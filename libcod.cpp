@@ -1127,6 +1127,7 @@ void Custom_PrintError(int a1, char *a2, int a3)
   char *v6;
   
   int _CONST_1 = 0x083D4100;
+  int _VAR = 0x8394048;
   int MMF_Code = 0x8283ED4;
   
   void (*logPrint)(int a1, char *s);
@@ -1158,7 +1159,7 @@ void Custom_PrintError(int a1, char *a2, int a3)
   }
   else
   {
-  if (( INT(0x8394048) && checkIndex((int)a2) ))
+  if (( *(int *)_VAR && checkIndex((int)a2) ))
   {	
      v4 = findIndex((unsigned int)(a2 - 1));
      v5 = IFline((unsigned int)(a2 - 1), a3);
