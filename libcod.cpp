@@ -975,6 +975,201 @@ int hook_findMap(const char *qpath, void **buffer)
 		return FS_ReadFile(qpath, buffer);
 }
 
+void Custom_InitMemory()
+{
+	char devType = *(int*)0x0839400A;
+	
+	int _VAR_1 = 0x08283ECC;
+	int _VAR_2 = 0x8283EA4;
+	int _VAR_3 = 0x8283EA8;
+	int _VAR_4 = 0x8283EA0;
+	int _VAR_5 = 0x8283EB0;
+	int _VAR_6 = 0x8283EB4;
+	int _VAR_7 = 0x8283EAC;
+	int _VAR_8 = 0x8283EBC;
+	int _VAR_9 = 0x8283EC0;
+	int _VAR_10 = 0x8283EB8;
+	
+	int MMF_Index = 0x8283ED8;
+	int MMF_Code = 0x8283ED4;
+	
+	void (*Main_InitMemory)();
+	*(int *)&Main_InitMemory = 0x8076B9C;
+	
+	if(devType) {
+		Main_InitMemory();
+		return;
+	}
+	
+void *(*MallocMemory)(size_t size);
+#if COD_VERSION == COD2_1_0
+	*(int *)&MallocMemory = 0x80A92FA;
+#elif COD_VERSION == COD2_1_2
+	*(int *)&MallocMemory = 0x80AB51A;
+#elif COD_VERSION == COD2_1_3
+	*(int *)&MallocMemory = 0x80AB65E;
+#endif
+
+	printf("devType = %i\n",devType);
+		
+	*(int *)_VAR_1 = -1;
+    *(int *)_VAR_2 = 0x10000;
+    *(int *)_VAR_3 = 0;
+    *(int *)_VAR_4 = (long)MallocMemory(0x140000u);
+    memset((void *)(*(int *)_VAR_4), 0, 20 * (*(int *)_VAR_2));
+    *(int *)_VAR_5 = 0x10000;
+    *(int *)_VAR_6 = 0;
+    *(int *)_VAR_7 = (long)MallocMemory(0x80000u);
+    *(int *)_VAR_8 = 0;
+    *(int *)_VAR_9 = 0;
+    *(int *)_VAR_10 = 16;
+    *(int *)MMF_Index = 0;
+    *(int *)MMF_Code = (long)MallocMemory(0x180u);
+
+}
+
+void Custom_WriteSCode(int a1, int a2)
+{
+  void *dest;
+  void *v3; 
+  int v4;
+  char *v5;
+  char *v6;
+  
+ void *(*MallocMemory)(size_t size);
+#if COD_VERSION == COD2_1_0
+	*(int *)&MallocMemory = 0x80A92FA;
+#elif COD_VERSION == COD2_1_2
+	*(int *)&MallocMemory = 0x80AB51A;
+#elif COD_VERSION == COD2_1_3
+	*(int *)&MallocMemory = 0x80AB65E;
+#endif
+	
+  void (*sub_80A9254)(void *ptr);
+    *(int *)&sub_80A9254 = 0x80A9254;
+	
+	int _VAR_1 = 0x8202A68;
+	int _VAR_2 = 0x8202A65;
+	int _VAR_3 = 0x8283EA8;
+	int _VAR_4 = 0x8283EA4;
+	int _VAR_5 = 0x8283EA0;
+	int _VAR_6 = 0x8283EB4;
+	int _VAR_7 = 0x8283EB0;
+	int _VAR_8 = 0x8283EAC;
+	int _VAR_9 = 0x8283EBC;
+	int _VAR_10 = 0x8202A6C;
+	int _VAR_11 = 0x8283EC0;
+	int _VAR_12 = 0x8283ECC;
+	int _VAR_13 = 0x8283ED0;
+  
+  if (*(int *)_VAR_1 != 2 )
+  {
+    if ( !*(int *)_VAR_2 )
+      a2 &= 0xFFFFFFFE;
+    if ( (unsigned int)(*(int *)_VAR_3) >= (unsigned int)(*(int *)_VAR_4))
+    {
+      (*(int *)_VAR_4) *= 2;
+      dest = MallocMemory(20 * (*(int *)_VAR_4));
+      memcpy(dest, (void *)(*(int *)_VAR_5), 20 * (*(int *)_VAR_3));
+      sub_80A9254((void *)(*(int *)_VAR_5));
+      (*(int *)_VAR_5) = (long)dest;
+    }
+    if ( (unsigned int)(*(int *)_VAR_6) >= (unsigned int)(*(int *)_VAR_7) )
+    {
+      (*(int *)_VAR_7) *= 2;
+      v3 = MallocMemory(8 * (*(int *)_VAR_7));
+      memcpy(v3, (void *)(*(int *)_VAR_8), 8 * (*(int *)_VAR_6));
+      sub_80A9254((void *)(*(int *)_VAR_8));
+      (*(int *)_VAR_8) = (long)v3;
+    }
+    if ( (*(int *)_VAR_9) == (*(int *)_VAR_10) )
+    {
+      v6 = (char *)(*(int *)_VAR_5) + 20 * --(*(int *)_VAR_3);
+    }
+    else
+    {
+      (*(int *)_VAR_11) = 0;
+      (*(int *)_VAR_9) = (*(int *)_VAR_10);
+      v6 = (char *)(*(int *)_VAR_5) + 20 * (*(int *)_VAR_3);
+      *((long *)(*(int *)_VAR_5) + 5 * (*(int *)_VAR_3) + 1) = (*(int *)_VAR_6);
+      *(long *)v6 = (*(int *)_VAR_9);
+    }
+    v4 = *((long *)v6 + 1) + (*(int *)_VAR_11);
+    v5 = (char *)(*(int *)_VAR_8) + 8 * v4;
+    *((long *)(*(int *)_VAR_8) + 2 * v4) = a1;
+    if ( a1 == -1 )
+    {
+      (*(int *)_VAR_12) = v4;
+    }
+    else if ( a1 == -2 )
+    {
+      (*(int *)_VAR_13) = v4;
+    }
+    else if ( (*(int *)_VAR_12) >= 0 )
+    {
+      if ( a2 & 1 )
+      {
+        *((long *)(*(int *)_VAR_8) + 2 * (*(int *)_VAR_12)) = a1;
+        (*(int *)_VAR_12) = -1;
+      }
+    }
+    *((long *)v5 + 1) |= a2;
+    *((long *)v6 + 2) = ++(*(int *)_VAR_11);
+    ++(*(int *)_VAR_3);
+    ++(*(int *)_VAR_6);
+  }
+}
+
+void Custom_PrintError(int a1, char *a2, int a3)
+{
+  int v4;
+  int v5;
+  char *v6;
+  
+  int _CONST_1 = 0x083D4100;
+  int MMF_Code = 0x8283ED4;
+  
+  void (*logPrint)(int a1, char *s);
+  *(int *)&logPrint = 0x80609A8;
+  
+  bool (*checkIndex)(int a1);
+  *(int *)&checkIndex = 0x80757CC;
+  
+  bool (*findIndex)(int a1);
+  *(int *)&findIndex = 0x8077D5A;
+  
+  int (*IFline)(unsigned int a1, int a2);
+  *(int *)&IFline = 0x807752A;
+  
+  void (*errorsPrint)(int a1, int a2, char *a3, int a4);
+  *(int *)&errorsPrint = 0x8077B96;
+  
+  char *(*CPrintf)(char *format, ...);
+  *(int *)&CPrintf = 0x80B59CE;
+  
+  if ( !a2 )
+  {
+    logPrint(a1, "<frozen thread>\n");
+    return;
+  }
+  if ( (int *)a2 == &(*(int*)_CONST_1)) 
+  {
+    logPrint(a1, "<removed thread>\n");
+  }
+  else
+  {
+  if (( INT(0x8394048) && checkIndex((int)a2) ))
+  {	
+     v4 = findIndex((unsigned int)(a2 - 1));
+     v5 = IFline((unsigned int)(a2 - 1), a3);
+	 errorsPrint(a1, *((long *)(*(int *)MMF_Code) + 6 * v4 + 1), *((char **)(*(int *)MMF_Code) + 6 * v4 + 2), v5);
+     return;
+  }
+  v6 = CPrintf("%s\n\n", a2);
+  logPrint(a1, v6);
+  }
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -1027,6 +1222,10 @@ public:
 		cracking_hook_call(0x0808F134, (int)hook_ClientUserinfoChanged);
 		cracking_hook_call(0x0807059F, (int)Scr_GetCustomFunction);
 		cracking_hook_call(0x080707C3, (int)Scr_GetCustomMethod);
+		cracking_hook_call(0x08075AC7, (int)Custom_InitMemory);
+		
+		cracking_hook_function(0x08077DBA, (int)Custom_PrintError);
+		cracking_hook_function(0x08076D92, (int)Custom_WriteSCode);
 
 #if COMPILE_PLAYER == 1
 		cracking_hook_call(0x0808E18F, (int)hook_gamestate_info);
