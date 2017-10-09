@@ -1,3 +1,4 @@
+# [LibcoD]
 The Call of Duty extension *libcod* is adding new server-side functions to:
 
  - Call Of Duty 2 1.0

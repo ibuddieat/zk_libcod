@@ -1010,7 +1010,7 @@ void *(*MallocMemory)(size_t size);
 	*(int *)&MallocMemory = 0x80AB65E;
 #endif
 
-	printf("devType = %i\n",devType);
+	//printf("devType = %i\n",devType);
 		
 	*(int *)_VAR_1 = -1;
     *(int *)_VAR_2 = 0x10000;

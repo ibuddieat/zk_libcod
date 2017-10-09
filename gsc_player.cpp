@@ -564,6 +564,39 @@ void gsc_player_enable_item_pickup(int id)
 	disable_player_item_pickup[id] = 0;
 }
 
+bool BG_AnimationCheckForBad(char *anim)
+{
+int i,v6,v8;
+
+int _VAR_ = 0x855A4E4;
+
+int (*ConverteStr)(int a1);
+*(int *)&ConverteStr = 0x80D45C4;
+
+signed int (*SACh)(char *a1, char *a2);
+*(int *)&SACh = 0x80B5620;
+
+v6 = ConverteStr((int)anim);
+v8 = 0;
+
+for ( i = *(int *)_VAR_; ; i += 96 ) 
+{
+	
+if ( v8 >= *(long *)((*(int *)_VAR_) + 49152) )
+{
+printf("BG_AnimationIndexForString: unknown player animation '%s'\n", anim);
+return false;
+}
+
+if ( v6 == *(long *)(i + 76) && !SACh(anim, (char *)i) )
+break;
+
+++v8;
+
+}
+return true;
+}
+
 void gsc_player_set_anim(int id)
 {
 	char* animation;
@@ -578,7 +611,7 @@ void gsc_player_set_anim(int id)
 	int animationIndex = 0;
 	extern int custom_animation[64];
 
-	if(strcmp(animation, "none"))
+	if(strcmp(animation, "none")&&BG_AnimationCheckForBad(animation)) 
 		animationIndex = BG_AnimationIndexForString(animation);
 
 	custom_animation[id] = (animationIndex);
