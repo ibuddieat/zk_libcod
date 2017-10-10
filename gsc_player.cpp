@@ -666,7 +666,7 @@ void gsc_entity_setbounds(int id)
 
 	if ( ! stackGetParams("ff", &width, &height))
 	{
-		stackError("gsc_entity_setbounds() one or more arguments is undefined or has a wrong type");
+		stackError("gsc_entity_setbounds() one or more arguments is %s or has a wrong type","undefined");
 		stackPushUndefined();
 		return;
 	}

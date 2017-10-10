@@ -15,7 +15,7 @@ char *slt;
 
 	if(!stackGetParams("ss", &str, &slt))
 	{
-		stackError("gsc_utils_cryptsh() one or more arguments is undefined or has a wrong type ");
+		stackError("gsc_utils_cryptsh() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}

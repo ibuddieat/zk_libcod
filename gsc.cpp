@@ -358,14 +358,15 @@ int stackGetParamType(int param)
 
 void stackError(char *format, ...)
 {
-	char errorMessage[COD2_MAX_STRINGLENGTH];
 	va_list va;
-
+	
 	va_start(va, format);
-	vsnprintf(errorMessage, sizeof(errorMessage), format, va);
+	
+	printf("\n");
+	vprintf(format,va);
+	printf("\n");
+	
 	va_end(va);
-
-	Scr_Error(errorMessage);
 }
 
 int stackGetParams(char *params, ...)
