@@ -977,24 +977,119 @@ int hook_findMap(const char *qpath, void **buffer)
 
 void Custom_InitMemory()
 {
-	char devType = *(int*)0x0839400A;
 	
-	int _VAR_1 = 0x08283ECC;
-	int _VAR_2 = 0x8283EA4;
-	int _VAR_3 = 0x8283EA8;
-	int _VAR_4 = 0x8283EA0;
-	int _VAR_5 = 0x8283EB0;
-	int _VAR_6 = 0x8283EB4;
-	int _VAR_7 = 0x8283EAC;
-	int _VAR_8 = 0x8283EBC;
-	int _VAR_9 = 0x8283EC0;
-	int _VAR_10 = 0x8283EB8;
+#if COD_VERSION == COD2_1_0
+char devType = *(int*)0x0839400A;
+#elif COD_VERSION == COD2_1_2
+char devType = *(int*)0x0839648A;
+#elif COD_VERSION == COD2_1_3
+char devType = *(int*)0x0839750A;
+#endif
 	
-	int MMF_Index = 0x8283ED8;
-	int MMF_Code = 0x8283ED4;
+#if COD_VERSION == COD2_1_0
+int _VAR_1 = 0x08283ECC;
+#elif COD_VERSION == COD2_1_2
+int _VAR_1 = 0x082862AC;
+#elif COD_VERSION == COD2_1_3
+int _VAR_1 = 0x0828732C ;
+#endif
+
+#if COD_VERSION == COD2_1_0
+int _VAR_2 = 0x8283EA4;
+#elif COD_VERSION == COD2_1_2
+int _VAR_2 = 0x8286284;
+#elif COD_VERSION == COD2_1_3
+int _VAR_2 = 0x8287304
+#endif
+
+#if COD_VERSION == COD2_1_0
+int _VAR_3 = 0x8283EA8;
+#elif COD_VERSION == COD2_1_2
+int _VAR_3 = 0x8286288;
+#elif COD_VERSION == COD2_1_3
+int _VAR_3 = 0x8287308;
+#endif
+
+#if COD_VERSION == COD2_1_0
+int _VAR_4 = 0x8283EA0;
+#elif COD_VERSION == COD2_1_2
+int _VAR_4 = 0x8286280;
+#elif COD_VERSION == COD2_1_3
+int _VAR_4 = 0x8287300;
+#endif
+
+#if COD_VERSION == COD2_1_0
+int _VAR_5 = 0x8283EB0;
+#elif COD_VERSION == COD2_1_2
+int _VAR_5 = 0x8286290;
+#elif COD_VERSION == COD2_1_3
+int _VAR_5 = 0x8287310;
+#endif
+
+#if COD_VERSION == COD2_1_0
+int _VAR_6 = 0x8283EB4;
+#elif COD_VERSION == COD2_1_2
+int _VAR_6 = 0x8286294;
+#elif COD_VERSION == COD2_1_3
+int _VAR_6 = 0x8287314;
+#endif
+
+#if COD_VERSION == COD2_1_0
+int _VAR_7 = 0x8283EAC;
+#elif COD_VERSION == COD2_1_2
+int _VAR_7 = 0x828628C;
+#elif COD_VERSION == COD2_1_3
+int _VAR_7 = 0x828730C;
+#endif
+
+#if COD_VERSION == COD2_1_0
+int _VAR_8 = 0x8283EBC;
+#elif COD_VERSION == COD2_1_2
+int _VAR_8 = 0x828629C;
+#elif COD_VERSION == COD2_1_3
+int _VAR_8 = 0x828731C ;
+#endif
+
+#if COD_VERSION == COD2_1_0
+int _VAR_9 = 0x8283EC0;
+#elif COD_VERSION == COD2_1_2
+int _VAR_9 = 0x82862A0;
+#elif COD_VERSION == COD2_1_3
+int _VAR_9 = 0x8287320;
+#endif
+
+#if COD_VERSION == COD2_1_0
+int _VAR_10 = 0x8283EB8;
+#elif COD_VERSION == COD2_1_2
+int _VAR_10 = 0x8286298;
+#elif COD_VERSION == COD2_1_3
+int _VAR_10 = 0x8287318;
+#endif
 	
-	void (*Main_InitMemory)();
-	*(int *)&Main_InitMemory = 0x8076B9C;
+#if COD_VERSION == COD2_1_0
+int MMF_Index = 0x8283ED8;
+#elif COD_VERSION == COD2_1_2
+int MMF_Index = 0x82862B8;
+#elif COD_VERSION == COD2_1_3
+int MMF_Index = 0x8287338;
+#endif
+	
+#if COD_VERSION == COD2_1_0
+int MMF_Code = 0x8283ED4;
+#elif COD_VERSION == COD2_1_2
+int MMF_Code = 0x82862B4;
+#elif COD_VERSION == COD2_1_3
+int MMF_Code = 0x8287334;
+#endif
+	
+void (*Main_InitMemory)();
+#if COD_VERSION == COD2_1_0
+*(int *)&Main_InitMemory = 0x8076B9C;
+#elif COD_VERSION == COD2_1_2
+*(int *)&Main_InitMemory = 0x8077110;
+#elif COD_VERSION == COD2_1_3
+*(int *)&Main_InitMemory = 0x80771DC;
+#endif
 	
 	if(devType) {
 		Main_InitMemory();
@@ -1003,11 +1098,11 @@ void Custom_InitMemory()
 	
 void *(*MallocMemory)(size_t size);
 #if COD_VERSION == COD2_1_0
-	*(int *)&MallocMemory = 0x80A92FA;
+*(int *)&MallocMemory = 0x80A92FA;
 #elif COD_VERSION == COD2_1_2
-	*(int *)&MallocMemory = 0x80AB51A;
+*(int *)&MallocMemory = 0x80AB51A;
 #elif COD_VERSION == COD2_1_3
-	*(int *)&MallocMemory = 0x80AB65E;
+*(int *)&MallocMemory = 0x80AB65E;
 #endif
 
 	//printf("devType = %i\n",devType);
@@ -1036,31 +1131,127 @@ void Custom_WriteSCode(int a1, int a2)
   char *v5;
   char *v6;
   
- void *(*MallocMemory)(size_t size);
+void *(*MallocMemory)(size_t size);
 #if COD_VERSION == COD2_1_0
-	*(int *)&MallocMemory = 0x80A92FA;
+*(int *)&MallocMemory = 0x80A92FA;
 #elif COD_VERSION == COD2_1_2
-	*(int *)&MallocMemory = 0x80AB51A;
+*(int *)&MallocMemory = 0x80AB51A;
 #elif COD_VERSION == COD2_1_3
-	*(int *)&MallocMemory = 0x80AB65E;
+*(int *)&MallocMemory = 0x80AB65E;
 #endif
 	
-  void (*sub_80A9254)(void *ptr);
-    *(int *)&sub_80A9254 = 0x80A9254;
+void (*MMDf)(void *ptr);
+#if COD_VERSION == COD2_1_0
+*(int *)&MMDf = 0x80A9254;
+#elif COD_VERSION == COD2_1_2
+*(int *)&MMDf = 0x80AB474;
+#elif COD_VERSION == COD2_1_3
+*(int *)&MMDf = 0x80AB5B8;
+#endif
 	
-	int _VAR_1 = 0x8202A68;
-	int _VAR_2 = 0x8202A65;
-	int _VAR_3 = 0x8283EA8;
-	int _VAR_4 = 0x8283EA4;
-	int _VAR_5 = 0x8283EA0;
-	int _VAR_6 = 0x8283EB4;
-	int _VAR_7 = 0x8283EB0;
-	int _VAR_8 = 0x8283EAC;
-	int _VAR_9 = 0x8283EBC;
-	int _VAR_10 = 0x8202A6C;
-	int _VAR_11 = 0x8283EC0;
-	int _VAR_12 = 0x8283ECC;
-	int _VAR_13 = 0x8283ED0;
+#if COD_VERSION == COD2_1_0
+int _VAR_1 = 0x8202A68;
+#elif COD_VERSION == COD2_1_2
+int _VAR_1 = 0x8204C28;
+#elif COD_VERSION == COD2_1_3
+int _VAR_1 = 0x8205CA8;
+#endif
+
+#if COD_VERSION == COD2_1_0
+int _VAR_2 = 0x8202A65;
+#elif COD_VERSION == COD2_1_2
+int _VAR_2 = 0x8204C25;
+#elif COD_VERSION == COD2_1_3
+int _VAR_2 = 0x8205CA5;
+#endif
+
+#if COD_VERSION == COD2_1_0
+int _VAR_3 = 0x8283EA8;
+#elif COD_VERSION == COD2_1_2
+int _VAR_3 = 0x8286288;
+#elif COD_VERSION == COD2_1_3
+int _VAR_3 = 0x8287308;
+#endif
+
+#if COD_VERSION == COD2_1_0
+int _VAR_4 = 0x8283EA4;
+#elif COD_VERSION == COD2_1_2
+int _VAR_4 = 0x8286284;
+#elif COD_VERSION == COD2_1_3
+int _VAR_4 = 0x8287304;
+#endif
+
+#if COD_VERSION == COD2_1_0
+int _VAR_5 = 0x8283EA0;
+#elif COD_VERSION == COD2_1_2
+int _VAR_5 = 0x8286280;
+#elif COD_VERSION == COD2_1_3
+int _VAR_5 = 0x8287300;
+#endif
+
+#if COD_VERSION == COD2_1_0
+int _VAR_6 = 0x8283EB4;
+#elif COD_VERSION == COD2_1_2
+int _VAR_6 = 0x8286294;
+#elif COD_VERSION == COD2_1_3
+int _VAR_6 = 0x8287314;
+#endif
+
+#if COD_VERSION == COD2_1_0
+int _VAR_7 = 0x8283EB0;
+#elif COD_VERSION == COD2_1_2
+int _VAR_7 = 0x8286290;
+#elif COD_VERSION == COD2_1_3
+int _VAR_7 = 0x8287310;
+#endif
+
+#if COD_VERSION == COD2_1_0
+int _VAR_8 = 0x8283EAC;
+#elif COD_VERSION == COD2_1_2
+int _VAR_8 = 0x828628C;
+#elif COD_VERSION == COD2_1_3
+int _VAR_8 = 0x828730C;
+#endif
+
+#if COD_VERSION == COD2_1_0
+int _VAR_9 = 0x8283EBC;
+#elif COD_VERSION == COD2_1_2
+int _VAR_9 = 0x828629C;
+#elif COD_VERSION == COD2_1_3
+int _VAR_9 = 0x828731C;
+#endif
+
+#if COD_VERSION == COD2_1_0
+int _VAR_10 = 0x8202A6C;
+#elif COD_VERSION == COD2_1_2
+int _VAR_10 = 0x8204C2C;
+#elif COD_VERSION == COD2_1_3
+int _VAR_10 = 0x8205CAC;
+#endif
+
+#if COD_VERSION == COD2_1_0
+int _VAR_11 = 0x8283EC0;
+#elif COD_VERSION == COD2_1_2
+int _VAR_11 = 0x82862A0;
+#elif COD_VERSION == COD2_1_3
+int _VAR_11 = 0x8287320;
+#endif
+
+#if COD_VERSION == COD2_1_0
+int _VAR_12 = 0x8283ECC;
+#elif COD_VERSION == COD2_1_2
+int _VAR_12 = 0x82862AC;
+#elif COD_VERSION == COD2_1_3
+int _VAR_12 = 0x828732C;
+#endif
+
+#if COD_VERSION == COD2_1_0
+int _VAR_13 = 0x8283ED0;
+#elif COD_VERSION == COD2_1_2
+int _VAR_13 = 0x82862B0;
+#elif COD_VERSION == COD2_1_3
+int _VAR_13 = 0x8287330;
+#endif
   
   if (*(int *)_VAR_1 != 2 )
   {
@@ -1071,7 +1262,7 @@ void Custom_WriteSCode(int a1, int a2)
       (*(int *)_VAR_4) *= 2;
       dest = MallocMemory(20 * (*(int *)_VAR_4));
       memcpy(dest, (void *)(*(int *)_VAR_5), 20 * (*(int *)_VAR_3));
-      sub_80A9254((void *)(*(int *)_VAR_5));
+      MMDf((void *)(*(int *)_VAR_5));
       (*(int *)_VAR_5) = (long)dest;
     }
     if ( (unsigned int)(*(int *)_VAR_6) >= (unsigned int)(*(int *)_VAR_7) )
@@ -1079,7 +1270,7 @@ void Custom_WriteSCode(int a1, int a2)
       (*(int *)_VAR_7) *= 2;
       v3 = MallocMemory(8 * (*(int *)_VAR_7));
       memcpy(v3, (void *)(*(int *)_VAR_8), 8 * (*(int *)_VAR_6));
-      sub_80A9254((void *)(*(int *)_VAR_8));
+      MMDf((void *)(*(int *)_VAR_8));
       (*(int *)_VAR_8) = (long)v3;
     }
     if ( (*(int *)_VAR_9) == (*(int *)_VAR_10) )
@@ -1126,27 +1317,83 @@ void Custom_PrintError(int a1, char *a2, int a3)
   int v5;
   char *v6;
   
-  int _CONST_1 = 0x083D4100;
-  int _VAR = 0x8394048;
-  int MMF_Code = 0x8283ED4;
+#if COD_VERSION == COD2_1_0
+int _CONST_1 = 0x83D4100;
+#elif COD_VERSION == COD2_1_2
+int _CONST_1 = 0x83D6580;
+#elif COD_VERSION == COD2_1_3
+int _CONST_1 = 0x83D7600;
+#endif
   
-  void (*logPrint)(int a1, char *s);
-  *(int *)&logPrint = 0x80609A8;
+#if COD_VERSION == COD2_1_0
+int _VAR = 0x8394048;
+#elif COD_VERSION == COD2_1_2
+int _VAR = 0x83964C8;
+#elif COD_VERSION == COD2_1_3
+int _VAR = 0x8397548;
+#endif
   
-  bool (*checkIndex)(int a1);
-  *(int *)&checkIndex = 0x80757CC;
+#if COD_VERSION == COD2_1_0
+int MMF_Code = 0x8283ED4;
+#elif COD_VERSION == COD2_1_2
+int MMF_Code = 0x82862B4;
+#elif COD_VERSION == COD2_1_3
+int MMF_Code = 0x8287334;
+#endif
   
-  bool (*findIndex)(int a1);
-  *(int *)&findIndex = 0x8077D5A;
+void (*logPrint)(int a1, char *s);
+#if COD_VERSION == COD2_1_0
+*(int *)&logPrint = 0x80609A8;
+#elif COD_VERSION == COD2_1_2
+*(int *)&logPrint = 0x8060C28;
+#elif COD_VERSION == COD2_1_3
+*(int *)&logPrint = 0x8060C20;
+#endif
   
-  int (*IFline)(unsigned int a1, int a2);
-  *(int *)&IFline = 0x807752A;
+bool (*checkIndex)(int a1);
+#if COD_VERSION == COD2_1_0
+*(int *)&checkIndex = 0x80757CC;
+#elif COD_VERSION == COD2_1_2
+*(int *)&checkIndex = 0x8075D48;
+#elif COD_VERSION == COD2_1_3
+*(int *)&checkIndex = 0x8075E14;
+#endif
   
-  void (*errorsPrint)(int a1, int a2, char *a3, int a4);
-  *(int *)&errorsPrint = 0x8077B96;
+bool (*findIndex)(int a1);
+#if COD_VERSION == COD2_1_0
+*(int *)&findIndex = 0x8077D5A;
+#elif COD_VERSION == COD2_1_2
+*(int *)&findIndex = 0x80782CE;
+#elif COD_VERSION == COD2_1_3
+*(int *)&findIndex = 0x807839A;
+#endif
   
-  char *(*CPrintf)(char *format, ...);
-  *(int *)&CPrintf = 0x80B59CE;
+int (*IFline)(unsigned int a1, int a2);
+#if COD_VERSION == COD2_1_0
+*(int *)&IFline = 0x807752A;
+#elif COD_VERSION == COD2_1_2
+*(int *)&IFline = 0x8077A9E;
+#elif COD_VERSION == COD2_1_3
+*(int *)&IFline = 0x8077B6A;
+#endif
+  
+void (*errorsPrint)(int a1, int a2, char *a3, int a4);
+#if COD_VERSION == COD2_1_0
+*(int *)&errorsPrint = 0x8077B96;
+#elif COD_VERSION == COD2_1_2
+*(int *)&errorsPrint = 0x807810A;
+#elif COD_VERSION == COD2_1_3
+*(int *)&errorsPrint = 0x80781D6;
+#endif
+  
+char *(*CPrintf)(char *format, ...);
+#if COD_VERSION == COD2_1_0
+*(int *)&CPrintf = 0x80B59CE;
+#elif COD_VERSION == COD2_1_2
+*(int *)&CPrintf = 0x80B7E62;
+#elif COD_VERSION == COD2_1_3
+*(int *)&CPrintf = 0x80B7FA6;
+#endif
   
   if ( !a2 )
   {
@@ -1225,7 +1472,7 @@ public:
 		cracking_hook_call(0x080707C3, (int)Scr_GetCustomMethod);
 		cracking_hook_call(0x08075AC7, (int)Custom_InitMemory);
 		
-		cracking_hook_function(0x08077DBA, (int)Custom_PrintError);
+		cracking_hook_function(0x08077DBA, (int)Custom_PrintError); 
 		cracking_hook_function(0x08076D92, (int)Custom_WriteSCode);
 
 #if COMPILE_PLAYER == 1
@@ -1288,6 +1535,10 @@ public:
 		cracking_hook_call(0x080909BE, (int)hook_ClientUserinfoChanged);
 		cracking_hook_call(0x08070B1B, (int)Scr_GetCustomFunction);
 		cracking_hook_call(0x08070D3F, (int)Scr_GetCustomMethod);
+		cracking_hook_call(0x0807603D, (int)Custom_InitMemory);
+		
+		cracking_hook_function(0x0807832E, (int)Custom_PrintError); 
+		cracking_hook_function(0x08077306, (int)Custom_WriteSCode);
 
 #if COMPILE_PLAYER == 1
 		cracking_hook_call(0x0808F533, (int)hook_gamestate_info);
@@ -1349,6 +1600,10 @@ public:
 		cracking_hook_call(0x08090A52, (int)hook_ClientUserinfoChanged);
 		cracking_hook_call(0x08070BE7, (int)Scr_GetCustomFunction);
 		cracking_hook_call(0x08070E0B, (int)Scr_GetCustomMethod);
+		cracking_hook_call(0x08076109, (int)Custom_InitMemory);
+		
+		cracking_hook_function(0x080783FA, (int)Custom_PrintError); 
+		cracking_hook_function(0x080773D2, (int)Custom_WriteSCode);
 
 #if COMPILE_PLAYER == 1
 		cracking_hook_call(0x0808F5C7, (int)hook_gamestate_info);
