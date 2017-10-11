@@ -870,4 +870,17 @@ void gsc_make_localized_string()
 	var->type = STACK_LOCALIZED_STRING;
 }
 
+void gsc_utils_getlasttestclientnumber()
+{
+#if COD_VERSION == COD2_1_0
+int offset = 0x083DF9EC;
+#elif COD_VERSION == COD2_1_2
+int offset = 0x083E1E8C;
+#elif COD_VERSION == COD2_1_3
+int offset = 0x083E2F0C;
+#endif
+
+stackPushInt(*(int *)offset);
+}
+
 #endif

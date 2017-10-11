@@ -204,6 +204,7 @@ scr_function_t scriptFunctions[] =
 	{"dlclose", gsc_dlclose, 0},
 	{"sqrt", gsc_utils_sqrt, 0},
 	{"sqrtInv", gsc_utils_sqrtInv, 0},
+	{"getlasttestclientnumber", gsc_utils_getlasttestclientnumber, 0},
 #endif
 
 #if COMPILE_WEAPONS == 1
