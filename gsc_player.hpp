@@ -75,6 +75,7 @@ static const int svstime_offset = 0x08423084;
 
 #define SVS_TIME (*(int *)svstime_offset)
 
+void gsc_player_lookatkiller(int id);
 
 void gsc_player_velocity_set(int id);
 void gsc_player_velocity_add(int id);
