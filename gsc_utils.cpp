@@ -467,43 +467,6 @@ void gsc_utils_float()
 	}
 }
 
-// rundll("print.so", "test_print")
-void gsc_utils_rundll()
-{
-	char *arg_library, *arg_function;
-	if ( ! stackGetParams("ss", &arg_library, &arg_function))
-	{
-		stackError("gsc_utils_rundll() one or more arguments is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-	Com_DPrintf("lib=%s func=%s\n", arg_library, arg_function);
-	//void *handle = dlopen(arg_library, RTLD_GLOBAL); // crashes
-	//void *handle = dlopen(arg_library, RTLD_LOCAL); // crashes
-	//void *handle = dlopen(arg_library, RTLD_NOW); // crashes
-	void *handle = dlopen(arg_library, RTLD_LAZY);
-	if ( ! handle)
-	{
-		stackError("dlopen(\"%s\") failed", arg_library);
-		stackPushInt(0);
-		return;
-	}
-	Com_DPrintf("dlopen(\"%s\") returned: %.8x\n", arg_library, (unsigned int)handle);
-	void (*func)();
-	//*((void *)&func) = dlsym(handle, arg_function);
-	*(int *)&func = (int)dlsym(handle, arg_function);
-	if (!func)
-	{
-		stackError("dlsym(\"%s\") failed", arg_function);
-		stackPushInt(0);
-		return;
-	}
-	Com_DPrintf("function-name=%s -> address=%.8x\n", arg_function, (unsigned int)func);
-	func();
-	dlclose(handle);
-	stackPushInt(1);
-}
-
 void gsc_utils_ExecuteString()
 {
 	char *str;
@@ -745,78 +708,6 @@ void gsc_set_configstring()
 
 	SV_SetConfigstring(index, string);
 	stackPushInt(1);
-}
-
-void gsc_call_function_raw()
-{
-	int func_address;
-	char *args;
-	unsigned char *data;
-	if ( ! stackGetParams("isi", &func_address, &args, &data))
-	{
-		stackError("gsc_call_function_raw() one or more arguments is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-	stackPushInt(cracking_call_function(func_address, args, data));
-}
-
-void gsc_dlopen()
-{
-	char *arg_library;
-	if ( ! stackGetParams("s", &arg_library))
-	{
-		stackError("gsc_dlopen() argument is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-	int handle = (int)dlopen(arg_library, RTLD_LAZY);
-	if ( ! handle)
-	{
-		stackError("dlopen(\"%s\") failed! Error: %s", arg_library, dlerror());
-		stackPushInt(0);
-		return;
-	}
-	stackPushInt(handle);
-}
-
-void gsc_dlsym()
-{
-	int handle;
-	char *arg_function;
-	if ( ! stackGetParams("is", &handle, &arg_function))
-	{
-		stackError("gsc_dlsym() one or more arguments is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-	int func = (int)dlsym((void *)handle, arg_function);
-	if (!func)
-	{
-		stackError("dlsym(\"%s\") failed! Error: %s", arg_function, dlerror());
-		stackPushInt(0);
-		return;
-	}
-	stackPushInt(func);
-}
-
-void gsc_dlclose()
-{
-	int handle;
-	if ( ! stackGetParams("i", &handle))
-	{
-		stackError("gsc_dlclose() argument is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-	int ret = dlclose((void *)handle);
-	if (ret != 0)
-	{
-		stackError("dlclose(%d) failed! Error: %s", handle, dlerror());
-		stackPushInt(0);
-		return;
-	}
-	stackPushInt(ret);
 }
 
 void gsc_utils_sqrt()

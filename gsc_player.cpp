@@ -4,6 +4,51 @@
 
 #define PLAYERSTATE_VELOCITY(playerid) (PLAYERSTATE(playerid) + 0x20)
 
+void gsc_player_lookatkiller(int id)
+{
+	int inflictor, attacker;
+
+	if ( ! stackGetParams("ii", &inflictor, &attacker))
+	{
+		stackError("gsc_player_lookatkiller() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	int self_entity = G_ENTITY(id);
+	int self_state = *(int *)(self_entity + 1);
+
+	if (!self_state)
+	{
+		stackError("gsc_player_lookatkiller() self_entity state is invalid");
+		stackPushUndefined();
+		return;
+	}
+
+	int inflictor_entity = G_ENTITY(inflictor);
+	int inflictor_state = *(int *)(inflictor_entity + 1);
+
+	if (!inflictor_state)
+	{
+		stackError("gsc_player_lookatkiller() inflictor_entity state is invalid");
+		stackPushUndefined();
+		return;
+	}
+
+	int attacker_entity = G_ENTITY(attacker);
+	int attacker_state = *(int *)(attacker_entity + 1);
+
+	if (!attacker_state)
+	{
+		stackError("gsc_player_lookatkiller() attacker_entity state is invalid");
+		stackPushUndefined();
+		return;
+	}
+
+	LookAtKiller(self_entity, inflictor_entity, attacker_entity);
+	stackPushInt(1);
+}
+
 void gsc_player_velocity_set(int id)
 {
 	float velocity[3];

@@ -181,7 +181,6 @@ scr_function_t scriptFunctions[] =
 	{"FS_LoadDir", gsc_utils_FS_LoadDir, 0},
 	{"getType", gsc_utils_getType, 0},
 	{"float", gsc_utils_float, 0},
-	{"rundll", gsc_utils_rundll, 0},
 	{"Cmd_ExecuteString", gsc_utils_ExecuteString, 0},
 	{"sendGameServerCommand", gsc_utils_sendgameservercommand, 0},
 	{"scandir", gsc_utils_scandir, 0},
@@ -198,10 +197,6 @@ scr_function_t scriptFunctions[] =
 	{"getconfigstring", gsc_get_configstring, 0},
 	{"setconfigstring", gsc_set_configstring, 0},
 	{"makelocalizedstring", gsc_make_localized_string, 0},
-	{"call_function_raw", gsc_call_function_raw, 0},
-	{"dlopen", gsc_dlopen, 0},
-	{"dlsym", gsc_dlsym, 0},
-	{"dlclose", gsc_dlclose, 0},
 	{"sqrt", gsc_utils_sqrt, 0},
 	{"sqrtInv", gsc_utils_sqrtInv, 0},
 	{"getlasttestclientnumber", gsc_utils_getlasttestclientnumber, 0},
@@ -305,6 +300,7 @@ scr_method_t scriptMethods[] =
 	{"setmovespeedscale", gsc_player_setmovespeedscale, 0},
 	{"ismantling", gsc_player_ismantling, 0},
 	{"isonladder", gsc_player_isonladder, 0},
+	{"lookatkiller", gsc_player_lookatkiller, 0},
 #endif
 
 #if COMPILE_BOTS == 1

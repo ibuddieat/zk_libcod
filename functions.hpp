@@ -798,4 +798,13 @@ static const Sys_IsLANAddress_t Sys_IsLANAddress = (Sys_IsLANAddress_t)0x080D54F
 static const Sys_IsLANAddress_t Sys_IsLANAddress = (Sys_IsLANAddress_t)0x080D5638;
 #endif
 
+typedef void (*LookAtKiller_t)(int self, int inflictor, int attacker);
+#if COD_VERSION == COD2_1_0
+static const LookAtKiller_t LookAtKiller = (LookAtKiller_t)0x080FF17A;
+#elif COD_VERSION == COD2_1_2
+static const LookAtKiller_t LookAtKiller = (LookAtKiller_t)0x081014AE;
+#elif COD_VERSION == COD2_1_3
+static const LookAtKiller_t LookAtKiller = (LookAtKiller_t)0x0810160A;
+#endif
+
 #endif
