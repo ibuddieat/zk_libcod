@@ -213,17 +213,6 @@ char* hook_AuthorizeState( int arg )
 	return s;
 }
 
-void hook_SV_BeginDownload_f( int a1 )
-{
-	char *file = Cmd_Argv(1);
-	int len = strlen(file);
-
-	if (len > 3 && strcmp(&file[len - 4], ".iwd") == 0)
-		SV_BeginDownload_f(a1);
-	else
-		Com_DPrintf("Invalid download attempt: %s\n", file);
-}
-
 void hook_ClientUserinfoChanged(int clientNum)
 {
 	if ( ! codecallback_userinfochanged)
@@ -280,14 +269,24 @@ void custom_SV_WriteDownloadToClient(int cl, msg_t *msg)
 	int wwwdld_offset2 = 134676;
 #endif
 
+    int clientnum = PLAYERBASE_ID(cl);
+
+	if (CLIENTSTATE(clientnum) == CS_ACTIVE)
+	{
+		*(int *)(cl + file_offset) = 0;
+		*(int *)(cl + filename_offset) = 0;
+		return;
+	}
+	
 	char *file = (char *)(cl + filename_offset);
 	int len = strlen(file);
 
-	if (!*(int *)(cl + filename_offset))
-		return;	// Nothing being downloaded
-
 	if (len < 4 || strcmp(&file[len - 4], ".iwd") != 0)
-		return;	// Not a valid iwd file
+	{
+ 		*(int *)(cl + file_offset) = 0;
+ 		*(int *)(cl + filename_offset) = 0;
+ 		return;
+ 	}
 
 	if (strlen(sv_downloadMessage->string))
 	{
@@ -296,6 +295,7 @@ void custom_SV_WriteDownloadToClient(int cl, msg_t *msg)
 		MSG_WriteShort(msg, 0);
 		MSG_WriteLong(msg, -1);
 		MSG_WriteString(msg, errorMessage);
+		*(int *)(cl + file_offset) = 0;
 		*(int *)(cl + filename_offset) = 0;
 		return;
 	}
@@ -318,7 +318,7 @@ void custom_SV_WriteDownloadToClient(int cl, msg_t *msg)
 	{
 		// We open the file here
 
-		Com_Printf("clientDownload: %d : begining \"%s\"\n", PLAYERBASE_ID(cl), cl + filename_offset);
+		Com_Printf("clientDownload: %d : begining \"%s\"\n", clientnum, cl + filename_offset);
 
 		iwdFile = FS_iwIwd((char *)(cl + filename_offset), "main");
 
@@ -327,12 +327,12 @@ void custom_SV_WriteDownloadToClient(int cl, msg_t *msg)
 			// cannot auto-download file
 			if (iwdFile)
 			{
-				Com_Printf("clientDownload: %d : \"%s\" cannot download iwd files\n", PLAYERBASE_ID(cl), cl + filename_offset);
+				Com_Printf("clientDownload: %d : \"%s\" cannot download iwd files\n", clientnum, cl + filename_offset);
 				Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_CANTAUTODLGAMEIWD\x15%s", cl + filename_offset);
 			}
 			else if ( !sv_allowDownload->boolean )
 			{
-				Com_Printf("clientDownload: %d : \"%s\" download disabled\n", PLAYERBASE_ID(cl), cl + filename_offset);
+				Com_Printf("clientDownload: %d : \"%s\" download disabled\n", clientnum, cl + filename_offset);
 				if (sv_pure->boolean)
 					Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_AUTODL_SERVERDISABLED_PURE\x15%s", cl + filename_offset);
 				else
@@ -340,7 +340,7 @@ void custom_SV_WriteDownloadToClient(int cl, msg_t *msg)
 			}
 			else
 			{
-				Com_Printf("clientDownload: %d : \"%s\" file not found on server\n", PLAYERBASE_ID(cl), cl + filename_offset);
+				Com_Printf("clientDownload: %d : \"%s\" file not found on server\n", clientnum, cl + filename_offset);
 				Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_AUTODL_FILENOTONSERVER\x15%s", cl + filename_offset);
 			}
 			MSG_WriteByte(msg, 5);
@@ -422,7 +422,7 @@ void custom_SV_WriteDownloadToClient(int cl, msg_t *msg)
 	if ( *(int *)(cl + 4 * curindex + unknown_offset2) )
 		MSG_WriteData(msg, *(void **)(cl + 4 * curindex + unknown_offset1), *(int *)(cl + 4 * curindex + unknown_offset2));
 
-	Com_DPrintf("clientDownload: %d : writing block %d\n", PLAYERBASE_ID(cl), *(int *)(cl + block_offset));
+	Com_DPrintf("clientDownload: %d : writing block %d\n", clientnum, *(int *)(cl + block_offset));
 
 	// Move on to the next block
 	// It will get sent with next snap shot.  The rate will keep us in line.
@@ -810,6 +810,16 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 		}
 	}
 
+#if COD_VERSION == COD2_1_0
+int lasttime_offset = 0x0848B674;
+#elif COD_VERSION == COD2_1_2
+int lasttime_offset = 0x0849EB74;
+#elif COD_VERSION == COD2_1_3
+int lasttime_offset = 0x0849FBF4;
+#endif
+
+*(int *)lasttime_offset = 0;
+	
 	SVC_RemoteCommand(from, msg);
 }
 
@@ -991,7 +1001,7 @@ int _VAR_1 = 0x08283ECC;
 #elif COD_VERSION == COD2_1_2
 int _VAR_1 = 0x082862AC;
 #elif COD_VERSION == COD2_1_3
-int _VAR_1 = 0x0828732C ;
+int _VAR_1 = 0x0828732C;
 #endif
 
 #if COD_VERSION == COD2_1_0
@@ -999,7 +1009,7 @@ int _VAR_2 = 0x8283EA4;
 #elif COD_VERSION == COD2_1_2
 int _VAR_2 = 0x8286284;
 #elif COD_VERSION == COD2_1_3
-int _VAR_2 = 0x8287304
+int _VAR_2 = 0x8287304;
 #endif
 
 #if COD_VERSION == COD2_1_0
@@ -1452,16 +1462,6 @@ public:
 #endif
 
 #if COD_VERSION == COD2_1_0
-		int *addressToDownloadPointer = (int *)0x0815D584;
-#elif COD_VERSION == COD2_1_2
-		int *addressToDownloadPointer = (int *)0x0817C9E4;
-#elif COD_VERSION == COD2_1_3
-		int *addressToDownloadPointer = (int *)0x0817DA04;
-#endif
-
-		*addressToDownloadPointer = (int)hook_SV_BeginDownload_f;
-
-#if COD_VERSION == COD2_1_0
 		cracking_hook_call(0x08061FE7, (int)hook_sv_init);
 		cracking_hook_call(0x0808F281, (int)hook_ClientCommand);
 		cracking_hook_call(0x0808C8C0, (int)hook_AuthorizeState);
@@ -1521,9 +1521,7 @@ public:
 		cracking_hook_call(0x0809403E, (int)hook_SVC_Status);
 		cracking_hook_call(0x080940C4, (int)hook_SV_GetChallenge);
 		cracking_hook_call(0x08094191, (int)hook_SVC_RemoteCommand);
-		cracking_write_hex(0x080951BE, (char *)"9090909090909090"); // time = Com_Milliseconds();
-		cracking_write_hex(0x080951E0, (char *)"EB"); // skip `time - lasttime` check
-		cracking_write_hex(0x080951E7, (char *)"9090909090909090"); // lasttime = time;
+		cracking_write_hex(0x081534E0, (char *)"65004f63742031312032303137006761"); //so fun - gamedate: Oct 11 2017
 #endif
 
 #elif COD_VERSION == COD2_1_2
@@ -1586,9 +1584,6 @@ public:
 		cracking_hook_call(0x08095ADA, (int)hook_SVC_Status);
 		cracking_hook_call(0x08095BF8, (int)hook_SV_GetChallenge);
 		cracking_hook_call(0x08095D63, (int)hook_SVC_RemoteCommand);
-		cracking_write_hex(0x080970D6, (char *)"9090909090909090"); // time = Com_Milliseconds();
-		cracking_write_hex(0x080970F8, (char *)"EB"); // skip `time - lasttime` check
-		cracking_write_hex(0x080970FF, (char *)"9090909090909090"); // lasttime = time;
 #endif
 
 #elif COD_VERSION == COD2_1_3
@@ -1651,9 +1646,6 @@ public:
 		cracking_hook_call(0x08095B94, (int)hook_SVC_Status);
 		cracking_hook_call(0x08095CB2, (int)hook_SV_GetChallenge);
 		cracking_hook_call(0x08095E1D, (int)hook_SVC_RemoteCommand);
-		cracking_write_hex(0x080971BC, (char *)"9090909090909090"); // time = Com_Milliseconds();
-		cracking_write_hex(0x080971DE, (char *)"EB"); // skip `time - lasttime` check
-		cracking_write_hex(0x080971F3, (char *)"9090909090909090"); // lasttime = time;
 #endif
 
 #endif
