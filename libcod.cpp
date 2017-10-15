@@ -450,6 +450,28 @@ int hook_BG_IsWeaponValid(int a1, int a2)
 	return 1;
 }
 
+char *custom_va(char *format, ...)
+{
+	char *s;
+	va_list va;
+	int v1;
+	signed int v3;
+
+	v1 = Sys_GetValue(1);
+	s = (char *)(v1 + (*(int *)(v1 + 2048) << 10));
+	v3 = *(int *)(v1 + 2048) + 1;
+	*(int *)(v1 + 2048) = v3 / 2;
+	*(int *)(v1 + 2048) = v3 - 2 * *(int *)(v1 + 2048);
+
+	va_start(va, format);
+	vsnprintf(s, COD2_MAX_STRINGLENGTH, format, va);
+	va_end(va);
+
+	s[COD2_MAX_STRINGLENGTH - 1] = '\0';
+
+	return s;
+}
+
 void hook_scriptError(int a1, int a2, int a3, void *a4)
 {
 	if (developer->integer == 2)
@@ -1515,6 +1537,7 @@ public:
 		hook_fire_grenade->hook();
 		cracking_hook_function(0x080E97F0, (int)hook_BG_IsWeaponValid);
 		cracking_hook_function(0x0808E544, (int)custom_SV_WriteDownloadToClient);
+		cracking_hook_function(0x080B59CE, (int)custom_va);
 
 #if COMPILE_RATELIMITER == 1
 		cracking_hook_call(0x08094081, (int)hook_SVC_Info);
@@ -1578,6 +1601,7 @@ public:
 		hook_fire_grenade->hook();
 		cracking_hook_function(0x080EBDE0, (int)hook_BG_IsWeaponValid);
 		cracking_hook_function(0x0808FD2E, (int)custom_SV_WriteDownloadToClient);
+		cracking_hook_function(0x080B7E62, (int)custom_va);
 
 #if COMPILE_RATELIMITER == 1
 		cracking_hook_call(0x08095B8E, (int)hook_SVC_Info);
@@ -1640,6 +1664,7 @@ public:
 		hook_fire_grenade->hook();
 		cracking_hook_function(0x080EBF24, (int)hook_BG_IsWeaponValid);
 		cracking_hook_function(0x0808FDC2, (int)custom_SV_WriteDownloadToClient);
+		cracking_hook_function(0x080B7FA6, (int)custom_va);
 
 #if COMPILE_RATELIMITER == 1
 		cracking_hook_call(0x08095C48, (int)hook_SVC_Info);
