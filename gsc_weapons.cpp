@@ -124,6 +124,15 @@ void gsc_weapons_setweaponreloademptytime()
 {
 	gsc_weapons_setweaponoffsetint("setweaponreloademptytime", 540);
 }
+void gsc_weapons_getweaponcookable()
+{
+	gsc_weapons_getweaponoffsetint("getweaponcookable", 828);
+}
+
+void gsc_weapons_setweaponcookable()
+{
+	gsc_weapons_setweaponoffsetint("setweaponcookable", 828);
+}
 
 char* hitlocs[] = { "none", "helmet", "head", "neck", "torso_upper", "torso_lower", "right_arm_upper", "right_arm_lower", "right_hand", "left_arm_upper", "left_arm_lower", "left_hand", "right_leg_upper", "right_leg_lower", "right_foot", "left_leg_upper", "left_leg_lower", "left_foot", "gun" };
 int getHitLocOffset(char* hitloc)
