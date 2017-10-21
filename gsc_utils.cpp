@@ -130,7 +130,7 @@ void Sys_AnsiColorPrint( const char *msg )
 	}
 }
 
-extern cvar_t *colored_prints;
+extern cvar_t *con_coloredPrints;
 int stackPrintParam(int param)
 {
 	if (param >= Scr_GetNumParam())
@@ -141,7 +141,7 @@ int stackPrintParam(int param)
 	case STACK_STRING:
 		char *str;
 		stackGetParamString(param, &str); // no error checking, since we know it's a string
-		if (colored_prints->boolean)
+		if (con_coloredPrints->boolean)
 			Sys_AnsiColorPrint(str);
 		else
 			printf("%s", str);

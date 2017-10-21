@@ -14,7 +14,7 @@ cvar_t *sv_allowDownload;
 cvar_t *sv_pure;
 cvar_t *developer;
 cvar_t *rcon_password;
-cvar_t *colored_prints;
+cvar_t *con_coloredPrints;
 
 #if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
 cvar_t *sv_wwwDownload;
@@ -811,8 +811,12 @@ bool SVC_RateLimitAddress( netadr_t from, int burst, int period )
 	return SVC_RateLimit( bucket, burst, period );
 }
 
+cvar_t *sv_allowRcon;
 void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 {
+	if (!sv_allowRcon->boolean)
+ 		return;
+	
 	// Prevent using rcon as an amplifier and make dictionary attacks impractical
 	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
 	{
@@ -1128,30 +1132,21 @@ void (*Main_InitMemory)();
 		return;
 	}
 	
-void *(*MallocMemory)(size_t size);
-#if COD_VERSION == COD2_1_0
-*(int *)&MallocMemory = 0x80A92FA;
-#elif COD_VERSION == COD2_1_2
-*(int *)&MallocMemory = 0x80AB51A;
-#elif COD_VERSION == COD2_1_3
-*(int *)&MallocMemory = 0x80AB65E;
-#endif
-
 	//printf("devType = %i\n",devType);
 		
 	*(int *)_VAR_1 = -1;
     *(int *)_VAR_2 = 0x10000;
     *(int *)_VAR_3 = 0;
-    *(int *)_VAR_4 = (long)MallocMemory(0x140000u);
+    *(int *)_VAR_4 = (long)Z_MallocInternal(0x140000u);
     memset((void *)(*(int *)_VAR_4), 0, 20 * (*(int *)_VAR_2));
     *(int *)_VAR_5 = 0x10000;
     *(int *)_VAR_6 = 0;
-    *(int *)_VAR_7 = (long)MallocMemory(0x80000u);
+    *(int *)_VAR_7 = (long)Z_MallocInternal(0x80000u);
     *(int *)_VAR_8 = 0;
     *(int *)_VAR_9 = 0;
     *(int *)_VAR_10 = 16;
     *(int *)MMF_Index = 0;
-    *(int *)MMF_Code = (long)MallocMemory(0x180u);
+    *(int *)MMF_Code = (long)Z_MallocInternal(0x180u);
 
 }
 
@@ -1163,15 +1158,6 @@ void Custom_WriteSCode(int a1, int a2)
   char *v5;
   char *v6;
   
-void *(*MallocMemory)(size_t size);
-#if COD_VERSION == COD2_1_0
-*(int *)&MallocMemory = 0x80A92FA;
-#elif COD_VERSION == COD2_1_2
-*(int *)&MallocMemory = 0x80AB51A;
-#elif COD_VERSION == COD2_1_3
-*(int *)&MallocMemory = 0x80AB65E;
-#endif
-	
 void (*MMDf)(void *ptr);
 #if COD_VERSION == COD2_1_0
 *(int *)&MMDf = 0x80A9254;
@@ -1292,7 +1278,7 @@ int _VAR_13 = 0x8287330;
     if ( (unsigned int)(*(int *)_VAR_3) >= (unsigned int)(*(int *)_VAR_4))
     {
       (*(int *)_VAR_4) *= 2;
-      dest = MallocMemory(20 * (*(int *)_VAR_4));
+      dest = Z_MallocInternal(20 * (*(int *)_VAR_4));
       memcpy(dest, (void *)(*(int *)_VAR_5), 20 * (*(int *)_VAR_3));
       MMDf((void *)(*(int *)_VAR_5));
       (*(int *)_VAR_5) = (long)dest;
@@ -1300,7 +1286,7 @@ int _VAR_13 = 0x8287330;
     if ( (unsigned int)(*(int *)_VAR_6) >= (unsigned int)(*(int *)_VAR_7) )
     {
       (*(int *)_VAR_7) *= 2;
-      v3 = MallocMemory(8 * (*(int *)_VAR_7));
+      v3 = Z_MallocInternal(8 * (*(int *)_VAR_7));
       memcpy(v3, (void *)(*(int *)_VAR_8), 8 * (*(int *)_VAR_6));
       MMDf((void *)(*(int *)_VAR_8));
       (*(int *)_VAR_8) = (long)v3;
@@ -1676,13 +1662,14 @@ public:
 #endif
 
 		// Register custom cvars
-		sv_cracked = Cvar_RegisterBool("sv_cracked", 0, 0x1000u);
-		sv_noauthorize = Cvar_RegisterBool("sv_noauthorize", 0, 0x1000u);
-		colored_prints = Cvar_RegisterBool("colored_prints", 1, 0x1000u);
-		g_playerCollision = Cvar_RegisterBool("g_playerCollision", 1, 0x1000u);
-		g_playerEject = Cvar_RegisterBool("g_playerEject", 1, 0x1000u);
-		fs_library = Cvar_RegisterString("fs_library", "", 0x1000u);
-		sv_downloadMessage = Cvar_RegisterString("sv_downloadMessage", "", 0x1000u);
+		sv_cracked = Cvar_RegisterBool("sv_cracked", 0, CVAR_ARCHIVE);
+		sv_noauthorize = Cvar_RegisterBool("sv_noauthorize", 0, CVAR_ARCHIVE);
+		con_coloredPrints = Cvar_RegisterBool("con_coloredPrints", 1, CVAR_ARCHIVE);
+		g_playerCollision = Cvar_RegisterBool("g_playerCollision", 1, CVAR_ARCHIVE);
+		g_playerEject = Cvar_RegisterBool("g_playerEject", 1, CVAR_ARCHIVE);
+		sv_allowRcon = Cvar_RegisterBool("sv_allowRcon", 1, CVAR_ARCHIVE);
+		fs_library = Cvar_RegisterString("fs_library", "", CVAR_ARCHIVE);
+		sv_downloadMessage = Cvar_RegisterString("sv_downloadMessage", "", CVAR_ARCHIVE);
 
 		setenv("LD_PRELOAD", "", 1); // dont inherit lib of parent
 		printf("> [PLUGIN LOADED]\n");

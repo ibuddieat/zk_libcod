@@ -53,6 +53,7 @@ static const int playerinfo_size = 0xB1064;
 #define PLAYERBASE_ID(address) ((address - *(int *)playerinfo_base) / playerinfo_size)
 #define PLAYERSTATE_ID(address) ((address - playerStates) / sizeOfPlayer)
 #define G_ENTITY_ID(address) ((address - gentities) / gentities_size)
+#define VALID_ENTITY(entity) (*(int *)(entity + 1))
 
 #if COD_VERSION == COD2_1_0
 static const int addresstype_offset = 0x6E5C4;

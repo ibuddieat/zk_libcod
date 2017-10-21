@@ -15,30 +15,27 @@ void gsc_player_lookatkiller(int id)
 		return;
 	}
 
-	int self_entity = G_ENTITY(id);
-	int self_state = *(int *)(self_entity + 1);
+	int self_entity = Scr_GetEntity(id);
 
-	if (!self_state)
+	if (!VALID_ENTITY(self_entity))
 	{
 		stackError("gsc_player_lookatkiller() self_entity state is invalid");
 		stackPushUndefined();
 		return;
 	}
 
-	int inflictor_entity = G_ENTITY(inflictor);
-	int inflictor_state = *(int *)(inflictor_entity + 1);
+	int inflictor_entity = Scr_GetEntity(inflictor);
 
-	if (!inflictor_state)
+	if (!VALID_ENTITY(inflictor_entity))
 	{
 		stackError("gsc_player_lookatkiller() inflictor_entity state is invalid");
 		stackPushUndefined();
 		return;
 	}
 
-	int attacker_entity = G_ENTITY(attacker);
-	int attacker_state = *(int *)(attacker_entity + 1);
+	int attacker_entity = Scr_GetEntity(attacker);
 
-	if (!attacker_state)
+	if (!VALID_ENTITY(attacker_entity))
 	{
 		stackError("gsc_player_lookatkiller() attacker_entity state is invalid");
 		stackPushUndefined();
