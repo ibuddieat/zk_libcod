@@ -1011,7 +1011,7 @@ int hook_findMap(const char *qpath, void **buffer)
 		return FS_ReadFile(qpath, buffer);
 }
 
-void Custom_InitMemory()
+void Scr_InitOpcodeLookup()
 {
 	
 #if COD_VERSION == COD2_1_0
@@ -1047,11 +1047,11 @@ int _VAR_3 = 0x8287308;
 #endif
 
 #if COD_VERSION == COD2_1_0
-int _VAR_4 = 0x8283EA0;
+int scrParserGlob = 0x8283EA0;
 #elif COD_VERSION == COD2_1_2
-int _VAR_4 = 0x8286280;
+int scrParserGlob = 0x8286280;
 #elif COD_VERSION == COD2_1_3
-int _VAR_4 = 0x8287300;
+int scrParserGlob = 0x8287300;
 #endif
 
 #if COD_VERSION == COD2_1_0
@@ -1118,17 +1118,17 @@ int MMF_Code = 0x82862B4;
 int MMF_Code = 0x8287334;
 #endif
 	
-void (*Main_InitMemory)();
+void (*GE_Scr_InitOpcodeLookup)();
 #if COD_VERSION == COD2_1_0
-*(int *)&Main_InitMemory = 0x8076B9C;
+*(int *)&GE_Scr_InitOpcodeLookup = 0x8076B9C;
 #elif COD_VERSION == COD2_1_2
-*(int *)&Main_InitMemory = 0x8077110;
+*(int *)&GE_Scr_InitOpcodeLookup = 0x8077110;
 #elif COD_VERSION == COD2_1_3
-*(int *)&Main_InitMemory = 0x80771DC;
+*(int *)&GE_Scr_InitOpcodeLookup = 0x80771DC;
 #endif
 	
 	if(devType) {
-		Main_InitMemory();
+		GE_Scr_InitOpcodeLookup();
 		return;
 	}
 	
@@ -1137,20 +1137,20 @@ void (*Main_InitMemory)();
 	*(int *)_VAR_1 = -1;
     *(int *)_VAR_2 = 0x10000;
     *(int *)_VAR_3 = 0;
-    *(int *)_VAR_4 = (long)Z_MallocInternal(0x140000u);
-    memset((void *)(*(int *)_VAR_4), 0, 20 * (*(int *)_VAR_2));
+    *(int *)scrParserGlob = (long )Z_MallocInternal(0x140000u);
+    memset((void *)(*(int *)scrParserGlob), 0, 20 * (*(int *)_VAR_2));
     *(int *)_VAR_5 = 0x10000;
     *(int *)_VAR_6 = 0;
-    *(int *)_VAR_7 = (long)Z_MallocInternal(0x80000u);
+    *(int *)_VAR_7 = (long )Z_MallocInternal(0x80000u);
     *(int *)_VAR_8 = 0;
     *(int *)_VAR_9 = 0;
     *(int *)_VAR_10 = 16;
     *(int *)MMF_Index = 0;
-    *(int *)MMF_Code = (long)Z_MallocInternal(0x180u);
+    *(int *)MMF_Code = (long )Z_MallocInternal(0x180u);
 
 }
 
-void Custom_WriteSCode(int a1, int a2)
+void custom_AddOpcodePos(int a1, int a2)
 {
   void *dest;
   void *v3; 
@@ -1158,29 +1158,29 @@ void Custom_WriteSCode(int a1, int a2)
   char *v5;
   char *v6;
   
-void (*MMDf)(void *ptr);
+void (*Z_FreeInternal)(void *ptr);
 #if COD_VERSION == COD2_1_0
-*(int *)&MMDf = 0x80A9254;
+*(int *)&Z_FreeInternal = 0x80A9254;
 #elif COD_VERSION == COD2_1_2
-*(int *)&MMDf = 0x80AB474;
+*(int *)&Z_FreeInternal = 0x80AB474;
 #elif COD_VERSION == COD2_1_3
-*(int *)&MMDf = 0x80AB5B8;
+*(int *)&Z_FreeInternal = 0x80AB5B8;
 #endif
 	
 #if COD_VERSION == COD2_1_0
-int _VAR_1 = 0x8202A68;
+int scrCompilePub = 0x8202A68;
 #elif COD_VERSION == COD2_1_2
-int _VAR_1 = 0x8204C28;
+int scrCompilePub = 0x8204C28;
 #elif COD_VERSION == COD2_1_3
-int _VAR_1 = 0x8205CA8;
+int scrCompilePub = 0x8205CA8;
 #endif
 
 #if COD_VERSION == COD2_1_0
-int _VAR_2 = 0x8202A65;
+int scrCompilePubT = 0x8202A65;
 #elif COD_VERSION == COD2_1_2
-int _VAR_2 = 0x8204C25;
+int scrCompilePubT = 0x8204C25;
 #elif COD_VERSION == COD2_1_3
-int _VAR_2 = 0x8205CA5;
+int scrCompilePubT = 0x8205CA5;
 #endif
 
 #if COD_VERSION == COD2_1_0
@@ -1200,11 +1200,11 @@ int _VAR_4 = 0x8287304;
 #endif
 
 #if COD_VERSION == COD2_1_0
-int _VAR_5 = 0x8283EA0;
+int scrParserGlob = 0x8283EA0;
 #elif COD_VERSION == COD2_1_2
-int _VAR_5 = 0x8286280;
+int scrParserGlob = 0x8286280;
 #elif COD_VERSION == COD2_1_3
-int _VAR_5 = 0x8287300;
+int scrParserGlob = 0x8287300;
 #endif
 
 #if COD_VERSION == COD2_1_0
@@ -1271,36 +1271,36 @@ int _VAR_13 = 0x82862B0;
 int _VAR_13 = 0x8287330;
 #endif
   
-  if (*(int *)_VAR_1 != 2 )
+  if (*(int *)scrCompilePub != 2 )
   {
-    if ( !*(int *)_VAR_2 )
+    if ( !*(int *)scrCompilePubT )
       a2 &= 0xFFFFFFFE;
     if ( (unsigned int)(*(int *)_VAR_3) >= (unsigned int)(*(int *)_VAR_4))
     {
       (*(int *)_VAR_4) *= 2;
       dest = Z_MallocInternal(20 * (*(int *)_VAR_4));
-      memcpy(dest, (void *)(*(int *)_VAR_5), 20 * (*(int *)_VAR_3));
-      MMDf((void *)(*(int *)_VAR_5));
-      (*(int *)_VAR_5) = (long)dest;
+      memcpy(dest, (void *)(*(int *)scrParserGlob), 20 * (*(int *)_VAR_3));
+      Z_FreeInternal((void *)(*(int *)scrParserGlob));
+      (*(int *)scrParserGlob) = (long)dest;
     }
     if ( (unsigned int)(*(int *)_VAR_6) >= (unsigned int)(*(int *)_VAR_7) )
     {
       (*(int *)_VAR_7) *= 2;
       v3 = Z_MallocInternal(8 * (*(int *)_VAR_7));
       memcpy(v3, (void *)(*(int *)_VAR_8), 8 * (*(int *)_VAR_6));
-      MMDf((void *)(*(int *)_VAR_8));
+      Z_FreeInternal((void *)(*(int *)_VAR_8));
       (*(int *)_VAR_8) = (long)v3;
     }
     if ( (*(int *)_VAR_9) == (*(int *)_VAR_10) )
     {
-      v6 = (char *)(*(int *)_VAR_5) + 20 * --(*(int *)_VAR_3);
+      v6 = (char *)(*(int *)scrParserGlob) + 20 * --(*(int *)_VAR_3);
     }
     else
     {
       (*(int *)_VAR_11) = 0;
       (*(int *)_VAR_9) = (*(int *)_VAR_10);
-      v6 = (char *)(*(int *)_VAR_5) + 20 * (*(int *)_VAR_3);
-      *((long *)(*(int *)_VAR_5) + 5 * (*(int *)_VAR_3) + 1) = (*(int *)_VAR_6);
+      v6 = (char *)(*(int *)scrParserGlob) + 20 * (*(int *)_VAR_3);
+      *((long *)(*(int *)scrParserGlob) + 5 * (*(int *)_VAR_3) + 1) = (*(int *)_VAR_6);
       *(long *)v6 = (*(int *)_VAR_9);
     }
     v4 = *((long *)v6 + 1) + (*(int *)_VAR_11);
@@ -1329,18 +1329,18 @@ int _VAR_13 = 0x8287330;
   }
 }
 
-void Custom_PrintError(int a1, char *a2, int a3)
+void custom_Scr_PrintPrevCodePos(int a1, char *a2, int a3)
 {
   int v4;
   int v5;
   char *v6;
   
 #if COD_VERSION == COD2_1_0
-int _CONST_1 = 0x83D4100;
+int g_EndPos = 0x83D4100;
 #elif COD_VERSION == COD2_1_2
-int _CONST_1 = 0x83D6580;
+int g_EndPos = 0x83D6580;
 #elif COD_VERSION == COD2_1_3
-int _CONST_1 = 0x83D7600;
+int g_EndPos = 0x83D7600;
 #endif
   
 #if COD_VERSION == COD2_1_0
@@ -1359,22 +1359,22 @@ int MMF_Code = 0x82862B4;
 int MMF_Code = 0x8287334;
 #endif
   
-void (*logPrint)(int a1, char *s);
+void (*Com_PrintMessage)(int a1, char *s);
 #if COD_VERSION == COD2_1_0
-*(int *)&logPrint = 0x80609A8;
+*(int *)&Com_PrintMessage = 0x80609A8;
 #elif COD_VERSION == COD2_1_2
-*(int *)&logPrint = 0x8060C28;
+*(int *)&Com_PrintMessage = 0x8060C28;
 #elif COD_VERSION == COD2_1_3
-*(int *)&logPrint = 0x8060C20;
+*(int *)&Com_PrintMessage = 0x8060C20;
 #endif
   
-bool (*checkIndex)(int a1);
+bool (*Scr_IsInOpcodeMemory)(int a1);
 #if COD_VERSION == COD2_1_0
-*(int *)&checkIndex = 0x80757CC;
+*(int *)&Scr_IsInOpcodeMemory = 0x80757CC;
 #elif COD_VERSION == COD2_1_2
-*(int *)&checkIndex = 0x8075D48;
+*(int *)&Scr_IsInOpcodeMemory = 0x8075D48;
 #elif COD_VERSION == COD2_1_3
-*(int *)&checkIndex = 0x8075E14;
+*(int *)&Scr_IsInOpcodeMemory = 0x8075E14;
 #endif
   
 bool (*findIndex)(int a1);
@@ -1395,44 +1395,44 @@ int (*IFline)(unsigned int a1, int a2);
 *(int *)&IFline = 0x8077B6A;
 #endif
   
-void (*errorsPrint)(int a1, int a2, char *a3, int a4);
+void (*Scr_PrintSourcePos)(int a1, int a2, char *a3, int a4);
 #if COD_VERSION == COD2_1_0
-*(int *)&errorsPrint = 0x8077B96;
+*(int *)&Scr_PrintSourcePos = 0x8077B96;
 #elif COD_VERSION == COD2_1_2
-*(int *)&errorsPrint = 0x807810A;
+*(int *)&Scr_PrintSourcePos = 0x807810A;
 #elif COD_VERSION == COD2_1_3
-*(int *)&errorsPrint = 0x80781D6;
+*(int *)&Scr_PrintSourcePos = 0x80781D6;
 #endif
   
-char *(*CPrintf)(char *format, ...);
+char *(*GE_va)(char *format, ...);
 #if COD_VERSION == COD2_1_0
-*(int *)&CPrintf = 0x80B59CE;
+*(int *)&GE_va = 0x80B59CE;
 #elif COD_VERSION == COD2_1_2
-*(int *)&CPrintf = 0x80B7E62;
+*(int *)&GE_va = 0x80B7E62;
 #elif COD_VERSION == COD2_1_3
-*(int *)&CPrintf = 0x80B7FA6;
+*(int *)&GE_va = 0x80B7FA6;
 #endif
   
   if ( !a2 )
   {
-    logPrint(a1, "<frozen thread>\n");
+    Com_PrintMessage(a1, "<frozen thread>\n");
     return;
   }
-  if ( (int *)a2 == &(*(int*)_CONST_1)) 
+  if ( (int *)a2 == &(*(int*)g_EndPos)) 
   {
-    logPrint(a1, "<removed thread>\n");
+    Com_PrintMessage(a1, "<removed thread>\n");
   }
   else
   {
-  if (( *(int *)_VAR && checkIndex((int)a2) ))
+  if (( *(int *)_VAR && Scr_IsInOpcodeMemory((int)a2) ))
   {	
      v4 = findIndex((unsigned int)(a2 - 1));
      v5 = IFline((unsigned int)(a2 - 1), a3);
-	 errorsPrint(a1, *((long *)(*(int *)MMF_Code) + 6 * v4 + 1), *((char **)(*(int *)MMF_Code) + 6 * v4 + 2), v5);
+	 Scr_PrintSourcePos(a1, *((long *)(*(int *)MMF_Code) + 6 * v4 + 1), *((char **)(*(int *)MMF_Code) + 6 * v4 + 2), v5);
      return;
   }
-  v6 = CPrintf("%s\n\n", a2);
-  logPrint(a1, v6);
+  v6 = GE_va("%s\n\n", a2);
+  Com_PrintMessage(a1, v6);
   }
 }
 
@@ -1478,10 +1478,7 @@ public:
 		cracking_hook_call(0x0808F134, (int)hook_ClientUserinfoChanged);
 		cracking_hook_call(0x0807059F, (int)Scr_GetCustomFunction);
 		cracking_hook_call(0x080707C3, (int)Scr_GetCustomMethod);
-		cracking_hook_call(0x08075AC7, (int)Custom_InitMemory);
-		
-		cracking_hook_function(0x08077DBA, (int)Custom_PrintError); 
-		cracking_hook_function(0x08076D92, (int)Custom_WriteSCode);
+		cracking_hook_call(0x08075AC7, (int)Scr_InitOpcodeLookup);
 
 #if COMPILE_PLAYER == 1
 		cracking_hook_call(0x0808E18F, (int)hook_gamestate_info);
@@ -1524,6 +1521,8 @@ public:
 		cracking_hook_function(0x080E97F0, (int)hook_BG_IsWeaponValid);
 		cracking_hook_function(0x0808E544, (int)custom_SV_WriteDownloadToClient);
 		cracking_hook_function(0x080B59CE, (int)custom_va);
+		cracking_hook_function(0x08077DBA, (int)custom_Scr_PrintPrevCodePos); 
+		cracking_hook_function(0x08076D92, (int)custom_AddOpcodePos);
 
 #if COMPILE_RATELIMITER == 1
 		cracking_hook_call(0x08094081, (int)hook_SVC_Info);
@@ -1542,10 +1541,7 @@ public:
 		cracking_hook_call(0x080909BE, (int)hook_ClientUserinfoChanged);
 		cracking_hook_call(0x08070B1B, (int)Scr_GetCustomFunction);
 		cracking_hook_call(0x08070D3F, (int)Scr_GetCustomMethod);
-		cracking_hook_call(0x0807603D, (int)Custom_InitMemory);
-		
-		cracking_hook_function(0x0807832E, (int)Custom_PrintError); 
-		cracking_hook_function(0x08077306, (int)Custom_WriteSCode);
+		cracking_hook_call(0x0807603D, (int)Scr_InitOpcodeLookup);
 
 #if COMPILE_PLAYER == 1
 		cracking_hook_call(0x0808F533, (int)hook_gamestate_info);
@@ -1588,6 +1584,8 @@ public:
 		cracking_hook_function(0x080EBDE0, (int)hook_BG_IsWeaponValid);
 		cracking_hook_function(0x0808FD2E, (int)custom_SV_WriteDownloadToClient);
 		cracking_hook_function(0x080B7E62, (int)custom_va);
+		cracking_hook_function(0x0807832E, (int)custom_Scr_PrintPrevCodePos); 
+		cracking_hook_function(0x08077306, (int)custom_AddOpcodePos);
 
 #if COMPILE_RATELIMITER == 1
 		cracking_hook_call(0x08095B8E, (int)hook_SVC_Info);
@@ -1605,10 +1603,7 @@ public:
 		cracking_hook_call(0x08090A52, (int)hook_ClientUserinfoChanged);
 		cracking_hook_call(0x08070BE7, (int)Scr_GetCustomFunction);
 		cracking_hook_call(0x08070E0B, (int)Scr_GetCustomMethod);
-		cracking_hook_call(0x08076109, (int)Custom_InitMemory);
-		
-		cracking_hook_function(0x080783FA, (int)Custom_PrintError); 
-		cracking_hook_function(0x080773D2, (int)Custom_WriteSCode);
+		cracking_hook_call(0x08076109, (int)Scr_InitOpcodeLookup);
 
 #if COMPILE_PLAYER == 1
 		cracking_hook_call(0x0808F5C7, (int)hook_gamestate_info);
@@ -1651,6 +1646,8 @@ public:
 		cracking_hook_function(0x080EBF24, (int)hook_BG_IsWeaponValid);
 		cracking_hook_function(0x0808FDC2, (int)custom_SV_WriteDownloadToClient);
 		cracking_hook_function(0x080B7FA6, (int)custom_va);
+		cracking_hook_function(0x080783FA, (int)custom_Scr_PrintPrevCodePos); 
+		cracking_hook_function(0x080773D2, (int)custom_AddOpcodePos);
 
 #if COMPILE_RATELIMITER == 1
 		cracking_hook_call(0x08095C48, (int)hook_SVC_Info);
