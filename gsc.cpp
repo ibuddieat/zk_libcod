@@ -118,7 +118,7 @@ char *stackGetParamTypeAsString(int param)
 
 scr_function_t scriptFunctions[] =
 {
-#if COMPILE_MYSQL == 1
+#if COMPILE_MYSQL_DEFAULT == 1
 	{"mysql_init", gsc_mysql_init, 0},
 	{"mysql_real_connect", gsc_mysql_real_connect, 0},
 	{"mysql_close", gsc_mysql_close, 0},
@@ -140,6 +140,39 @@ scr_function_t scriptFunctions[] =
 	{"mysql_async_getresult_and_free", gsc_mysql_async_getresult_and_free, 0},
 	{"mysql_async_initializer", gsc_mysql_async_initializer, 0},
 	{"mysql_reuse_connection", gsc_mysql_reuse_connection, 0},
+#endif
+
+#if COMPILE_MYSQL_VORON == 1
+	{"mysql_initialize", gsc_mysql_initialize, 0},
+	{"mysql_close", gsc_mysql_close, 0},
+	{"mysql_query", gsc_mysql_query, 0},
+	{"mysql_errno", gsc_mysql_errno, 0},
+	{"mysql_error", gsc_mysql_error, 0},
+	{"mysql_affected_rows", gsc_mysql_affected_rows, 0},
+	{"mysql_store_result", gsc_mysql_store_result, 0},
+	{"mysql_num_rows", gsc_mysql_num_rows, 0},
+	{"mysql_num_fields", gsc_mysql_num_fields, 0},
+	{"mysql_field_seek", gsc_mysql_field_seek, 0},
+	{"mysql_fetch_field", gsc_mysql_fetch_field, 0},
+	{"mysql_fetch_row", gsc_mysql_fetch_row, 0},
+	{"mysql_free_result", gsc_mysql_free_result, 0},
+	{"mysql_real_escape_string", gsc_mysql_real_escape_string, 0},
+
+	{"async_mysql_initialize", gsc_async_mysql_initialize, 0},
+	{"async_mysql_close", gsc_async_mysql_close, 0},
+	{"async_mysql_create_query", gsc_async_mysql_create_query, 0},
+	{"async_mysql_create_query_nosave", gsc_async_mysql_create_query_nosave, 0},
+	{"async_mysql_checkdone", gsc_async_mysql_checkdone, 0},
+	{"async_mysql_errno", gsc_async_mysql_errno, 0},
+	{"async_mysql_error", gsc_async_mysql_error, 0},
+	{"async_mysql_affected_rows", gsc_async_mysql_affected_rows, 0},
+	{"async_mysql_num_rows", gsc_async_mysql_num_rows, 0},
+	{"async_mysql_num_fields", gsc_async_mysql_num_fields, 0},
+	{"async_mysql_field_seek", gsc_async_mysql_field_seek, 0},
+	{"async_mysql_fetch_field", gsc_async_mysql_fetch_field, 0},
+	{"async_mysql_fetch_row", gsc_async_mysql_fetch_row, 0},
+	{"async_mysql_free_task", gsc_async_mysql_free_task, 0},
+	{"async_mysql_real_escape_string", gsc_async_mysql_real_escape_string, 0},
 #endif
 
 #if COMPILE_EXEC == 1
@@ -191,6 +224,7 @@ scr_function_t scriptFunctions[] =
 	{"fsize", gsc_utils_fsize, 0},
 	{"sprintf", gsc_utils_sprintf, 0},
 	{"getsystemtime", gsc_utils_getsystemtime, 0},
+	{"getserverstarttime", gsc_utils_getserverstarttime, 0},
 	{"getlocaltime", gsc_utils_getlocaltime, 0},
 	{"G_FindConfigstringIndex", gsc_G_FindConfigstringIndex, 0},
 	{"G_FindConfigstringIndexOriginal", gsc_G_FindConfigstringIndexOriginal, 0},
@@ -315,6 +349,11 @@ scr_method_t scriptMethods[] =
 	{"reloadweapon", gsc_bots_reloadweapon, 0},
 	{"adsaim", gsc_bots_adsaim, 0},
 	{"switchtoweaponid", gsc_bots_switchtoweaponid, 0},
+#endif
+
+#if COMPILE_MYSQL_VORON == 1
+  	{"async_mysql_create_entity_query", gsc_async_mysql_create_entity_query, 0},
+  	{"async_mysql_create_entity_query_nosave", gsc_async_mysql_create_entity_query_nosave, 0},
 #endif
 
 #ifdef EXTRA_METHODS_INC
@@ -486,7 +525,7 @@ int stackGetParamString(int param, char **value)
 	return 1;
 }
 
-int stackGetParamVector(int param, float value[3])
+int stackGetParamVector(int param, vec3_t value)
 {
 	if (param >= Scr_GetNumParam())
 		return 0;
@@ -518,125 +557,4 @@ int stackGetParamFloat(int param, float *value)
 	*value = var->u.floatValue;
 
 	return 1;
-}
-
-int stackPushUndefined()
-{
-	int (*signature)();
-
-#if COD_VERSION == COD2_1_0
-	*((int *)(&signature)) = 0x08084B88;
-#elif COD_VERSION == COD2_1_2
-	*((int *)(&signature)) = 0x08085104;
-#elif COD_VERSION == COD2_1_3
-	*((int *)(&signature)) = 0x080851D0;
-#endif
-
-	return signature();
-}
-
-int stackPushInt(int ret) // as in isalive
-{
-	int (*signature)(int);
-
-#if COD_VERSION == COD2_1_0
-	*((int *)(&signature)) = 0x08084B1C;
-#elif COD_VERSION == COD2_1_2
-	*((int *)(&signature)) = 0x08085098; // difference to 1.3: CC
-#elif COD_VERSION == COD2_1_3
-	*((int *)(&signature)) = 0x08085164;
-#endif
-
-	return signature(ret);
-}
-
-int stackPushVector(float *ret) // as in vectornormalize
-{
-	int (*signature)(float *);
-
-#if COD_VERSION == COD2_1_0
-	*((int *)(&signature)) = 0x08084CBE;
-#elif COD_VERSION == COD2_1_2
-	*((int *)(&signature)) = 0x0808523A; // difference to 1.3: CC
-#elif COD_VERSION == COD2_1_3
-	*((int *)(&signature)) = 0x08085306;
-#endif
-
-	return signature(ret);
-}
-
-int stackPushFloat(float ret) // as in distance
-{
-	int (*signature)(float);
-
-#if COD_VERSION == COD2_1_0
-	*((int *)(&signature)) = 0x08084B40;
-#elif COD_VERSION == COD2_1_2
-	*((int *)(&signature)) = 0x080850BC; // difference to 1.3: CC
-#elif COD_VERSION == COD2_1_3
-	*((int *)(&signature)) = 0x08085188;
-#endif
-
-	return signature(ret);
-}
-
-int stackPushString(char *toPush) // as in getcvar()
-{
-	int (*signature)(char *);
-
-#if COD_VERSION == COD2_1_0
-	*((int *)(&signature)) = 0x08084C1A;
-#elif COD_VERSION == COD2_1_2
-	*((int *)(&signature)) = 0x08085196; // difference to 1.3: CC
-#elif COD_VERSION == COD2_1_3
-	*((int *)(&signature)) = 0x08085262;
-#endif
-
-	return signature(toPush);
-}
-
-int stackPushEntity(int arg) // as in getent() // todo: find out how to represent an entity
-{
-	int (*signature)(int);
-
-#if COD_VERSION == COD2_1_0
-	*((int *)(&signature)) = 0x08118CC0;
-#elif COD_VERSION == COD2_1_2
-	*((int *)(&signature)) = 0x0811AFF4; // difference OTHER then CC
-#elif COD_VERSION == COD2_1_3
-	*((int *)(&signature)) = 0x08117F50;
-#endif
-
-	return signature(arg);
-}
-
-// as in bullettrace
-int stackPushArray()
-{
-	int (*signature)();
-
-#if COD_VERSION == COD2_1_0
-	*((int *)(&signature)) = 0x08084CF0;
-#elif COD_VERSION == COD2_1_2
-	*((int *)(&signature)) = 0x0808526C;
-#elif COD_VERSION == COD2_1_3
-	*((int *)(&signature)) = 0x08085338;
-#endif
-
-	return signature();
-}
-
-int stackPushArrayLast() // as in getentarray
-{
-	int (*signature)();
-
-#if COD_VERSION == COD2_1_0
-	*((int *)(&signature)) = 0x08084D1C;
-#elif COD_VERSION == COD2_1_2
-	*((int *)(&signature)) = 0x08085298;
-#elif COD_VERSION == COD2_1_3
-	*((int *)(&signature)) = 0x08085364;
-#endif
-
-	return signature();
 }

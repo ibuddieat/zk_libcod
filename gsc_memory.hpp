@@ -5,11 +5,6 @@
 extern "C" {
 #endif
 
-/* default stuff */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 /* gsc functions */
 #include "gsc.hpp"
 

@@ -192,33 +192,9 @@ typedef unsigned char byte;
 
 typedef union
 {
-int i;
-byte rgba[4];
+	int i;
+	byte rgba[4];
 } ucolor_t;
-
-typedef enum
-{
-	CVAR_BOOL,
-	CVAR_FLOAT,
-	CVAR_VEC2,
-	CVAR_VEC3,
-	CVAR_VEC4,
-	CVAR_INT,
-	CVAR_ENUM,
-	CVAR_STRING,
-	CVAR_COLOR
-} cvarType_t;
-
-typedef	union value_s
-{
-	float floatval;
-	float value;
-	int integer;
-	char* string;
-	byte boolean;
-	vec3_t vec3;
-	vec4_t vec4;
-} value_t;
 
 typedef struct cvar_s
 {
@@ -276,8 +252,6 @@ typedef struct cvar_s
 	struct cvar_s *hashNext;
 } cvar_t;
 
-extern int cvar_modifiedFlags;
-
 //defines Cvarflags
 #define	CVAR_ARCHIVE		1	// set to cause it to be saved to vars.rc
 // used for system variables, not for player
@@ -298,16 +272,6 @@ extern int cvar_modifiedFlags;
 #define CVAR_NORESTART		1024	// do not clear when a cvar_restart is issued
 #define	CVAR_USER_CREATED	16384	// created by a set command
 
-struct VariableStackBuffer
-{
-	const char *pos;
-	unsigned short size;
-	unsigned short bufLen;
-	unsigned short localId;
-	char time;
-	char buf[1];
-};
-
 union VariableUnion
 {
 	int intValue;
@@ -326,17 +290,36 @@ typedef struct
 	int type;
 } VariableValue;
 
-typedef struct leakyBucket_s leakyBucket_t;
-struct leakyBucket_s
+typedef struct
 {
-	netadrtype_t type;
-	unsigned char adr[4];
-	int	lastTime;
-	signed char	burst;
-	long hash;
-
-	leakyBucket_t *prev, *next;
-};
+	const char *fieldBuffer;
+	u_int16_t canonicalStrCount;
+	byte developer;
+	byte developer_script;
+	byte evaluate;
+	byte pad[3];
+	const char *error_message;
+	int error_index;
+	unsigned int time;
+	unsigned int timeArrayId;
+	unsigned int pauseArrayId;
+	unsigned int levelId;
+	unsigned int gameId;
+	unsigned int animId;
+	unsigned int freeEntList;
+	unsigned int tempVariable;
+	byte bInited;
+	byte pad2;
+	u_int16_t savecount;
+	unsigned int checksum;
+	unsigned int entId;
+	unsigned int entFieldName;
+	struct HunkUser *programHunkUser;
+	const char *programBuffer;
+	const char *endScriptBuffer;
+	u_int16_t saveIdMap[24574];
+	u_int16_t saveIdMapRev[24574];
+} scrVarPub_t;
 
 struct function_stack_t
 {
@@ -360,46 +343,15 @@ typedef struct
 	int function_count;
 	struct function_frame_t *function_frame;
 	VariableValue *top;
-	unsigned char debugCode;
-	unsigned char abort_on_error;
-	unsigned char terminal_error;
-	unsigned char pad;
+	byte debugCode;
+	byte abort_on_error;
+	byte terminal_error;
+	byte pad;
 	unsigned int inparamcount;
 	unsigned int outparamcount;
 	struct function_frame_t function_frame_start[32];
 	VariableValue stack[2048];
 } scrVmPub_t;
-
-typedef struct
-{
-	const char *fieldBuffer;
-	unsigned short canonicalStrCount;
-	unsigned char developer;
-	unsigned char developer_script;
-	unsigned char evaluate;
-	unsigned char pad[3];
-	const char *error_message;
-	int error_index;
-	unsigned int time;
-	unsigned int timeArrayId;
-	unsigned int pauseArrayId;
-	unsigned int levelId;
-	unsigned int gameId;
-	unsigned int animId;
-	unsigned int freeEntList;
-	unsigned int tempVariable;
-	unsigned char bInited;
-	unsigned char pad2;
-	unsigned short savecount;
-	unsigned int checksum;
-	unsigned int entId;
-	unsigned int entFieldName;
-	struct HunkUser *programHunkUser;
-	const char *programBuffer;
-	const char *endScriptBuffer;
-	unsigned short saveIdMap[24574];
-	unsigned short saveIdMapRev[24574];
-} scrVarPub_t;
 
 typedef int	fileHandle_t;
 
@@ -420,6 +372,248 @@ typedef struct scr_method_s
 	xmethod_t		call;
 	int				developer;
 } scr_method_t;
+
+typedef enum
+{
+	EV_NONE = 0,
+	EV_FOOTSTEP_RUN_DEFAULT,
+	EV_FOOTSTEP_RUN_BARK,
+	EV_FOOTSTEP_RUN_BRICK,
+	EV_FOOTSTEP_RUN_CARPET,
+	EV_FOOTSTEP_RUN_CLOTH,
+	EV_FOOTSTEP_RUN_CONCRETE,
+	EV_FOOTSTEP_RUN_DIRT,
+	EV_FOOTSTEP_RUN_FLESH,
+	EV_FOOTSTEP_RUN_FOLIAGE,
+	EV_FOOTSTEP_RUN_GLASS,
+	EV_FOOTSTEP_RUN_GRASS,
+	EV_FOOTSTEP_RUN_GRAVEL,
+	EV_FOOTSTEP_RUN_ICE,
+	EV_FOOTSTEP_RUN_METAL,
+	EV_FOOTSTEP_RUN_MUD,
+	EV_FOOTSTEP_RUN_PAPER,
+	EV_FOOTSTEP_RUN_PLASTER,
+	EV_FOOTSTEP_RUN_ROCK,
+	EV_FOOTSTEP_RUN_SAND,
+	EV_FOOTSTEP_RUN_SNOW,
+	EV_FOOTSTEP_RUN_WATER,
+	EV_FOOTSTEP_RUN_WOOD,
+	EV_FOOTSTEP_RUN_ASPHALT,
+	EV_FOOTSTEP_WALK_DEFAULT,
+	EV_FOOTSTEP_WALK_BARK,
+	EV_FOOTSTEP_WALK_BRICK,
+	EV_FOOTSTEP_WALK_CARPET,
+	EV_FOOTSTEP_WALK_CLOTH,
+	EV_FOOTSTEP_WALK_CONCRETE,
+	EV_FOOTSTEP_WALK_DIRT,
+	EV_FOOTSTEP_WALK_FLESH,
+	EV_FOOTSTEP_WALK_FOLIAGE,
+	EV_FOOTSTEP_WALK_GLASS,
+	EV_FOOTSTEP_WALK_GRASS,
+	EV_FOOTSTEP_WALK_GRAVEL,
+	EV_FOOTSTEP_WALK_ICE,
+	EV_FOOTSTEP_WALK_METAL,
+	EV_FOOTSTEP_WALK_MUD,
+	EV_FOOTSTEP_WALK_PAPER,
+	EV_FOOTSTEP_WALK_PLASTER,
+	EV_FOOTSTEP_WALK_ROCK,
+	EV_FOOTSTEP_WALK_SAND,
+	EV_FOOTSTEP_WALK_SNOW,
+	EV_FOOTSTEP_WALK_WATER,
+	EV_FOOTSTEP_WALK_WOOD,
+	EV_FOOTSTEP_WALK_ASPHALT,
+	EV_FOOTSTEP_PRONE_DEFAULT,
+	EV_FOOTSTEP_PRONE_BARK,
+	EV_FOOTSTEP_PRONE_BRICK,
+	EV_FOOTSTEP_PRONE_CARPET,
+	EV_FOOTSTEP_PRONE_CLOTH,
+	EV_FOOTSTEP_PRONE_CONCRETE,
+	EV_FOOTSTEP_PRONE_DIRT,
+	EV_FOOTSTEP_PRONE_FLESH,
+	EV_FOOTSTEP_PRONE_FOLIAGE,
+	EV_FOOTSTEP_PRONE_GLASS,
+	EV_FOOTSTEP_PRONE_GRASS,
+	EV_FOOTSTEP_PRONE_GRAVEL,
+	EV_FOOTSTEP_PRONE_ICE,
+	EV_FOOTSTEP_PRONE_METAL,
+	EV_FOOTSTEP_PRONE_MUD,
+	EV_FOOTSTEP_PRONE_PAPER,
+	EV_FOOTSTEP_PRONE_PLASTER,
+	EV_FOOTSTEP_PRONE_ROCK,
+	EV_FOOTSTEP_PRONE_SAND,
+	EV_FOOTSTEP_PRONE_SNOW,
+	EV_FOOTSTEP_PRONE_WATER,
+	EV_FOOTSTEP_PRONE_WOOD,
+	EV_FOOTSTEP_PRONE_ASPHALT,
+	EV_JUMP_DEFAULT,
+	EV_JUMP_BARK,
+	EV_JUMP_BRICK,
+	EV_JUMP_CARPET,
+	EV_JUMP_CLOTH,
+	EV_JUMP_CONCRETE,
+	EV_JUMP_DIRT,
+	EV_JUMP_FLESH,
+	EV_JUMP_FOLIAGE,
+	EV_JUMP_GLASS,
+	EV_JUMP_GRASS,
+	EV_JUMP_GRAVEL,
+	EV_JUMP_ICE,
+	EV_JUMP_METAL,
+	EV_JUMP_MUD,
+	EV_JUMP_PAPER,
+	EV_JUMP_PLASTER,
+	EV_JUMP_ROCK,
+	EV_JUMP_SAND,
+	EV_JUMP_SNOW,
+	EV_JUMP_WATER,
+	EV_JUMP_WOOD,
+	EV_JUMP_ASPHALT,
+	EV_LANDING_DEFAULT,
+	EV_LANDING_BARK,
+	EV_LANDING_BRICK,
+	EV_LANDING_CARPET,
+	EV_LANDING_CLOTH,
+	EV_LANDING_CONCRETE,
+	EV_LANDING_DIRT,
+	EV_LANDING_FLESH,
+	EV_LANDING_FOLIAGE,
+	EV_LANDING_GLASS,
+	EV_LANDING_GRASS,
+	EV_LANDING_GRAVEL,
+	EV_LANDING_ICE,
+	EV_LANDING_METAL,
+	EV_LANDING_MUD,
+	EV_LANDING_PAPER,
+	EV_LANDING_PLASTER,
+	EV_LANDING_ROCK,
+	EV_LANDING_SAND,
+	EV_LANDING_SNOW,
+	EV_LANDING_WATER,
+	EV_LANDING_WOOD,
+	EV_LANDING_ASPHALT,
+	EV_LANDING_PAIN_DEFAULT,
+	EV_LANDING_PAIN_BARK,
+	EV_LANDING_PAIN_BRICK,
+	EV_LANDING_PAIN_CARPET,
+	EV_LANDING_PAIN_CLOTH,
+	EV_LANDING_PAIN_CONCRETE,
+	EV_LANDING_PAIN_DIRT,
+	EV_LANDING_PAIN_FLESH,
+	EV_LANDING_PAIN_FOLIAGE,
+	EV_LANDING_PAIN_GLASS,
+	EV_LANDING_PAIN_GRASS,
+	EV_LANDING_PAIN_GRAVEL,
+	EV_LANDING_PAIN_ICE,
+	EV_LANDING_PAIN_METAL,
+	EV_LANDING_PAIN_MUD,
+	EV_LANDING_PAIN_PAPER,
+	EV_LANDING_PAIN_PLASTER,
+	EV_LANDING_PAIN_ROCK,
+	EV_LANDING_PAIN_SAND,
+	EV_LANDING_PAIN_SNOW,
+	EV_LANDING_PAIN_WATER,
+	EV_LANDING_PAIN_WOOD,
+	EV_LANDING_PAIN_ASPHALT,
+	EV_FOLIAGE_SOUND,
+	EV_STANCE_FORCE_STAND,
+	EV_STANCE_FORCE_CROUCH,
+	EV_STANCE_FORCE_PRONE,
+	EV_STEP_VIEW,
+	EV_ITEM_PICKUP,
+	EV_AMMO_PICKUP,
+	EV_NOAMMO,
+	EV_EMPTYCLIP,
+	EV_EMPTY_OFFHAND,
+	EV_RESET_ADS,
+	EV_RELOAD,
+	EV_RELOAD_FROM_EMPTY,
+	EV_RELOAD_START,
+	EV_RELOAD_END,
+	EV_RAISE_WEAPON,
+	EV_PUTAWAY_WEAPON,
+	EV_WEAPON_ALT,
+	EV_PULLBACK_WEAPON,
+	EV_FIRE_WEAPON,
+	EV_FIRE_WEAPONB,
+	EV_FIRE_WEAPON_LASTSHOT,
+	EV_RECHAMBER_WEAPON,
+	EV_EJECT_BRASS,
+	EV_MELEE_SWIPE,
+	EV_FIRE_MELEE,
+	EV_PREP_OFFHAND,
+	EV_USE_OFFHAND,
+	EV_SWITCH_OFFHAND,
+	EV_BINOCULAR_ENTER,
+	EV_BINOCULAR_EXIT,
+	EV_BINOCULAR_FIRE,
+	EV_BINOCULAR_RELEASE,
+	EV_BINOCULAR_DROP,
+	EV_MELEE_HIT,
+	EV_MELEE_MISS,
+	EV_FIRE_WEAPON_MG42,
+	EV_FIRE_QUADBARREL_1,
+	EV_FIRE_QUADBARREL_2,
+	EV_BULLET_TRACER,
+	EV_SOUND_ALIAS,
+	EV_SOUND_ALIAS_AS_MASTER,
+	EV_BULLET_HIT_SMALL,
+	EV_BULLET_HIT_LARGE,
+	EV_SHOTGUN_HIT,
+	EV_BULLET_HIT_AP,
+	EV_BULLET_HIT_CLIENT_SMALL,
+	EV_BULLET_HIT_CLIENT_LARGE,
+	EV_GRENADE_BOUNCE,
+	EV_GRENADE_EXPLODE,
+	EV_ROCKET_EXPLODE,
+	EV_ROCKET_EXPLODE_NOMARKS,
+	EV_CUSTOM_EXPLODE,
+	EV_CUSTOM_EXPLODE_NOMARKS,
+	EV_BULLET,
+	EV_PLAY_FX,
+	EV_PLAY_FX_ON_TAG,
+	EV_EARTHQUAKE,
+	EV_GRENADE_SUICIDE,
+	EV_OBITUARY
+} entity_event_t;
+
+typedef enum
+{
+	TRACE_HITTYPE_NONE = 0x0,
+	TRACE_HITTYPE_ENTITY = 0x1,
+	TRACE_HITTYPE_DYNENT_MODEL = 0x2,
+	TRACE_HITTYPE_DYNENT_BRUSH = 0x3,
+	TRACE_HITTYPE_GLASS = 0x4
+} TraceHitType;
+
+typedef struct trace_s
+{
+	float fraction;
+	vec3_t normal;
+	int surfaceFlags;
+	int contents;
+	const char *material;
+	TraceHitType hitType;
+	u_int16_t hitId;
+	u_int16_t modelIndex;
+	u_int16_t partName;
+	u_int16_t partGroup;
+	byte allsolid;
+	byte startsolid;
+	byte walkable;
+	byte padding;
+} trace_t;
+
+typedef struct leakyBucket_s leakyBucket_t;
+struct leakyBucket_s
+{
+	netadrtype_t type;
+	unsigned char adr[4];
+	int	lastTime;
+	signed char	burst;
+	long hash;
+
+	leakyBucket_t *prev, *next;
+};
 
 typedef xfunction_t (*Scr_GetFunction_t)(const char** v_function, int* v_developer);
 #if COD_VERSION == COD2_1_0
@@ -878,6 +1072,105 @@ static const Scr_IsSystemActive_t Scr_IsSystemActive = (Scr_IsSystemActive_t)0x0
 static const Scr_IsSystemActive_t Scr_IsSystemActive = (Scr_IsSystemActive_t)0x080845AC;
 #elif COD_VERSION == COD2_1_3
 static const Scr_IsSystemActive_t Scr_IsSystemActive = (Scr_IsSystemActive_t)0x08084678;
+#endif
+
+typedef void (*Scr_AddInt_t)(int value);
+#if COD_VERSION == COD2_1_0
+static const Scr_AddInt_t Scr_AddInt = (Scr_AddInt_t)0x08084B1C;
+#elif COD_VERSION == COD2_1_2
+static const Scr_AddInt_t Scr_AddInt = (Scr_AddInt_t)0x08085098;
+#elif COD_VERSION == COD2_1_3
+static const Scr_AddInt_t Scr_AddInt = (Scr_AddInt_t)0x08085164;
+#endif
+
+typedef void (*Scr_AddFloat_t)(float);
+#if COD_VERSION == COD2_1_0
+static const Scr_AddFloat_t Scr_AddFloat = (Scr_AddFloat_t)0x08084B40;
+#elif COD_VERSION == COD2_1_2
+static const Scr_AddFloat_t Scr_AddFloat = (Scr_AddFloat_t)0x080850BC;
+#elif COD_VERSION == COD2_1_3
+static const Scr_AddFloat_t Scr_AddFloat = (Scr_AddFloat_t)0x08085188;
+#endif
+
+typedef void (*Scr_AddString_t)(const char *string);
+#if COD_VERSION == COD2_1_0
+static const Scr_AddString_t Scr_AddString = (Scr_AddString_t)0x08084C1A;
+#elif COD_VERSION == COD2_1_2
+static const Scr_AddString_t Scr_AddString = (Scr_AddString_t)0x08085196;
+#elif COD_VERSION == COD2_1_3
+static const Scr_AddString_t Scr_AddString = (Scr_AddString_t)0x08085262;
+#endif
+
+typedef void (*Scr_AddUndefined_t)(void);
+#if COD_VERSION == COD2_1_0
+static const Scr_AddUndefined_t Scr_AddUndefined = (Scr_AddUndefined_t)0x08084B88;
+#elif COD_VERSION == COD2_1_2
+static const Scr_AddUndefined_t Scr_AddUndefined = (Scr_AddUndefined_t)0x08085104;
+#elif COD_VERSION == COD2_1_3
+static const Scr_AddUndefined_t Scr_AddUndefined = (Scr_AddUndefined_t)0x080851D0;
+#endif
+
+typedef void (*Scr_AddVector_t)(vec3_t vec);
+#if COD_VERSION == COD2_1_0
+static const Scr_AddVector_t Scr_AddVector = (Scr_AddVector_t)0x08084CBE;
+#elif COD_VERSION == COD2_1_2
+static const Scr_AddVector_t Scr_AddVector = (Scr_AddVector_t)0x0808523A;
+#elif COD_VERSION == COD2_1_3
+static const Scr_AddVector_t Scr_AddVector = (Scr_AddVector_t)0x08085306;
+#endif
+
+typedef void (*Scr_AddEntity_t)(int entity);
+#if COD_VERSION == COD2_1_0
+static const Scr_AddEntity_t Scr_AddEntity = (Scr_AddEntity_t)0x08118CC0;
+#elif COD_VERSION == COD2_1_2
+static const Scr_AddEntity_t Scr_AddEntity = (Scr_AddEntity_t)0x0811AFF4;
+#elif COD_VERSION == COD2_1_3
+static const Scr_AddEntity_t Scr_AddEntity = (Scr_AddEntity_t)0x08117F50;
+#endif
+
+typedef void (*Scr_MakeArray_t)(void);
+#if COD_VERSION == COD2_1_0
+static const Scr_MakeArray_t Scr_MakeArray = (Scr_MakeArray_t)0x08084CF0;
+#elif COD_VERSION == COD2_1_2
+static const Scr_MakeArray_t Scr_MakeArray = (Scr_MakeArray_t)0x0808526C;
+#elif COD_VERSION == COD2_1_3
+static const Scr_MakeArray_t Scr_MakeArray = (Scr_MakeArray_t)0x08085338;
+#endif
+
+typedef void (*Scr_AddArray_t)(void);
+#if COD_VERSION == COD2_1_0
+static const Scr_AddArray_t Scr_AddArray = (Scr_AddArray_t)0x08084D1C;
+#elif COD_VERSION == COD2_1_2
+static const Scr_AddArray_t Scr_AddArray = (Scr_AddArray_t)0x08085298;
+#elif COD_VERSION == COD2_1_3
+static const Scr_AddArray_t Scr_AddArray = (Scr_AddArray_t)0x08085364;
+#endif
+
+typedef int (*G_TempEntity_t)(vec3_t origin, int event);
+#if COD_VERSION == COD2_1_0
+static const G_TempEntity_t G_TempEntity = (G_TempEntity_t)0x0811CB34;
+#elif COD_VERSION == COD2_1_2
+static const G_TempEntity_t G_TempEntity = (G_TempEntity_t)0x0811EE68;
+#elif COD_VERSION == COD2_1_3
+static const G_TempEntity_t G_TempEntity = (G_TempEntity_t)0x0811EFC4;
+#endif
+
+typedef int (*DirToByte_t)(vec3_t dir);
+#if COD_VERSION == COD2_1_0
+static const DirToByte_t DirToByte = (DirToByte_t)0x080A1C2A;
+#elif COD_VERSION == COD2_1_2
+static const DirToByte_t DirToByte = (DirToByte_t)0x080A3E4A;
+#elif COD_VERSION == COD2_1_3
+static const DirToByte_t DirToByte = (DirToByte_t)0x080A3F8E;
+#endif
+
+typedef void (*G_LocationalTrace_t)(trace_t *results, const vec3_t start, const vec3_t end, int passEntityNum, int contentmask);
+#if COD_VERSION == COD2_1_0
+static const G_LocationalTrace_t G_LocationalTrace = (G_LocationalTrace_t)0x08108134;
+#elif COD_VERSION == COD2_1_2
+static const G_LocationalTrace_t G_LocationalTrace = (G_LocationalTrace_t)0x0810A470;
+#elif COD_VERSION == COD2_1_3
+static const G_LocationalTrace_t G_LocationalTrace = (G_LocationalTrace_t)0x0810A5CC;
 #endif
 
 #endif

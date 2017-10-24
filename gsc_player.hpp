@@ -5,76 +5,8 @@
 extern "C" {
 #endif
 
-/* default stuff */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 /* gsc functions */
 #include "gsc.hpp"
-
-#if COD_VERSION == COD2_1_0
-static const int playerStates = 0x086F1480;
-static const int sizeOfPlayer = 0x28A4;
-#elif COD_VERSION == COD2_1_2
-static const int playerStates = 0x08705480;
-static const int sizeOfPlayer = 0x28A4;
-#elif COD_VERSION == COD2_1_3
-static const int playerStates = 0x087a2500;
-static const int sizeOfPlayer = 0x28A4;
-#endif
-
-#if COD_VERSION == COD2_1_0
-static const int gentities = 0x08665480;
-static const int gentities_size = 560;
-#elif COD_VERSION == COD2_1_2
-static const int gentities = 0x08679380;
-static const int gentities_size = 560;
-#elif COD_VERSION == COD2_1_3
-static const int gentities = 0x08716400;
-static const int gentities_size = 560;
-#endif
-
-#if COD_VERSION == COD2_1_0
-static const int playerinfo_base = 0x0841FB0C;
-static const int playerinfo_size = 0x78F14;
-#elif COD_VERSION == COD2_1_2
-static const int playerinfo_base = 0x0842200C;
-static const int playerinfo_size = 0x79064;
-#elif COD_VERSION == COD2_1_3
-static const int playerinfo_base = 0x0842308C;
-static const int playerinfo_size = 0xB1064;
-#endif
-
-#define PLAYERBASE(playerid) (*(int *)(playerinfo_base) + playerid * playerinfo_size)
-#define PLAYERSTATE(playerid) (playerStates + playerid * sizeOfPlayer)
-#define G_ENTITY(playerid) (gentities + gentities_size * playerid)
-
-#define PLAYERBASE_ID(address) ((address - *(int *)playerinfo_base) / playerinfo_size)
-#define PLAYERSTATE_ID(address) ((address - playerStates) / sizeOfPlayer)
-#define G_ENTITY_ID(address) ((address - gentities) / gentities_size)
-#define VALID_ENTITY(entity) (*(int *)(entity + 1))
-
-#if COD_VERSION == COD2_1_0
-static const int addresstype_offset = 0x6E5C4;
-#elif COD_VERSION == COD2_1_2
-static const int addresstype_offset = 0x6E6D4;
-#elif COD_VERSION == COD2_1_3
-static const int addresstype_offset = 0x6E6D4;
-#endif
-
-#define ADDRESSTYPE(playerid) (*(int *)(PLAYERBASE(playerid) + addresstype_offset))
-#define CLIENTSTATE(playerid) (*(int *)(PLAYERBASE(playerid)))
-
-#if COD_VERSION == COD2_1_0
-static const int svstime_offset = 0x0841FB04;
-#elif COD_VERSION == COD2_1_2
-static const int svstime_offset = 0x08422004;
-#elif COD_VERSION == COD2_1_3
-static const int svstime_offset = 0x08423084;
-#endif
-
-#define SVS_TIME (*(int *)svstime_offset)
 
 void gsc_player_lookatkiller(int id);
 

@@ -5,16 +5,8 @@
 extern "C" {
 #endif
 
-/* default stuff */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 /* gsc functions */
 #include "gsc.hpp"
-
-/* link unlink */
-#include <unistd.h>
 
 void gsc_utils_printf();
 void gsc_utils_getarraykeys();
@@ -39,6 +31,7 @@ void gsc_set_configstring();
 void gsc_make_localized_string();
 void gsc_utils_cryptsh();
 void gsc_utils_getlasttestclientnumber();
+void gsc_utils_bullethiteffect();
 
 void gsc_utils_fopen();
 void gsc_utils_fread();
@@ -48,6 +41,7 @@ void gsc_utils_fsize();
 void gsc_utils_sprintf();
 void gsc_utils_getsystemtime();
 void gsc_utils_getlocaltime();
+void gsc_utils_getserverstarttime();
 
 void gsc_utils_sqrt();
 void gsc_utils_sqrtInv();

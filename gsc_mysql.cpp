@@ -1,13 +1,6 @@
 #include "gsc_mysql.hpp"
 
-#if COMPILE_MYSQL == 1
-
-/*
-	Had the problem, that a query failed but no mysql_errno() was set
-	Reason: mysql_query() didnt even got executed, because the str was undefined
-	So the function quittet with stackPushInt(0)
-	Now its undefined, and i shall test it every time
-*/
+#if COMPILE_MYSQL_DEFAULT == 1
 
 #include <mysql/mysql.h>
 #include <pthread.h>

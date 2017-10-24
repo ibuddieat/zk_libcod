@@ -53,6 +53,7 @@ void gsc_exec()
 	Com_DPrintf("gsc_exec() executing: %s\n", command);
 
 	FILE *fp;
+
 	fp = popen(command, "r");
 
 	if (fp == NULL)
@@ -84,8 +85,10 @@ void gsc_exec()
 	}
 
 	content[curpos] = '\0';
+
 	stackPushString(content);
 	stackPushArrayLast();
+
 	pclose(fp);
 }
 
@@ -158,6 +161,7 @@ void gsc_exec_async_create()
 		current = current->next;
 
 	exec_async_task *newtask = new exec_async_task;
+
 	strncpy(newtask->command, command, COD2_MAX_STRINGLENGTH - 1);
 	newtask->command[COD2_MAX_STRINGLENGTH - 1] = '\0';
 	newtask->output = NULL;
@@ -212,16 +216,21 @@ void gsc_exec_async_create()
 		first_exec_async_task = newtask;
 
 	pthread_t exec_doer;
-	int error = pthread_create(&exec_doer, NULL, exec_async, newtask);
 
-	if (error)
+	if (pthread_create(&exec_doer, NULL, exec_async, newtask) != 0)
 	{
-		stackError("gsc_exec_async_create() error detaching exec_async handler thread %i\n", error);
+		stackError("gsc_exec_async_create() error creating exec async handler thread!");
 		stackPushUndefined();
 		return;
 	}
 
-	pthread_detach(exec_doer);
+	if (pthread_detach(exec_doer) != 0)
+	{
+		stackError("gsc_exec_async_create() error detaching exec async handler thread!");
+		stackPushUndefined();
+		return;
+	}
+
 	stackPushInt(1);
 }
 
@@ -245,6 +254,7 @@ void gsc_exec_async_create_nosave()
 		current = current->next;
 
 	exec_async_task *newtask = new exec_async_task;
+
 	strncpy(newtask->command, command, COD2_MAX_STRINGLENGTH - 1);
 	newtask->command[COD2_MAX_STRINGLENGTH - 1] = '\0';
 	newtask->output = NULL;
@@ -299,16 +309,21 @@ void gsc_exec_async_create_nosave()
 		first_exec_async_task = newtask;
 
 	pthread_t exec_doer;
-	int error = pthread_create(&exec_doer, NULL, exec_async, newtask);
 
-	if (error)
+	if (pthread_create(&exec_doer, NULL, exec_async, newtask) != 0)
 	{
-		stackError("gsc_exec_async_create_nosave() error detaching exec_async handler thread %i\n", error);
+		stackError("gsc_exec_async_create_nosave() error creating exec async handler thread!");
 		stackPushUndefined();
 		return;
 	}
 
-	pthread_detach(exec_doer);
+	if (pthread_detach(exec_doer) != 0)
+	{
+		stackError("gsc_exec_async_create_nosave() error detaching exec async handler thread!");
+		stackPushUndefined();
+		return;
+	}
+
 	stackPushInt(1);
 }
 
@@ -355,6 +370,7 @@ void gsc_exec_async_checkdone()
 
 				stackPushArray();
 				exec_outputline *output = task->output;
+
 				while (output != NULL)
 				{
 					exec_outputline *next = output->next;
