@@ -46,38 +46,35 @@ void gsc_utils_bullethiteffect()
 	stackPushInt(1);
 }
 
-unsigned short Scr_GetArray(int param)
-{
-	if (param >= Scr_GetNumParam())
-	{
-		stackError("Scr_GetArray() one parameter is required");
-		return 0;
-	}
-
-	VariableValue *var;
-	var = &scrVmPub.top[-param];
-
-	if (var->type == STACK_OBJECT)
-		return *(unsigned short*)var;
-
-	stackError("Scr_GetArray() the parameter must be an array");
-	return 0;
-}
-
 void gsc_utils_getarraykeys()
 {
-	unsigned short arrIndex = Scr_GetArray(0);
+	int arrIndex;
+
+	if (!stackGetParamObject(0, &arrIndex))
+	{
+		stackError("gsc_utils_getarraykeys() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	int arraysize = GetArraySize(arrIndex);
+
+	if (!arraysize)
+	{
+		stackError("gsc_utils_getarraykeys() got an empty or invalid array");
+		stackPushUndefined();
+		return;
+	}
+
+	int next = GetNextVariable(arrIndex);
+
 	stackPushArray();
 
-	if (arrIndex == 0)
-		return; // we didn't find a valid array
-
-	unsigned short i;
-	for(i = GetNextVariable(arrIndex); i != 0;)
+	for (int i = 0; i < arraysize; i++)
 	{
-		stackPushString(SL_ConvertToString(GetVariableName(i)));
+		stackPushString(SL_ConvertToString(GetVariableName(next)));
 		stackPushArrayLast();
-		i = GetNextVariable(i);
+		next = GetNextVariable(next);
 	}
 }
 
@@ -350,27 +347,28 @@ void gsc_utils_system()
 	stackPushInt( system(cmd) );
 }
 
-static int starttime = time(NULL);
-void gsc_utils_getserverstarttime()
+time_t c_Time_g, s_Time_g;
+static int starttime = time(&s_Time_g);
+void gsc_utils_gettimes()
 {
-	stackPushInt( starttime );
-}
+	int *type;
+	if ( ! stackGetParams("i",  &type))
+		type=0;
+	
+	int secs = type?time(&c_Time_g):starttime;
+	
+	struct tm *timeconv = localtime(type?&c_Time_g:&s_Time_g);
+	char *time_asc = asctime(timeconv);
+	
+	time_asc[strlen(time_asc) - 1] = '\0';
 
-void gsc_utils_getsystemtime()
-{
-	time_t timer;
-	stackPushInt( time(&timer) );
-}
-
-void gsc_utils_getlocaltime()
-{
-	time_t timer;
-	struct tm *timeinfo;
-
-	time(&timer);
-	timeinfo = localtime(&timer);
-
-	stackPushString( asctime(timeinfo) );
+	Scr_MakeArray();
+	
+	Scr_AddInt( secs );
+	Scr_AddArray();
+	
+	Scr_AddString( time_asc );
+	Scr_AddArray();
 }
 
 void gsc_utils_exponent()

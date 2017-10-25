@@ -27,6 +27,7 @@ void gsc_player_button_frag(int id);
 void gsc_player_button_smoke(int id);
 
 void gsc_player_stance_get(int id);
+void gsc_player_stance_set(int id);
 
 void gsc_player_spectatorclient_get(int id);
 void gsc_get_userinfo(int id);

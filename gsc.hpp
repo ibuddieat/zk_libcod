@@ -183,15 +183,17 @@ static const int svstime_offset = 0x08423084;
 
 void stackError(char *format, ...);
 
+int stackGetParamType(int param);
 char *stackGetParamTypeAsString(int param);
+
+int stackGetParams(char *params, ...);
 
 int stackGetParamInt(int param, int *value);
 int stackGetParamFunction(int param, int *value);
 int stackGetParamString(int param, char **value);
-int stackGetParamVector(int param, float value[3]);
+int stackGetParamVector(int param, vec3_t value);
 int stackGetParamFloat(int param, float *value);
-int stackGetParamType(int param);
-int stackGetParams(char *params, ...);
+int stackGetParamObject(int param, int *value);
 
 xfunction_t Scr_GetCustomFunction(const char **fname, int *fdev);
 xmethod_t Scr_GetCustomMethod(const char **fname, int *fdev);

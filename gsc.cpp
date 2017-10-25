@@ -223,9 +223,7 @@ scr_function_t scriptFunctions[] =
 	{"fclose", gsc_utils_fclose, 0},
 	{"fsize", gsc_utils_fsize, 0},
 	{"sprintf", gsc_utils_sprintf, 0},
-	{"getsystemtime", gsc_utils_getsystemtime, 0},
-	{"getserverstarttime", gsc_utils_getserverstarttime, 0},
-	{"getlocaltime", gsc_utils_getlocaltime, 0},
+	{"gettimes", gsc_utils_gettimes, 0},
 	{"G_FindConfigstringIndex", gsc_G_FindConfigstringIndex, 0},
 	{"G_FindConfigstringIndexOriginal", gsc_G_FindConfigstringIndexOriginal, 0},
 	{"getconfigstring", gsc_get_configstring, 0},
@@ -234,6 +232,7 @@ scr_function_t scriptFunctions[] =
 	{"sqrt", gsc_utils_sqrt, 0},
 	{"sqrtInv", gsc_utils_sqrtInv, 0},
 	{"getlasttestclientnumber", gsc_utils_getlasttestclientnumber, 0},
+	{"bullethiteffect", gsc_utils_bullethiteffect, 0},
 #endif
 
 #if COMPILE_WEAPONS == 1
@@ -290,6 +289,7 @@ scr_method_t scriptMethods[] =
 
 #if COMPILE_PLAYER == 1
 	{"getStance", gsc_player_stance_get, 0},
+	{"setStance", gsc_player_stance_set, 0},
 	{"setVelocity", gsc_player_velocity_set, 0},
 	{"addVelocity", gsc_player_velocity_add, 0},
 	{"getVelocity", gsc_player_velocity_get, 0},
@@ -342,7 +342,7 @@ scr_method_t scriptMethods[] =
 #if COMPILE_BOTS == 1
 	{"setwalkdir", gsc_bots_set_walkdir, 0},
 	{"setlean", gsc_bots_set_lean, 0},
-	{"setstance", gsc_bots_set_stance, 0},
+	{"setbotstance", gsc_bots_set_stance, 0},
 	{"thrownade", gsc_bots_thrownade, 0},
 	{"fireweapon", gsc_bots_fireweapon, 0},
 	{"meleeweapon", gsc_bots_meleeweapon, 0},
@@ -555,6 +555,23 @@ int stackGetParamFloat(int param, float *value)
 		return 0;
 
 	*value = var->u.floatValue;
+
+	return 1;
+
+}
+
+int stackGetParamObject(int param, int *value)
+{
+	if (param >= Scr_GetNumParam())
+		return 0;
+
+	VariableValue *var;
+	var = &scrVmPub.top[-param];
+
+	if (var->type != STACK_OBJECT)
+		return 0;
+
+	*value = *(int *)var;
 
 	return 1;
 }

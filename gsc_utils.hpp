@@ -39,9 +39,7 @@ void gsc_utils_fwrite();
 void gsc_utils_fclose();
 void gsc_utils_fsize();
 void gsc_utils_sprintf();
-void gsc_utils_getsystemtime();
-void gsc_utils_getlocaltime();
-void gsc_utils_getserverstarttime();
+void gsc_utils_gettimes();
 
 void gsc_utils_sqrt();
 void gsc_utils_sqrtInv();

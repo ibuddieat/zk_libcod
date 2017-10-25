@@ -3,7 +3,7 @@
 
 /* MAKE FUNCTIONS STATIC, SO THEY CAN BE IN EVERY FILE */
 
-typedef unsigned short (*GetVariableName_t)(unsigned short a1);
+typedef int (*GetVariableName_t)(int a1);
 #if COD_VERSION == COD2_1_0
 static const GetVariableName_t GetVariableName = (GetVariableName_t)0x0807CA72;
 #elif COD_VERSION == COD2_1_2
@@ -12,13 +12,22 @@ static const GetVariableName_t GetVariableName = (GetVariableName_t)0x0807CFF6;
 static const GetVariableName_t GetVariableName = (GetVariableName_t)0x0807D0C2;
 #endif
 
-typedef unsigned short (*GetNextVariable_t)(unsigned short a1);
+typedef int (*GetNextVariable_t)(int a1);
 #if COD_VERSION == COD2_1_0
 static const GetNextVariable_t GetNextVariable = (GetNextVariable_t)0x0807C9CE;
 #elif COD_VERSION == COD2_1_2
 static const GetNextVariable_t GetNextVariable = (GetNextVariable_t)0x0807CF52;
 #elif COD_VERSION == COD2_1_3
 static const GetNextVariable_t GetNextVariable = (GetNextVariable_t)0x0807D01E;
+#endif
+
+typedef int (*GetArraySize_t)(int a1);
+#if COD_VERSION == COD2_1_0
+static const GetArraySize_t GetArraySize = (GetArraySize_t)0x0807C9AC;
+#elif COD_VERSION == COD2_1_2
+static const GetArraySize_t GetArraySize = (GetArraySize_t)0x0807CF30;
+#elif COD_VERSION == COD2_1_3
+static const GetArraySize_t GetArraySize = (GetArraySize_t)0x0807CFFC;
 #endif
 
 typedef char * (*SL_ConvertToString_t)(unsigned int index);
@@ -271,6 +280,16 @@ typedef struct cvar_s
 #define	CVAR_TEMP		256	// can be set even when cheats are disabled, but is not archived
 #define CVAR_NORESTART		1024	// do not clear when a cvar_restart is issued
 #define	CVAR_USER_CREATED	16384	// created by a set command
+
+struct VariableStackBuffer
+{
+	const char *pos;
+	u_int16_t size;
+	u_int16_t bufLen;
+	u_int16_t localId;
+	char time;
+	char buf[1];
+};
 
 union VariableUnion
 {
@@ -1171,6 +1190,15 @@ static const G_LocationalTrace_t G_LocationalTrace = (G_LocationalTrace_t)0x0810
 static const G_LocationalTrace_t G_LocationalTrace = (G_LocationalTrace_t)0x0810A470;
 #elif COD_VERSION == COD2_1_3
 static const G_LocationalTrace_t G_LocationalTrace = (G_LocationalTrace_t)0x0810A5CC;
+#endif
+
+typedef void (*G_AddEvent_t)(int ent, int event, int eventParm);
+#if COD_VERSION == COD2_1_0
+static const G_AddEvent_t G_AddEvent = (G_AddEvent_t)0x0811CDA2;
+#elif COD_VERSION == COD2_1_2
+static const G_AddEvent_t G_AddEvent = (G_AddEvent_t)0x0811F0D6;
+#elif COD_VERSION == COD2_1_3
+static const G_AddEvent_t G_AddEvent = (G_AddEvent_t)0x0811F232;
 #endif
 
 #endif

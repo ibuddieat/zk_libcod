@@ -252,6 +252,37 @@ void gsc_player_stance_get(int id)
 	stackPushString(stance);
 }
 
+void gsc_player_stance_set(int id)
+{
+	char* stance;
+
+	if ( ! stackGetParams("s", &stance))
+	{
+		stackError("gsc_player_stance_set() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	int event;
+
+	if (strcmp(stance, "stand") == 0)
+		event = EV_STANCE_FORCE_STAND;
+	else if (strcmp(stance, "crouch") == 0)
+		event = EV_STANCE_FORCE_CROUCH;
+	else if (strcmp(stance, "prone") == 0)
+		event = EV_STANCE_FORCE_PRONE;
+	else
+	{
+		stackError("gsc_player_stance_set() invalid argument '%s'. Valid arguments are: 'stand' 'crouch' 'prone'", stance);
+		stackPushUndefined();
+		return;
+	}
+
+	G_AddEvent(G_ENTITY(id), event, 0);
+
+	stackPushInt(1);
+}
+
 void gsc_player_spectatorclient_get(int id)
 {
 	int spectatorClient = *(unsigned char *)(PLAYERSTATE(id) + 0xCC);
@@ -611,11 +642,11 @@ int BG_AnimationCheckForBad(char *anim)
 int i,v6,v8;
 
 #if COD_VERSION == COD2_1_0
-int _VAR_ = 0x855A4E4;
+int globalScriptData = 0x855A4E4;
 #elif COD_VERSION == COD2_1_2
-int _VAR_ = 0x856E3A4;
+int globalScriptData = 0x856E3A4;
 #elif COD_VERSION == COD2_1_3
-int _VAR_ = 0x860B424;
+int globalScriptData = 0x860B424;
 #endif
 
 int (*ConverteStr)(int a1);
@@ -639,10 +670,10 @@ signed int (*SACh)(char *a1, char *a2);
 v6 = ConverteStr((int)anim);
 v8 = 0;
 
-for ( i = *(int *)_VAR_; ; i += 96 ) 
+for ( i = *(int *)globalScriptData; ; i += 96 ) 
 {
 	
-if ( v8 >= *(long *)((*(int *)_VAR_) + 49152) )
+if ( v8 >= *(long *)((*(int *)globalScriptData) + 49152) )
 {
 printf("BG_AnimationIndexForString: unknown player animation '%s'\n", anim);
 return 0;
