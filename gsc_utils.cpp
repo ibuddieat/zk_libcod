@@ -8,6 +8,24 @@
 #include <sys/stat.h> // fsize
 //thanks to riicchhaarrd/php
 
+void gsc_utils_vectorscale()
+{
+	vec3_t vector;
+	float scale;
+
+	if ( ! stackGetParams("vf", &vector, &scale))
+	{
+		stackError("gsc_utils_vectorscale() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	vec3_t out;
+
+	VectorScale(vector, scale, out);
+	stackPushVector(out);
+}
+
 void gsc_utils_cryptsh()
 {
 char *str;

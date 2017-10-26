@@ -98,50 +98,42 @@ $cc $options $constants -c cracking.cpp -o objects_$1/cracking.opp
 echo "##### COMPILE $1 GSC.CPP #####"
 $cc $options $constants -c gsc.cpp -o objects_$1/gsc.opp
 
-if [ "1" == "1" ]; then
-#if [ `perl -ne 'print if s/^#define\sCOMPILE_BOTS\s(\d)$/\1/' config.hpp` == "1" ]; then
+if  grep -q "COMPILE_BOTS 1" config.hpp; then
 	echo "##### COMPILE $1 GSC_BOTS.CPP #####"
 	$cc $options $constants -c gsc_bots.cpp -o objects_$1/gsc_bots.opp
 fi
 
-if [ "1" == "1" ]; then
-#if [ `perl -ne 'print if s/^#define\sCOMPILE_EXEC\s(\d)$/\1/' config.hpp` == "1" ]; then
+if grep -q "COMPILE_EXEC 1" config.hpp; then
 	echo "##### COMPILE $1 GSC_EXEC.CPP #####"
 	$cc $options $constants -c gsc_exec.cpp -o objects_$1/gsc_exec.opp
 fi
 
-if [ "1" == "1" ]; then
-#if [ `perl -ne 'print if s/^#define\sCOMPILE_MEMORY\s(\d)$/\1/' config.hpp` == "1" ]; then
+if grep -q "COMPILE_MEMORY 1" config.hpp; then
 	echo "##### COMPILE $1 GSC_MEMORY.CPP #####"
 	$cc $options $constants -c gsc_memory.cpp -o objects_$1/gsc_memory.opp
 fi
 
-if [ "1" == "1" ]; then
-#if [ `perl -ne 'print if s/^#define\sCOMPILE_MYSQL_DEFAULT\s(\d)$/\1/' config.hpp` == "1" ]; then
+if [ $mysql_variant == 1 ]; then
 	echo "##### COMPILE $1 GSC_MYSQL.CPP #####"
 	$cc $options $constants -c gsc_mysql.cpp -o objects_$1/gsc_mysql.opp
 fi
 
-if [ "1" == "1" ]; then
-#if [ `perl -ne 'print if s/^#define\sCOMPILE_MYSQL_VORON\s(\d)$/\1/' config.hpp` == "1" ]; then
+if [ $mysql_variant == 2 ]; then
 	echo "##### COMPILE $1 GSC_MYSQL_VORON.CPP #####"
 	$cc $options $constants -c gsc_mysql_voron.cpp -o objects_$1/gsc_mysql_voron.opp
 fi
 
-if [ "1" == "1" ]; then
-#if [ `perl -ne 'print if s/^#define\sCOMPILE_PLAYER\s(\d)$/\1/' config.hpp` == "1" ]; then
+if grep -q "COMPILE_PLAYER 1" config.hpp; then
 	echo "##### COMPILE $1 GSC_PLAYER.CPP #####"
 	$cc $options $constants -c gsc_player.cpp -o objects_$1/gsc_player.opp
 fi
 
-if [ "1" == "1" ]; then
-#if [ `perl -ne 'print if s/^#define\sCOMPILE_UTILS\s(\d)$/\1/' config.hpp` == "1" ]; then
+if grep -q "COMPILE_UTILS 1" config.hpp; then
 	echo "##### COMPILE $1 GSC_UTILS.CPP #####"
 	$cc $options $constants -c gsc_utils.cpp -o objects_$1/gsc_utils.opp
 fi
 
-if [ "1" == "1" ]; then
-#if [ `perl -ne 'print if s/^#define\sCOMPILE_WEAPONS\s(\d)$/\1/' config.hpp` == "1" ]; then
+if grep -q "COMPILE_WEAPONS 1" config.hpp; then
 	echo "##### COMPILE $1 GSC_WEAPONS.CPP #####"
 	$cc $options $constants -c gsc_weapons.cpp -o objects_$1/gsc_weapons.opp
 fi

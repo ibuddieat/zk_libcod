@@ -278,7 +278,16 @@ void gsc_player_stance_set(int id)
 		return;
 	}
 
-	G_AddEvent(G_ENTITY(id), event, 0);
+	int player = Scr_GetEntity(id);
+	
+	if(VALID_ENTITY(player))
+		G_AddEvent(player, event, 0);
+	else
+	{
+		stackError("gsc_player_stance_set() player state is invalid");
+		stackPushUndefined();
+		return;
+	}
 
 	stackPushInt(1);
 }

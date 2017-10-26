@@ -146,6 +146,7 @@ static const int playerinfo_size = 0xB1064;
 #define G_ENTITY(playerid) (gentities + gentities_size * playerid)
 
 #define VALID_ENTITY(entity) (*(int *)(entity + 1))
+#define VectorScale(v, s, o) ((o)[0]=(v)[0]*(s),(o)[1]=(v)[1]*(s),(o)[2]=(v)[2]*(s))
 
 #define PLAYERBASE_ID(address) ((address - *(int *)playerinfo_base) / playerinfo_size)
 #define PLAYERSTATE_ID(address) ((address - playerStates) / sizeOfPlayer)

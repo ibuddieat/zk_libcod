@@ -43,6 +43,7 @@ void gsc_utils_gettimes();
 
 void gsc_utils_sqrt();
 void gsc_utils_sqrtInv();
+void gsc_utils_vectorscale();
 
 #ifdef __cplusplus
 }

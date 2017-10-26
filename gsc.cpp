@@ -233,6 +233,7 @@ scr_function_t scriptFunctions[] =
 	{"sqrtInv", gsc_utils_sqrtInv, 0},
 	{"getlasttestclientnumber", gsc_utils_getlasttestclientnumber, 0},
 	{"bullethiteffect", gsc_utils_bullethiteffect, 0},
+	{"vectorscale", gsc_utils_vectorscale, 0},
 #endif
 
 #if COMPILE_WEAPONS == 1
