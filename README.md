@@ -7,7 +7,6 @@ The Call of Duty extension *libcod* is adding new server-side functions to:
 
 Requirements:
 ```
-Perl
 g++ (multilib for x64)
 MySQL (optional)
 ```
@@ -31,7 +30,7 @@ Little overview of added functions:
 - setVelocity, getVelocity, addVelocity (needed for the mods: portal, surf)
 - keyPressed-functions for left, right, forward, backward, leanleft, leanright, jump etc., (needed for: surf, doublejump made by IzNoGod)
 - setAlive-function (needed for: zombots, so xmodels are damagable without damage-trigger... zombots in stockmaps)
-- disableGlobalPlayerCollision() also disableGlobalPlayerEject()
+- Dynamic control of player collisions, eject (Cvars: ```g_PlayerCollision```, ```g_PlayerEject```)
 - native bot functions (bots can move, shoot, jump, melee, ads, set stance)
 - weapon-functions (get/set weapon damage, firetime, maxammo without editing their files)
 - Print path to script if an error occurs ("Started from:", "Called from:"; position cycle in code: "infinity loop error"; etc.) in developer mode = 0 (```developer 0```)
