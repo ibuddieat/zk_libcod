@@ -1,10 +1,6 @@
 #ifndef _GSC_HPP_
 #define _GSC_HPP_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define COD2_1_0 210
 #define COD2_1_2 212
 #define COD2_1_3 213
@@ -25,6 +21,7 @@ extern "C" {
 #include <stddef.h> // offsetof
 
 #include "config.hpp"
+#include "declarations.hpp" //voron tak reshil :)
 #include "cracking.hpp"
 #include "functions.hpp"
 
@@ -105,8 +102,17 @@ static const int vmpub_offset = 0x083D7A00;
 static const int vmpub_offset = 0x083D8A80;
 #endif
 
+#if COD_VERSION == COD2_1_0
+static const int svs_offset = 0x0841FB00;
+#elif COD_VERSION == COD2_1_2
+static const int svs_offset = 0x08422000;
+#elif COD_VERSION == COD2_1_3
+static const int svs_offset = 0x08423080;
+#endif
+
 #define scrVarPub (*((scrVarPub_t*)( varpub_offset )))
 #define scrVmPub (*((scrVmPub_t*)( vmpub_offset )))
+#define svs (*((serverStatic_t*)( svs_offset )))
 
 #if COD_VERSION == COD2_1_0
 static const int playerStates = 0x086F1480;
@@ -181,26 +187,23 @@ static const int svstime_offset = 0x08423084;
 #define stackPushEntity Scr_AddEntity
 #define stackPushArray Scr_MakeArray
 #define stackPushArrayLast Scr_AddArray
+#define stackPushObject Scr_AddObject
 
-void stackError(char *format, ...);
+void stackError(const char *format, ...);
 
 int stackGetParamType(int param);
-char *stackGetParamTypeAsString(int param);
+const char *stackGetParamTypeAsString(int param);
 
-int stackGetParams(char *params, ...);
+int stackGetParams(const char *params, ...);
 
 int stackGetParamInt(int param, int *value);
 int stackGetParamFunction(int param, int *value);
 int stackGetParamString(int param, char **value);
 int stackGetParamVector(int param, vec3_t value);
 int stackGetParamFloat(int param, float *value);
-int stackGetParamObject(int param, int *value);
+int stackGetParamObject(int param, unsigned int *value);
 
 xfunction_t Scr_GetCustomFunction(const char **fname, int *fdev);
 xmethod_t Scr_GetCustomMethod(const char **fname, int *fdev);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

@@ -11,7 +11,7 @@ bool isValidWeaponId(int id)
 	return true;
 }
 
-void gsc_weapons_getweaponoffsetint(char* funcname, int offset)
+void gsc_weapons_getweaponoffsetint(const char* funcname, int offset)
 {
 	int id;
 	if ( ! stackGetParams("i", &id))
@@ -32,7 +32,7 @@ void gsc_weapons_getweaponoffsetint(char* funcname, int offset)
 	stackPushInt(value);
 }
 
-void gsc_weapons_setweaponoffsetint(char* funcname, int offset)
+void gsc_weapons_setweaponoffsetint(const char* funcname, int offset)
 {
 	int id;
 	int value;
@@ -124,6 +124,7 @@ void gsc_weapons_setweaponreloademptytime()
 {
 	gsc_weapons_setweaponoffsetint("setweaponreloademptytime", 540);
 }
+
 void gsc_weapons_getweaponcookable()
 {
 	gsc_weapons_getweaponoffsetint("getweaponcookable", 828);
@@ -134,7 +135,7 @@ void gsc_weapons_setweaponcookable()
 	gsc_weapons_setweaponoffsetint("setweaponcookable", 828);
 }
 
-char* hitlocs[] = { "none", "helmet", "head", "neck", "torso_upper", "torso_lower", "right_arm_upper", "right_arm_lower", "right_hand", "left_arm_upper", "left_arm_lower", "left_hand", "right_leg_upper", "right_leg_lower", "right_foot", "left_leg_upper", "left_leg_lower", "left_foot", "gun" };
+const char* hitlocs[] = { "none", "helmet", "head", "neck", "torso_upper", "torso_lower", "right_arm_upper", "right_arm_lower", "right_hand", "left_arm_upper", "left_arm_lower", "left_hand", "right_leg_upper", "right_leg_lower", "right_foot", "left_leg_upper", "left_leg_lower", "left_foot", "gun" };
 int getHitLocOffset(char* hitloc)
 {
 	int offset = 0; // none

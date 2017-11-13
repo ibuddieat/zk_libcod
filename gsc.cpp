@@ -1,6 +1,6 @@
 #include "gsc.hpp"
 
-char *stackGetParamTypeAsString(int param)
+const char *stackGetParamTypeAsString(int param)
 {
 	if (param >= Scr_GetNumParam())
 		return "UNDEFINED";
@@ -8,116 +8,93 @@ char *stackGetParamTypeAsString(int param)
 	VariableValue *var;
 	var = &scrVmPub.top[-param];
 
-	char *type;
-
 	switch (var->type)
 	{
-	case  0:
-		type = "UNDEFINED";
-		break;
+	case 0:
+		return "UNDEFINED";
 
-	case  1:
-		type = "OBJECT";
-		break;
+	case 1:
+		return "OBJECT";
 
-	case  2:
-		type = "STRING";
-		break;
+	case 2:
+		return "STRING";
 
-	case  3:
-		type = "LOCALIZED_STRING";
-		break;
+	case 3:
+		return "LOCALIZED_STRING";
 
-	case  4:
-		type = "VECTOR";
-		break;
+	case 4:
+		return "VECTOR";
 
-	case  5:
-		type = "FLOAT";
-		break;
+	case 5:
+		return "FLOAT";
 
-	case  6:
-		type = "INT";
-		break;
+	case 6:
+		return "INT";
 
-	case  7:
-		type = "CODEPOS";
-		break;
+	case 7:
+		return "CODEPOS";
 
-	case  8:
-		type = "PRECODEPOS";
-		break;
+	case 8:
+		return "PRECODEPOS";
 
-	case  9:
-		type = "FUNCTION";
-		break;
+	case 9:
+		return "FUNCTION";
 
 	case 10:
-		type = "STACK";
-		break;
+		return "STACK";
 
 	case 11:
-		type = "ANIMATION";
-		break;
+		return "ANIMATION";
 
 	case 12:
-		type = "DEVELOPER_CODEPOS";
-		break;
+		return "DEVELOPER_CODEPOS";
 
 	case 13:
-		type = "INCLUDE_CODEPOS";
-		break;
+		return "INCLUDE_CODEPOS";
 
 	case 14:
-		type = "THREAD_LIST";
-		break;
+		return "THREAD_LIST";
 
 	case 15:
-		type = "THREAD_1";
-		break;
+		return "THREAD_1";
 
 	case 16:
-		type = "THREAD_2";
-		break;
+		return "THREAD_2";
 
 	case 17:
-		type = "THREAD_3";
-		break;
+		return "THREAD_3";
 
 	case 18:
-		type = "THREAD_4";
-		break;
+		return "THREAD_4";
 
 	case 19:
-		type = "STRUCT";
-		break;
+		return "STRUCT";
 
 	case 20:
-		type = "REMOVED_ENTITY";
-		break;
+		return "REMOVED_ENTITY";
 
 	case 21:
-		type = "ENTITY";
-		break;
+		return "ENTITY";
 
 	case 22:
-		type = "ARRAY";
-		break;
+		return "ARRAY";
 
 	case 23:
-		type = "REMOVED_THREAD";
-		break;
+		return "REMOVED_THREAD";
 
 	default:
-		type = "UNKNOWN TYPE";
-		break;
+		return "UNKNOWN TYPE";
 	}
-
-	return type;
 }
+
+void NULL_FUNC(void) {}
 
 scr_function_t scriptFunctions[] =
 {
+	#if COD_VERSION == COD2_1_0
+	{"endparty", NULL_FUNC, 0}, //cod2 1.2
+	#endif
+	
 #if COMPILE_MYSQL_DEFAULT == 1
 	{"mysql_init", gsc_mysql_init, 0},
 	{"mysql_real_connect", gsc_mysql_real_connect, 0},
@@ -182,10 +159,6 @@ scr_function_t scriptFunctions[] =
 	{"exec_async_checkdone", gsc_exec_async_checkdone, 0},
 #endif
 
-#if COMPILE_PLAYER == 1
-	{"kick2", gsc_kick_slot, 0},
-#endif
-
 #if COMPILE_MEMORY == 1
 	{"memory_malloc", gsc_memory_malloc, 0},
 	{"memory_free", gsc_memory_free, 0},
@@ -197,6 +170,10 @@ scr_function_t scriptFunctions[] =
 	{"binarybuffer_seek", gsc_binarybuffer_seek, 0},
 	{"binarybuffer_write", gsc_binarybuffer_write, 0},
 	{"binarybuffer_read", gsc_binarybuffer_read, 0},
+#endif
+
+#if COMPILE_PLAYER == 1
+	{"kick2", gsc_kick_slot, 0},
 #endif
 
 #if COMPILE_UTILS == 1
@@ -288,6 +265,23 @@ xfunction_t Scr_GetCustomFunction(const char **fname, int *fdev)
 scr_method_t scriptMethods[] =
 {
 
+#if COMPILE_BOTS == 1
+	{"setwalkdir", gsc_bots_set_walkdir, 0},
+	{"setlean", gsc_bots_set_lean, 0},
+	{"setbotstance", gsc_bots_set_stance, 0},
+	{"thrownade", gsc_bots_thrownade, 0},
+	{"fireweapon", gsc_bots_fireweapon, 0},
+	{"meleeweapon", gsc_bots_meleeweapon, 0},
+	{"reloadweapon", gsc_bots_reloadweapon, 0},
+	{"adsaim", gsc_bots_adsaim, 0},
+	{"switchtoweaponid", gsc_bots_switchtoweaponid, 0},
+#endif
+
+#if COMPILE_MYSQL_VORON == 1
+  	{"async_mysql_create_entity_query", gsc_async_mysql_create_entity_query, 0},
+  	{"async_mysql_create_entity_query_nosave", gsc_async_mysql_create_entity_query_nosave, 0},
+#endif
+
 #if COMPILE_PLAYER == 1
 	{"getStance", gsc_player_stance_get, 0},
 	{"setStance", gsc_player_stance_set, 0},
@@ -340,23 +334,6 @@ scr_method_t scriptMethods[] =
 	{"lookatkiller", gsc_player_lookatkiller, 0},
 #endif
 
-#if COMPILE_BOTS == 1
-	{"setwalkdir", gsc_bots_set_walkdir, 0},
-	{"setlean", gsc_bots_set_lean, 0},
-	{"setbotstance", gsc_bots_set_stance, 0},
-	{"thrownade", gsc_bots_thrownade, 0},
-	{"fireweapon", gsc_bots_fireweapon, 0},
-	{"meleeweapon", gsc_bots_meleeweapon, 0},
-	{"reloadweapon", gsc_bots_reloadweapon, 0},
-	{"adsaim", gsc_bots_adsaim, 0},
-	{"switchtoweaponid", gsc_bots_switchtoweaponid, 0},
-#endif
-
-#if COMPILE_MYSQL_VORON == 1
-  	{"async_mysql_create_entity_query", gsc_async_mysql_create_entity_query, 0},
-  	{"async_mysql_create_entity_query_nosave", gsc_async_mysql_create_entity_query_nosave, 0},
-#endif
-
 #ifdef EXTRA_METHODS_INC
 #include "extra/methods.hpp"
 #endif
@@ -395,7 +372,7 @@ int stackGetParamType(int param)
 	return var->type;
 }
 
-void stackError(char *format, ...)
+void stackError(const char *format, ...)
 {
 	va_list va;
 	
@@ -408,15 +385,14 @@ void stackError(char *format, ...)
 	va_end(va);
 }
 
-int stackGetParams(char *params, ...)
+int stackGetParams(const char *params, ...)
 {
 	va_list args;
 	va_start(args, params);
 
 	int errors = 0;
-	int len = strlen(params);
 
-	for (int i = 0; i < len; i++)
+	for (size_t i = 0; i < strlen(params); i++)
 	{
 		switch (params[i])
 		{
@@ -486,6 +462,12 @@ int stackGetParamInt(int param, int *value)
 	VariableValue *var;
 	var = &scrVmPub.top[-param];
 
+	if (var->type == STACK_FLOAT)
+	{
+		*value = var->u.floatValue;
+		return 1;
+	}
+
 	if (var->type != STACK_INT)
 		return 0;
 
@@ -552,16 +534,21 @@ int stackGetParamFloat(int param, float *value)
 	VariableValue *var;
 	var = &scrVmPub.top[-param];
 
+	if (var->type == STACK_INT)
+	{
+		*value = var->u.intValue;
+		return 1;
+	}
+
 	if (var->type != STACK_FLOAT)
 		return 0;
 
 	*value = var->u.floatValue;
 
 	return 1;
-
 }
 
-int stackGetParamObject(int param, int *value)
+int stackGetParamObject(int param, unsigned int *value)
 {
 	if (param >= Scr_GetNumParam())
 		return 0;

@@ -13,7 +13,8 @@ enum
 	INT_VALUE,
 	FLOAT_VALUE,
 	STRING_VALUE,
-	VECTOR_VALUE
+	VECTOR_VALUE,
+	OBJECT_VALUE
 };
 
 struct async_mysql_task
@@ -26,7 +27,6 @@ struct async_mysql_task
 	bool done;
 	bool complete;
 	bool save;
-	bool error;
 	bool cleanup;
 	MYSQL_RES *result;
 	unsigned int levelId;
@@ -34,8 +34,9 @@ struct async_mysql_task
 	int valueType;
 	int intValue;
 	float floatValue;
-	char *stringValue;
+	char stringValue[COD2_MAX_STRINGLENGTH];
 	vec3_t vectorValue;
+	unsigned int objectValue;
 	int entityNum;
 	int entityState;
 };
@@ -93,6 +94,7 @@ void *async_mysql_query_handler(void* dummy)
 
 				if (task->next != NULL)
 					task->next->prev = task->prev;
+
 				if (task->prev != NULL)
 					task->prev->next = task->next;
 				else
@@ -234,6 +236,7 @@ void gsc_async_mysql_create_query()
 	float valueFloat;
 	char *valueString;
 	vec3_t valueVector;
+	unsigned int valueObject;
 
 	if (stackGetParamInt(2, &valueInt))
 	{
@@ -248,7 +251,6 @@ void gsc_async_mysql_create_query()
 	else if (stackGetParamString(2, &valueString))
 	{
 		newtask->valueType = STRING_VALUE;
-		newtask->stringValue = (char *)malloc(strlen(valueString) + 1);
 		strcpy(newtask->stringValue, valueString);
 	}
 	else if (stackGetParamVector(2, valueVector))
@@ -257,6 +259,11 @@ void gsc_async_mysql_create_query()
 		newtask->vectorValue[0] = valueVector[0];
 		newtask->vectorValue[1] = valueVector[1];
 		newtask->vectorValue[2] = valueVector[2];
+	}
+	else if (stackGetParamObject(2, &valueObject))
+	{
+		newtask->valueType = OBJECT_VALUE;
+		newtask->objectValue = valueObject;
 	}
 	else
 		newtask->hasargument = false;
@@ -325,6 +332,7 @@ void gsc_async_mysql_create_query_nosave()
 	float valueFloat;
 	char *valueString;
 	vec3_t valueVector;
+	unsigned int valueObject;
 
 	if (stackGetParamInt(2, &valueInt))
 	{
@@ -339,7 +347,6 @@ void gsc_async_mysql_create_query_nosave()
 	else if (stackGetParamString(2, &valueString))
 	{
 		newtask->valueType = STRING_VALUE;
-		newtask->stringValue = (char *)malloc(strlen(valueString) + 1);
 		strcpy(newtask->stringValue, valueString);
 	}
 	else if (stackGetParamVector(2, valueVector))
@@ -348,6 +355,11 @@ void gsc_async_mysql_create_query_nosave()
 		newtask->vectorValue[0] = valueVector[0];
 		newtask->vectorValue[1] = valueVector[1];
 		newtask->vectorValue[2] = valueVector[2];
+	}
+	else if (stackGetParamObject(2, &valueObject))
+	{
+		newtask->valueType = OBJECT_VALUE;
+		newtask->objectValue = valueObject;
 	}
 	else
 		newtask->hasargument = false;
@@ -416,6 +428,7 @@ void gsc_async_mysql_create_entity_query(int entid)
 	float valueFloat;
 	char *valueString;
 	vec3_t valueVector;
+	unsigned int valueObject;
 
 	if (stackGetParamInt(2, &valueInt))
 	{
@@ -430,7 +443,6 @@ void gsc_async_mysql_create_entity_query(int entid)
 	else if (stackGetParamString(2, &valueString))
 	{
 		newtask->valueType = STRING_VALUE;
-		newtask->stringValue = (char *)malloc(strlen(valueString) + 1);
 		strcpy(newtask->stringValue, valueString);
 	}
 	else if (stackGetParamVector(2, valueVector))
@@ -439,6 +451,11 @@ void gsc_async_mysql_create_entity_query(int entid)
 		newtask->vectorValue[0] = valueVector[0];
 		newtask->vectorValue[1] = valueVector[1];
 		newtask->vectorValue[2] = valueVector[2];
+	}
+	else if (stackGetParamObject(2, &valueObject))
+	{
+		newtask->valueType = OBJECT_VALUE;
+		newtask->objectValue = valueObject;
 	}
 	else
 		newtask->hasargument = false;
@@ -507,6 +524,7 @@ void gsc_async_mysql_create_entity_query_nosave(int entid)
 	float valueFloat;
 	char *valueString;
 	vec3_t valueVector;
+	unsigned int valueObject;
 
 	if (stackGetParamInt(2, &valueInt))
 	{
@@ -521,7 +539,6 @@ void gsc_async_mysql_create_entity_query_nosave(int entid)
 	else if (stackGetParamString(2, &valueString))
 	{
 		newtask->valueType = STRING_VALUE;
-		newtask->stringValue = (char *)malloc(strlen(valueString) + 1);
 		strcpy(newtask->stringValue, valueString);
 	}
 	else if (stackGetParamVector(2, valueVector))
@@ -530,6 +547,11 @@ void gsc_async_mysql_create_entity_query_nosave(int entid)
 		newtask->vectorValue[0] = valueVector[0];
 		newtask->vectorValue[1] = valueVector[1];
 		newtask->vectorValue[2] = valueVector[2];
+	}
+	else if (stackGetParamObject(2, &valueObject))
+	{
+		newtask->valueType = OBJECT_VALUE;
+		newtask->objectValue = valueObject;
 	}
 	else
 		newtask->hasargument = false;
@@ -581,11 +603,14 @@ void gsc_async_mysql_checkdone()
 
 								case STRING_VALUE:
 									stackPushString(task->stringValue);
-									free(task->stringValue);
 									break;
 
 								case VECTOR_VALUE:
 									stackPushVector(task->vectorValue);
+									break;
+
+								case OBJECT_VALUE:
+									stackPushObject(task->objectValue);
 									break;
 
 								default:
@@ -621,7 +646,6 @@ void gsc_async_mysql_checkdone()
 
 						case STRING_VALUE:
 							stackPushString(task->stringValue);
-							free(task->stringValue);
 							break;
 
 						case VECTOR_VALUE:

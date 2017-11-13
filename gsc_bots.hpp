@@ -1,11 +1,6 @@
 #ifndef _GSC_BOTS_HPP_
 #define _GSC_BOTS_HPP_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/* gsc functions */
 #include "gsc.hpp"
 
 void gsc_bots_set_walkdir(int id);
@@ -17,9 +12,5 @@ void gsc_bots_meleeweapon(int id);
 void gsc_bots_reloadweapon(int id);
 void gsc_bots_adsaim(int id);
 void gsc_bots_switchtoweaponid(int id);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

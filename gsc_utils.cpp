@@ -66,7 +66,7 @@ void gsc_utils_bullethiteffect()
 
 void gsc_utils_getarraykeys()
 {
-	int arrIndex;
+	unsigned int arrIndex;
 
 	if (!stackGetParamObject(0, &arrIndex))
 	{
@@ -84,7 +84,7 @@ void gsc_utils_getarraykeys()
 		return;
 	}
 
-	int next = GetNextVariable(arrIndex);
+	unsigned int next = GetNextVariable(arrIndex);
 
 	stackPushArray();
 
@@ -423,10 +423,8 @@ void gsc_utils_file_link()
 		stackPushUndefined();
 		return;
 	}
-	char cmd[COD2_MAX_STRINGLENGTH];
-	snprintf(cmd, sizeof(cmd), "ln -sfn %s %s", source, dest);
-	int link_failed = system(cmd);
-	stackPushInt( link_failed ); // 0 == success
+	int link_success = symlink(source, dest) == 0;
+	stackPushInt( link_success );
 }
 
 void gsc_utils_file_unlink()
@@ -438,7 +436,8 @@ void gsc_utils_file_unlink()
 		stackPushUndefined();
 		return;
 	}
-	stackPushInt( unlink(file) ); // 0 == success
+	int unlink_success = unlink(file) == 0;
+	stackPushInt( unlink_success );
 }
 
 void gsc_utils_file_exists()
@@ -450,7 +449,8 @@ void gsc_utils_file_exists()
 		stackPushUndefined();
 		return;
 	}
-	stackPushInt( ! (access(filename, F_OK) == -1) );
+	int file_exists = access(filename, F_OK) != -1;
+	stackPushInt( file_exists );
 }
 
 void gsc_utils_FS_LoadDir()

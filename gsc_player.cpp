@@ -226,30 +226,27 @@ void gsc_player_stance_get(int id)
 	unsigned char *stance_address = (unsigned char *)(G_ENTITY(id) + 8);
 	int code = *stance_address & 0x0F; // just the last 4 bits tell the state
 
-	char *stance;
 	switch (code)
 	{
 	case  0:
 	case  2:
-		stance = "stand";
+		stackPushString("stand");
 		break;
 
 	case  4:
 	case  6:
-		stance = "duck";
+		stackPushString("duck");
 		break;
 
 	case  8:
 	case 10:
-		stance = "lie";
+		stackPushString("lie");
 		break;
 
 	default:
-		stance = "unknown";
+		stackPushString("unknown");
 		break;
 	}
-
-	stackPushString(stance);
 }
 
 void gsc_player_stance_set(int id)
@@ -443,6 +440,8 @@ void gsc_player_connectionlesspacket(int id)
 		return;
 	}
 
+	/*
+	
 	char message[COD2_MAX_STRINGLENGTH];
 	message[0] = -1;
 	message[1] = -1;
@@ -467,7 +466,9 @@ void gsc_player_connectionlesspacket(int id)
 	int info_player = PLAYERBASE(id);
 	netadr_t * from = (netadr_t*)(info_player + remoteaddress_offset);
 	SV_ConnectionlessPacket(*from, &msg);
-
+	
+	*/
+	
 	stackPushInt(1);
 }
 

@@ -1,10 +1,6 @@
 #ifndef _GSC_UTILS_HPP_
 #define _GSC_UTILS_HPP_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* gsc functions */
 #include "gsc.hpp"
 
@@ -44,9 +40,5 @@ void gsc_utils_gettimes();
 void gsc_utils_sqrt();
 void gsc_utils_sqrtInv();
 void gsc_utils_vectorscale();
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

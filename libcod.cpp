@@ -38,6 +38,18 @@ void hook_sv_init(char *format, ...)
 
 }
 
+void hook_sv_spawnserver(const char *format, ...)
+{
+	char s[COD2_MAX_STRINGLENGTH];
+	va_list va;
+
+	va_start(va, format);
+	vsnprintf(s, sizeof(s), format, va);
+	va_end(va);
+
+	Com_Printf("%s", s);
+}
+
 int codecallback_playercommand = 0;
 int codecallback_userinfochanged = 0;
 int codecallback_fire_grenade = 0;
@@ -173,7 +185,7 @@ int hook_isLanAddress( netadr_t adr )
 }
 
 cvar_t *sv_cracked;
-char* hook_AuthorizeState( int arg )
+const char* hook_AuthorizeState( int arg )
 {
 	char *s = Cmd_Argv(arg);
 
@@ -202,9 +214,6 @@ void custom_SV_WriteDownloadToClient(int cl, msg_t *msg)
 	char errorMessage[COD2_MAX_STRINGLENGTH];
 	int iwdFile;
 	int curindex;
-
-	int MAX_DOWNLOAD_BLKSIZE = 1024; // default -> 2048
-	int MAX_DOWNLOAD_WINDOW = 8;
 
 #if COD_VERSION == COD2_1_0
 	int rate_offset = 452008;
@@ -420,7 +429,7 @@ int hook_BG_IsWeaponValid(int a1, int a2)
 	return 1;
 }
 
-char *custom_va(char *format, ...)
+char *custom_va(const char *format, ...)
 {
 	char *s;
 	va_list va;
@@ -487,7 +496,7 @@ void hook_scriptError(int a1, int a2, int a3, void *a4)
 
 #if COMPILE_PLAYER == 1
 int gamestate_size[64] = {0};
-void hook_gamestate_info(char *format, ...)
+void hook_gamestate_info(const char *format, ...)
 {
 	char s[COD2_MAX_STRINGLENGTH];
 	va_list va;
@@ -916,9 +925,9 @@ void hook_SVC_Status(netadr_t from)
 #endif
 
 cvar_t *fs_library;
-void manymaps_prepare(char *mapname, int read)
+void manymaps_prepare(const char *mapname, int read)
 {
-	char library_path[512];
+	char library_path[512], map_check[512];
 
 	cvar_t *fs_homepath = Cvar_FindVar("fs_homepath");
 	cvar_t *fs_game = Cvar_FindVar("fs_game");
@@ -929,18 +938,15 @@ void manymaps_prepare(char *mapname, int read)
 	else
 		snprintf(library_path, sizeof(library_path), "%s/%s/Library", fs_homepath->string, fs_game->string);
 
-	char map_check[512];
 	snprintf(map_check, sizeof(map_check), "%s/%s.iwd", library_path, mapname);
-	int map_exists = access(map_check, F_OK) != -1;
 
 #if COD_VERSION == COD2_1_0
-	char *stock_maps[] = { "mp_breakout", "mp_brecourt", "mp_burgundy", "mp_carentan", "mp_dawnville", "mp_decoy", "mp_downtown", "mp_farmhouse", "mp_leningrad", "mp_matmata", "mp_railyard", "mp_toujane", "mp_trainstation" };
+	const char *stock_maps[] = { "mp_breakout", "mp_brecourt", "mp_burgundy", "mp_carentan", "mp_dawnville", "mp_decoy", "mp_downtown", "mp_farmhouse", "mp_leningrad", "mp_matmata", "mp_railyard", "mp_toujane", "mp_trainstation" };
 #else
-	char *stock_maps[] = { "mp_breakout", "mp_brecourt", "mp_burgundy", "mp_carentan", "mp_dawnville", "mp_decoy", "mp_downtown", "mp_farmhouse", "mp_leningrad", "mp_matmata", "mp_railyard", "mp_toujane", "mp_trainstation", "mp_rhine", "mp_harbor" };
+	const char *stock_maps[] = { "mp_breakout", "mp_brecourt", "mp_burgundy", "mp_carentan", "mp_dawnville", "mp_decoy", "mp_downtown", "mp_farmhouse", "mp_leningrad", "mp_matmata", "mp_railyard", "mp_toujane", "mp_trainstation", "mp_rhine", "mp_harbor" };
 #endif
 
-	bool map_found = false;
-	bool from_stock_map = false;
+	bool map_found = false, from_stock_map = false;
 
 	for (int i = 0; i < int( sizeof(stock_maps) / sizeof(stock_maps[0]) ); i++)
 	{
@@ -956,6 +962,7 @@ void manymaps_prepare(char *mapname, int read)
 		if (strcmp(mapname, stock_maps[i]) == 0)
 		{
 			map_found = true;
+
 			if (from_stock_map) // When changing from stock map to stock map do not trigger manymap
 				return;
 			else
@@ -963,26 +970,32 @@ void manymaps_prepare(char *mapname, int read)
 		}
 	}
 
+	int map_exists = access(map_check, F_OK) != -1;
+
 	if (!map_exists && !map_found)
 		return;
 
 	DIR *dir;
 	struct dirent *dir_ent;
+
 	dir = opendir(library_path);
 
 	if (!dir)
 		return;
 
-	while ( (dir_ent = readdir(dir)) != NULL)
+	while ((dir_ent = readdir(dir)) != NULL)
 	{
 		if (strcmp(dir_ent->d_name, ".") == 0 || strcmp(dir_ent->d_name, "..") == 0)
 			continue;
 
 		char fileDelete[512];
 		snprintf(fileDelete, sizeof(fileDelete), "%s/%s/%s", fs_homepath->string, fs_game->string, dir_ent->d_name);
-		int exists = access(fileDelete, F_OK) != -1;
-		if (exists)
-			printf("manymaps> REMOVED MANYMAP: %s result of unlink: %d\n", fileDelete, unlink(fileDelete));
+
+		if (access(fileDelete, F_OK) != -1)
+		{
+			int unlink_success = unlink(fileDelete) == 0;
+			printf("manymaps> REMOVED OLD LINK: %s result of unlink: %s\n", fileDelete, unlink_success?"success":"failed");
+		}
 	}
 
 	closedir(dir);
@@ -990,16 +1003,16 @@ void manymaps_prepare(char *mapname, int read)
 	if (map_exists)
 	{
 		char src[512], dst[512];
+
 		snprintf(src, sizeof(src), "%s/%s.iwd", library_path, mapname);
 		snprintf(dst, sizeof(dst), "%s/%s/%s.iwd", fs_homepath->string, fs_game->string, mapname);
-		printf("manymaps> LINK src=%s dst=%s\n", src, dst);
+
 		if (access(src, F_OK) != -1)
 		{
-			char cmd[COD2_MAX_STRINGLENGTH];
-			snprintf(cmd, sizeof(cmd), "ln -sfn %s %s", src, dst);
-			int link_success = system(cmd) == 0;
-			printf("manymaps> LINK: %s\n", link_success?"success":"failed (probably already exists)");
-			if (read == -1) // FS_LoadDir is needed when empty.iwd is missing (then .d3dbsp isn't referenced anywhere)
+			int link_success = symlink(src, dst) == 0;
+			printf("manymaps> NEW LINK: src=%s dst=%s result of link: %s\n", src, dst, link_success?"success":"failed");
+
+			if (link_success && read == -1) // FS_LoadDir is needed when empty.iwd is missing (then .d3dbsp isn't referenced anywhere)
 				FS_LoadDir(fs_homepath->string, fs_game->string);
 		}
 	}
@@ -1364,7 +1377,7 @@ int MMF_Code = 0x82862B4;
 int MMF_Code = 0x8287334;
 #endif
   
-void (*Com_PrintMessage)(int a1, char *s);
+void (*Com_PrintMessage)(int a1, const char *s);
 #if COD_VERSION == COD2_1_0
 *(int *)&Com_PrintMessage = 0x80609A8;
 #elif COD_VERSION == COD2_1_2
@@ -1409,7 +1422,7 @@ void (*Scr_PrintSourcePos)(int a1, int a2, char *a3, int a4);
 *(int *)&Scr_PrintSourcePos = 0x80781D6;
 #endif
   
-char *(*GE_va)(char *format, ...);
+char *(*GE_va)(const char *format, ...);
 #if COD_VERSION == COD2_1_0
 *(int *)&GE_va = 0x80B59CE;
 #elif COD_VERSION == COD2_1_2
@@ -1476,6 +1489,7 @@ public:
 
 #if COD_VERSION == COD2_1_0
 		cracking_hook_call(0x08061FE7, (int)hook_sv_init);
+		cracking_hook_call(0x08091D0C, (int)hook_sv_spawnserver);
 		cracking_hook_call(0x0808F281, (int)hook_ClientCommand);
 		cracking_hook_call(0x0808C8C0, (int)hook_AuthorizeState);
 		cracking_hook_call(0x0808BFCA, (int)hook_isLanAddress);
@@ -1539,6 +1553,7 @@ public:
 
 #elif COD_VERSION == COD2_1_2
 		cracking_hook_call(0x08062301, (int)hook_sv_init);
+		cracking_hook_call(0x08093572, (int)hook_sv_spawnserver);
 		cracking_hook_call(0x08090B0C, (int)hook_ClientCommand);
 		cracking_hook_call(0x0808DA52, (int)hook_AuthorizeState);
 		cracking_hook_call(0x0808D22E, (int)hook_isLanAddress);
@@ -1601,6 +1616,7 @@ public:
 
 #elif COD_VERSION == COD2_1_3
 		cracking_hook_call(0x080622F9, (int)hook_sv_init);
+		cracking_hook_call(0x0809362A, (int)hook_sv_spawnserver);
 		cracking_hook_call(0x08090BA0, (int)hook_ClientCommand);
 		cracking_hook_call(0x0808DB12, (int)hook_AuthorizeState);
 		cracking_hook_call(0x0808D2FA, (int)hook_isLanAddress);
@@ -1696,12 +1712,12 @@ cCallOfDuty2Pro *pro;
 // both now: able to load with wrapper AND directly
 // IMPORTANT: file needs "lib" infront of name, otherwise it wont be loaded
 
-extern "C" void __attribute__ ((constructor)) lib_load(void) // will be called when LD_PRELOAD is referencing this .so
+void __attribute__ ((constructor)) lib_load(void) // will be called when LD_PRELOAD is referencing this .so
 {
 	pro = new cCallOfDuty2Pro;
 }
 
-extern "C" void __attribute__ ((destructor)) lib_unload(void)
+void __attribute__ ((destructor)) lib_unload(void)
 {
 	delete pro;
 }

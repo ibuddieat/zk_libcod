@@ -1,11 +1,6 @@
 #ifndef _GSC_MYSQL_VORON_HPP_
 #define _GSC_MYSQL_VORON_HPP_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/* gsc functions */
 #include "gsc.hpp"
 
 void gsc_mysql_initialize();
@@ -41,9 +36,5 @@ void gsc_async_mysql_real_escape_string();
 
 void gsc_async_mysql_create_entity_query(int entid);
 void gsc_async_mysql_create_entity_query_nosave(int entid);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

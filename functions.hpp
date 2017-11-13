@@ -3,7 +3,7 @@
 
 /* MAKE FUNCTIONS STATIC, SO THEY CAN BE IN EVERY FILE */
 
-typedef int (*GetVariableName_t)(int a1);
+typedef unsigned int (*GetVariableName_t)(unsigned int a1);
 #if COD_VERSION == COD2_1_0
 static const GetVariableName_t GetVariableName = (GetVariableName_t)0x0807CA72;
 #elif COD_VERSION == COD2_1_2
@@ -12,7 +12,7 @@ static const GetVariableName_t GetVariableName = (GetVariableName_t)0x0807CFF6;
 static const GetVariableName_t GetVariableName = (GetVariableName_t)0x0807D0C2;
 #endif
 
-typedef int (*GetNextVariable_t)(int a1);
+typedef unsigned int (*GetNextVariable_t)(unsigned int a1);
 #if COD_VERSION == COD2_1_0
 static const GetNextVariable_t GetNextVariable = (GetNextVariable_t)0x0807C9CE;
 #elif COD_VERSION == COD2_1_2
@@ -21,7 +21,7 @@ static const GetNextVariable_t GetNextVariable = (GetNextVariable_t)0x0807CF52;
 static const GetNextVariable_t GetNextVariable = (GetNextVariable_t)0x0807D01E;
 #endif
 
-typedef int (*GetArraySize_t)(int a1);
+typedef int (*GetArraySize_t)(unsigned int a1);
 #if COD_VERSION == COD2_1_0
 static const GetArraySize_t GetArraySize = (GetArraySize_t)0x0807C9AC;
 #elif COD_VERSION == COD2_1_2
@@ -146,493 +146,6 @@ static const FS_LoadDir_t FS_LoadDir = (FS_LoadDir_t)0x080A22D8;
 #elif COD_VERSION == COD2_1_3
 static const FS_LoadDir_t FS_LoadDir = (FS_LoadDir_t)0x080A241C;
 #endif
-
-typedef enum
-{
-	CS_FREE,		// can be reused for a new connection
-	CS_ZOMBIE,		// client has been disconnected, but don't reuse connection for a couple seconds
-	CS_CONNECTED,	// has been assigned to a client_t, but no gamestate yet
-	CS_PRIMED,		// gamestate has been sent, but client hasn't sent a usercmd
-	CS_ACTIVE		// client is fully in game
-} clientState_t;
-
-typedef enum
-{
-	NA_BOT = 0,
-	NA_BAD = 0,
-	NA_LOOPBACK = 2,
-	NA_BROADCAST = 3,
-	NA_IP = 4,
-	NA_IPX = 5,
-	NA_BROADCAST_IPX = 6
-} netadrtype_t;
-
-typedef struct
-{
-	netadrtype_t type;
-	unsigned char ip[4];
-	char ipx[10];
-	unsigned short port;
-} netadr_t;
-
-typedef enum
-{
-	NS_CLIENT,
-	NS_SERVER
-} netsrc_t;
-
-typedef struct
-{
-	bool overflowed; // 0
-	char *data; // 4
-	int maxsize; // 8
-	int cursize; // 12
-	int readcount; // 16
-	int bit;
-} msg_t; // 0x18
-
-typedef float vec_t;
-typedef vec_t vec2_t[2];
-typedef vec_t vec3_t[3];
-typedef vec_t vec4_t[4];
-typedef vec_t vec5_t[5];
-
-typedef unsigned char byte;
-
-typedef union
-{
-	int i;
-	byte rgba[4];
-} ucolor_t;
-
-typedef struct cvar_s
-{
-	char *name;
-	char *description;
-	short int flags;
-	byte type;
-	byte modified;
-	union
-	{
-		float floatval;
-		float value;
-		int integer;
-		char* string;
-		byte boolean;
-		vec2_t vec2;
-		vec3_t vec3;
-		vec4_t vec4;
-		ucolor_t color;
-	};
-	union
-	{
-		float latchedFloatval;
-		int latchedInteger;
-		char* latchedString;
-		byte latchedBoolean;
-		vec2_t latchedVec2;
-		vec3_t latchedVec3;
-		vec4_t latchedVec4;
-		ucolor_t latchedColor;
-	};
-	union
-	{
-		float resetFloatval;
-		int resetInteger;
-		char* resetString;
-		byte resetBoolean;
-		vec2_t resetVec2;
-		vec3_t resetVec3;
-		vec4_t resetVec4;
-		ucolor_t resetColor;
-	};
-	union
-	{
-		int imin;
-		float fmin;
-	};
-	union
-	{
-		int imax;
-		float fmax;
-		const char** enumStr;
-	};
-	struct cvar_s *next;
-	struct cvar_s *hashNext;
-} cvar_t;
-
-//defines Cvarflags
-#define	CVAR_ARCHIVE		1	// set to cause it to be saved to vars.rc
-// used for system variables, not for player
-// specific configurations
-#define	CVAR_USERINFO		2	// sent to server on connect or change
-#define	CVAR_SERVERINFO		4	// sent in response to front end requests
-#define	CVAR_SYSTEMINFO		8	// these cvars will be duplicated on all clients
-#define	CVAR_INIT		16	// don't allow change from console at all,
-// but can be set from the command line
-#define	CVAR_LATCH		32	// will only change when C code next does
-// a Cvar_Get(), so it can't be changed
-// without proper initialization.  modified
-// will be set, even though the value hasn't
-// changed yet
-#define	CVAR_ROM		64	// display only, cannot be set by user at all
-#define CVAR_CHEAT		128	// can not be changed if cheats are disabled
-#define	CVAR_TEMP		256	// can be set even when cheats are disabled, but is not archived
-#define CVAR_NORESTART		1024	// do not clear when a cvar_restart is issued
-#define	CVAR_USER_CREATED	16384	// created by a set command
-
-struct VariableStackBuffer
-{
-	const char *pos;
-	u_int16_t size;
-	u_int16_t bufLen;
-	u_int16_t localId;
-	char time;
-	char buf[1];
-};
-
-union VariableUnion
-{
-	int intValue;
-	float floatValue;
-	unsigned int stringValue;
-	const float *vectorValue;
-	const char *codePosValue;
-	unsigned int pointerValue;
-	struct VariableStackBuffer *stackValue;
-	unsigned int entityOffset;
-};
-
-typedef struct
-{
-	union VariableUnion u;
-	int type;
-} VariableValue;
-
-typedef struct
-{
-	const char *fieldBuffer;
-	u_int16_t canonicalStrCount;
-	byte developer;
-	byte developer_script;
-	byte evaluate;
-	byte pad[3];
-	const char *error_message;
-	int error_index;
-	unsigned int time;
-	unsigned int timeArrayId;
-	unsigned int pauseArrayId;
-	unsigned int levelId;
-	unsigned int gameId;
-	unsigned int animId;
-	unsigned int freeEntList;
-	unsigned int tempVariable;
-	byte bInited;
-	byte pad2;
-	u_int16_t savecount;
-	unsigned int checksum;
-	unsigned int entId;
-	unsigned int entFieldName;
-	struct HunkUser *programHunkUser;
-	const char *programBuffer;
-	const char *endScriptBuffer;
-	u_int16_t saveIdMap[24574];
-	u_int16_t saveIdMapRev[24574];
-} scrVarPub_t;
-
-struct function_stack_t
-{
-	const char *pos;
-	unsigned int localId;
-	unsigned int localVarCount;
-	VariableValue *top;
-	VariableValue *startTop;
-};
-
-struct function_frame_t
-{
-	struct function_stack_t fs;
-	int topType;
-};
-
-typedef struct
-{
-	unsigned int *localVars;
-	VariableValue *maxstack;
-	int function_count;
-	struct function_frame_t *function_frame;
-	VariableValue *top;
-	byte debugCode;
-	byte abort_on_error;
-	byte terminal_error;
-	byte pad;
-	unsigned int inparamcount;
-	unsigned int outparamcount;
-	struct function_frame_t function_frame_start[32];
-	VariableValue stack[2048];
-} scrVmPub_t;
-
-typedef int	fileHandle_t;
-
-typedef void (*xfunction_t)();
-
-typedef struct scr_function_s
-{
-	char			*name;
-	xfunction_t		call;
-	int				developer;
-} scr_function_t;
-
-typedef void (*xmethod_t)(int);
-
-typedef struct scr_method_s
-{
-	char			*name;
-	xmethod_t		call;
-	int				developer;
-} scr_method_t;
-
-typedef enum
-{
-	EV_NONE = 0,
-	EV_FOOTSTEP_RUN_DEFAULT,
-	EV_FOOTSTEP_RUN_BARK,
-	EV_FOOTSTEP_RUN_BRICK,
-	EV_FOOTSTEP_RUN_CARPET,
-	EV_FOOTSTEP_RUN_CLOTH,
-	EV_FOOTSTEP_RUN_CONCRETE,
-	EV_FOOTSTEP_RUN_DIRT,
-	EV_FOOTSTEP_RUN_FLESH,
-	EV_FOOTSTEP_RUN_FOLIAGE,
-	EV_FOOTSTEP_RUN_GLASS,
-	EV_FOOTSTEP_RUN_GRASS,
-	EV_FOOTSTEP_RUN_GRAVEL,
-	EV_FOOTSTEP_RUN_ICE,
-	EV_FOOTSTEP_RUN_METAL,
-	EV_FOOTSTEP_RUN_MUD,
-	EV_FOOTSTEP_RUN_PAPER,
-	EV_FOOTSTEP_RUN_PLASTER,
-	EV_FOOTSTEP_RUN_ROCK,
-	EV_FOOTSTEP_RUN_SAND,
-	EV_FOOTSTEP_RUN_SNOW,
-	EV_FOOTSTEP_RUN_WATER,
-	EV_FOOTSTEP_RUN_WOOD,
-	EV_FOOTSTEP_RUN_ASPHALT,
-	EV_FOOTSTEP_WALK_DEFAULT,
-	EV_FOOTSTEP_WALK_BARK,
-	EV_FOOTSTEP_WALK_BRICK,
-	EV_FOOTSTEP_WALK_CARPET,
-	EV_FOOTSTEP_WALK_CLOTH,
-	EV_FOOTSTEP_WALK_CONCRETE,
-	EV_FOOTSTEP_WALK_DIRT,
-	EV_FOOTSTEP_WALK_FLESH,
-	EV_FOOTSTEP_WALK_FOLIAGE,
-	EV_FOOTSTEP_WALK_GLASS,
-	EV_FOOTSTEP_WALK_GRASS,
-	EV_FOOTSTEP_WALK_GRAVEL,
-	EV_FOOTSTEP_WALK_ICE,
-	EV_FOOTSTEP_WALK_METAL,
-	EV_FOOTSTEP_WALK_MUD,
-	EV_FOOTSTEP_WALK_PAPER,
-	EV_FOOTSTEP_WALK_PLASTER,
-	EV_FOOTSTEP_WALK_ROCK,
-	EV_FOOTSTEP_WALK_SAND,
-	EV_FOOTSTEP_WALK_SNOW,
-	EV_FOOTSTEP_WALK_WATER,
-	EV_FOOTSTEP_WALK_WOOD,
-	EV_FOOTSTEP_WALK_ASPHALT,
-	EV_FOOTSTEP_PRONE_DEFAULT,
-	EV_FOOTSTEP_PRONE_BARK,
-	EV_FOOTSTEP_PRONE_BRICK,
-	EV_FOOTSTEP_PRONE_CARPET,
-	EV_FOOTSTEP_PRONE_CLOTH,
-	EV_FOOTSTEP_PRONE_CONCRETE,
-	EV_FOOTSTEP_PRONE_DIRT,
-	EV_FOOTSTEP_PRONE_FLESH,
-	EV_FOOTSTEP_PRONE_FOLIAGE,
-	EV_FOOTSTEP_PRONE_GLASS,
-	EV_FOOTSTEP_PRONE_GRASS,
-	EV_FOOTSTEP_PRONE_GRAVEL,
-	EV_FOOTSTEP_PRONE_ICE,
-	EV_FOOTSTEP_PRONE_METAL,
-	EV_FOOTSTEP_PRONE_MUD,
-	EV_FOOTSTEP_PRONE_PAPER,
-	EV_FOOTSTEP_PRONE_PLASTER,
-	EV_FOOTSTEP_PRONE_ROCK,
-	EV_FOOTSTEP_PRONE_SAND,
-	EV_FOOTSTEP_PRONE_SNOW,
-	EV_FOOTSTEP_PRONE_WATER,
-	EV_FOOTSTEP_PRONE_WOOD,
-	EV_FOOTSTEP_PRONE_ASPHALT,
-	EV_JUMP_DEFAULT,
-	EV_JUMP_BARK,
-	EV_JUMP_BRICK,
-	EV_JUMP_CARPET,
-	EV_JUMP_CLOTH,
-	EV_JUMP_CONCRETE,
-	EV_JUMP_DIRT,
-	EV_JUMP_FLESH,
-	EV_JUMP_FOLIAGE,
-	EV_JUMP_GLASS,
-	EV_JUMP_GRASS,
-	EV_JUMP_GRAVEL,
-	EV_JUMP_ICE,
-	EV_JUMP_METAL,
-	EV_JUMP_MUD,
-	EV_JUMP_PAPER,
-	EV_JUMP_PLASTER,
-	EV_JUMP_ROCK,
-	EV_JUMP_SAND,
-	EV_JUMP_SNOW,
-	EV_JUMP_WATER,
-	EV_JUMP_WOOD,
-	EV_JUMP_ASPHALT,
-	EV_LANDING_DEFAULT,
-	EV_LANDING_BARK,
-	EV_LANDING_BRICK,
-	EV_LANDING_CARPET,
-	EV_LANDING_CLOTH,
-	EV_LANDING_CONCRETE,
-	EV_LANDING_DIRT,
-	EV_LANDING_FLESH,
-	EV_LANDING_FOLIAGE,
-	EV_LANDING_GLASS,
-	EV_LANDING_GRASS,
-	EV_LANDING_GRAVEL,
-	EV_LANDING_ICE,
-	EV_LANDING_METAL,
-	EV_LANDING_MUD,
-	EV_LANDING_PAPER,
-	EV_LANDING_PLASTER,
-	EV_LANDING_ROCK,
-	EV_LANDING_SAND,
-	EV_LANDING_SNOW,
-	EV_LANDING_WATER,
-	EV_LANDING_WOOD,
-	EV_LANDING_ASPHALT,
-	EV_LANDING_PAIN_DEFAULT,
-	EV_LANDING_PAIN_BARK,
-	EV_LANDING_PAIN_BRICK,
-	EV_LANDING_PAIN_CARPET,
-	EV_LANDING_PAIN_CLOTH,
-	EV_LANDING_PAIN_CONCRETE,
-	EV_LANDING_PAIN_DIRT,
-	EV_LANDING_PAIN_FLESH,
-	EV_LANDING_PAIN_FOLIAGE,
-	EV_LANDING_PAIN_GLASS,
-	EV_LANDING_PAIN_GRASS,
-	EV_LANDING_PAIN_GRAVEL,
-	EV_LANDING_PAIN_ICE,
-	EV_LANDING_PAIN_METAL,
-	EV_LANDING_PAIN_MUD,
-	EV_LANDING_PAIN_PAPER,
-	EV_LANDING_PAIN_PLASTER,
-	EV_LANDING_PAIN_ROCK,
-	EV_LANDING_PAIN_SAND,
-	EV_LANDING_PAIN_SNOW,
-	EV_LANDING_PAIN_WATER,
-	EV_LANDING_PAIN_WOOD,
-	EV_LANDING_PAIN_ASPHALT,
-	EV_FOLIAGE_SOUND,
-	EV_STANCE_FORCE_STAND,
-	EV_STANCE_FORCE_CROUCH,
-	EV_STANCE_FORCE_PRONE,
-	EV_STEP_VIEW,
-	EV_ITEM_PICKUP,
-	EV_AMMO_PICKUP,
-	EV_NOAMMO,
-	EV_EMPTYCLIP,
-	EV_EMPTY_OFFHAND,
-	EV_RESET_ADS,
-	EV_RELOAD,
-	EV_RELOAD_FROM_EMPTY,
-	EV_RELOAD_START,
-	EV_RELOAD_END,
-	EV_RAISE_WEAPON,
-	EV_PUTAWAY_WEAPON,
-	EV_WEAPON_ALT,
-	EV_PULLBACK_WEAPON,
-	EV_FIRE_WEAPON,
-	EV_FIRE_WEAPONB,
-	EV_FIRE_WEAPON_LASTSHOT,
-	EV_RECHAMBER_WEAPON,
-	EV_EJECT_BRASS,
-	EV_MELEE_SWIPE,
-	EV_FIRE_MELEE,
-	EV_PREP_OFFHAND,
-	EV_USE_OFFHAND,
-	EV_SWITCH_OFFHAND,
-	EV_BINOCULAR_ENTER,
-	EV_BINOCULAR_EXIT,
-	EV_BINOCULAR_FIRE,
-	EV_BINOCULAR_RELEASE,
-	EV_BINOCULAR_DROP,
-	EV_MELEE_HIT,
-	EV_MELEE_MISS,
-	EV_FIRE_WEAPON_MG42,
-	EV_FIRE_QUADBARREL_1,
-	EV_FIRE_QUADBARREL_2,
-	EV_BULLET_TRACER,
-	EV_SOUND_ALIAS,
-	EV_SOUND_ALIAS_AS_MASTER,
-	EV_BULLET_HIT_SMALL,
-	EV_BULLET_HIT_LARGE,
-	EV_SHOTGUN_HIT,
-	EV_BULLET_HIT_AP,
-	EV_BULLET_HIT_CLIENT_SMALL,
-	EV_BULLET_HIT_CLIENT_LARGE,
-	EV_GRENADE_BOUNCE,
-	EV_GRENADE_EXPLODE,
-	EV_ROCKET_EXPLODE,
-	EV_ROCKET_EXPLODE_NOMARKS,
-	EV_CUSTOM_EXPLODE,
-	EV_CUSTOM_EXPLODE_NOMARKS,
-	EV_BULLET,
-	EV_PLAY_FX,
-	EV_PLAY_FX_ON_TAG,
-	EV_EARTHQUAKE,
-	EV_GRENADE_SUICIDE,
-	EV_OBITUARY
-} entity_event_t;
-
-typedef enum
-{
-	TRACE_HITTYPE_NONE = 0x0,
-	TRACE_HITTYPE_ENTITY = 0x1,
-	TRACE_HITTYPE_DYNENT_MODEL = 0x2,
-	TRACE_HITTYPE_DYNENT_BRUSH = 0x3,
-	TRACE_HITTYPE_GLASS = 0x4
-} TraceHitType;
-
-typedef struct trace_s
-{
-	float fraction;
-	vec3_t normal;
-	int surfaceFlags;
-	int contents;
-	const char *material;
-	TraceHitType hitType;
-	u_int16_t hitId;
-	u_int16_t modelIndex;
-	u_int16_t partName;
-	u_int16_t partGroup;
-	byte allsolid;
-	byte startsolid;
-	byte walkable;
-	byte padding;
-} trace_t;
-
-typedef struct leakyBucket_s leakyBucket_t;
-struct leakyBucket_s
-{
-	netadrtype_t type;
-	unsigned char adr[4];
-	int	lastTime;
-	signed char	burst;
-	long hash;
-
-	leakyBucket_t *prev, *next;
-};
 
 typedef xfunction_t (*Scr_GetFunction_t)(const char** v_function, int* v_developer);
 #if COD_VERSION == COD2_1_0
@@ -958,7 +471,7 @@ static const FS_SV_FOpenFileRead_t FS_SV_FOpenFileRead = (FS_SV_FOpenFileRead_t)
 static const FS_SV_FOpenFileRead_t FS_SV_FOpenFileRead = (FS_SV_FOpenFileRead_t)0x08064558;
 #endif
 
-typedef int (*FS_iwIwd_t)(char *a1, char *a2);
+typedef int (*FS_iwIwd_t)(const char *a1, const char *a2);
 #if COD_VERSION == COD2_1_0
 static const FS_iwIwd_t FS_iwIwd = (FS_iwIwd_t)0x08064ECC;
 #elif COD_VERSION == COD2_1_2
@@ -1163,6 +676,15 @@ static const Scr_AddArray_t Scr_AddArray = (Scr_AddArray_t)0x08084D1C;
 static const Scr_AddArray_t Scr_AddArray = (Scr_AddArray_t)0x08085298;
 #elif COD_VERSION == COD2_1_3
 static const Scr_AddArray_t Scr_AddArray = (Scr_AddArray_t)0x08085364;
+#endif
+
+typedef void (*Scr_AddObject_t)(unsigned int object);
+#if COD_VERSION == COD2_1_0
+static const Scr_AddObject_t Scr_AddObject = (Scr_AddObject_t)0x08084BA2;
+#elif COD_VERSION == COD2_1_2
+static const Scr_AddObject_t Scr_AddObject = (Scr_AddObject_t)0x0808511E;
+#elif COD_VERSION == COD2_1_3
+static const Scr_AddObject_t Scr_AddObject = (Scr_AddObject_t)0x080851EA;
 #endif
 
 typedef int (*G_TempEntity_t)(vec3_t origin, int event);
