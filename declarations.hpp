@@ -5,9 +5,25 @@
 #define qtrue 1
 #define qfalse 0
 
+#define ValidEntity(entity) 	((*(int *)(entity + 1)))
+#define DotProduct(x,y)			((x)[0]*(y)[0]+(x)[1]*(y)[1]+(x)[2]*(y)[2])
+#define VectorSubtract(a,b,c)	((c)[0]=(a)[0]-(b)[0],(c)[1]=(a)[1]-(b)[1],(c)[2]=(a)[2]-(b)[2])
+#define VectorAdd(a,b,c)		((c)[0]=(a)[0]+(b)[0],(c)[1]=(a)[1]+(b)[1],(c)[2]=(a)[2]+(b)[2])
+#define VectorCopy(a,b)			((b)[0]=(a)[0],(b)[1]=(a)[1],(b)[2]=(a)[2])
+#define	VectorScale(v, s, o)	((o)[0]=(v)[0]*(s),(o)[1]=(v)[1]*(s),(o)[2]=(v)[2]*(s))
+#define	VectorMA(v, s, b, o)	((o)[0]=(v)[0]+(b)[0]*(s),(o)[1]=(v)[1]+(b)[1]*(s),(o)[2]=(v)[2]+(b)[2]*(s))
+
+#define COD2_MAX_STRINGLENGTH 1024
+#define MAX_CLIENTS 64
+#define PACKET_BACKUP 32
+#define MAX_QPATH 64
+#define MAX_OSPATH 256
+#define FRAMETIME 50
+
 typedef unsigned char byte;
 typedef struct gclient_s gclient_t;
 typedef struct gentity_s gentity_t;
+typedef int scr_entref_t;
 
 enum svc_ops_e
 {
@@ -20,6 +36,25 @@ enum svc_ops_e
 	svc_snapshot,
 	svc_EOF
 };
+
+typedef enum
+{
+	ET_GENERAL = 0,
+	ET_PLAYER = 1,
+	ET_ITEM = 3,
+	ET_MISSILE = 4,
+	ET_INVISIBLE = 5,
+	ET_SCRIPTMOVER = 6
+} entityType_t;
+
+typedef enum
+{
+	TEAM_FREE,
+	TEAM_RED,
+	TEAM_BLUE,
+	TEAM_SPEC,
+	TEAM_NUM_TEAMS
+} team_t;
 
 typedef enum
 {
@@ -73,7 +108,7 @@ typedef enum
 typedef struct
 {
 	qboolean overflowed;
-	byte* data;
+	byte *data;
 	int maxsize;
 	int cursize;
 	int readcount;
@@ -148,7 +183,6 @@ typedef struct cvar_s
 	struct cvar_s *hashNext;
 } cvar_t;
 
-
 #define	CVAR_ARCHIVE		1
 #define	CVAR_USERINFO		2
 #define	CVAR_SERVERINFO		4
@@ -183,15 +217,75 @@ union VariableUnion
 	unsigned int entityOffset;
 };
 
+union ObjectInfo_u
+{
+	u_int16_t size;
+	u_int16_t entnum;
+	u_int16_t nextEntId;
+	u_int16_t self;
+};
+
+struct ObjectInfo
+{
+	u_int16_t refCount;
+	union ObjectInfo_u u;
+};
+
+union VariableValueInternal_u
+{
+	u_int16_t next;
+	union VariableUnion u;
+	struct ObjectInfo o;
+};
+
+union VariableValueInternal_w
+{
+	unsigned int status;
+	unsigned int type;
+	unsigned int name;
+	unsigned int classnum;
+	unsigned int notifyName;
+	unsigned int waitTime;
+	unsigned int parentLocalId;
+};
+
+union VariableValueInternal_v
+{
+	u_int16_t next;
+	u_int16_t index;
+};
+
 typedef struct
 {
 	union VariableUnion u;
 	int type;
 } VariableValue;
 
+union Variable_u
+{
+	u_int16_t prev;
+	u_int16_t prevSibling;
+};
+
+struct Variable
+{
+	u_int16_t id;
+	union Variable_u u;
+};
+
+typedef struct
+{
+	struct Variable hash;
+	union VariableValueInternal_u u;
+	union VariableValueInternal_w w;
+	union VariableValueInternal_v v;
+	u_int16_t nextSibling;
+} VariableValueInternal;
+
 typedef struct
 {
 	const char *fieldBuffer;
+	struct HunkUser *programHunkUser;
 	u_int16_t canonicalStrCount;
 	byte developer;
 	byte developer_script;
@@ -213,11 +307,8 @@ typedef struct
 	unsigned int checksum;
 	unsigned int entId;
 	unsigned int entFieldName;
-	struct HunkUser *programHunkUser;
 	const char *programBuffer;
 	const char *endScriptBuffer;
-	u_int16_t saveIdMap[24574];
-	u_int16_t saveIdMapRev[24574];
 } scrVarPub_t;
 
 struct function_stack_t
@@ -253,23 +344,21 @@ typedef struct
 } scrVmPub_t;
 
 typedef int	fileHandle_t;
-
 typedef void (*xfunction_t)();
+typedef void (*xmethod_t)(scr_entref_t);
 
 typedef struct scr_function_s
 {
 	const char      *name;
 	xfunction_t     call;
-	int             developer;
+	qboolean        developer;
 } scr_function_t;
-
-typedef void (*xmethod_t)(int);
 
 typedef struct scr_method_s
 {
 	const char     *name;
 	xmethod_t      call;
-	int            developer;
+	qboolean       developer;
 } scr_method_t;
 
 typedef enum
@@ -601,8 +690,8 @@ typedef struct entityState_s
 	trajectory_t apos;
 	int time;
 	int time2;
-	vec3_t origin2;
-	vec3_t angles2;
+	vec3_t origin;
+	vec3_t angles;
 	int otherEntityNum;
 	int attackerEntityNum;
 	int groundEntityNum;
@@ -653,9 +742,9 @@ typedef enum
 	STAT_HEALTH,
 	STAT_DEAD_YAW,
 	STAT_MAX_HEALTH,
-	STAT_UNKNOWN1,
-	STAT_UNKNOWN2,
-	STAT_UNKNOWN3
+	STAT_FRIENDLY_LOOKAT_CLIENTNUM,
+	STAT_FRIENDLY_LOOKAT_HEALTH,
+	STAT_SPAWN_COUNT
 } statIndex_t;
 
 typedef enum
@@ -761,6 +850,14 @@ typedef struct hudElemState_s
 	hudelem_t archival[31];
 } hudElemState_t;
 
+typedef struct
+{
+	float	yaw;
+	int	timer;
+	int	transIndex;
+	int	flags;
+} mantleState_t;
+
 typedef struct playerState_s
 {
 	int	commandTime;
@@ -770,14 +867,12 @@ typedef struct playerState_s
 	int pm_time;
 	vec3_t origin;
 	vec3_t velocity;
-	vec2_t oldVelocity;
+	vec2_t oldVelocity; // 48
+	int	weaponTime;
 	int weaponDelay;
-	// not confirmed below
 	int	grenadeTimeLeft;
 	int	throwBackGrenadeOwner;
 	int	throwBackGrenadeTimeLeft;
-	int	weaponRestrictKickTime;
-	// end of not confirmed
 	int	gravity;
 	float leanf;
 	int speed;
@@ -809,28 +904,37 @@ typedef struct playerState_s
 	int adsDelayTime;
 	int	viewmodelIndex;
 	vec3_t viewangles;
-	char unk40[40];
+	int viewHeightTarget;
+	float viewHeightCurrent;
+	int viewHeightLerpTime;
+	int viewHeightLerpTarget;
+	int viewHeightLerpDown;
+	int unknown[5];
 	int	damageEvent;
 	int	damageYaw;
 	int	damagePitch;
 	int	damageCount;
 	int	stats[6];
 	int	ammo[128];
-	int	ammoclip[128];
-	// not confirmed below
-	unsigned int weapons[4];
+	int	ammoclip[128]; // 836
+	unsigned int weapons[4]; // 1348
 	unsigned int weaponsold[4];
-	unsigned int weaponrechamber[2];
-	// end of not confirmed
+	unsigned int weaponrechamber[2]; // ?
 	vec3_t mins;
 	vec3_t maxs;
 	float proneDirection;
 	float proneDirectionPitch;
-	int unknown3[3];
-	ViewLockTypes_t	viewlocked;
-	int unknown;
+	float proneTorsoPitch;
+	ViewLockTypes_t viewlocked;
 	int viewlocked_entNum;
-	int unknown10[10];
+	int	cursorHint;
+	int	cursorHintString;
+	int	cursorHintEntIndex;
+	int unknown1;
+	vec3_t unkAngles;
+	float holdBreathScale;
+	int holdBreathTimer;
+	mantleState_t mantleState;
 	int entityEventSequence;
 	int	weapAnim;
 	float aimSpreadScale;
@@ -910,8 +1014,10 @@ struct gclient_s
 	qboolean inactivityWarning;
 	int playerTalkTime;
 	int rewardTime; // N/A
-	float antilagShootTime;
-	int unused_space[6];
+	float antilagShootTime; // 10256
+	int unknown_space[2];
+	int unknownClientEndFrameVar;
+	int unknown_space2[3];
 	gentity_t *lookAtEntity; // needs a NULL check, otherwise crash.
 	int activateEntNumber;
 	int activateTime;
@@ -919,11 +1025,14 @@ struct gclient_s
 	int pingPlayerTime;
 	int damageFeedBackTime;
 	vec2_t damageFeedBackDir;
-	float weaponSwayDir; // 10316
-	int unused_space2[15];
+	vec3_t swayViewAngles; // 10316
+	vec3_t swayOffset;
+	vec3_t swayAngles;
+	int unknown_space3[7];
 	float weaponRecoil; // 10380
-	int unused_space3[4];
+	int unknown_space4[3];
 	int lastServerTime;
+	int lastActivateTime;
 }; // verified
 
 typedef int turretInfo_s;
@@ -938,46 +1047,42 @@ struct gentity_s
 	byte takedamage;
 	byte active;
 	byte nopickup;
-	byte handler;
+	byte model;
 	byte team;
-	u_int16_t classname;
+	byte handler;
+	byte pad;
+	u_int16_t classname; // 360
 	u_int16_t target;
 	u_int16_t targetname;
-	u_int16_t pad;
 	int spawnflags;
 	int flags;
 	int eventTime;
-	int tempEntity;
-	int dobj; // ? maybe not 384
+	qboolean freeAfterEvent; // 380
+	qboolean unlinkAfterEvent;
 	int clipmask;
-	int unknown; //  392
-	int pointContents;
+	int realClipmask;
+	int realContents; // 396
 	int nextthink; // 400
-	int damage;
+	int healthPoints;
+	int unknown;
+	int damage; // 412
 	int unknown2;
-	int damage2;
-	int unknownItemRelated;
 	int unknown3;
-	int unknownItemRelated2;
-	int item; // 428
+	float physicsBounce; // 424
+	u_int16_t item; // 428 This is item id, not item pointer!
 	int hurtTouchTime;
 	int useSharedNum;
-	int offsetTime;
-	int unknown4[9];
-	int think; // ?
-	float unknown5;
-	int unknown6;
-	int playerStatePrediction[3]; // 500
-	vec3_t lerpPosition; // 512
-	vec3_t moverOrigin; // 524
+	int attackerWeapon; // 440 ?
+	int unknown11[11];
+	int playerStatePrediction; // ?
+	vec3_t lerpOrigin; // 492
+	vec3_t lerpAngles; // 504
+	vec3_t moverOrigin; // 516
 	byte attachedModels[6]; // 528
-	byte free;
-	byte free2;
-	byte numAttachedModels; // 540
-	byte free3;
-	byte free4;
-	int animTree; // ?
-	vec4_t color;
+	u_int16_t attachedTagName; // 536 ?
+	u_int16_t numAttachedModels; // 538 ?
+	int animTree; // 540 ?
+	vec4_t color; // ?
 }; // verified
 
 #define MAX_DOWNLOAD_BLKSIZE 1024
@@ -1008,8 +1113,8 @@ typedef struct
 typedef struct client_s
 {
 	clientState_t	state;
-	int				gamestateSent;
-	int				unkClientStateVar;
+	int				unksnapshotvar;
+	int				unksnapshotvar2;
 	char			userinfo[1024];
 	reliableCommands_t	reliableCommands[128];
 	int				reliableSequence;
@@ -1023,7 +1128,7 @@ typedef struct client_s
 	char			lastClientCommandString[1024];
 	gentity_t 		*gentity;
 	char 			name[32];
-	char			downloadName[64];
+	char			downloadName[MAX_QPATH];
 	fileHandle_t	download;
 	int				downloadSize;
 	int				downloadCount;
@@ -1035,20 +1140,20 @@ typedef struct client_s
 	qboolean		downloadEOF;
 	int				downloadSendTime;
 #if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
-	char			wwwDownloadURL[256];
+	char			wwwDownloadURL[MAX_OSPATH];
 	qboolean		wwwDownload;
 	qboolean		wwwDownloadStarted;
 	qboolean		wwwDlAck;
 	qboolean		wwwDl_failed;
 #endif
 	int				deltaMessage;
-	int				nextReliableTime;
+	int				floodprotect;
 	int				lastPacketTime;
 	int				lastConnectTime;
 	int				nextSnapshotTime;
 	qboolean		rateDelayed;
 	int				timeoutCount;
-	clientSnapshot_t frames[32];
+	clientSnapshot_t frames[PACKET_BACKUP];
 	int				ping;
 	int				rate;
 	int				snapshotMsec;
@@ -1060,7 +1165,7 @@ typedef struct client_s
 	int				serverId;
 	voices_t		voicedata[40];
 	int				unsentVoiceData;
-	byte			mutedClients[64];
+	byte			mutedClients[MAX_CLIENTS];
 	byte			hasVoip;
 #if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
 	char 			pbguid[64];
@@ -1109,8 +1214,670 @@ typedef struct
 	char 		netProfilingBuf[1504];
 } serverStatic_t; // verified
 
-#define g_entities ((gentity_t*)(gentities))
-#define g_clients ((gclient_t*)(playerStates))
+typedef struct
+{
+	const char *key;
+	const char *value;
+} keyValueStr_t;
+
+typedef struct
+{
+	byte spawnVarsValid;
+	int numSpawnVars;
+	keyValueStr_t spawnVars[64];
+	int numSpawnVarChars;
+	char spawnVarChars[2048];
+} SpawnVar;
+
+typedef struct
+{
+	u_int16_t entnum;
+	u_int16_t otherEntnum;
+	int useCount;
+	int otherUseCount;
+} trigger_info_t;
+
+typedef struct
+{
+	struct gclient_s *clients;
+	struct gentity_s *gentities;
+	int gentitySize;
+	int num_entities;
+	struct gentity_s *firstFreeEnt;
+	struct gentity_s *lastFreeEnt;
+	fileHandle_t logFile;
+	int initializing;
+	int clientIsSpawning;
+	objective_t objectives[16];
+	int maxclients;
+	int framenum;
+	int time;
+	int previousTime;
+	int frameTime;
+	int startTime;
+	int teamScores[TEAM_NUM_TEAMS];
+	int lastTeammateHealthTime;
+	qboolean bUpdateScoresForIntermission;
+	int manualNameChange;
+	int numConnectedClients;
+	int sortedClients[MAX_CLIENTS];
+	char voteString[1024];
+	char voteDisplayString[1024];
+	int voteTime; // 711
+	int voteExecuteTime;
+	int voteYes;
+	int voteNo;
+	int numVotingClients;
+	byte gap[2072];
+	SpawnVar spawnVars;
+	int savePersist;
+	struct gentity_s *droppedWeaponCue[32];
+	float fFogOpaqueDist;
+	float fFogOpaqueDistSqrd;
+	int remapCount;
+	int currentPlayerClone;
+	trigger_info_t pendingTriggerList[256];
+	trigger_info_t currentTriggerList[256];
+	int pendingTriggerListSize;
+	int currentTriggerListSize;
+	int finished;
+	int bPlayerIgnoreRadiusDamage;
+	int bPlayerIgnoreRadiusDamageLatched;
+	int registerWeapons;
+	int bRegisterItems;
+	int currentEntityThink;
+	void *openScriptIOFileHandles[1];
+	char *openScriptIOFileBuffers[1];
+} level_locals_t; // possibly more stuff here
+
+typedef enum
+{
+	SS_DEAD,
+	SS_LOADING,
+	SS_GAME
+} serverState_t;
+
+#define MAX_CONFIGSTRINGS   2048
+#define MAX_MODELS          256
+#define GENTITYNUM_BITS     10
+#define MAX_GENTITIES       ( 1 << GENTITYNUM_BITS )
+#define MAX_ENT_CLUSTERS    16
+#define MAX_BPS_WINDOW 		20
+
+typedef struct
+{
+	int cluster;
+	int area;
+	int firstLeafBrush;
+	int numLeafBrushes;
+	int firstLeafSurface;
+	int numLeafSurfaces;
+} cLeaf_t;
+
+typedef struct cmodel_s
+{
+	vec3_t mins, maxs;
+	cLeaf_t leaf;
+} cmodel_t;
+
+typedef struct
+{
+	int svFlags;
+	int clientMask[2];
+	vec3_t absmin;
+	vec3_t absmax;
+} archivedEntityShared_t;
+
+typedef struct archivedEntity_s
+{
+	entityState_t s;
+	archivedEntityShared_t r;
+} archivedEntity_t;
+
+typedef struct svEntity_s
+{
+	u_int16_t worldSector;
+	u_int16_t nextEntityInWorldSector;
+	archivedEntity_t baseline;
+	int numClusters;
+	int clusternums[MAX_ENT_CLUSTERS];
+	int	lastCluster;
+	int	linkcontents;
+	float linkmin[2];
+	float linkmax[2];
+} svEntity_t;
+
+typedef struct
+{
+	serverState_t state;
+	qboolean restarting;
+	int start_frameTime;
+	int	checksumFeed;
+	int timeResidual;
+	int unk; // ?
+	struct cmodel_s *models[MAX_MODELS]; // ?
+	char *configstrings[MAX_CONFIGSTRINGS];
+	svEntity_t svEntities[MAX_GENTITIES];
+	char *entityParsePoint;
+	gentity_t *gentities;
+	int gentitySize;
+	int	num_entities;
+	playerState_t *gameClients;
+	int gameClientSize;
+	int	skelTimeStamp;
+	int	skelMemPos;
+	int	bpsWindow[MAX_BPS_WINDOW];
+	int	bpsWindowSteps;
+	int	bpsTotalBytes;
+	int	bpsMaxBytes;
+	int	ubpsWindow[MAX_BPS_WINDOW];
+	int	ubpsTotalBytes;
+	int	ubpsMaxBytes;
+	float ucompAve;
+	int	ucompNum;
+	char gametype[MAX_QPATH];
+} server_t; // verified
+
+typedef enum weapType_t
+{
+	WEAPTYPE_BULLET = 0x0,
+	WEAPTYPE_GRENADE = 0x1,
+	WEAPTYPE_PROJECTILE = 0x2,
+	WEAPTYPE_BINOCULARS = 0x3,
+	WEAPTYPE_NUM = 0x4
+} weapType_t;
+
+typedef enum weapClass_t
+{
+	WEAPCLASS_RIFLE = 0x0,
+	WEAPCLASS_MG = 0x1,
+	WEAPCLASS_SMG = 0x2,
+	WEAPCLASS_SPREAD = 0x3,
+	WEAPCLASS_PISTOL = 0x4,
+	WEAPCLASS_GRENADE = 0x5,
+	WEAPCLASS_ROCKETLAUNCHER = 0x6,
+	WEAPCLASS_TURRET = 0x7,
+	WEAPCLASS_NON_PLAYER = 0x8,
+	WEAPCLASS_ITEM = 0x9,
+	WEAPCLASS_NUM = 0xA
+} weapClass_t;
+
+typedef enum ImpactType_t
+{
+	IMPACT_TYPE_NONE = 0x0,
+	IMPACT_TYPE_BULLET_SMALL = 0x1,
+	IMPACT_TYPE_BULLET_LARGE = 0x2,
+	IMPACT_TYPE_BULLET_AP = 0x3,
+	IMPACT_TYPE_SHOTGUN = 0x4,
+	IMPACT_TYPE_GRENADE_BOUNCE = 0x5,
+	IMPACT_TYPE_GRENADE_EXPLODE = 0x6,
+	IMPACT_TYPE_ROCKET_EXPLODE = 0x7,
+	IMPACT_TYPE_PROJECTILE_DUD = 0x8,
+	IMPACT_TYPE_COUNT = 0x9
+} ImpactType_t;
+
+typedef enum weapInventoryType_t
+{
+	WEAPINVENTORY_PRIMARY = 0x0,
+	WEAPINVENTORY_OFFHAND = 0x1,
+	WEAPINVENTORY_ITEM = 0x2,
+	WEAPINVENTORY_ALTMODE = 0x3,
+	WEAPINVENTORYCOUNT = 0x4
+} weapInventoryType_t;
+
+typedef enum OffhandClass_t
+{
+	OFFHAND_CLASS_NONE = 0x0,
+	OFFHAND_CLASS_FRAG_GRENADE = 0x1,
+	OFFHAND_CLASS_SMOKE_GRENADE = 0x2,
+	OFFHAND_CLASS_COUNT = 0x3
+} OffhandClass_t;
+
+typedef enum weapStance_t
+{
+	WEAPSTANCE_STAND = 0x0,
+	WEAPSTANCE_DUCK = 0x1,
+	WEAPSTANCE_PRONE = 0x2,
+	WEAPSTANCE_NUM = 0x3
+} weapStance_t;
+
+typedef enum weapOverlayReticle_t
+{
+	WEAPOVERLAYRETICLE_NONE = 0x0,
+	WEAPOVERLAYRETICLE_CROSSHAIR = 0x1,
+	WEAPOVERLAYRETICLE_NUM = 0x2
+} weapOverlayReticle_t;
+
+typedef enum weaponIconRatioType_t
+{
+	WEAPON_ICON_RATIO_1TO1 = 0x0,
+	WEAPON_ICON_RATIO_2TO1 = 0x1,
+	WEAPON_ICON_RATIO_4TO1 = 0x2,
+	WEAPON_ICON_RATIO_COUNT = 0x3
+} weaponIconRatioType_t;
+
+typedef enum weapProjExposion_t
+{
+	WEAPPROJEXP_GRENADE = 0x0,
+	WEAPPROJEXP_MOLOTOV = 0x1,
+	WEAPPROJEXP_ROCKET = 0x2,
+	WEAPPROJEXP_NONE = 0x3,
+	WEAPPROJEXP_NUM = 0x4
+} weapProjExposion_t;
+
+typedef const char FxEffectDef_t;
+typedef const char snd_alias_list_t;
+typedef const char Material_t;
+
+typedef struct WeaponDef_t
+{
+	const char *szInternalName;
+	const char *szDisplayName;
+	const char *szOverlayName;
+	const char *szViewModelName;
+	const char *szHandModelName;
+	int unknown;
+	const char *szXAnims[22];
+	const char *szModeName;
+	int playerAnimType;
+	weapType_t weapType;
+	weapClass_t weapClass;
+	ImpactType_t impactType;
+	weapInventoryType_t inventoryType;
+	OffhandClass_t offhandClass; // ? not confirmed
+	weapStance_t stance; // ? not confirmed
+	FxEffectDef_t *viewFlashEffect;
+	FxEffectDef_t *worldFlashEffect;
+	snd_alias_list_t *pickupSound;
+	snd_alias_list_t *ammoPickupSound;
+	snd_alias_list_t *projectileSound;
+	snd_alias_list_t *pullbackSound;
+	snd_alias_list_t *fireSound;
+	snd_alias_list_t *fireSoundPlayer;
+	snd_alias_list_t *unknown4[4];
+	snd_alias_list_t *fireLastSound;
+	snd_alias_list_t *fireLastSoundPlayer;
+	snd_alias_list_t *meleeSwipeSound;
+	snd_alias_list_t *rechamberSound;
+	snd_alias_list_t *rechamberSoundPlayer;
+	snd_alias_list_t *reloadSound;
+	snd_alias_list_t *reloadSoundPlayer;
+	snd_alias_list_t *reloadEmptySound;
+	snd_alias_list_t *reloadEmptySoundPlayer;
+	snd_alias_list_t *reloadStartSound;
+	snd_alias_list_t *reloadStartSoundPlayer;
+	snd_alias_list_t *reloadEndSound;
+	snd_alias_list_t *reloadEndSoundPlayer;
+	snd_alias_list_t *altSwitchSound;
+	snd_alias_list_t *raiseSound;
+	snd_alias_list_t *putawaySound;
+	snd_alias_list_t *noteTrackSoundA;
+	snd_alias_list_t *noteTrackSoundB;
+	snd_alias_list_t *noteTrackSoundC;
+	snd_alias_list_t *noteTrackSoundD;
+	FxEffectDef_t *shellEjectEffect;
+	FxEffectDef_t *lastShotEjectEffect;
+	Material_t *reticleCenter;
+	Material_t *reticleSide;
+	int iReticleCenterSize;
+	int iReticleSideSize;
+	int iReticleMinOfs;
+	float vStandMove[3];
+	float vStandRot[3];
+	float vDuckedOfs[3];
+	float vDuckedMove[3];
+	float vDuckedRot[3];
+	float vProneOfs[3];
+	float vProneMove[3];
+	float vProneRot[3];
+	float fPosMoveRate;
+	float fPosProneMoveRate;
+	float fStandMoveMinSpeed;
+	float fDuckedMoveMinSpeed;
+	float fProneMoveMinSpeed;
+	float fPosRotRate;
+	float fPosProneRotRate;
+	float fStandRotMinSpeed;
+	float fDuckedRotMinSpeed;
+	float fProneRotMinSpeed;
+	const char *worldModel;
+	Material_t *hudIcon;
+	Material_t *modeIcon;
+	int iStartAmmo;
+	const char *szAmmoName;
+	int iAmmoIndex;
+	const char *szClipName;
+	int iClipIndex;
+	int iMaxAmmo;
+	int iClipSize;
+	int shotCount;
+	const char *szSharedAmmoCapName;
+	int iSharedAmmoCapIndex;
+	int iSharedAmmoCap;
+	int damage;
+	int playerDamage;
+	int iMeleeDamage;
+	int iDamageType;
+	int iFireDelay;
+	int iMeleeDelay;
+	int iFireTime;
+	int iRechamberTime;
+	int iRechamberBoltTime;
+	int iHoldFireTime;
+	int iMeleeTime;
+	int iReloadTime;
+	int iReloadEmptyTime;
+	int iReloadAddTime;
+	int iReloadStartTime;
+	int iReloadStartAddTime;
+	int iReloadEndTime;
+	int iDropTime;
+	int iRaiseTime;
+	int iAltDropTime;
+	int iAltRaiseTime;
+	int quickDropTime;
+	int quickRaiseTime;
+	int fuseTime;
+	float autoAimRange;
+	float aimAssistRange;
+	float aimAssistRangeAds;
+	float aimPadding;
+	float enemyCrosshairRange;
+	int crosshairColorChange;
+	float moveSpeedScale;
+	float fAdsZoomFov;
+	float fAdsZoomInFrac;
+	float fAdsZoomOutFrac;
+	Material_t *overlayMaterial;
+	weapOverlayReticle_t overlayReticle;
+	float overlayWidth;
+	float overlayHeight;
+	float fAdsBobFactor;
+	float fAdsViewBobMult;
+	float fHipSpreadStandMin;
+	float fHipSpreadDuckedMin;
+	float fHipSpreadProneMin;
+	float hipSpreadStandMax;
+	float hipSpreadDuckedMax;
+	float hipSpreadProneMax;
+	float fHipSpreadDecayRate;
+	float fHipSpreadFireAdd;
+	float fHipSpreadTurnAdd;
+	float fHipSpreadMoveAdd;
+	float fHipSpreadDuckedDecay;
+	float fHipSpreadProneDecay;
+	float fHipReticleSidePos;
+	int iAdsTransInTime;
+	int iAdsTransOutTime;
+	float fAdsIdleAmount;
+	float fHipIdleAmount;
+	float adsIdleSpeed;
+	float hipIdleSpeed;
+	float fIdleCrouchFactor;
+	float fIdleProneFactor;
+	float fGunMaxPitch;
+	float fGunMaxYaw;
+	float swayMaxAngle;
+	float swayLerpSpeed;
+	float swayPitchScale;
+	float swayYawScale;
+	float swayHorizScale;
+	float swayVertScale;
+	float swayShellShockScale;
+	float adsSwayMaxAngle;
+	float adsSwayLerpSpeed;
+	float adsSwayPitchScale;
+	float adsSwayYawScale;
+	float adsSwayHorizScale;
+	float adsSwayVertScale;
+	int bRifleBullet;
+	int armorPiercing;
+	int semiAuto;
+	int bBoltAction;
+	int aimDownSight;
+	int bRechamberWhileAds;
+	float adsViewErrorMin;
+	float adsViewErrorMax;
+	int bCookOffHold;
+	int bClipOnly;
+	int cancelAutoHolsterWhenEmpty; // ?
+	int suppressAmmoReserveDisplay; // ?
+	Material_t *killIcon;
+	weaponIconRatioType_t killIconRatio; // ?
+	int flipKillIcon;
+	int bNoPartialReload;
+	int bSegmentedReload;
+	int iReloadAmmoAdd;
+	int iReloadStartAdd;
+	const char *szAltWeaponName;
+	uint altWeaponIndex;
+	int iDropAmmoMin;
+	int iDropAmmoMax;
+	int iExplosionRadius;
+	int iExplosionInnerDamage;
+	int iExplosionOuterDamage;
+	int iProjectileSpeed;
+	int iProjectileSpeedUp;
+	const char *projectileModel;
+	weapProjExposion_t projExplosion;
+	FxEffectDef_t *projExplosionEffect;
+	snd_alias_list_t *projExplosionSound;
+	int bProjImpactExplode;
+	float parallelBounce[23];
+	float perpendicularBounce[23];
+	FxEffectDef_t *projTrailEffect;
+	int unknown2[4];
+	float fAdsAimPitch;
+	float fAdsCrosshairInFrac;
+	float fAdsCrosshairOutFrac;
+	int adsGunKickReducedKickBullets;
+	float adsGunKickReducedKickPercent;
+	float fAdsGunKickPitchMin;
+	float fAdsGunKickPitchMax;
+	float fAdsGunKickYawMin;
+	float fAdsGunKickYawMax;
+	float fAdsGunKickAccel;
+	float fAdsGunKickSpeedMax;
+	float fAdsGunKickSpeedDecay;
+	float fAdsGunKickStaticDecay;
+	float fAdsViewKickPitchMin;
+	float fAdsViewKickPitchMax;
+	float fAdsViewKickYawMin;
+	float fAdsViewKickYawMax;
+	float fAdsViewKickCenterSpeed;
+	float fAdsViewScatterMin;
+	float fAdsViewScatterMax;
+	float fAdsSpread;
+	int hipGunKickReducedKickBullets;
+	float hipGunKickReducedKickPercent;
+	float fHipGunKickPitchMin;
+	float fHipGunKickPitchMax;
+	float fHipGunKickYawMin;
+	float fHipGunKickYawMax;
+	float fHipGunKickAccel;
+	float fHipGunKickSpeedMax;
+	float fHipGunKickSpeedDecay;
+	float fHipGunKickStaticDecay;
+	float fHipViewKickPitchMin;
+	float fHipViewKickPitchMax;
+	float fHipViewKickYawMin;
+	float fHipViewKickYawMax;
+	float fHipViewKickCenterSpeed;
+	float fHipViewScatterMin;
+	float fHipViewScatterMax;
+	float fightDist;
+	float maxDist;
+	const char *aiVsAiAccuracyGraph;
+	const char *aiVsPlayerAccuracyGraph;
+	int accuracyGraphKnotCount[2];
+	int originalAccuracyGraphKnotCount[2];
+	int iPositionReloadTransTime;
+	float leftArc;
+	float rightArc;
+	float topArc;
+	float bottomArc;
+	float accuracy;
+	float aiSpread;
+	float playerSpread;
+	int minVertTurnSpeed;
+	int minHorTurnSpeed;
+	int maxVertTurnSpeed;
+	int maxHorTurnSpeed;
+	float pitchConvergenceTime;
+	float yawConvergenceTime;
+	float suppressTime;
+	float maxRange;
+	float fAnimHorRotateInc;
+	float fPlayerPositionDist;
+	const char *szUseHintString;
+	const char *dropHintString;
+	int iUseHintStringIndex;
+	int dropHintStringIndex;
+	float horizViewJitter;
+	float vertViewJitter;
+	const char *szScript;
+	float fOOPosAnimLength[2];
+	int minDamage;
+	int minPlayerDamage;
+	float fMaxDamageRange;
+	float fMinDamageRange;
+	int unknown5[4];
+	float locationDamageMultipliers[19];
+	const char *fireRumble;
+	const char *meleeImpactRumble;
+} WeaponDef_t;
+
+typedef enum
+{
+	ANIM_BP_UNUSED,
+	ANIM_BP_LEGS,
+	ANIM_BP_TORSO,
+	ANIM_BP_BOTH,
+	NUM_ANIM_BODYPARTS
+} animBodyPart_t;
+
+typedef enum
+{
+	IT_BAD,
+	IT_WEAPON,
+	IT_AMMO,
+	IT_HEALTH,
+	IT_HOLDABLE,
+} itemType_t;
+
+typedef struct gitem_s
+{
+	char *classname; // ??? They don't set classname or what? Other fields work fine.
+	char *pickup_sound;
+	char *world_model;
+	int giTag; // ?
+	char *icon;
+	char *display_name; // Weapon string e.g WEAPON_STEN
+	int quantity; // ammo for weapons
+	itemType_t giType;
+	int giAmmoIndex;
+	int giClipIndex;
+	int giSharedAmmoCapIndex; // guessed
+} gitem_t;
+
+typedef struct
+{
+	short emptystring;
+	short allies;
+	short axis;
+	short current;
+	short damage;
+	short death;
+	short dlight;
+	short done;
+	short empty;
+	short entity;
+	short failed;
+	short fraction;
+	short goal;
+	short grenade;
+	short info_notnull;
+	short invisible;
+	short key1;
+	short key2;
+	short killanimscript;
+	short left;
+	short movedone;
+	short noclass;
+	short normal;
+	short pistol;
+	short plane_waypoint;
+	short player;
+	short position;
+	short primary;
+	short primaryb;
+	short prone;
+	short right;
+	short rocket;
+	short rotatedone;
+	short script_brushmodel;
+	short script_model;
+	short script_origin;
+	short spectator;
+	short stand;
+	short surfacetype;
+	short target_script_trigger;
+	short tempEntity;
+	short touch;
+	short trigger;
+	short trigger_use;
+	short trigger_use_touch;
+	short trigger_damage;
+	short trigger_lookat;
+	short truck_cam;
+	short worldspawn;
+	short binocular_enter;
+	short binocular_exit;
+	short binocular_fire;
+	short binocular_release;
+	short binocular_drop;
+	short begin;
+	short intermission;
+	short menuresponse;
+	short playing;
+	short none;
+	short dead;
+	short auto_change;
+	short manual_change;
+	short freelook;
+	short call_vote;
+	short vote;
+	short snd_enveffectsprio_level;
+	short snd_enveffectsprio_shellshock;
+	short snd_channelvolprio_holdbreath;
+	short snd_channelvolprio_pain;
+	short snd_channelvolprio_shellshock;
+	short tag_flash;
+	short tag_flash_11;
+	short tag_flash_2;
+	short tag_flash_22;
+	short tag_brass;
+	short j_head;
+	short tag_weapon;
+	short tag_player;
+	short tag_camera;
+	short tag_aim;
+	short tag_aim_animated;
+	short tag_origin;
+	short tag_butt;
+	short tag_weapon_right;
+	short back_low;
+	short back_mid;
+	short back_up;
+	short neck;
+	short head;
+	short pelvis;
+} stringIndex_t;
+
+#define	SVF_NOCLIENT  0x00000001
+#define	SVF_BROADCAST 0x00000008
+
+#define KEY_MASK_NONE        	0
 
 #define KEY_MASK_FORWARD        127
 #define KEY_MASK_BACK           -127
@@ -1118,7 +1885,7 @@ typedef struct
 #define KEY_MASK_MOVELEFT       -127
 
 #define KEY_MASK_FIRE           1
-#define KEY_MASK_MELEE			4
+#define KEY_MASK_MELEE          4
 #define KEY_MASK_USE            8
 #define KEY_MASK_RELOAD         16
 #define KEY_MASK_LEANLEFT       64
@@ -1131,5 +1898,155 @@ typedef struct
 #define KEY_MASK_HOLDBREATH     32768
 #define KEY_MASK_FRAG           65536
 #define KEY_MASK_SMOKE          131072
+
+#define EF_VOTED 0x00100000
+#define EF_TALK 0x00200000
+#define EF_TAUNT 0x00400000
+#define EF_FIRING 0x00000020
+#define EF_MANTLE 0x00004000
+#define EF_CROUCHING 0x00000004
+#define EF_PRONE 0x00000008
+#define EF_DEAD 0x00020000
+#define EF_USETURRET 0x00000300
+#define EF_AIMDOWNSIGHT 0x00040000
+
+#define PMF_LADDER 32
+
+#define CONTENTS_SOLID          1
+#define CONTENTS_NONCOLLIDING   4
+#define CONTENTS_LAVA           8
+#define CONTENTS_WATER          0x20
+#define CONTENTS_CANSHOTCLIP    0x40
+#define CONTENTS_MISSILECLIP    0x80
+#define CONTENTS_VEHICLECLIP	0x200
+#define CONTENTS_ITEMCLIP       0x400
+#define CONTENTS_SKY            0x800
+#define CONTENTS_AI_NOSIGHT     0x1000
+#define CONTENTS_CLIPSHOT       0x2000
+#define CONTENTS_MOVER          0x4000
+#define CONTENTS_PLAYERCLIP     0x10000
+#define CONTENTS_MONSTERCLIP    0x20000
+#define CONTENTS_TELEPORTER     0x40000
+#define CONTENTS_JUMPPAD        0x80000
+#define CONTENTS_CLUSTERPORTAL  0x100000
+#define CONTENTS_DONOTENTER     0x200000
+#define CONTENTS_DONOTENTER_LARGE 0x400000
+
+#define CONTENTS_MANTLE         0x1000000
+#define CONTENTS_DETAIL         0x8000000
+#define CONTENTS_STRUCTURAL     0x10000000
+#define CONTENTS_TRANSPARENT    0x20000000
+#define CONTENTS_NODROP         0x80000000
+
+#define CONTENTS_BODY           0x2000000
+#define CONTENTS_TRIGGER        0x40000000
+
+#if COD_VERSION == COD2_1_0
+static const int gentities_offset = 0x08665480;
+#elif COD_VERSION == COD2_1_2
+static const int gentities_offset = 0x08679380;
+#elif COD_VERSION == COD2_1_3
+static const int gentities_offset = 0x08716400;
+#endif
+
+#if COD_VERSION == COD2_1_0
+static const int gclients_offset = 0x086F1480;
+#elif COD_VERSION == COD2_1_2
+static const int gclients_offset = 0x08705480;
+#elif COD_VERSION == COD2_1_3
+static const int gclients_offset = 0x087A2500;
+#endif
+
+#define g_entities ((gentity_t*)(gentities_offset))
+#define g_clients ((gclient_t*)(gclients_offset))
+
+#if COD_VERSION == COD2_1_0
+static const int varpub_offset = 0x08394000;
+#elif COD_VERSION == COD2_1_2
+static const int varpub_offset = 0x08396480;
+#elif COD_VERSION == COD2_1_3
+static const int varpub_offset = 0x08397500;
+#endif
+
+#if COD_VERSION == COD2_1_0
+static const int varglob_offset = 0x08294000;
+#elif COD_VERSION == COD2_1_2
+static const int varglob_offset = 0x08296480;
+#elif COD_VERSION == COD2_1_3
+static const int varglob_offset = 0x08297500;
+#endif
+
+#if COD_VERSION == COD2_1_0
+static const int vmpub_offset = 0x083D7600;
+#elif COD_VERSION == COD2_1_2
+static const int vmpub_offset = 0x083D7A00;
+#elif COD_VERSION == COD2_1_3
+static const int vmpub_offset = 0x083D8A80;
+#endif
+
+#if COD_VERSION == COD2_1_0
+static const int sv_offset = 0x0842BC80;
+#elif COD_VERSION == COD2_1_2
+static const int sv_offset = 0x0843F180;
+#elif COD_VERSION == COD2_1_3
+static const int sv_offset = 0x08440200;
+#endif
+
+#if COD_VERSION == COD2_1_0
+static const int svs_offset = 0x0841FB00;
+#elif COD_VERSION == COD2_1_2
+static const int svs_offset = 0x08422000;
+#elif COD_VERSION == COD2_1_3
+static const int svs_offset = 0x08423080;
+#endif
+
+#if COD_VERSION == COD2_1_0
+static const int level_offset = 0x0859B400;
+#elif COD_VERSION == COD2_1_2
+static const int level_offset = 0x085AF300;
+#elif COD_VERSION == COD2_1_3
+static const int level_offset = 0x0864C380;
+#endif
+
+#if COD_VERSION == COD2_1_0
+static const int itemlist_offset = 0x08164C20;
+#elif COD_VERSION == COD2_1_2
+static const int itemlist_offset = 0x081840A0;
+#elif COD_VERSION == COD2_1_3
+static const int itemlist_offset = 0x081850C0;
+#endif
+
+#if COD_VERSION == COD2_1_0
+static const int const_offset = 0x087A22A0;
+#elif COD_VERSION == COD2_1_2
+static const int const_offset = 0x087B61A0;
+#elif COD_VERSION == COD2_1_3
+static const int const_offset = 0x08853220;
+#endif
+
+#define scrVarPub (*((scrVarPub_t*)( varpub_offset )))
+#define scrVmPub (*((scrVmPub_t*)( vmpub_offset )))
+#define scrVarGlob (((VariableValueInternal*)( varglob_offset )))
+#define scrVarGlob_high (((VariableValueInternal*)( varglob_offset + 16 * 32770 )))
+#define sv (*((server_t*)( sv_offset )))
+#define svs (*((serverStatic_t*)( svs_offset )))
+#define level (*((level_locals_t*)( level_offset )))
+#define bg_itemlist (((gitem_t*)( itemlist_offset )))
+#define scr_const (*((stringIndex_t*)( const_offset )))
+
+/*
+// Check for critical structure sizes and fail if not match
+#if COD_VERSION == COD2_1_0
+static_assert((sizeof(client_t) == 0x78F14), "ERROR: client_t size is invalid!");
+#elif COD_VERSION == COD2_1_2
+static_assert((sizeof(client_t) == 0x79064), "ERROR: client_t size is invalid!");
+#elif COD_VERSION == COD2_1_3
+static_assert((sizeof(client_t) == 0xB1064), "ERROR: client_t size is invalid!");
+#endif
+
+static_assert((sizeof(gentity_t) == 560), "ERROR: gentity_t size is invalid!");
+static_assert((sizeof(gclient_t) == 0x28A4), "ERROR: gclient_t size is invalid!");
+static_assert((sizeof(gitem_t) == 44), "ERROR: gitem_t size is invalid!");
+*/
 
 #endif

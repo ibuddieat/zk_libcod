@@ -86,14 +86,14 @@ const char *stackGetParamTypeAsString(int param)
 		return "UNKNOWN TYPE";
 	}
 }
-
+void NULL_FUNC_ENTITY(scr_entref_t id) {}
 void NULL_FUNC(void) {}
 
 scr_function_t scriptFunctions[] =
 {
-	#if COD_VERSION == COD2_1_0
+#if COD_VERSION == COD2_1_0
 	{"endparty", NULL_FUNC, 0}, //cod2 1.2
-	#endif
+#endif
 	
 #if COMPILE_MYSQL_DEFAULT == 1
 	{"mysql_init", gsc_mysql_init, 0},
@@ -277,6 +277,11 @@ scr_method_t scriptMethods[] =
 	{"switchtoweaponid", gsc_bots_switchtoweaponid, 0},
 #endif
 
+#if COMPILE_ENTITY == 1
+	{"setAlive", gsc_entity_setalive, 0},
+	{"setBounds", gsc_entity_setbounds, 0},
+#endif
+
 #if COMPILE_MYSQL_VORON == 1
   	{"async_mysql_create_entity_query", gsc_async_mysql_create_entity_query, 0},
   	{"async_mysql_create_entity_query_nosave", gsc_async_mysql_create_entity_query_nosave, 0},
@@ -302,25 +307,24 @@ scr_method_t scriptMethods[] =
 	{"getIP", gsc_player_getip, 0},
 	{"getPing", gsc_player_getping, 0},
 	{"getSpectatorClient", gsc_player_spectatorclient_get, 0},
-	{"ClientCommand", gsc_player_ClientCommand, 0},
-	{"getLastConnectTime", gsc_player_getLastConnectTime, 0},
-	{"getLastMSG", gsc_player_getLastMSG, 0},
+	{"ClientCommand", gsc_player_clientcommand, 0},
+	{"getLastConnectTime", gsc_player_getlastconnecttime, 0},
+	{"getLastMSG", gsc_player_getlastmsg, 0},
 	{"getAddressType", gsc_player_addresstype, 0},
 	{"getClientState", gsc_player_getclientstate, 0},
 	{"renameClient", gsc_player_renameclient, 0},
-	{"setAlive", gsc_entity_setalive, 0},
-	{"setBounds", gsc_entity_setbounds, 0},
-	{"get_userinfo", gsc_get_userinfo, 0},
-	{"set_userinfo", gsc_set_userinfo, 0},
+	{"get_userinfo", gsc_player_get_userinfo, 0},
+	{"set_userinfo", gsc_player_set_userinfo, 0},
 	{"printOutOfBand", gsc_player_outofbandprint, 0},
 	{"connectionlessPacket", gsc_player_connectionlesspacket, 0},
 	{"clientuserinfochanged", gsc_player_clientuserinfochanged, 0},
-	{"resetNextReliableTime", gsc_player_resetNextReliableTime, 0},
+	{"resetNextReliableTime", gsc_player_resetnextreliabletime, 0},
 	{"setg_speed", gsc_player_setg_speed, 0},
 	{"setg_gravity", gsc_player_setg_gravity, 0},
 	{"setweaponfiremeleedelay", gsc_player_setweaponfiremeleedelay, 0},
-	{"disableitempickup", gsc_player_disable_item_pickup, 0},
-	{"enableitempickup", gsc_player_enable_item_pickup, 0},
+	{"disableitempickup", /*gsc_player_disable_item_pickup*/ NULL_FUNC_ENTITY, 0},
+	{"enableitempickup", /*gsc_player_enable_item_pickup*/ NULL_FUNC_ENTITY, 0},
+	{"setmovespeedscale", NULL_FUNC_ENTITY, 0},
 	{"play_anim", gsc_player_set_anim, 0},
 	{"getjumpslowdowntimer", gsc_player_getjumpslowdowntimer, 0},
 	{"getcooktime", gsc_player_getcooktime, 0},
@@ -328,7 +332,6 @@ scr_method_t scriptMethods[] =
 	{"clienthasclientmuted", gsc_player_clienthasclientmuted, 0},
 	{"getlastgamestate", gsc_player_getlastgamestatesize, 0},
 	{"getfps", gsc_player_getfps, 0},
-	{"setmovespeedscale", gsc_player_setmovespeedscale, 0},
 	{"ismantling", gsc_player_ismantling, 0},
 	{"isonladder", gsc_player_isonladder, 0},
 	{"lookatkiller", gsc_player_lookatkiller, 0},
@@ -341,9 +344,10 @@ scr_method_t scriptMethods[] =
 	{NULL, NULL, 0} /* terminator */
 };
 
-xmethod_t Scr_GetCustomMethod(const char **fname, int *fdev)
+xmethod_t Scr_GetCustomMethod(const char **fname, qboolean *fdev)
 {
 	xmethod_t m = Scr_GetMethod(fname, fdev);
+
 	if (m)
 		return m;
 
@@ -353,8 +357,10 @@ xmethod_t Scr_GetCustomMethod(const char **fname, int *fdev)
 			continue;
 
 		scr_method_t func = scriptMethods[i];
+
 		*fname = func.name;
 		*fdev = func.developer;
+
 		return func.call;
 	}
 
@@ -443,6 +449,17 @@ int stackGetParams(const char *params, ...)
 			break;
 		}
 
+		case 'c':
+		{
+			unsigned int *tmp = va_arg(args, unsigned int *);
+			if ( ! stackGetParamConstString(i, tmp))
+			{
+				Com_DPrintf("\nstackGetParams() Param %i is not a const string\n", i);
+				errors++;
+			}
+			break;
+		}
+
 		default:
 			errors++;
 			Com_DPrintf("\nUnknown identifier [%s] passed to stackGetParams()\n", params[i]);
@@ -508,6 +525,22 @@ int stackGetParamString(int param, char **value)
 	return 1;
 }
 
+int stackGetParamConstString(int param, unsigned int *value)
+{
+	if (param >= Scr_GetNumParam())
+		return 0;
+
+	VariableValue *var;
+	var = &scrVmPub.top[-param];
+
+	if (var->type != STACK_STRING)
+		return 0;
+
+	*value = var->u.stringValue;
+
+	return 1;
+}
+
 int stackGetParamVector(int param, vec3_t value)
 {
 	if (param >= Scr_GetNumParam())
@@ -559,7 +592,7 @@ int stackGetParamObject(int param, unsigned int *value)
 	if (var->type != STACK_OBJECT)
 		return 0;
 
-	*value = *(int *)var;
+	*value = var->u.pointerValue;
 
 	return 1;
 }

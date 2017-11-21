@@ -1,11 +1,6 @@
 #ifndef _GSC_WEAPONS_HPP_
 #define _GSC_WEAPONS_HPP_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/* gsc functions */
 #include "gsc.hpp"
 
 void gsc_weapons_getweaponmaxammo();
@@ -27,9 +22,5 @@ void gsc_weapons_setweaponcookable();
 void gsc_weapons_getweaponhitlocmultiplier();
 void gsc_weapons_setweaponhitlocmultiplier();
 void gsc_weapons_getloadedweapons();
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

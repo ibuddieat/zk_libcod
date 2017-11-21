@@ -34,7 +34,7 @@ void gsc_async_mysql_fetch_row();
 void gsc_async_mysql_free_task();
 void gsc_async_mysql_real_escape_string();
 
-void gsc_async_mysql_create_entity_query(int entid);
-void gsc_async_mysql_create_entity_query_nosave(int entid);
+void gsc_async_mysql_create_entity_query(scr_entref_t entid);
+void gsc_async_mysql_create_entity_query_nosave(scr_entref_t entid);
 
 #endif

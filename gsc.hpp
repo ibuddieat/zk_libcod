@@ -5,8 +5,6 @@
 #define COD2_1_2 212
 #define COD2_1_3 213
 
-#define COD2_MAX_STRINGLENGTH 1024
-
 /* default stuff */
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,6 +17,9 @@
 #include <sys/mman.h> // mprotect
 #include <execinfo.h> // stacktrace
 #include <stddef.h> // offsetof
+#include <ctype.h> // toupper
+#include <time.h>  // getsystemtime
+#include <sys/stat.h> // fsize
 
 #include "config.hpp"
 #include "declarations.hpp" //voron tak reshil :)
@@ -27,6 +28,10 @@
 
 #if COMPILE_BOTS == 1
 #include "gsc_bots.hpp"
+#endif
+
+#if COMPILE_ENTITY == 1
+#include "gsc_entity.hpp"
 #endif
 
 #if COMPILE_EXEC == 1
@@ -86,100 +91,8 @@
 #define STACK_ARRAY 22
 #define STACK_REMOVED_THREAD 23
 
-#if COD_VERSION == COD2_1_0
-static const int varpub_offset = 0x08394000;
-#elif COD_VERSION == COD2_1_2
-static const int varpub_offset = 0x08396480;
-#elif COD_VERSION == COD2_1_3
-static const int varpub_offset = 0x08397500;
-#endif
-
-#if COD_VERSION == COD2_1_0
-static const int vmpub_offset = 0x083D7600;
-#elif COD_VERSION == COD2_1_2
-static const int vmpub_offset = 0x083D7A00;
-#elif COD_VERSION == COD2_1_3
-static const int vmpub_offset = 0x083D8A80;
-#endif
-
-#if COD_VERSION == COD2_1_0
-static const int svs_offset = 0x0841FB00;
-#elif COD_VERSION == COD2_1_2
-static const int svs_offset = 0x08422000;
-#elif COD_VERSION == COD2_1_3
-static const int svs_offset = 0x08423080;
-#endif
-
-#define scrVarPub (*((scrVarPub_t*)( varpub_offset )))
-#define scrVmPub (*((scrVmPub_t*)( vmpub_offset )))
-#define svs (*((serverStatic_t*)( svs_offset )))
-
-#if COD_VERSION == COD2_1_0
-static const int playerStates = 0x086F1480;
-static const int sizeOfPlayer = 0x28A4;
-#elif COD_VERSION == COD2_1_2
-static const int playerStates = 0x08705480;
-static const int sizeOfPlayer = 0x28A4;
-#elif COD_VERSION == COD2_1_3
-static const int playerStates = 0x087a2500;
-static const int sizeOfPlayer = 0x28A4;
-#endif
-
-#if COD_VERSION == COD2_1_0
-static const int gentities = 0x08665480;
-static const int gentities_size = 560;
-#elif COD_VERSION == COD2_1_2
-static const int gentities = 0x08679380;
-static const int gentities_size = 560;
-#elif COD_VERSION == COD2_1_3
-static const int gentities = 0x08716400;
-static const int gentities_size = 560;
-#endif
-
-#if COD_VERSION == COD2_1_0
-static const int playerinfo_base = 0x0841FB0C;
-static const int playerinfo_size = 0x78F14;
-#elif COD_VERSION == COD2_1_2
-static const int playerinfo_base = 0x0842200C;
-static const int playerinfo_size = 0x79064;
-#elif COD_VERSION == COD2_1_3
-static const int playerinfo_base = 0x0842308C;
-static const int playerinfo_size = 0xB1064;
-#endif
-
-#define PLAYERBASE(playerid) (*(int *)(playerinfo_base) + playerid * playerinfo_size)
-#define PLAYERSTATE(playerid) (playerStates + playerid * sizeOfPlayer)
-#define G_ENTITY(playerid) (gentities + gentities_size * playerid)
-
-#define VALID_ENTITY(entity) (*(int *)(entity + 1))
-#define VectorScale(v, s, o) ((o)[0]=(v)[0]*(s),(o)[1]=(v)[1]*(s),(o)[2]=(v)[2]*(s))
-
-#define PLAYERBASE_ID(address) ((address - *(int *)playerinfo_base) / playerinfo_size)
-#define PLAYERSTATE_ID(address) ((address - playerStates) / sizeOfPlayer)
-#define G_ENTITY_ID(address) ((address - gentities) / gentities_size)
-
-#if COD_VERSION == COD2_1_0
-static const int addresstype_offset = 0x6E5C4;
-#elif COD_VERSION == COD2_1_2
-static const int addresstype_offset = 0x6E6D4;
-#elif COD_VERSION == COD2_1_3
-static const int addresstype_offset = 0x6E6D4;
-#endif
-
-#define ADDRESSTYPE(playerid) (*(int *)(PLAYERBASE(playerid) + addresstype_offset))
-#define CLIENTSTATE(playerid) (*(int *)(PLAYERBASE(playerid)))
-
-#if COD_VERSION == COD2_1_0
-static const int svstime_offset = 0x0841FB04;
-#elif COD_VERSION == COD2_1_2
-static const int svstime_offset = 0x08422004;
-#elif COD_VERSION == COD2_1_3
-static const int svstime_offset = 0x08423084;
-#endif
-
-#define SVS_TIME (*(int *)svstime_offset)
-
 #define stackPushUndefined Scr_AddUndefined
+#define stackPushBool Scr_AddBool
 #define stackPushInt Scr_AddInt
 #define stackPushFloat Scr_AddFloat
 #define stackPushString Scr_AddString
@@ -189,21 +102,21 @@ static const int svstime_offset = 0x08423084;
 #define stackPushArrayLast Scr_AddArray
 #define stackPushObject Scr_AddObject
 
-void stackError(const char *format, ...);
-
 int stackGetParamType(int param);
 const char *stackGetParamTypeAsString(int param);
 
 int stackGetParams(const char *params, ...);
+void stackError(const char *format, ...);
 
 int stackGetParamInt(int param, int *value);
 int stackGetParamFunction(int param, int *value);
 int stackGetParamString(int param, char **value);
+int stackGetParamConstString(int param, unsigned int *value);
 int stackGetParamVector(int param, vec3_t value);
 int stackGetParamFloat(int param, float *value);
 int stackGetParamObject(int param, unsigned int *value);
 
-xfunction_t Scr_GetCustomFunction(const char **fname, int *fdev);
-xmethod_t Scr_GetCustomMethod(const char **fname, int *fdev);
+xfunction_t Scr_GetCustomFunction(const char **fname, qboolean *fdev);
+xmethod_t Scr_GetCustomMethod(const char **fname, qboolean *fdev);
 
 #endif

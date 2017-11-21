@@ -6,7 +6,7 @@
 # ./doit.sh cod2_1_3
 
 cc="g++"
-options="-I. -m32 -fPIC -Wall -Wno-write-strings" # -Wno-write-strings - not full warnings
+options="-I. -m32 -fPIC -Wall" # -Wno-write-strings - not full warnings
 
 mysql_variant=0
 
@@ -101,6 +101,11 @@ $cc $options $constants -c gsc.cpp -o objects_$1/gsc.opp
 if  grep -q "COMPILE_BOTS 1" config.hpp; then
 	echo "##### COMPILE $1 GSC_BOTS.CPP #####"
 	$cc $options $constants -c gsc_bots.cpp -o objects_$1/gsc_bots.opp
+fi
+
+if  grep -q "COMPILE_ENTITY 1" config.hpp; then
+	echo "##### COMPILE $1 GSC_ENTITY.CPP #####"
+	$cc $options $constants -c gsc_entity.cpp -o objects_$1/gsc_entity.opp
 fi
 
 if grep -q "COMPILE_EXEC 1" config.hpp; then

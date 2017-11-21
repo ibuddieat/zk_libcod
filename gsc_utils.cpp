@@ -2,28 +2,28 @@
 
 #if COMPILE_UTILS == 1
 
-#include <dirent.h> // dir stuff
-#include <ctype.h> // toupper
-#include <time.h>  // getsystemtime
-#include <sys/stat.h> // fsize
-//thanks to riicchhaarrd/php
-
-void gsc_utils_vectorscale()
+time_t c_Time_g, s_Time_g;
+static int starttime = time(&s_Time_g);
+void gsc_utils_gettimes()
 {
-	vec3_t vector;
-	float scale;
+	int *type;
+	if ( ! stackGetParams("i",  &type))
+		type=0;
+	
+	int secs = type?time(&c_Time_g):starttime;
+	
+	struct tm *timeconv = localtime(type?&c_Time_g:&s_Time_g);
+	char *time_asc = asctime(timeconv);
+	
+	time_asc[strlen(time_asc) - 1] = '\0';
 
-	if ( ! stackGetParams("vf", &vector, &scale))
-	{
-		stackError("gsc_utils_vectorscale() one or more arguments is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-
-	vec3_t out;
-
-	VectorScale(vector, scale, out);
-	stackPushVector(out);
+	Scr_MakeArray();
+	
+	Scr_AddInt( secs );
+	Scr_AddArray();
+	
+	Scr_AddString( time_asc );
+	Scr_AddArray();
 }
 
 void gsc_utils_cryptsh()
@@ -40,30 +40,7 @@ char *sault;
 	stackPushString(crypt(str,sault));
 }
 
-void gsc_utils_bullethiteffect()
-{
-	vec3_t origin;
-	vec3_t normal;
-
-	if ( ! stackGetParams("vv", &origin, &normal))
-	{
-		stackError("gsc_utils_bullethiteffect() one or more arguments is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-
-	int entity = G_TempEntity(origin, EV_SHOTGUN_HIT);
-	*(int *)(entity + 160) = DirToByte(normal);
-
-	trace_t trace;
-
-	vec3_t end_origin = { origin[0] - (normal[0] * 10), origin[1] - (normal[1] * 10), origin[2] - (normal[2] * 10) };
-	G_LocationalTrace(&trace, origin, end_origin, 1023, 1);
-	*(int *)(entity + 136) = trace.surfaceFlags >> 20;
-
-	stackPushInt(1);
-}
-
+//thanks to riicchhaarrd/php
 void gsc_utils_getarraykeys()
 {
 	unsigned int arrIndex;
@@ -204,6 +181,7 @@ int stackPrintParam(int param)
 		printf("%d", tmp_int);
 		return 1;
 	}
+
 	printf("(%s)", stackGetParamTypeAsString(param));
 	return 0;
 }
@@ -211,6 +189,7 @@ int stackPrintParam(int param)
 void gsc_utils_printf()
 {
 	char *str;
+
 	if ( ! stackGetParams("s", &str))
 	{
 		stackError("gsc_utils_printf() argument is undefined or has a wrong type");
@@ -237,27 +216,30 @@ void gsc_utils_printf()
 			putchar(str[i]);
 	}
 
-	stackPushInt(1);
+	stackPushBool(qtrue);
 }
 
 void gsc_utils_sprintf()
 {
 	char result[COD2_MAX_STRINGLENGTH];
 	char *str;
+
 	if (!stackGetParams("s", &str))
 	{
 		stackError("gsc_utils_sprintf() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
+
 	int param = 1; // maps to first %
 	int len = strlen(str);
 	int num = 0;
+
 	for (int i = 0; i < len; i++)
 	{
 		if (str[i] == '%')
 		{
-			if(str[i + 1] == '%')
+			if (str[i + 1] == '%')
 			{
 				result[num++] = '%';
 				i++;
@@ -280,6 +262,7 @@ void gsc_utils_sprintf()
 					stackGetParamVector(param, vec);
 					num += sprintf(&(result[num]), "(%.2f, %.2f, %.2f)", vec[0], vec[1], vec[2]);
 					break;
+
 				case STACK_FLOAT:
 
 					float tmp_float;
@@ -293,12 +276,14 @@ void gsc_utils_sprintf()
 					num += sprintf(&(result[num]), "%d", tmp_int);
 					break;
 				}
+
 				param++;
 			}
 		}
 		else
 			result[num++] = str[i];
 	}
+
 	result[num] = '\0';
 	stackPushString(result);
 }
@@ -306,123 +291,99 @@ void gsc_utils_sprintf()
 void gsc_utils_getAscii()
 {
 	char *str;
-	if ( ! stackGetParams("s", &str) || strlen(str) == 0)
+
+	if ( ! stackGetParams("s", &str))
 	{
 		stackError("gsc_utils_getAscii() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
+
+	if (!strlen(str))
+	{
+		stackError("gsc_utils_getAscii() string length is 0");
+		stackPushUndefined();
+		return;
+	}
+
 	stackPushInt(str[0]);
 }
 
 void gsc_utils_toupper()
 {
 	char *str;
-	int offset = 0;
-	int len = 0;
-	if ( ! stackGetParams("s", &str) || strlen(str) == 0)
+
+	if ( ! stackGetParams("s", &str))
 	{
 		stackError("gsc_utils_toupper() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	stackGetParamInt(1, &offset);
-	if(offset < 0)
-		offset = 0;
-	if(!stackGetParamInt(2, &len) || len == 0)
-		len = strlen(str);
-	if((len - offset) > int(strlen(str)))
-		len = strlen(str) - offset;
-	if(len <= 0)
+	if (!strlen(str))
 	{
-		stackPushString("");
+		stackError("gsc_utils_toupper() string length is 0");
+		stackPushUndefined();
 		return;
 	}
 
-	int maxlen = strlen(str);
-	char result[maxlen+1];
-	strcpy(result, str);
-
-	for (int i = offset; i < len; i++)
-	{
-		result[i] = toupper(str[i]);
-	}
-	result[maxlen] = '\0';
-
-	stackPushString(result);
+	stackPushString( I_strupr(str) );
 }
 
 void gsc_utils_system()
 {
 	char *cmd;
+
 	if ( ! stackGetParams("s",  &cmd))
 	{
 		stackError("gsc_utils_system() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
+
 	stackPushInt( system(cmd) );
-}
-
-time_t c_Time_g, s_Time_g;
-static int starttime = time(&s_Time_g);
-void gsc_utils_gettimes()
-{
-	int *type;
-	if ( ! stackGetParams("i",  &type))
-		type=0;
-	
-	int secs = type?time(&c_Time_g):starttime;
-	
-	struct tm *timeconv = localtime(type?&c_Time_g:&s_Time_g);
-	char *time_asc = asctime(timeconv);
-	
-	time_asc[strlen(time_asc) - 1] = '\0';
-
-	Scr_MakeArray();
-	
-	Scr_AddInt( secs );
-	Scr_AddArray();
-	
-	Scr_AddString( time_asc );
-	Scr_AddArray();
 }
 
 void gsc_utils_exponent()
 {
 	float basis;
 	float exponent;
+
 	if ( ! stackGetParams("ff", &basis, &exponent))
 	{
 		stackError("gsc_utils_exponent() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
+
 	stackPushFloat( pow(basis, exponent) );
 }
 
 void gsc_utils_round()
 {
 	float val;
+
 	if ( ! stackGetParams("f",  &val))
 	{
 		stackError("gsc_utils_round() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
+
 	stackPushFloat( roundf(val * 100) / 100 );
 }
 
 void gsc_utils_file_link()
 {
 	char *source, *dest;
+
 	if ( ! stackGetParams("ss",  &source, &dest))
 	{
 		stackError("gsc_utils_file_link() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
+
 	int link_success = symlink(source, dest) == 0;
 	stackPushInt( link_success );
 }
@@ -430,12 +391,14 @@ void gsc_utils_file_link()
 void gsc_utils_file_unlink()
 {
 	char *file;
+
 	if ( ! stackGetParams("s",  &file))
 	{
 		stackError("gsc_utils_file_unlink() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
+
 	int unlink_success = unlink(file) == 0;
 	stackPushInt( unlink_success );
 }
@@ -443,12 +406,14 @@ void gsc_utils_file_unlink()
 void gsc_utils_file_exists()
 {
 	char *filename;
+
 	if ( ! stackGetParams("s", &filename))
 	{
 		stackError("gsc_utils_file_exists() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
+
 	int file_exists = access(filename, F_OK) != -1;
 	stackPushInt( file_exists );
 }
@@ -456,14 +421,16 @@ void gsc_utils_file_exists()
 void gsc_utils_FS_LoadDir()
 {
 	char *path, *dir;
+
 	if ( ! stackGetParams("ss", &path, &dir))
 	{
 		stackError("gsc_utils_FS_LoadDir() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
+
 	FS_LoadDir(path, dir);
-	stackPushInt(1);
+	stackPushBool(qtrue);
 }
 
 void gsc_utils_getType()
@@ -474,6 +441,7 @@ void gsc_utils_getType()
 		stackPushUndefined();
 		return;
 	}
+
 	stackPushString( stackGetParamTypeAsString(0) );
 }
 
@@ -516,53 +484,64 @@ void gsc_utils_float()
 void gsc_utils_ExecuteString()
 {
 	char *str;
+
 	if ( ! stackGetParams("s", &str))
 	{
 		stackError("gsc_utils_ExecuteString() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
+
 	Cmd_ExecuteString(str);
-	stackPushInt(1);
+	stackPushBool(qtrue);
 }
 
 void gsc_utils_sendgameservercommand()
 {
 	int clientNum;
 	char *message;
+
 	if ( ! stackGetParams("is", &clientNum, &message))
 	{
 		stackError("gsc_utils_sendgameservercommand() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
+
 	SV_GameSendServerCommand(clientNum, 0, message);
-	stackPushInt(1);
+	stackPushBool(qtrue);
 }
 
 void gsc_utils_scandir()
 {
 	char *dirname;
+
 	if ( ! stackGetParams("s", &dirname))
 	{
 		stackError("gsc_utils_scandir() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
+
 	DIR *dir;
 	struct dirent *dir_ent;
+
 	dir = opendir(dirname);
+
 	if ( ! dir)
 	{
 		stackPushUndefined();
 		return;
 	}
+
 	stackPushArray();
+
 	while ( (dir_ent = readdir(dir)) != NULL)
 	{
 		stackPushString(dir_ent->d_name);
 		stackPushArrayLast();
 	}
+
 	closedir(dir);
 }
 
@@ -570,6 +549,7 @@ void gsc_utils_fopen()
 {
 	FILE *file;
 	char *filename, *mode;
+
 	if ( ! stackGetParams("ss", &filename, &mode))
 	{
 		stackError("gsc_utils_fopen() one or more arguments is undefined or has a wrong type");
@@ -592,6 +572,7 @@ void gsc_utils_fopen()
 void gsc_utils_fread()
 {
 	FILE *file;
+
 	if ( ! stackGetParams("i", &file))
 	{
 		stackError("gsc_utils_fread() argument is undefined or has a wrong type");
@@ -608,11 +589,13 @@ void gsc_utils_fread()
 
 	char buffer[256];
 	int ret = fread(buffer, 1, 255, file);
+
 	if ( ! ret)
 	{
 		stackPushUndefined();
 		return;
 	}
+
 	buffer[ret] = '\0';
 	stackPushString(buffer);
 }
@@ -621,6 +604,7 @@ void gsc_utils_fwrite()
 {
 	FILE *file;
 	char *buffer;
+
 	if ( ! stackGetParams("is", &file, &buffer))
 	{
 		stackError("gsc_utils_fwrite() one or more arguments is undefined or has a wrong type");
@@ -641,6 +625,7 @@ void gsc_utils_fwrite()
 void gsc_utils_fclose()
 {
 	FILE *file;
+
 	if ( ! stackGetParams("i", &file))
 	{
 		stackError("gsc_utils_fclose() argument is undefined or has a wrong type");
@@ -661,6 +646,7 @@ void gsc_utils_fclose()
 void gsc_utils_fsize()
 {
 	FILE *file;
+
 	if ( ! stackGetParams("i", &file))
 	{
 		stackError("gsc_utils_fsize() argument is undefined or has a wrong type");
@@ -686,6 +672,7 @@ void gsc_G_FindConfigstringIndexOriginal()
 {
 	char *name;
 	int min, max, create;
+
 	if ( ! stackGetParams("siii", &name, &min, &max, &create))
 	{
 		stackError("gsc_G_FindConfigstringIndexOriginal() one or more arguments is undefined or has a wrong type");
@@ -701,6 +688,7 @@ void gsc_G_FindConfigstringIndex()
 {
 	char *name;
 	int min, max;
+
 	if ( ! stackGetParams("sii", &name, &min, &max))
 	{
 		stackError("gsc_G_FindConfigstringIndex() one or more arguments is undefined or has a wrong type");
@@ -709,7 +697,7 @@ void gsc_G_FindConfigstringIndex()
 
 	for (int i = 1; i < max; i++)
 	{
-		char *curitem = SV_GetConfigstringConst(min + i);
+		const char *curitem = SV_GetConfigstringConst(min + i);
 
 		if ( ! *curitem)
 			break;
@@ -721,12 +709,13 @@ void gsc_G_FindConfigstringIndex()
 		}
 	}
 
-	stackPushInt(0);
+	stackPushBool(qtrue);
 }
 
 void gsc_get_configstring()
 {
 	int index;
+
 	if ( ! stackGetParams("i", &index))
 	{
 		stackError("gsc_get_configstring() argument is undefined or has a wrong type");
@@ -734,7 +723,8 @@ void gsc_get_configstring()
 		return;
 	}
 
-	char *string = SV_GetConfigstringConst(index);
+	const char *string = SV_GetConfigstringConst(index);
+
 	if ( ! *string )
 		stackPushUndefined();
 	else
@@ -745,6 +735,7 @@ void gsc_set_configstring()
 {
 	int index;
 	char *string;
+
 	if ( ! stackGetParams("is", &index, &string))
 	{
 		stackError("gsc_set_configstring() one or more arguments is undefined or has a wrong type");
@@ -753,30 +744,34 @@ void gsc_set_configstring()
 	}
 
 	SV_SetConfigstring(index, string);
-	stackPushInt(1);
+	stackPushBool(qtrue);
 }
 
 void gsc_utils_sqrt()
 {
 	float x;
+
 	if ( ! stackGetParams("f", &x))
 	{
 		stackError("gsc_utils_sqrt() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
+
 	stackPushFloat(sqrt(x));
 }
 
 void gsc_utils_sqrtInv()
 {
 	float x;
+
 	if ( ! stackGetParams("f", &x))
 	{
 		stackError("gsc_utils_sqrtInv() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
+
 	// http://www.beyond3d.com/content/articles/8/
 	float xhalf = 0.5f*x;
 	int i = *(int*)&x;
@@ -810,14 +805,57 @@ void gsc_make_localized_string()
 void gsc_utils_getlasttestclientnumber()
 {
 #if COD_VERSION == COD2_1_0
-int offset = 0x083DF9EC;
+	int offset = 0x083DF9EC;
 #elif COD_VERSION == COD2_1_2
-int offset = 0x083E1E8C;
+	int offset = 0x083E1E8C;
 #elif COD_VERSION == COD2_1_3
-int offset = 0x083E2F0C;
+	int offset = 0x083E2F0C;
 #endif
 
-stackPushInt(*(int *)offset);
+	stackPushInt(*(int *)offset);
+}
+
+void gsc_utils_bullethiteffect()
+{
+	vec3_t origin;
+	vec3_t normal;
+
+	if ( ! stackGetParams("vv", &origin, &normal))
+	{
+		stackError("gsc_utils_bullethiteffect() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	gentity_t *entity = G_TempEntity(origin, EV_SHOTGUN_HIT);
+	entity->s.eventParm = DirToByte(normal);
+
+	trace_t trace;
+
+	vec3_t end_origin = { origin[0] - (normal[0] * 10), origin[1] - (normal[1] * 10), origin[2] - (normal[2] * 10) };
+	G_LocationalTrace(&trace, origin, end_origin, 1023, 1);
+
+	entity->s.surfaceFlags = (trace.surfaceFlags >> 20) & 0x1F;
+
+	stackPushBool(qtrue);
+}
+
+void gsc_utils_vectorscale()
+{
+	vec3_t vector;
+	float scale;
+
+	if ( ! stackGetParams("vf", &vector, &scale))
+	{
+		stackError("gsc_utils_vectorscale() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	vec3_t out;
+
+	VectorScale(vector, scale, out);
+	stackPushVector(out);
 }
 
 #endif

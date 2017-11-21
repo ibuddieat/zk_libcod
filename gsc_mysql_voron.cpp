@@ -5,9 +5,6 @@
 #include <mysql/mysql.h>
 #include <pthread.h>
 
-#define INVALID_ENTITY -1
-#define INVALID_STATE 0
-
 enum
 {
 	INT_VALUE,
@@ -37,8 +34,8 @@ struct async_mysql_task
 	char stringValue[COD2_MAX_STRINGLENGTH];
 	vec3_t vectorValue;
 	unsigned int objectValue;
-	int entityNum;
-	int entityState;
+	bool hasentity;
+	gentity_t *gentity;
 };
 
 MYSQL *async_mysql_connection = NULL;
@@ -176,10 +173,10 @@ void gsc_async_mysql_close()
 	if (async_mysql_connection != NULL)
 	{
 		mysql_close(async_mysql_connection);
-		stackPushInt(1);
+		stackPushBool(qtrue);
 	}
 	else
-		stackPushInt(0);
+		stackPushBool(qfalse);
 }
 
 void gsc_async_mysql_create_query()
@@ -229,8 +226,8 @@ void gsc_async_mysql_create_query()
 	newtask->cleanup = false;
 	newtask->levelId = scrVarPub.levelId;
 	newtask->hasargument = true;
-	newtask->entityNum = INVALID_ENTITY;
-	newtask->entityState = INVALID_STATE;
+	newtask->hasentity = false;
+	newtask->gentity = NULL;
 
 	int valueInt;
 	float valueFloat;
@@ -275,7 +272,7 @@ void gsc_async_mysql_create_query()
 
 	pthread_mutex_unlock(&lock_async_mysql);
 
-	stackPushInt(1);
+	stackPushBool(qtrue);
 }
 
 void gsc_async_mysql_create_query_nosave()
@@ -325,8 +322,8 @@ void gsc_async_mysql_create_query_nosave()
 	newtask->cleanup = false;
 	newtask->levelId = scrVarPub.levelId;
 	newtask->hasargument = true;
-	newtask->entityNum = INVALID_ENTITY;
-	newtask->entityState = INVALID_STATE;
+	newtask->hasentity = false;
+	newtask->gentity = NULL;
 
 	int valueInt;
 	float valueFloat;
@@ -371,10 +368,10 @@ void gsc_async_mysql_create_query_nosave()
 
 	pthread_mutex_unlock(&lock_async_mysql);
 
-	stackPushInt(1);
+	stackPushBool(qtrue);
 }
 
-void gsc_async_mysql_create_entity_query(int entid)
+void gsc_async_mysql_create_entity_query(scr_entref_t entid)
 {
 	char *query;
 
@@ -421,8 +418,8 @@ void gsc_async_mysql_create_entity_query(int entid)
 	newtask->cleanup = false;
 	newtask->levelId = scrVarPub.levelId;
 	newtask->hasargument = true;
-	newtask->entityNum = entid;
-	newtask->entityState = *(int *)(G_ENTITY(newtask->entityNum) + 1);
+	newtask->hasentity = true;
+	newtask->gentity = &g_entities[entid];
 
 	int valueInt;
 	float valueFloat;
@@ -467,10 +464,10 @@ void gsc_async_mysql_create_entity_query(int entid)
 
 	pthread_mutex_unlock(&lock_async_mysql);
 
-	stackPushInt(1);
+	stackPushBool(qtrue);
 }
 
-void gsc_async_mysql_create_entity_query_nosave(int entid)
+void gsc_async_mysql_create_entity_query_nosave(scr_entref_t entid)
 {
 	char *query;
 
@@ -517,8 +514,8 @@ void gsc_async_mysql_create_entity_query_nosave(int entid)
 	newtask->cleanup = false;
 	newtask->levelId = scrVarPub.levelId;
 	newtask->hasargument = true;
-	newtask->entityNum = entid;
-	newtask->entityState = *(int *)(G_ENTITY(newtask->entityNum) + 1);
+	newtask->hasentity = true;
+	newtask->gentity = &g_entities[entid];
 
 	int valueInt;
 	float valueFloat;
@@ -563,7 +560,7 @@ void gsc_async_mysql_create_entity_query_nosave(int entid)
 
 	pthread_mutex_unlock(&lock_async_mysql);
 
-	stackPushInt(1);
+	stackPushBool(qtrue);
 }
 
 void gsc_async_mysql_checkdone()
@@ -581,51 +578,44 @@ void gsc_async_mysql_checkdone()
 
 			if (Scr_IsSystemActive() && task->save && task->callback && (scrVarPub.levelId == task->levelId))
 			{
-				if (task->entityNum != INVALID_ENTITY)
+				if (task->hasentity)
 				{
-					if (task->entityState != INVALID_STATE)
+					if (task->gentity != NULL)
 					{
-						int state = *(int *)(G_ENTITY(task->entityNum) + 1);
-
-						if (state != INVALID_STATE && state == task->entityState)
+						if (task->hasargument)
 						{
-							if (task->hasargument)
+							switch(task->valueType)
 							{
-								switch(task->valueType)
-								{
-								case INT_VALUE:
-									stackPushInt(task->intValue);
-									break;
+							case INT_VALUE:
+								stackPushInt(task->intValue);
+								break;
 
-								case FLOAT_VALUE:
-									stackPushFloat(task->floatValue);
-									break;
+							case FLOAT_VALUE:
+								stackPushFloat(task->floatValue);
+								break;
 
-								case STRING_VALUE:
-									stackPushString(task->stringValue);
-									break;
+							case STRING_VALUE:
+								stackPushString(task->stringValue);
+								break;
 
-								case VECTOR_VALUE:
-									stackPushVector(task->vectorValue);
-									break;
+							case VECTOR_VALUE:
+								stackPushVector(task->vectorValue);
+								break;
 
-								case OBJECT_VALUE:
-									stackPushObject(task->objectValue);
-									break;
+							case OBJECT_VALUE:
+								stackPushObject(task->objectValue);
+								break;
 
-								default:
-									stackPushUndefined();
-									break;
-								}
+							default:
+								stackPushUndefined();
+								break;
 							}
-
-							stackPushInt(task->id);
-
-							short ret = Scr_ExecEntThread(G_ENTITY(task->entityNum), task->callback, task->save + task->hasargument);
-							Scr_FreeThread(ret);
 						}
-						else
-							task->cleanup = true;
+
+						stackPushInt(task->id);
+
+						short ret = Scr_ExecEntThread(task->gentity, task->callback, task->save + task->hasargument);
+						Scr_FreeThread(ret);
 					}
 					else
 						task->cleanup = true;
@@ -949,7 +939,7 @@ void gsc_async_mysql_free_task()
 	}
 
 	target_task->cleanup = true;
-	stackPushInt(1);
+	stackPushBool(qtrue);
 }
 
 void gsc_async_mysql_real_escape_string()
@@ -1016,10 +1006,10 @@ void gsc_mysql_close()
 	if (mysql_connection != NULL)
 	{
 		mysql_close(mysql_connection);
-		stackPushInt(1);
+		stackPushBool(qtrue);
 	}
 	else
-		stackPushInt(0);
+		stackPushBool(qfalse);
 }
 
 void gsc_mysql_query()
@@ -1249,7 +1239,7 @@ void gsc_mysql_free_result()
 	}
 
 	mysql_free_result((MYSQL_RES *)result);
-	stackPushInt(1);
+	stackPushBool(qtrue);
 }
 
 void gsc_mysql_real_escape_string()

@@ -7,13 +7,15 @@ cvar_t *developer;
 cvar_t *rcon_password;
 cvar_t *con_coloredPrints;
 cvar_t *cl_allowDownload;
+cvar_t *sv_timeout;
+cvar_t *sv_zombietime;
 
 #if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
 cvar_t *sv_wwwDownload;
 cvar_t *cl_wwwDownload;
 #endif
 
-void hook_sv_init(char *format, ...)
+void hook_sv_init(const char *format, ...)
 {
 	char s[COD2_MAX_STRINGLENGTH];
 	va_list va;
@@ -31,6 +33,8 @@ void hook_sv_init(char *format, ...)
 	sv_pure = Cvar_FindVar("sv_pure");
 	developer = Cvar_FindVar("developer");
 	rcon_password = Cvar_FindVar("rcon_password");
+	sv_timeout = Cvar_FindVar("sv_timeout");
+	sv_zombietime = Cvar_FindVar("sv_zombietime");
 
 #if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
 	sv_wwwDownload = Cvar_FindVar("sv_wwwDownload");
@@ -48,6 +52,13 @@ void hook_sv_spawnserver(const char *format, ...)
 	va_end(va);
 
 	Com_Printf("%s", s);
+
+	/* Do stuff after sv has been spawned here */
+
+#if COMPILE_SQLITE == 1
+	free_sqlite_db_stores_and_tasks();
+#endif
+
 }
 
 int codecallback_playercommand = 0;
@@ -116,24 +127,23 @@ int player_eject(int a1)
 }
 
 cHook *hook_fire_grenade;
-int fire_grenade(int player, int a2, int a3, int weapon, int a5)
+gentity_t* fire_grenade(gentity_t *self, vec3_t start, vec3_t dir, int weapon, int time)
 {
 	hook_fire_grenade->unhook();
 
-	int (*sig)(int player, int a2, int a3, int a4, int a5);
+	gentity_t* (*sig)(gentity_t *self, vec3_t start, vec3_t dir, int weapon, int time);
 	*(int *)&sig = hook_fire_grenade->from;
 
-	int grenade = sig(player, a2, a3, weapon, a5);
+	gentity_t* grenade = sig(self, start, dir, weapon, time);
 
 	hook_fire_grenade->hook();
 
 	if (codecallback_fire_grenade)
 	{
-		int weapondef = BG_WeaponDefs(weapon);
-		char *weaponname = *(char**)weapondef;
-		stackPushString(weaponname);
+		WeaponDef_t *def = BG_WeaponDefs(weapon);
+		stackPushString(def->szInternalName);
 		stackPushEntity(grenade);
-		short ret = Scr_ExecEntThread(player, codecallback_fire_grenade, 2);
+		short ret = Scr_ExecEntThread(self, codecallback_fire_grenade, 2);
 		Scr_FreeThread(ret);
 	}
 
@@ -149,11 +159,11 @@ void hook_ClientCommand(int clientNum)
 	}
 
 	stackPushArray();
-	int args = trap_Argc();
+	int args = Cmd_Argc();
 	for (int i = 0; i < args; i++)
 	{
 		char tmp[COD2_MAX_STRINGLENGTH];
-		trap_Argv(i, tmp, sizeof(tmp));
+		SV_Cmd_ArgvBuffer(i, tmp, sizeof(tmp));
 		if(i == 1 && tmp[0] >= 20 && tmp[0] <= 22)
 		{
 			char *part = strtok(tmp + 1, " ");
@@ -171,12 +181,12 @@ void hook_ClientCommand(int clientNum)
 		}
 	}
 
-	short ret = Scr_ExecEntThread(G_ENTITY(clientNum), codecallback_playercommand, 1);
+	short ret = Scr_ExecEntThread(&g_entities[clientNum], codecallback_playercommand, 1);
 	Scr_FreeThread(ret);
 }
 
 cvar_t *sv_noauthorize;
-int hook_isLanAddress( netadr_t adr )
+int hook_isLanAddress(netadr_t adr)
 {
 	if (sv_noauthorize->boolean)
 		return 1;
@@ -185,9 +195,9 @@ int hook_isLanAddress( netadr_t adr )
 }
 
 cvar_t *sv_cracked;
-const char* hook_AuthorizeState( int arg )
+const char* hook_AuthorizeState(int arg)
 {
-	char *s = Cmd_Argv(arg);
+	const char *s = Cmd_Argv(arg);
 
 	if (sv_cracked->boolean && strcmp(s, "deny") == 0)
 		return "accept";
@@ -204,209 +214,181 @@ void hook_ClientUserinfoChanged(int clientNum)
 	}
 
 	stackPushInt(clientNum); // one parameter is required
-	short ret = Scr_ExecEntThread(G_ENTITY(clientNum), codecallback_userinfochanged, 1);
+	short ret = Scr_ExecEntThread(&g_entities[clientNum], codecallback_userinfochanged, 1);
 	Scr_FreeThread(ret);
 }
 
 cvar_t *sv_downloadMessage;
-void custom_SV_WriteDownloadToClient(int cl, msg_t *msg)
+void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 {
-	char errorMessage[COD2_MAX_STRINGLENGTH];
-	int iwdFile;
 	int curindex;
+	int iwdFile;
+	char errorMessage[COD2_MAX_STRINGLENGTH];
 
-#if COD_VERSION == COD2_1_0
-	int rate_offset = 452008;
-#elif COD_VERSION == COD2_1_2
-	int rate_offset = 452280;
-#elif COD_VERSION == COD2_1_3
-	int rate_offset = 452280;
-#endif
+	if (cl->state == CS_ACTIVE)
+		return; // Client already in game
 
-#if COD_VERSION == COD2_1_0
-	int snaps_offset = 452012;
-#elif COD_VERSION == COD2_1_2
-	int snaps_offset = 452284;
-#elif COD_VERSION == COD2_1_3
-	int snaps_offset = 452284;
-#endif
+	if (!*cl->downloadName)
+		return;	// Nothing being downloaded
 
-	int filename_offset = 134248;
-	int file_offset = 134312;
-	int cl_iwd_offset = 134316;
-	int block_offset = 134332;
-	int section_offset = 134324;
-	int nextblock_offset = 134328;
-	int eof_offset = 134320;
-	int addeof_offset = 134400;
-	int unknown_offset1 = 134336;
-	int unknown_offset2 = 134368;
-	int time_offset = 134404;
+	if (strlen(cl->downloadName) < 4)
+		return; // File length too short
+
+	if (strcmp(&cl->downloadName[strlen(cl->downloadName) - 4], ".iwd") != 0)
+		return; // Not a iwd file
 
 #if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
-	int wwwdld_offset1 = 134664;
-	int wwwdld_offset2 = 134676;
+	if ( cl->wwwDlAck )
+		return; // wwwDl acknowleged
 #endif
-
-    int clientnum = PLAYERBASE_ID(cl);
-
-	if (CLIENTSTATE(clientnum) == CS_ACTIVE)
-	{
-		*(int *)(cl + file_offset) = 0;
-		*(int *)(cl + filename_offset) = 0;
-		return;
-	}
-	
-	char *file = (char *)(cl + filename_offset);
-	int len = strlen(file);
-
-	if (len < 4 || strcmp(&file[len - 4], ".iwd") != 0)
-	{
- 		*(int *)(cl + file_offset) = 0;
- 		*(int *)(cl + filename_offset) = 0;
- 		return;
- 	}
 
 	if (strlen(sv_downloadMessage->string))
 	{
 		Com_sprintf(errorMessage, sizeof(errorMessage), sv_downloadMessage->string);
-		MSG_WriteByte(msg, 5);
-		MSG_WriteShort(msg, 0);
-		MSG_WriteLong(msg, -1);
-		MSG_WriteString(msg, errorMessage);
-		*(int *)(cl + file_offset) = 0;
-		*(int *)(cl + filename_offset) = 0;
-		return;
+
+		MSG_WriteByte( msg, svc_download );
+		MSG_WriteShort( msg, 0 ); // client is expecting block zero
+		MSG_WriteLong( msg, -1 ); // illegal file size
+		MSG_WriteString( msg, errorMessage );
+
+		*cl->downloadName = 0;
+		return; // Download message instead of download
 	}
 
-	*(int *)cl = CS_CONNECTED;  	       // Set client state - connected. Now players that are downloading will show as 'CNCT' in rcon, etc.
-	*(int *)(cl + rate_offset)  = 25000;   // Hardcode client rate so even users with lower rate values will have fullspeed download. Setting it to above 25000 doesn't do anything
-	*(int *)(cl + snaps_offset) = 50;      // Hadrcode client snaps. They will be equal to sv_fps anyway. Edit: Actually its snapshotMsec, 50 ~ /snaps "20", is the best value.
-
 #if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
-	if ( sv_wwwDownload->boolean && *(int *)(cl + wwwdld_offset1) )
+	if (sv_wwwDownload->boolean && cl->wwwDownload)
 	{
-		if ( *(int *)(cl + wwwdld_offset2) )
-			*(int *)(cl + wwwdld_offset2) = 0;
-		else if ( SV_WWWRedirectClient(cl, msg) )
-			return;
+		if (!cl->wwwDl_failed)
+		{
+			SV_WWWRedirectClient(cl, msg);
+			return; // wwwDl redirect
+		}
 	}
 #endif
 
-	if (!*(int *)(cl + file_offset))
+	// Hardcode client variables to make max download speed for everyone
+	cl->state = CS_CONNECTED;
+	cl->rate = 25000;
+	cl->snapshotMsec = 50;
+
+	if (!cl->download)
 	{
 		// We open the file here
 
-		Com_Printf("clientDownload: %d : begining \"%s\"\n", clientnum, cl + filename_offset);
+		Com_Printf("clientDownload: %d : begining \"%s\"\n", cl - svs.clients, cl->downloadName);
 
-		iwdFile = FS_iwIwd((char *)(cl + filename_offset), "main");
+		iwdFile = FS_iwIwd(cl->downloadName, "main");
 
-		if ( !sv_allowDownload->boolean || iwdFile || ( *(int *)(cl + cl_iwd_offset) = FS_SV_FOpenFileRead( (char *)(cl + filename_offset), (fileHandle_t*)(cl + file_offset) ) ) <= 0 )
+		if ( !sv_allowDownload->integer || iwdFile || ( cl->downloadSize = FS_SV_FOpenFileRead( cl->downloadName, &cl->download ) ) <= 0 )
 		{
 			// cannot auto-download file
 			if (iwdFile)
 			{
-				Com_Printf("clientDownload: %d : \"%s\" cannot download iwd files\n", clientnum, cl + filename_offset);
-				Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_CANTAUTODLGAMEIWD\x15%s", cl + filename_offset);
+				Com_Printf("clientDownload: %d : \"%s\" cannot download iwd files\n", cl - svs.clients, cl->downloadName);
+				Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_CANTAUTODLGAMEIWD\x15%s", cl->downloadName);
 			}
 			else if ( !sv_allowDownload->boolean )
 			{
-				Com_Printf("clientDownload: %d : \"%s\" download disabled\n", clientnum, cl + filename_offset);
+				Com_Printf("clientDownload: %d : \"%s\" download disabled\n", cl - svs.clients, cl->downloadName);
+
 				if (sv_pure->boolean)
-					Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_AUTODL_SERVERDISABLED_PURE\x15%s", cl + filename_offset);
+					Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_AUTODL_SERVERDISABLED_PURE\x15%s", cl->downloadName);
 				else
-					Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_AUTODL_SERVERDISABLED\x15%s", cl + filename_offset);
+					Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_AUTODL_SERVERDISABLED\x15%s", cl->downloadName);
 			}
 			else
 			{
-				Com_Printf("clientDownload: %d : \"%s\" file not found on server\n", clientnum, cl + filename_offset);
-				Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_AUTODL_FILENOTONSERVER\x15%s", cl + filename_offset);
+				Com_Printf("clientDownload: %d : \"%s\" file not found on server\n", cl - svs.clients, cl->downloadName);
+				Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_AUTODL_FILENOTONSERVER\x15%s", cl->downloadName);
 			}
-			MSG_WriteByte(msg, 5);
-			MSG_WriteShort(msg, 0);
-			MSG_WriteLong(msg, -1);
-			MSG_WriteString(msg, errorMessage);
 
-			*(int *)(cl + filename_offset) = 0;
+			MSG_WriteByte( msg, svc_download );
+			MSG_WriteShort( msg, 0 ); // client is expecting block zero
+			MSG_WriteLong( msg, -1 ); // illegal file size
+			MSG_WriteString( msg, errorMessage );
+
+			*cl->downloadName = 0;
 			return;
 		}
 
 		// Init
-		*(int *)(cl + block_offset) = 0;
-		*(int *)(cl + section_offset) = 0;
-		*(int *)(cl + nextblock_offset) = 0;
-		*(int *)(cl + eof_offset) = 0;
-		*(int *)(cl + addeof_offset) = 0;
+		cl->downloadCurrentBlock = cl->downloadClientBlock = cl->downloadXmitBlock = 0;
+		cl->downloadCount = 0;
+		cl->downloadEOF = qfalse;
 	}
 
 	// Perform any reads that we need to
-	while ( *(int *)(cl + nextblock_offset) - *(int *)(cl + section_offset) < MAX_DOWNLOAD_WINDOW && *(int *)(cl + cl_iwd_offset) != *(int *)(cl + eof_offset) )
+	while (cl->downloadCurrentBlock - cl->downloadClientBlock < MAX_DOWNLOAD_WINDOW && cl->downloadSize != cl->downloadCount)
 	{
-		curindex = (*(int *)(cl + nextblock_offset) % MAX_DOWNLOAD_WINDOW);
+		curindex = (cl->downloadCurrentBlock % MAX_DOWNLOAD_WINDOW);
 
-		if (!*(int *)(cl + 4 * curindex + unknown_offset1))
-			*(int *)(cl + 4 * curindex + unknown_offset1) = (int)Z_MallocInternal(MAX_DOWNLOAD_BLKSIZE);
+		if (!cl->downloadBlocks[curindex])
+			cl->downloadBlocks[curindex] = (unsigned char *)Z_MallocInternal(MAX_DOWNLOAD_BLKSIZE);
 
-		*(int *)(cl + 4 * curindex + unknown_offset2) = FS_Read(*(void **)(cl + 4 * curindex + unknown_offset1), MAX_DOWNLOAD_BLKSIZE, *(int *)(cl + file_offset));
+		cl->downloadBlockSize[curindex] = FS_Read( cl->downloadBlocks[curindex], MAX_DOWNLOAD_BLKSIZE, cl->download );
 
-		if ( *(int *)(cl + 4 * curindex + unknown_offset2) < 0 )
+		if (cl->downloadBlockSize[curindex] < 0)
 		{
 			// EOF right now
-			*(int *)(cl + eof_offset) = *(int *)(cl + cl_iwd_offset);
+			cl->downloadCount = cl->downloadSize;
 			break;
 		}
 
-		*(int *)(cl + eof_offset) += *(int *)(cl + 4 * curindex + unknown_offset2);
+		cl->downloadCount += cl->downloadBlockSize[curindex];
 
 		// Load in next block
-		( *(int *)(cl + nextblock_offset) )++;
+		cl->downloadCurrentBlock++;
 	}
 
 	// Check to see if we have eof condition and add the EOF block
-	if ( *(int *)(cl + eof_offset) == *(int *)(cl + cl_iwd_offset) && !*(int *)(cl + addeof_offset) && *(int *)(cl + nextblock_offset) - *(int *)(cl + section_offset) < MAX_DOWNLOAD_WINDOW)
+	if (cl->downloadCount == cl->downloadSize && !cl->downloadEOF && cl->downloadCurrentBlock - cl->downloadClientBlock < MAX_DOWNLOAD_WINDOW)
 	{
-		*(int *)(cl + 4 * (*(int *)(cl + nextblock_offset) % MAX_DOWNLOAD_WINDOW) + unknown_offset2) = 0;
-		( *(int *)(cl + nextblock_offset) )++;
-
-		*(int *)(cl + addeof_offset) = 1;  // We have added the EOF block
+		cl->downloadBlockSize[cl->downloadCurrentBlock % MAX_DOWNLOAD_WINDOW] = 0;
+		cl->downloadCurrentBlock++;
+		cl->downloadEOF = qtrue;  // We have added the EOF block
 	}
 
 	// Write out the next section of the file, if we have already reached our window,
 	// automatically start retransmitting
-	if ( *(int *)(cl + section_offset) == *(int *)(cl + nextblock_offset) )
+
+	if (cl->downloadClientBlock == cl->downloadCurrentBlock)
 		return; // Nothing to transmit
 
-	if ( *(int *)(cl + block_offset) == *(int *)(cl + nextblock_offset) )
+	if (cl->downloadXmitBlock == cl->downloadCurrentBlock)
 	{
 		// We have transmitted the complete window, should we start resending?
-		if (SVS_TIME - *(int *)(cl + time_offset) > 1000)
-			*(int *)(cl + block_offset) = *(int *)(cl + section_offset);
+
+		//FIXME:  This uses a hardcoded one second timeout for lost blocks
+		//the timeout should be based on client rate somehow
+		if (svs.time - cl->downloadSendTime > 1000)
+			cl->downloadXmitBlock = cl->downloadClientBlock;
 		else
 			return;
 	}
 
 	// Send current block
-	curindex = *(int *)(cl + block_offset) % MAX_DOWNLOAD_WINDOW;
+	curindex = (cl->downloadXmitBlock % MAX_DOWNLOAD_WINDOW);
 
-	MSG_WriteByte(msg, 5);
-	MSG_WriteShort(msg, *(int *)(cl + block_offset));
+	MSG_WriteByte( msg, svc_download );
+	MSG_WriteShort( msg, cl->downloadXmitBlock );
 
 	// block zero is special, contains file size
-	if ( *(int *)(cl + block_offset) == 0 )
-		MSG_WriteLong(msg, *(int *)(cl + cl_iwd_offset));
+	if ( cl->downloadXmitBlock == 0 )
+		MSG_WriteLong( msg, cl->downloadSize );
 
-	MSG_WriteShort(msg, *(int *)(cl + 4 * curindex + unknown_offset2));
+	MSG_WriteShort( msg, cl->downloadBlockSize[curindex] );
 
 	// Write the block
-	if ( *(int *)(cl + 4 * curindex + unknown_offset2) )
-		MSG_WriteData(msg, *(void **)(cl + 4 * curindex + unknown_offset1), *(int *)(cl + 4 * curindex + unknown_offset2));
+	if ( cl->downloadBlockSize[curindex] )
+		MSG_WriteData( msg, cl->downloadBlocks[curindex], cl->downloadBlockSize[curindex] );
 
-	Com_DPrintf("clientDownload: %d : writing block %d\n", clientnum, *(int *)(cl + block_offset));
+	Com_DPrintf("clientDownload: %d : writing block %d\n", cl - svs.clients, cl->downloadXmitBlock);
 
 	// Move on to the next block
 	// It will get sent with next snap shot.  The rate will keep us in line.
-	( *(int *)(cl + block_offset) )++;
-	*(int *)(cl + time_offset) = SVS_TIME;
+	cl->downloadXmitBlock++;
+
+	cl->downloadSendTime = svs.time;
 }
 
 // Segfault fix
@@ -418,7 +400,7 @@ int hook_BG_IsWeaponValid(int a1, int a2)
 	if ( !(unsigned char)sub_80D9E84(a1 + 1348, a2) )
 		return 0;
 
-	int weapon = BG_WeaponDefs(a2);
+	int weapon = (int)BG_WeaponDefs(a2);
 
 	if ( !weapon )
 		return 0;
@@ -451,40 +433,158 @@ char *custom_va(const char *format, ...)
 	return s;
 }
 
-void hook_SV_VerifyIwds_f(int cl)
+void hook_SV_VerifyIwds_f(client_t *cl)
 {
-#if COD_VERSION == COD2_1_0
-	int pureauthentic_offset = 452016;
-#elif COD_VERSION == COD2_1_2
-	int pureauthentic_offset = 452288;
-#elif COD_VERSION == COD2_1_3
-	int pureauthentic_offset = 452288;
-#endif
-
 	if (sv_pure->boolean)
-		*(int *)(cl + pureauthentic_offset) = 1;
+		cl->pureAuthentic = 1;
 }
 
-void hook_SV_ResetPureClient_f(int cl)
+void hook_SV_ResetPureClient_f(client_t *cl)
 {
-#if COD_VERSION == COD2_1_0
-	int pureauthentic_offset = 452016;
-#elif COD_VERSION == COD2_1_2
-	int pureauthentic_offset = 452288;
-#elif COD_VERSION == COD2_1_3
-	int pureauthentic_offset = 452288;
-#endif
-
-	*(int *)(cl + pureauthentic_offset) = 0;
+	cl->pureAuthentic = 0;
 
 	if (codecallback_vid_restart)
 	{
-		int client_id = PLAYERBASE_ID(cl);
-		stackPushInt(client_id);
-		short ret = Scr_ExecEntThread(G_ENTITY(client_id), codecallback_vid_restart, 1);
+		stackPushInt(cl - svs.clients);
+		short ret = Scr_ExecEntThread(cl->gentity, codecallback_vid_restart, 1);
 		Scr_FreeThread(ret);
 	}
 }
+
+// Adds bot pings and removes spam on 1.2 and 1.3
+void custom_SV_CalcPings( void )
+{
+	int i, j;
+	client_t *cl;
+	int total, count;
+	int delta;
+
+	for ( i = 0 ; i < sv_maxclients->integer ; i++ )
+	{
+		cl = &svs.clients[i];
+
+		if ( cl->state != CS_ACTIVE )
+		{
+			cl->ping = -1;
+			continue;
+		}
+
+		if ( !cl->gentity )
+		{
+			cl->ping = -1;
+			continue;
+		}
+
+		if ( cl->netchan.remoteAddress.type == NA_BOT )
+		{
+			cl->ping = 0;
+			cl->lastPacketTime = svs.time;
+			continue;
+		}
+
+		total = 0;
+		count = 0;
+
+		for ( j = 0 ; j < PACKET_BACKUP ; j++ )
+		{
+			if ( cl->frames[j].messageAcked == 0xFFFFFFFF )
+				continue;
+
+			delta = cl->frames[j].messageAcked - cl->frames[j].messageSent;
+			count++;
+			total += delta;
+		}
+
+		if ( !count )
+			cl->ping = 999;
+		else
+		{
+			cl->ping = total / count;
+
+			if ( cl->ping > 999 )
+				cl->ping = 999;
+		}
+	}
+}
+
+void custom_SV_CheckTimeouts( void )
+{
+	int	i;
+	client_t *cl;
+	int	droppoint;
+	int	zombiepoint;
+
+	droppoint = svs.time - 1000 * sv_timeout->integer;
+	zombiepoint = svs.time - 1000 * sv_zombietime->integer;
+
+	for ( i = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ )
+	{
+		// message times may be wrong across a changelevel
+		if (cl->lastPacketTime > svs.time)
+			cl->lastPacketTime = svs.time;
+
+		if (cl->state == CS_ZOMBIE && cl->lastPacketTime < zombiepoint)
+		{
+			cl->state = CS_FREE; // can now be reused
+			continue;
+		}
+
+		if (cl->state >= CS_CONNECTED && cl->lastPacketTime < droppoint)
+		{
+			// wait several frames so a debugger session doesn't
+			// cause a timeout
+			if ( ++cl->timeoutCount > 5 )
+			{
+				SV_DropClient(cl, "EXE_TIMEDOUT");
+				cl->state = CS_FREE; // don't bother with zombie state
+			}
+		}
+		else
+			cl->timeoutCount = 0;
+	}
+}
+
+#if COMPILE_BOTS == 1
+int bot_buttons[MAX_CLIENTS] = {0};
+int bot_weapon[MAX_CLIENTS] = {0};
+char bot_forwardmove[MAX_CLIENTS] = {0};
+char bot_rightmove[MAX_CLIENTS] = {0};
+void custom_SV_BotUserMove(client_t *client)
+{
+	int num;
+	usercmd_t ucmd = {0};
+
+	if (client->gentity == NULL)
+		return;
+
+	num = client - svs.clients;
+	ucmd.serverTime = svs.time;
+
+	playerState_t *ps = SV_GameClientNum(num);
+	gentity_t *ent = SV_GentityNum(num);
+
+	if (bot_weapon[num])
+		ucmd.weapon = (byte)(bot_weapon[num] & 0xFF);
+	else
+		ucmd.weapon = (byte)(ps->weapon & 0xFF);
+
+	if (ent->client == NULL)
+		return;
+
+	if (ent->client->sess.archiveTime == 0)
+	{
+		ucmd.buttons = bot_buttons[num];
+
+		ucmd.forwardmove = bot_forwardmove[num];
+		ucmd.rightmove = bot_rightmove[num];
+
+		VectorCopy(ent->client->sess.cmd.angles, ucmd.angles);
+	}
+
+	client->deltaMessage = client->netchan.outgoingSequence - 1;
+	SV_ClientThink(client, &ucmd);
+}
+#endif
 
 void hook_scriptError(int a1, int a2, int a3, void *a4)
 {
@@ -495,7 +595,7 @@ void hook_scriptError(int a1, int a2, int a3, void *a4)
 }
 
 #if COMPILE_PLAYER == 1
-int gamestate_size[64] = {0};
+int gamestate_size[MAX_CLIENTS] = {0};
 void hook_gamestate_info(const char *format, ...)
 {
 	char s[COD2_MAX_STRINGLENGTH];
@@ -524,137 +624,23 @@ void hook_gamestate_info(const char *format, ...)
 	gamestate_size[clientnum] = gamestate;
 }
 
-int custom_animation[64] = {0};
-cHook *hook_set_anim;
-int set_anim(int a1, int a2, signed int a3, int a4, int a5, int a6, int a7)
-{
-	int clientnum = PLAYERSTATE_ID(a1);
-
-	if (CLIENTSTATE(clientnum) == CS_ACTIVE && custom_animation[clientnum])
-	{
-		a2 = custom_animation[clientnum];
-		a4 = 0;
-		a5 = 1;
-		a6 = 0;
-		a7 = 1;
-	}
-
-	hook_set_anim->unhook();
-	int (*sig)(int a1, int a2, signed int a3, int a4, int a5, int a6, int a7);
-	*(int *)&sig = hook_set_anim->from;
-	int ret = sig(a1, a2, a3, a4, a5, a6, a7);
-	hook_set_anim->hook();
-
-	return ret;
-}
-#endif
-
-#if COMPILE_BOTS == 1
-cHook *hook_set_bot_variables;
-int set_bot_variables()
-{
-	hook_set_bot_variables->unhook();
-	int (*sig)();
-	*(int *)&sig = hook_set_bot_variables->from;
-	int ret = sig();
-	hook_set_bot_variables->hook();
-
-#if COD_VERSION == COD2_1_0
-	int ping_offset = 113001;
-	int lastmsg_offset = 134416;
-#elif COD_VERSION == COD2_1_2
-	int ping_offset = 113069;
-	int lastmsg_offset = 134688;
-#elif COD_VERSION == COD2_1_3
-	int ping_offset = 113069;
-	int lastmsg_offset = 134688;
-#endif
-
-	for (int i = 0; i < sv_maxclients->integer; i++)
-	{
-		if (CLIENTSTATE(i) == CS_ACTIVE && ADDRESSTYPE(i) == NA_BOT)
-		{
-			*(int *)(PLAYERBASE(i) + (ping_offset * 4)) = 0;
-			*(int *)(PLAYERBASE(i) + lastmsg_offset) = SVS_TIME + 50;
-		}
-	}
-
-	return ret;
-}
-
-cHook *hook_fire_antilag;
-int fire_antilag(int a1, int a2)
-{
-	hook_fire_antilag->unhook();
-
-#if COD_VERSION == COD2_1_0
-	int offset = 0x0859B5EC;
-#elif COD_VERSION == COD2_1_2
-	int offset = 0x085AF4EC;
-#elif COD_VERSION == COD2_1_3
-	int offset = 0x0864C56C;
-#endif
-
-	int clientnum = G_ENTITY_ID(a1);
-
-	if (ADDRESSTYPE(clientnum) == NA_BOT)
-		a2 = *(int *)offset;
-
-	int (*sig)(int a1, int a2);
-	*(int *)&sig = hook_fire_antilag->from;
-	int ret = sig(a1, a2);
-
-	hook_fire_antilag->hook();
-
-	return ret;
-}
-
-cHook *hook_free_slot;
-int free_slot(int a1, char* message)
-{
-	hook_free_slot->unhook();
-	int (*sig)(int a1, char* message);
-	*(int *)&sig = hook_free_slot->from;
-	int ret = sig(a1, message);
-	hook_free_slot->hook();
-
-	int clientnum = PLAYERBASE_ID(a1);
-
-	if (ADDRESSTYPE(clientnum) == NA_BOT)
-	{
-		Com_DPrintf("Going from CS_ZOMBIE to CS_FREE for %s\n", (char *)a1 + 134216);
-		*(int *)a1 = CS_FREE;
-	}
-
-	return ret;
-}
-
-int bot_movement[64] = {0};
-int bot_state[64] = {0};
-int bot_grenade[64] = {0};
-int bot_stance[64] = {0};
-int bot_shoot[64] = {0};
-int bot_melee[64] = {0};
-int bot_ads[64] = {0};
-int bot_lean[64] = {0};
-int bot_reload[64] = {0};
-int bot_weapon[64] = {0};
-#endif
-
-#if COMPILE_PLAYER == 1
-int clientfps[64] = {0};
-int tempfps[64] = {0};
-int fpstime[64] = {0};
-#endif
-
+int clientfps[MAX_CLIENTS] = {0};
+int tempfps[MAX_CLIENTS] = {0};
+int fpstime[MAX_CLIENTS] = {0};
 cHook *hook_play_movement;
-int play_movement(int a1, int a2)
+int play_movement(client_t *cl, usercmd_t *ucmd)
 {
-#if COMPILE_PLAYER == 1 || COMPILE_BOTS == 1
-	int clientnum = PLAYERBASE_ID(a1);
-#endif
+	hook_play_movement->unhook();
 
-#if COMPILE_PLAYER == 1
+	int (*sig)(client_t *cl, usercmd_t *ucmd);
+	*(int *)&sig = hook_play_movement->from;
+
+	int ret = sig(cl, ucmd);
+
+	hook_play_movement->hook();
+
+	int clientnum = cl - svs.clients;
+
 	tempfps[clientnum]++;
 
 	if (Sys_MilliSeconds() >= (fpstime[clientnum] + 1000))
@@ -663,30 +649,59 @@ int play_movement(int a1, int a2)
 		fpstime[clientnum] = Sys_MilliSeconds();
 		tempfps[clientnum] = 0;
 	}
-#endif
-
-#if COMPILE_BOTS == 1
-	if (CLIENTSTATE(clientnum) == CS_ACTIVE && ADDRESSTYPE(clientnum) == NA_BOT)
-	{
-		bot_state[clientnum] = (bot_stance[clientnum] + bot_melee[clientnum] + bot_grenade[clientnum] + bot_shoot[clientnum] + bot_ads[clientnum] + bot_lean[clientnum] + bot_reload[clientnum]);
-
-		*(int *)(a2 + 4) = bot_state[clientnum];
-
-		if (bot_weapon[clientnum])
-			*(int *)(a2 + 8) = bot_weapon[clientnum];
-
-		*(int *)(a2 + 24) = bot_movement[clientnum];
-	}
-#endif
-
-	hook_play_movement->unhook();
-	int (*sig)(int a1, int a2);
-	*(int *)&sig = hook_play_movement->from;
-	int ret = sig(a1, a2);
-	hook_play_movement->hook();
 
 	return ret;
 }
+
+int player_g_speed[MAX_CLIENTS] = {0};
+int player_g_gravity[MAX_CLIENTS] = {0};
+cHook *hook_play_endframe;
+int play_endframe(gentity_t *ent)
+{
+	hook_play_endframe->unhook();
+
+	int (*sig)(gentity_t *ent);
+	*(int *)&sig = hook_play_endframe->from;
+
+	int ret = sig(ent);
+
+	hook_play_endframe->hook();
+
+	if (ent->client->sess.state == STATE_PLAYING)
+	{
+		int num = ent - g_entities;
+
+		if (player_g_speed[num] > 0)
+			ent->client->ps.speed = player_g_speed[num];
+
+		if (player_g_gravity[num] > 0)
+			ent->client->ps.gravity = player_g_gravity[num];
+	}
+
+	return ret;
+}
+
+int custom_animation[MAX_CLIENTS] = {0};
+cHook *hook_set_anim;
+int set_anim(playerState_t *ps, int animNum, animBodyPart_t bodyPart, int forceDuration, qboolean setTimer, qboolean isContinue, qboolean force)
+{
+	hook_set_anim->unhook();
+
+	int (*sig)(playerState_t *ps, int animNum, animBodyPart_t bodyPart, int forceDuration, qboolean setTimer, qboolean isContinue, qboolean force);
+	*(int *)&sig = hook_set_anim->from;
+
+	int ret;
+
+	if (!custom_animation[ps->clientNum])
+		ret = sig(ps, animNum, bodyPart, forceDuration, setTimer, isContinue, force);
+	else
+		ret = sig(ps, custom_animation[ps->clientNum], bodyPart, forceDuration, qtrue, isContinue, qtrue);
+
+	hook_set_anim->hook();
+
+	return ret;
+}
+#endif
 
 #if COMPILE_RATELIMITER == 1
 // ioquake3 rate limit connectionless requests
@@ -829,8 +844,8 @@ cvar_t *sv_allowRcon;
 void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 {
 	if (!sv_allowRcon->boolean)
- 		return;
-	
+		return;
+
 	// Prevent using rcon as an amplifier and make dictionary attacks impractical
 	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
 	{
@@ -851,15 +866,15 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 	}
 
 #if COD_VERSION == COD2_1_0
-int lasttime_offset = 0x0848B674;
+	int lasttime_offset = 0x0848B674;
 #elif COD_VERSION == COD2_1_2
-int lasttime_offset = 0x0849EB74;
+	int lasttime_offset = 0x0849EB74;
 #elif COD_VERSION == COD2_1_3
-int lasttime_offset = 0x0849FBF4;
+	int lasttime_offset = 0x0849FBF4;
 #endif
 
-*(int *)lasttime_offset = 0;
-	
+	*(int *)lasttime_offset = 0;
+
 	SVC_RemoteCommand(from, msg);
 }
 
@@ -1475,18 +1490,6 @@ public:
 		// allow to write in executable memory
 		mprotect((void *)0x08048000, 0x135000, PROT_READ | PROT_WRITE | PROT_EXEC);
 
-#if COMPILE_PLAYER == 1
-#if COD_VERSION == COD2_1_0
-		int *addressToPickUpItemPointer = (int *)0x08167B34;
-#elif COD_VERSION == COD2_1_2
-		int *addressToPickUpItemPointer = (int *)0x08186F94;
-#elif COD_VERSION == COD2_1_3
-		int *addressToPickUpItemPointer = (int *)0x08187FB4;
-#endif
-
-		*addressToPickUpItemPointer = (int)hook_pickup_item;
-#endif
-
 #if COD_VERSION == COD2_1_0
 		cracking_hook_call(0x08061FE7, (int)hook_sv_init);
 		cracking_hook_call(0x08091D0C, (int)hook_sv_spawnserver);
@@ -1503,52 +1506,46 @@ public:
 		cracking_hook_call(0x0808E18F, (int)hook_gamestate_info);
 #endif
 
-#if COMPILE_PLAYER == 1
-		cracking_hook_call(0x080DFF66, (int)hook_player_setmovespeed);
-		cracking_hook_call(0x080F50AB, (int)hook_player_g_speed);
-#endif
-
 		cracking_hook_call(0x08081CFE, (int)hook_scriptError);
+
 		hook_gametype_scripts = new cHook(0x0810DDEE, (int)hook_codscript_gametype_scripts);
 		hook_gametype_scripts->hook();
-
-#if COMPILE_PLAYER == 1
-		hook_set_anim = new cHook(0x080D69B2, (int)set_anim);
-		hook_set_anim->hook();
-#endif
 
 		hook_player_collision = new cHook(0x080F2F2E, (int)player_collision);
 		hook_player_collision->hook();
 		hook_player_eject = new cHook(0x080F474A, (int)player_eject);
 		hook_player_eject->hook();
-
-#if COMPILE_BOTS == 1
-		hook_set_bot_variables = new cHook(0x0809443E, (int)set_bot_variables);
-		hook_set_bot_variables->hook();
-		hook_fire_antilag = new cHook(0x0811E3E0, (int)fire_antilag);
-		hook_fire_antilag->hook();
-		hook_free_slot = new cHook(0x0808DC8C, (int)free_slot);
-		hook_free_slot->hook();
-#endif
-
-		hook_play_movement = new cHook(0x0808F488, (int)play_movement);
-		hook_play_movement->hook();
 		hook_fire_grenade = new cHook(0x0810C1F6, (int)fire_grenade);
 		hook_fire_grenade->hook();
+
+#if COMPILE_PLAYER == 1
+		hook_play_movement = new cHook(0x0808F488, (int)play_movement);
+		hook_play_movement->hook();
+		hook_play_endframe = new cHook(0x080F4DBE, (int)play_endframe);
+		hook_play_endframe->hook();
+		hook_set_anim = new cHook(0x080D69B2, (int)set_anim);
+		hook_set_anim->hook();
+#endif
+
 		cracking_hook_function(0x080E97F0, (int)hook_BG_IsWeaponValid);
 		cracking_hook_function(0x0808E544, (int)custom_SV_WriteDownloadToClient);
 		cracking_hook_function(0x080B59CE, (int)custom_va);
 		cracking_hook_function(0x08077DBA, (int)custom_Scr_PrintPrevCodePos); 
 		cracking_hook_function(0x08076D92, (int)custom_AddOpcodePos);
 		cracking_hook_function(0x0808EC66, (int)hook_SV_VerifyIwds_f);
- 		cracking_hook_function(0x0808EEEC, (int)hook_SV_ResetPureClient_f);
+		cracking_hook_function(0x0808EEEC, (int)hook_SV_ResetPureClient_f);
+		cracking_hook_function(0x0809443E, (int)custom_SV_CalcPings);
+		cracking_hook_function(0x080945AC, (int)custom_SV_CheckTimeouts);
+
+#if COMPILE_BOTS == 1
+		cracking_hook_function(0x0809479A, (int)custom_SV_BotUserMove);
+#endif
 
 #if COMPILE_RATELIMITER == 1
 		cracking_hook_call(0x08094081, (int)hook_SVC_Info);
 		cracking_hook_call(0x0809403E, (int)hook_SVC_Status);
 		cracking_hook_call(0x080940C4, (int)hook_SV_GetChallenge);
 		cracking_hook_call(0x08094191, (int)hook_SVC_RemoteCommand);
-		cracking_write_hex(0x081534E0, (char *)"65004f63742031312032303137006761"); //so fun - gamedate: Oct 11 2017
 #endif
 
 #elif COD_VERSION == COD2_1_2
@@ -1567,45 +1564,40 @@ public:
 		cracking_hook_call(0x0808F533, (int)hook_gamestate_info);
 #endif
 
-#if COMPILE_PLAYER == 1
-		cracking_hook_call(0x080E2546, (int)hook_player_setmovespeed);
-		cracking_hook_call(0x080F76BF, (int)hook_player_g_speed);
-#endif
-
 		cracking_hook_call(0x0808227A, (int)hook_scriptError);
+
 		hook_gametype_scripts = new cHook(0x0811012A, (int)hook_codscript_gametype_scripts);
 		hook_gametype_scripts->hook();
-
-#if COMPILE_PLAYER == 1
-		hook_set_anim = new cHook(0x080D8F92, (int)set_anim);
-		hook_set_anim->hook();
-#endif
 
 		hook_player_collision = new cHook(0x080F553E, (int)player_collision);
 		hook_player_collision->hook();
 		hook_player_eject = new cHook(0x080F6D5A, (int)player_eject);
 		hook_player_eject->hook();
-
-#if COMPILE_BOTS == 1
-		hook_set_bot_variables = new cHook(0x0809630E, (int)set_bot_variables);
-		hook_set_bot_variables->hook();
-		hook_fire_antilag = new cHook(0x08120714, (int)fire_antilag);
-		hook_fire_antilag->hook();
-		hook_free_slot = new cHook(0x0808EF9A, (int)free_slot);
-		hook_free_slot->hook();
-#endif
-
-		hook_play_movement = new cHook(0x08090D18, (int)play_movement);
-		hook_play_movement->hook();
 		hook_fire_grenade = new cHook(0x0810E532, (int)fire_grenade);
 		hook_fire_grenade->hook();
+
+#if COMPILE_PLAYER == 1
+		hook_play_movement = new cHook(0x08090D18, (int)play_movement);
+		hook_play_movement->hook();
+		hook_play_endframe = new cHook(0x080F73D2, (int)play_endframe);
+		hook_play_endframe->hook();
+		hook_set_anim = new cHook(0x080D8F92, (int)set_anim);
+		hook_set_anim->hook();
+#endif
+
 		cracking_hook_function(0x080EBDE0, (int)hook_BG_IsWeaponValid);
 		cracking_hook_function(0x0808FD2E, (int)custom_SV_WriteDownloadToClient);
 		cracking_hook_function(0x080B7E62, (int)custom_va);
 		cracking_hook_function(0x0807832E, (int)custom_Scr_PrintPrevCodePos); 
 		cracking_hook_function(0x08077306, (int)custom_AddOpcodePos);
 		cracking_hook_function(0x080904A0, (int)hook_SV_VerifyIwds_f);
- 		cracking_hook_function(0x08090726, (int)hook_SV_ResetPureClient_f);
+		cracking_hook_function(0x08090726, (int)hook_SV_ResetPureClient_f);
+		cracking_hook_function(0x0809630E, (int)custom_SV_CalcPings);
+		cracking_hook_function(0x080964C4, (int)custom_SV_CheckTimeouts);
+
+#if COMPILE_BOTS == 1
+		cracking_hook_function(0x080966B2, (int)custom_SV_BotUserMove);
+#endif
 
 #if COMPILE_RATELIMITER == 1
 		cracking_hook_call(0x08095B8E, (int)hook_SVC_Info);
@@ -1630,45 +1622,40 @@ public:
 		cracking_hook_call(0x0808F5C7, (int)hook_gamestate_info);
 #endif
 
-#if COMPILE_PLAYER == 1
-		cracking_hook_call(0x080E268A, (int)hook_player_setmovespeed);
-		cracking_hook_call(0x080F7803, (int)hook_player_g_speed);
-#endif
-
 		cracking_hook_call(0x08082346, (int)hook_scriptError);
+
 		hook_gametype_scripts = new cHook(0x08110286, (int)hook_codscript_gametype_scripts);
 		hook_gametype_scripts->hook();
-
-#if COMPILE_PLAYER == 1
-		hook_set_anim = new cHook(0x080D90D6, (int)set_anim);
-		hook_set_anim->hook();
-#endif
 
 		hook_player_collision = new cHook(0x080F5682, (int)player_collision);
 		hook_player_collision->hook();
 		hook_player_eject = new cHook(0x080F6E9E, (int)player_eject);
 		hook_player_eject->hook();
-
-#if COMPILE_BOTS == 1
-		hook_set_bot_variables = new cHook(0x080963C8, (int)set_bot_variables);
-		hook_set_bot_variables->hook();
-		hook_fire_antilag = new cHook(0x08120870, (int)fire_antilag);
-		hook_fire_antilag->hook();
-		hook_free_slot = new cHook(0x0808F02E, (int)free_slot);
-		hook_free_slot->hook();
-#endif
-
-		hook_play_movement = new cHook(0x08090DAC, (int)play_movement);
-		hook_play_movement->hook();
 		hook_fire_grenade = new cHook(0x0810E68E, (int)fire_grenade);
 		hook_fire_grenade->hook();
+
+#if COMPILE_PLAYER == 1
+		hook_play_movement = new cHook(0x08090DAC, (int)play_movement);
+		hook_play_movement->hook();
+		hook_play_endframe = new cHook(0x080F7516, (int)play_endframe);
+		hook_play_endframe->hook();
+		hook_set_anim = new cHook(0x080D90D6, (int)set_anim);
+		hook_set_anim->hook();
+#endif
+
 		cracking_hook_function(0x080EBF24, (int)hook_BG_IsWeaponValid);
 		cracking_hook_function(0x0808FDC2, (int)custom_SV_WriteDownloadToClient);
 		cracking_hook_function(0x080B7FA6, (int)custom_va);
 		cracking_hook_function(0x080783FA, (int)custom_Scr_PrintPrevCodePos); 
 		cracking_hook_function(0x080773D2, (int)custom_AddOpcodePos);
 		cracking_hook_function(0x08090534, (int)hook_SV_VerifyIwds_f);
- 		cracking_hook_function(0x080907BA, (int)hook_SV_ResetPureClient_f);
+		cracking_hook_function(0x080907BA, (int)hook_SV_ResetPureClient_f);
+		cracking_hook_function(0x080963C8, (int)custom_SV_CalcPings);
+		cracking_hook_function(0x0809657E, (int)custom_SV_CheckTimeouts);
+
+#if COMPILE_BOTS == 1
+		cracking_hook_function(0x0809676C, (int)custom_SV_BotUserMove);
+#endif
 
 #if COMPILE_RATELIMITER == 1
 		cracking_hook_call(0x08095C48, (int)hook_SVC_Info);
@@ -1680,21 +1667,21 @@ public:
 #endif
 
 		// Register custom cvars
-		sv_cracked = Cvar_RegisterBool("sv_cracked", 0, CVAR_ARCHIVE);
-		sv_noauthorize = Cvar_RegisterBool("sv_noauthorize", 0, CVAR_ARCHIVE);
-		con_coloredPrints = Cvar_RegisterBool("con_coloredPrints", 1, CVAR_ARCHIVE);
-		g_playerCollision = Cvar_RegisterBool("g_playerCollision", 1, CVAR_ARCHIVE);
-		g_playerEject = Cvar_RegisterBool("g_playerEject", 1, CVAR_ARCHIVE);
-		sv_allowRcon = Cvar_RegisterBool("sv_allowRcon", 1, CVAR_ARCHIVE);
+		sv_cracked = Cvar_RegisterBool("sv_cracked", qfalse, CVAR_ARCHIVE);
+		sv_noauthorize = Cvar_RegisterBool("sv_noauthorize", qfalse, CVAR_ARCHIVE);
+		con_coloredPrints = Cvar_RegisterBool("con_coloredPrints", qtrue, CVAR_ARCHIVE);
+		g_playerCollision = Cvar_RegisterBool("g_playerCollision", qtrue, CVAR_ARCHIVE);
+		g_playerEject = Cvar_RegisterBool("g_playerEject", qtrue, CVAR_ARCHIVE);
+		sv_allowRcon = Cvar_RegisterBool("sv_allowRcon", qtrue, CVAR_ARCHIVE);
 		fs_library = Cvar_RegisterString("fs_library", "", CVAR_ARCHIVE);
 		sv_downloadMessage = Cvar_RegisterString("sv_downloadMessage", "", CVAR_ARCHIVE);
-		
+
 		// Force download on clients
- 		cl_allowDownload = Cvar_RegisterBool("cl_allowDownload", 1, CVAR_ARCHIVE | CVAR_SYSTEMINFO);
- 
- #if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
- 		cl_wwwDownload = Cvar_RegisterBool("cl_wwwDownload", 1, CVAR_ARCHIVE | CVAR_SYSTEMINFO);
- #endif
+		cl_allowDownload = Cvar_RegisterBool("cl_allowDownload", qtrue, CVAR_ARCHIVE | CVAR_SYSTEMINFO);
+
+#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
+		cl_wwwDownload = Cvar_RegisterBool("cl_wwwDownload", qtrue, CVAR_ARCHIVE | CVAR_SYSTEMINFO);
+#endif
 
 		setenv("LD_PRELOAD", "", 1); // dont inherit lib of parent
 		printf("> [PLUGIN LOADED]\n");
@@ -1711,8 +1698,9 @@ cCallOfDuty2Pro *pro;
 // lol, single again: because it got loaded two times now
 // both now: able to load with wrapper AND directly
 // IMPORTANT: file needs "lib" infront of name, otherwise it wont be loaded
+// will be called when LD_PRELOAD is referencing this .so
 
-void __attribute__ ((constructor)) lib_load(void) // will be called when LD_PRELOAD is referencing this .so
+void __attribute__ ((constructor)) lib_load(void)
 {
 	pro = new cCallOfDuty2Pro;
 }
