@@ -1151,7 +1151,7 @@ void (*GE_Scr_InitOpcodeLookup)();
 	}
 	
 	//printf("devType = %i\n",devType);
-		
+	
 	*(int *)_VAR_1 = -1;
     *(int *)_VAR_2 = 0x10000;
     *(int *)_VAR_3 = 0;

@@ -177,7 +177,7 @@ scr_function_t scriptFunctions[] =
 #endif
 
 #if COMPILE_UTILS == 1
-    {"crypt", gsc_utils_cryptsh, 0},
+	{"crypt", gsc_utils_cryptsh, 0},
 	{"printf", gsc_utils_printf, 0},
 	{"getArrayKeys", gsc_utils_getarraykeys, 0},
 	{"getAscii", gsc_utils_getAscii, 0},
