@@ -1039,429 +1039,61 @@ int hook_findMap(const char *qpath, void **buffer)
 		return FS_ReadFile(qpath, buffer);
 }
 
-void Scr_InitOpcodeLookup()
+cHook *hook_init_opcode;
+void custom_Scr_InitOpcodeLookup()
 {
+	hook_init_opcode->unhook();
 	
-#if COD_VERSION == COD2_1_0
-char devType = *(int*)0x0839400A;
-#elif COD_VERSION == COD2_1_2
-char devType = *(int*)0x0839648A;
-#elif COD_VERSION == COD2_1_3
-char devType = *(int*)0x0839750A;
-#endif
+	void (*GE_Scr_InitOpcodeLookup)();
+	*(int *)&GE_Scr_InitOpcodeLookup = hook_init_opcode->from;
 	
-#if COD_VERSION == COD2_1_0
-int _VAR_1 = 0x08283ECC;
-#elif COD_VERSION == COD2_1_2
-int _VAR_1 = 0x082862AC;
-#elif COD_VERSION == COD2_1_3
-int _VAR_1 = 0x0828732C;
-#endif
-
-#if COD_VERSION == COD2_1_0
-int _VAR_2 = 0x8283EA4;
-#elif COD_VERSION == COD2_1_2
-int _VAR_2 = 0x8286284;
-#elif COD_VERSION == COD2_1_3
-int _VAR_2 = 0x8287304;
-#endif
-
-#if COD_VERSION == COD2_1_0
-int _VAR_3 = 0x8283EA8;
-#elif COD_VERSION == COD2_1_2
-int _VAR_3 = 0x8286288;
-#elif COD_VERSION == COD2_1_3
-int _VAR_3 = 0x8287308;
-#endif
-
-#if COD_VERSION == COD2_1_0
-int scrParserGlob = 0x8283EA0;
-#elif COD_VERSION == COD2_1_2
-int scrParserGlob = 0x8286280;
-#elif COD_VERSION == COD2_1_3
-int scrParserGlob = 0x8287300;
-#endif
-
-#if COD_VERSION == COD2_1_0
-int _VAR_5 = 0x8283EB0;
-#elif COD_VERSION == COD2_1_2
-int _VAR_5 = 0x8286290;
-#elif COD_VERSION == COD2_1_3
-int _VAR_5 = 0x8287310;
-#endif
-
-#if COD_VERSION == COD2_1_0
-int _VAR_6 = 0x8283EB4;
-#elif COD_VERSION == COD2_1_2
-int _VAR_6 = 0x8286294;
-#elif COD_VERSION == COD2_1_3
-int _VAR_6 = 0x8287314;
-#endif
-
-#if COD_VERSION == COD2_1_0
-int _VAR_7 = 0x8283EAC;
-#elif COD_VERSION == COD2_1_2
-int _VAR_7 = 0x828628C;
-#elif COD_VERSION == COD2_1_3
-int _VAR_7 = 0x828730C;
-#endif
-
-#if COD_VERSION == COD2_1_0
-int _VAR_8 = 0x8283EBC;
-#elif COD_VERSION == COD2_1_2
-int _VAR_8 = 0x828629C;
-#elif COD_VERSION == COD2_1_3
-int _VAR_8 = 0x828731C ;
-#endif
-
-#if COD_VERSION == COD2_1_0
-int _VAR_9 = 0x8283EC0;
-#elif COD_VERSION == COD2_1_2
-int _VAR_9 = 0x82862A0;
-#elif COD_VERSION == COD2_1_3
-int _VAR_9 = 0x8287320;
-#endif
-
-#if COD_VERSION == COD2_1_0
-int _VAR_10 = 0x8283EB8;
-#elif COD_VERSION == COD2_1_2
-int _VAR_10 = 0x8286298;
-#elif COD_VERSION == COD2_1_3
-int _VAR_10 = 0x8287318;
-#endif
+	scrVarPub_t * vars = &scrVarPub;
 	
-#if COD_VERSION == COD2_1_0
-int MMF_Index = 0x8283ED8;
-#elif COD_VERSION == COD2_1_2
-int MMF_Index = 0x82862B8;
-#elif COD_VERSION == COD2_1_3
-int MMF_Index = 0x8287338;
-#endif
+	vars->developer = 1;
+	GE_Scr_InitOpcodeLookup();
 	
-#if COD_VERSION == COD2_1_0
-int MMF_Code = 0x8283ED4;
-#elif COD_VERSION == COD2_1_2
-int MMF_Code = 0x82862B4;
-#elif COD_VERSION == COD2_1_3
-int MMF_Code = 0x8287334;
-#endif
+	if(!developer->integer)
+		vars->developer = 0;
 	
-void (*GE_Scr_InitOpcodeLookup)();
-#if COD_VERSION == COD2_1_0
-*(int *)&GE_Scr_InitOpcodeLookup = 0x8076B9C;
-#elif COD_VERSION == COD2_1_2
-*(int *)&GE_Scr_InitOpcodeLookup = 0x8077110;
-#elif COD_VERSION == COD2_1_3
-*(int *)&GE_Scr_InitOpcodeLookup = 0x80771DC;
-#endif
-	
-	if(devType) {
-		GE_Scr_InitOpcodeLookup();
-		return;
-	}
-	
-	//printf("devType = %i\n",devType);
-	
-	*(int *)_VAR_1 = -1;
-    *(int *)_VAR_2 = 0x10000;
-    *(int *)_VAR_3 = 0;
-    *(int *)scrParserGlob = (long )Z_MallocInternal(0x140000u);
-    memset((void *)(*(int *)scrParserGlob), 0, 20 * (*(int *)_VAR_2));
-    *(int *)_VAR_5 = 0x10000;
-    *(int *)_VAR_6 = 0;
-    *(int *)_VAR_7 = (long )Z_MallocInternal(0x80000u);
-    *(int *)_VAR_8 = 0;
-    *(int *)_VAR_9 = 0;
-    *(int *)_VAR_10 = 16;
-    *(int *)MMF_Index = 0;
-    *(int *)MMF_Code = (long )Z_MallocInternal(0x180u);
-
+	hook_init_opcode->hook();
 }
 
+cHook *hook_add_opcode;
 void custom_AddOpcodePos(int a1, int a2)
 {
-  void *dest;
-  void *v3; 
-  int v4;
-  char *v5;
-  char *v6;
-  
-void (*Z_FreeInternal)(void *ptr);
-#if COD_VERSION == COD2_1_0
-*(int *)&Z_FreeInternal = 0x80A9254;
-#elif COD_VERSION == COD2_1_2
-*(int *)&Z_FreeInternal = 0x80AB474;
-#elif COD_VERSION == COD2_1_3
-*(int *)&Z_FreeInternal = 0x80AB5B8;
-#endif
+	hook_add_opcode->unhook();
 	
-#if COD_VERSION == COD2_1_0
-int scrCompilePub = 0x8202A68;
-#elif COD_VERSION == COD2_1_2
-int scrCompilePub = 0x8204C28;
-#elif COD_VERSION == COD2_1_3
-int scrCompilePub = 0x8205CA8;
-#endif
-
-#if COD_VERSION == COD2_1_0
-int scrCompilePubT = 0x8202A65;
-#elif COD_VERSION == COD2_1_2
-int scrCompilePubT = 0x8204C25;
-#elif COD_VERSION == COD2_1_3
-int scrCompilePubT = 0x8205CA5;
-#endif
-
-#if COD_VERSION == COD2_1_0
-int _VAR_3 = 0x8283EA8;
-#elif COD_VERSION == COD2_1_2
-int _VAR_3 = 0x8286288;
-#elif COD_VERSION == COD2_1_3
-int _VAR_3 = 0x8287308;
-#endif
-
-#if COD_VERSION == COD2_1_0
-int _VAR_4 = 0x8283EA4;
-#elif COD_VERSION == COD2_1_2
-int _VAR_4 = 0x8286284;
-#elif COD_VERSION == COD2_1_3
-int _VAR_4 = 0x8287304;
-#endif
-
-#if COD_VERSION == COD2_1_0
-int scrParserGlob = 0x8283EA0;
-#elif COD_VERSION == COD2_1_2
-int scrParserGlob = 0x8286280;
-#elif COD_VERSION == COD2_1_3
-int scrParserGlob = 0x8287300;
-#endif
-
-#if COD_VERSION == COD2_1_0
-int _VAR_6 = 0x8283EB4;
-#elif COD_VERSION == COD2_1_2
-int _VAR_6 = 0x8286294;
-#elif COD_VERSION == COD2_1_3
-int _VAR_6 = 0x8287314;
-#endif
-
-#if COD_VERSION == COD2_1_0
-int _VAR_7 = 0x8283EB0;
-#elif COD_VERSION == COD2_1_2
-int _VAR_7 = 0x8286290;
-#elif COD_VERSION == COD2_1_3
-int _VAR_7 = 0x8287310;
-#endif
-
-#if COD_VERSION == COD2_1_0
-int _VAR_8 = 0x8283EAC;
-#elif COD_VERSION == COD2_1_2
-int _VAR_8 = 0x828628C;
-#elif COD_VERSION == COD2_1_3
-int _VAR_8 = 0x828730C;
-#endif
-
-#if COD_VERSION == COD2_1_0
-int _VAR_9 = 0x8283EBC;
-#elif COD_VERSION == COD2_1_2
-int _VAR_9 = 0x828629C;
-#elif COD_VERSION == COD2_1_3
-int _VAR_9 = 0x828731C;
-#endif
-
-#if COD_VERSION == COD2_1_0
-int _VAR_10 = 0x8202A6C;
-#elif COD_VERSION == COD2_1_2
-int _VAR_10 = 0x8204C2C;
-#elif COD_VERSION == COD2_1_3
-int _VAR_10 = 0x8205CAC;
-#endif
-
-#if COD_VERSION == COD2_1_0
-int _VAR_11 = 0x8283EC0;
-#elif COD_VERSION == COD2_1_2
-int _VAR_11 = 0x82862A0;
-#elif COD_VERSION == COD2_1_3
-int _VAR_11 = 0x8287320;
-#endif
-
-#if COD_VERSION == COD2_1_0
-int _VAR_12 = 0x8283ECC;
-#elif COD_VERSION == COD2_1_2
-int _VAR_12 = 0x82862AC;
-#elif COD_VERSION == COD2_1_3
-int _VAR_12 = 0x828732C;
-#endif
-
-#if COD_VERSION == COD2_1_0
-int _VAR_13 = 0x8283ED0;
-#elif COD_VERSION == COD2_1_2
-int _VAR_13 = 0x82862B0;
-#elif COD_VERSION == COD2_1_3
-int _VAR_13 = 0x8287330;
-#endif
-  
-  if (*(int *)scrCompilePub != 2 )
-  {
-    if ( !*(int *)scrCompilePubT )
-      a2 &= 0xFFFFFFFE;
-    if ( (unsigned int)(*(int *)_VAR_3) >= (unsigned int)(*(int *)_VAR_4))
-    {
-      (*(int *)_VAR_4) *= 2;
-      dest = Z_MallocInternal(20 * (*(int *)_VAR_4));
-      memcpy(dest, (void *)(*(int *)scrParserGlob), 20 * (*(int *)_VAR_3));
-      Z_FreeInternal((void *)(*(int *)scrParserGlob));
-      (*(int *)scrParserGlob) = (long)dest;
-    }
-    if ( (unsigned int)(*(int *)_VAR_6) >= (unsigned int)(*(int *)_VAR_7) )
-    {
-      (*(int *)_VAR_7) *= 2;
-      v3 = Z_MallocInternal(8 * (*(int *)_VAR_7));
-      memcpy(v3, (void *)(*(int *)_VAR_8), 8 * (*(int *)_VAR_6));
-      Z_FreeInternal((void *)(*(int *)_VAR_8));
-      (*(int *)_VAR_8) = (long)v3;
-    }
-    if ( (*(int *)_VAR_9) == (*(int *)_VAR_10) )
-    {
-      v6 = (char *)(*(int *)scrParserGlob) + 20 * --(*(int *)_VAR_3);
-    }
-    else
-    {
-      (*(int *)_VAR_11) = 0;
-      (*(int *)_VAR_9) = (*(int *)_VAR_10);
-      v6 = (char *)(*(int *)scrParserGlob) + 20 * (*(int *)_VAR_3);
-      *((long *)(*(int *)scrParserGlob) + 5 * (*(int *)_VAR_3) + 1) = (*(int *)_VAR_6);
-      *(long *)v6 = (*(int *)_VAR_9);
-    }
-    v4 = *((long *)v6 + 1) + (*(int *)_VAR_11);
-    v5 = (char *)(*(int *)_VAR_8) + 8 * v4;
-    *((long *)(*(int *)_VAR_8) + 2 * v4) = a1;
-    if ( a1 == -1 )
-    {
-      (*(int *)_VAR_12) = v4;
-    }
-    else if ( a1 == -2 )
-    {
-      (*(int *)_VAR_13) = v4;
-    }
-    else if ( (*(int *)_VAR_12) >= 0 )
-    {
-      if ( a2 & 1 )
-      {
-        *((long *)(*(int *)_VAR_8) + 2 * (*(int *)_VAR_12)) = a1;
-        (*(int *)_VAR_12) = -1;
-      }
-    }
-    *((long *)v5 + 1) |= a2;
-    *((long *)v6 + 2) = ++(*(int *)_VAR_11);
-    ++(*(int *)_VAR_3);
-    ++(*(int *)_VAR_6);
-  }
+	void (*GE_AddOpcodePos)(int, int);
+	*(int *)&GE_AddOpcodePos = hook_add_opcode->from;
+	
+	scrVarPub_t * vars = &scrVarPub;
+	
+	vars->developer = 1;
+	GE_AddOpcodePos(a1, a2);
+	
+	if(!developer->integer)
+		vars->developer = 0;
+	
+	hook_add_opcode->hook();
 }
 
+cHook *hook_print_codepos;
 void custom_Scr_PrintPrevCodePos(int a1, char *a2, int a3)
 {
-  int v4;
-  int v5;
-  char *v6;
-  
-#if COD_VERSION == COD2_1_0
-int g_EndPos = 0x83D4100;
-#elif COD_VERSION == COD2_1_2
-int g_EndPos = 0x83D6580;
-#elif COD_VERSION == COD2_1_3
-int g_EndPos = 0x83D7600;
-#endif
-  
-#if COD_VERSION == COD2_1_0
-int _VAR = 0x8394048;
-#elif COD_VERSION == COD2_1_2
-int _VAR = 0x83964C8;
-#elif COD_VERSION == COD2_1_3
-int _VAR = 0x8397548;
-#endif
-  
-#if COD_VERSION == COD2_1_0
-int MMF_Code = 0x8283ED4;
-#elif COD_VERSION == COD2_1_2
-int MMF_Code = 0x82862B4;
-#elif COD_VERSION == COD2_1_3
-int MMF_Code = 0x8287334;
-#endif
-  
-void (*Com_PrintMessage)(int a1, const char *s);
-#if COD_VERSION == COD2_1_0
-*(int *)&Com_PrintMessage = 0x80609A8;
-#elif COD_VERSION == COD2_1_2
-*(int *)&Com_PrintMessage = 0x8060C28;
-#elif COD_VERSION == COD2_1_3
-*(int *)&Com_PrintMessage = 0x8060C20;
-#endif
-  
-bool (*Scr_IsInOpcodeMemory)(int a1);
-#if COD_VERSION == COD2_1_0
-*(int *)&Scr_IsInOpcodeMemory = 0x80757CC;
-#elif COD_VERSION == COD2_1_2
-*(int *)&Scr_IsInOpcodeMemory = 0x8075D48;
-#elif COD_VERSION == COD2_1_3
-*(int *)&Scr_IsInOpcodeMemory = 0x8075E14;
-#endif
-  
-bool (*findIndex)(int a1);
-#if COD_VERSION == COD2_1_0
-*(int *)&findIndex = 0x8077D5A;
-#elif COD_VERSION == COD2_1_2
-*(int *)&findIndex = 0x80782CE;
-#elif COD_VERSION == COD2_1_3
-*(int *)&findIndex = 0x807839A;
-#endif
-  
-int (*IFline)(unsigned int a1, int a2);
-#if COD_VERSION == COD2_1_0
-*(int *)&IFline = 0x807752A;
-#elif COD_VERSION == COD2_1_2
-*(int *)&IFline = 0x8077A9E;
-#elif COD_VERSION == COD2_1_3
-*(int *)&IFline = 0x8077B6A;
-#endif
-  
-void (*Scr_PrintSourcePos)(int a1, int a2, char *a3, int a4);
-#if COD_VERSION == COD2_1_0
-*(int *)&Scr_PrintSourcePos = 0x8077B96;
-#elif COD_VERSION == COD2_1_2
-*(int *)&Scr_PrintSourcePos = 0x807810A;
-#elif COD_VERSION == COD2_1_3
-*(int *)&Scr_PrintSourcePos = 0x80781D6;
-#endif
-  
-char *(*GE_va)(const char *format, ...);
-#if COD_VERSION == COD2_1_0
-*(int *)&GE_va = 0x80B59CE;
-#elif COD_VERSION == COD2_1_2
-*(int *)&GE_va = 0x80B7E62;
-#elif COD_VERSION == COD2_1_3
-*(int *)&GE_va = 0x80B7FA6;
-#endif
-  
-  if ( !a2 )
-  {
-    Com_PrintMessage(a1, "<frozen thread>\n");
-    return;
-  }
-  if ( (int *)a2 == &(*(int*)g_EndPos)) 
-  {
-    Com_PrintMessage(a1, "<removed thread>\n");
-  }
-  else
-  {
-  if (( *(int *)_VAR && Scr_IsInOpcodeMemory((int)a2) ))
-  {	
-     v4 = findIndex((unsigned int)(a2 - 1));
-     v5 = IFline((unsigned int)(a2 - 1), a3);
-	 Scr_PrintSourcePos(a1, *((long *)(*(int *)MMF_Code) + 6 * v4 + 1), *((char **)(*(int *)MMF_Code) + 6 * v4 + 2), v5);
-     return;
-  }
-  v6 = GE_va("%s\n\n", a2);
-  Com_PrintMessage(a1, v6);
-  }
+	hook_print_codepos->unhook();
+	
+	void (*GE_Scr_PrintPrevCodePos)(int, char *, int);
+	*(int *)&GE_Scr_PrintPrevCodePos = hook_print_codepos->from;
+	
+	scrVarPub_t * vars = &scrVarPub;
+	
+	vars->developer = 1;
+	GE_Scr_PrintPrevCodePos(a1, a2, a3);
+	
+	if(!developer->integer)
+		vars->developer = 0;
+	
+	hook_print_codepos->hook();
 }
 
 class cCallOfDuty2Pro
@@ -1495,7 +1127,6 @@ public:
 		cracking_hook_call(0x0808F134, (int)hook_ClientUserinfoChanged);
 		cracking_hook_call(0x0807059F, (int)Scr_GetCustomFunction);
 		cracking_hook_call(0x080707C3, (int)Scr_GetCustomMethod);
-		cracking_hook_call(0x08075AC7, (int)Scr_InitOpcodeLookup);
 
 #if COMPILE_PLAYER == 1
 		cracking_hook_call(0x0808E18F, (int)hook_gamestate_info);
@@ -1506,6 +1137,13 @@ public:
 		hook_gametype_scripts = new cHook(0x0810DDEE, (int)hook_codscript_gametype_scripts);
 		hook_gametype_scripts->hook();
 
+		hook_init_opcode = new cHook(0x08076B9C, (int)custom_Scr_InitOpcodeLookup);
+		hook_init_opcode->hook();
+		hook_add_opcode = new cHook(0x08076D92, (int)custom_AddOpcodePos);
+		hook_add_opcode->hook();
+		hook_print_codepos = new cHook(0x08077DBA, (int)custom_Scr_PrintPrevCodePos);
+		hook_print_codepos->hook();
+		
 		hook_player_collision = new cHook(0x080F2F2E, (int)player_collision);
 		hook_player_collision->hook();
 		hook_player_eject = new cHook(0x080F474A, (int)player_eject);
@@ -1525,8 +1163,6 @@ public:
 		cracking_hook_function(0x080E97F0, (int)hook_BG_IsWeaponValid);
 		cracking_hook_function(0x0808E544, (int)custom_SV_WriteDownloadToClient);
 		cracking_hook_function(0x080B59CE, (int)custom_va);
-		cracking_hook_function(0x08077DBA, (int)custom_Scr_PrintPrevCodePos); 
-		cracking_hook_function(0x08076D92, (int)custom_AddOpcodePos);
 		cracking_hook_function(0x0808EC66, (int)hook_SV_VerifyIwds_f);
 		cracking_hook_function(0x0808EEEC, (int)hook_SV_ResetPureClient_f);
 		cracking_hook_function(0x0809443E, (int)custom_SV_CalcPings);
@@ -1553,7 +1189,6 @@ public:
 		cracking_hook_call(0x080909BE, (int)hook_ClientUserinfoChanged);
 		cracking_hook_call(0x08070B1B, (int)Scr_GetCustomFunction);
 		cracking_hook_call(0x08070D3F, (int)Scr_GetCustomMethod);
-		cracking_hook_call(0x0807603D, (int)Scr_InitOpcodeLookup);
 
 #if COMPILE_PLAYER == 1
 		cracking_hook_call(0x0808F533, (int)hook_gamestate_info);
@@ -1563,7 +1198,14 @@ public:
 
 		hook_gametype_scripts = new cHook(0x0811012A, (int)hook_codscript_gametype_scripts);
 		hook_gametype_scripts->hook();
-
+		
+		hook_init_opcode = new cHook(0x08077110, (int)custom_Scr_InitOpcodeLookup);
+		hook_init_opcode->hook();
+		hook_add_opcode = new cHook(0x08077306, (int)custom_AddOpcodePos);
+		hook_add_opcode->hook();
+		hook_print_codepos = new cHook(0x0807832E, (int)custom_Scr_PrintPrevCodePos);
+		hook_print_codepos->hook();
+		
 		hook_player_collision = new cHook(0x080F553E, (int)player_collision);
 		hook_player_collision->hook();
 		hook_player_eject = new cHook(0x080F6D5A, (int)player_eject);
@@ -1583,8 +1225,6 @@ public:
 		cracking_hook_function(0x080EBDE0, (int)hook_BG_IsWeaponValid);
 		cracking_hook_function(0x0808FD2E, (int)custom_SV_WriteDownloadToClient);
 		cracking_hook_function(0x080B7E62, (int)custom_va);
-		cracking_hook_function(0x0807832E, (int)custom_Scr_PrintPrevCodePos); 
-		cracking_hook_function(0x08077306, (int)custom_AddOpcodePos);
 		cracking_hook_function(0x080904A0, (int)hook_SV_VerifyIwds_f);
 		cracking_hook_function(0x08090726, (int)hook_SV_ResetPureClient_f);
 		cracking_hook_function(0x0809630E, (int)custom_SV_CalcPings);
@@ -1611,7 +1251,6 @@ public:
 		cracking_hook_call(0x08090A52, (int)hook_ClientUserinfoChanged);
 		cracking_hook_call(0x08070BE7, (int)Scr_GetCustomFunction);
 		cracking_hook_call(0x08070E0B, (int)Scr_GetCustomMethod);
-		cracking_hook_call(0x08076109, (int)Scr_InitOpcodeLookup);
 
 #if COMPILE_PLAYER == 1
 		cracking_hook_call(0x0808F5C7, (int)hook_gamestate_info);
@@ -1622,6 +1261,13 @@ public:
 		hook_gametype_scripts = new cHook(0x08110286, (int)hook_codscript_gametype_scripts);
 		hook_gametype_scripts->hook();
 
+		hook_init_opcode = new cHook(0x080771DC, (int)custom_Scr_InitOpcodeLookup);
+		hook_init_opcode->hook();
+		hook_add_opcode = new cHook(0x080773D2, (int)custom_AddOpcodePos);
+		hook_add_opcode->hook();
+		hook_print_codepos = new cHook(0x080783FA, (int)custom_Scr_PrintPrevCodePos);
+		hook_print_codepos->hook();
+		
 		hook_player_collision = new cHook(0x080F5682, (int)player_collision);
 		hook_player_collision->hook();
 		hook_player_eject = new cHook(0x080F6E9E, (int)player_eject);
@@ -1641,8 +1287,6 @@ public:
 		cracking_hook_function(0x080EBF24, (int)hook_BG_IsWeaponValid);
 		cracking_hook_function(0x0808FDC2, (int)custom_SV_WriteDownloadToClient);
 		cracking_hook_function(0x080B7FA6, (int)custom_va);
-		cracking_hook_function(0x080783FA, (int)custom_Scr_PrintPrevCodePos); 
-		cracking_hook_function(0x080773D2, (int)custom_AddOpcodePos);
 		cracking_hook_function(0x08090534, (int)hook_SV_VerifyIwds_f);
 		cracking_hook_function(0x080907BA, (int)hook_SV_ResetPureClient_f);
 		cracking_hook_function(0x080963C8, (int)custom_SV_CalcPings);
