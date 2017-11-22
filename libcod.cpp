@@ -54,11 +54,6 @@ void hook_sv_spawnserver(const char *format, ...)
 	Com_Printf("%s", s);
 
 	/* Do stuff after sv has been spawned here */
-
-#if COMPILE_SQLITE == 1
-	free_sqlite_db_stores_and_tasks();
-#endif
-
 }
 
 int codecallback_playercommand = 0;

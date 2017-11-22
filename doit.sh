@@ -159,7 +159,7 @@ $cc $options $constants -c libcod.cpp -o objects_$1/libcod.opp
 
 echo "##### LINKING lib$1.so #####"
 objects="$(ls objects_$1/*.opp)"
-$cc -m32 -shared -L/lib32 -o bin/lib$1.so -ldl $objects -lpthread $mysql_link -lcrypt
+$cc -m32 -shared -L/lib32 -o bin/lib$1.so -ldl $objects -lpthread $mysql_link
 rm objects_$1 -r
 
 if [ mysql_variant > 0 ]; then

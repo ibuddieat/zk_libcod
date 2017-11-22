@@ -26,20 +26,6 @@ void gsc_utils_gettimes()
 	Scr_AddArray();
 }
 
-void gsc_utils_cryptsh()
-{
-char *str;
-char *sault;
-
-	if(!stackGetParams("ss", &str, &sault))
-	{
-		stackError("gsc_utils_cryptsh() one or more arguments is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-	stackPushString(crypt(str,sault));
-}
-
 //thanks to riicchhaarrd/php
 void gsc_utils_getarraykeys()
 {
