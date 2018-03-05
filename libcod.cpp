@@ -650,6 +650,7 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 
 int player_g_speed[MAX_CLIENTS] = {0};
 int player_g_gravity[MAX_CLIENTS] = {0};
+float player_g_msscale[MAX_CLIENTS] = {0};
 cHook *hook_play_endframe;
 int play_endframe(gentity_t *ent)
 {
@@ -671,6 +672,9 @@ int play_endframe(gentity_t *ent)
 
 		if (player_g_gravity[num] > 0)
 			ent->client->ps.gravity = player_g_gravity[num];
+		
+		if (player_g_msscale[num] > 0)
+			ent->client->sess.moveSpeedScaleMultiplier = player_g_msscale[num];
 	}
 
 	return ret;

@@ -640,6 +640,51 @@ void gsc_player_getjumpslowdowntimer(scr_entref_t id)
 	stackPushInt(entity->client->ps.pm_time);
 }
 
+void gsc_player_setmovespeedscale(scr_entref_t id)
+{
+	float scale;
+
+	if ( ! stackGetParams("f", &scale))
+	{
+		stackError("gsc_player_setmovespeedscale() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if (id > MAX_CLIENTS)
+	{
+		stackError("gsc_player_setmovespeedscale() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+	
+	extern float player_g_msscale[MAX_CLIENTS];
+	
+	if (scale < 0)
+	{
+		stackError("gsc_player_setmovespeedscale() param must be equal or above zero");
+		stackPushUndefined();
+		return;
+	}
+	
+	player_g_msscale[id] = scale;
+	stackPushBool(qtrue);
+}
+
+void gsc_player_getmovespeedscale(scr_entref_t id)
+{
+	gentity_t *entity = &g_entities[id];
+
+	if (entity->client == NULL)
+	{
+		stackError("gsc_player_getmovespeedscale() entity %i is not a player");
+		stackPushUndefined();
+		return;
+	}
+	
+	stackPushFloat(entity->client->sess.moveSpeedScaleMultiplier);
+}
+
 void gsc_player_setg_speed(scr_entref_t id)
 {
 	int speed;
@@ -671,6 +716,20 @@ void gsc_player_setg_speed(scr_entref_t id)
 	stackPushBool(qtrue);
 }
 
+void gsc_player_getg_speed(scr_entref_t id)
+{
+	gentity_t *entity = &g_entities[id];
+
+	if (entity->client == NULL)
+	{
+		stackError("gsc_player_getg_speed() entity %i is not a player");
+		stackPushUndefined();
+		return;
+	}
+	
+	stackPushInt(entity->client->ps.speed);
+}
+
 void gsc_player_setg_gravity(scr_entref_t id)
 {
 	int gravity;
@@ -700,6 +759,20 @@ void gsc_player_setg_gravity(scr_entref_t id)
 
 	player_g_gravity[id] = gravity;
 	stackPushBool(qtrue);
+}
+
+void gsc_player_getg_gravity(scr_entref_t id)
+{
+	gentity_t *entity = &g_entities[id];
+
+	if (entity->client == NULL)
+	{
+		stackError("gsc_player_getg_gravity() entity %i is not a player");
+		stackPushUndefined();
+		return;
+	}
+	
+	stackPushInt(entity->client->ps.gravity);
 }
 
 void gsc_player_setweaponfiremeleedelay(scr_entref_t id)
