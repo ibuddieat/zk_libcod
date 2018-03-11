@@ -6,14 +6,30 @@
 #define qfalse 0
 
 #define ValidEntity(entity) 	((*(int *)(entity + 1)))
-#define DotProduct(x,y)			((x)[0]*(y)[0]+(x)[1]*(y)[1]+(x)[2]*(y)[2])
-#define VectorSubtract(a,b,c)	((c)[0]=(a)[0]-(b)[0],(c)[1]=(a)[1]-(b)[1],(c)[2]=(a)[2]-(b)[2])
-#define VectorAdd(a,b,c)		((c)[0]=(a)[0]+(b)[0],(c)[1]=(a)[1]+(b)[1],(c)[2]=(a)[2]+(b)[2])
-#define VectorCopy(a,b)			((b)[0]=(a)[0],(b)[1]=(a)[1],(b)[2]=(a)[2])
-#define	VectorScale(v, s, o)	((o)[0]=(v)[0]*(s),(o)[1]=(v)[1]*(s),(o)[2]=(v)[2]*(s))
-#define	VectorMA(v, s, b, o)	((o)[0]=(v)[0]+(b)[0]*(s),(o)[1]=(v)[1]+(b)[1]*(s),(o)[2]=(v)[2]+(b)[2]*(s))
+#define VectorSubtract(a,b,c)   ((c)[0]=(a)[0]-(b)[0],(c)[1]=(a)[1]-(b)[1],(c)[2]=(a)[2]-(b)[2])
+#define VectorAdd(a,b,c)        ((c)[0]=(a)[0]+(b)[0],(c)[1]=(a)[1]+(b)[1],(c)[2]=(a)[2]+(b)[2])
+#define VectorCopy(a,b)         ((b)[0]=(a)[0],(b)[1]=(a)[1],(b)[2]=(a)[2])
+
+#define	VectorScale(v, s, o)    ((o)[0]=(v)[0]*(s),(o)[1]=(v)[1]*(s),(o)[2]=(v)[2]*(s))
+#define VectorMA(v, s, b, o)    ((o)[0]=(v)[0]+(b)[0]*(s),(o)[1]=(v)[1]+(b)[1]*(s),(o)[2]=(v)[2]+(b)[2]*(s))
+#define CrossProduct(a,b,c)     ((c)[0]=(a)[1]*(b)[2]-(a)[2]*(b)[1],(c)[1]=(a)[2]*(b)[0]-(a)[0]*(b)[2],(c)[2]=(a)[0]*(b)[1]-(a)[1]*(b)[0])
+
+#define DotProduct4( x,y )        ( ( x )[0] * ( y )[0] + ( x )[1] * ( y )[1] + ( x )[2] * ( y )[2] + ( x )[3] * ( y )[3] )
+#define VectorSubtract4( a,b,c )  ( ( c )[0] = ( a )[0] - ( b )[0],( c )[1] = ( a )[1] - ( b )[1],( c )[2] = ( a )[2] - ( b )[2],( c )[3] = ( a )[3] - ( b )[3] )
+#define VectorAdd4( a,b,c )       ( ( c )[0] = ( a )[0] + ( b )[0],( c )[1] = ( a )[1] + ( b )[1],( c )[2] = ( a )[2] + ( b )[2],( c )[3] = ( a )[3] + ( b )[3] )
+#define VectorCopy4( a,b )        ( ( b )[0] = ( a )[0],( b )[1] = ( a )[1],( b )[2] = ( a )[2],( b )[3] = ( a )[3] )
+#define VectorScale4( v, s, o )   ( ( o )[0] = ( v )[0] * ( s ),( o )[1] = ( v )[1] * ( s ),( o )[2] = ( v )[2] * ( s ),( o )[3] = ( v )[3] * ( s ) )
+#define VectorMA4( v, s, b, o )   ( ( o )[0] = ( v )[0] + ( b )[0] * ( s ),( o )[1] = ( v )[1] + ( b )[1] * ( s ),( o )[2] = ( v )[2] + ( b )[2] * ( s ),( o )[3] = ( v )[3] + ( b )[3] * ( s ) )
+
+#define VectorClear(a)		((a)[0]=(a)[1]=(a)[2]=0)
+#define VectorNegate( a,b )       ( ( b )[0] = -( a )[0],( b )[1] = -( a )[1],( b )[2] = -( a )[2] )
+#define VectorSet(v, x, y, z)	((v)[0]=(x), (v)[1]=(y), (v)[2]=(z))
+#define Vector4Copy( a,b )        ( ( b )[0] = ( a )[0],( b )[1] = ( a )[1],( b )[2] = ( a )[2],( b )[3] = ( a )[3] )
+
+#define SnapVector( v ) {v[0] = (int)v[0]; v[1] = (int)v[1]; v[2] = (int)v[2];}
 
 #define COD2_MAX_STRINGLENGTH 1024
+
 #define MAX_CLIENTS 64
 #define PACKET_BACKUP 32
 #define MAX_QPATH 64
@@ -41,6 +57,7 @@ typedef enum
 {
 	ET_GENERAL = 0,
 	ET_PLAYER = 1,
+	ET_CORPSE = 2,
 	ET_ITEM = 3,
 	ET_MISSILE = 4,
 	ET_INVISIBLE = 5,
@@ -130,14 +147,12 @@ typedef union
 typedef struct cvar_s
 {
 	char *name;
-	char *description;
-	short int flags;
+	unsigned short flags;
 	byte type;
 	byte modified;
 	union
 	{
 		float floatval;
-		float value;
 		int integer;
 		char* string;
 		byte boolean;
@@ -664,12 +679,15 @@ typedef struct
 
 typedef enum
 {
-	TR_STATIONARY,
-	TR_INTERPOLATE,
-	TR_LINEAR,
-	TR_LINEAR_STOP,
-	TR_SINE,
-	TR_GRAVITY
+	TR_STATIONARY = 0,
+	TR_INTERPOLATE = 1,
+	TR_LINEAR = 2,
+	TR_LINEAR_STOP = 3,
+	TR_SINE = 4,
+	TR_GRAVITY = 5,
+	TR_GRAVITY_PAUSED = 6,
+	TR_ACCELERATE = 7,
+	TR_DECCELERATE = 8
 } trType_t;
 
 typedef struct
@@ -1780,6 +1798,88 @@ typedef struct gitem_s
 	int giSharedAmmoCapIndex; // guessed
 } gitem_t;
 
+typedef struct XBoneInfo_s
+{
+	float bounds[2][3];
+	float offset[3];
+	float radiusSquared;
+} XBoneInfo_t;
+
+typedef struct XModelCollSurf_s
+{
+	float mins[3];
+	float maxs[3];
+	int boneIdx;
+	int contents;
+	int surfFlags;
+} XModelCollSurf_t;
+
+typedef struct XModelHighMipBounds_s
+{
+	float mins[3];
+	float maxs[3];
+} XModelHighMipBounds_t;
+
+typedef struct XModelStreamInfo_s
+{
+	XModelHighMipBounds_t *highMipBounds;
+} XModelStreamInfo_t;
+
+typedef struct XModel_s
+{
+	char numBones;
+	char numRootBones;
+	u_int16_t *boneNames;
+	char *parentList;
+	byte unk[72];
+	XModelCollSurf_t *collSurfs; // 84
+	int numCollSurfs; // 88
+	int contents; // 92
+	XBoneInfo_t *boneInfo; // 96
+	vec3_t mins; // 100
+	vec3_t maxs;
+	short numLods; // 124
+	short collLod;
+	XModelStreamInfo_t streamInfo; // 128
+	int memUsage; // 132
+	const char *name; // 136
+	char flags; // 140
+	char bad; // 141
+} XModel_t;
+
+typedef struct DObjSkeletonPartMatrix_s
+{
+	float p1[4];
+	float p2[4];
+} DObjSkeletonPartMatrix_t;
+
+typedef struct DSkelPartBits_s
+{
+	int anim[4];
+	int control[4];
+	int skel[4];
+} DSkelPartBits_t;
+
+typedef struct DSkel_s
+{
+	DSkelPartBits_t *partBits;
+	int timeStamp;
+	DObjSkeletonPartMatrix_t *mat;
+} DSkel_t;
+
+typedef struct DObj_s
+{
+	int *tree;
+	DSkel_t skel;
+	unsigned short duplicateParts; // 16
+	int unk2;
+	byte numModels; // 24
+	byte numBones; // 25
+	byte duplicatePartsSize; // 26
+	byte pad;
+	XModel_t *models; // 28
+} DObj_t;
+
 typedef struct
 {
 	short emptystring;
@@ -2009,14 +2109,6 @@ static const int level_offset = 0x0864C380;
 #endif
 
 #if COD_VERSION == COD2_1_0
-static const int itemlist_offset = 0x08164C20;
-#elif COD_VERSION == COD2_1_2
-static const int itemlist_offset = 0x081840A0;
-#elif COD_VERSION == COD2_1_3
-static const int itemlist_offset = 0x081850C0;
-#endif
-
-#if COD_VERSION == COD2_1_0
 static const int const_offset = 0x087A22A0;
 #elif COD_VERSION == COD2_1_2
 static const int const_offset = 0x087B61A0;
@@ -2031,22 +2123,26 @@ static const int const_offset = 0x08853220;
 #define sv (*((server_t*)( sv_offset )))
 #define svs (*((serverStatic_t*)( svs_offset )))
 #define level (*((level_locals_t*)( level_offset )))
-#define bg_itemlist (((gitem_t*)( itemlist_offset )))
 #define scr_const (*((stringIndex_t*)( const_offset )))
 
-/*
-// Check for critical structure sizes and fail if not match
-#if COD_VERSION == COD2_1_0
-static_assert((sizeof(client_t) == 0x78F14), "ERROR: client_t size is invalid!");
-#elif COD_VERSION == COD2_1_2
-static_assert((sizeof(client_t) == 0x79064), "ERROR: client_t size is invalid!");
-#elif COD_VERSION == COD2_1_3
-static_assert((sizeof(client_t) == 0xB1064), "ERROR: client_t size is invalid!");
-#endif
 
-static_assert((sizeof(gentity_t) == 560), "ERROR: gentity_t size is invalid!");
-static_assert((sizeof(gclient_t) == 0x28A4), "ERROR: gclient_t size is invalid!");
-static_assert((sizeof(gitem_t) == 44), "ERROR: gitem_t size is invalid!");
-*/
+// Check for critical structure sizes and fail if not match
+#if __GNUC__ >= 6
+
+#if COD_VERSION == COD2_1_0
+
+ static_assert((sizeof(client_t) == 0x78F14), "ERROR: client_t size is invalid!");
+#elif COD_VERSION == COD2_1_2
+ static_assert((sizeof(client_t) == 0x79064), "ERROR: client_t size is invalid!");
+#elif COD_VERSION == COD2_1_3
+ static_assert((sizeof(client_t) == 0xB1064), "ERROR: client_t size is invalid!");
+ 
+#endif
+ 
+ static_assert((sizeof(gentity_t) == 560), "ERROR: gentity_t size is invalid!");
+ static_assert((sizeof(gclient_t) == 0x28A4), "ERROR: gclient_t size is invalid!");
+ static_assert((sizeof(gitem_t) == 44), "ERROR: gitem_t size is invalid!");
+ 
+#endif
 
 #endif

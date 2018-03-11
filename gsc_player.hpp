@@ -51,6 +51,7 @@ void gsc_player_clienthasclientmuted(scr_entref_t id);
 void gsc_player_getlastgamestatesize(scr_entref_t id);
 void gsc_player_getfps(scr_entref_t id);
 void gsc_player_lookatkiller(scr_entref_t id);
+void gsc_player_isbot(scr_entref_t id);
 
 // player functions without entity
 void gsc_kick_slot();

@@ -822,4 +822,76 @@ static const Scr_SetString_t Scr_SetString = (Scr_SetString_t)0x08079D14;
 static const Scr_SetString_t Scr_SetString = (Scr_SetString_t)0x08079DE0;
 #endif
 
+typedef gitem_t * (*BG_FindItemForWeapon_t)(unsigned int weaponIndex);
+#if COD_VERSION == COD2_1_0
+static const BG_FindItemForWeapon_t BG_FindItemForWeapon = (BG_FindItemForWeapon_t)0x080DCAE6;
+#elif COD_VERSION == COD2_1_2
+static const BG_FindItemForWeapon_t BG_FindItemForWeapon = (BG_FindItemForWeapon_t)0x080DF0C6;
+#elif COD_VERSION == COD2_1_3
+static const BG_FindItemForWeapon_t BG_FindItemForWeapon = (BG_FindItemForWeapon_t)0x080DF20A;
+#endif
+
+typedef XModel_t * (*SV_XModelGet_t)(const char *name);
+#if COD_VERSION == COD2_1_0
+static const SV_XModelGet_t SV_XModelGet = (SV_XModelGet_t)0x08090534;
+#elif COD_VERSION == COD2_1_2
+static const SV_XModelGet_t SV_XModelGet = (SV_XModelGet_t)0x08091D44;
+#elif COD_VERSION == COD2_1_3
+static const SV_XModelGet_t SV_XModelGet = (SV_XModelGet_t)0x08091E48;
+#endif
+
+typedef XModel_t * (*SV_XModelForIndex_t)(unsigned int modelIndex);
+#if COD_VERSION == COD2_1_0
+static const SV_XModelForIndex_t SV_XModelForIndex = (SV_XModelForIndex_t)0x0811B0F8;
+#elif COD_VERSION == COD2_1_2
+static const SV_XModelForIndex_t SV_XModelForIndex = (SV_XModelForIndex_t)0x0811D42C;
+#elif COD_VERSION == COD2_1_3
+static const SV_XModelForIndex_t SV_XModelForIndex = (SV_XModelForIndex_t)0x0811D588;
+#endif
+
+typedef qboolean (*SV_DObjExists_t)(gentity_t *ent);
+#if COD_VERSION == COD2_1_0
+static const SV_DObjExists_t SV_DObjExists = (SV_DObjExists_t)0x08090A5A;
+#elif COD_VERSION == COD2_1_2
+static const SV_DObjExists_t SV_DObjExists = (SV_DObjExists_t)0x0809226A;
+#elif COD_VERSION == COD2_1_3
+static const SV_DObjExists_t SV_DObjExists = (SV_DObjExists_t)0x0809236E;
+#endif
+
+typedef DObj_t * (*Com_GetServerDObj_t)(int entNum);
+#if COD_VERSION == COD2_1_0
+static const Com_GetServerDObj_t Com_GetServerDObj = (Com_GetServerDObj_t)0x0806289C;
+#elif COD_VERSION == COD2_1_2
+static const Com_GetServerDObj_t Com_GetServerDObj = (Com_GetServerDObj_t)0x08062BCC;
+#elif COD_VERSION == COD2_1_3
+static const Com_GetServerDObj_t Com_GetServerDObj = (Com_GetServerDObj_t)0x08062BC4;
+#endif
+
+typedef void (*SV_DObjDumpInfo_t)(gentity_t *ent);
+#if COD_VERSION == COD2_1_0
+static const SV_DObjDumpInfo_t SV_DObjDumpInfo = (SV_DObjDumpInfo_t)0x08090584;
+#elif COD_VERSION == COD2_1_2
+static const SV_DObjDumpInfo_t SV_DObjDumpInfo = (SV_DObjDumpInfo_t)0x08091D94;
+#elif COD_VERSION == COD2_1_3
+static const SV_DObjDumpInfo_t SV_DObjDumpInfo = (SV_DObjDumpInfo_t)0x08091E98;
+#endif
+
+typedef qboolean (*DObjSkelExists_t)(DObj_t *dobj, int skelTimeStamp);
+#if COD_VERSION == COD2_1_0
+static const DObjSkelExists_t DObjSkelExists = (DObjSkelExists_t)0x080B83A2;
+#elif COD_VERSION == COD2_1_2
+static const DObjSkelExists_t DObjSkelExists = (DObjSkelExists_t)0x080BA836;
+#elif COD_VERSION == COD2_1_3
+static const DObjSkelExists_t DObjSkelExists = (DObjSkelExists_t)0x080BA97A;
+#endif
+
+typedef void (*BG_EvaluateTrajectory_t)(const trajectory_t *tr, int atTime, vec3_t result);
+#if COD_VERSION == COD2_1_0
+static const BG_EvaluateTrajectory_t BG_EvaluateTrajectory = (BG_EvaluateTrajectory_t)0x080DCEB0;
+#elif COD_VERSION == COD2_1_2
+static const BG_EvaluateTrajectory_t BG_EvaluateTrajectory = (BG_EvaluateTrajectory_t)0x080DF490;
+#elif COD_VERSION == COD2_1_3
+static const BG_EvaluateTrajectory_t BG_EvaluateTrajectory = (BG_EvaluateTrajectory_t)0x080DF5D4;
+#endif
+
 #endif

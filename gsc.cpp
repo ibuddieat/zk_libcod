@@ -335,6 +335,7 @@ scr_method_t scriptMethods[] =
 	{"ismantling", gsc_player_ismantling, 0},
 	{"isonladder", gsc_player_isonladder, 0},
 	{"lookatkiller", gsc_player_lookatkiller, 0},
+	{"isbot", gsc_player_isbot, 0},
 #endif
 
 #ifdef EXTRA_METHODS_INC

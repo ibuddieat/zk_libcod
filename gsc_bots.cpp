@@ -13,7 +13,7 @@ void gsc_bots_set_walkdir(scr_entref_t id)
 		return;
 	}
 
-	if (id > MAX_CLIENTS)
+	if (id >= MAX_CLIENTS)
 	{
 		stackError("gsc_bots_set_walkdir() entity %i is not a player", id);
 		stackPushUndefined();
@@ -66,7 +66,7 @@ void gsc_bots_set_lean(scr_entref_t id)
 		return;
 	}
 
-	if (id > MAX_CLIENTS)
+	if (id >= MAX_CLIENTS)
 	{
 		stackError("gsc_bots_set_lean() entity %i is not a player", id);
 		stackPushUndefined();
@@ -111,7 +111,7 @@ void gsc_bots_set_stance(scr_entref_t id)
 		return;
 	}
 
-	if (id > MAX_CLIENTS)
+	if (id >= MAX_CLIENTS)
 	{
 		stackError("gsc_bots_set_stance() entity %i is not a player", id);
 		stackPushUndefined();
@@ -158,7 +158,7 @@ void gsc_bots_thrownade(scr_entref_t id)
 		return;
 	}
 
-	if (id > MAX_CLIENTS)
+	if (id >= MAX_CLIENTS)
 	{
 		stackError("gsc_bots_thrownade() entity %i is not a player", id);
 		stackPushUndefined();
@@ -195,7 +195,7 @@ void gsc_bots_fireweapon(scr_entref_t id)
 		return;
 	}
 
-	if (id > MAX_CLIENTS)
+	if (id >= MAX_CLIENTS)
 	{
 		stackError("gsc_bots_fireweapon() entity %i is not a player", id);
 		stackPushUndefined();
@@ -232,7 +232,7 @@ void gsc_bots_meleeweapon(scr_entref_t id)
 		return;
 	}
 
-	if (id > MAX_CLIENTS)
+	if (id >= MAX_CLIENTS)
 	{
 		stackError("gsc_bots_meleeweapon() entity %i is not a player", id);
 		stackPushUndefined();
@@ -269,7 +269,7 @@ void gsc_bots_reloadweapon(scr_entref_t id)
 		return;
 	}
 
-	if (id > MAX_CLIENTS)
+	if (id >= MAX_CLIENTS)
 	{
 		stackError("gsc_bots_reloadweapon() entity %i is not a player", id);
 		stackPushUndefined();
@@ -306,7 +306,7 @@ void gsc_bots_adsaim(scr_entref_t id)
 		return;
 	}
 
-	if (id > MAX_CLIENTS)
+	if (id >= MAX_CLIENTS)
 	{
 		stackError("gsc_bots_adsaim() entity %i is not a player", id);
 		stackPushUndefined();
@@ -343,7 +343,7 @@ void gsc_bots_switchtoweaponid(scr_entref_t id)
 		return;
 	}
 
-	if (id > MAX_CLIENTS)
+	if (id >= MAX_CLIENTS)
 	{
 		stackError("gsc_bots_switchtoweaponid() entity %i is not a player", id);
 		stackPushUndefined();
