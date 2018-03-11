@@ -640,51 +640,6 @@ void gsc_player_getjumpslowdowntimer(scr_entref_t id)
 	stackPushInt(entity->client->ps.pm_time);
 }
 
-void gsc_player_setmovespeedscale(scr_entref_t id)
-{
-	float scale;
-
-	if ( ! stackGetParams("f", &scale))
-	{
-		stackError("gsc_player_setmovespeedscale() argument is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-
-	if (id > MAX_CLIENTS)
-	{
-		stackError("gsc_player_setmovespeedscale() entity %i is not a player", id);
-		stackPushUndefined();
-		return;
-	}
-	
-	extern float player_g_msscale[MAX_CLIENTS];
-	
-	if (scale < 0)
-	{
-		stackError("gsc_player_setmovespeedscale() param must be equal or above zero");
-		stackPushUndefined();
-		return;
-	}
-	
-	player_g_msscale[id] = scale;
-	stackPushBool(qtrue);
-}
-
-void gsc_player_getmovespeedscale(scr_entref_t id)
-{
-	gentity_t *entity = &g_entities[id];
-
-	if (entity->client == NULL)
-	{
-		stackError("gsc_player_getmovespeedscale() entity %i is not a player");
-		stackPushUndefined();
-		return;
-	}
-	
-	stackPushFloat(entity->client->sess.moveSpeedScaleMultiplier);
-}
-
 void gsc_player_setg_speed(scr_entref_t id)
 {
 	int speed;
@@ -856,6 +811,28 @@ return v8;
 }
 return 0;
 }
+/*
+void gsc_player_set_anim(scr_entref_t id)
+{
+	char *animation;
+
+	if ( ! stackGetParams("s", &animation))
+	{
+		stackError("gsc_player_set_anim() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	extern int custom_animation[MAX_CLIENTS];
+	int animationIndex = 0;
+
+	if (strcmp(animation, "none") != 0)
+		animationIndex = BG_AnimationIndexForString(animation);
+
+	custom_animation[id] = animationIndex;
+	stackPushBool(qtrue);
+}
+*/
 
 void gsc_player_set_anim(scr_entref_t id)
 {

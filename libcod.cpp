@@ -60,6 +60,7 @@ int codecallback_playercommand = 0;
 int codecallback_userinfochanged = 0;
 int codecallback_fire_grenade = 0;
 int codecallback_vid_restart = 0;
+int codecallback_client_spam = 0;
 
 cHook *hook_gametype_scripts;
 int hook_codscript_gametype_scripts()
@@ -70,6 +71,7 @@ int hook_codscript_gametype_scripts()
 	codecallback_userinfochanged = Scr_GetFunctionHandle("maps/mp/gametypes/_callbacksetup", "CodeCallback_UserInfoChanged", 0);
 	codecallback_fire_grenade = Scr_GetFunctionHandle("maps/mp/gametypes/_callbacksetup", "CodeCallback_FireGrenade", 0);
 	codecallback_vid_restart = Scr_GetFunctionHandle("maps/mp/gametypes/_callbacksetup", "CodeCallback_VidRestart", 0);
+	codecallback_client_spam = Scr_GetFunctionHandle("maps/mp/gametypes/_callbacksetup", "CodeCallback_CLSpam", 0);
 
 	int (*sig)();
 	*(int *)&sig = hook_gametype_scripts->from;
@@ -650,7 +652,6 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 
 int player_g_speed[MAX_CLIENTS] = {0};
 int player_g_gravity[MAX_CLIENTS] = {0};
-float player_g_msscale[MAX_CLIENTS] = {0};
 cHook *hook_play_endframe;
 int play_endframe(gentity_t *ent)
 {
@@ -672,9 +673,7 @@ int play_endframe(gentity_t *ent)
 
 		if (player_g_gravity[num] > 0)
 			ent->client->ps.gravity = player_g_gravity[num];
-		
-		if (player_g_msscale[num] > 0)
-			ent->client->sess.moveSpeedScaleMultiplier = player_g_msscale[num];
+
 	}
 
 	return ret;
@@ -839,6 +838,19 @@ bool SVC_RateLimitAddress( netadr_t from, int burst, int period )
 	return SVC_RateLimit( bucket, burst, period );
 }
 
+void SVC_callback(const char * str, const char * ip)
+{
+	gentity_t * dummy = &g_entities[0];
+	
+	if( codecallback_client_spam )
+	{
+		stackPushString(ip);
+		stackPushString(str);
+		short ret = Scr_ExecEntThread(dummy, codecallback_client_spam, 2);
+		Scr_FreeThread(ret);
+	}
+}
+
 cvar_t *sv_allowRcon;
 void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 {
@@ -849,6 +861,7 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
 	{
 		Com_DPrintf( "SVC_RemoteCommand: rate limit from %s exceeded, dropping request\n", NET_AdrToString( from ) );
+		SVC_callback( "RCON_RATELIMIT_ADDRESS", NET_AdrToString(from) );
 		return;
 	}
 
@@ -860,6 +873,7 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 		if ( SVC_RateLimit( &bucket, 10, 1000 ) )
 		{
 			Com_DPrintf( "SVC_RemoteCommand: rate limit exceeded, dropping request\n" );
+			SVC_callback( "RCON_RATELIMIT", NET_AdrToString(from) );
 			return;
 		}
 	}
@@ -883,6 +897,7 @@ void hook_SV_GetChallenge(netadr_t from)
 	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
 	{
 		Com_DPrintf( "SV_GetChallenge: rate limit from %s exceeded, dropping request\n", NET_AdrToString( from ) );
+		SVC_callback( "CHALLENGE_RATELIMIT_ADDRESS", NET_AdrToString(from) );
 		return;
 	}
 
@@ -891,6 +906,7 @@ void hook_SV_GetChallenge(netadr_t from)
 	if ( SVC_RateLimit( &outboundLeakyBucket, 10, 100 ) )
 	{
 		Com_DPrintf( "SV_GetChallenge: rate limit exceeded, dropping request\n" );
+		SVC_callback( "CHALLENGE_RATELIMIT", NET_AdrToString(from) );
 		return;
 	}
 
@@ -903,6 +919,7 @@ void hook_SVC_Info(netadr_t from)
 	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
 	{
 		Com_DPrintf( "SVC_Info: rate limit from %s exceeded, dropping request\n", NET_AdrToString( from ) );
+		SVC_callback( "INFO_RATELIMIT_ADRESS", NET_AdrToString(from) );
 		return;
 	}
 
@@ -911,6 +928,7 @@ void hook_SVC_Info(netadr_t from)
 	if ( SVC_RateLimit( &outboundLeakyBucket, 10, 100 ) )
 	{
 		Com_DPrintf( "SVC_Info: rate limit exceeded, dropping request\n" );
+		SVC_callback( "INFO_RATELIMIT", NET_AdrToString(from) );
 		return;
 	}
 
@@ -923,6 +941,7 @@ void hook_SVC_Status(netadr_t from)
 	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
 	{
 		Com_DPrintf( "SVC_Status: rate limit from %s exceeded, dropping request\n", NET_AdrToString( from ) );
+		SVC_callback( "STATUS_RATELIMIT_ADRESS", NET_AdrToString(from) );
 		return;
 	}
 
@@ -931,6 +950,7 @@ void hook_SVC_Status(netadr_t from)
 	if ( SVC_RateLimit( &outboundLeakyBucket, 10, 100 ) )
 	{
 		Com_DPrintf( "SVC_Status: rate limit exceeded, dropping request\n" );
+		SVC_callback( "STATUS_RATELIMIT", NET_AdrToString(from) );
 		return;
 	}
 

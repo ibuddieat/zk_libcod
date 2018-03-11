@@ -21,6 +21,8 @@ void gsc_weapons_getweaponcookable();
 void gsc_weapons_setweaponcookable();
 void gsc_weapons_getweaponhitlocmultiplier();
 void gsc_weapons_setweaponhitlocmultiplier();
+void gsc_weapons_getmovespeedscale();
+void gsc_weapons_setmovespeedscale();
 void gsc_weapons_getloadedweapons();
 
 #endif
