@@ -24,6 +24,19 @@ cvar_t *g_playerEject;
 cvar_t *sv_allowRcon;
 cvar_t *fs_library;
 cvar_t *sv_downloadMessage;
+cvar_t *fs_callbacks;
+
+cHook *hook_gametype_scripts;
+cHook *hook_player_collision;
+cHook *hook_player_eject;
+cHook *hook_fire_grenade;
+cHook *hook_play_movement;
+cHook *hook_play_endframe;
+cHook *hook_set_anim;
+cHook *hook_init_opcode;
+cHook *hook_add_opcode;
+cHook *hook_print_codepos;
+cHook *hook_developer_prints;
 
 /* ... ... ... */
 
@@ -49,6 +62,7 @@ void hook_sv_init(const char *format, ...)
 	sv_allowRcon = Cvar_RegisterBool("sv_allowRcon", qtrue, CVAR_ARCHIVE);
 	fs_library = Cvar_RegisterString("fs_library", "", CVAR_ARCHIVE);
 	sv_downloadMessage = Cvar_RegisterString("sv_downloadMessage", "", CVAR_ARCHIVE);
+	fs_callbacks = Cvar_RegisterString("fs_callbacks", "", CVAR_ARCHIVE);
 
 	// Force download on clients
 	cl_allowDownload = Cvar_RegisterBool("cl_allowDownload", qtrue, CVAR_ARCHIVE | CVAR_SYSTEMINFO);
@@ -81,6 +95,8 @@ void hook_sv_spawnserver(const char *format, ...)
 	va_end(va);
 
 	Com_Printf("%s", s);
+	
+	hook_developer_prints->hook();
 
 	/* Do stuff after sv has been spawned here */
 }
@@ -90,17 +106,23 @@ int codecallback_userinfochanged = 0;
 int codecallback_fire_grenade = 0;
 int codecallback_vid_restart = 0;
 int codecallback_client_spam = 0;
+int codecallback_sv_dprintf = 0;
 
-cHook *hook_gametype_scripts;
 int hook_codscript_gametype_scripts()
 {
+	char path_for_cb[512] = "maps/mp/gametypes/_callbacksetup";
+	
 	hook_gametype_scripts->unhook();
 
-	codecallback_playercommand = Scr_GetFunctionHandle("maps/mp/gametypes/_callbacksetup", "CodeCallback_PlayerCommand", 0);
-	codecallback_userinfochanged = Scr_GetFunctionHandle("maps/mp/gametypes/_callbacksetup", "CodeCallback_UserInfoChanged", 0);
-	codecallback_fire_grenade = Scr_GetFunctionHandle("maps/mp/gametypes/_callbacksetup", "CodeCallback_FireGrenade", 0);
-	codecallback_vid_restart = Scr_GetFunctionHandle("maps/mp/gametypes/_callbacksetup", "CodeCallback_VidRestart", 0);
-	codecallback_client_spam = Scr_GetFunctionHandle("maps/mp/gametypes/_callbacksetup", "CodeCallback_CLSpam", 0);
+	if (strlen(fs_callbacks->string))
+		strncpy(path_for_cb, fs_callbacks->string, sizeof(path_for_cb));
+	
+	codecallback_playercommand = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_PlayerCommand", 0);
+	codecallback_userinfochanged = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_UserInfoChanged", 0);
+	codecallback_fire_grenade = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_FireGrenade", 0);
+	codecallback_vid_restart = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_VidRestart", 0);
+	codecallback_client_spam = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_CLSpam", 0);
+	codecallback_sv_dprintf = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_DPrintf", 0);
 
 	int (*sig)();
 	*(int *)&sig = hook_gametype_scripts->from;
@@ -110,7 +132,6 @@ int hook_codscript_gametype_scripts()
 	return ret;
 }
 
-cHook *hook_player_collision;
 int player_collision(int a1)
 {
 	hook_player_collision->unhook();
@@ -130,7 +151,6 @@ int player_collision(int a1)
 	return ret;
 }
 
-cHook *hook_player_eject;
 int player_eject(int a1)
 {
 	hook_player_eject->unhook();
@@ -150,7 +170,6 @@ int player_eject(int a1)
 	return ret;
 }
 
-cHook *hook_fire_grenade;
 gentity_t* fire_grenade(gentity_t *self, vec3_t start, vec3_t dir, int weapon, int time)
 {
 	hook_fire_grenade->unhook();
@@ -627,7 +646,7 @@ void hook_gamestate_info(const char *format, ...)
 	va_end(va);
 
 	Com_DPrintf("%s", s);
-
+		
 	char *tok;
 	int gamestate = 0;
 	int clientnum = 0;
@@ -645,10 +664,30 @@ void hook_gamestate_info(const char *format, ...)
 	gamestate_size[clientnum] = gamestate;
 }
 
+void hook_dprintf(const char *format, ...)
+{
+	char s[COD2_MAX_STRINGLENGTH];
+	va_list va;
+
+	va_start(va, format);
+	vsnprintf(s, sizeof(s), format, va);
+	va_end(va);
+	
+	if (codecallback_sv_dprintf && !level.initializing)
+	{
+		stackPushString(s);
+		short ret = Scr_ExecThread(codecallback_sv_dprintf, 1);
+		Scr_FreeThread(ret);
+	}
+	else 
+		if (developer->integer || codecallback_sv_dprintf)
+			printf("%s", s);
+
+}
+
 int clientfps[MAX_CLIENTS] = {0};
 int tempfps[MAX_CLIENTS] = {0};
 int fpstime[MAX_CLIENTS] = {0};
-cHook *hook_play_movement;
 int play_movement(client_t *cl, usercmd_t *ucmd)
 {
 	hook_play_movement->unhook();
@@ -676,7 +715,6 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 
 int player_g_speed[MAX_CLIENTS] = {0};
 int player_g_gravity[MAX_CLIENTS] = {0};
-cHook *hook_play_endframe;
 int play_endframe(gentity_t *ent)
 {
 	hook_play_endframe->unhook();
@@ -704,7 +742,6 @@ int play_endframe(gentity_t *ent)
 }
 
 int custom_animation[MAX_CLIENTS] = {0};
-cHook *hook_set_anim;
 int set_anim(playerState_t *ps, int animNum, animBodyPart_t bodyPart, int forceDuration, qboolean setTimer, qboolean isContinue, qboolean force)
 {
 	hook_set_anim->unhook();
@@ -862,17 +899,19 @@ bool SVC_RateLimitAddress( netadr_t from, int burst, int period )
 	return SVC_RateLimit( bucket, burst, period );
 }
 
-void SVC_callback(const char * str, const char * ip)
-{
-	gentity_t * dummy = &g_entities[0];
-	
-	if( codecallback_client_spam )
+bool SVC_callback(const char * str, const char * ip)
+{	
+	if( codecallback_client_spam && !level.initializing)
 	{
 		stackPushString(ip);
 		stackPushString(str);
-		short ret = Scr_ExecEntThread(dummy, codecallback_client_spam, 2);
+		short ret = Scr_ExecThread(codecallback_client_spam, 2);
 		Scr_FreeThread(ret);
+		
+		return true;
 	}
+	
+	return false;
 }
 
 void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
@@ -883,8 +922,8 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 	// Prevent using rcon as an amplifier and make dictionary attacks impractical
 	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
 	{
-		Com_DPrintf( "SVC_RemoteCommand: rate limit from %s exceeded, dropping request\n", NET_AdrToString( from ) );
-		SVC_callback( "RCON_RATELIMIT_ADDRESS", NET_AdrToString(from) );
+		if (!SVC_callback("RCON:ADDRESS", NET_AdrToString(from)))
+			Com_DPrintf("SVC_RemoteCommand: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
 		return;
 	}
 
@@ -895,8 +934,8 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 		// Make DoS via rcon impractical
 		if ( SVC_RateLimit( &bucket, 10, 1000 ) )
 		{
-			Com_DPrintf( "SVC_RemoteCommand: rate limit exceeded, dropping request\n" );
-			SVC_callback( "RCON_RATELIMIT", NET_AdrToString(from) );
+			if (!SVC_callback("RCON:GLOBAL", NET_AdrToString(from)))
+				Com_DPrintf("SVC_RemoteCommand: rate limit exceeded, dropping request\n");
 			return;
 		}
 	}
@@ -919,8 +958,8 @@ void hook_SV_GetChallenge(netadr_t from)
 	// Prevent using getchallenge as an amplifier
 	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
 	{
-		Com_DPrintf( "SV_GetChallenge: rate limit from %s exceeded, dropping request\n", NET_AdrToString( from ) );
-		SVC_callback( "CHALLENGE_RATELIMIT_ADDRESS", NET_AdrToString(from) );
+		if (!SVC_callback("CHALLENGE:ADDRESS", NET_AdrToString(from)))
+			Com_DPrintf("SV_GetChallenge: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
 		return;
 	}
 
@@ -928,8 +967,8 @@ void hook_SV_GetChallenge(netadr_t from)
 	// excess outbound bandwidth usage when being flooded inbound
 	if ( SVC_RateLimit( &outboundLeakyBucket, 10, 100 ) )
 	{
-		Com_DPrintf( "SV_GetChallenge: rate limit exceeded, dropping request\n" );
-		SVC_callback( "CHALLENGE_RATELIMIT", NET_AdrToString(from) );
+		if (!SVC_callback("CHALLENGE:GLOBAL", NET_AdrToString(from)))
+			Com_DPrintf("SV_GetChallenge: rate limit exceeded, dropping request\n");
 		return;
 	}
 
@@ -941,8 +980,8 @@ void hook_SVC_Info(netadr_t from)
 	// Prevent using getinfo as an amplifier
 	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
 	{
-		Com_DPrintf( "SVC_Info: rate limit from %s exceeded, dropping request\n", NET_AdrToString( from ) );
-		SVC_callback( "INFO_RATELIMIT_ADRESS", NET_AdrToString(from) );
+		if (!SVC_callback("INFO:ADDRESS", NET_AdrToString(from)))
+			Com_DPrintf("SVC_Info: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
 		return;
 	}
 
@@ -950,8 +989,8 @@ void hook_SVC_Info(netadr_t from)
 	// excess outbound bandwidth usage when being flooded inbound
 	if ( SVC_RateLimit( &outboundLeakyBucket, 10, 100 ) )
 	{
-		Com_DPrintf( "SVC_Info: rate limit exceeded, dropping request\n" );
-		SVC_callback( "INFO_RATELIMIT", NET_AdrToString(from) );
+		if (!SVC_callback("INFO:GLOBAL", NET_AdrToString(from)))
+			Com_DPrintf("SVC_Info: rate limit exceeded, dropping request\n");
 		return;
 	}
 
@@ -963,8 +1002,8 @@ void hook_SVC_Status(netadr_t from)
 	// Prevent using getstatus as an amplifier
 	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
 	{
-		Com_DPrintf( "SVC_Status: rate limit from %s exceeded, dropping request\n", NET_AdrToString( from ) );
-		SVC_callback( "STATUS_RATELIMIT_ADRESS", NET_AdrToString(from) );
+		if (!SVC_callback("STATUS:ADDRESS", NET_AdrToString(from)))
+			Com_DPrintf("SVC_Status: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
 		return;
 	}
 
@@ -972,8 +1011,8 @@ void hook_SVC_Status(netadr_t from)
 	// excess outbound bandwidth usage when being flooded inbound
 	if ( SVC_RateLimit( &outboundLeakyBucket, 10, 100 ) )
 	{
-		Com_DPrintf( "SVC_Status: rate limit exceeded, dropping request\n" );
-		SVC_callback( "STATUS_RATELIMIT", NET_AdrToString(from) );
+		if (!SVC_callback("STATUS:GLOBAL", NET_AdrToString(from)))
+			Com_DPrintf("SVC_Status: rate limit exceeded, dropping request\n");
 		return;
 	}
 
@@ -1085,7 +1124,6 @@ int hook_findMap(const char *qpath, void **buffer)
 		return FS_ReadFile(qpath, buffer);
 }
 
-cHook *hook_init_opcode;
 void custom_Scr_InitOpcodeLookup()
 {
 	hook_init_opcode->unhook();
@@ -1104,7 +1142,6 @@ void custom_Scr_InitOpcodeLookup()
 	hook_init_opcode->hook();
 }
 
-cHook *hook_add_opcode;
 void custom_AddOpcodePos(int a1, int a2)
 {
 	hook_add_opcode->unhook();
@@ -1123,7 +1160,6 @@ void custom_AddOpcodePos(int a1, int a2)
 	hook_add_opcode->hook();
 }
 
-cHook *hook_print_codepos;
 void custom_Scr_PrintPrevCodePos(int a1, char *a2, int a3)
 {
 	hook_print_codepos->unhook();
@@ -1185,7 +1221,9 @@ public:
 
 		hook_gametype_scripts = new cHook(0x0810DDEE, (int)hook_codscript_gametype_scripts);
 		hook_gametype_scripts->hook();
-
+		
+		hook_developer_prints = new cHook(0x08060B7C, (int)hook_dprintf);
+		
 		hook_init_opcode = new cHook(0x08076B9C, (int)custom_Scr_InitOpcodeLookup);
 		hook_init_opcode->hook();
 		hook_add_opcode = new cHook(0x08076D92, (int)custom_AddOpcodePos);
@@ -1247,6 +1285,7 @@ public:
 
 		hook_gametype_scripts = new cHook(0x0811012A, (int)hook_codscript_gametype_scripts);
 		hook_gametype_scripts->hook();
+		hook_developer_prints = new cHook(0x08060E42, (int)hook_dprintf);
 		
 		hook_init_opcode = new cHook(0x08077110, (int)custom_Scr_InitOpcodeLookup);
 		hook_init_opcode->hook();
@@ -1309,6 +1348,7 @@ public:
 
 		hook_gametype_scripts = new cHook(0x08110286, (int)hook_codscript_gametype_scripts);
 		hook_gametype_scripts->hook();
+		hook_developer_prints = new cHook(0x08060E3A, (int)hook_dprintf);
 
 		hook_init_opcode = new cHook(0x080771DC, (int)custom_Scr_InitOpcodeLookup);
 		hook_init_opcode->hook();
