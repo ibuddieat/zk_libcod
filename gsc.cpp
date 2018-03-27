@@ -153,7 +153,7 @@ scr_function_t scriptFunctions[] =
 #endif
 
 #if COMPILE_EXEC == 1
-	{"script_result", gsc_exec, 0},
+	{"execute", gsc_exec, 0},
 	{"exec_async_create", gsc_exec_async_create, 0},
 	{"exec_async_create_nosave", gsc_exec_async_create_nosave, 0},
 	{"exec_async_checkdone", gsc_exec_async_checkdone, 0},

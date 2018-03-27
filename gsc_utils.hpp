@@ -4,6 +4,7 @@
 /* gsc functions */
 #include "gsc.hpp"
 
+void Sys_AnsiColorPrint( const char *msg );
 void gsc_utils_printf();
 void gsc_utils_getarraykeys();
 void gsc_utils_getAscii();

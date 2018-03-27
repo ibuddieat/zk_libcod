@@ -36,6 +36,7 @@ cHook *hook_set_anim;
 cHook *hook_init_opcode;
 cHook *hook_add_opcode;
 cHook *hook_print_codepos;
+cHook *hook_standart_prints;
 cHook *hook_developer_prints;
 
 /* ... ... ... */
@@ -52,6 +53,8 @@ void hook_sv_init(const char *format, ...)
 	Com_Printf("%s", s);
 
 	/* Do stuff after sv has been initialized here */
+	
+	hook_developer_prints->hook();
 	
 	// Register custom cvars
 	sv_cracked = Cvar_RegisterBool("sv_cracked", qfalse, CVAR_ARCHIVE);
@@ -96,8 +99,6 @@ void hook_sv_spawnserver(const char *format, ...)
 
 	Com_Printf("%s", s);
 	
-	hook_developer_prints->hook();
-
 	/* Do stuff after sv has been spawned here */
 }
 
@@ -197,6 +198,9 @@ void hook_ClientCommand(int clientNum)
 {
 	if ( ! codecallback_playercommand)
 	{
+		if (!Scr_IsSystemActive())
+			return;
+		
 		ClientCommand(clientNum);
 		return;
 	}
@@ -250,6 +254,9 @@ void hook_ClientUserinfoChanged(int clientNum)
 {
 	if ( ! codecallback_userinfochanged)
 	{
+		if (!Scr_IsSystemActive())
+			return;
+		
 		ClientUserinfoChanged(clientNum);
 		return;
 	}
@@ -485,6 +492,12 @@ void hook_SV_ResetPureClient_f(client_t *cl)
 
 	if (codecallback_vid_restart)
 	{
+		if (!Scr_IsSystemActive())
+			return;
+		
+		if (cl->gentity == NULL)
+			return;
+		
 		stackPushInt(cl - svs.clients);
 		short ret = Scr_ExecEntThread(cl->gentity, codecallback_vid_restart, 1);
 		Scr_FreeThread(ret);
@@ -664,6 +677,26 @@ void hook_gamestate_info(const char *format, ...)
 	gamestate_size[clientnum] = gamestate;
 }
 
+void hook_printf(const char *format, ...)
+{
+	char s[COD2_MAX_STRINGLENGTH];
+	va_list va;
+
+	va_start(va, format);
+	vsnprintf(s, sizeof(s), format, va);
+	va_end(va);
+	
+	if (Scr_IsSystemActive() && !level.initializing)
+	{
+		if (con_coloredPrints->boolean)
+			Sys_AnsiColorPrint(s);
+		else
+			printf("%s", s);
+	}
+	else
+		printf("%s", s);
+}
+
 void hook_dprintf(const char *format, ...)
 {
 	char s[COD2_MAX_STRINGLENGTH];
@@ -673,7 +706,7 @@ void hook_dprintf(const char *format, ...)
 	vsnprintf(s, sizeof(s), format, va);
 	va_end(va);
 	
-	if (codecallback_sv_dprintf && !level.initializing)
+	if (codecallback_sv_dprintf && Scr_IsSystemActive() /*&& !level.initializing*/)
 	{
 		stackPushString(s);
 		short ret = Scr_ExecThread(codecallback_sv_dprintf, 1);
@@ -681,7 +714,7 @@ void hook_dprintf(const char *format, ...)
 	}
 	else 
 		if (developer->integer || codecallback_sv_dprintf)
-			printf("%s", s);
+			Com_Printf("%s", s);
 
 }
 
@@ -1023,7 +1056,7 @@ void hook_SVC_Status(netadr_t from)
 void manymaps_prepare(const char *mapname, int read)
 {
 	char library_path[512], map_check[512];
-
+	
 	cvar_t *fs_homepath = Cvar_FindVar("fs_homepath");
 	cvar_t *fs_game = Cvar_FindVar("fs_game");
 	cvar_t *map = Cvar_FindVar("mapname");
@@ -1221,8 +1254,9 @@ public:
 
 		hook_gametype_scripts = new cHook(0x0810DDEE, (int)hook_codscript_gametype_scripts);
 		hook_gametype_scripts->hook();
-		
 		hook_developer_prints = new cHook(0x08060B7C, (int)hook_dprintf);
+		hook_standart_prints = new cHook(0x08060B2C, int(hook_printf));
+		hook_standart_prints->hook();
 		
 		hook_init_opcode = new cHook(0x08076B9C, (int)custom_Scr_InitOpcodeLookup);
 		hook_init_opcode->hook();
@@ -1286,6 +1320,8 @@ public:
 		hook_gametype_scripts = new cHook(0x0811012A, (int)hook_codscript_gametype_scripts);
 		hook_gametype_scripts->hook();
 		hook_developer_prints = new cHook(0x08060E42, (int)hook_dprintf);
+		hook_standart_prints = new cHook(0x08060DF2, int(hook_printf));
+		hook_standart_prints->hook();
 		
 		hook_init_opcode = new cHook(0x08077110, (int)custom_Scr_InitOpcodeLookup);
 		hook_init_opcode->hook();
@@ -1349,6 +1385,8 @@ public:
 		hook_gametype_scripts = new cHook(0x08110286, (int)hook_codscript_gametype_scripts);
 		hook_gametype_scripts->hook();
 		hook_developer_prints = new cHook(0x08060E3A, (int)hook_dprintf);
+		hook_standart_prints = new cHook(0x08060DEA, int(hook_printf));
+		hook_standart_prints->hook();
 
 		hook_init_opcode = new cHook(0x080771DC, (int)custom_Scr_InitOpcodeLookup);
 		hook_init_opcode->hook();

@@ -102,7 +102,7 @@ void *exec_async(void *input_c)
 	fp = popen(task->command, "r");
 
 	if (fp == NULL)
-	{
+	{	
 		task->error = true;
 		return NULL;
 	}
@@ -137,7 +137,7 @@ void *exec_async(void *input_c)
 	}
 	else
 		while(getc(fp) != EOF); //make thread wait for function to finish
-
+	
 	pclose(fp);
 	task->done = true;
 	return NULL;
@@ -147,15 +147,13 @@ void gsc_exec_async_create()
 {
 	char *command;
 	int callback;
-
+	
 	if (!stackGetParamString(0, &command))
 	{
 		stackError("gsc_exec_async_create() argument is undefined or has wrong type");
 		stackPushUndefined();
 		return;
 	}
-
-	Com_DPrintf("gsc_exec_async_create() executing: %s\n", command);
 
 	exec_async_task *current = first_exec_async_task;
 
@@ -222,6 +220,8 @@ void gsc_exec_async_create()
 	else
 		first_exec_async_task = newtask;
 
+	Com_DPrintf("gsc_exec_async_create() executing: %s\n", command);
+	
 	pthread_t exec_doer;
 
 	if (pthread_create(&exec_doer, NULL, exec_async, newtask) != 0)
@@ -252,8 +252,6 @@ void gsc_exec_async_create_nosave()
 		stackPushUndefined();
 		return;
 	}
-
-	Com_DPrintf("gsc_exec_async_create_nosave() executing: %s\n", command);
 
 	exec_async_task *current = first_exec_async_task;
 
@@ -320,6 +318,8 @@ void gsc_exec_async_create_nosave()
 	else
 		first_exec_async_task = newtask;
 
+	Com_DPrintf("gsc_exec_async_create_nosave() executing: %s\n", command);
+	
 	pthread_t exec_doer;
 
 	if (pthread_create(&exec_doer, NULL, exec_async, newtask) != 0)
@@ -347,10 +347,8 @@ void gsc_exec_async_checkdone()
 	{
 		exec_async_task *task = current;
 		current = current->next;
-
 		if (task->done)
 		{
-			//push to cod
 			if (Scr_IsSystemActive() && task->save && task->callback && !task->error && (scrVarPub.levelId == task->levelId))
 			{
 				if (task->hasargument)
@@ -394,7 +392,7 @@ void gsc_exec_async_checkdone()
 					delete output;
 					output = next;
 				}
-
+				
 				short ret = Scr_ExecThread(task->callback, task->save + task->hasargument);
 				Scr_FreeThread(ret);
 			}
