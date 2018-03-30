@@ -54,8 +54,6 @@ void hook_sv_init(const char *format, ...)
 
 	/* Do stuff after sv has been initialized here */
 	
-	hook_developer_prints->hook();
-	
 	// Register custom cvars
 	sv_cracked = Cvar_RegisterBool("sv_cracked", qfalse, CVAR_ARCHIVE);
 	sv_noauthorize = Cvar_RegisterBool("sv_noauthorize", qfalse, CVAR_ARCHIVE);
@@ -100,6 +98,8 @@ void hook_sv_spawnserver(const char *format, ...)
 	Com_Printf("%s", s);
 	
 	/* Do stuff after sv has been spawned here */
+	
+	hook_developer_prints->hook();
 }
 
 int codecallback_playercommand = 0;
@@ -113,11 +113,11 @@ int hook_codscript_gametype_scripts()
 {
 	char path_for_cb[512] = "maps/mp/gametypes/_callbacksetup";
 	
-	hook_gametype_scripts->unhook();
-
-	if (strlen(fs_callbacks->string))
+	if (fs_callbacks->string)
 		strncpy(path_for_cb, fs_callbacks->string, sizeof(path_for_cb));
 	
+	hook_gametype_scripts->unhook();
+			
 	codecallback_playercommand = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_PlayerCommand", 0);
 	codecallback_userinfochanged = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_UserInfoChanged", 0);
 	codecallback_fire_grenade = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_FireGrenade", 0);
@@ -196,11 +196,12 @@ gentity_t* fire_grenade(gentity_t *self, vec3_t start, vec3_t dir, int weapon, i
 
 void hook_ClientCommand(int clientNum)
 {
+
+	if (!Scr_IsSystemActive())
+		return;
+			
 	if ( ! codecallback_playercommand)
-	{
-		if (!Scr_IsSystemActive())
-			return;
-		
+	{	
 		ClientCommand(clientNum);
 		return;
 	}
@@ -252,15 +253,15 @@ const char* hook_AuthorizeState(int arg)
 
 void hook_ClientUserinfoChanged(int clientNum)
 {
-	if ( ! codecallback_userinfochanged)
-	{
-		if (!Scr_IsSystemActive())
-			return;
+	if (!Scr_IsSystemActive())
+		return;
 		
+	if ( ! codecallback_userinfochanged)
+	{	
 		ClientUserinfoChanged(clientNum);
 		return;
 	}
-
+			
 	stackPushInt(clientNum); // one parameter is required
 	short ret = Scr_ExecEntThread(&g_entities[clientNum], codecallback_userinfochanged, 1);
 	Scr_FreeThread(ret);
@@ -490,11 +491,8 @@ void hook_SV_ResetPureClient_f(client_t *cl)
 {
 	cl->pureAuthentic = 0;
 
-	if (codecallback_vid_restart)
-	{
-		if (!Scr_IsSystemActive())
-			return;
-		
+	if (codecallback_vid_restart && Scr_IsSystemActive())
+	{	
 		if (cl->gentity == NULL)
 			return;
 		
@@ -686,13 +684,8 @@ void hook_printf(const char *format, ...)
 	vsnprintf(s, sizeof(s), format, va);
 	va_end(va);
 	
-	if (Scr_IsSystemActive() && !level.initializing)
-	{
-		if (con_coloredPrints->boolean)
-			Sys_AnsiColorPrint(s);
-		else
-			printf("%s", s);
-	}
+	if (Scr_IsSystemActive() && con_coloredPrints->boolean)
+		Sys_AnsiColorPrint(s);
 	else
 		printf("%s", s);
 }
@@ -706,15 +699,22 @@ void hook_dprintf(const char *format, ...)
 	vsnprintf(s, sizeof(s), format, va);
 	va_end(va);
 	
-	if (codecallback_sv_dprintf && Scr_IsSystemActive() /*&& !level.initializing*/)
+	if (Scr_IsSystemActive())
 	{
-		stackPushString(s);
-		short ret = Scr_ExecThread(codecallback_sv_dprintf, 1);
-		Scr_FreeThread(ret);
+		if (codecallback_sv_dprintf)
+		{
+			stackPushString(s);
+			short ret = Scr_ExecThread(codecallback_sv_dprintf, 1);
+			Scr_FreeThread(ret);
+		
+			return;
+		}
+		
+		if (!developer->integer)
+			return;
 	}
-	else 
-		if (developer->integer || codecallback_sv_dprintf)
-			Com_Printf("%s", s);
+	
+	Com_Printf("%s", s);
 
 }
 
@@ -934,7 +934,7 @@ bool SVC_RateLimitAddress( netadr_t from, int burst, int period )
 
 bool SVC_callback(const char * str, const char * ip)
 {	
-	if( codecallback_client_spam && !level.initializing)
+	if( codecallback_client_spam && Scr_IsSystemActive())
 	{
 		stackPushString(ip);
 		stackPushString(str);
