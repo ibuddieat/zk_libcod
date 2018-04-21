@@ -34,6 +34,7 @@ void gsc_utils_fread();
 void gsc_utils_fwrite();
 void gsc_utils_fclose();
 void gsc_utils_fsize();
+void gsc_utils_fremove();
 void gsc_utils_sprintf();
 void gsc_utils_gettimes();
 

@@ -2010,6 +2010,7 @@ typedef struct
 #define EF_USETURRET 0x00000300
 #define EF_AIMDOWNSIGHT 0x00040000
 
+#define PMF_MANTLE 4
 #define PMF_LADDER 32
 
 #define CONTENTS_SOLID          1

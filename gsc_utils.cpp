@@ -653,6 +653,20 @@ void gsc_utils_fsize()
 	stackPushInt( buf.st_size );
 }
 
+void gsc_utils_fremove()
+{
+	char * file;
+	
+	if (!stackGetParams("s", &file))
+	{
+		stackError("gsc_utils_fremove() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+	
+	stackPushInt(remove( file ));
+}
+
 // http://code.metager.de/source/xref/RavenSoftware/jediacademy/code/game/g_utils.cpp#36
 void gsc_G_FindConfigstringIndexOriginal()
 {

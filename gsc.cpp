@@ -198,6 +198,7 @@ scr_function_t scriptFunctions[] =
 	{"fwrite", gsc_utils_fwrite, 0},
 	{"fclose", gsc_utils_fclose, 0},
 	{"fsize", gsc_utils_fsize, 0},
+	{"fremove", gsc_utils_fremove, 0},
 	{"sprintf", gsc_utils_sprintf, 0},
 	{"gettimes", gsc_utils_gettimes, 0},
 	{"G_FindConfigstringIndex", gsc_G_FindConfigstringIndex, 0},

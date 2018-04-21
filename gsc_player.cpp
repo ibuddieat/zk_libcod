@@ -617,7 +617,7 @@ void gsc_player_ismantling(scr_entref_t id)
 		return;
 	}
 
-	if (entity->s.eFlags & EF_MANTLE)
+	if (entity->client->ps.pm_flags & PMF_MANTLE)
 		stackPushBool(qtrue);
 	else
 		stackPushBool(qfalse);
