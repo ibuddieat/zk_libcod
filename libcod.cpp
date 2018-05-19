@@ -39,6 +39,16 @@ cHook *hook_print_codepos;
 cHook *hook_standart_prints;
 cHook *hook_developer_prints;
 
+int codecallback_playercommand = 0;
+int codecallback_userinfochanged = 0;
+int codecallback_fire_grenade = 0;
+int codecallback_vid_restart = 0;
+int codecallback_client_spam = 0;
+int codecallback_sv_dprintf = 0;
+int codecallback_meleebutton = 0;
+int codecallback_usebutton = 0;
+int codecallback_attackbutton = 0;
+
 /* ... ... ... */
 
 void hook_sv_init(const char *format, ...)
@@ -102,18 +112,11 @@ void hook_sv_spawnserver(const char *format, ...)
 	hook_developer_prints->hook();
 }
 
-int codecallback_playercommand = 0;
-int codecallback_userinfochanged = 0;
-int codecallback_fire_grenade = 0;
-int codecallback_vid_restart = 0;
-int codecallback_client_spam = 0;
-int codecallback_sv_dprintf = 0;
-
 int hook_codscript_gametype_scripts()
 {
 	char path_for_cb[512] = "maps/mp/gametypes/_callbacksetup";
 	
-	if (fs_callbacks->string)
+	if (strlen(fs_callbacks->string))
 		strncpy(path_for_cb, fs_callbacks->string, sizeof(path_for_cb));
 	
 	hook_gametype_scripts->unhook();
@@ -124,6 +127,9 @@ int hook_codscript_gametype_scripts()
 	codecallback_vid_restart = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_VidRestart", 0);
 	codecallback_client_spam = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_CLSpam", 0);
 	codecallback_sv_dprintf = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_DPrintf", 0);
+	codecallback_meleebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MeleeButton", 0);
+ 	codecallback_usebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_UseButton", 0);
+	codecallback_attackbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_AttackButton", 0);
 
 	int (*sig)();
 	*(int *)&sig = hook_gametype_scripts->from;
@@ -675,52 +681,10 @@ void hook_gamestate_info(const char *format, ...)
 	gamestate_size[clientnum] = gamestate;
 }
 
-void hook_printf(const char *format, ...)
-{
-	char s[COD2_MAX_STRINGLENGTH];
-	va_list va;
-
-	va_start(va, format);
-	vsnprintf(s, sizeof(s), format, va);
-	va_end(va);
-	
-	if (Scr_IsSystemActive() && con_coloredPrints->boolean)
-		Sys_AnsiColorPrint(s);
-	else
-		printf("%s", s);
-}
-
-void hook_dprintf(const char *format, ...)
-{
-	char s[COD2_MAX_STRINGLENGTH];
-	va_list va;
-
-	va_start(va, format);
-	vsnprintf(s, sizeof(s), format, va);
-	va_end(va);
-	
-	if (Scr_IsSystemActive())
-	{
-		if (codecallback_sv_dprintf)
-		{
-			stackPushString(s);
-			short ret = Scr_ExecThread(codecallback_sv_dprintf, 1);
-			Scr_FreeThread(ret);
-		
-			return;
-		}
-		
-		if (!developer->integer)
-			return;
-	}
-	
-	Com_Printf("%s", s);
-
-}
-
 int clientfps[MAX_CLIENTS] = {0};
 int tempfps[MAX_CLIENTS] = {0};
 int fpstime[MAX_CLIENTS] = {0};
+int previousbuttons[MAX_CLIENTS] = {0};
 int play_movement(client_t *cl, usercmd_t *ucmd)
 {
 	hook_play_movement->unhook();
@@ -742,7 +706,35 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 		fpstime[clientnum] = Sys_MilliSeconds();
 		tempfps[clientnum] = 0;
 	}
+	
+	if(ucmd->buttons & KEY_MASK_MELEE && !(previousbuttons[clientnum] & KEY_MASK_MELEE))
+	{
+		if(codecallback_meleebutton)
+		{
+			short ret = Scr_ExecEntThread(cl->gentity, codecallback_meleebutton, 0);
+			Scr_FreeThread(ret);
+		}
+	}
 
+	if(ucmd->buttons & KEY_MASK_USE && !(previousbuttons[clientnum] & KEY_MASK_USE))
+	{
+		if(codecallback_usebutton)
+		{
+			short ret = Scr_ExecEntThread(cl->gentity, codecallback_usebutton, 0);
+			Scr_FreeThread(ret);
+		}
+	}
+
+	if(ucmd->buttons & KEY_MASK_FIRE && !(previousbuttons[clientnum] & KEY_MASK_FIRE))
+	{
+		if(codecallback_attackbutton)
+		{
+			short ret = Scr_ExecEntThread(cl->gentity, codecallback_attackbutton, 0);
+			Scr_FreeThread(ret);
+		}
+	}
+
+	previousbuttons[clientnum] = ucmd->buttons;
 	return ret;
 }
 
@@ -1211,6 +1203,49 @@ void custom_Scr_PrintPrevCodePos(int a1, char *a2, int a3)
 	hook_print_codepos->hook();
 }
 
+void hook_printf(const char *format, ...)
+{
+	char s[COD2_MAX_STRINGLENGTH];
+	va_list va;
+
+	va_start(va, format);
+	vsnprintf(s, sizeof(s), format, va);
+	va_end(va);
+	
+	if (Scr_IsSystemActive() && con_coloredPrints->boolean)
+		Sys_AnsiColorPrint(s);
+	else
+		printf("%s", s);
+}
+
+void hook_dprintf(const char *format, ...)
+{
+	char s[COD2_MAX_STRINGLENGTH];
+	va_list va;
+
+	va_start(va, format);
+	vsnprintf(s, sizeof(s), format, va);
+	va_end(va);
+	
+	if (Scr_IsSystemActive())
+	{
+		if (codecallback_sv_dprintf)
+		{
+			stackPushString(s);
+			short ret = Scr_ExecThread(codecallback_sv_dprintf, 1);
+			Scr_FreeThread(ret);
+		
+			return;
+		}
+		
+		if (!developer->integer)
+			return;
+	}
+	
+	Com_Printf("%s", s);
+
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -1245,6 +1280,7 @@ public:
 		cracking_hook_call(0x0808F134, (int)hook_ClientUserinfoChanged);
 		cracking_hook_call(0x0807059F, (int)Scr_GetCustomFunction);
 		cracking_hook_call(0x080707C3, (int)Scr_GetCustomMethod);
+		cracking_hook_call(0x0810E507, (int)Com_DPrintf);
 
 #if COMPILE_PLAYER == 1
 		cracking_hook_call(0x0808E18F, (int)hook_gamestate_info);
@@ -1310,6 +1346,7 @@ public:
 		cracking_hook_call(0x080909BE, (int)hook_ClientUserinfoChanged);
 		cracking_hook_call(0x08070B1B, (int)Scr_GetCustomFunction);
 		cracking_hook_call(0x08070D3F, (int)Scr_GetCustomMethod);
+		cracking_hook_call(0x08110832, (int)Com_DPrintf);
 
 #if COMPILE_PLAYER == 1
 		cracking_hook_call(0x0808F533, (int)hook_gamestate_info);
@@ -1375,6 +1412,7 @@ public:
 		cracking_hook_call(0x08090A52, (int)hook_ClientUserinfoChanged);
 		cracking_hook_call(0x08070BE7, (int)Scr_GetCustomFunction);
 		cracking_hook_call(0x08070E0B, (int)Scr_GetCustomMethod);
+		cracking_hook_call(0x0811098E, (int)Com_DPrintf);
 
 #if COMPILE_PLAYER == 1
 		cracking_hook_call(0x0808F5C7, (int)hook_gamestate_info);
