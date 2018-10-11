@@ -1,6 +1,22 @@
 #include "gsc_player.hpp"
 
 #if COMPILE_PLAYER == 1
+void gsc_player_item_pickup(scr_entref_t id)
+{
+	int canPickup;
+	
+	if ( ! stackGetParams("i", &canPickup))
+	{
+		stackError("gsc_player_item_pickup() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+	
+	extern int player_sw_pickup[MAX_CLIENTS];
+	
+	player_sw_pickup[id] = canPickup;
+	stackPushBool(qtrue);
+}
 
 void gsc_player_isbot(scr_entref_t id)
 {
@@ -777,76 +793,54 @@ void gsc_player_setweaponfiremeleedelay(scr_entref_t id)
 
 int BG_AnimationCheckForBad(char *anim)
 {
-int i,v6,v8;
+	int i, v6, v8;
 
-#if COD_VERSION == COD2_1_0
-int globalScriptData = 0x855A4E4;
-#elif COD_VERSION == COD2_1_2
-int globalScriptData = 0x856E3A4;
-#elif COD_VERSION == COD2_1_3
-int globalScriptData = 0x860B424;
-#endif
+	#if COD_VERSION == COD2_1_0
+	int globalScriptData = 0x855A4E4;
+	#elif COD_VERSION == COD2_1_2
+	int globalScriptData = 0x856E3A4;
+	#elif COD_VERSION == COD2_1_3
+	int globalScriptData = 0x860B424;
+	#endif
 
-int (*ConverteStr)(int a1);
-#if COD_VERSION == COD2_1_0
-*(int *)&ConverteStr = 0x80D45C4;
-#elif COD_VERSION == COD2_1_2
-*(int *)&ConverteStr = 0x80D6B9C;
-#elif COD_VERSION == COD2_1_3
-*(int *)&ConverteStr = 0x80D6CE0;
-#endif
+	int (*ConverteStr)(int a1);
+	#if COD_VERSION == COD2_1_0
+	*(int *)&ConverteStr = 0x80D45C4;
+	#elif COD_VERSION == COD2_1_2
+	*(int *)&ConverteStr = 0x80D6B9C;
+	#elif COD_VERSION == COD2_1_3
+	*(int *)&ConverteStr = 0x80D6CE0;
+	#endif
 
-signed int (*SACh)(char *a1, char *a2);
-#if COD_VERSION == COD2_1_0
-*(int *)&SACh = 0x80B5620;
-#elif COD_VERSION == COD2_1_2
-*(int *)&SACh = 0x80B7AB4;
-#elif COD_VERSION == COD2_1_3
-*(int *)&SACh = 0x80B7BF8;
-#endif
+	signed int (*SACh)(char *a1, char *a2);
+	#if COD_VERSION == COD2_1_0
+	*(int *)&SACh = 0x80B5620;
+	#elif COD_VERSION == COD2_1_2
+	*(int *)&SACh = 0x80B7AB4;
+	#elif COD_VERSION == COD2_1_3
+	*(int *)&SACh = 0x80B7BF8;
+	#endif
 
-v6 = ConverteStr((int)anim);
-v8 = 0;
+	v6 = ConverteStr((int)anim);
+	v8 = 0;
 
-for ( i = *(int *)globalScriptData; ; i += 96 ) 
-{
-	
-if ( v8 >= *(long *)((*(int *)globalScriptData) + 49152) )
-{
-printf("BG_AnimationIndexForString: unknown player animation '%s'\n", anim);
-return 0;
-}
-
-if ( v6 == *(long *)(i + 76) && !SACh(anim, (char *)i) )
-return v8;
-
-++v8;
-
-}
-return 0;
-}
-/*
-void gsc_player_set_anim(scr_entref_t id)
-{
-	char *animation;
-
-	if ( ! stackGetParams("s", &animation))
+	for ( i = *(int *)globalScriptData; ; i += 96 ) 
 	{
-		stackError("gsc_player_set_anim() argument is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
+		
+		if ( v8 >= *(long *)((*(int *)globalScriptData) + 49152) )
+		{
+			printf("BG_AnimationIndexForString: unknown player animation '%s'\n", anim);
+			return 0;
+		}
+
+		if ( v6 == *(long *)(i + 76) && !SACh(anim, (char *)i) )
+			return v8;
+
+		++v8;
+
 	}
-
-	extern int custom_animation[MAX_CLIENTS];
-	int animationIndex = 0;
-
-	if (strcmp(animation, "none") != 0)
-		animationIndex = BG_AnimationIndexForString(animation);
-
-	custom_animation[id] = animationIndex;
-	stackPushBool(qtrue);
+	return 0;
 }
-*/
 
 void gsc_player_set_anim(scr_entref_t id)
 {
@@ -862,7 +856,7 @@ void gsc_player_set_anim(scr_entref_t id)
 	int animationIndex = 0;
 	extern int custom_animation[64];
 
-	animationIndex=strcmp(animation, "none")?BG_AnimationCheckForBad(animation):0;
+	animationIndex = strcmp(animation, "none") ? BG_AnimationCheckForBad(animation) : 0;
 
 	custom_animation[id] = animationIndex;
 	stackPushBool(qtrue);

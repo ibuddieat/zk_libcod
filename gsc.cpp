@@ -317,6 +317,7 @@ scr_method_t scriptMethods[] =
 	{"renameClient", gsc_player_renameclient, 0},
 	{"get_userinfo", gsc_player_get_userinfo, 0},
 	{"set_userinfo", gsc_player_set_userinfo, 0},
+	{"itempickup", gsc_player_item_pickup, 0},
 	{"printOutOfBand", gsc_player_outofbandprint, 0},
 	{"connectionlessPacket", gsc_player_connectionlesspacket, 0},
 	{"clientuserinfochanged", gsc_player_clientuserinfochanged, 0},
