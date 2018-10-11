@@ -172,10 +172,6 @@ scr_function_t scriptFunctions[] =
 	{"binarybuffer_read", gsc_binarybuffer_read, 0},
 #endif
 
-#if COMPILE_PLAYER == 1
-	{"kick2", gsc_kick_slot, 0},
-#endif
-
 #if COMPILE_UTILS == 1
 	{"printf", gsc_utils_printf, 0},
 	{"getArrayKeys", gsc_utils_getarraykeys, 0},
@@ -338,6 +334,7 @@ scr_method_t scriptMethods[] =
 	{"isonladder", gsc_player_isonladder, 0},
 	{"lookatkiller", gsc_player_lookatkiller, 0},
 	{"isbot", gsc_player_isbot, 0},
+	{"dropclient", gsc_drop_client, 0},
 #endif
 
 #ifdef EXTRA_METHODS_INC

@@ -1,6 +1,7 @@
 #include "gsc_player.hpp"
 
 #if COMPILE_PLAYER == 1
+
 void gsc_player_item_pickup(scr_entref_t id)
 {
 	int canPickup;
@@ -876,32 +877,18 @@ void gsc_player_getcooktime(scr_entref_t id)
 	stackPushInt(entity->client->ps.grenadeTimeLeft);
 }
 
-void gsc_kick_slot()
+void gsc_drop_client(scr_entref_t id)
 {
-	int id;
-	char* msg;
+	char * msg;
 
-	if ( ! stackGetParams("is", &id, &msg))
+	if ( ! stackGetParams("s", &msg))
 	{
-		stackError("gsc_kick_slot() one or more arguments is undefined or has a wrong type");
+		stackError("gsc_drop_client() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
-
-	if (id >= MAX_CLIENTS)
-	{
-		stackError("gsc_kick_slot() entity %i is not a player", id);
-		stackPushUndefined();
-		return;
-	}
-
-	client_t *client = &svs.clients[id];
-
-	if (client == NULL)
-	{
-		stackPushUndefined();
-		return;
-	}
+	
+	client_t * client = &svs.clients[id];
 
 	if (client->netchan.remoteAddress.type == NA_LOOPBACK)
 	{
