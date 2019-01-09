@@ -2,8 +2,16 @@
 
 #if COMPILE_PLAYER == 1
 
+
 void gsc_player_item_pickup(scr_entref_t id)
-{
+{	
+	if (id >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_item_pickup() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
 	int canPickup;
 	
 	if ( ! stackGetParams("i", &canPickup))

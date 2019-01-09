@@ -653,19 +653,21 @@ void hook_scriptError(int a1, int a2, int a3, void *a4)
 }
 
 int player_sw_pickup[MAX_CLIENTS] = {1};
-void touch_item(gentity_t * item, gentity_t * ent, long * a3, int a4)
+int touch_item(gentity_t * item, gentity_t * entity, int touch)
 {
-	if (!player_sw_pickup[ent->client->ps.clientNum])
-		return;
+	if (!player_sw_pickup[entity->client->ps.clientNum])
+		return 0;
 	
 	hook_touch_item->unhook();
 	
-	void (*GE_Touch_Item)(gentity_t *, gentity_t *, long *, int);
-	*(int *)&GE_Touch_Item = hook_touch_item->from;	
-	
-	GE_Touch_Item(item, ent, a3, a4);
+	int (*sig)(gentity_t *, gentity_t *, int);
+	*(int *)&sig = hook_touch_item->from;
+
+	int ret = sig(item, entity, touch);
 	
 	hook_touch_item->hook();
+	
+	return ret;
 }
 
 #if COMPILE_PLAYER == 1
@@ -1324,7 +1326,7 @@ public:
 		hook_player_eject->hook();
 		hook_fire_grenade = new cHook(0x0810C1F6, (int)fire_grenade);
 		hook_fire_grenade->hook();
-		hook_touch_item = new cHook(0x0810381C, int(touch_item));
+		hook_touch_item = new cHook(0x081037F0, int(touch_item));
 		hook_touch_item->hook();
 
 #if COMPILE_PLAYER == 1
@@ -1392,7 +1394,7 @@ public:
 		hook_player_eject->hook();
 		hook_fire_grenade = new cHook(0x0810E532, (int)fire_grenade);
 		hook_fire_grenade->hook();
-		hook_touch_item = new cHook(0x08105B50, int(touch_item));
+		hook_touch_item = new cHook(0x08105B24, int(touch_item));
 		hook_touch_item->hook();
 
 #if COMPILE_PLAYER == 1
@@ -1460,7 +1462,7 @@ public:
 		hook_player_eject->hook();
 		hook_fire_grenade = new cHook(0x0810E68E, (int)fire_grenade);
 		hook_fire_grenade->hook();
-		hook_touch_item = new cHook(0x08105CAC, int(touch_item));
+		hook_touch_item = new cHook(0x08105C80, int(touch_item));
 		hook_touch_item->hook();
 
 #if COMPILE_PLAYER == 1

@@ -210,6 +210,56 @@ void gsc_weapons_getweaponcookable()
 	stackPushInt(weapon->bCookOffHold);
 }
 
+void gsc_weapons_setweaponmaxammo()
+{
+	int id;
+	int ammo;
+
+	if ( ! stackGetParams("ii", &id, &ammo))
+	{
+		stackError("gsc_weapons_setweaponmaxammo() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if (!isValidWeaponId(id))
+	{
+		stackError("gsc_weapons_setweaponmaxammo() weapon index is out of bounds");
+		stackPushUndefined();
+		return;
+	}
+
+	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	weapon->iMaxAmmo = ammo;
+
+	stackPushBool(qtrue);
+}
+
+void gsc_weapons_setweaponclipsize()
+{
+	int id;
+	int clipSize;
+
+	if ( ! stackGetParams("ii", &id, &clipSize))
+	{
+		stackError("gsc_weapons_setweaponclipsize() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if (!isValidWeaponId(id))
+	{
+		stackError("gsc_weapons_setweaponclipsize() weapon index is out of bounds");
+		stackPushUndefined();
+		return;
+	}
+
+	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	weapon->iClipSize = clipSize;
+
+	stackPushBool(qtrue);
+}
+
 void gsc_weapons_setweapondamage()
 {
 	int id;

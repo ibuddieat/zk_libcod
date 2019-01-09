@@ -211,7 +211,9 @@ scr_function_t scriptFunctions[] =
 
 #if COMPILE_WEAPONS == 1
 	{"getweaponmaxammo", gsc_weapons_getweaponmaxammo, 0},
+	{"setweaponmaxammo", gsc_weapons_setweaponmaxammo, 0},
 	{"getweaponclipsize", gsc_weapons_getweaponclipsize, 0},
+	{"setweaponclipsize", gsc_weapons_setweaponclipsize, 0},
 	{"getweapondamage", gsc_weapons_getweapondamage, 0},
 	{"setweapondamage", gsc_weapons_setweapondamage, 0},
 	{"getweaponmeleedamage", gsc_weapons_getweaponmeleedamage, 0},
@@ -278,6 +280,7 @@ scr_method_t scriptMethods[] =
 #if COMPILE_ENTITY == 1
 	{"setAlive", gsc_entity_setalive, 0},
 	{"setBounds", gsc_entity_setbounds, 0},
+	{"adv_movegravity", gsc_entity_movegravity, 0},
 #endif
 
 #if COMPILE_MYSQL_VORON == 1

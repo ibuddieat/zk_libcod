@@ -41,6 +41,26 @@ typedef struct gclient_s gclient_t;
 typedef struct gentity_s gentity_t;
 typedef int scr_entref_t;
 
+typedef enum
+{
+	MOD_UNKNOWN,
+	MOD_PISTOL_BULLET,
+	MOD_RIFLE_BULLET,
+	MOD_GRENADE,
+	MOD_GRENADE_SPLASH,
+	MOD_PROJECTILE,
+	MOD_PROJECTILE_SPLASH,
+	MOD_MELEE,
+	MOD_HEAD_SHOT,
+	MOD_CRUSH,
+	MOD_TELEFRAG,
+	MOD_FALLING,
+	MOD_SUICIDE,
+	MOD_TRIGGER_HURT,
+	MOD_EXPLOSIVE,
+	MOD_BAD
+} meansOfDeath_t;
+
 enum svc_ops_e
 {
 	svc_nop,
@@ -2041,6 +2061,50 @@ typedef struct
 
 #define CONTENTS_BODY           0x2000000
 #define CONTENTS_TRIGGER        0x40000000
+
+#define SURF_NOLIGHTMAP         0x0
+#define SURF_NODAMAGE           0x1
+#define SURF_SLICK              0x2
+#define SURF_SKY                0x4
+#define SURF_LADDER             0x8
+#define SURF_NOIMPACT           0x10
+#define SURF_NOMARKS            0x20
+#define SURF_NODRAW             0x80
+#define SURF_NOSTEPS            0x2000
+#define SURF_NONSOLID           0x4000
+#define SURF_NODLIGHT           0x20000
+#define SURF_NOCASTSHADOW       0x40000
+#define SURF_MANTLEON           0x2000000
+#define SURF_MANTLEOVER         0x4000000
+#define SURF_PORTAL             0x80000000
+
+#define SURF_BARK               0x100000
+#define SURF_BRICK              0x200000
+#define SURF_CARPET             0x300000
+#define SURF_CLOTH              0x400000
+#define SURF_CONCRETE           0x500000
+#define SURF_DIRT               0x600000
+#define SURF_FLESH              0x700000
+#define SURF_FOLIAGE            0x800000
+#define SURF_GLASS              0x900000
+#define SURF_GRASS              0xa00000
+#define SURF_GRAVEL             0xb00000
+#define SURF_ICE                0xc00000
+#define SURF_METAL              0xd00000
+#define SURF_MUD                0xe00000
+#define SURF_PAPER              0xf00000
+#define SURF_PLASTER            0x1000000
+#define SURF_ROCK               0x1100000
+#define SURF_SAND               0x1200000
+#define SURF_SNOW               0x1300000
+#define SURF_WATER              0x1400000
+#define SURF_WOOD               0x1500000
+#define SURF_ASPHALT            0x1600000
+
+#define TOOL_OCCLUDER           0x1
+#define TOOL_DRAWTOGGLE         0x2
+#define TOOL_ORIGIN             0x4
+#define TOOL_RADIALNORMALS      0x8
 
 #if COD_VERSION == COD2_1_0
 static const int gentities_offset = 0x08665480;

@@ -4,7 +4,9 @@
 #include "gsc.hpp"
 
 void gsc_weapons_getweaponmaxammo();
+void gsc_weapons_setweaponmaxammo();
 void gsc_weapons_getweaponclipsize();
+void gsc_weapons_setweaponclipsize();
 void gsc_weapons_getweapondamage();
 void gsc_weapons_setweapondamage();
 void gsc_weapons_getweaponmeleedamage();
