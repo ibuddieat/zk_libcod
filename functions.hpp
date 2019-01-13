@@ -336,6 +336,15 @@ static const NET_AdrToString_t NET_AdrToString = (NET_AdrToString_t)0x0806B1DC;
 static const NET_AdrToString_t NET_AdrToString = (NET_AdrToString_t)0x0806B1D4;
 #endif
 
+typedef qboolean (*NET_StringToAdr_t)(char *s, netadr_t *a);
+#if COD_VERSION == COD2_1_0
+static const NET_StringToAdr_t NET_StringToAdr = (NET_StringToAdr_t)0x0806C750;
+#elif COD_VERSION == COD2_1_2
+static const NET_StringToAdr_t NET_StringToAdr = (NET_StringToAdr_t)0x0806CCCC;
+#elif COD_VERSION == COD2_1_3
+static const NET_StringToAdr_t NET_StringToAdr = (NET_StringToAdr_t)0x0806CD98;
+#endif
+
 typedef void (*Scr_Error_t)(const char *string);
 #if COD_VERSION == COD2_1_0
 static const Scr_Error_t Scr_Error = (Scr_Error_t)0x08084DB4;

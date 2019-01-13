@@ -40,6 +40,8 @@ cHook *hook_standart_prints;
 cHook *hook_developer_prints;
 cHook *hook_touch_item;
 
+int codecallback_remotecommand = 0;
+
 int codecallback_playercommand = 0;
 int codecallback_userinfochanged = 0;
 int codecallback_fire_grenade = 0;
@@ -121,6 +123,8 @@ int hook_codscript_gametype_scripts()
 		strncpy(path_for_cb, fs_callbacks->string, sizeof(path_for_cb));
 	
 	hook_gametype_scripts->unhook();
+			
+	codecallback_remotecommand = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_remoteCommand", 0);
 			
 	codecallback_playercommand = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_PlayerCommand", 0);
 	codecallback_userinfochanged = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_UserInfoChanged", 0);
@@ -962,7 +966,7 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 {
 	if (!sv_allowRcon->boolean)
 		return;
-
+	
 	// Prevent using rcon as an amplifier and make dictionary attacks impractical
 	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
 	{
@@ -983,14 +987,26 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 			return;
 		}
 	}
+	
+	if (codecallback_remotecommand)
+	{	
+		stackPushInt((int)msg);
+		stackPushString((char *)msg->data);
+		stackPushString(NET_AdrToString(from));
+	
+		short ret = Scr_ExecThread(codecallback_remotecommand, 3);
+		Scr_FreeThread(ret);
+		
+		return;
+	}
 
-#if COD_VERSION == COD2_1_0
+	#if COD_VERSION == COD2_1_0
 	int lasttime_offset = 0x0848B674;
-#elif COD_VERSION == COD2_1_2
+	#elif COD_VERSION == COD2_1_2
 	int lasttime_offset = 0x0849EB74;
-#elif COD_VERSION == COD2_1_3
+	#elif COD_VERSION == COD2_1_3
 	int lasttime_offset = 0x0849FBF4;
-#endif
+	#endif
 
 	*(int *)lasttime_offset = 0;
 
@@ -1234,7 +1250,11 @@ void hook_printf(const char *format, ...)
 	if (Scr_IsSystemActive() && con_coloredPrints->boolean)
 		Sys_AnsiColorPrint(s);
 	else
-		printf("%s", s);
+	{
+		hook_standart_prints->unhook();
+		Com_Printf("%s", s);
+		hook_standart_prints->hook();
+	}
 }
 
 void hook_dprintf(const char *format, ...)
