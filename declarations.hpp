@@ -1079,45 +1079,50 @@ struct gentity_s
 {
 	entityState_t s;
 	entityShared_t r;
-	struct gclient_s *client;
+	struct gclient_s *client; // 344
 	turretInfo_s *pTurretInfo;
 	byte physicsObject; // 352
-	byte takedamage;
-	byte active;
-	byte nopickup;
-	byte model;
-	byte team;
-	byte handler;
-	byte pad;
+	byte takedamage; // 353
+	byte active; // 354
+	byte nopickup; // 355 ?
+	byte model; // 356
+	byte dobjbits; // 357 ?
+	byte handler; // 358
+	byte team; // 359
 	u_int16_t classname; // 360
 	u_int16_t target;
 	u_int16_t targetname;
+	u_int16_t padding;
 	int spawnflags;
 	int flags;
 	int eventTime;
 	qboolean freeAfterEvent; // 380
-	qboolean unlinkAfterEvent;
-	int clipmask;
-	int realClipmask;
-	int realContents; // 396
+	qboolean unlinkAfterEvent; // 384
+	int clipmask; // 388
+	int framenum; // 392
+	gentity_t *parent; // 396
 	int nextthink; // 400
-	int healthPoints;
-	int unknown;
+	int healthPoints; // 404
+	int reservedHealth; // 408 ?
 	int damage; // 412
-	int unknown2;
-	int unknown3;
-	float physicsBounce; // 424
-	u_int16_t item; // 428 This is item id, not item pointer!
-	int hurtTouchTime;
-	int useSharedNum;
-	int attackerWeapon; // 440 ?
-	int unknown11[11];
-	int playerStatePrediction; // ?
-	vec3_t lerpOrigin; // 492
-	vec3_t lerpAngles; // 504
-	vec3_t moverOrigin; // 516
+	int splashDamage; // 416 ?
+	int splashRadius; // 420 ?
+	float pfDecelTimeMove; // 424
+	float pfDecelTimeRotate; // 428
+	float pfSpeedMove; // 432
+	float pfSpeedRotate; // 436
+	float pfMidTimeMove; // 440
+	float pfMidTimeRotate; // 444
+	vec3_t vPos1Move; // 448 ?
+	vec3_t vPos2Move; // 460
+	vec3_t vPos3Move; // 472
+	vec3_t vPos1Rotate; // 484 ?
+	vec3_t vPos2Rotate; // 496
+	vec3_t vPos3Rotate; // 508
+	int moverState; // 520 ?
+	gentity_t** linkedEntities; // 524 ??
 	byte attachedModels[6]; // 528
-	u_int16_t attachedTagName; // 536 ?
+	u_int16_t attachedModelsIndexes; // 536 ?
 	u_int16_t numAttachedModels; // 538 ?
 	int animTree; // 540 ?
 	vec4_t color; // ?

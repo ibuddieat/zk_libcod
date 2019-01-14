@@ -41,7 +41,6 @@ cHook *hook_developer_prints;
 cHook *hook_touch_item;
 
 int codecallback_remotecommand = 0;
-
 int codecallback_playercommand = 0;
 int codecallback_userinfochanged = 0;
 int codecallback_fire_grenade = 0;
@@ -125,7 +124,6 @@ int hook_codscript_gametype_scripts()
 	hook_gametype_scripts->unhook();
 			
 	codecallback_remotecommand = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_remoteCommand", 0);
-			
 	codecallback_playercommand = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_PlayerCommand", 0);
 	codecallback_userinfochanged = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_UserInfoChanged", 0);
 	codecallback_fire_grenade = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_FireGrenade", 0);
