@@ -6,6 +6,5 @@
 
 void gsc_entity_setalive(scr_entref_t id);
 void gsc_entity_setbounds(scr_entref_t id);
-void gsc_entity_movegravity(scr_entref_t id);
 
 #endif

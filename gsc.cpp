@@ -281,7 +281,6 @@ scr_method_t scriptMethods[] =
 #if COMPILE_ENTITY == 1
 	{"setAlive", gsc_entity_setalive, 0},
 	{"setBounds", gsc_entity_setbounds, 0},
-	{"adv_movegravity", gsc_entity_movegravity, 0},
 #endif
 
 #if COMPILE_MYSQL_VORON == 1
