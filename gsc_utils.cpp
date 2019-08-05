@@ -33,7 +33,7 @@ void gsc_utils_dorconcmd()
 	
 	if (!stackGetParams("si", &sFrom, &pointerMsg))
 	{
-		stackError("gsc_utils_dorconCMD() one or more arguments is undefined or has a wrong type");
+		stackError("gsc_utils_dorconcmd() one or more arguments is undefined or has a wrong type");
 		return;
 	}
 	

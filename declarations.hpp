@@ -132,8 +132,8 @@ typedef struct
 {
 	netadrtype_t type;
 	byte ip[4];
-	byte ipx[10];
 	unsigned short port;
+	byte ipx[10];
 } netadr_t;
 
 typedef enum
