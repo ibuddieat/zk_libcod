@@ -160,6 +160,9 @@ scr_function_t scriptFunctions[] =
 #endif
 
 #if COMPILE_MEMORY == 1
+	{"memory_pointer_new", gsc_memory_pointer_new, 0},
+	{"memory_pointer_free", gsc_memory_pointer_free, 0},
+	{"memory_pointer_set", gsc_memory_pointer_set, 0},
 	{"memory_malloc", gsc_memory_malloc, 0},
 	{"memory_free", gsc_memory_free, 0},
 	{"memory_int_get", gsc_memory_int_get, 0},
