@@ -955,9 +955,13 @@ typedef struct playerState_s
 	int	stats[6];
 	int	ammo[128];
 	int	ammoclip[128]; // 836
-	unsigned int weapons[4]; // 1348
-	unsigned int weaponsold[4];
-	unsigned int weaponrechamber[2]; // ?
+	int weapFlags;
+	int weapFlags2;
+	int unknown2[2];
+	byte slot_none;
+	byte slot_primary;
+	byte slot_primaryb;
+	int unknown3[5];
 	vec3_t mins;
 	vec3_t maxs;
 	float proneDirection;

@@ -12,6 +12,27 @@ qboolean isValidWeaponId(int id)
 	return qtrue;
 }
 
+void gsc_weapons_getweapondisplayname()
+{
+	int id;
+
+	if ( ! stackGetParams("i", &id))
+	{
+		stackError("gsc_weapons_getweapondisplayname() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+	
+	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	stackPushString(weapon->szDisplayName);
+	
+	VariableValue *var;
+	int param = 0;
+
+	var = &scrVmPub.top[-param];
+	var->type = STACK_LOCALIZED_STRING;
+}
+
 void gsc_weapons_getweaponmaxammo()
 {
 	int id;

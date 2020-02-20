@@ -237,6 +237,8 @@ scr_function_t scriptFunctions[] =
 	{"getweaponmovespeedscale", gsc_weapons_getmovespeedscale, 0},
 	{"setweaponmovespeedscale", gsc_weapons_setmovespeedscale, 0},
 	{"getloadedweapons", gsc_weapons_getloadedweapons, 0},
+	{"getweapondisplayname", gsc_weapons_getweapondisplayname, 0},
+	
 #endif
 
 #ifdef EXTRA_FUNCTIONS_INC
@@ -340,7 +342,9 @@ scr_method_t scriptMethods[] =
 	{"isonladder", gsc_player_isonladder, 0},
 	{"lookatkiller", gsc_player_lookatkiller, 0},
 	{"isbot", gsc_player_isbot, 0},
-	{"dropclient", gsc_drop_client, 0},
+	{"dropclient", gsc_player_dropclient, 0},
+	{"getcurrentoffhandslotammo", gsc_player_getcurrentoffhandslotammo, 0},
+	{"getweaponindexoffhand", gsc_player_getweaponindexoffhand, 0},
 #endif
 
 #ifdef EXTRA_METHODS_INC

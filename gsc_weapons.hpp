@@ -26,5 +26,6 @@ void gsc_weapons_setweaponhitlocmultiplier();
 void gsc_weapons_getmovespeedscale();
 void gsc_weapons_setmovespeedscale();
 void gsc_weapons_getloadedweapons();
+void gsc_weapons_getweapondisplayname();
 
 #endif

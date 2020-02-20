@@ -2,6 +2,33 @@
 
 #if COMPILE_PLAYER == 1
 
+void gsc_player_getweaponindexoffhand(scr_entref_t id)
+{
+	if (id >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_getweaponindexoffhand() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+	
+	playerState_t *ps = SV_GameClientNum(id);
+
+	stackPushInt(ps->weapon);
+}
+
+void gsc_player_getcurrentoffhandslotammo(scr_entref_t id)
+{
+	if (id >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_getcurrentoffhandslotammo() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	playerState_t *ps = SV_GameClientNum(id);
+
+	stackPushInt(ps->ammoclip[ps->offHandIndex - 1]);
+}
 
 void gsc_player_item_pickup(scr_entref_t id)
 {	
@@ -885,7 +912,7 @@ void gsc_player_getcooktime(scr_entref_t id)
 	stackPushInt(entity->client->ps.grenadeTimeLeft);
 }
 
-void gsc_drop_client(scr_entref_t id)
+void gsc_player_dropclient(scr_entref_t id)
 {
 	char * msg;
 
