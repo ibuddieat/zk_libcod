@@ -36,8 +36,6 @@ cHook *hook_set_anim;
 cHook *hook_init_opcode;
 cHook *hook_add_opcode;
 cHook *hook_print_codepos;
-cHook *hook_standart_prints;
-cHook *hook_developer_prints;
 cHook *hook_touch_item;
 
 int codecallback_remotecommand = 0;
@@ -46,7 +44,6 @@ int codecallback_userinfochanged = 0;
 int codecallback_fire_grenade = 0;
 int codecallback_vid_restart = 0;
 int codecallback_client_spam = 0;
-int codecallback_sv_dprintf = 0;
 int codecallback_meleebutton = 0;
 int codecallback_usebutton = 0;
 int codecallback_attackbutton = 0;
@@ -110,8 +107,6 @@ void hook_sv_spawnserver(const char *format, ...)
 	Com_Printf("%s", s);
 	
 	/* Do stuff after sv has been spawned here */
-	
-	hook_developer_prints->hook();
 }
 
 int hook_codscript_gametype_scripts()
@@ -129,7 +124,6 @@ int hook_codscript_gametype_scripts()
 	codecallback_fire_grenade = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_FireGrenade", 0);
 	codecallback_vid_restart = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_VidRestart", 0);
 	codecallback_client_spam = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_CLSpam", 0);
-	codecallback_sv_dprintf = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_DPrintf", 0);
 	codecallback_meleebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MeleeButton", 0);
  	codecallback_usebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_UseButton", 0);
 	codecallback_attackbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_AttackButton", 0);
@@ -1236,53 +1230,6 @@ void custom_Scr_PrintPrevCodePos(int a1, char *a2, int a3)
 	hook_print_codepos->hook();
 }
 
-void hook_printf(const char *format, ...)
-{
-	char s[COD2_MAX_STRINGLENGTH];
-	va_list va;
-
-	va_start(va, format);
-	vsnprintf(s, sizeof(s), format, va);
-	va_end(va);
-	
-	if (Scr_IsSystemActive() && con_coloredPrints->boolean)
-		Sys_AnsiColorPrint(s);
-	else
-	{
-		hook_standart_prints->unhook();
-		Com_Printf("%s", s);
-		hook_standart_prints->hook();
-	}
-}
-
-void hook_dprintf(const char *format, ...)
-{
-	char s[COD2_MAX_STRINGLENGTH];
-	va_list va;
-
-	va_start(va, format);
-	vsnprintf(s, sizeof(s), format, va);
-	va_end(va);
-	
-	if (Scr_IsSystemActive())
-	{
-		if (codecallback_sv_dprintf)
-		{
-			stackPushString(s);
-			short ret = Scr_ExecThread(codecallback_sv_dprintf, 1);
-			Scr_FreeThread(ret);
-		
-			return;
-		}
-		
-		if (!developer->integer)
-			return;
-	}
-	
-	Com_Printf("%s", s);
-
-}
-
 class cCallOfDuty2Pro
 {
 public:
@@ -1327,9 +1274,6 @@ public:
 
 		hook_gametype_scripts = new cHook(0x0810DDEE, (int)hook_codscript_gametype_scripts);
 		hook_gametype_scripts->hook();
-		hook_developer_prints = new cHook(0x08060B7C, (int)hook_dprintf);
-		hook_standart_prints = new cHook(0x08060B2C, int(hook_printf));
-		hook_standart_prints->hook();
 		
 		hook_init_opcode = new cHook(0x08076B9C, (int)custom_Scr_InitOpcodeLookup);
 		hook_init_opcode->hook();
@@ -1395,9 +1339,6 @@ public:
 
 		hook_gametype_scripts = new cHook(0x0811012A, (int)hook_codscript_gametype_scripts);
 		hook_gametype_scripts->hook();
-		hook_developer_prints = new cHook(0x08060E42, (int)hook_dprintf);
-		hook_standart_prints = new cHook(0x08060DF2, int(hook_printf));
-		hook_standart_prints->hook();
 		
 		hook_init_opcode = new cHook(0x08077110, (int)custom_Scr_InitOpcodeLookup);
 		hook_init_opcode->hook();
@@ -1463,9 +1404,6 @@ public:
 
 		hook_gametype_scripts = new cHook(0x08110286, (int)hook_codscript_gametype_scripts);
 		hook_gametype_scripts->hook();
-		hook_developer_prints = new cHook(0x08060E3A, (int)hook_dprintf);
-		hook_standart_prints = new cHook(0x08060DEA, int(hook_printf));
-		hook_standart_prints->hook();
 
 		hook_init_opcode = new cHook(0x080771DC, (int)custom_Scr_InitOpcodeLookup);
 		hook_init_opcode->hook();

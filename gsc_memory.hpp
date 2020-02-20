@@ -3,12 +3,6 @@
 
 #include "gsc.hpp"
 
-/* beta */
-void gsc_memory_pointer_new();
-void gsc_memory_pointer_free();
-void gsc_memory_pointer_set();
-/* beta */
-
 void gsc_memory_malloc();
 void gsc_memory_free();
 void gsc_memory_int_get();
