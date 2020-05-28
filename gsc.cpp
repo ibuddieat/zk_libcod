@@ -178,7 +178,7 @@ scr_function_t scriptFunctions[] =
 	{"getArrayKeys", gsc_utils_getarraykeys, 0},
 	{"getAscii", gsc_utils_getAscii, 0},
 	{"toUpper", gsc_utils_toupper, 0},
-	{"system", gsc_utils_system, 0},
+	/* {"system", gsc_utils_system, 0}, */
 	{"exponent", gsc_utils_exponent, 0},
 	{"round", gsc_utils_round, 0},
 	{"file_link", gsc_utils_file_link, 0},
