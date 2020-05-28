@@ -7,7 +7,6 @@ cvar_t *sv_allowDownload;
 cvar_t *sv_pure;
 cvar_t *developer;
 cvar_t *rcon_password;
-cvar_t *con_coloredPrints;
 cvar_t *cl_allowDownload;
 cvar_t *sv_timeout;
 cvar_t *sv_zombietime;
@@ -22,6 +21,7 @@ cvar_t *sv_noauthorize;
 cvar_t *g_playerCollision;
 cvar_t *g_playerEject;
 cvar_t *sv_allowRcon;
+cvar_t *sv_limitLocalRcon;
 cvar_t *fs_library;
 cvar_t *sv_downloadMessage;
 cvar_t *fs_callbacks;
@@ -36,6 +36,7 @@ cHook *hook_set_anim;
 cHook *hook_init_opcode;
 cHook *hook_add_opcode;
 cHook *hook_print_codepos;
+cHook *hook_developer_prints;
 cHook *hook_touch_item;
 
 int codecallback_remotecommand = 0;
@@ -44,6 +45,7 @@ int codecallback_userinfochanged = 0;
 int codecallback_fire_grenade = 0;
 int codecallback_vid_restart = 0;
 int codecallback_client_spam = 0;
+int codecallback_sv_dprintf = 0;
 int codecallback_meleebutton = 0;
 int codecallback_usebutton = 0;
 int codecallback_attackbutton = 0;
@@ -66,10 +68,10 @@ void hook_sv_init(const char *format, ...)
 	// Register custom cvars
 	sv_cracked = Cvar_RegisterBool("sv_cracked", qfalse, CVAR_ARCHIVE);
 	sv_noauthorize = Cvar_RegisterBool("sv_noauthorize", qfalse, CVAR_ARCHIVE);
-	con_coloredPrints = Cvar_RegisterBool("con_coloredPrints", qtrue, CVAR_ARCHIVE);
 	g_playerCollision = Cvar_RegisterBool("g_playerCollision", qtrue, CVAR_ARCHIVE);
 	g_playerEject = Cvar_RegisterBool("g_playerEject", qtrue, CVAR_ARCHIVE);
 	sv_allowRcon = Cvar_RegisterBool("sv_allowRcon", qtrue, CVAR_ARCHIVE);
+    sv_limitLocalRcon = Cvar_RegisterBool("sv_limitLocalRcon", qfalse, CVAR_ARCHIVE);
 	fs_library = Cvar_RegisterString("fs_library", "", CVAR_ARCHIVE);
 	sv_downloadMessage = Cvar_RegisterString("sv_downloadMessage", "", CVAR_ARCHIVE);
 	fs_callbacks = Cvar_RegisterString("fs_callbacks", "", CVAR_ARCHIVE);
@@ -107,6 +109,8 @@ void hook_sv_spawnserver(const char *format, ...)
 	Com_Printf("%s", s);
 	
 	/* Do stuff after sv has been spawned here */
+	
+	hook_developer_prints->hook();
 }
 
 int hook_codscript_gametype_scripts()
@@ -118,12 +122,13 @@ int hook_codscript_gametype_scripts()
 	
 	hook_gametype_scripts->unhook();
 			
-	codecallback_remotecommand = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_remoteCommand", 0);
+	codecallback_remotecommand = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_RemoteCommand", 0);
 	codecallback_playercommand = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_PlayerCommand", 0);
 	codecallback_userinfochanged = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_UserInfoChanged", 0);
 	codecallback_fire_grenade = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_FireGrenade", 0);
 	codecallback_vid_restart = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_VidRestart", 0);
 	codecallback_client_spam = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_CLSpam", 0);
+	codecallback_sv_dprintf = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_DPrintf", 0);
 	codecallback_meleebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MeleeButton", 0);
  	codecallback_usebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_UseButton", 0);
 	codecallback_attackbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_AttackButton", 0);
@@ -954,34 +959,59 @@ bool SVC_callback(const char * str, const char * ip)
 	return false;
 }
 
+bool SVC_ApplyLimit( netadr_t from )
+{
+    // Prevent using rcon as an amplifier and make dictionary attacks impractical
+    if ( SVC_RateLimitAddress( from, 10, 1000 ) )
+    {
+        if (!SVC_callback("RCON:ADDRESS", NET_AdrToString(from)))
+            Com_DPrintf( "SVC_RemoteCommand: rate limit from %s exceeded, dropping request\n", NET_AdrToString( from ) );
+        return true;
+    }
+
+    if ( !strlen( rcon_password->string ) || strcmp(Cmd_Argv(1), rcon_password->string) != 0 )
+    {
+        static leakyBucket_t bucket;
+
+        // Make DoS via rcon impractical
+        if ( SVC_RateLimit( &bucket, 10, 1000 ) )
+        {
+            if (!SVC_callback("RCON:GLOBAL", NET_AdrToString(from)))
+                Com_DPrintf( "SVC_RemoteCommand: rate limit exceeded, dropping request\n" );
+            return true;
+        }
+    }
+    
+    return false;
+}
+
 void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 {
 	if (!sv_allowRcon->boolean)
 		return;
 	
-	// Prevent using rcon as an amplifier and make dictionary attacks impractical
-	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
-	{
-		if (!SVC_callback("RCON:ADDRESS", NET_AdrToString(from)))
-			Com_DPrintf("SVC_RemoteCommand: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
-		return;
-	}
-
-	if ( !strlen( rcon_password->string ) || strcmp(Cmd_Argv(1), rcon_password->string) != 0 )
-	{
-		static leakyBucket_t bucket;
-
-		// Make DoS via rcon impractical
-		if ( SVC_RateLimit( &bucket, 10, 1000 ) )
-		{
-			if (!SVC_callback("RCON:GLOBAL", NET_AdrToString(from)))
-				Com_DPrintf("SVC_RemoteCommand: rate limit exceeded, dropping request\n");
-			return;
-		}
-	}
+    if (!sv_limitLocalRcon->boolean)
+    {
+        unsigned char *ip = from.ip;
+    
+        if (!(ip[0] == 10 ||                                    // 10.0.0.0 – 10.255.255.255
+             (ip[0] == 172 && (ip[1] >= 16 && ip[1] <= 31)) ||  // 172.16.0.0 – 172.31.255.255
+             (ip[0] == 192 && ip[1] == 168)))                   // 192.168.0.0 – 192.168.255.255
+        {
+            if ( SVC_ApplyLimit( from ) )
+                return;
+        }
+    }
+    else
+    {
+        if ( SVC_ApplyLimit( from ) )
+            return;
+    }
 	
 	if (codecallback_remotecommand)
-	{	
+	{
+        msg->data[(int)msg->cursize] = '\0';
+        
 		stackPushInt((int)msg);
 		stackPushString((char *)msg->data);
 		stackPushString(NET_AdrToString(from));
@@ -1230,6 +1260,34 @@ void custom_Scr_PrintPrevCodePos(int a1, char *a2, int a3)
 	hook_print_codepos->hook();
 }
 
+void hook_dprintf(const char *format, ...)
+{
+	char s[COD2_MAX_STRINGLENGTH];
+	va_list va;
+
+	va_start(va, format);
+	vsnprintf(s, sizeof(s), format, va);
+	va_end(va);
+	
+	if (Scr_IsSystemActive())
+	{
+		if (codecallback_sv_dprintf)
+		{
+			stackPushString(s);
+			short ret = Scr_ExecThread(codecallback_sv_dprintf, 1);
+			Scr_FreeThread(ret);
+		
+			return;
+		}
+		
+		if (!developer->integer)
+			return;
+	}
+	
+	Com_Printf("%s", s);
+
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -1274,6 +1332,8 @@ public:
 
 		hook_gametype_scripts = new cHook(0x0810DDEE, (int)hook_codscript_gametype_scripts);
 		hook_gametype_scripts->hook();
+        
+		hook_developer_prints = new cHook(0x08060B7C, (int)hook_dprintf);
 		
 		hook_init_opcode = new cHook(0x08076B9C, (int)custom_Scr_InitOpcodeLookup);
 		hook_init_opcode->hook();
@@ -1339,13 +1399,15 @@ public:
 
 		hook_gametype_scripts = new cHook(0x0811012A, (int)hook_codscript_gametype_scripts);
 		hook_gametype_scripts->hook();
-		
-		hook_init_opcode = new cHook(0x08077110, (int)custom_Scr_InitOpcodeLookup);
-		hook_init_opcode->hook();
-		hook_add_opcode = new cHook(0x08077306, (int)custom_AddOpcodePos);
-		hook_add_opcode->hook();
-		hook_print_codepos = new cHook(0x0807832E, (int)custom_Scr_PrintPrevCodePos);
-		hook_print_codepos->hook();
+        
+        hook_init_opcode = new cHook(0x08077110, (int)custom_Scr_InitOpcodeLookup);
+        hook_init_opcode->hook();
+        hook_add_opcode = new cHook(0x08077306, (int)custom_AddOpcodePos);
+        hook_add_opcode->hook();
+        hook_print_codepos = new cHook(0x0807832E, (int)custom_Scr_PrintPrevCodePos);
+        hook_print_codepos->hook();
+        
+		hook_developer_prints = new cHook(0x08060E42, (int)hook_dprintf);
 		
 		hook_player_collision = new cHook(0x080F553E, (int)player_collision);
 		hook_player_collision->hook();
@@ -1404,6 +1466,8 @@ public:
 
 		hook_gametype_scripts = new cHook(0x08110286, (int)hook_codscript_gametype_scripts);
 		hook_gametype_scripts->hook();
+        
+		hook_developer_prints = new cHook(0x08060E3A, (int)hook_dprintf);
 
 		hook_init_opcode = new cHook(0x080771DC, (int)custom_Scr_InitOpcodeLookup);
 		hook_init_opcode->hook();
