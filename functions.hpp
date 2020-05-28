@@ -462,6 +462,15 @@ static const MSG_WriteData_t MSG_WriteData = (MSG_WriteData_t)0x0806804C;
 static const MSG_WriteData_t MSG_WriteData = (MSG_WriteData_t)0x08068044;
 #endif
 
+typedef void (*SV_SendMessageToClient_t)(msg_t *buf, client_t *cl);
+#if COD_VERSION == COD2_1_0
+static const SV_SendMessageToClient_t SV_SendMessageToClient = (SV_SendMessageToClient_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_SendMessageToClient_t SV_SendMessageToClient = (SV_SendMessageToClient_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_SendMessageToClient_t SV_SendMessageToClient = (SV_SendMessageToClient_t)0x0809ABA2;
+#endif
+
 typedef long (*FS_SV_FOpenFileRead_t)(const char *filename, fileHandle_t *fp);
 #if COD_VERSION == COD2_1_0
 static const FS_SV_FOpenFileRead_t FS_SV_FOpenFileRead = (FS_SV_FOpenFileRead_t)0x08064100;
