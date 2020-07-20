@@ -174,6 +174,15 @@ static const Cvar_FindVar_t Cvar_FindVar = (Cvar_FindVar_t)0x080B2D94;
 static const Cvar_FindVar_t Cvar_FindVar = (Cvar_FindVar_t)0x080B2ED8;
 #endif
 
+typedef cvar_t* (*Cvar_SetString_t)(const char *var_name, const char *var_value, unsigned short flags);
+#if COD_VERSION == COD2_1_0
+static const Cvar_SetString_t Cvar_SetString = (Cvar_SetString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Cvar_SetString_t Cvar_SetString = (Cvar_SetString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Cvar_SetString_t Cvar_SetString = (Cvar_SetString_t)0x080B4FA2;
+#endif
+
 typedef cvar_t* (*Cvar_RegisterBool_t)(const char *var_name, qboolean var_value, unsigned short flags);
 #if COD_VERSION == COD2_1_0
 static const Cvar_RegisterBool_t Cvar_RegisterBool = (Cvar_RegisterBool_t)0x080B1B72;
@@ -235,6 +244,15 @@ static const ClientUserinfoChanged_t ClientUserinfoChanged = (ClientUserinfoChan
 static const ClientUserinfoChanged_t ClientUserinfoChanged = (ClientUserinfoChanged_t)0x080F8B1A;
 #elif COD_VERSION == COD2_1_3
 static const ClientUserinfoChanged_t ClientUserinfoChanged = (ClientUserinfoChanged_t)0x080F8C5E;
+#endif
+
+typedef void (*SV_UpdateServerCommandsToClient_t)(client_t *client, msg_t *msg);
+#if COD_VERSION == COD2_1_0
+static const SV_UpdateServerCommandsToClient_t SV_UpdateServerCommandsToClient = (SV_UpdateServerCommandsToClient_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_UpdateServerCommandsToClient_t SV_UpdateServerCommandsToClient = (SV_UpdateServerCommandsToClient_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_UpdateServerCommandsToClient_t SV_UpdateServerCommandsToClient = (SV_UpdateServerCommandsToClient_t)0x080988B2;
 #endif
 
 typedef int (*SV_ClientHasClientMuted_t)(int clientnum, int mutedclientnum);
@@ -444,6 +462,15 @@ static const MSG_WriteLong_t MSG_WriteLong = (MSG_WriteLong_t)0x080680F2;
 static const MSG_WriteLong_t MSG_WriteLong = (MSG_WriteLong_t)0x080680EA;
 #endif
 
+typedef void (*MSG_WriteBigString_t)(msg_t *msg, const char *s);
+#if COD_VERSION == COD2_1_0
+static const MSG_WriteBigString_t MSG_WriteBigString = (MSG_WriteBigString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const MSG_WriteBigString_t MSG_WriteBigString = (MSG_WriteBigString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const MSG_WriteBigString_t MSG_WriteBigString = (MSG_WriteBigString_t)0x08068256;
+#endif
+
 typedef void (*MSG_WriteString_t)(msg_t *msg, const char *s);
 #if COD_VERSION == COD2_1_0
 static const MSG_WriteString_t MSG_WriteString = (MSG_WriteString_t)0x08067CE4;
@@ -462,6 +489,15 @@ static const MSG_WriteData_t MSG_WriteData = (MSG_WriteData_t)0x0806804C;
 static const MSG_WriteData_t MSG_WriteData = (MSG_WriteData_t)0x08068044;
 #endif
 
+typedef void (*MSG_WriteDeltaEntity_t)(msg_t *msg, const entityState_t *from, const entityState_t *to, qboolean force);
+#if COD_VERSION == COD2_1_0
+static const MSG_WriteDeltaEntity_t MSG_WriteDeltaEntity = (MSG_WriteDeltaEntity_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const MSG_WriteDeltaEntity_t MSG_WriteDeltaEntity = (MSG_WriteDeltaEntity_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const MSG_WriteDeltaEntity_t MSG_WriteDeltaEntity = (MSG_WriteDeltaEntity_t)0x0806984C;
+#endif
+
 typedef void (*SV_SendMessageToClient_t)(msg_t *buf, client_t *cl);
 #if COD_VERSION == COD2_1_0
 static const SV_SendMessageToClient_t SV_SendMessageToClient = (SV_SendMessageToClient_t)0x0; // Not tested
@@ -469,6 +505,15 @@ static const SV_SendMessageToClient_t SV_SendMessageToClient = (SV_SendMessageTo
 static const SV_SendMessageToClient_t SV_SendMessageToClient = (SV_SendMessageToClient_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const SV_SendMessageToClient_t SV_SendMessageToClient = (SV_SendMessageToClient_t)0x0809ABA2;
+#endif
+
+typedef void (*SV_Netchan_TransmitNextFragment_t)(client_t *cl);
+#if COD_VERSION == COD2_1_0
+static const SV_Netchan_TransmitNextFragment_t SV_Netchan_TransmitNextFragment = (SV_Netchan_TransmitNextFragment_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_Netchan_TransmitNextFragment_t SV_Netchan_TransmitNextFragment = (SV_Netchan_TransmitNextFragment_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_Netchan_TransmitNextFragment_t SV_Netchan_TransmitNextFragment = (SV_Netchan_TransmitNextFragment_t)0x08097610;
 #endif
 
 typedef long (*FS_SV_FOpenFileRead_t)(const char *filename, fileHandle_t *fp);

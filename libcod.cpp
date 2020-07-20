@@ -36,7 +36,6 @@ cHook *hook_set_anim;
 cHook *hook_init_opcode;
 cHook *hook_add_opcode;
 cHook *hook_print_codepos;
-cHook *hook_developer_prints;
 cHook *hook_touch_item;
 
 int codecallback_remotecommand = 0;
@@ -45,7 +44,6 @@ int codecallback_userinfochanged = 0;
 int codecallback_fire_grenade = 0;
 int codecallback_vid_restart = 0;
 int codecallback_client_spam = 0;
-int codecallback_sv_dprintf = 0;
 int codecallback_meleebutton = 0;
 int codecallback_usebutton = 0;
 int codecallback_attackbutton = 0;
@@ -109,8 +107,6 @@ void hook_sv_spawnserver(const char *format, ...)
 	Com_Printf("%s", s);
 	
 	/* Do stuff after sv has been spawned here */
-	
-	hook_developer_prints->hook();
 }
 
 int hook_codscript_gametype_scripts()
@@ -128,7 +124,6 @@ int hook_codscript_gametype_scripts()
 	codecallback_fire_grenade = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_FireGrenade", 0);
 	codecallback_vid_restart = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_VidRestart", 0);
 	codecallback_client_spam = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_CLSpam", 0);
-	codecallback_sv_dprintf = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_DPrintf", 0);
 	codecallback_meleebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MeleeButton", 0);
  	codecallback_usebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_UseButton", 0);
 	codecallback_attackbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_AttackButton", 0);
@@ -275,34 +270,132 @@ void hook_ClientUserinfoChanged(int clientNum)
 	Scr_FreeThread(ret);
 }
 
+int gamestate_size[MAX_CLIENTS] = {0};
+void custom_SV_SendClientGameState( client_t *client ) {
+	int			start;
+	entityState_t	*base, nullstate;
+	msg_t		msg;
+	byte		msgBuffer[MAX_MSGLEN];
+    
+    while(client->state != CS_FREE && client->netchan.unsentFragments){
+		SV_Netchan_TransmitNextFragment(client);
+	}
+
+ 	Com_DPrintf("SV_SendClientGameState() for %s\n", client->name);
+	Com_DPrintf("Going from CS_CONNECTED to CS_PRIMED for %s\n", client->name);
+	client->state = CS_PRIMED;
+	client->pureAuthentic = 0;
+
+	// when we receive the first packet from the client, we will
+	// notice that it is from a different serverid and that the
+	// gamestate message was not just sent, forcing a retransmit
+	client->gamestateMessageNum = client->netchan.outgoingSequence;
+
+	MSG_Init( &msg, msgBuffer, sizeof( msgBuffer ) );
+
+	// NOTE, MRE: all server->client messages now acknowledge
+	// let the client know which reliable clientCommands we have received
+	MSG_WriteLong( &msg, client->lastClientCommand );
+
+	// send any server commands waiting to be sent first.
+	// we have to do this cause we send the client->reliableSequence
+	// with a gamestate and it sets the clc.serverCommandSequence at
+	// the client side
+	SV_UpdateServerCommandsToClient( client, &msg );
+
+    #if 0
+
+    // q3 client buffer overflow
+    // tested, but non-functional
+    // See https://securitytracker.com/id?1016219
+    //
+    int     i;
+    MSG_WriteByte( &msg, svc_download );
+    MSG_WriteShort( &msg, 1 );         // block != 0, for fast return
+    MSG_WriteShort( &msg, 16384 + 1024 ); // amount of bytes to copy
+    for(i = 0; i < 16384; i++) {        // overwrite the data buffer
+        MSG_WriteByte(&msg, 0x00);      // 0x00 for saving space
+    }
+    for(i = 0; i < 1024; i++) {           // do the rest of the job
+        MSG_WriteByte(&msg, 'a');       // return address: 0x61616161
+    }
+    SV_SendMessageToClient( &msg, client );
+    return;
+
+    #endif
+
+	// send the gamestate
+	MSG_WriteByte( &msg, svc_gamestate );
+	MSG_WriteLong( &msg, client->reliableSequence );
+
+	// write the configstrings
+	for ( start = 0 ; start < MAX_CONFIGSTRINGS ; start++ ) {
+		if (sv.configstrings[start][0]) {
+			MSG_WriteByte( &msg, svc_configstring );
+			MSG_WriteShort( &msg, start );
+			MSG_WriteBigString( &msg, sv.configstrings[start] );
+		}
+	}
+
+	// write the baselines
+	memset( &nullstate, 0, sizeof( nullstate ) ); // Com_Memset
+    
+	for ( start = 0 ; start < MAX_GENTITIES; start++ ) {
+		base = &sv.svEntities[start].baseline;
+		if ( !base->number ) {
+			continue;
+		}
+		MSG_WriteByte( &msg, svc_baseline );
+		MSG_WriteDeltaEntity( &msg, &nullstate, base, qtrue );
+	}
+
+	MSG_WriteByte( &msg, svc_EOF );
+	MSG_WriteLong( &msg, client - svs.clients );
+	MSG_WriteLong( &msg, sv.checksumFeed );
+    MSG_WriteByte( &msg, svc_EOF );
+    
+    Com_DPrintf("Sending %i bytes in gamestate to client: %i\n", msg.cursize, client - svs.clients);
+    gamestate_size[client - svs.clients] = int(msg.cursize);
+
+	// deliver this to the client
+	SV_SendMessageToClient( &msg, client );
+}
+
 void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 {
 	int curindex;
 	int iwdFile;
 	char errorMessage[COD2_MAX_STRINGLENGTH];
 
-	if (cl->state == CS_ACTIVE)
-		return; // Client already in game
-
-	if (!*cl->downloadName)
-		return;	// Nothing being downloaded
-
-	if (strlen(cl->downloadName) < 4)
-		return; // File length too short
-
-	if (strcmp(&cl->downloadName[strlen(cl->downloadName) - 4], ".iwd") != 0)
-		return; // Not a iwd file
+	if (cl->state == CS_ACTIVE) {
+        //Com_DPrintf("clientDownload: Client already in game, name = '%s'\n", cl->downloadName);
+		return;
+    }
+	if (!*cl->downloadName) {
+        // Com_DPrintf("clientDownload: Nothing being downloaded\n");
+		return;
+    }
+	if (strlen(cl->downloadName) < 4) {
+        // Com_DPrintf("clientDownload: File length too short\n");
+		return;
+    }
+	if (strcmp(&cl->downloadName[strlen(cl->downloadName) - 4], ".iwd") != 0) {
+        // Com_DPrintf("clientDownload: Not a iwd file\n");
+		return;
+    }
 
 #if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
-	if ( cl->wwwDlAck )
-		return; // wwwDl acknowleged
+	if ( cl->wwwDlAck ) {
+        // Com_DPrintf("clientDownload: wwwDl acknowleged\n");
+		return;
+    }
 #endif
 
 	if (strlen(sv_downloadMessage->string))
 	{
 		Com_sprintf(errorMessage, sizeof(errorMessage), sv_downloadMessage->string);
 
-		MSG_WriteByte( msg, svc_download );
+        MSG_WriteByte( msg, svc_download );
 		MSG_WriteShort( msg, 0 ); // client is expecting block zero
 		MSG_WriteLong( msg, -1 ); // illegal file size
 		MSG_WriteString( msg, errorMessage );
@@ -672,6 +765,8 @@ int touch_item(gentity_t * item, gentity_t * entity, int touch)
 }
 
 #if COMPILE_PLAYER == 1
+
+#if COD_VERSION == COD2_1_0 || COD_VERSION == COD2_1_2
 int gamestate_size[MAX_CLIENTS] = {0};
 void hook_gamestate_info(const char *format, ...)
 {
@@ -700,6 +795,7 @@ void hook_gamestate_info(const char *format, ...)
 
 	gamestate_size[clientnum] = gamestate;
 }
+#endif
 
 int clientfps[MAX_CLIENTS] = {0};
 int tempfps[MAX_CLIENTS] = {0};
@@ -1038,7 +1134,7 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 void hook_SV_GetChallenge(netadr_t from)
 {
 	// Prevent using getchallenge as an amplifier
-	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
+	if ( SVC_RateLimitAddress( from, 5, 1000 ) )
 	{
 		if (!SVC_callback("CHALLENGE:ADDRESS", NET_AdrToString(from)))
 			Com_DPrintf("SV_GetChallenge: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
@@ -1260,34 +1356,6 @@ void custom_Scr_PrintPrevCodePos(int a1, char *a2, int a3)
 	hook_print_codepos->hook();
 }
 
-void hook_dprintf(const char *format, ...)
-{
-	char s[COD2_MAX_STRINGLENGTH];
-	va_list va;
-
-	va_start(va, format);
-	vsnprintf(s, sizeof(s), format, va);
-	va_end(va);
-	
-	if (Scr_IsSystemActive())
-	{
-		if (codecallback_sv_dprintf)
-		{
-			stackPushString(s);
-			short ret = Scr_ExecThread(codecallback_sv_dprintf, 1);
-			Scr_FreeThread(ret);
-		
-			return;
-		}
-		
-		if (!developer->integer)
-			return;
-	}
-	
-	Com_Printf("%s", s);
-
-}
-
 class cCallOfDuty2Pro
 {
 public:
@@ -1322,7 +1390,6 @@ public:
 		cracking_hook_call(0x0808F134, (int)hook_ClientUserinfoChanged);
 		cracking_hook_call(0x0807059F, (int)Scr_GetCustomFunction);
 		cracking_hook_call(0x080707C3, (int)Scr_GetCustomMethod);
-		cracking_hook_call(0x0810E507, (int)Com_DPrintf);
 
 #if COMPILE_PLAYER == 1
 		cracking_hook_call(0x0808E18F, (int)hook_gamestate_info);
@@ -1333,8 +1400,6 @@ public:
 		hook_gametype_scripts = new cHook(0x0810DDEE, (int)hook_codscript_gametype_scripts);
 		hook_gametype_scripts->hook();
         
-		hook_developer_prints = new cHook(0x08060B7C, (int)hook_dprintf);
-		
 		hook_init_opcode = new cHook(0x08076B9C, (int)custom_Scr_InitOpcodeLookup);
 		hook_init_opcode->hook();
 		hook_add_opcode = new cHook(0x08076D92, (int)custom_AddOpcodePos);
@@ -1389,7 +1454,6 @@ public:
 		cracking_hook_call(0x080909BE, (int)hook_ClientUserinfoChanged);
 		cracking_hook_call(0x08070B1B, (int)Scr_GetCustomFunction);
 		cracking_hook_call(0x08070D3F, (int)Scr_GetCustomMethod);
-		cracking_hook_call(0x08110832, (int)Com_DPrintf);
 
 #if COMPILE_PLAYER == 1
 		cracking_hook_call(0x0808F533, (int)hook_gamestate_info);
@@ -1406,8 +1470,6 @@ public:
         hook_add_opcode->hook();
         hook_print_codepos = new cHook(0x0807832E, (int)custom_Scr_PrintPrevCodePos);
         hook_print_codepos->hook();
-        
-		hook_developer_prints = new cHook(0x08060E42, (int)hook_dprintf);
 		
 		hook_player_collision = new cHook(0x080F553E, (int)player_collision);
 		hook_player_collision->hook();
@@ -1456,18 +1518,10 @@ public:
 		cracking_hook_call(0x08090A52, (int)hook_ClientUserinfoChanged);
 		cracking_hook_call(0x08070BE7, (int)Scr_GetCustomFunction);
 		cracking_hook_call(0x08070E0B, (int)Scr_GetCustomMethod);
-		cracking_hook_call(0x0811098E, (int)Com_DPrintf);
-
-#if COMPILE_PLAYER == 1
-		cracking_hook_call(0x0808F5C7, (int)hook_gamestate_info);
-#endif
-
 		cracking_hook_call(0x08082346, (int)hook_scriptError);
 
 		hook_gametype_scripts = new cHook(0x08110286, (int)hook_codscript_gametype_scripts);
 		hook_gametype_scripts->hook();
-        
-		hook_developer_prints = new cHook(0x08060E3A, (int)hook_dprintf);
 
 		hook_init_opcode = new cHook(0x080771DC, (int)custom_Scr_InitOpcodeLookup);
 		hook_init_opcode->hook();
@@ -1495,6 +1549,7 @@ public:
 #endif
 
 		cracking_hook_function(0x080EBF24, (int)hook_BG_IsWeaponValid);
+        cracking_hook_function(0x0808F302, (int)custom_SV_SendClientGameState);
 		cracking_hook_function(0x0808FDC2, (int)custom_SV_WriteDownloadToClient);
 		cracking_hook_function(0x080B7FA6, (int)custom_va);
 		cracking_hook_function(0x08090534, (int)hook_SV_VerifyIwds_f);

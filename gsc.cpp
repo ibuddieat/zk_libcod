@@ -340,7 +340,6 @@ scr_method_t scriptMethods[] =
 	{"lookatkiller", gsc_player_lookatkiller, 0},
 	{"isbot", gsc_player_isbot, 0},
 	{"dropclient", gsc_player_dropclient, 0},
-	{"runcommand", gsc_player_runcommand, 0},
 	{"getcurrentoffhandslotammo", gsc_player_getcurrentoffhandslotammo, 0},
 	{"getweaponindexoffhand", gsc_player_getweaponindexoffhand, 0},
 #endif
