@@ -281,7 +281,7 @@ void custom_SV_SendClientGameState( client_t *client ) {
 		SV_Netchan_TransmitNextFragment(client);
 	}
 
- 	Com_DPrintf("SV_SendClientGameState() for %s\n", client->name);
+ 	Com_DPrintf("custom_SV_SendClientGameState() for %s\n", client->name);
 	Com_DPrintf("Going from CS_CONNECTED to CS_PRIMED for %s\n", client->name);
 	client->state = CS_PRIMED;
 	client->pureAuthentic = 0;
@@ -341,7 +341,7 @@ void custom_SV_SendClientGameState( client_t *client ) {
 	memset( &nullstate, 0, sizeof( nullstate ) ); // Com_Memset
     
 	for ( start = 0 ; start < MAX_GENTITIES; start++ ) {
-		base = &sv.svEntities[start].baseline;
+		base = &sv.svEntities[start].baseline.s;
 		if ( !base->number ) {
 			continue;
 		}
@@ -766,8 +766,6 @@ int touch_item(gentity_t * item, gentity_t * entity, int touch)
 
 #if COMPILE_PLAYER == 1
 
-#if COD_VERSION == COD2_1_0 || COD_VERSION == COD2_1_2
-int gamestate_size[MAX_CLIENTS] = {0};
 void hook_gamestate_info(const char *format, ...)
 {
 	char s[COD2_MAX_STRINGLENGTH];
@@ -795,7 +793,6 @@ void hook_gamestate_info(const char *format, ...)
 
 	gamestate_size[clientnum] = gamestate;
 }
-#endif
 
 int clientfps[MAX_CLIENTS] = {0};
 int tempfps[MAX_CLIENTS] = {0};
@@ -1519,6 +1516,10 @@ public:
 		cracking_hook_call(0x08070BE7, (int)Scr_GetCustomFunction);
 		cracking_hook_call(0x08070E0B, (int)Scr_GetCustomMethod);
 		cracking_hook_call(0x08082346, (int)hook_scriptError);
+        
+#if COMPILE_PLAYER == 1
+		cracking_hook_call(0x0808F5C7, (int)hook_gamestate_info);
+#endif
 
 		hook_gametype_scripts = new cHook(0x08110286, (int)hook_codscript_gametype_scripts);
 		hook_gametype_scripts->hook();

@@ -1385,7 +1385,7 @@ typedef struct svEntity_s
 {
 	u_int16_t worldSector;
 	u_int16_t nextEntityInWorldSector;
-	entityState_t baseline;
+	archivedEntity_t baseline;
 	int numClusters;
 	int clusternums[MAX_ENT_CLUSTERS];
 	int	lastCluster;
