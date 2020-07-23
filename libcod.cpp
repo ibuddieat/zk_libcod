@@ -334,6 +334,7 @@ void custom_SV_SendClientGameState( client_t *client ) {
 			MSG_WriteByte( &msg, svc_configstring );
 			MSG_WriteShort( &msg, start );
 			MSG_WriteBigString( &msg, sv.configstrings[start] );
+            //Com_DPrintf("Sending configstring %i to client %i: %s\n", start, client - svs.clients, sv.configstrings[start]);
 		}
 	}
 

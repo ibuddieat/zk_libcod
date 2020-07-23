@@ -523,6 +523,49 @@ void gsc_utils_sendgameservercommand()
 		stackPushUndefined();
 		return;
 	}
+    
+    /*
+    Parsed on client in CG_ServerCommand (0x4d1b80 in 1.3)
+    
+    switch(cmd) {
+        "B": CG_MapRestart
+        "C": (int) switchToOffHand()
+        "D": (?, ?, ?) CG_DeactivateReverbCmd
+        "E": (?, ?, ?, ?) CG_SetChannelVolCmd
+        "F": (?, ?, ?) CG_DeactivateChannelVolCmd
+        "G": ?
+        "H": ?
+        "I": (str) giveWeapon() (str indicates type, includes item pickup stuff)
+        "J": (int) appears when another player disconnects
+        "K": closeIngameMenu()
+        "a": (int) switchToWeapon()
+        "b": (int, ...) scoreboard info (/+score)
+             Example with 2 players:
+             b 2 0 0 1 3 29 0 0
+                     0 0 43 4 0
+             3 Players:
+             b 3 0 0 1 0 32 0 0
+                     2 0 61 0 0 
+                     0 0 48 1 0
+        "d": (int, str) playSound(), ambientPlay()
+             (int, str) playFx()
+             (int, str) configstrings (e.g., when changing sv_voice)
+             (int, int, int, float, float, float, float, int) setExpFog()
+        "e": (str) error message, like iprintLn()
+        "f": (str) iprintLn()
+        "g": (str) iprintLnBold()
+        "h": (str) chat message (all)
+        "o": (str) MusicPlay()
+        "p": (int) MusicStop()
+        "s": (int) playLocalSound()
+        "t": (int) openMenu()
+        "u": closeMenu()
+        "i": (str) chat message (team)
+        "v": (str) vstr exec
+        "w": (str) disconnect
+        default: Com_Printf("Unknown client game command: %s\n", cmd);
+    }
+    */
 
 	SV_GameSendServerCommand(clientNum, 0, message);
 	stackPushBool(qtrue);
