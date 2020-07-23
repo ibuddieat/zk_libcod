@@ -12,9 +12,9 @@ https://github.com/ibuddieat/zk_libcod (this repository)
 ```
 
 Changes provided by this repository:
-- Added `sv_limitLocalRcon` to whitelist internal IPs at rcon rate limiting
-- Added `CodeCallback_DPrintf` function (which was removed from the parent repository)
-- Disabled `con_coloredPrints` as it may break incoming rcon commands (-> issues with BigBrotherBot)
+- Added `sv_limitLocalRcon` cvar to whitelist internal IPs at rcon rate limiting
+- Added `SV_SendClientGameState` function for miscellaneous game engine tests
+- Removed `con_coloredPrints` as it may break incoming rcon commands (-> issues with BigBrotherBot)
 - Disabled several functions that would make it easy to harm the server with malicious map scripts
 
 Build requirements:
