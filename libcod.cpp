@@ -270,6 +270,77 @@ void hook_ClientUserinfoChanged(int clientNum)
 	Scr_FreeThread(ret);
 }
 
+typedef void (*FUN_0808e1ea_t)(client_t *client);
+FUN_0808e1ea_t FUN_0808e1ea = (FUN_0808e1ea_t)0x0808e1ea;
+
+typedef int (*FUN_081384cc_t)(const char *str);
+FUN_081384cc_t FUN_081384cc = (FUN_081384cc_t)0x081384cc;
+
+void custom_SV_DropClient( client_t *drop, const char *reason ) {
+	int i, pb_test;
+	challenge_t *challenge;
+	qboolean isBot = qfalse;
+    char name[32];
+    
+    Com_DPrintf( "custom_SV_DropClient for %s\n", drop->name );
+
+	if ( drop->state == CS_ZOMBIE ) {
+		return;     // already dropped
+	}
+    
+    drop->unksnapshotvar2 = 0; // *(drop+8)
+    strcpy(name, drop->name);
+    FUN_0808e1ea(drop);
+
+	Com_DPrintf( "Going to CS_ZOMBIE for %s\n", name );
+	drop->state = CS_ZOMBIE;        // become free in a few seconds
+
+    if ( drop->netchan.remoteAddress.type == NA_BOT ) {
+        isBot = qtrue;
+    }
+
+	if ( !isBot ) {
+		// see if we already have a challenge for this ip
+		challenge = &svs.challenges[0];
+
+		for ( i = 0 ; i < MAX_CHALLENGES ; i++, challenge++ ) {
+			if ( NET_CompareAdr( drop->netchan.remoteAddress, challenge->adr ) ) {
+				challenge->connected = qfalse;
+				break;
+			}
+		}
+	}
+
+    pb_test = FUN_081384cc(reason);
+    if (!isBot && Q_stricmp(reason, "EXE_DISCONNECTED") != 0) { // do not show kick message at bots
+        if (!pb_test) {
+            SV_SendServerCommand(0, 0, "e \"\x15%s^7 %s%s\"", name, "", reason);
+        } else {
+            SV_SendServerCommand(0, 0, "e \"\x15%s^7 %s%s\"", name, "\x14", reason);
+        }
+    }
+    Com_Printf("%i:%s %s\n", drop - svs.clients, name, reason);
+    SV_SendServerCommand(0, 1, "J %d", drop - svs.clients);
+    if (!pb_test) {
+        SV_SendServerCommand(drop, 1, "w \"%s^7 %s\" PB", name, reason);
+    } else {
+        SV_SendServerCommand(drop, 1, "w \"%s\"", reason);
+    }
+
+	// if this was the last client on the server, send a heartbeat
+	// to the master so it is known the server is empty
+	// send a heartbeat now so the master will get up to date info
+	// if there is already a slot for this ip, reuse it
+	for ( i = 0 ; i < sv_maxclients->integer ; i++ ) {
+		if ( svs.clients[i].state >= CS_CONNECTED ) {
+			break;
+		}
+	}
+	if ( i == sv_maxclients->integer ) {
+		SV_Heartbeat();
+	}
+}
+
 int gamestate_size[MAX_CLIENTS] = {0};
 void custom_SV_SendClientGameState( client_t *client ) {
 	int			start;
@@ -1552,6 +1623,7 @@ public:
 
 		cracking_hook_function(0x080EBF24, (int)hook_BG_IsWeaponValid);
         cracking_hook_function(0x0808F302, (int)custom_SV_SendClientGameState);
+        cracking_hook_function(0x0808F02E, (int)custom_SV_DropClient);
 		cracking_hook_function(0x0808FDC2, (int)custom_SV_WriteDownloadToClient);
 		cracking_hook_function(0x080B7FA6, (int)custom_va);
 		cracking_hook_function(0x08090534, (int)hook_SV_VerifyIwds_f);

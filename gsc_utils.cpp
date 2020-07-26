@@ -528,7 +528,7 @@ void gsc_utils_sendgameservercommand()
     Parsed on client in CG_ServerCommand (0x4d1b80 in 1.3)
     
     switch(cmd) {
-        "B": CG_MapRestart
+        "B": calls CG_MapRestart
         "C": (int) switchToOffHand()
         "D": (?, ?, ?) CG_DeactivateReverbCmd
         "E": (?, ?, ?, ?) CG_SetChannelVolCmd
@@ -536,10 +536,11 @@ void gsc_utils_sendgameservercommand()
         "G": ?
         "H": ?
         "I": (str) giveWeapon() (str indicates type, includes item pickup stuff)
-        "J": (int) appears when another player disconnects
+        "J": (int) is sent on player disconnect (in SV_DropClient)
         "K": closeIngameMenu()
         "a": (int) switchToWeapon()
         "b": (int, ...) scoreboard info (/+score)
+             b <num players> <?> <?> <player n id> <player n score> <player n ping> <player n deaths> <player n status icon id>
              Example with 2 players:
              b 2 0 0 1 3 29 0 0
                      0 0 43 4 0
@@ -551,7 +552,7 @@ void gsc_utils_sendgameservercommand()
              (int, str) playFx()
              (int, str) configstrings (e.g., when changing sv_voice)
              (int, int, int, float, float, float, float, int) setExpFog()
-        "e": (str) error message, like iprintLn()
+        "e": (str) error message, like iprintLn(), sent to active players on kick() etc.
         "f": (str) iprintLn()
         "g": (str) iprintLnBold()
         "h": (str) chat message (all)
@@ -562,7 +563,7 @@ void gsc_utils_sendgameservercommand()
         "u": closeMenu()
         "i": (str) chat message (team)
         "v": (str) vstr exec
-        "w": (str) disconnect
+        "w": (str) disconnect message for the player that disconnected
         default: Com_Printf("Unknown client game command: %s\n", cmd);
     }
     */

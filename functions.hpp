@@ -3,6 +3,15 @@
 
 /* MAKE FUNCTIONS STATIC, SO THEY CAN BE IN EVERY FILE */
 
+typedef int (*Q_stricmp_t)(const char *s1, const char *s2);
+#if COD_VERSION == COD2_1_0
+static const Q_stricmp_t Q_stricmp = (Q_stricmp_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Q_stricmp_t Q_stricmp = (Q_stricmp_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Q_stricmp_t Q_stricmp = (Q_stricmp_t)0x080B7BF8;
+#endif
+
 typedef unsigned int (*GetVariableName_t)(unsigned int a1);
 #if COD_VERSION == COD2_1_0
 static const GetVariableName_t GetVariableName = (GetVariableName_t)0x0807CA72;
@@ -228,6 +237,15 @@ static const SV_GameSendServerCommand_t SV_GameSendServerCommand = (SV_GameSendS
 static const SV_GameSendServerCommand_t SV_GameSendServerCommand = (SV_GameSendServerCommand_t)0x080917AA;
 #endif
 
+typedef void (QDECL *SV_SendServerCommand_t)(client_t *cl, int, const char *fmt, ...);
+#if COD_VERSION == COD2_1_0
+static const SV_SendServerCommand_t SV_SendServerCommand = (SV_SendServerCommand_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_SendServerCommand_t SV_SendServerCommand = (SV_SendServerCommand_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_SendServerCommand_t SV_SendServerCommand = (SV_SendServerCommand_t)0x08094A10;
+#endif
+
 typedef void (*SV_DropClient_t)(client_t *drop, const char *reason);
 #if COD_VERSION == COD2_1_0
 static const SV_DropClient_t SV_DropClient = (SV_DropClient_t)0x0808DC8C;
@@ -361,6 +379,15 @@ static const NET_StringToAdr_t NET_StringToAdr = (NET_StringToAdr_t)0x0806C750;
 static const NET_StringToAdr_t NET_StringToAdr = (NET_StringToAdr_t)0x0806CCCC;
 #elif COD_VERSION == COD2_1_3
 static const NET_StringToAdr_t NET_StringToAdr = (NET_StringToAdr_t)0x0806CD98;
+#endif
+
+typedef qboolean (*NET_CompareAdr_t)(netadr_t a, netadr_t b);
+#if COD_VERSION == COD2_1_0
+static const NET_CompareAdr_t NET_CompareAdr = (NET_CompareAdr_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const NET_CompareAdr_t NET_CompareAdr = (NET_CompareAdr_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const NET_CompareAdr_t NET_CompareAdr = (NET_CompareAdr_t)0x0806C54C;
 #endif
 
 typedef void (*Scr_Error_t)(const char *string);
@@ -811,6 +838,15 @@ static const SV_ClientThink_t SV_ClientThink = (SV_ClientThink_t)0x0808F488;
 static const SV_ClientThink_t SV_ClientThink = (SV_ClientThink_t)0x08090D18;
 #elif COD_VERSION == COD2_1_3
 static const SV_ClientThink_t SV_ClientThink = (SV_ClientThink_t)0x08090DAC;
+#endif
+
+typedef void (*SV_Heartbeat_t)(void);
+#if COD_VERSION == COD2_1_0
+static const SV_Heartbeat_t SV_Heartbeat = (SV_Heartbeat_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_Heartbeat_t SV_Heartbeat = (SV_Heartbeat_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_Heartbeat_t SV_Heartbeat = (SV_Heartbeat_t)0x0808CB98;
 #endif
 
 typedef void (*G_LogPrintf_t)(const char *fmt, ...);

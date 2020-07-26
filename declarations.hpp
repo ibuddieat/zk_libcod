@@ -1,6 +1,8 @@
 #ifndef _DECLARATIONS_HPP_
 #define _DECLARATIONS_HPP_
 
+#define QDECL __attribute__((cdecl))
+
 #define qboolean int
 #define qtrue 1
 #define qfalse 0
@@ -31,6 +33,7 @@
 #define COD2_MAX_STRINGLENGTH 1024
 
 #define MAX_CLIENTS 64
+#define MAX_CHALLENGES 1024
 #define PACKET_BACKUP 32
 #define MAX_QPATH 64
 #define MAX_OSPATH 256
