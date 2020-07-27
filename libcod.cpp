@@ -1124,7 +1124,7 @@ bool SVC_callback(const char * str, const char * ip)
 	return false;
 }
 
-bool SVC_ApplyLimit( netadr_t from )
+bool SVC_ApplyRconLimit( netadr_t from, bool badRconPassword )
 {
     // Prevent using rcon as an amplifier and make dictionary attacks impractical
     if ( SVC_RateLimitAddress( from, 10, 1000 ) )
@@ -1134,7 +1134,7 @@ bool SVC_ApplyLimit( netadr_t from )
         return true;
     }
 
-    if ( !strlen( rcon_password->string ) || strcmp(Cmd_Argv(1), rcon_password->string) != 0 )
+    if ( badRconPassword )
     {
         static leakyBucket_t bucket;
 
@@ -1154,6 +1154,8 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 {
 	if (!sv_allowRcon->boolean)
 		return;
+    
+    bool badRconPassword = !strlen( rcon_password->string ) || strcmp(Cmd_Argv(1), rcon_password->string) != 0;
 	
     if (!sv_limitLocalRcon->boolean)
     {
@@ -1163,17 +1165,17 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
              (ip[0] == 172 && (ip[1] >= 16 && ip[1] <= 31)) ||  // 172.16.0.0 – 172.31.255.255
              (ip[0] == 192 && ip[1] == 168)))                   // 192.168.0.0 – 192.168.255.255
         {
-            if ( SVC_ApplyLimit( from ) )
+            if ( SVC_ApplyRconLimit( from, badRconPassword ) )
                 return;
         }
     }
     else
     {
-        if ( SVC_ApplyLimit( from ) )
+        if ( SVC_ApplyRconLimit( from, badRconPassword ) )
             return;
     }
-	
-	if (codecallback_remotecommand)
+    
+	if (codecallback_remotecommand && !badRconPassword && Scr_IsSystemActive() && strcmp(Cmd_Argv(2), "map") != 0 && strcmp(Cmd_Argv(2), "devmap") != 0)
 	{
         msg->data[(int)msg->cursize] = '\0';
         
