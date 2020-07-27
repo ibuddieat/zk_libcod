@@ -1,4 +1,4 @@
-# libcod for \*.ZK.\*
+# libcod for \*.ZK.\* Zombie Knights
 
 This extension has its focus on Call of Duty&reg; 2 in version 1.3. Other versions are not supported.
 
@@ -13,7 +13,8 @@ https://github.com/ibuddieat/zk_libcod (this repository)
 
 Changes provided by this repository:
 - Added `sv_limitLocalRcon` cvar to whitelist internal IPs at rcon rate limiting
-- Added `SV_SendClientGameState` function for miscellaneous game engine tests
+- Added `custom_SV_DropClient` function to disable bot disconnect messages
+- Added `custom_SV_SendClientGameState` function for miscellaneous game engine tests
 - Removed `con_coloredPrints` as it may break incoming rcon commands (-> issues with BigBrotherBot)
 - Disabled several functions that would make it easy to harm the server with malicious map scripts
 
