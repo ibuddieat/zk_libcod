@@ -534,7 +534,7 @@ static const SV_SendMessageToClient_t SV_SendMessageToClient = (SV_SendMessageTo
 static const SV_SendMessageToClient_t SV_SendMessageToClient = (SV_SendMessageToClient_t)0x0809ABA2;
 #endif
 
-typedef void (*SV_Netchan_TransmitNextFragment_t)(client_t *cl);
+typedef void (*SV_Netchan_TransmitNextFragment_t)(netchan_t *chan);
 #if COD_VERSION == COD2_1_0
 static const SV_Netchan_TransmitNextFragment_t SV_Netchan_TransmitNextFragment = (SV_Netchan_TransmitNextFragment_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
