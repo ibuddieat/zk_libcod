@@ -349,7 +349,7 @@ void custom_SV_SendClientGameState( client_t *client ) {
 	byte		msgBuffer[MAX_MSGLEN];
     
     while(client->state != CS_FREE && client->netchan.unsentFragments){
-		SV_Netchan_TransmitNextFragment(client);
+		SV_Netchan_TransmitNextFragment(&client->netchan);
 	}
 
  	Com_DPrintf("custom_SV_SendClientGameState() for %s\n", client->name);
@@ -1205,7 +1205,7 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 void hook_SV_GetChallenge(netadr_t from)
 {
 	// Prevent using getchallenge as an amplifier
-	if ( SVC_RateLimitAddress( from, 5, 1000 ) )
+	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
 	{
 		if (!SVC_callback("CHALLENGE:ADDRESS", NET_AdrToString(from)))
 			Com_DPrintf("SV_GetChallenge: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
