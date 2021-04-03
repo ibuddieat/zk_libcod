@@ -1175,7 +1175,15 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
             return;
     }
     
-	if (codecallback_remotecommand && !badRconPassword && Scr_IsSystemActive() && strcmp(Cmd_Argv(2), "map") != 0 && strcmp(Cmd_Argv(2), "devmap") != 0)
+	if (
+        codecallback_remotecommand && 
+        !badRconPassword && 
+        Scr_IsSystemActive() && 
+        strcmp(Cmd_Argv(2), "map") != 0 && 
+        strcmp(Cmd_Argv(2), "devmap") != 0 && 
+        strcmp(Cmd_Argv(2), "map_restart") != 0 && 
+        strcmp(Cmd_Argv(2), "fast_restart") != 0
+        )
 	{
         msg->data[(int)msg->cursize] = '\0';
         
