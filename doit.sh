@@ -113,6 +113,11 @@ if grep -q "COMPILE_EXEC 1" config.hpp; then
 	$cc $options $constants -c gsc_exec.cpp -o objects_$1/gsc_exec.opp
 fi
 
+if grep -q "COMPILE_LEVEL 1" config.hpp; then
+	echo "##### COMPILE $1 GSC_LEVEL.CPP #####"
+	$cc $options $constants -c gsc_level.cpp -o objects_$1/gsc_level.opp
+fi
+
 if grep -q "COMPILE_MEMORY 1" config.hpp; then
 	echo "##### COMPILE $1 GSC_MEMORY.CPP #####"
 	$cc $options $constants -c gsc_memory.cpp -o objects_$1/gsc_memory.opp

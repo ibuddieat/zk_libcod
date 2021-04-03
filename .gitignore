@@ -14,6 +14,8 @@
 !gsc_entity.hpp
 !gsc_exec.cpp
 !gsc_exec.hpp
+!gsc_level.cpp
+!gsc_level.hpp
 !gsc_memory.cpp
 !gsc_memory.hpp
 !gsc_mysql.cpp

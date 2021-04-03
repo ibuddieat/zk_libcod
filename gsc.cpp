@@ -159,6 +159,12 @@ scr_function_t scriptFunctions[] =
 	{"exec_async_checkdone", gsc_exec_async_checkdone, 0},
 #endif
 
+#if COMPILE_LEVEL == 1
+	{"getnumberofstaticmodels", gsc_level_getnumberofstaticmodels, 0},
+	{"getstaticmodelname", gsc_level_getstaticmodelname, 0},
+	{"getstaticmodelorigin", gsc_level_getstaticmodelorigin, 0},
+#endif
+
 #if COMPILE_MEMORY == 1
 	{"memory_malloc", gsc_memory_malloc, 0},
 	{"memory_free", gsc_memory_free, 0},
