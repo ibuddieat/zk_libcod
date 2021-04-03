@@ -384,6 +384,7 @@ typedef struct
 typedef int	fileHandle_t;
 typedef void (*xfunction_t)();
 typedef void (*xmethod_t)(scr_entref_t);
+typedef void (*xcommand_t) (void);
 
 typedef struct scr_function_s
 {

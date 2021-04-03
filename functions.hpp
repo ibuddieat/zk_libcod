@@ -120,6 +120,15 @@ static const Com_sprintf_t Com_sprintf = (Com_sprintf_t)0x080B7DC6;
 static const Com_sprintf_t Com_sprintf = (Com_sprintf_t)0x080B7F0A;
 #endif
 
+typedef void (*Cmd_AddCommand_t)(const char *cmd_name, xcommand_t function);
+#if COD_VERSION == COD2_1_0
+static const Cmd_AddCommand_t Cmd_AddCommand = (Cmd_AddCommand_t)0x080604B2;
+#elif COD_VERSION == COD2_1_2
+static const Cmd_AddCommand_t Cmd_AddCommand = (Cmd_AddCommand_t)0x080606BE;
+#elif COD_VERSION == COD2_1_3
+static const Cmd_AddCommand_t Cmd_AddCommand = (Cmd_AddCommand_t)0x080606B6;
+#endif
+
 typedef void (*Cmd_ExecuteString_t)(const char *cmd);
 #if COD_VERSION == COD2_1_0
 static const Cmd_ExecuteString_t Cmd_ExecuteString = (Cmd_ExecuteString_t)0x08060754;
