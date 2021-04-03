@@ -37,35 +37,6 @@ int stackPrintParam(int param)
 	return 0;
 }
 
-void gsc_utils_dorconcmd()
-{	
-	char * sFrom;
-	int pointerMsg;
-	
-	if (!stackGetParams("si", &sFrom, &pointerMsg))
-	{
-		stackError("gsc_utils_dorconcmd() one or more arguments is undefined or has a wrong type");
-		return;
-	}
-	
-	netadr_t from;
-	
-	msg_t * msg = (msg_t *)pointerMsg;
-	NET_StringToAdr(sFrom, &from);
-		
-	#if COD_VERSION == COD2_1_0
-	int lasttime_offset = 0x0848B674;
-	#elif COD_VERSION == COD2_1_2
-	int lasttime_offset = 0x0849EB74;
-	#elif COD_VERSION == COD2_1_3
-	int lasttime_offset = 0x0849FBF4;
-	#endif
-
-	*(int *)lasttime_offset = 0;
-
-	SVC_RemoteCommand(from, msg);
-}
-
 void gsc_utils_remotecommand()
 {
 	char * sFrom;
@@ -82,11 +53,6 @@ void gsc_utils_remotecommand()
 	msg_t * msg = (msg_t *)pointerMsg;
 	NET_StringToAdr(sFrom, &from);
 
-	RemoteCommand(from, msg);
-}
-
-void RemoteCommand(netadr_t from, msg_t *msg)
-{
 #if COD_VERSION == COD2_1_0
 	int lasttime_offset = 0x0848B674;
 #elif COD_VERSION == COD2_1_2

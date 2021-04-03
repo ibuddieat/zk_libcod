@@ -4,8 +4,6 @@
 /* gsc functions */
 #include "gsc.hpp"
 
-void gsc_utils_dorconcmd();
-void RemoteCommand(netadr_t from, msg_t *msg);
 void gsc_utils_remotecommand();
 void gsc_utils_executestring();
 void gsc_utils_sendgameservercommand();
