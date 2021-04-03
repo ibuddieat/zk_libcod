@@ -95,6 +95,8 @@ void hook_sv_init(const char *format, ...)
 
 }
 
+void hook_bad_printf(const char *format, ...) {}
+
 void hook_sv_spawnserver(const char *format, ...)
 {
 	char s[COD2_MAX_STRINGLENGTH];
@@ -1530,12 +1532,12 @@ public:
 		cracking_hook_call(0x080909BE, (int)hook_ClientUserinfoChanged);
 		cracking_hook_call(0x08070B1B, (int)Scr_GetCustomFunction);
 		cracking_hook_call(0x08070D3F, (int)Scr_GetCustomMethod);
+		cracking_hook_call(0x0808227A, (int)hook_scriptError);
+		cracking_hook_call(0x0808FCBE, (int)hook_bad_printf);
 
 #if COMPILE_PLAYER == 1
 		cracking_hook_call(0x0808F533, (int)hook_gamestate_info);
 #endif
-
-		cracking_hook_call(0x0808227A, (int)hook_scriptError);
 
 		hook_gametype_scripts = new cHook(0x0811012A, (int)hook_codscript_gametype_scripts);
 		hook_gametype_scripts->hook();
@@ -1595,6 +1597,7 @@ public:
 		cracking_hook_call(0x08070BE7, (int)Scr_GetCustomFunction);
 		cracking_hook_call(0x08070E0B, (int)Scr_GetCustomMethod);
 		cracking_hook_call(0x08082346, (int)hook_scriptError);
+		cracking_hook_call(0x0808FD52, (int)hook_bad_printf);
         
 #if COMPILE_PLAYER == 1
 		cracking_hook_call(0x0808F5C7, (int)hook_gamestate_info);
