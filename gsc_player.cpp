@@ -889,6 +889,23 @@ void gsc_player_set_anim(scr_entref_t id)
 		return;
 	}
 
+	gentity_t *entity = &g_entities[id];
+
+	if (entity->s.eType == ET_CORPSE)
+	{
+		int index = BG_AnimationIndexForString(animation);
+		entity->s.legsAnim = index;
+		stackPushBool(qtrue);
+		return;
+	}
+
+	if (entity->client == NULL)
+	{
+		stackError("gsc_player_set_anim() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
 	int animationIndex = 0;
 	extern int custom_animation[64];
 
