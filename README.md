@@ -2,14 +2,16 @@
 
 This extension has its focus on Call of Duty&reg; 2 in version 1.3. Other versions are not supported.
 
-Fork path:
-```
+Initial fork path:
+
+<pre>
 https://github.com/ibuddieat/zk_libcod (this repository)
-└─> [damage99/libcod](https://github.com/damage99/libcod)
-    └─> [voron00/libcod](https://github.com/voron00/libcod)
-        └─> [M-itch/libcod](https://github.com/M-itch/libcod)
-            └─> [kungfooman/libcod](https://github.com/kungfooman/libcod) (original libcod implementation)
-```
+└─> <a href="https://github.com/damage99/libcod">damage99/libcod</a>
+    └─> <a href="https://github.com/voron00/libcod">voron00/libcod</a>
+        └─> <a href="https://github.com/M-itch/libcod">M-itch/libcod</a>
+            └─> <a href="https://github.com/kungfooman/libcod">kungfooman/libcod</a> (original libcod implementation)
+
+</pre>
 
 Changes provided by this repository:
 - Added `sv_limitLocalRcon` cvar to whitelist internal IPs at rcon rate limiting
