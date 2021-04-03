@@ -118,7 +118,7 @@ void gsc_utils_sendgameservercommand()
                      2 0 61 0 0 
                      0 0 48 1 0
         "d": (int, str) playSound(), ambientPlay()
-             (int, str) playFx()
+             (int, str) playFx(), playFxOnTag()
              (int, str) configstrings (e.g., when changing sv_voice)
              (int, int, int, float, float, float, float, int) setExpFog()
         "e": (str) error message, like iprintLn(), sent to active players on kick() etc.
