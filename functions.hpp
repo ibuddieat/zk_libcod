@@ -579,6 +579,15 @@ static const BG_WeaponDefs_t BG_WeaponDefs = (BG_WeaponDefs_t)0x080EB860;
 static const BG_WeaponDefs_t BG_WeaponDefs = (BG_WeaponDefs_t)0x080EB9A4;
 #endif
 
+typedef int (*BG_FindWeaponIndexForName_t)(const char *name);
+#if COD_VERSION == COD2_1_0
+static const BG_FindWeaponIndexForName_t BG_FindWeaponIndexForName = (BG_FindWeaponIndexForName_t)0x080E949C;
+#elif COD_VERSION == COD2_1_2
+static const BG_FindWeaponIndexForName_t BG_FindWeaponIndexForName = (BG_FindWeaponIndexForName_t)0x080EBA8C;
+#elif COD_VERSION == COD2_1_3
+static const BG_FindWeaponIndexForName_t BG_FindWeaponIndexForName = (BG_FindWeaponIndexForName_t)0x080EBBD0;
+#endif
+
 typedef int (*BG_GetNumWeapons_t)(void);
 #if COD_VERSION == COD2_1_0
 static const BG_GetNumWeapons_t BG_GetNumWeapons = (BG_GetNumWeapons_t)0x080E9322;
