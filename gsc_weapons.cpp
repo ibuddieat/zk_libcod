@@ -604,6 +604,64 @@ void gsc_weapons_setweaponhitlocmultiplier()
 	stackPushBool(qtrue);
 }
 
+void gsc_weapons_getmovespeedscale()
+{
+	int id;
+	char *name;
+
+	if (stackGetParams("s", &name)) 
+	{
+		id = BG_FindWeaponIndexForName(name);
+	}
+	else if ( ! stackGetParams("i", &id))
+	{
+		stackError("gsc_weapons_getmovespeedscale() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if (!isValidWeaponId(id))
+	{
+		stackError("gsc_weapons_getmovespeedscale() weapon index is out of bounds");
+		stackPushUndefined();
+		return;
+	}
+
+	WeaponDef_t *weapon = BG_WeaponDefs(id);
+
+	stackPushFloat(weapon->moveSpeedScale);
+}
+
+void gsc_weapons_setmovespeedscale()
+{
+	int id;
+    char *name;
+	float scale;
+    
+    if (stackGetParams("sf", &name, &scale)) 
+	{
+		id = BG_FindWeaponIndexForName(name);
+	}
+	else if ( ! stackGetParams("if", &id, &scale))
+	{
+		stackError("gsc_weapons_setmovespeedscale() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if (!isValidWeaponId(id))
+	{
+		stackError("gsc_weapons_setmovespeedscale() weapon index is out of bounds");
+		stackPushUndefined();
+		return;
+	}
+
+	WeaponDef_t *weapon = BG_WeaponDefs(id);
+
+	weapon->moveSpeedScale = scale;
+	stackPushBool(qtrue);
+}
+
 void gsc_weapons_getloadedweapons()
 {
 	int numweapons = BG_GetNumWeapons();
