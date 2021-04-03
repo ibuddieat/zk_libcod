@@ -571,9 +571,7 @@ int stackGetParamVector(int param, vec3_t value)
 	if (var->type != STACK_VECTOR)
 		return 0;
 
-	value[0] = *(float *)(var->u.vectorValue + 0);
-	value[1] = *(float *)(var->u.vectorValue + 1);
-	value[2] = *(float *)(var->u.vectorValue + 2);
+	VectorCopy(var->u.vectorValue, value);
 
 	return 1;
 }
