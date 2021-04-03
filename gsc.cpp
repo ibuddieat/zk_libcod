@@ -342,6 +342,7 @@ scr_method_t scriptMethods[] =
 	{"dropclient", gsc_player_dropclient, 0},
 	{"getcurrentoffhandslotammo", gsc_player_getcurrentoffhandslotammo, 0},
 	{"getweaponindexoffhand", gsc_player_getweaponindexoffhand, 0},
+	{"noclip", gsc_player_noclip, 0},
 #endif
 
 #ifdef EXTRA_METHODS_INC

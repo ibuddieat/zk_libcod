@@ -1006,4 +1006,36 @@ void gsc_player_getfps(scr_entref_t id)
 	stackPushInt(clientfps[id]);
 }
 
+void gsc_player_noclip(scr_entref_t id)
+{
+	char *noclip;
+
+	if ( ! stackGetParams("s", &noclip))
+	{
+		stackError("gsc_player_noclip() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if (id >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_noclip() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	client_t *client = &svs.clients[id];
+
+	if ( !Q_stricmp( noclip, "on" ) || atoi( noclip ) ) {
+		//client_t->gentity_t->gclient_s
+		client->gentity->client->noclip = qtrue;
+	} else if ( !Q_stricmp( noclip, "off" ) || !Q_stricmp( noclip, "0" ) ) {
+		client->gentity->client->noclip = qfalse;
+	} else {
+		client->gentity->client->noclip = !client->gentity->client->noclip;
+	}
+    
+	stackPushBool(qtrue);
+}
+
 #endif
