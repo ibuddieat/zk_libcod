@@ -174,21 +174,24 @@ scr_function_t scriptFunctions[] =
 
 #if COMPILE_UTILS == 1
 	{"dorcon", gsc_utils_dorconcmd, 0},
-	{"printf", gsc_utils_printf, 0},
-	{"getArrayKeys", gsc_utils_getarraykeys, 0},
-	{"getAscii", gsc_utils_getAscii, 0},
-	{"toUpper", gsc_utils_toupper, 0},
+	{"remotecommand", gsc_utils_remotecommand, 0},
+	{"cmd_executestring", gsc_utils_executestring, 0},
+	{"sendgameservercommand", gsc_utils_sendgameservercommand, 0},
 	/* {"system", gsc_utils_system, 0}, */
-	{"exponent", gsc_utils_exponent, 0},
-	{"round", gsc_utils_round, 0},
+    
+	{"printf", gsc_utils_printf, 0},
+	{"sprintf", gsc_utils_sprintf, 0},
+	{"printoutofband", gsc_utils_outofbandprint, 0}, //
+	{"putchar", gsc_utils_putchar, 0}, //
+    
+	{"getarraykeys", gsc_utils_getarraykeys, 0},
+	{"getascii", gsc_utils_getascii, 0},
+	{"toupper", gsc_utils_toupper, 0},
+
 	{"file_link", gsc_utils_file_link, 0},
 	{"file_unlink", gsc_utils_file_unlink, 0},
 	{"file_exists", gsc_utils_file_exists, 0},
 	{"FS_LoadDir", gsc_utils_FS_LoadDir, 0},
-	{"getType", gsc_utils_getType, 0},
-	{"float", gsc_utils_float, 0},
-	{"Cmd_ExecuteString", gsc_utils_ExecuteString, 0},
-	{"sendGameServerCommand", gsc_utils_sendgameservercommand, 0},
 	{"scandir", gsc_utils_scandir, 0},
 	/* {"fopen", gsc_utils_fopen, 0},
 	{"fread", gsc_utils_fread, 0},
@@ -196,18 +199,28 @@ scr_function_t scriptFunctions[] =
 	{"fclose", gsc_utils_fclose, 0},
 	{"fsize", gsc_utils_fsize, 0},
 	{"fremove", gsc_utils_fremove, 0}, */
-	{"sprintf", gsc_utils_sprintf, 0},
-	{"gettimes", gsc_utils_gettimes, 0},
-	{"G_FindConfigstringIndex", gsc_G_FindConfigstringIndex, 0},
-	{"G_FindConfigstringIndexOriginal", gsc_G_FindConfigstringIndexOriginal, 0},
+
+	{"getsysmilliseconds", gsc_utils_getsysmilliseconds, 0},
+	{"getsystemtime", gsc_utils_getsystemtime, 0}, //
+	{"getserverstarttime", gsc_utils_getserverstarttime, 0}, //
+	{"getlocaltime", gsc_utils_getlocaltime, 0}, //
+    
+	{"g_findconfigstringindexoriginal", gsc_g_findconfigstringindexoriginal, 0},
+	{"g_findconfigstringindex", gsc_g_findconfigstringindex, 0},
 	{"getconfigstring", gsc_get_configstring, 0},
 	{"setconfigstring", gsc_set_configstring, 0},
 	{"makelocalizedstring", gsc_make_localized_string, 0},
+    
+	{"float", gsc_utils_float, 0},
+	{"exponent", gsc_utils_exponent, 0},
+	{"round", gsc_utils_round, 0},
 	{"sqrt", gsc_utils_sqrt, 0},
-	{"sqrtInv", gsc_utils_sqrtInv, 0},
+	{"sqrtinv", gsc_utils_sqrtinv, 0},
+	{"vectorscale", gsc_utils_vectorscale, 0},
+    
 	{"getlasttestclientnumber", gsc_utils_getlasttestclientnumber, 0},
 	{"bullethiteffect", gsc_utils_bullethiteffect, 0},
-	{"vectorscale", gsc_utils_vectorscale, 0},
+	{"gettype", gsc_utils_gettype, 0},
 #endif
 
 #if COMPILE_WEAPONS == 1
@@ -235,7 +248,6 @@ scr_function_t scriptFunctions[] =
 	{"setweaponmovespeedscale", gsc_weapons_setmovespeedscale, 0},
 	{"getloadedweapons", gsc_weapons_getloadedweapons, 0},
 	{"getweapondisplayname", gsc_weapons_getweapondisplayname, 0},
-	
 #endif
 
 #ifdef EXTRA_FUNCTIONS_INC

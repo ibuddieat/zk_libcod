@@ -1,171 +1,6 @@
 #include "gsc_utils.hpp"
 
 #if COMPILE_UTILS == 1
-
-time_t c_Time_g, s_Time_g;
-static int starttime = time(&s_Time_g);
-void gsc_utils_gettimes()
-{
-	int type;
-	if (!stackGetParams("i", &type))
-		type = 0;
-	
-	int secs = type ? time(&c_Time_g) : starttime;
-	
-	struct tm *timeconv = localtime(type ? &c_Time_g : &s_Time_g);
-	char *time_asc = asctime(timeconv);
-	
-	time_asc[strlen(time_asc) - 1] = '\0';
-
-	Scr_MakeArray();
-	
-	Scr_AddInt(secs);
-	Scr_AddArray();
-	
-	Scr_AddString(time_asc);
-	Scr_AddArray();
-}
-
-void gsc_utils_dorconcmd()
-{	
-	char * sFrom;
-	int pointerMsg;
-	
-	if (!stackGetParams("si", &sFrom, &pointerMsg))
-	{
-		stackError("gsc_utils_dorconcmd() one or more arguments is undefined or has a wrong type");
-		return;
-	}
-	
-	netadr_t from;
-	
-	msg_t * msg = (msg_t *)pointerMsg;
-	NET_StringToAdr(sFrom, &from);
-		
-	#if COD_VERSION == COD2_1_0
-	int lasttime_offset = 0x0848B674;
-	#elif COD_VERSION == COD2_1_2
-	int lasttime_offset = 0x0849EB74;
-	#elif COD_VERSION == COD2_1_3
-	int lasttime_offset = 0x0849FBF4;
-	#endif
-
-	*(int *)lasttime_offset = 0;
-
-	SVC_RemoteCommand(from, msg);
-}
-
-void gsc_utils_getarraykeys()
-{
-	unsigned int arrIndex;
-
-	if (!stackGetParamObject(0, &arrIndex))
-	{
-		stackError("gsc_utils_getarraykeys() argument is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-
-	int arraysize = GetArraySize(arrIndex);
-
-	if (!arraysize)
-	{
-		stackError("gsc_utils_getarraykeys() got an empty or invalid array");
-		stackPushUndefined();
-		return;
-	}
-
-	unsigned int index = arrIndex;
-	unsigned int name;
-
-	stackPushArray();
-
-	for (int i = 0; i < arraysize; i++)
-	{
-		index = GetNextVariable(index);
-		name = GetVariableName(index);
-
-		if (name < 0x10000)
-		{
-			stackPushString(SL_ConvertToString(name));
-			stackPushArrayLast();
-		}
-	}
-}
-
-/*
-=================
-Sys_AnsiColorPrint
-Transform Q3 colour codes to ANSI escape sequences
-=================
-*/
-#define MAXPRINTMSG 1024
-#define ColorIndex(c)	(((c) - '0') & 0x07)
-#define Q_COLOR_ESCAPE	'^'
-#define Q_IsColorString(p)	((p) && *(p) == Q_COLOR_ESCAPE && *((p)+1) && isdigit(*((p)+1))) // ^[0-9]
-void Sys_AnsiColorPrint( const char *msg )
-{
-	static char buffer[ MAXPRINTMSG ];
-	int         length = 0;
-	static int  q3ToAnsi[ 8 ] =
-	{
-		30, // COLOR_BLACK
-		31, // COLOR_RED
-		32, // COLOR_GREEN
-		33, // COLOR_YELLOW
-		34, // COLOR_BLUE
-		36, // COLOR_CYAN
-		35, // COLOR_MAGENTA
-		0   // COLOR_WHITE
-	};
-
-	while( *msg )
-	{
-		if( Q_IsColorString( msg ) || *msg == '\n' )
-		{
-			// First empty the buffer
-			if( length > 0 )
-			{
-				buffer[ length ] = '\0';
-				fputs( buffer, stdout );
-				length = 0;
-			}
-
-			if( *msg == '\n' )
-			{
-				// Issue a reset and then the newline
-				fputs( "\033[0m\n", stdout );
-				msg++;
-			}
-			else
-			{
-				// Print the color code
-				snprintf( buffer, sizeof( buffer ), "\033[1;%dm", q3ToAnsi[ ColorIndex( *( msg + 1 ) ) ] );
-				fputs( buffer, stdout );
-				msg += 2;
-			}
-		}
-		else
-		{
-			if( length >= MAXPRINTMSG - 1 )
-				break;
-
-			buffer[ length ] = *msg;
-			length++;
-			msg++;
-		}
-	}
-
-	// Empty anything still left in the buffer
-	if( length > 0 )
-	{
-		buffer[ length ] = '\0';
-		fputs( buffer, stdout );
-		// Issue a reset at the end
-		fputs( "\033[0m", stdout );
-	}
-}
-
 int stackPrintParam(int param)
 {
 	if (param >= Scr_GetNumParam())
@@ -200,6 +35,158 @@ int stackPrintParam(int param)
 
 	printf("(%s)", stackGetParamTypeAsString(param));
 	return 0;
+}
+
+void gsc_utils_dorconcmd()
+{	
+	char * sFrom;
+	int pointerMsg;
+	
+	if (!stackGetParams("si", &sFrom, &pointerMsg))
+	{
+		stackError("gsc_utils_dorconcmd() one or more arguments is undefined or has a wrong type");
+		return;
+	}
+	
+	netadr_t from;
+	
+	msg_t * msg = (msg_t *)pointerMsg;
+	NET_StringToAdr(sFrom, &from);
+		
+	#if COD_VERSION == COD2_1_0
+	int lasttime_offset = 0x0848B674;
+	#elif COD_VERSION == COD2_1_2
+	int lasttime_offset = 0x0849EB74;
+	#elif COD_VERSION == COD2_1_3
+	int lasttime_offset = 0x0849FBF4;
+	#endif
+
+	*(int *)lasttime_offset = 0;
+
+	SVC_RemoteCommand(from, msg);
+}
+
+void gsc_utils_remotecommand()
+{
+	char * sFrom;
+	int pointerMsg;
+
+	if (!stackGetParams("si", &sFrom, &pointerMsg))
+	{
+		stackError("gsc_utils_remotecommand() one or more arguments is undefined or has a wrong type");
+		return;
+	}
+
+	netadr_t from;
+
+	msg_t * msg = (msg_t *)pointerMsg;
+	NET_StringToAdr(sFrom, &from);
+
+	RemoteCommand(from, msg);
+}
+
+void RemoteCommand(netadr_t from, msg_t *msg)
+{
+#if COD_VERSION == COD2_1_0
+	int lasttime_offset = 0x0848B674;
+#elif COD_VERSION == COD2_1_2
+	int lasttime_offset = 0x0849EB74;
+#elif COD_VERSION == COD2_1_3
+	int lasttime_offset = 0x0849FBF4;
+#endif
+
+	*(int *)lasttime_offset = 0;
+
+	SVC_RemoteCommand(from, msg);
+}
+
+void gsc_utils_executestring()
+{
+	char *str;
+
+	if ( ! stackGetParams("s", &str))
+	{
+		stackError("gsc_utils_executestring() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	Cmd_ExecuteString(str);
+	stackPushBool(qtrue);
+}
+
+void gsc_utils_sendgameservercommand()
+{
+	int clientNum;
+	char *message;
+
+	if ( ! stackGetParams("is", &clientNum, &message))
+	{
+		stackError("gsc_utils_sendgameservercommand() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+    
+    /*
+    Parsed on client in CG_ServerCommand (0x4d1b80 in 1.3)
+    
+    switch(cmd) {
+        "B": calls CG_MapRestart
+        "C": (int) switchToOffHand()
+        "D": (?, ?, ?) CG_DeactivateReverbCmd
+        "E": (?, ?, ?, ?) CG_SetChannelVolCmd
+        "F": (?, ?, ?) CG_DeactivateChannelVolCmd
+        "G": ?
+        "H": ?
+        "I": (str) giveWeapon() (str indicates type, includes item pickup stuff)
+        "J": (int) is sent on player disconnect (in SV_DropClient)
+        "K": closeIngameMenu()
+        "a": (int) switchToWeapon()
+        "b": (int, ...) scoreboard info (/+score)
+             b <num players> <?> <?> <player n id> <player n score> <player n ping> <player n deaths> <player n status icon id>
+             Example with 2 players:
+             b 2 0 0 1 3 29 0 0
+                     0 0 43 4 0
+             3 Players:
+             b 3 0 0 1 0 32 0 0
+                     2 0 61 0 0 
+                     0 0 48 1 0
+        "d": (int, str) playSound(), ambientPlay()
+             (int, str) playFx()
+             (int, str) configstrings (e.g., when changing sv_voice)
+             (int, int, int, float, float, float, float, int) setExpFog()
+        "e": (str) error message, like iprintLn(), sent to active players on kick() etc.
+        "f": (str) iprintLn()
+        "g": (str) iprintLnBold()
+        "h": (str) chat message (all)
+        "o": (str) MusicPlay()
+        "p": (int) MusicStop()
+        "s": (int) playLocalSound()
+        "t": (int) openMenu()
+        "u": closeMenu()
+        "i": (str) chat message (team)
+        "v": (str) vstr exec
+        "w": (str) disconnect message for the player that disconnected
+        default: Com_Printf("Unknown client game command: %s\n", cmd);
+    }
+    */
+
+	SV_GameSendServerCommand(clientNum, 0, message);
+	stackPushBool(qtrue);
+}
+
+void gsc_utils_system()
+{
+	char *cmd;
+
+	if ( ! stackGetParams("s",  &cmd))
+	{
+		stackError("gsc_utils_system() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushInt( system(cmd) );
 }
 
 void gsc_utils_printf()
@@ -304,20 +291,102 @@ void gsc_utils_sprintf()
 	stackPushString(result);
 }
 
-void gsc_utils_getAscii()
+void gsc_utils_outofbandprint()
+{
+	char * address;
+	char * msg;
+
+	if (!stackGetParams("ss", &address, &msg))
+	{
+		stackError("gsc_utils_outofbandprint() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	netadr_t from;
+	NET_StringToAdr(address, &from);
+	NET_OutOfBandPrint(NS_SERVER, from, msg);
+}
+
+
+void gsc_utils_putchar()
+{
+	int val;
+
+	if ( ! stackGetParams("i",  &val))
+	{
+		stackError("gsc_utils_putchar() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if (val < -127 || val > 127)
+	{
+		stackError("gsc_utils_putchar() character index is out of range");
+		stackPushUndefined();
+		return;
+	}
+
+	char s[2];
+
+	s[0] = val;
+	s[1] = '\0';
+
+	stackPushString( s );
+}
+
+void gsc_utils_getarraykeys()
+{
+	unsigned int arrIndex;
+
+	if (!stackGetParamObject(0, &arrIndex))
+	{
+		stackError("gsc_utils_getarraykeys() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	int arraysize = GetArraySize(arrIndex);
+
+	if (!arraysize)
+	{
+		stackError("gsc_utils_getarraykeys() got an empty or invalid array");
+		stackPushUndefined();
+		return;
+	}
+
+	unsigned int index = arrIndex;
+	unsigned int name;
+
+	stackPushArray();
+
+	for (int i = 0; i < arraysize; i++)
+	{
+		index = GetNextVariable(index);
+		name = GetVariableName(index);
+
+		if (name < 0x10000)
+		{
+			stackPushString(SL_ConvertToString(name));
+			stackPushArrayLast();
+		}
+	}
+}
+
+void gsc_utils_getascii()
 {
 	char *str;
 
 	if ( ! stackGetParams("s", &str))
 	{
-		stackError("gsc_utils_getAscii() argument is undefined or has a wrong type");
+		stackError("gsc_utils_getascii() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
 	if (!strlen(str))
 	{
-		stackError("gsc_utils_getAscii() string length is 0");
+		stackError("gsc_utils_getascii() string length is 0");
 		stackPushUndefined();
 		return;
 	}
@@ -344,49 +413,6 @@ void gsc_utils_toupper()
 	}
 
 	stackPushString( I_strupr(str) );
-}
-
-void gsc_utils_system()
-{
-	char *cmd;
-
-	if ( ! stackGetParams("s",  &cmd))
-	{
-		stackError("gsc_utils_system() argument is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-
-	stackPushInt( system(cmd) );
-}
-
-void gsc_utils_exponent()
-{
-	float basis;
-	float exponent;
-
-	if ( ! stackGetParams("ff", &basis, &exponent))
-	{
-		stackError("gsc_utils_exponent() one or more arguments is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-
-	stackPushFloat( pow(basis, exponent) );
-}
-
-void gsc_utils_round()
-{
-	float val;
-
-	if ( ! stackGetParams("f",  &val))
-	{
-		stackError("gsc_utils_round() argument is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-
-	stackPushFloat( roundf(val * 100) / 100 );
 }
 
 void gsc_utils_file_link()
@@ -446,129 +472,6 @@ void gsc_utils_FS_LoadDir()
 	}
 
 	FS_LoadDir(path, dir);
-	stackPushBool(qtrue);
-}
-
-void gsc_utils_getType()
-{
-	if (Scr_GetNumParam() == 0)
-	{
-		stackError("gsc_utils_getType() argument is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-
-	stackPushString( stackGetParamTypeAsString(0) );
-}
-
-void gsc_utils_float()
-{
-	if (Scr_GetNumParam() == 0)
-	{
-		stackError("gsc_utils_float() argument is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-
-	switch (stackGetParamType(0))
-	{
-	case STACK_STRING:
-		char *asstring;
-		stackGetParamString(0, &asstring);
-		stackPushFloat( atof(asstring) );
-		return;
-
-	case STACK_FLOAT:
-		float asfloat;
-		stackGetParamFloat(0, &asfloat);
-		stackPushFloat( asfloat );
-		return;
-
-	case STACK_INT:
-		int asinteger;
-		stackGetParamInt(0, &asinteger);
-		stackPushFloat( float(asinteger) );
-		return;
-
-	default:
-		stackError("gsc_utils_float() argument is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-}
-
-void gsc_utils_ExecuteString()
-{
-	char *str;
-
-	if ( ! stackGetParams("s", &str))
-	{
-		stackError("gsc_utils_ExecuteString() argument is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-
-	Cmd_ExecuteString(str);
-	stackPushBool(qtrue);
-}
-
-void gsc_utils_sendgameservercommand()
-{
-	int clientNum;
-	char *message;
-
-	if ( ! stackGetParams("is", &clientNum, &message))
-	{
-		stackError("gsc_utils_sendgameservercommand() one or more arguments is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-    
-    /*
-    Parsed on client in CG_ServerCommand (0x4d1b80 in 1.3)
-    
-    switch(cmd) {
-        "B": calls CG_MapRestart
-        "C": (int) switchToOffHand()
-        "D": (?, ?, ?) CG_DeactivateReverbCmd
-        "E": (?, ?, ?, ?) CG_SetChannelVolCmd
-        "F": (?, ?, ?) CG_DeactivateChannelVolCmd
-        "G": ?
-        "H": ?
-        "I": (str) giveWeapon() (str indicates type, includes item pickup stuff)
-        "J": (int) is sent on player disconnect (in SV_DropClient)
-        "K": closeIngameMenu()
-        "a": (int) switchToWeapon()
-        "b": (int, ...) scoreboard info (/+score)
-             b <num players> <?> <?> <player n id> <player n score> <player n ping> <player n deaths> <player n status icon id>
-             Example with 2 players:
-             b 2 0 0 1 3 29 0 0
-                     0 0 43 4 0
-             3 Players:
-             b 3 0 0 1 0 32 0 0
-                     2 0 61 0 0 
-                     0 0 48 1 0
-        "d": (int, str) playSound(), ambientPlay()
-             (int, str) playFx()
-             (int, str) configstrings (e.g., when changing sv_voice)
-             (int, int, int, float, float, float, float, int) setExpFog()
-        "e": (str) error message, like iprintLn(), sent to active players on kick() etc.
-        "f": (str) iprintLn()
-        "g": (str) iprintLnBold()
-        "h": (str) chat message (all)
-        "o": (str) MusicPlay()
-        "p": (int) MusicStop()
-        "s": (int) playLocalSound()
-        "t": (int) openMenu()
-        "u": closeMenu()
-        "i": (str) chat message (team)
-        "v": (str) vstr exec
-        "w": (str) disconnect message for the player that disconnected
-        default: Com_Printf("Unknown client game command: %s\n", cmd);
-    }
-    */
-
-	SV_GameSendServerCommand(clientNum, 0, message);
 	stackPushBool(qtrue);
 }
 
@@ -741,15 +644,49 @@ void gsc_utils_fremove()
 	stackPushInt(remove( file ));
 }
 
+void gsc_utils_getsysmilliseconds()
+{
+	stackPushInt(Sys_MilliSeconds());
+}
+
+void gsc_utils_getsystemtime()
+{
+	time_t timer;
+	stackPushInt( time(&timer) );
+}
+
+static int starttime = time(NULL);
+void gsc_utils_getserverstarttime()
+{
+	stackPushInt( starttime );
+}
+
+void gsc_utils_getlocaltime()
+{
+	time_t timer;
+	struct tm *timeinfo;
+
+	time(&timer);
+	timeinfo = localtime(&timer);
+
+	const char *timestring = asctime(timeinfo);
+	char stripped_time[128];
+
+	strncpy(stripped_time, timestring, sizeof(stripped_time));
+	stripped_time[strlen(timestring) - 1] = '\0';
+
+	stackPushString( stripped_time );
+}
+
 // http://code.metager.de/source/xref/RavenSoftware/jediacademy/code/game/g_utils.cpp#36
-void gsc_G_FindConfigstringIndexOriginal()
+void gsc_g_findconfigstringindexoriginal()
 {
 	char *name;
 	int min, max, create;
 
 	if ( ! stackGetParams("siii", &name, &min, &max, &create))
 	{
-		stackError("gsc_G_FindConfigstringIndexOriginal() one or more arguments is undefined or has a wrong type");
+		stackError("gsc_g_findconfigstringindexoriginal() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
@@ -758,14 +695,14 @@ void gsc_G_FindConfigstringIndexOriginal()
 }
 
 // simple version, without crash
-void gsc_G_FindConfigstringIndex()
+void gsc_g_findconfigstringindex()
 {
 	char *name;
 	int min, max;
 
 	if ( ! stackGetParams("sii", &name, &min, &max))
 	{
-		stackError("gsc_G_FindConfigstringIndex() one or more arguments is undefined or has a wrong type");
+		stackError("gsc_g_findconfigstringindex() one or more arguments is undefined or has a wrong type");
 		return;
 	}
 
@@ -821,41 +758,6 @@ void gsc_set_configstring()
 	stackPushBool(qtrue);
 }
 
-void gsc_utils_sqrt()
-{
-	float x;
-
-	if ( ! stackGetParams("f", &x))
-	{
-		stackError("gsc_utils_sqrt() argument is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-
-	stackPushFloat(sqrt(x));
-}
-
-void gsc_utils_sqrtInv()
-{
-	float x;
-
-	if ( ! stackGetParams("f", &x))
-	{
-		stackError("gsc_utils_sqrtInv() argument is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-
-	// http://www.beyond3d.com/content/articles/8/
-	float xhalf = 0.5f*x;
-	int i = *(int*)&x;
-	i = 0x5f3759df - (i>>1);
-	x = *(float*)&i;
-	x = x*(1.5f - xhalf*x*x);
-
-	stackPushFloat(x);
-}
-
 void gsc_make_localized_string()
 {
 	char *str;
@@ -874,6 +776,124 @@ void gsc_make_localized_string()
 
 	var = &scrVmPub.top[-param];
 	var->type = STACK_LOCALIZED_STRING;
+}
+
+void gsc_utils_float()
+{
+	if (Scr_GetNumParam() == 0)
+	{
+		stackError("gsc_utils_float() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	switch (stackGetParamType(0))
+	{
+	case STACK_STRING:
+		char *asstring;
+		stackGetParamString(0, &asstring);
+		stackPushFloat( atof(asstring) );
+		return;
+
+	case STACK_FLOAT:
+		float asfloat;
+		stackGetParamFloat(0, &asfloat);
+		stackPushFloat( asfloat );
+		return;
+
+	case STACK_INT:
+		int asinteger;
+		stackGetParamInt(0, &asinteger);
+		stackPushFloat( float(asinteger) );
+		return;
+
+	default:
+		stackError("gsc_utils_float() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+}
+
+void gsc_utils_exponent()
+{
+	float basis;
+	float exponent;
+
+	if ( ! stackGetParams("ff", &basis, &exponent))
+	{
+		stackError("gsc_utils_exponent() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushFloat( pow(basis, exponent) );
+}
+
+void gsc_utils_round()
+{
+	float val;
+
+	if ( ! stackGetParams("f",  &val))
+	{
+		stackError("gsc_utils_round() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushFloat( roundf(val * 100) / 100 );
+}
+
+void gsc_utils_sqrt()
+{
+	float x;
+
+	if ( ! stackGetParams("f", &x))
+	{
+		stackError("gsc_utils_sqrt() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushFloat(sqrt(x));
+}
+
+void gsc_utils_sqrtinv()
+{
+	float x;
+
+	if ( ! stackGetParams("f", &x))
+	{
+		stackError("gsc_utils_sqrtinv() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	// http://www.beyond3d.com/content/articles/8/
+	float xhalf = 0.5f*x;
+	int i = *(int*)&x;
+	i = 0x5f3759df - (i>>1);
+	x = *(float*)&i;
+	x = x*(1.5f - xhalf*x*x);
+
+	stackPushFloat(x);
+}
+
+void gsc_utils_vectorscale()
+{
+	vec3_t vector;
+	float scale;
+
+	if ( ! stackGetParams("vf", &vector, &scale))
+	{
+		stackError("gsc_utils_vectorscale() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	vec3_t out;
+
+	VectorScale(vector, scale, out);
+	stackPushVector(out);
 }
 
 void gsc_utils_getlasttestclientnumber()
@@ -914,22 +934,15 @@ void gsc_utils_bullethiteffect()
 	stackPushBool(qtrue);
 }
 
-void gsc_utils_vectorscale()
+void gsc_utils_gettype()
 {
-	vec3_t vector;
-	float scale;
-
-	if ( ! stackGetParams("vf", &vector, &scale))
+	if (Scr_GetNumParam() == 0)
 	{
-		stackError("gsc_utils_vectorscale() one or more arguments is undefined or has a wrong type");
+		stackError("gsc_utils_gettype() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	vec3_t out;
-
-	VectorScale(vector, scale, out);
-	stackPushVector(out);
+	stackPushString( stackGetParamTypeAsString(0) );
 }
-
 #endif
