@@ -1081,14 +1081,32 @@ struct gclient_s
 	int lastActivateTime;
 }; // verified
 
-typedef int turretInfo_s;
+struct turretInfo_s
+{
+	int inuse;
+	int flags;
+	int fireTime;
+	vec2_t arcmin;
+	vec2_t arcmax;
+	float dropPitch;
+	int stance;
+	int prevStance;
+	int fireSndDelay;
+	vec3_t userOrigin;
+	float playerSpread;
+	int triggerDown;
+	char fireSnd;
+	char fireSndPlayer;
+	char stopSnd;
+	char stopSndPlayer;
+};
 
 struct gentity_s
 {
 	entityState_t s;
 	entityShared_t r;
 	struct gclient_s *client; // 344
-	turretInfo_s *pTurretInfo;
+	turretInfo_s *pTurretInfo; // 348
 	byte physicsObject; // 352
 	byte takedamage; // 353
 	byte active; // 354

@@ -1011,4 +1011,13 @@ static const BG_EvaluateTrajectory_t BG_EvaluateTrajectory = (BG_EvaluateTraject
 static const BG_EvaluateTrajectory_t BG_EvaluateTrajectory = (BG_EvaluateTrajectory_t)0x080DF5D4;
 #endif
 
+typedef void (*Scr_Notify_t)(gentity_t *ent, unsigned short constString, unsigned int numArgs);
+#if COD_VERSION == COD2_1_0
+static const Scr_Notify_t Scr_Notify = (Scr_Notify_t)0x08118E4E;
+#elif COD_VERSION == COD2_1_2
+static const Scr_Notify_t Scr_Notify = (Scr_Notify_t)0x0811B182;
+#elif COD_VERSION == COD2_1_3
+static const Scr_Notify_t Scr_Notify = (Scr_Notify_t)0x0811B2DE;
+#endif
+
 #endif
