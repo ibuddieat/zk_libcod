@@ -5,10 +5,10 @@ This extension has its focus on Call of Duty&reg; 2 in version 1.3. Other versio
 Fork path:
 ```
 https://github.com/ibuddieat/zk_libcod (this repository)
-└─> https://github.com/damage99/libcod
-    └─> https://github.com/voron00/libcod
-        └─> https://github.com/M-itch/libcod
-            └─> https://github.com/kungfooman/libcod (original libcod implementation)
+└─> [damage99/libcod](https://github.com/damage99/libcod)
+    └─> [voron00/libcod](https://github.com/voron00/libcod)
+        └─> [M-itch/libcod](https://github.com/M-itch/libcod)
+            └─> [kungfooman/libcod](https://github.com/kungfooman/libcod) (original libcod implementation)
 ```
 
 Changes provided by this repository:
