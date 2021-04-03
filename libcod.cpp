@@ -634,24 +634,21 @@ int hook_BG_IsWeaponValid(int a1, int a2)
 
 char *custom_va(const char *format, ...)
 {
-	char *s;
+	struct va_info_t *info;
+	int index;
 	va_list va;
-	int v1;
-	signed int v3;
 
-	v1 = Sys_GetValue(1);
-	s = (char *)(v1 + (*(int *)(v1 + 2048) << 10));
-	v3 = *(int *)(v1 + 2048) + 1;
-	*(int *)(v1 + 2048) = v3 / 2;
-	*(int *)(v1 + 2048) = v3 - 2 * *(int *)(v1 + 2048);
+	info = (va_info_t*)Sys_GetValue(1);
+	index = info->index;
+	info->index = (info->index + 1) % MAX_VASTRINGS;
 
 	va_start(va, format);
-	vsnprintf(s, COD2_MAX_STRINGLENGTH, format, va);
+	vsnprintf(info->va_string[index], sizeof(info->va_string[0]), format, va);
 	va_end(va);
 
-	s[COD2_MAX_STRINGLENGTH - 1] = '\0';
+	info->va_string[index][1023] = 0;
 
-	return s;
+	return info->va_string[index];
 }
 
 void hook_SV_VerifyIwds_f(client_t *cl)
