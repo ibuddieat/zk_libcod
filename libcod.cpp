@@ -37,6 +37,7 @@ cHook *hook_init_opcode;
 cHook *hook_add_opcode;
 cHook *hook_print_codepos;
 cHook *hook_touch_item;
+cHook *hook_g_tempentity;
 
 int codecallback_remotecommand = 0;
 int codecallback_playercommand = 0;
@@ -47,6 +48,7 @@ int codecallback_client_spam = 0;
 int codecallback_meleebutton = 0;
 int codecallback_usebutton = 0;
 int codecallback_attackbutton = 0;
+int codecallback_g_tempentity = 0;
 
 /* ... ... ... */
 
@@ -129,6 +131,7 @@ int hook_codscript_gametype_scripts()
 	codecallback_meleebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MeleeButton", 0);
  	codecallback_usebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_UseButton", 0);
 	codecallback_attackbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_AttackButton", 0);
+	codecallback_g_tempentity = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_TempEntity", 0);
 
 	int (*sig)();
 	*(int *)&sig = hook_gametype_scripts->from;
@@ -197,6 +200,29 @@ gentity_t* fire_grenade(gentity_t *self, vec3_t start, vec3_t dir, int weapon, i
 	}
 
 	return grenade;
+}
+
+gentity_t* custom_G_TempEntity(vec3_t origin, int event)
+{
+	hook_g_tempentity->unhook();
+
+	gentity_t* (*sig)(vec3_t origin, int event);
+	*(int *)&sig = hook_g_tempentity->from;
+
+	gentity_t* tempEntity = sig(origin, event);
+
+	hook_g_tempentity->hook();
+
+	if (codecallback_g_tempentity)
+	{
+		stackPushEntity(tempEntity);
+		stackPushInt(event);
+		stackPushVector(origin);
+		short ret = Scr_ExecThread(codecallback_g_tempentity, 3);
+		Scr_FreeThread(ret);
+	}
+
+	return tempEntity;
 }
 
 void hook_ClientCommand(int clientNum)
@@ -1621,6 +1647,8 @@ public:
 		hook_fire_grenade->hook();
 		hook_touch_item = new cHook(0x08105C80, int(touch_item));
 		hook_touch_item->hook();
+		hook_g_tempentity = new cHook(0x0811EFC4, (int)custom_G_TempEntity);
+		hook_g_tempentity->hook();
 
 #if COMPILE_PLAYER == 1
 		hook_play_movement = new cHook(0x08090DAC, (int)play_movement);
