@@ -1055,4 +1055,18 @@ void gsc_player_noclip(scr_entref_t id)
 	stackPushBool(qtrue);
 }
 
+void gsc_player_getinactivitytime(scr_entref_t id)
+{
+	if (id >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_getinactivitytime() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	client_t *client = &svs.clients[id];
+    
+	stackPushInt(client->gentity->client->inactivityTime);
+}
+
 #endif

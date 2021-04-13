@@ -360,6 +360,7 @@ scr_method_t scriptMethods[] =
 	{"getcurrentoffhandslotammo", gsc_player_getcurrentoffhandslotammo, 0},
 	{"getweaponindexoffhand", gsc_player_getweaponindexoffhand, 0},
 	{"noclip", gsc_player_noclip, 0},
+	{"getinactivitytime", gsc_player_getinactivitytime, 0},
 #endif
 
 #ifdef EXTRA_METHODS_INC
