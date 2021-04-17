@@ -247,6 +247,8 @@ scr_function_t scriptFunctions[] =
 	{"setweaponreloademptytime", gsc_weapons_setweaponreloademptytime, 0},
 	{"getweaponcookable", gsc_weapons_getweaponcookable, 0},
  	{"setweaponcookable", gsc_weapons_setweaponcookable, 0},
+	{"getweaponfusetime", gsc_weapons_getweaponfusetime, 0},
+	{"setweaponfusetime", gsc_weapons_setweaponfusetime, 0},
 	{"getweaponhitlocmultiplier", gsc_weapons_getweaponhitlocmultiplier, 0},
 	{"setweaponhitlocmultiplier", gsc_weapons_setweaponhitlocmultiplier, 0},
 	{"getweaponmovespeedscale", gsc_weapons_getmovespeedscale, 0},

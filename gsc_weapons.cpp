@@ -255,6 +255,33 @@ void gsc_weapons_getweaponcookable()
 	stackPushInt(weapon->bCookOffHold);
 }
 
+void gsc_weapons_getweaponfusetime()
+{
+	int id;
+	char *name;
+
+	if (stackGetParams("s", &name)) 
+	{
+		id = BG_FindWeaponIndexForName(name);
+	}
+	else if ( ! stackGetParams("i", &id))
+	{
+		stackError("gsc_weapons_getweaponfusetime() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if (!isValidWeaponId(id))
+	{
+		stackError("gsc_weapons_getweaponfusetime() weapon index is out of bounds");
+		stackPushUndefined();
+		return;
+	}
+
+	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	stackPushInt(weapon->fuseTime);
+}
+
 void gsc_weapons_setweapondamage()
 {
 	int id;
@@ -501,7 +528,7 @@ void gsc_weapons_setweaponcookable()
 	char *name;
 	int cookable;
 
-	if (stackGetParams("si", &name, &time)) 
+	if (stackGetParams("si", &name, &cookable)) 
 	{
 		id = BG_FindWeaponIndexForName(name);
 	}
@@ -521,6 +548,36 @@ void gsc_weapons_setweaponcookable()
 
 	WeaponDef_t *weapon = BG_WeaponDefs(id);
 	weapon->bCookOffHold = cookable;
+
+	stackPushBool(qtrue);
+}
+
+void gsc_weapons_setweaponfusetime()
+{
+	int id;
+	char *name;
+	int time;
+
+	if (stackGetParams("si", &name, &time)) 
+	{
+		id = BG_FindWeaponIndexForName(name);
+	}
+	else if ( ! stackGetParams("ii", &id, &time))
+	{
+		stackError("gsc_weapons_setweaponfusetime() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if (!isValidWeaponId(id))
+	{
+		stackError("gsc_weapons_setweaponfusetime() weapon index is out of bounds");
+		stackPushUndefined();
+		return;
+	}
+
+	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	weapon->fuseTime = time;
 
 	stackPushBool(qtrue);
 }

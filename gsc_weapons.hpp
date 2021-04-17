@@ -21,6 +21,8 @@ void gsc_weapons_getweaponreloademptytime();
 void gsc_weapons_setweaponreloademptytime();
 void gsc_weapons_getweaponcookable();
 void gsc_weapons_setweaponcookable();
+void gsc_weapons_getweaponfusetime();
+void gsc_weapons_setweaponfusetime();
 void gsc_weapons_getweaponhitlocmultiplier();
 void gsc_weapons_setweaponhitlocmultiplier();
 void gsc_weapons_getmovespeedscale();
