@@ -20,7 +20,7 @@ Changes provided by this repository:
   * `<player> noclip("on|off|toggle");`
   * `<player> getinactivitytime();`
   * `getweaponfusetime(<weapon name>);`
-  * `getweaponfusetime(<weapon name>, <time in ms>);`
+  * `setweaponfusetime(<weapon name>, <time in ms>);`
 - Removed `con_coloredPrints` as it may break incoming rcon commands (-> issues with BigBrotherBot)
 - Disabled several functions that would make it easy to harm the server with malicious map scripts
 
