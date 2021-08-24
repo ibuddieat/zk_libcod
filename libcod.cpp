@@ -215,9 +215,10 @@ gentity_t* custom_G_TempEntity(vec3_t origin, int event)
 
 	if (codecallback_g_tempentity)
 	{
+		stackPushEntity(tempEntity);
 		stackPushInt(event);
 		stackPushVector(origin);
-		short ret = Scr_ExecThread(codecallback_g_tempentity, 2);
+		short ret = Scr_ExecThread(codecallback_g_tempentity, 3);
 		Scr_FreeThread(ret);
 	}
 
@@ -1646,8 +1647,8 @@ public:
 		hook_fire_grenade->hook();
 		hook_touch_item = new cHook(0x08105C80, int(touch_item));
 		hook_touch_item->hook();
-		hook_g_tempentity = new cHook(0x0811EFC4, (int)custom_G_TempEntity);
-		hook_g_tempentity->hook();
+		//hook_g_tempentity = new cHook(0x0811EFC4, (int)custom_G_TempEntity);
+		//hook_g_tempentity->hook();
 
 #if COMPILE_PLAYER == 1
 		hook_play_movement = new cHook(0x08090DAC, (int)play_movement);
