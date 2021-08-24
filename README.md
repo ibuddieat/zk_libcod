@@ -16,6 +16,8 @@ Changes provided by this repository:
 - Added `sv_limitLocalRcon` cvar to whitelist internal IPs at rcon rate limiting
 - Added `custom_SV_DropClient` function to disable bot disconnect messages
 - Added `custom_SV_SendClientGameState` function for miscellaneous game engine tests
+- Added script callback functions for:
+  * `G_TempEntity()`
 - Added script code functions:
   * `<player> noclip("on|off|toggle");`
   * `<player> getinactivitytime();`

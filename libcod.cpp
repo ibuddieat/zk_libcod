@@ -215,10 +215,9 @@ gentity_t* custom_G_TempEntity(vec3_t origin, int event)
 
 	if (codecallback_g_tempentity)
 	{
-		stackPushEntity(tempEntity);
 		stackPushInt(event);
 		stackPushVector(origin);
-		short ret = Scr_ExecThread(codecallback_g_tempentity, 3);
+		short ret = Scr_ExecThread(codecallback_g_tempentity, 2);
 		Scr_FreeThread(ret);
 	}
 
