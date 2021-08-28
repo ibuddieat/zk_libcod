@@ -27,9 +27,18 @@ Changes provided by this repository:
 - Disabled several functions that would make it easy to harm the server with malicious map scripts
 
 Build requirements:
+- gcc and g++ (with multilib on 64-bit x86 operating systems)
+- libstdc++5
+- MySQL client (if required by functionality)
+
+Requirements installation (for Ubuntu 18.04.5 LTS):
 ```
-g++ (multilib for x64)
-MySQL (optional)
+dpkg --add-architecture i386
+apt update
+apt install gcc-multilib
+apt install g++-multilib
+apt install libstdc++5:i386
+apt install libmysqlclient-dev:i386
 ```
 
 Creating the binary (written to `./bin`):
