@@ -3,6 +3,9 @@
 
 #include "gsc.hpp"
 
+void gsc_weapons_init();
+void gsc_weapons_free();
+int hook_findWeaponIndex(char* weapon);
 void gsc_weapons_getweaponmaxammo();
 void gsc_weapons_setweaponmaxammo();
 void gsc_weapons_getweaponclipsize();
@@ -29,5 +32,8 @@ void gsc_weapons_getmovespeedscale();
 void gsc_weapons_setmovespeedscale();
 void gsc_weapons_getloadedweapons();
 void gsc_weapons_getweapondisplayname();
+void gsc_weapons_resetignoredweapons();
+void gsc_weapons_ignoreweapon();
+void gsc_weapons_setdefaultweapon();
 
 #endif

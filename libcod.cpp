@@ -1494,6 +1494,7 @@ public:
 		cracking_hook_call(0x0808F134, (int)hook_ClientUserinfoChanged);
 		cracking_hook_call(0x0807059F, (int)Scr_GetCustomFunction);
 		cracking_hook_call(0x080707C3, (int)Scr_GetCustomMethod);
+        cracking_hook_call(0x080E9524, (int)hook_findWeaponIndex);
 
 #if COMPILE_PLAYER == 1
 		cracking_hook_call(0x0808E18F, (int)hook_gamestate_info);
@@ -1560,6 +1561,7 @@ public:
 		cracking_hook_call(0x08070D3F, (int)Scr_GetCustomMethod);
 		cracking_hook_call(0x0808227A, (int)hook_scriptError);
 		cracking_hook_call(0x0808FCBE, (int)hook_bad_printf);
+        cracking_hook_call(0x080EBB14, (int)hook_findWeaponIndex);
 
 #if COMPILE_PLAYER == 1
 		cracking_hook_call(0x0808F533, (int)hook_gamestate_info);
@@ -1624,6 +1626,7 @@ public:
 		cracking_hook_call(0x08070E0B, (int)Scr_GetCustomMethod);
 		cracking_hook_call(0x08082346, (int)hook_scriptError);
 		cracking_hook_call(0x0808FD52, (int)hook_bad_printf);
+        cracking_hook_call(0x080EBC58, (int)hook_findWeaponIndex);
         
 #if COMPILE_PLAYER == 1
 		cracking_hook_call(0x0808F5C7, (int)hook_gamestate_info);
@@ -1681,12 +1684,13 @@ public:
 #endif
 
 #endif
-
+        gsc_weapons_init();
 		printf("> [PLUGIN LOADED]\n");
 	}
 
 	~cCallOfDuty2Pro()
 	{
+        gsc_weapons_free();
 		printf("> [PLUGIN UNLOADED]\n");
 	}
 };

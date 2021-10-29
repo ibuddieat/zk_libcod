@@ -766,4 +766,120 @@ void gsc_weapons_getweapondisplayname()
 	var->type = STACK_LOCALIZED_STRING;
 }
 
+#define MAX_WEAPON_IGNORE_SIZE 20
+#define MAX_WEAPON_NAME_SIZE 32
+char* defaultweapon_mp = (char*)malloc(MAX_WEAPON_NAME_SIZE);
+char ignoredWeapons[MAX_WEAPON_IGNORE_SIZE][MAX_WEAPON_NAME_SIZE];
+int ignoredWeaponCount = 0;
+
+void gsc_weapons_init() {
+	strcpy(defaultweapon_mp, "defaultweapon_mp");
+	defaultweapon_mp[strlen(defaultweapon_mp)] = '\0';
+}
+
+void gsc_weapons_free() {
+	free(defaultweapon_mp);
+}
+
+bool isOnIgnoreList(char* weapon) {
+	if(ignoredWeaponCount == 0)
+		return false;
+	
+	for(int i=0;i<ignoredWeaponCount;i++) {
+		if(strcmp(ignoredWeapons[i], weapon) == 0)
+			return true;
+	}
+	
+	return false;
+}
+
+int hook_findWeaponIndex(char* weapon) {
+	typedef int (*findIndexWeapon_t)(char* weapon);
+	#if COD_VERSION == COD2_1_0
+		findIndexWeapon_t findIndexWeapon = (findIndexWeapon_t)0x080E949C;
+	#elif COD_VERSION == COD2_1_2
+		findIndexWeapon_t findIndexWeapon = (findIndexWeapon_t)0x080EBA8C;
+	#elif COD_VERSION == COD2_1_3
+		findIndexWeapon_t findIndexWeapon = (findIndexWeapon_t)0x080EBBD0;
+	#else
+		#warning findIndexWeapon_t findIndexWeapon = NULL;
+		findIndexWeapon_t findIndexWeapon = (findIndexWeapon_t)NULL;
+	#endif
+	
+	if(isOnIgnoreList(weapon))
+		return findIndexWeapon(defaultweapon_mp);
+	else
+		return findIndexWeapon(weapon);
+}
+
+void gsc_weapons_resetignoredweapons() {
+	ignoredWeaponCount = 0;
+}
+
+void gsc_weapons_ignoreweapon() {
+	char* weapon;
+	if ( ! stackGetParams("s", &weapon)) {
+		printf("scriptengine> wrongs args for: ignoreWeapon(weapon)\n");
+		stackPushUndefined();
+		return;
+	}
+	
+	if(strlen(weapon) > MAX_WEAPON_NAME_SIZE - 1) {
+		printf("scriptengine> weapon name is too long: ignoreWeapon(weapon)\n");
+		stackPushUndefined();
+		return;
+	}
+	
+	if(ignoredWeaponCount >= MAX_WEAPON_IGNORE_SIZE) {
+		printf("scriptengine> Exceeded MAX_WEAPON_IGNORE_SIZE %d\n", MAX_WEAPON_IGNORE_SIZE);
+		stackPushUndefined();
+		return;
+	}
+	
+	strcpy(ignoredWeapons[ignoredWeaponCount], weapon);
+	ignoredWeapons[ignoredWeaponCount][strlen(weapon)] = '\0';
+	ignoredWeaponCount++;
+	stackPushInt(1);
+}
+
+void gsc_weapons_setdefaultweapon() {
+	char* weapon;
+	if ( ! stackGetParams("s", &weapon)) {
+		printf("scriptengine> wrongs args for: setDefaultWeapon(weapon)\n");
+		stackPushUndefined();
+		return;
+	}
+	
+	if(strlen(weapon) > MAX_WEAPON_NAME_SIZE - 1) {
+		printf("scriptengine> weapon name is too long: setDefaultWeapon(weapon)\n");
+		stackPushUndefined();
+		return;
+	}
+	
+	if(strcmp(defaultweapon_mp, weapon) == 0) {
+		stackPushInt(2);
+		return;
+	}
+	
+	strcpy(defaultweapon_mp, weapon);
+	defaultweapon_mp[strlen(weapon)] = '\0';
+	#if COD_VERSION == COD2_1_0
+		memcpy((void*)0x0811E929, &defaultweapon_mp, 4); // default
+		memcpy((void*)0x080E8AAD, &defaultweapon_mp, 4); // not found
+		//memcpy((void*)0x080F014D, &defaultweapon_mp, 4); // not found backup
+		memcpy((void*)0x080E928A, &defaultweapon_mp, 4); // unknown
+	#elif COD_VERSION == COD2_1_2
+		memcpy((void*)0x08120C5A, &defaultweapon_mp, 4); // default
+		memcpy((void*)0x080EB09D, &defaultweapon_mp, 4); // not found
+		//memcpy((void*)0x080F273D, &defaultweapon_mp, 4); // not found backup
+		memcpy((void*)0x080EB87A, &defaultweapon_mp, 4); // unknown
+	#elif COD_VERSION == COD2_1_3
+		memcpy((void*)0x08120DB9, &defaultweapon_mp, 4); // default
+		memcpy((void*)0x080EB1E1, &defaultweapon_mp, 4); // not found
+		//memcpy((void*)0x080F2881, &defaultweapon_mp, 4); // not found backup
+		memcpy((void*)0x080EB9BE, &defaultweapon_mp, 4); // unknown
+	#endif
+	stackPushInt(1);
+}
+
 #endif

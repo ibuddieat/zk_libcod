@@ -255,6 +255,9 @@ scr_function_t scriptFunctions[] =
 	{"setweaponmovespeedscale", gsc_weapons_setmovespeedscale, 0},
 	{"getloadedweapons", gsc_weapons_getloadedweapons, 0},
 	{"getweapondisplayname", gsc_weapons_getweapondisplayname, 0},
+	{"resetignoredweapons", gsc_weapons_resetignoredweapons, 0},
+	{"ignoreweapon", gsc_weapons_ignoreweapon, 0},
+	{"setdefaultweapon", gsc_weapons_setdefaultweapon, 0},
 #endif
 
 #ifdef EXTRA_FUNCTIONS_INC
