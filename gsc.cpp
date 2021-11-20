@@ -207,8 +207,7 @@ scr_function_t scriptFunctions[] =
 	{"fclose", gsc_utils_fclose, 0},
 	{"fsize", gsc_utils_fsize, 0},
 	{"fremove", gsc_utils_fremove, 0}, */
-
-	{"getsysmilliseconds", gsc_utils_getsysmilliseconds, 0},
+    
 	{"getsystemtime", gsc_utils_getsystemtime, 0}, //
 	{"getserverstarttime", gsc_utils_getserverstarttime, 0}, //
 	{"getlocaltime", gsc_utils_getlocaltime, 0}, //

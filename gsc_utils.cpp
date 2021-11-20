@@ -611,11 +611,6 @@ void gsc_utils_fremove()
 	stackPushInt(remove( file ));
 }
 
-void gsc_utils_getsysmilliseconds()
-{
-	stackPushInt((int)Sys_Milliseconds());
-}
-
 void gsc_utils_getsystemtime()
 {
 	time_t timer;

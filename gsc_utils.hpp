@@ -30,7 +30,6 @@ void gsc_utils_fclose();
 void gsc_utils_fsize();
 void gsc_utils_fremove();
 
-void gsc_utils_getsysmilliseconds();
 void gsc_utils_getsystemtime();
 void gsc_utils_getserverstarttime();
 void gsc_utils_getlocaltime();
