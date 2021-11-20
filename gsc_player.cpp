@@ -38,7 +38,6 @@ void gsc_player_item_pickup(scr_entref_t id)
 	}
 
 	int canPickup;
-	
 	if ( ! stackGetParams("i", &canPickup))
 	{
 		stackError("gsc_player_item_pickup() one or more arguments is undefined or has a wrong type");
@@ -47,7 +46,6 @@ void gsc_player_item_pickup(scr_entref_t id)
 	}
 	
 	extern int player_sw_pickup[MAX_CLIENTS];
-	
 	player_sw_pickup[id] = canPickup;
 	stackPushBool(qtrue);
 }
@@ -118,16 +116,15 @@ void gsc_player_velocity_set(scr_entref_t id)
 		return;
 	}
 
-	gentity_t *entity = &g_entities[id];
-
-	if (entity->client == NULL)
+	if (id >= MAX_CLIENTS)
 	{
 		stackError("gsc_player_velocity_set() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
 
-	VectorCopy(velocity, entity->client->ps.velocity);
+	playerState_t *ps = SV_GameClientNum(id);
+	VectorCopy(velocity, ps->velocity);
 	stackPushBool(qtrue);
 }
 
@@ -142,35 +139,40 @@ void gsc_player_velocity_add(scr_entref_t id)
 		return;
 	}
 
-	gentity_t *entity = &g_entities[id];
-
-	if (entity->client == NULL)
+	if (id >= MAX_CLIENTS)
 	{
 		stackError("gsc_player_velocity_add() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
 
-	VectorAdd(entity->client->ps.velocity, velocity, entity->client->ps.velocity);
+	playerState_t *ps = SV_GameClientNum(id);
+	VectorAdd(ps->velocity, velocity, ps->velocity);
 	stackPushBool(qtrue);
 }
 
 void gsc_player_velocity_get(scr_entref_t id)
 {
-	gentity_t *entity = &g_entities[id];
-
-	if (entity->client == NULL)
+	if (id >= MAX_CLIENTS)
 	{
 		stackError("gsc_player_velocity_get() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
 
-	stackPushVector(entity->client->ps.velocity);
+	playerState_t *ps = SV_GameClientNum(id);
+	stackPushVector(ps->velocity);
 }
 
 void gsc_player_clientuserinfochanged(scr_entref_t id)
 {
+	if (id >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_clientuserinfochanged() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+    
 	ClientUserinfoChanged(id);
 	stackPushBool(qtrue);
 }
@@ -194,7 +196,6 @@ void gsc_player_get_userinfo(scr_entref_t id)
 	}
 
 	client_t *client = &svs.clients[id];
-
 	char *val = Info_ValueForKey(client->userinfo, key);
 
 	if (strlen(val))
@@ -222,7 +223,6 @@ void gsc_player_set_userinfo(scr_entref_t id)
 	}
 
 	client_t *client = &svs.clients[id];
-
 	Info_SetValueForKey(client->userinfo, key, value);
 	stackPushBool(qtrue);
 }
@@ -476,6 +476,13 @@ void gsc_player_getping(scr_entref_t id)
 
 void gsc_player_clientcommand(scr_entref_t id)
 {
+    if (id >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_clientcommand() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+    
 	ClientCommand(id);
 	stackPushBool(qtrue);
 }
@@ -637,50 +644,41 @@ void gsc_player_resetnextreliabletime(scr_entref_t id)
 
 void gsc_player_ismantling(scr_entref_t id)
 {
-	gentity_t *entity = &g_entities[id];
-
-	if (entity->client == NULL)
+	if (id >= MAX_CLIENTS)
 	{
 		stackError("gsc_player_ismantling() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
 
-	if (entity->client->ps.pm_flags & PMF_MANTLE)
-		stackPushBool(qtrue);
-	else
-		stackPushBool(qfalse);
+	playerState_t *ps = SV_GameClientNum(id);
+	stackPushBool(ps->pm_flags & PMF_MANTLE ? qtrue : qfalse);
 }
 
 void gsc_player_isonladder(scr_entref_t id)
 {
-	gentity_t *entity = &g_entities[id];
-
-	if (entity->client == NULL)
+	if (id >= MAX_CLIENTS)
 	{
 		stackError("gsc_player_isonladder() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
 
-	if (entity->client->ps.pm_flags & PMF_LADDER)
-		stackPushBool(qtrue);
-	else
-		stackPushBool(qfalse);
+	playerState_t *ps = SV_GameClientNum(id);
+	stackPushBool(ps->pm_flags & PMF_LADDER ? qtrue : qfalse);
 }
 
 void gsc_player_getjumpslowdowntimer(scr_entref_t id)
 {
-	gentity_t *entity = &g_entities[id];
-
-	if (entity->client == NULL)
+	if (id >= MAX_CLIENTS)
 	{
 		stackError("gsc_player_getjumpslowdowntimer() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
 
-	stackPushInt(entity->client->ps.pm_time);
+	playerState_t *ps = SV_GameClientNum(id);
+	stackPushInt(ps->pm_time);
 }
 
 void gsc_player_clearjumpstate(scr_entref_t id)
@@ -800,7 +798,14 @@ void gsc_player_setweaponfiremeleedelay(scr_entref_t id)
 		stackPushUndefined();
 		return;
 	}
-
+    
+	if (id >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_setweaponfiremeleedelay() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+    
 	if (delay < 0)
 	{
 		stackError("gsc_player_setweaponfiremeleedelay() param must be equal or above zero");
@@ -808,16 +813,8 @@ void gsc_player_setweaponfiremeleedelay(scr_entref_t id)
 		return;
 	}
 
-	gentity_t *entity = &g_entities[id];
-
-	if (entity->client == NULL)
-	{
-		stackError("gsc_player_setweaponfiremeleedelay() entity %i is not a player", id);
-		stackPushUndefined();
-		return;
-	}
-
-	entity->client->ps.weaponDelay = delay;
+    playerState_t *ps = SV_GameClientNum(id);
+	ps->weaponDelay = delay;
 	stackPushBool(qtrue);
 }
 
@@ -911,16 +908,15 @@ void gsc_player_set_anim(scr_entref_t id)
 
 void gsc_player_getcooktime(scr_entref_t id)
 {
-	gentity_t *entity = &g_entities[id];
-
-	if (entity->client == NULL)
+	if (id >= MAX_CLIENTS)
 	{
 		stackError("gsc_player_getcooktime() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
 
-	stackPushInt(entity->client->ps.grenadeTimeLeft);
+	playerState_t *ps = SV_GameClientNum(id);
+	stackPushInt(ps->grenadeTimeLeft);
 }
 
 void gsc_player_dropclient(scr_entref_t id)

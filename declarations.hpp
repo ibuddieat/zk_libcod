@@ -2377,6 +2377,17 @@ struct va_info_t
 #define PMF_LADDER 32
 #define PMF_SLIDING 0x200
 #define PMF_JUMPING 0x80000
+#define PMF_PRONE 				1
+#define PMF_CROUCH 				2
+#define PMF_MANTLE 				4
+#define PMF_FRAG				16
+#define PMF_LADDER 				32
+#define PMF_BACKWARDS_RUN 		128
+#define PMF_SLIDING 			512
+#define PMF_MELEE 				8192
+#define PMF_JUMPING 			524288
+#define PMF_SPECTATING 			16777216
+#define PMF_DISABLEWEAPON 		67108864
 
 #define CONTENTS_SOLID          1
 #define CONTENTS_NONCOLLIDING   4
