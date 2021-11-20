@@ -1,9 +1,6 @@
 #ifndef _FUNCTIONS_HPP_
 #define _FUNCTIONS_HPP_
 
-#include <stdint.h>
-#include <sys/time.h>
-
 /* MAKE FUNCTIONS STATIC, SO THEY CAN BE IN EVERY FILE */
 
 typedef int (*Q_stricmp_t)(const char *s1, const char *s2);
@@ -410,29 +407,6 @@ static const Scr_Error_t Scr_Error = (Scr_Error_t)0x08085330;
 #elif COD_VERSION == COD2_1_3
 static const Scr_Error_t Scr_Error = (Scr_Error_t)0x080853FC;
 #endif
-
-/**
- * @brief Base time in seconds
- */
-time_t sys_timeBase = 0;
-
-/**
- * @brief Current time in ms, using sys_timeBase as origin
- */
-uint64_t Sys_Milliseconds(void)
-{
-	struct timeval tp;
-
-	gettimeofday(&tp, NULL);
-
-	if (!sys_timeBase)
-	{
-		sys_timeBase = tp.tv_sec;
-		return tp.tv_usec / 1000;
-	}
-
-	return (tp.tv_sec - sys_timeBase) * 1000 + tp.tv_usec / 1000;
-}
 
 typedef int (*G_FindConfigstringIndex_t)(const char *name, int start, int max, qboolean create, const char *fieldname);
 #if COD_VERSION == COD2_1_0

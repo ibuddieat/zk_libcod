@@ -1,5 +1,8 @@
 #include "gsc.hpp"
 
+#include <stdint.h>
+#include <sys/time.h>
+
 const char *stackGetParamTypeAsString(int param)
 {
 	if (param >= Scr_GetNumParam())
@@ -626,4 +629,27 @@ int stackGetParamObject(int param, unsigned int *value)
 	*value = var->u.pointerValue;
 
 	return 1;
+}
+
+/**
+ * @brief Base time in seconds
+ */
+time_t sys_timeBase = 0;
+
+/**
+ * @brief Current time in ms, using sys_timeBase as origin
+ */
+uint64_t Sys_Milliseconds(void)
+{
+	struct timeval tp;
+
+	gettimeofday(&tp, NULL);
+
+	if (!sys_timeBase)
+	{
+		sys_timeBase = tp.tv_sec;
+		return tp.tv_usec / 1000;
+	}
+
+	return (tp.tv_sec - sys_timeBase) * 1000 + tp.tv_usec / 1000;
 }
