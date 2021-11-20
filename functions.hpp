@@ -48,6 +48,24 @@ static const SL_ConvertToString_t SL_ConvertToString = (SL_ConvertToString_t)0x0
 static const SL_ConvertToString_t SL_ConvertToString = (SL_ConvertToString_t)0x08078EE6;
 #endif
 
+typedef unsigned int (*SL_GetString_t)(const char *str, int type);
+#if COD_VERSION == COD2_1_0
+static const SL_GetString_t SL_GetString = (SL_GetString_t)0x08079290;
+#elif COD_VERSION == COD2_1_2
+static const SL_GetString_t SL_GetString = (SL_GetString_t)0x08079814;
+#elif COD_VERSION == COD2_1_3
+static const SL_GetString_t SL_GetString = (SL_GetString_t)0x080798E0;
+#endif
+
+typedef void (*SL_RemoveRefToString_t)(unsigned int);
+#if COD_VERSION == COD2_1_0
+static const SL_RemoveRefToString_t SL_RemoveRefToString = (SL_RemoveRefToString_t)0x080796A2;
+#elif COD_VERSION == COD2_1_2
+static const SL_RemoveRefToString_t SL_RemoveRefToString = (SL_RemoveRefToString_t)0x08079C26;
+#elif COD_VERSION == COD2_1_3
+static const SL_RemoveRefToString_t SL_RemoveRefToString = (SL_RemoveRefToString_t)0x08079CF2;
+#endif
+
 typedef int (*Scr_GetFunctionHandle_t)(const char* scriptName, const char* labelName, int isNeeded);
 #if COD_VERSION == COD2_1_0
 static const Scr_GetFunctionHandle_t Scr_GetFunctionHandle = (Scr_GetFunctionHandle_t)0x0810DD70;
@@ -669,13 +687,22 @@ static const Scr_IsSystemActive_t Scr_IsSystemActive = (Scr_IsSystemActive_t)0x0
 static const Scr_IsSystemActive_t Scr_IsSystemActive = (Scr_IsSystemActive_t)0x08084678;
 #endif
 
-typedef int (*Sys_GetValue_t)(int key);
+typedef void* (*Sys_GetValue_t)(int key);
 #if COD_VERSION == COD2_1_0
 static const Sys_GetValue_t Sys_GetValue = (Sys_GetValue_t)0x080D44A4;
 #elif COD_VERSION == COD2_1_2
 static const Sys_GetValue_t Sys_GetValue = (Sys_GetValue_t)0x080D6A7C;
 #elif COD_VERSION == COD2_1_3
 static const Sys_GetValue_t Sys_GetValue = (Sys_GetValue_t)0x080D6BC0;
+#endif
+
+typedef void (*Sys_SetValue_t)(int key, void* value);
+#if COD_VERSION == COD2_1_0
+static const Sys_SetValue_t Sys_SetValue = (Sys_SetValue_t)0x080D4492;
+#elif COD_VERSION == COD2_1_2
+static const Sys_SetValue_t Sys_SetValue = (Sys_SetValue_t)0x080D6A6A;
+#elif COD_VERSION == COD2_1_3
+static const Sys_SetValue_t Sys_SetValue = (Sys_SetValue_t)0x080D6BAE;
 #endif
 
 typedef int (*Scr_GetEntity_t)(int a1);
