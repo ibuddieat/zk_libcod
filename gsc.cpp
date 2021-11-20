@@ -352,6 +352,7 @@ scr_method_t scriptMethods[] =
 	{"setweaponfiremeleedelay", gsc_player_setweaponfiremeleedelay, 0},
 	{"play_anim", gsc_player_set_anim, 0},
 	{"getjumpslowdowntimer", gsc_player_getjumpslowdowntimer, 0},
+    {"clearjumpstate", gsc_player_clearjumpstate, 0},
 	{"getcooktime", gsc_player_getcooktime, 0},
 	{"setguid", gsc_player_setguid, 0},
 	{"clienthasclientmuted", gsc_player_clienthasclientmuted, 0},

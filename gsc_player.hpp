@@ -37,6 +37,7 @@ void gsc_player_resetnextreliabletime(scr_entref_t id);
 void gsc_player_ismantling(scr_entref_t id);
 void gsc_player_isonladder(scr_entref_t id);
 void gsc_player_getjumpslowdowntimer(scr_entref_t id);
+void gsc_player_clearjumpstate(scr_entref_t id);
 void gsc_player_setmovespeedscale(scr_entref_t id);
 void gsc_player_getmovespeedscale(scr_entref_t id);
 void gsc_player_setg_speed(scr_entref_t id);

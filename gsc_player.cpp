@@ -12,7 +12,6 @@ void gsc_player_getweaponindexoffhand(scr_entref_t id)
 	}
 	
 	playerState_t *ps = SV_GameClientNum(id);
-
 	stackPushInt(ps->weapon);
 }
 
@@ -26,7 +25,6 @@ void gsc_player_getcurrentoffhandslotammo(scr_entref_t id)
 	}
 
 	playerState_t *ps = SV_GameClientNum(id);
-
 	stackPushInt(ps->ammoclip[ps->offHandIndex - 1]);
 }
 
@@ -64,7 +62,6 @@ void gsc_player_isbot(scr_entref_t id)
 	}
 
 	client_t *client = &svs.clients[id];
-
 	stackPushBool(client->bot);
 }
 
@@ -240,7 +237,6 @@ void gsc_player_button_ads(scr_entref_t id)
 	}
 
 	client_t *client = &svs.clients[id];
-
 	stackPushBool(client->lastUsercmd.buttons & KEY_MASK_ADS_MODE ? qtrue : qfalse);
 }
 
@@ -254,7 +250,6 @@ void gsc_player_button_left(scr_entref_t id)
 	}
 
 	client_t *client = &svs.clients[id];
-
 	stackPushBool(client->lastUsercmd.rightmove == KEY_MASK_MOVELEFT ? qtrue : qfalse);
 }
 
@@ -268,7 +263,6 @@ void gsc_player_button_right(scr_entref_t id)
 	}
 
 	client_t *client = &svs.clients[id];
-
 	stackPushBool(client->lastUsercmd.rightmove == KEY_MASK_MOVERIGHT ? qtrue : qfalse);
 }
 
@@ -282,7 +276,6 @@ void gsc_player_button_forward(scr_entref_t id)
 	}
 
 	client_t *client = &svs.clients[id];
-
 	stackPushBool(client->lastUsercmd.forwardmove == KEY_MASK_FORWARD ? qtrue : qfalse);
 }
 
@@ -296,7 +289,6 @@ void gsc_player_button_back(scr_entref_t id)
 	}
 
 	client_t *client = &svs.clients[id];
-
 	stackPushBool(client->lastUsercmd.forwardmove == KEY_MASK_BACK ? qtrue : qfalse);
 }
 
@@ -310,7 +302,6 @@ void gsc_player_button_leanleft(scr_entref_t id)
 	}
 
 	client_t *client = &svs.clients[id];
-
 	stackPushBool(client->lastUsercmd.buttons & KEY_MASK_LEANLEFT ? qtrue : qfalse);
 }
 
@@ -324,7 +315,6 @@ void gsc_player_button_leanright(scr_entref_t id)
 	}
 
 	client_t *client = &svs.clients[id];
-
 	stackPushBool(client->lastUsercmd.buttons & KEY_MASK_LEANRIGHT ? qtrue : qfalse);
 }
 
@@ -338,7 +328,6 @@ void gsc_player_button_reload(scr_entref_t id)
 	}
 
 	client_t *client = &svs.clients[id];
-
 	stackPushBool(client->lastUsercmd.buttons & KEY_MASK_RELOAD ? qtrue : qfalse);
 }
 
@@ -352,7 +341,6 @@ void gsc_player_button_jump(scr_entref_t id)
 	}
 
 	client_t *client = &svs.clients[id];
-
 	stackPushBool(client->lastUsercmd.buttons & KEY_MASK_JUMP ? qtrue : qfalse);
 }
 
@@ -366,7 +354,6 @@ void gsc_player_button_frag(scr_entref_t id)
 	}
 
 	client_t *client = &svs.clients[id];
-
 	stackPushBool(client->lastUsercmd.buttons & KEY_MASK_FRAG ? qtrue : qfalse);
 }
 
@@ -380,7 +367,6 @@ void gsc_player_button_smoke(scr_entref_t id)
 	}
 
 	client_t *client = &svs.clients[id];
-
 	stackPushBool(client->lastUsercmd.buttons & KEY_MASK_SMOKE ? qtrue : qfalse);
 }
 
@@ -472,7 +458,6 @@ void gsc_player_getip(scr_entref_t id)
 
 	char tmp[16];
 	snprintf(tmp, sizeof(tmp), "%d.%d.%d.%d", client->netchan.remoteAddress.ip[0], client->netchan.remoteAddress.ip[1], client->netchan.remoteAddress.ip[2], client->netchan.remoteAddress.ip[3]);
-
 	stackPushString(tmp);
 }
 
@@ -486,7 +471,6 @@ void gsc_player_getping(scr_entref_t id)
 	}
 
 	client_t *client = &svs.clients[id];
-
 	stackPushInt(client->ping);
 }
 
@@ -506,7 +490,6 @@ void gsc_player_getlastconnecttime(scr_entref_t id)
 	}
 
 	client_t *client = &svs.clients[id];
-
 	stackPushInt(client->lastConnectTime);
 }
 
@@ -520,7 +503,6 @@ void gsc_player_getlastmsg(scr_entref_t id)
 	}
 
 	client_t *client = &svs.clients[id];
-
 	stackPushInt(svs.time - client->lastPacketTime);
 }
 
@@ -534,7 +516,6 @@ void gsc_player_getclientstate(scr_entref_t id)
 	}
 
 	client_t *client = &svs.clients[id];
-
 	stackPushInt(client->state);
 }
 
@@ -548,7 +529,6 @@ void gsc_player_addresstype(scr_entref_t id)
 	}
 
 	client_t *client = &svs.clients[id];
-
 	stackPushInt(client->netchan.remoteAddress.type);
 }
 
@@ -578,10 +558,8 @@ void gsc_player_renameclient(scr_entref_t id)
 	}
 
 	client_t *client = &svs.clients[id];
-
 	Info_SetValueForKey(client->userinfo, "name", name);
 	strcpy(client->name, name);
-
 	stackPushBool(qtrue);
 }
 
@@ -604,7 +582,6 @@ void gsc_player_outofbandprint(scr_entref_t id)
 	}
 
 	client_t *client = &svs.clients[id];
-
 	NET_OutOfBandPrint(NS_SERVER, client->netchan.remoteAddress, cmd);
 	stackPushBool(qtrue);
 }
@@ -704,6 +681,22 @@ void gsc_player_getjumpslowdowntimer(scr_entref_t id)
 	}
 
 	stackPushInt(entity->client->ps.pm_time);
+}
+
+void gsc_player_clearjumpstate(scr_entref_t id)
+{
+	if (id >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_clearjumpstate() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	playerState_t *ps = SV_GameClientNum(id);
+
+	ps->pm_flags &= 0xF7u;
+	ps->pm_time = 0;
+	ps->jumpTime = 0;
 }
 
 void gsc_player_setg_speed(scr_entref_t id)
@@ -971,7 +964,6 @@ void gsc_player_setguid(scr_entref_t id)
 	}
 
 	client_t *client = &svs.clients[id];
-
 	client->guid = guid;
 	stackPushBool(qtrue);
 }
@@ -1044,7 +1036,6 @@ void gsc_player_noclip(scr_entref_t id)
 	client_t *client = &svs.clients[id];
 
 	if ( !Q_stricmp( noclip, "on" ) || atoi( noclip ) ) {
-		//client_t->gentity_t->gclient_s
 		client->gentity->client->noclip = qtrue;
 	} else if ( !Q_stricmp( noclip, "off" ) || !Q_stricmp( noclip, "0" ) ) {
 		client->gentity->client->noclip = qfalse;
@@ -1065,7 +1056,6 @@ void gsc_player_getinactivitytime(scr_entref_t id)
 	}
 
 	client_t *client = &svs.clients[id];
-    
 	stackPushInt(client->gentity->client->inactivityTime);
 }
 
