@@ -694,9 +694,10 @@ void gsc_player_clearjumpstate(scr_entref_t id)
 
 	playerState_t *ps = SV_GameClientNum(id);
 
-	ps->pm_flags &= 0xF7u;
+	ps->pm_flags &= ~(PMF_JUMPING|PMF_SLIDING);
 	ps->pm_time = 0;
 	ps->jumpTime = 0;
+    ps->jumpOriginZ = 0;
 }
 
 void gsc_player_setg_speed(scr_entref_t id)

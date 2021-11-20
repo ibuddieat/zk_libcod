@@ -60,8 +60,7 @@ typedef enum
 	MOD_FALLING,
 	MOD_SUICIDE,
 	MOD_TRIGGER_HURT,
-	MOD_EXPLOSIVE,
-	MOD_BAD
+	MOD_EXPLOSIVE
 } meansOfDeath_t;
 
 enum svc_ops_e
@@ -2376,6 +2375,8 @@ struct va_info_t
 
 #define PMF_MANTLE 4
 #define PMF_LADDER 32
+#define PMF_SLIDING 0x200
+#define PMF_JUMPING 0x80000
 
 #define CONTENTS_SOLID          1
 #define CONTENTS_NONCOLLIDING   4
