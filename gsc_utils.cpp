@@ -657,6 +657,13 @@ void gsc_g_findconfigstringindexoriginal()
 		stackPushUndefined();
 		return;
 	}
+    
+	if (min < 0 || max >= MAX_CONFIGSTRINGS)
+	{
+		stackError("gsc_g_findconfigstringindexoriginal() configstring index is out of range");
+		stackPushUndefined();
+		return;
+	}
 
 	stackPushInt( G_FindConfigstringIndex(name, min, max, create, "G_FindConfigstringIndex() from GSC") );
 }
@@ -670,6 +677,13 @@ void gsc_g_findconfigstringindex()
 	if ( ! stackGetParams("sii", &name, &min, &max))
 	{
 		stackError("gsc_g_findconfigstringindex() one or more arguments is undefined or has a wrong type");
+		return;
+	}
+    
+    if (min < 0 || max >= MAX_CONFIGSTRINGS)
+	{
+		stackError("gsc_g_findconfigstringindex() configstring index is out of range");
+		stackPushUndefined();
 		return;
 	}
 
@@ -700,6 +714,13 @@ void gsc_get_configstring()
 		stackPushUndefined();
 		return;
 	}
+    
+    if (index < 0 || index >= MAX_CONFIGSTRINGS)
+	{
+		stackError("gsc_get_configstring() configstring index is out of range");
+		stackPushUndefined();
+		return;
+	}
 
 	const char *string = SV_GetConfigstringConst(index);
 
@@ -717,6 +738,13 @@ void gsc_set_configstring()
 	if ( ! stackGetParams("is", &index, &string))
 	{
 		stackError("gsc_set_configstring() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+    
+	if (index < 0 || index >= MAX_CONFIGSTRINGS)
+	{
+		stackError("gsc_set_configstring() configstring index is out of range");
 		stackPushUndefined();
 		return;
 	}
