@@ -1,6 +1,8 @@
 #ifndef _DECLARATIONS_HPP_
 #define _DECLARATIONS_HPP_
 
+#include <stdint.h>
+
 #define QDECL __attribute__((cdecl))
 
 #define qboolean int
@@ -634,7 +636,7 @@ struct leakyBucket_s
 {
 	netadrtype_t type;
 	unsigned char adr[4];
-	int	lastTime;
+	uint64_t lastTime;
 	signed char	burst;
 	long hash;
 	leakyBucket_t *prev, *next;

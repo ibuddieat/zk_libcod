@@ -613,7 +613,7 @@ void gsc_utils_fremove()
 
 void gsc_utils_getsysmilliseconds()
 {
-	stackPushInt(Sys_MilliSeconds());
+	stackPushInt((int)Sys_Milliseconds());
 }
 
 void gsc_utils_getsystemtime()

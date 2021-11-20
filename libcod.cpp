@@ -893,7 +893,7 @@ void hook_gamestate_info(const char *format, ...)
 
 int clientfps[MAX_CLIENTS] = {0};
 int tempfps[MAX_CLIENTS] = {0};
-int fpstime[MAX_CLIENTS] = {0};
+uint64_t fpstime[MAX_CLIENTS] = {0};
 int previousbuttons[MAX_CLIENTS] = {0};
 int play_movement(client_t *cl, usercmd_t *ucmd)
 {
@@ -910,10 +910,10 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 
 	tempfps[clientnum]++;
 
-	if (Sys_MilliSeconds() >= (fpstime[clientnum] + 1000))
+	if (Sys_Milliseconds() >= (fpstime[clientnum] + 1000))
 	{
 		clientfps[clientnum] = tempfps[clientnum];
-		fpstime[clientnum] = Sys_MilliSeconds();
+		fpstime[clientnum] = Sys_Milliseconds();
 		tempfps[clientnum] = 0;
 	}
 	
@@ -1031,7 +1031,7 @@ static leakyBucket_t *SVC_BucketForAddress( netadr_t address, int burst, int per
 	leakyBucket_t *bucket = NULL;
 	int	i;
 	long hash = SVC_HashForAddress( address );
-	int	now = Sys_MilliSeconds();
+	uint64_t now = Sys_Milliseconds();
 
 	for ( bucket = bucketHashes[ hash ]; bucket; bucket = bucket->next )
 	{
@@ -1100,7 +1100,7 @@ bool SVC_RateLimit( leakyBucket_t *bucket, int burst, int period )
 {
 	if ( bucket != NULL )
 	{
-		int now = Sys_MilliSeconds();
+		uint64_t now = Sys_Milliseconds();
 		int interval = now - bucket->lastTime;
 		int expired = interval / period;
 		int expiredRemainder = interval % period;
