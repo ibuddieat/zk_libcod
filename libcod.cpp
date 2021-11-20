@@ -910,7 +910,7 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 
 	tempfps[clientnum]++;
 
-	if (svs.time >= (fpstime[clientnum] + 1000))
+	if (svs.time - fpstime[clientnum] >= 1000)
 	{
 		clientfps[clientnum] = tempfps[clientnum];
 		fpstime[clientnum] = svs.time;
