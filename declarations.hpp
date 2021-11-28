@@ -2375,10 +2375,6 @@ struct va_info_t
 #define EF_USETURRET 0x00000300
 #define EF_AIMDOWNSIGHT 0x00040000
 
-#define PMF_MANTLE 4
-#define PMF_LADDER 32
-#define PMF_SLIDING 0x200
-#define PMF_JUMPING 0x80000
 #define PMF_PRONE 				1
 #define PMF_CROUCH 				2
 #define PMF_MANTLE 				4
