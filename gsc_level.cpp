@@ -49,4 +49,9 @@ void gsc_level_getstaticmodelorigin()
 	stackPushVector(cm.staticModelList[index].origin);
 }
 
+void gsc_level_getentitycount()
+{
+	stackPushInt(level.num_entities);
+}
+
 #endif

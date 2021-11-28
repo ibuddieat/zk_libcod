@@ -166,6 +166,7 @@ scr_function_t scriptFunctions[] =
 	{"getnumberofstaticmodels", gsc_level_getnumberofstaticmodels, 0},
 	{"getstaticmodelname", gsc_level_getstaticmodelname, 0},
 	{"getstaticmodelorigin", gsc_level_getstaticmodelorigin, 0},
+	{"getentitycount", gsc_level_getentitycount, 0},
 #endif
 
 #if COMPILE_MEMORY == 1

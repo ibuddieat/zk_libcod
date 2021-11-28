@@ -19,10 +19,11 @@ Changes provided by this repository:
 - Added script callback functions for:
   * `G_TempEntity()`
 - Added script code functions:
-  * `<player> noclip("on|off|toggle");`
-  * `<player> getinactivitytime();`
-  * `getweaponfusetime(<weapon name>);`
-  * `setweaponfusetime(<weapon name>, <time in ms>);`
+  * `<player> noclip("on|off|toggle")`
+  * `<player> getinactivitytime()`
+  * `getweaponfusetime(<weapon name>)`
+  * `setweaponfusetime(<weapon name>, <time in ms>)`
+  * `getentitycount()`
 - Removed `con_coloredPrints` as it may break incoming rcon commands (-> issues with BigBrotherBot)
 - Disabled several functions that would make it easy to harm the server with malicious map scripts
 

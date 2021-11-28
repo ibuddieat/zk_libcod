@@ -7,5 +7,6 @@
 void gsc_level_getnumberofstaticmodels();
 void gsc_level_getstaticmodelname();
 void gsc_level_getstaticmodelorigin();
+void gsc_level_getentitycount();
 
 #endif
