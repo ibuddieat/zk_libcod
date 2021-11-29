@@ -18,6 +18,7 @@ cvar_t *cl_wwwDownload;
 
 cvar_t *sv_cracked;
 cvar_t *sv_noauthorize;
+cvar_t *g_debugEvents;
 cvar_t *g_playerCollision;
 cvar_t *g_playerEject;
 cvar_t *sv_allowRcon;
@@ -48,7 +49,6 @@ int codecallback_client_spam = 0;
 int codecallback_meleebutton = 0;
 int codecallback_usebutton = 0;
 int codecallback_attackbutton = 0;
-int codecallback_g_tempentity = 0;
 
 /* ... ... ... */
 
@@ -68,6 +68,7 @@ void hook_sv_init(const char *format, ...)
 	// Register custom cvars
 	sv_cracked = Cvar_RegisterBool("sv_cracked", qfalse, CVAR_ARCHIVE);
 	sv_noauthorize = Cvar_RegisterBool("sv_noauthorize", qfalse, CVAR_ARCHIVE);
+    g_debugEvents = Cvar_RegisterBool("g_debugEvents", qfalse, CVAR_ARCHIVE);
 	g_playerCollision = Cvar_RegisterBool("g_playerCollision", qtrue, CVAR_ARCHIVE);
 	g_playerEject = Cvar_RegisterBool("g_playerEject", qtrue, CVAR_ARCHIVE);
 	sv_allowRcon = Cvar_RegisterBool("sv_allowRcon", qtrue, CVAR_ARCHIVE);
@@ -131,7 +132,6 @@ int hook_codscript_gametype_scripts()
 	codecallback_meleebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MeleeButton", 0);
  	codecallback_usebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_UseButton", 0);
 	codecallback_attackbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_AttackButton", 0);
-	codecallback_g_tempentity = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_TempEntity", 0);
 
 	int (*sig)();
 	*(int *)&sig = hook_gametype_scripts->from;
@@ -200,29 +200,6 @@ gentity_t* fire_grenade(gentity_t *self, vec3_t start, vec3_t dir, int weapon, i
 	}
 
 	return grenade;
-}
-
-gentity_t* custom_G_TempEntity(vec3_t origin, int event)
-{
-	hook_g_tempentity->unhook();
-
-	gentity_t* (*sig)(vec3_t origin, int event);
-	*(int *)&sig = hook_g_tempentity->from;
-
-	gentity_t* tempEntity = sig(origin, event);
-
-	hook_g_tempentity->hook();
-
-	if (codecallback_g_tempentity)
-	{
-		stackPushEntity(tempEntity);
-		stackPushInt(event);
-		stackPushVector(origin);
-		short ret = Scr_ExecThread(codecallback_g_tempentity, 3);
-		Scr_FreeThread(ret);
-	}
-
-	return tempEntity;
 }
 
 void hook_ClientCommand(int clientNum)
@@ -367,6 +344,272 @@ void custom_SV_DropClient( client_t *drop, const char *reason ) {
 	if ( i == sv_maxclients->integer ) {
 		SV_Heartbeat();
 	}
+}
+
+char const *eventnames[] = {
+	"EV_NONE",
+	"EV_FOOTSTEP_RUN_DEFAULT",
+	"EV_FOOTSTEP_RUN_BARK",
+	"EV_FOOTSTEP_RUN_BRICK",
+	"EV_FOOTSTEP_RUN_CARPET",
+	"EV_FOOTSTEP_RUN_CLOTH",
+	"EV_FOOTSTEP_RUN_CONCRETE",
+	"EV_FOOTSTEP_RUN_DIRT",
+	"EV_FOOTSTEP_RUN_FLESH",
+	"EV_FOOTSTEP_RUN_FOLIAGE",
+	"EV_FOOTSTEP_RUN_GLASS",      // 10
+	"EV_FOOTSTEP_RUN_GRASS",
+	"EV_FOOTSTEP_RUN_GRAVEL",
+	"EV_FOOTSTEP_RUN_ICE",
+	"EV_FOOTSTEP_RUN_METAL",
+	"EV_FOOTSTEP_RUN_MUD",
+	"EV_FOOTSTEP_RUN_PAPER",
+	"EV_FOOTSTEP_RUN_PLASTER",
+	"EV_FOOTSTEP_RUN_ROCK",
+	"EV_FOOTSTEP_RUN_SAND",
+	"EV_FOOTSTEP_RUN_SNOW",       // 20
+	"EV_FOOTSTEP_RUN_WATER",
+	"EV_FOOTSTEP_RUN_WOOD",
+	"EV_FOOTSTEP_RUN_ASPHALT",
+	"EV_FOOTSTEP_WALK_DEFAULT",
+	"EV_FOOTSTEP_WALK_BARK",
+	"EV_FOOTSTEP_WALK_BRICK",
+	"EV_FOOTSTEP_WALK_CARPET",
+	"EV_FOOTSTEP_WALK_CLOTH",
+	"EV_FOOTSTEP_WALK_CONCRETE",
+	"EV_FOOTSTEP_WALK_DIRT",      // 30
+	"EV_FOOTSTEP_WALK_FLESH",
+	"EV_FOOTSTEP_WALK_FOLIAGE",
+	"EV_FOOTSTEP_WALK_GLASS",
+	"EV_FOOTSTEP_WALK_GRASS",
+	"EV_FOOTSTEP_WALK_GRAVEL",
+	"EV_FOOTSTEP_WALK_ICE",
+	"EV_FOOTSTEP_WALK_METAL",
+	"EV_FOOTSTEP_WALK_MUD",
+	"EV_FOOTSTEP_WALK_PAPER",
+	"EV_FOOTSTEP_WALK_PLASTER",   // 40
+	"EV_FOOTSTEP_WALK_ROCK",
+	"EV_FOOTSTEP_WALK_SAND",
+	"EV_FOOTSTEP_WALK_SNOW",
+	"EV_FOOTSTEP_WALK_WATER",
+	"EV_FOOTSTEP_WALK_WOOD",
+	"EV_FOOTSTEP_WALK_ASPHALT",
+	"EV_FOOTSTEP_PRONE_DEFAULT",
+	"EV_FOOTSTEP_PRONE_BARK",
+	"EV_FOOTSTEP_PRONE_BRICK",
+	"EV_FOOTSTEP_PRONE_CARPET",   // 50
+	"EV_FOOTSTEP_PRONE_CLOTH",
+	"EV_FOOTSTEP_PRONE_CONCRETE",
+	"EV_FOOTSTEP_PRONE_DIRT",
+	"EV_FOOTSTEP_PRONE_FLESH",
+	"EV_FOOTSTEP_PRONE_FOLIAGE",
+	"EV_FOOTSTEP_PRONE_GLASS",
+	"EV_FOOTSTEP_PRONE_GRASS",
+	"EV_FOOTSTEP_PRONE_GRAVEL",
+	"EV_FOOTSTEP_PRONE_ICE",
+	"EV_FOOTSTEP_PRONE_METAL",    // 60
+	"EV_FOOTSTEP_PRONE_MUD",
+	"EV_FOOTSTEP_PRONE_PAPER",
+	"EV_FOOTSTEP_PRONE_PLASTER",
+	"EV_FOOTSTEP_PRONE_ROCK",
+	"EV_FOOTSTEP_PRONE_SAND",
+	"EV_FOOTSTEP_PRONE_SNOW",
+	"EV_FOOTSTEP_PRONE_WATER",
+	"EV_FOOTSTEP_PRONE_WOOD",
+	"EV_FOOTSTEP_PRONE_ASPHALT",
+	"EV_JUMP_DEFAULT",            // 70
+	"EV_JUMP_BARK",
+	"EV_JUMP_BRICK",
+	"EV_JUMP_CARPET",
+	"EV_JUMP_CLOTH",
+	"EV_JUMP_CONCRETE",
+	"EV_JUMP_DIRT",
+	"EV_JUMP_FLESH",
+	"EV_JUMP_FOLIAGE",
+	"EV_JUMP_GLASS",
+	"EV_JUMP_GRASS",              // 80
+	"EV_JUMP_GRAVEL",
+	"EV_JUMP_ICE",
+	"EV_JUMP_METAL",
+	"EV_JUMP_MUD",
+	"EV_JUMP_PAPER",
+	"EV_JUMP_PLASTER",
+	"EV_JUMP_ROCK",
+	"EV_JUMP_SAND",
+	"EV_JUMP_SNOW",
+	"EV_JUMP_WATER",              // 90
+	"EV_JUMP_WOOD",
+	"EV_JUMP_ASPHALT",
+	"EV_LANDING_DEFAULT",
+	"EV_LANDING_BARK",
+	"EV_LANDING_BRICK",
+	"EV_LANDING_CARPET",
+	"EV_LANDING_CLOTH",
+	"EV_LANDING_CONCRETE",
+	"EV_LANDING_DIRT",
+	"EV_LANDING_FLESH",           // 100
+	"EV_LANDING_FOLIAGE",
+	"EV_LANDING_GLASS",
+	"EV_LANDING_GRASS",
+	"EV_LANDING_GRAVEL",
+	"EV_LANDING_ICE",
+	"EV_LANDING_METAL",
+	"EV_LANDING_MUD",
+	"EV_LANDING_PAPER",
+	"EV_LANDING_PLASTER",
+	"EV_LANDING_ROCK",            // 110
+	"EV_LANDING_SAND",
+	"EV_LANDING_SNOW",
+	"EV_LANDING_WATER",
+	"EV_LANDING_WOOD",
+	"EV_LANDING_ASPHALT",
+	"EV_LANDING_PAIN_DEFAULT",
+	"EV_LANDING_PAIN_BARK",
+	"EV_LANDING_PAIN_BRICK",
+	"EV_LANDING_PAIN_CARPET",
+	"EV_LANDING_PAIN_CLOTH",      // 120
+	"EV_LANDING_PAIN_CONCRETE",
+	"EV_LANDING_PAIN_DIRT",
+	"EV_LANDING_PAIN_FLESH",
+	"EV_LANDING_PAIN_FOLIAGE",
+	"EV_LANDING_PAIN_GLASS",
+	"EV_LANDING_PAIN_GRASS",
+	"EV_LANDING_PAIN_GRAVEL",
+	"EV_LANDING_PAIN_ICE",
+	"EV_LANDING_PAIN_METAL",
+	"EV_LANDING_PAIN_MUD",        // 130
+	"EV_LANDING_PAIN_PAPER",
+	"EV_LANDING_PAIN_PLASTER",
+	"EV_LANDING_PAIN_ROCK",
+	"EV_LANDING_PAIN_SAND",
+	"EV_LANDING_PAIN_SNOW",
+	"EV_LANDING_PAIN_WATER",
+	"EV_LANDING_PAIN_WOOD",
+	"EV_LANDING_PAIN_ASPHALT",
+	"EV_FOLIAGE_SOUND",
+	"EV_STANCE_FORCE_STAND",      // 140
+	"EV_STANCE_FORCE_CROUCH",
+	"EV_STANCE_FORCE_PRONE",
+	"EV_STEP_VIEW",
+	"EV_ITEM_PICKUP",
+	"EV_AMMO_PICKUP",
+	"EV_NOAMMO",
+	"EV_EMPTYCLIP",
+	"EV_EMPTY_OFFHAND",
+	"EV_RESET_ADS",
+	"EV_RELOAD",                  // 150
+	"EV_RELOAD_FROM_EMPTY",
+	"EV_RELOAD_START",
+	"EV_RELOAD_END",
+	"EV_RAISE_WEAPON",
+	"EV_PUTAWAY_WEAPON",
+	"EV_WEAPON_ALT",
+	"EV_PULLBACK_WEAPON",
+	"EV_FIRE_WEAPON",
+	"EV_FIRE_WEAPONB",
+	"EV_FIRE_WEAPON_LASTSHOT",    // 160
+	"EV_RECHAMBER_WEAPON",
+	"EV_EJECT_BRASS",
+	"EV_MELEE_SWIPE",
+	"EV_FIRE_MELEE",
+	"EV_PREP_OFFHAND",
+	"EV_USE_OFFHAND",
+	"EV_SWITCH_OFFHAND",
+	"EV_BINOCULAR_ENTER",
+	"EV_BINOCULAR_EXIT",
+	"EV_BINOCULAR_FIRE",          // 170
+	"EV_BINOCULAR_RELEASE",
+	"EV_BINOCULAR_DROP",
+	"EV_MELEE_HIT",
+	"EV_MELEE_MISS",
+	"EV_FIRE_WEAPON_MG42",
+	"EV_FIRE_QUADBARREL_1",
+	"EV_FIRE_QUADBARREL_2",
+	"EV_BULLET_TRACER",
+	"EV_SOUND_ALIAS",
+	"EV_SOUND_ALIAS_AS_MASTER",   // 180
+	"EV_BULLET_HIT_SMALL",
+	"EV_BULLET_HIT_LARGE",
+	"EV_SHOTGUN_HIT",
+	"EV_BULLET_HIT_AP",
+	"EV_BULLET_HIT_CLIENT_SMALL",
+	"EV_BULLET_HIT_CLIENT_LARGE",
+	"EV_GRENADE_BOUNCE",
+	"EV_GRENADE_EXPLODE",
+	"EV_ROCKET_EXPLODE",
+	"EV_ROCKET_EXPLODE_NOMARKS",  // 190
+	"EV_CUSTOM_EXPLODE",
+	"EV_CUSTOM_EXPLODE_NOMARKS",
+	"EV_BULLET",
+	"EV_PLAY_FX",
+	"EV_PLAY_FX_ON_TAG",
+	"EV_EARTHQUAKE",
+	"EV_GRENADE_SUICIDE",
+	"EV_OBITUARY"                 // 198
+};
+
+void custom_BG_AddPredictableEventToPlayerstate( int event, int eventParm, playerState_t *ps ) {
+    if (event != EV_NONE) {
+        if (g_debugEvents->boolean)
+            Com_DPrintf("custom_BG_AddPredictableEventToPlayerstate() event %26s for client %2d\n", eventnames[event], ps->clientNum);
+        
+        /*
+        // filter example:
+        // hide footsteps on dirt for player 0 (the player can still hear himself)
+        if (event == EV_FOOTSTEP_RUN_DIRT && ps->clientNum == 0) {
+            Com_DPrintf("custom_BG_AddPredictableEventToPlayerstate() filter event EV_FOOTSTEP_RUN_DIRT for client 0\n", eventnames[event], eventParm, ps->clientNum);
+            return;
+        }
+        */
+        
+        ps->events[ps->eventSequence & ( MAX_EVENTS - 1 )] = event & 0xff;
+        ps->eventParms[ps->eventSequence & ( MAX_EVENTS - 1 )] = eventParm & 0xff;
+        ps->eventSequence++;
+    }
+}
+
+void custom_G_AddEvent (gentity_t * ent, int event, int eventParm) {
+	if ( ent->client ) {
+        if (g_debugEvents->boolean)
+            Com_DPrintf("custom_G_AddEvent() event %26s for client %2d\n", eventnames[event], ent->client->ps.clientNum);
+		ent->client->ps.events[ent->client->ps.eventSequence & ( MAX_EVENTS - 1 )] = event;
+		ent->client->ps.eventParms[ent->client->ps.eventSequence & ( MAX_EVENTS - 1 )] = eventParm;
+		ent->client->ps.eventSequence++;
+	} else {
+        if (g_debugEvents->boolean)
+            Com_DPrintf("custom_G_AddEvent() event %26s for entity %2d\n", eventnames[event], ent->s.number);
+		ent->s.events[ent->s.eventSequence & ( MAX_EVENTS - 1 )] = event;
+		ent->s.eventParms[ent->s.eventSequence & ( MAX_EVENTS - 1 )] = eventParm;
+		ent->s.eventSequence++;
+	}
+	ent->eventTime = level.time;
+	ent->r.eventTime = level.time;
+}
+
+gentity_t* custom_G_TempEntity(vec3_t origin, int event)
+{
+	hook_g_tempentity->unhook();
+
+	gentity_t* (*sig)(vec3_t origin, int event);
+	*(int *)&sig = hook_g_tempentity->from;
+
+    if (g_debugEvents->boolean)
+        Com_DPrintf("custom_G_TempEntity() event %26s at (%f,%f,%f)\n", eventnames[event], origin[0], origin[1], origin[2]);
+    
+    /*
+    // filter example:
+    // use with caution: this can cause script runtime errors (or worse) on
+    // some events, e.g., when using the obituary function, due to (then)
+    // undefined parameters
+    if (event == EV_PLAY_FX) {
+        event = EV_NONE;
+    }
+    */
+	gentity_t* tempEntity = sig(origin, event);
+    
+    hook_g_tempentity->hook();
+
+	return tempEntity;
 }
 
 int gamestate_size[MAX_CLIENTS] = {0};
@@ -1650,8 +1893,8 @@ public:
 		hook_fire_grenade->hook();
 		hook_touch_item = new cHook(0x08105C80, int(touch_item));
 		hook_touch_item->hook();
-		//hook_g_tempentity = new cHook(0x0811EFC4, (int)custom_G_TempEntity);
-		//hook_g_tempentity->hook();
+		hook_g_tempentity = new cHook(0x0811EFC4, (int)custom_G_TempEntity);
+		hook_g_tempentity->hook();
 
 #if COMPILE_PLAYER == 1
 		hook_play_movement = new cHook(0x08090DAC, (int)play_movement);
@@ -1662,7 +1905,9 @@ public:
 		hook_set_anim->hook();
 #endif
 
+        cracking_hook_function(0x0811F232, (int)custom_G_AddEvent);
 		cracking_hook_function(0x080EBF24, (int)hook_BG_IsWeaponValid);
+        cracking_hook_function(0x080DFC78, (int)custom_BG_AddPredictableEventToPlayerstate);
         cracking_hook_function(0x0808F302, (int)custom_SV_SendClientGameState);
         cracking_hook_function(0x0808F02E, (int)custom_SV_DropClient);
 		cracking_hook_function(0x0808FDC2, (int)custom_SV_WriteDownloadToClient);

@@ -40,6 +40,7 @@
 #define MAX_QPATH 64
 #define MAX_OSPATH 256
 #define FRAMETIME 50
+#define MAX_EVENTS 4
 
 typedef unsigned char byte;
 typedef struct gclient_s gclient_t;
@@ -748,8 +749,8 @@ typedef struct entityState_s
 	int	solid;
 	int	eventParm;
 	int	eventSequence;
-	vec4_t events;
-	vec4_t eventParms;
+	int events[4];
+	unsigned int eventParms[4];
 	int weapon;
 	int legsAnim;
 	int torsoAnim;
