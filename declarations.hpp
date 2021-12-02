@@ -42,7 +42,11 @@
 #define FRAMETIME 50
 #define MAX_EVENTS 4
 
+#define FLOAT_INT_BITS  13
+#define FLOAT_INT_BIAS  ( 1 << ( FLOAT_INT_BITS - 1 ) ) // 0x1000
+
 typedef unsigned char byte;
+typedef signed char sbyte;
 typedef struct gclient_s gclient_t;
 typedef struct gentity_s gentity_t;
 typedef int scr_entref_t;
@@ -605,6 +609,13 @@ typedef enum
 	EV_OBITUARY                 // 198
 } entity_event_t;
 
+typedef struct netField_s
+{
+    char *name;
+    int offset;
+    int bits;
+} netField_t;
+
 typedef enum
 {
 	TRACE_HITTYPE_NONE = 0x0,
@@ -915,8 +926,8 @@ typedef struct playerState_s
 	int	weaponTime;
 	int weaponDelay;
 	int	grenadeTimeLeft;
-	int	throwBackGrenadeOwner;
-	int	throwBackGrenadeTimeLeft;
+	int	weaponRestrictKickTime;
+	int	foliageSoundTime;
 	int	gravity;
 	float leanf;
 	int speed;
@@ -925,15 +936,15 @@ typedef struct playerState_s
 	vec3_t vLadderVec;
 	int jumpTime;
 	float jumpOriginZ;
-	int legsTime;
+	int legsTimer;
 	int legsAnim;
-	int torsoTime;
+	int torsoTimer;
 	int torsoAnim;
 	int	legsAnimDuration;
 	int	torsoAnimDuration;
 	int	damageTimer;
 	int	damageDuration;
-	int	flinchYawAnim;
+	int	flinchYaw;
 	int	movementDir;
 	int	eFlags;
 	int	eventSequence;
@@ -953,7 +964,9 @@ typedef struct playerState_s
 	int viewHeightLerpTime;
 	int viewHeightLerpTarget;
 	int viewHeightLerpDown;
-	int unknown[5];
+	float viewHeightLerpPosAdj;
+    vec2_t viewAngleClampBase;
+    vec2_t viewAngleClampRange;
 	int	damageEvent;
 	int	damageYaw;
 	int	damagePitch;
@@ -961,13 +974,11 @@ typedef struct playerState_s
 	int	stats[6];
 	int	ammo[128];
 	int	ammoclip[128]; // 836
-	int weapFlags;
-	int weapFlags2;
-	int unknown2[2];
-	byte slot_none;
-	byte slot_primary;
-	byte slot_primaryb;
-	int unknown3[5];
+	uint weapons[2];
+	uint weaponold[2];
+    byte weaponslots[5];
+    uint weaponrechamber[2];
+    int unknown[2];
 	vec3_t mins;
 	vec3_t maxs;
 	float proneDirection;
@@ -978,8 +989,10 @@ typedef struct playerState_s
 	int	cursorHint;
 	int	cursorHintString;
 	int	cursorHintEntIndex;
-	int unknown1;
-	vec3_t unkAngles;
+	int iCompassFriendInfo;
+    float fTorsoHeight;
+    float fTorsoPitch;
+	float fWaistPitch;
 	float holdBreathScale;
 	int holdBreathTimer;
 	mantleState_t mantleState;
@@ -990,7 +1003,7 @@ typedef struct playerState_s
 	int	shellshockTime;
 	int	shellshockDuration;
 	objective_t objective[16];
-	int archiveTime;
+	int deltaTime;
 	hudElemState_t hud;
 } playerState_t;
 
@@ -1282,7 +1295,7 @@ typedef struct
 	challenge_t	challenges[1024];
 	netadr_t	redirectAddress;
 	netadr_t	authorizeAddress;
-	char 		netProfilingBuf[1504];
+	char 		netProfilingBuf[1504]; // shouldn't that be at most [252]? else we run into sv_offset
 } serverStatic_t; // verified
 
 typedef struct
@@ -2560,6 +2573,30 @@ static const int bspglob_offset = 0x08187D28;
 static const int bspglob_offset = 0x08188DA8;
 #endif
 
+#if COD_VERSION == COD2_1_0
+static const int playerStateFields_offset = 0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const int playerStateFields_offset = 0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const int playerStateFields_offset = 0x08142520;
+#endif
+
+#if COD_VERSION == COD2_1_0
+static const int entityStateFields_offset = 0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const int entityStateFields_offset = 0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const int entityStateFields_offset = 0x081417a0;
+#endif
+
+#if COD_VERSION == COD2_1_0
+static const int objectiveFields_offset = 0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const int objectiveFields_offset = 0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const int objectiveFields_offset = 0x08142a20;
+#endif
+
 #define scrVarPub (*((scrVarPub_t*)( varpub_offset )))
 #define scrVmPub (*((scrVmPub_t*)( vmpub_offset )))
 #define scrVarGlob (((VariableValueInternal*)( varglob_offset )))
@@ -2571,6 +2608,9 @@ static const int bspglob_offset = 0x08188DA8;
 #define level_bgs (*((bgs_s*)( bgs_offset )))
 #define cm (*((clipMap_t*)( cm_offset )))
 #define comBspGlob (*((comBspGlob_t*)( bspglob_offset )))
+#define playerStateFields (*((netField_t*)( playerStateFields_offset )))
+#define entityStateFields (*((netField_t*)( entityStateFields_offset )))
+#define objectiveFields (*((netField_t*)( objectiveFields_offset )))
 
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6

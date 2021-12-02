@@ -102,8 +102,8 @@ void gsc_utils_sendgameservercommand()
         "D": (?, ?, ?) CG_DeactivateReverbCmd
         "E": (?, ?, ?, ?) CG_SetChannelVolCmd
         "F": (?, ?, ?) CG_DeactivateChannelVolCmd
-        "G": ?
-        "H": ?
+        "G": (int) setTeamScore (allies or axis, didn't test)
+        "H": (int) setTeamScore (allies or axis, didn't test)
         "I": (str) giveWeapon() (str indicates type, includes item pickup stuff)
         "J": (int) is sent on player disconnect (in SV_DropClient)
         "K": closeIngameMenu()
@@ -126,8 +126,9 @@ void gsc_utils_sendgameservercommand()
         "g": (str) iprintLnBold()
         "h": (str) chat message (all)
         "i": (str) chat message (team)
-        "o": (str) MusicPlay()
-        "p": (int) MusicStop()
+        "o": (str) musicPlay()
+        "p": (int) musicStop()
+        "q": (int) soundFade()
         "s": (int) playLocalSound()
         "t": (int) openMenu()
         "u": closeMenu()

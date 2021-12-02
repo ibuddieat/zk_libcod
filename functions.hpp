@@ -480,6 +480,33 @@ static const MSG_Init_t MSG_Init = (MSG_Init_t)0x08067BE0;
 static const MSG_Init_t MSG_Init = (MSG_Init_t)0x08067BD8;
 #endif
 
+typedef void (*MSG_WriteBit0_t)(msg_t *msg);
+#if COD_VERSION == COD2_1_0
+static const MSG_WriteBit0_t MSG_WriteBit0 = (MSG_WriteBit0_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const MSG_WriteBit0_t MSG_WriteBit0 = (MSG_WriteBit0_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const MSG_WriteBit0_t MSG_WriteBit0 = (MSG_WriteBit0_t)0x08067d28;
+#endif
+
+typedef void (*MSG_WriteBit1_t)(msg_t *msg);
+#if COD_VERSION == COD2_1_0
+static const MSG_WriteBit1_t MSG_WriteBit1 = (MSG_WriteBit1_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const MSG_WriteBit1_t MSG_WriteBit1 = (MSG_WriteBit1_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const MSG_WriteBit1_t MSG_WriteBit1 = (MSG_WriteBit1_t)0x08067d86;
+#endif
+
+typedef void (*MSG_WriteBits_t)(msg_t *msg, int value, int bits);
+#if COD_VERSION == COD2_1_0
+static const MSG_WriteBits_t MSG_WriteBits = (MSG_WriteBits_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const MSG_WriteBits_t MSG_WriteBits = (MSG_WriteBits_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const MSG_WriteBits_t MSG_WriteBits = (MSG_WriteBits_t)0x08067c62;
+#endif
+
 typedef void (*MSG_WriteByte_t)(msg_t *msg, int c);
 #if COD_VERSION == COD2_1_0
 static const MSG_WriteByte_t MSG_WriteByte = (MSG_WriteByte_t)0x08067B4C;
@@ -507,6 +534,15 @@ static const MSG_WriteLong_t MSG_WriteLong = (MSG_WriteLong_t)0x080680F2;
 static const MSG_WriteLong_t MSG_WriteLong = (MSG_WriteLong_t)0x080680EA;
 #endif
 
+typedef void (*MSG_WriteAngle16_t)(msg_t *msg, float f);
+#if COD_VERSION == COD2_1_0
+static const MSG_WriteAngle16_t MSG_WriteAngle16 = (MSG_WriteAngle16_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const MSG_WriteAngle16_t MSG_WriteAngle16 = (MSG_WriteAngle16_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const MSG_WriteAngle16_t MSG_WriteAngle16 = (MSG_WriteAngle16_t)0x08068366;
+#endif
+
 typedef void (*MSG_WriteBigString_t)(msg_t *msg, const char *s);
 #if COD_VERSION == COD2_1_0
 static const MSG_WriteBigString_t MSG_WriteBigString = (MSG_WriteBigString_t)0x0; // Not tested
@@ -525,7 +561,7 @@ static const MSG_WriteString_t MSG_WriteString = (MSG_WriteString_t)0x080681AC;
 static const MSG_WriteString_t MSG_WriteString = (MSG_WriteString_t)0x080681A4;
 #endif
 
-typedef void (*MSG_WriteData_t)(msg_t *buf, const void *data, int length);
+typedef void (*MSG_WriteData_t)(msg_t *msg, const void *data, int length);
 #if COD_VERSION == COD2_1_0
 static const MSG_WriteData_t MSG_WriteData = (MSG_WriteData_t)0x08067B84;
 #elif COD_VERSION == COD2_1_2
@@ -543,7 +579,25 @@ static const MSG_WriteDeltaEntity_t MSG_WriteDeltaEntity = (MSG_WriteDeltaEntity
 static const MSG_WriteDeltaEntity_t MSG_WriteDeltaEntity = (MSG_WriteDeltaEntity_t)0x0806984C;
 #endif
 
-typedef void (*SV_SendMessageToClient_t)(msg_t *buf, client_t *cl);
+typedef void (*MSG_WriteDeltaObjective_t)(msg_t *msg, objective_t *from, objective_t *to, int lc, int numStateFields, netField_t *objFields);
+#if COD_VERSION == COD2_1_0
+static const MSG_WriteDeltaObjective_t MSG_WriteDeltaObjective = (MSG_WriteDeltaObjective_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const MSG_WriteDeltaObjective_t MSG_WriteDeltaObjective = (MSG_WriteDeltaObjective_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const MSG_WriteDeltaObjective_t MSG_WriteDeltaObjective = (MSG_WriteDeltaObjective_t)0x08069602;
+#endif
+
+typedef void (*MSG_WriteDeltaHudElems_t)(msg_t *buf,hudelem_t *from,hudelem_t *to,int count);
+#if COD_VERSION == COD2_1_0
+static const MSG_WriteDeltaHudElems_t MSG_WriteDeltaHudElems = (MSG_WriteDeltaHudElems_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const MSG_WriteDeltaHudElems_t MSG_WriteDeltaHudElems = (MSG_WriteDeltaHudElems_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const MSG_WriteDeltaHudElems_t MSG_WriteDeltaHudElems = (MSG_WriteDeltaHudElems_t)0x08069f84;
+#endif
+
+typedef void (*SV_SendMessageToClient_t)(msg_t *msg, client_t *cl);
 #if COD_VERSION == COD2_1_0
 static const SV_SendMessageToClient_t SV_SendMessageToClient = (SV_SendMessageToClient_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2

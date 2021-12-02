@@ -39,6 +39,7 @@ cHook *hook_add_opcode;
 cHook *hook_print_codepos;
 cHook *hook_touch_item;
 cHook *hook_g_tempentity;
+cHook *hook_msg_writedeltaplayerstate;
 
 int codecallback_remotecommand = 0;
 int codecallback_playercommand = 0;
@@ -610,6 +611,237 @@ gentity_t* custom_G_TempEntity(vec3_t origin, int event)
     hook_g_tempentity->hook();
 
 	return tempEntity;
+}
+
+void custom_MSG_WriteDeltaPlayerstate2(msg_t *msg, playerState_t *from, playerState_t *to)
+{
+	hook_msg_writedeltaplayerstate->unhook();
+
+	int (*sig)(msg_t *msg, playerState_t *from, playerState_t *to);
+	*(int *)&sig = hook_msg_writedeltaplayerstate->from;
+    
+    Com_DPrintf("custom_MSG_WriteDeltaPlayerstate2() unknown = (%i,%i)\n", to+256, to+260);
+
+	sig(msg, from , to);
+    
+    hook_msg_writedeltaplayerstate->hook();
+}
+
+void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerState_t *to)
+{
+    playerState_t dummy;
+    int i, j, lc;
+    int *toF;
+    int *fromF;
+    netField_t *field;
+    float fullFloat;
+    int trunc;
+    
+    int local_271c;
+    sbyte local_2714;
+    int local_2710;
+    int local_270c;
+    
+    uint bits;
+    int clipbits;
+    int ammobits [7];
+    int statsbits;
+
+    if ( !from ) {
+        from = &dummy;
+        memset( &dummy, 0, sizeof(dummy) );
+    }
+    
+    if (g_debugEvents->boolean) {
+        Com_DPrintf("custom_MSG_WriteDeltaPlayerstate() clientNum = %d\n", to->clientNum);
+    }
+    
+	lc = 0;
+	for ( i = 0, field = &playerStateFields; i < 105; i++, field++ ) {
+		fromF = ( int * )( (byte *)from + field->offset );
+		toF = ( int * )( (byte *)to + field->offset );
+		if ( *fromF != *toF ) {
+			lc = i + 1;
+		}
+	}
+    
+	MSG_WriteByte( msg, lc );
+    
+    i = 0;
+    field = &playerStateFields;
+    while (i < lc) {
+		fromF = ( int * )( (byte *)from + field->offset );
+		toF = ( int * )( (byte *)to + field->offset );
+        
+        if ( *fromF == *toF ) {
+            MSG_WriteBit0(msg);
+        } else {
+            MSG_WriteBit1(msg);
+            
+            if (field->bits == 0) {
+                fullFloat = *(float *)toF;
+                trunc = (int)fullFloat;
+                
+                if ( trunc == fullFloat && trunc + FLOAT_INT_BIAS >= 0 && trunc + FLOAT_INT_BIAS < ( 1 << FLOAT_INT_BITS ) ) {
+                    MSG_WriteBit0(msg);
+                    MSG_WriteBits(msg, trunc + FLOAT_INT_BIAS, 5);
+                    MSG_WriteByte(msg, (char)((trunc + 0x1000) >> 5));
+                } else {
+                    MSG_WriteBit1(msg);
+                    MSG_WriteLong(msg, *toF);
+                }
+            } else {
+                if (field->bits == -100) {
+                    if (*toF == 0) {
+                        MSG_WriteBit0(msg);
+                    } else {
+                        MSG_WriteBit1(msg);
+                        MSG_WriteAngle16(msg, *toF);
+                    }
+                } else {
+                    local_270c = *toF;
+                    local_271c = field->bits;
+                    if (local_271c < 0) {
+                        local_271c = -local_271c;
+                    }
+                    local_2710 = local_271c;
+                    bits = local_271c & 7;
+                    if (bits != 0) {
+                        MSG_WriteBits(msg, local_270c,bits);
+                        local_2710 = local_271c - bits;
+                        local_2714 = (sbyte)bits;
+                        local_270c = local_270c >> local_2714;
+                    }
+                    while (local_2710 != 0) {
+                        MSG_WriteByte(msg,(char)local_270c);
+                        local_270c = local_270c >> 8;
+                        local_2710 = local_2710 + -8;
+                    }
+                }
+            }
+        }
+        i++;
+        field++;
+    }
+    
+    // Stats
+    statsbits = 0;
+    i = 0;
+    while (i < 6) {
+        if (to->stats[i] != from->stats[i]) {
+            statsbits = statsbits | 1 << ((byte)i & 0x1f);
+        }
+        i++;
+    }
+    if (statsbits == 0) {
+        MSG_WriteBit0(msg);
+    } else {
+        MSG_WriteBit1(msg);
+        MSG_WriteBits(msg,statsbits,6);
+        if ((statsbits & 1U) != 0) {
+            MSG_WriteShort(msg,to->stats[0]);
+        }
+        if ((statsbits & 2U) != 0) {
+            MSG_WriteShort(msg,to->stats[1]);
+        }
+        if ((statsbits & 4U) != 0) {
+            MSG_WriteShort(msg,to->stats[2]);
+        }
+        if ((statsbits & 8U) != 0) {
+            MSG_WriteBits(msg,to->stats[3],6);
+        }
+        if ((statsbits & 0x10U) != 0) {
+            MSG_WriteShort(msg,to->stats[4]);
+        }
+        if ((statsbits & 0x20U) != 0) {
+            MSG_WriteByte(msg,(char)to->stats[5]);
+        }
+    }
+    
+    // Ammo
+    j = 0;
+    while (j < 4) {
+        ammobits[j] = 0;
+        i = 0;
+        while (i < 0x10) {
+            if (to->ammo[j * 0x10 + i] != from->ammo[j * 0x10 + i]) {
+                ammobits[j] = 1 << ((byte)i & 0x1f) | ammobits[j];
+            }
+            i++;
+        }
+        j++;
+    }
+    if ((((ammobits[0] == 0) && (ammobits[1] == 0)) && (ammobits[2] == 0)) && (ammobits[3] == 0)) {
+        MSG_WriteBit0(msg);
+    } else {
+        MSG_WriteBit1(msg);
+        j = 0;
+        while (j < 4) {
+            if (ammobits[j] == 0) {
+                MSG_WriteBit0(msg);
+            } else {
+                MSG_WriteBit1(msg);
+                MSG_WriteShort(msg,ammobits[j]);
+                i = 0;
+                while (i < 0x10) {
+                    if ((ammobits[j] >> ((byte)i & 0x1f) & 1U) != 0) {
+                        MSG_WriteShort(msg,to->ammo[j * 0x10 + i]);
+                    }
+                    i++;
+                }
+            }
+            j++;
+        }
+    }
+    
+    // Clipammo
+    j = 0;
+    while (j < 4) {
+        clipbits = 0;
+        i = 0;
+        while (i < 0x10) {
+            if (to->ammoclip[j * 0x10 + i] != from->ammoclip[j * 0x10 + i]) {
+                clipbits = clipbits | 1 << ((byte)i & 0x1f);
+            }
+            i++;
+        }
+        if (clipbits == 0) {
+            MSG_WriteBit0(msg);
+        } else {
+            MSG_WriteBit1(msg);
+            MSG_WriteShort(msg,clipbits);
+            i = 0;
+            while (i < 0x10) {
+                if ((clipbits >> ((byte)i & 0x1f) & 1U) != 0) {
+                    MSG_WriteShort(msg,to->ammoclip[j * 0x10 + i]);
+                }
+                i++;
+            }
+        }
+        j++;
+    }
+
+    // Objectives
+    if (!memcmp(from->objective, to->objective, sizeof(from->objective))) {
+        MSG_WriteBit0(msg);
+    } else {
+        MSG_WriteBit1(msg);
+        i = 0;
+        while (i < 0x10) {
+            MSG_WriteBits(msg, to->objective[i].state, 3);
+            MSG_WriteDeltaObjective(msg, &from->objective[i], &to->objective[i], 0, 6, &objectiveFields);
+            i++;
+        }
+    }
+    
+    // Huds
+    if (!memcmp(&from->hud, &to->hud, sizeof(from->hud))) {
+        MSG_WriteBit0(msg);
+    } else {
+        MSG_WriteBit1(msg);
+        MSG_WriteDeltaHudElems(msg, from->hud.archival, to->hud.archival, 0x1f);
+        MSG_WriteDeltaHudElems(msg, from->hud.current, to->hud.current, 0x1f);
+    }
 }
 
 int gamestate_size[MAX_CLIENTS] = {0};
@@ -1874,6 +2106,8 @@ public:
 		hook_touch_item->hook();
 		hook_g_tempentity = new cHook(0x0811EFC4, (int)custom_G_TempEntity);
 		hook_g_tempentity->hook();
+		//hook_msg_writedeltaplayerstate = new cHook(0x0806A200, (int)custom_MSG_WriteDeltaPlayerstate2);
+		//hook_msg_writedeltaplayerstate->hook();
 
 #if COMPILE_PLAYER == 1
 		hook_play_movement = new cHook(0x08090DAC, (int)play_movement);
@@ -1887,6 +2121,7 @@ public:
         cracking_hook_function(0x0811F232, (int)custom_G_AddEvent);
 		cracking_hook_function(0x080EBF24, (int)hook_BG_IsWeaponValid);
         cracking_hook_function(0x080DFC78, (int)custom_BG_AddPredictableEventToPlayerstate);
+        cracking_hook_function(0x0806A200, (int)custom_MSG_WriteDeltaPlayerstate);
         cracking_hook_function(0x0808F302, (int)custom_SV_SendClientGameState);
         cracking_hook_function(0x0808F02E, (int)custom_SV_DropClient);
 		cracking_hook_function(0x0808FDC2, (int)custom_SV_WriteDownloadToClient);
