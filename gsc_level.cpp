@@ -51,7 +51,7 @@ void gsc_level_getstaticmodelorigin()
 
 void gsc_level_getentitycount()
 {
-	stackPushInt(level.num_entities); // sv.num_entities better?
+	stackPushInt(level.num_entities);
 }
 
 #endif

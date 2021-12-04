@@ -766,7 +766,7 @@ typedef struct entityState_s
 	int legsAnim;
 	int torsoAnim;
 	int leanf;
-	int scale; // used as loopfxid, hintstring, ...
+	int scale; // used as loopfxid, hintstring, ... and doesn't actually scale a player's model size
 	int dmgFlags;
 	int animMovetype;
     float fTorsoHeight;
