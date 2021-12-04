@@ -97,6 +97,11 @@ scr_function_t scriptFunctions[] =
 #if COD_VERSION == COD2_1_0
 	{"endparty", NULL_FUNC, 0}, //cod2 1.2
 #endif
+
+#if COMPILE_BOTS == 1
+	{"setnexttestclientname", gsc_bots_setnexttestclientname, 0},
+	{"resettestclientnaming", gsc_bots_resettestclientnaming, 0},
+#endif
 	
 #if COMPILE_MYSQL_DEFAULT == 1
 	{"mysql_init", gsc_mysql_init, 0},

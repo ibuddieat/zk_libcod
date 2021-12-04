@@ -20,12 +20,15 @@ Changes provided by this repository:
 - Added `custom_BG_AddPredictableEventToPlayerstate` function to be able to filter aforementioned events
 - Added `custom_G_AddEvent` function to be able to filter aforementioned events
 - Added `custom_G_TempEntity` function to be able to filter aforementioned events
+- Added `custom_MSG_WriteDeltaPlayerstate` function
 - Added script code functions:
   * `<player> noclip("on|off|toggle")`
   * `<player> getinactivitytime()`
   * `getweaponfusetime(<weapon name>)`
   * `setweaponfusetime(<weapon name>, <time in ms>)`
   * `getentitycount()`
+  * `setnexttestclientname()`
+  * `resettestclientnaming()`
 - Removed `con_coloredPrints` cvar as it may break incoming rcon commands (-> issues with BigBrotherBot)
 - Disabled several functions that would make it easy to harm the server with malicious map scripts
 

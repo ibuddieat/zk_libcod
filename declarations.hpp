@@ -2599,6 +2599,14 @@ static const int objectiveFields_offset = 0x0; // Not tested
 static const int objectiveFields_offset = 0x08142a20;
 #endif
 
+#if COD_VERSION == COD2_1_0
+static const int testclient_connect_string_offset = 0x0;  // Not tested
+#elif COD_VERSION == COD2_1_2
+static const int testclient_connect_string_offset = 0x0;  // Not tested
+#elif COD_VERSION == COD2_1_3
+static const int testclient_connect_string_offset = 0x0814ab20;
+#endif
+
 #define scrVarPub (*((scrVarPub_t*)( varpub_offset )))
 #define scrVmPub (*((scrVmPub_t*)( vmpub_offset )))
 #define scrVarGlob (((VariableValueInternal*)( varglob_offset )))

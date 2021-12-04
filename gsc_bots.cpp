@@ -366,4 +366,35 @@ void gsc_bots_switchtoweaponid(scr_entref_t id)
 	stackPushBool(qtrue);
 }
 
+void gsc_bots_setnexttestclientname()
+{
+	char *str;
+
+	if ( ! stackGetParams("s", &str))
+	{
+		stackError("gsc_bots_setnexttestclientname() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+    if ( ! strlen(str) || strlen(str) > 31 )
+    {
+		stackError("gsc_bots_setnexttestclientname() requires a string of length 1-31 characters");
+		stackPushUndefined();
+		return;
+    }
+	
+    // original str size = 158 chars + null + 25 more free nulls after in data segment
+    // removed the "head" and "color" values so we have enough space for a full 31 character long bot name and do not risk running into an overflow when the bot id gets long
+    // the bot id that is incremented in SV_AddTestClient is dumped into the "model" value
+    snprintf((char *)testclient_connect_string_offset, 184, "connect \"\\cg_predictItems\\1\\cl_punkbuster\\0\\cl_anonymous\\0\\model\\%%d\\snaps\\20\\rate\\5000\\name\\%s\\protocol\\%%d\"", str);
+	stackPushBool(qtrue);
+}
+
+void gsc_bots_resettestclientnaming()
+{
+    snprintf((char *)testclient_connect_string_offset, 184, "connect \"\\cg_predictItems\\1\\cl_punkbuster\\0\\cl_anonymous\\0\\color\\4\\head\\default\\model\\multi\\snaps\\20\\rate\\5000\\name\\bot%%d\\protocol\\%%d\"");
+	stackPushBool(qtrue);
+}
+
 #endif
