@@ -920,7 +920,7 @@ void gsc_utils_bullethiteffect()
 	vec3_t end_origin = { origin[0] - (normal[0] * 10), origin[1] - (normal[1] * 10), origin[2] - (normal[2] * 10) };
 	G_LocationalTrace(&trace, origin, end_origin, 1023, 1);
 
-	entity->s.surfaceFlags = (trace.surfaceFlags >> 20) & 0x1F;
+	entity->s.surfType = (trace.surfaceFlags >> 20) & 0x1F;
 
 	stackPushBool(qtrue);
 }

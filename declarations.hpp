@@ -745,15 +745,15 @@ typedef struct entityState_s
 	trajectory_t apos;
 	int time;
 	int time2;
-	vec3_t origin;
-	vec3_t angles;
+	vec3_t origin2;
+	vec3_t angles2;
 	int otherEntityNum;
 	int attackerEntityNum;
 	int groundEntityNum;
 	int constantLight;
 	int loopSound;
-	int surfaceFlags;
-	int modelindex;
+	int surfType;
+	int index; // modelIndex
 	int clientNum;
 	int	iHeadIcon;
 	int	iHeadIconTeam;
@@ -765,11 +765,13 @@ typedef struct entityState_s
 	int weapon;
 	int legsAnim;
 	int torsoAnim;
-	int stage;
-	int loopfxid;
-	int hintstring;
+	int leanf;
+	int scale; // used as loopfxid, hintstring, ...
+	int dmgFlags;
 	int animMovetype;
-	vec3_t unkAngles;
+    float fTorsoHeight;
+    float fTorsoPitch;
+    float fWaistPitch;
 } entityState_t; // verified
 
 typedef struct

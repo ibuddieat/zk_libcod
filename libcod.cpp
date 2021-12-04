@@ -620,9 +620,11 @@ void custom_MSG_WriteDeltaPlayerstate2(msg_t *msg, playerState_t *from, playerSt
 	int (*sig)(msg_t *msg, playerState_t *from, playerState_t *to);
 	*(int *)&sig = hook_msg_writedeltaplayerstate->from;
     
-    Com_DPrintf("custom_MSG_WriteDeltaPlayerstate2() unknown = (%i,%i)\n", to+256, to+260);
+    Com_DPrintf("custom_MSG_WriteDeltaPlayerstate2() begin: msg->cursize = %d\n", msg->cursize);
 
 	sig(msg, from , to);
+    
+    Com_DPrintf("custom_MSG_WriteDeltaPlayerstate2() end:   msg->cursize = %d\n", msg->cursize);
     
     hook_msg_writedeltaplayerstate->hook();
 }
@@ -636,28 +638,28 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
     netField_t *field;
     float fullFloat;
     int trunc;
-    
     int local_271c;
     sbyte local_2714;
     int local_2710;
     int local_270c;
-    
     uint bits;
     int clipbits;
     int ammobits [7];
     int statsbits;
+
+    if ( g_debugEvents->boolean ) {
+        if ( from ) {
+            Com_DPrintf("custom_MSG_WriteDeltaPlayerstate() %d->%d\n", from->clientNum, to->clientNum);
+        }
+    }
 
     if ( !from ) {
         from = &dummy;
         memset( &dummy, 0, sizeof(dummy) );
     }
     
-    if (g_debugEvents->boolean) {
-        Com_DPrintf("custom_MSG_WriteDeltaPlayerstate() clientNum = %d\n", to->clientNum);
-    }
-    
 	lc = 0;
-	for ( i = 0, field = &playerStateFields; i < 105; i++, field++ ) {
+	for ( i = 0, field = &playerStateFields; i < 0x69; i++, field++ ) {
 		fromF = ( int * )( (byte *)from + field->offset );
 		toF = ( int * )( (byte *)to + field->offset );
 		if ( *fromF != *toF ) {
@@ -667,9 +669,8 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
     
 	MSG_WriteByte( msg, lc );
     
-    i = 0;
     field = &playerStateFields;
-    while (i < lc) {
+    for (i = 0; i < lc; i++, field++) {
 		fromF = ( int * )( (byte *)from + field->offset );
 		toF = ( int * )( (byte *)to + field->offset );
         
@@ -696,7 +697,7 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
                         MSG_WriteBit0(msg);
                     } else {
                         MSG_WriteBit1(msg);
-                        MSG_WriteAngle16(msg, *toF);
+                        MSG_WriteAngle16(msg, *(float *)toF);
                     }
                 } else {
                     local_270c = *toF;
@@ -720,8 +721,6 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
                 }
             }
         }
-        i++;
-        field++;
     }
     
     // Stats
@@ -2106,6 +2105,7 @@ public:
 		hook_touch_item->hook();
 		hook_g_tempentity = new cHook(0x0811EFC4, (int)custom_G_TempEntity);
 		hook_g_tempentity->hook();
+        //cracking_hook_function(0x0806A200, (int)custom_MSG_WriteDeltaPlayerstate);
 		//hook_msg_writedeltaplayerstate = new cHook(0x0806A200, (int)custom_MSG_WriteDeltaPlayerstate2);
 		//hook_msg_writedeltaplayerstate->hook();
 
