@@ -1118,6 +1118,43 @@ struct turretInfo_s
 	char stopSndPlayer;
 };
 
+struct item_ent_t
+{
+    int ammoCount;
+    int clipAmmoCount;
+    int index;
+};
+
+struct trigger_ent_t
+{
+    int threshold;
+    int accumulate;
+    int timestamp;
+    int singleUserEntIndex;
+    byte requireLookAt;
+};
+
+struct mover_ent_t
+{
+    float decelTime;
+    float aDecelTime;
+    float speed;
+    float aSpeed;
+    float midTime;
+    float aMidTime;
+    vec3_t pos1;
+    vec3_t pos2;
+    vec3_t pos3;
+    vec3_t apos1;
+    vec3_t apos2;
+    vec3_t apos3;
+};
+
+struct corpse_ent_t
+{
+    int deathAnimStartTime;
+};
+
 struct gentity_s
 {
 	entityState_t s;
@@ -1148,21 +1185,15 @@ struct gentity_s
 	int healthPoints; // 404
 	int reservedHealth; // 408 ?
 	int damage; // 412
-	int splashDamage; // 416 ?
-	int splashRadius; // 420 ?
-	float pfDecelTimeMove; // 424
-	float pfDecelTimeRotate; // 428
-	float pfSpeedMove; // 432
-	float pfSpeedRotate; // 436
-	float pfMidTimeMove; // 440
-	float pfMidTimeRotate; // 444
-	vec3_t vPos1Move; // 448 ?
-	vec3_t vPos2Move; // 460
-	vec3_t vPos3Move; // 472
-	vec3_t vPos1Rotate; // 484 ?
-	vec3_t vPos2Rotate; // 496
-	vec3_t vPos3Rotate; // 508
-	int moverState; // 520 ?
+	int unknown1; // 416 count ?
+	union { // 420
+		struct item_ent_t item[2];
+		struct trigger_ent_t trigger;
+		struct mover_ent_t mover;
+		struct corpse_ent_t corpse;
+	} params;
+	int unknown2; // 516 ?
+    int unknown3; // 520 ?
 	gentity_t** linkedEntities; // 524 ??
 	byte attachedModels[6]; // 528
 	u_int16_t attachedModelsIndexes; // 536 ?
@@ -1564,7 +1595,10 @@ typedef struct WeaponDef_t
 	snd_alias_list_t *pullbackSound;
 	snd_alias_list_t *fireSound;
 	snd_alias_list_t *fireSoundPlayer;
-	snd_alias_list_t *unknown4[4];
+	snd_alias_list_t *fireLoopSound;
+    snd_alias_list_t *fireLoopSoundPlayer;
+    snd_alias_list_t *fireStopSound;
+    snd_alias_list_t *fireStopSoundPlayer;
 	snd_alias_list_t *fireLastSound;
 	snd_alias_list_t *fireLastSoundPlayer;
 	snd_alias_list_t *meleeSwipeSound;
@@ -1736,7 +1770,8 @@ typedef struct WeaponDef_t
 	float parallelBounce[23];
 	float perpendicularBounce[23];
 	FxEffectDef_t *projTrailEffect;
-	int unknown2[4];
+    int projectileDLight; // here or after vProjectileColor
+	float vProjectileColor[3];
 	float fAdsAimPitch;
 	float fAdsCrosshairInFrac;
 	float fAdsCrosshairOutFrac;
@@ -1811,7 +1846,11 @@ typedef struct WeaponDef_t
 	int minPlayerDamage;
 	float fMaxDamageRange;
 	float fMinDamageRange;
-	int unknown5[4];
+    float destabilizationBaseTime;
+    float destabilizationTimeReductionRatio;
+    float destabilizationAngleMax;
+    int destabilizeDistance;
+    int unknown5; // here or before destabilize vars
 	float locationDamageMultipliers[19];
 	const char *fireRumble;
 	const char *meleeImpactRumble;
@@ -2600,6 +2639,14 @@ static const int objectiveFields_offset = 0x08142a20;
 #endif
 
 #if COD_VERSION == COD2_1_0
+static const int bg_itemlist_offset = 0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const int bg_itemlist_offset = 0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const int bg_itemlist_offset = 0x081850C0;
+#endif
+
+#if COD_VERSION == COD2_1_0
 static const int testclient_connect_string_offset = 0x0;  // Not tested
 #elif COD_VERSION == COD2_1_2
 static const int testclient_connect_string_offset = 0x0;  // Not tested
@@ -2621,6 +2668,7 @@ static const int testclient_connect_string_offset = 0x0814ab20;
 #define playerStateFields (*((netField_t*)( playerStateFields_offset )))
 #define entityStateFields (*((netField_t*)( entityStateFields_offset )))
 #define objectiveFields (*((netField_t*)( objectiveFields_offset )))
+#define bg_itemlist (*((gitem_t*)( bg_itemlist_offset )))
 
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6

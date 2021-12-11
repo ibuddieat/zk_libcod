@@ -1045,9 +1045,9 @@ void gsc_player_noclip(scr_entref_t id)
 
 	client_t *client = &svs.clients[id];
 
-	if ( !Q_stricmp( noclip, "on" ) || atoi( noclip ) ) {
+	if ( !I_stricmp( noclip, "on" ) || atoi( noclip ) ) {
 		client->gentity->client->noclip = qtrue;
-	} else if ( !Q_stricmp( noclip, "off" ) || !Q_stricmp( noclip, "0" ) ) {
+	} else if ( !I_stricmp( noclip, "off" ) || !I_stricmp( noclip, "0" ) ) {
 		client->gentity->client->noclip = qfalse;
 	} else {
 		client->gentity->client->noclip = !client->gentity->client->noclip;

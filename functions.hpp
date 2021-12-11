@@ -3,15 +3,6 @@
 
 /* MAKE FUNCTIONS STATIC, SO THEY CAN BE IN EVERY FILE */
 
-typedef int (*Q_stricmp_t)(const char *s1, const char *s2);
-#if COD_VERSION == COD2_1_0
-static const Q_stricmp_t Q_stricmp = (Q_stricmp_t)0x0; // Not tested
-#elif COD_VERSION == COD2_1_2
-static const Q_stricmp_t Q_stricmp = (Q_stricmp_t)0x0; // Not tested
-#elif COD_VERSION == COD2_1_3
-static const Q_stricmp_t Q_stricmp = (Q_stricmp_t)0x080B7BF8;
-#endif
-
 typedef unsigned int (*GetVariableName_t)(unsigned int a1);
 #if COD_VERSION == COD2_1_0
 static const GetVariableName_t GetVariableName = (GetVariableName_t)0x0807CA72;
@@ -363,6 +354,15 @@ static const SVC_RemoteCommand_t SVC_RemoteCommand = (SVC_RemoteCommand_t)0x0809
 static const SVC_RemoteCommand_t SVC_RemoteCommand = (SVC_RemoteCommand_t)0x08097188;
 #endif
 
+typedef int (*SV_GetGuid_t)(int num);
+#if COD_VERSION == COD2_1_0
+static const SV_GetGuid_t SV_GetGuid = (SV_GetGuid_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_GetGuid_t SV_GetGuid = (SV_GetGuid_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_GetGuid_t SV_GetGuid = (SV_GetGuid_t)0x08092412;
+#endif
+
 typedef void (*SV_GetChallenge_t)(netadr_t from);
 #if COD_VERSION == COD2_1_0
 static const SV_GetChallenge_t SV_GetChallenge = (SV_GetChallenge_t)0x0808BE54;
@@ -570,6 +570,15 @@ static const MSG_WriteData_t MSG_WriteData = (MSG_WriteData_t)0x0806804C;
 static const MSG_WriteData_t MSG_WriteData = (MSG_WriteData_t)0x08068044;
 #endif
 
+typedef void (*MSG_WriteDeltaField_t)(msg_t *msg, const byte *from, const byte *to, netField_t *field);
+#if COD_VERSION == COD2_1_0
+static const MSG_WriteDeltaField_t MSG_WriteDeltaField = (MSG_WriteDeltaField_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const MSG_WriteDeltaField_t MSG_WriteDeltaField = (MSG_WriteDeltaField_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const MSG_WriteDeltaField_t MSG_WriteDeltaField = (MSG_WriteDeltaField_t)0x080692dc;
+#endif
+
 typedef void (*MSG_WriteDeltaEntity_t)(msg_t *msg, const entityState_t *from, const entityState_t *to, qboolean force);
 #if COD_VERSION == COD2_1_0
 static const MSG_WriteDeltaEntity_t MSG_WriteDeltaEntity = (MSG_WriteDeltaEntity_t)0x0; // Not tested
@@ -588,7 +597,7 @@ static const MSG_WriteDeltaObjective_t MSG_WriteDeltaObjective = (MSG_WriteDelta
 static const MSG_WriteDeltaObjective_t MSG_WriteDeltaObjective = (MSG_WriteDeltaObjective_t)0x08069602;
 #endif
 
-typedef void (*MSG_WriteDeltaHudElems_t)(msg_t *buf,hudelem_t *from,hudelem_t *to,int count);
+typedef void (*MSG_WriteDeltaHudElems_t)(msg_t *buf, hudelem_t *from, hudelem_t *to, int count);
 #if COD_VERSION == COD2_1_0
 static const MSG_WriteDeltaHudElems_t MSG_WriteDeltaHudElems = (MSG_WriteDeltaHudElems_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
@@ -858,15 +867,6 @@ static const Scr_AddObject_t Scr_AddObject = (Scr_AddObject_t)0x0808511E;
 static const Scr_AddObject_t Scr_AddObject = (Scr_AddObject_t)0x080851EA;
 #endif
 
-typedef gentity_t * (*G_TempEntity_t)(vec3_t origin, int event);
-#if COD_VERSION == COD2_1_0
-static const G_TempEntity_t G_TempEntity = (G_TempEntity_t)0x0811CB34;
-#elif COD_VERSION == COD2_1_2
-static const G_TempEntity_t G_TempEntity = (G_TempEntity_t)0x0811EE68;
-#elif COD_VERSION == COD2_1_3
-static const G_TempEntity_t G_TempEntity = (G_TempEntity_t)0x0811EFC4;
-#endif
-
 typedef int (*DirToByte_t)(vec3_t dir);
 #if COD_VERSION == COD2_1_0
 static const DirToByte_t DirToByte = (DirToByte_t)0x080A1C2A;
@@ -948,6 +948,33 @@ static const G_LogPrintf_t G_LogPrintf = (G_LogPrintf_t)0x08109836;
 static const G_LogPrintf_t G_LogPrintf = (G_LogPrintf_t)0x08109992;
 #endif
 
+typedef void (*I_CleanStr_t)(char *str);
+#if COD_VERSION == COD2_1_0
+static const I_CleanStr_t I_CleanStr = (I_CleanStr_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const I_CleanStr_t I_CleanStr = (I_CleanStr_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const I_CleanStr_t I_CleanStr = (I_CleanStr_t)0x080B7E54;
+#endif
+
+typedef void (*I_strncpyz_t)(char *dest, const char *src, int destsize);
+#if COD_VERSION == COD2_1_0
+static const I_strncpyz_t I_strncpyz = (I_strncpyz_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const I_strncpyz_t I_strncpyz = (I_strncpyz_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const I_strncpyz_t I_strncpyz = (I_strncpyz_t)0x080B7AB6;
+#endif
+
+typedef int (*I_stricmp_t)(const char *s1, const char *s2);
+#if COD_VERSION == COD2_1_0
+static const I_stricmp_t I_stricmp = (I_stricmp_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const I_stricmp_t I_stricmp = (I_stricmp_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const I_stricmp_t I_stricmp = (I_stricmp_t)0x080B7BF8;
+#endif
+
 typedef char * (*I_strlwr_t)(char *s1);
 #if COD_VERSION == COD2_1_0
 static const I_strlwr_t I_strlwr = (I_strlwr_t)0x080B573C;
@@ -966,6 +993,15 @@ static const I_strupr_t I_strupr = (I_strupr_t)0x080B7C12;
 static const I_strupr_t I_strupr = (I_strupr_t)0x080B7D56;
 #endif
 
+typedef void (*G_FreeEntity_t)(gentity_t *entity);
+#if COD_VERSION == COD2_1_0
+static const G_FreeEntity_t G_FreeEntity = (G_FreeEntity_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_FreeEntity_t G_FreeEntity = (G_FreeEntity_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_FreeEntity_t G_FreeEntity = (G_FreeEntity_t)0x0811EE50;
+#endif
+
 typedef gentity_t * (*G_Spawn_t)(void);
 #if COD_VERSION == COD2_1_0
 static const G_Spawn_t G_Spawn = (G_Spawn_t)0x0811C546;
@@ -973,6 +1009,15 @@ static const G_Spawn_t G_Spawn = (G_Spawn_t)0x0811C546;
 static const G_Spawn_t G_Spawn = (G_Spawn_t)0x0811E87A;
 #elif COD_VERSION == COD2_1_3
 static const G_Spawn_t G_Spawn = (G_Spawn_t)0x0811E9D6;
+#endif
+
+typedef gentity_t * (*G_TempEntity_t)(vec3_t origin, int event);
+#if COD_VERSION == COD2_1_0
+static const G_TempEntity_t G_TempEntity = (G_TempEntity_t)0x0811CB34;
+#elif COD_VERSION == COD2_1_2
+static const G_TempEntity_t G_TempEntity = (G_TempEntity_t)0x0811EE68;
+#elif COD_VERSION == COD2_1_3
+static const G_TempEntity_t G_TempEntity = (G_TempEntity_t)0x0811EFC4;
 #endif
 
 typedef void (*SV_LinkEntity_t)(gentity_t *ent);
@@ -1018,6 +1063,15 @@ static const BG_FindItemForWeapon_t BG_FindItemForWeapon = (BG_FindItemForWeapon
 static const BG_FindItemForWeapon_t BG_FindItemForWeapon = (BG_FindItemForWeapon_t)0x080DF0C6;
 #elif COD_VERSION == COD2_1_3
 static const BG_FindItemForWeapon_t BG_FindItemForWeapon = (BG_FindItemForWeapon_t)0x080DF20A;
+#endif
+
+typedef int (*BG_CanItemBeGrabbed_t)(entityState_t *ent, playerState_t *ps, int touch);
+#if COD_VERSION == COD2_1_0
+static const BG_CanItemBeGrabbed_t BG_CanItemBeGrabbed = (BG_CanItemBeGrabbed_t)0x0;
+#elif COD_VERSION == COD2_1_2
+static const BG_CanItemBeGrabbed_t BG_CanItemBeGrabbed = (BG_CanItemBeGrabbed_t)0x0;
+#elif COD_VERSION == COD2_1_3
+static const BG_CanItemBeGrabbed_t BG_CanItemBeGrabbed = (BG_CanItemBeGrabbed_t)0x080DF39E;
 #endif
 
 typedef XModel_t * (*SV_XModelGet_t)(const char *name);
@@ -1090,6 +1144,33 @@ static const Scr_Notify_t Scr_Notify = (Scr_Notify_t)0x08118E4E;
 static const Scr_Notify_t Scr_Notify = (Scr_Notify_t)0x0811B182;
 #elif COD_VERSION == COD2_1_3
 static const Scr_Notify_t Scr_Notify = (Scr_Notify_t)0x0811B2DE;
+#endif
+    
+typedef int (*Pickup_Ammo_t)(gentity_t *item, gentity_t *entity);
+#if COD_VERSION == COD2_1_0
+static const Pickup_Ammo_t Pickup_Ammo = (Pickup_Ammo_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Pickup_Ammo_t Pickup_Ammo = (Pickup_Ammo_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Pickup_Ammo_t Pickup_Ammo = (Pickup_Ammo_t)0x08104E64;
+#endif
+
+typedef int (*Pickup_Weapon_t)(gentity_t *item, gentity_t *entity, entity_event_t *event, int touch);
+#if COD_VERSION == COD2_1_0
+static const Pickup_Weapon_t Pickup_Weapon = (Pickup_Weapon_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Pickup_Weapon_t Pickup_Weapon = (Pickup_Weapon_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Pickup_Weapon_t Pickup_Weapon = (Pickup_Weapon_t)0x08105072;
+#endif
+
+typedef int (*Pickup_Health_t)(gentity_t *item, gentity_t *entity);
+#if COD_VERSION == COD2_1_0
+static const Pickup_Health_t Pickup_Health = (Pickup_Health_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Pickup_Health_t Pickup_Health = (Pickup_Health_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Pickup_Health_t Pickup_Health = (Pickup_Health_t)0x081059C0;
 #endif
 
 #endif

@@ -39,7 +39,6 @@ cHook *hook_add_opcode;
 cHook *hook_print_codepos;
 cHook *hook_touch_item;
 cHook *hook_g_tempentity;
-cHook *hook_msg_writedeltaplayerstate;
 
 int codecallback_remotecommand = 0;
 int codecallback_playercommand = 0;
@@ -318,7 +317,7 @@ void custom_SV_DropClient( client_t *drop, const char *reason ) {
 	}
 
     pb_test = FUN_081384cc(reason);
-    if (!isBot && Q_stricmp(reason, "EXE_DISCONNECTED") != 0) { // do not show kick message at bots
+    if (!isBot && I_stricmp(reason, "EXE_DISCONNECTED") != 0) { // do not show kick message at bots
         if (!pb_test) {
             SV_SendServerCommand(0, 0, "e \"\x15%s^7 %s%s\"", name, "", reason);
         } else {
@@ -345,6 +344,82 @@ void custom_SV_DropClient( client_t *drop, const char *reason ) {
 	if ( i == sv_maxclients->integer ) {
 		SV_Heartbeat();
 	}
+}
+
+void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
+{
+    gclient_t * client;
+    entity_event_t event;
+    gitem_t *bg_item;
+    char name[0x40];
+    int respawn;
+    itemType_t type;
+    
+    if ( !item->active ) {
+        return;
+    }
+    
+    item->active = 0;
+    client = entity->client;
+    
+    if ( !client || entity->healthPoints <= 0 || level.clientIsSpawning ) {
+        return;
+    }
+
+    event = EV_ITEM_PICKUP;
+    bg_item = &bg_itemlist;
+    bg_item += item->params.item[0].index;
+    
+    if ( !BG_CanItemBeGrabbed(&item->s, &entity->client->ps, touch) ) {
+        if ( (!touch && (item->s).clientNum != (entity->s).number) && bg_item->giType == IT_WEAPON ) {
+            if ( !(((entity->client->ps).weapons[bg_item->giAmmoIndex >> 5] >> (bg_item->giAmmoIndex & 0x1F)) & 1) ) {
+                if ( (BG_WeaponDefs(bg_item->giAmmoIndex)->impactType - 1) < 2) {
+                    SV_GameSendServerCommand(((int)(entity[-0x3dc11].r.absmax + 1) >> 4) * -0x75075075, 0, custom_va("%c \"GAME_CANT_GET_PRIMARY_WEAP_MESSAGE\"", 0x66));
+                }
+            } else {
+                SV_GameSendServerCommand(((int)(entity[-0x3dc11].r.absmax + 1) >> 4) * -0x75075075, 0, custom_va("%c \"GAME_PICKUP_CANTCARRYMOREAMMO\x14%s\"", 0x66, BG_WeaponDefs(bg_item->giAmmoIndex)->szDisplayName));
+            }
+        }
+    } else {
+        
+        I_strncpyz(name, (entity->client->sess).manualModeName, 0x40);
+        I_CleanStr(name);
+        
+        if ( bg_item->giType == IT_WEAPON ) {
+            G_LogPrintf("Weapon;%d;%d;%s;%s\n", SV_GetGuid((entity->s).number), (entity->s).number, name, BG_WeaponDefs(bg_item->giAmmoIndex)->szInternalName);
+        } else {
+            G_LogPrintf("Item;%d;%d;%s;%s\n", SV_GetGuid((entity->s).number), (entity->s).number, name, bg_item->classname);
+        }
+        
+        type = bg_item->giType;
+        if ( type == IT_AMMO ) {
+            
+            Com_DPrintf( "custom_Touch_Item client %d picked up item %s\n", client->ps.clientNum, bg_item->classname );
+            
+            respawn = Pickup_Ammo(item, entity);
+        } else if ( type < 3 ) {
+            if (type != IT_WEAPON) {
+                return;
+            }
+            
+            Com_DPrintf( "custom_Touch_Item client %d picked up weapon %s with count %d\n", client->ps.clientNum, BG_WeaponDefs(bg_item->giAmmoIndex)->szInternalName, bg_item->quantity );
+            
+            respawn = Pickup_Weapon(item, entity, &event, touch);
+        } else {
+            if ( type != IT_HEALTH ) {
+                return;
+            }
+            respawn = Pickup_Health(item, entity);
+        }
+        if (respawn != 0) {
+            if ( (entity->client->sess).predictItemPickup == 0 ) {
+                G_AddEvent(entity, event, (item->s).index);
+            } else {
+                G_AddPredictableEvent(entity, event, (item->s).index);
+            }
+            G_FreeEntity(item);
+        }
+    }
 }
 
 char const *eventnames[] = {
@@ -613,20 +688,58 @@ gentity_t* custom_G_TempEntity(vec3_t origin, int event)
 	return tempEntity;
 }
 
-void custom_MSG_WriteDeltaPlayerstate2(msg_t *msg, playerState_t *from, playerState_t *to)
+int custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t *to, int force, int numFields, int indexBits, netField_t *entityStateFieldsPointer, int bChangeBit)
 {
-	hook_msg_writedeltaplayerstate->unhook();
+    int *toF;
+    int *fromF;
+    netField_t *field;
+    int lc;
+    int i;
 
-	int (*sig)(msg_t *msg, playerState_t *from, playerState_t *to);
-	*(int *)&sig = hook_msg_writedeltaplayerstate->from;
-    
-    Com_DPrintf("custom_MSG_WriteDeltaPlayerstate2() begin: msg->cursize = %d\n", msg->cursize);
+    /*if ( g_debugEvents->boolean ) {
+        Com_DPrintf("custom_MSG_WriteDeltaPlayerstate() for entity %d\n",to->number);
+    }*/
 
-	sig(msg, from , to);
-    
-    Com_DPrintf("custom_MSG_WriteDeltaPlayerstate2() end:   msg->cursize = %d\n", msg->cursize);
-    
-    hook_msg_writedeltaplayerstate->hook();
+    if ( !to ) {
+        if (bChangeBit != 0) {
+            MSG_WriteBit1(msg);
+        }
+        MSG_WriteBits(msg,from->number,indexBits);
+        MSG_WriteBit1(msg);
+    } else {
+        lc = 0;
+        field = entityStateFieldsPointer;
+        for (i = 0; i < numFields; i++, field++) {
+            fromF = ( int * )( (byte *)from + field->offset );
+            toF = ( int * )( (byte *)to + field->offset );
+            if ( *fromF != *toF ) {
+                lc = i + 1;
+            }
+        }
+        if (lc == 0) {
+            if (force != 0) {
+                if (bChangeBit != 0) {
+                    MSG_WriteBit1(msg);
+                }
+                MSG_WriteBits(msg,to->number,indexBits);
+                MSG_WriteBit0(msg);
+                MSG_WriteBit0(msg);
+            }
+        } else {
+            if (bChangeBit != 0) {
+                MSG_WriteBit1(msg);
+            }
+            MSG_WriteBits(msg, to->number, indexBits);
+            MSG_WriteBit0(msg);
+            MSG_WriteBit1(msg);
+            MSG_WriteByte(msg, lc);
+            field = entityStateFieldsPointer;
+            for (i = 0; i < lc; i++, field++) {
+                MSG_WriteDeltaField(msg, (byte *)from, (byte *)to, field);
+            }
+        }
+    }
+    return i;
 }
 
 void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerState_t *to)
@@ -644,14 +757,12 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
     int local_270c;
     uint bits;
     int clipbits;
-    int ammobits [7];
+    int ammobits[7];
     int statsbits;
 
-    if ( g_debugEvents->boolean ) {
-        if ( from ) {
-            Com_DPrintf("custom_MSG_WriteDeltaPlayerstate() %d->%d\n", from->clientNum, to->clientNum);
-        }
-    }
+    /*if ( g_debugEvents->boolean ) {
+        Com_DPrintf("custom_MSG_WriteDeltaPlayerstate() for client %d\n",to->clientNum);
+    }*/
 
     if ( !from ) {
         from = &dummy;
@@ -2105,9 +2216,6 @@ public:
 		hook_touch_item->hook();
 		hook_g_tempentity = new cHook(0x0811EFC4, (int)custom_G_TempEntity);
 		hook_g_tempentity->hook();
-        //cracking_hook_function(0x0806A200, (int)custom_MSG_WriteDeltaPlayerstate);
-		//hook_msg_writedeltaplayerstate = new cHook(0x0806A200, (int)custom_MSG_WriteDeltaPlayerstate2);
-		//hook_msg_writedeltaplayerstate->hook();
 
 #if COMPILE_PLAYER == 1
 		hook_play_movement = new cHook(0x08090DAC, (int)play_movement);
@@ -2118,9 +2226,11 @@ public:
 		hook_set_anim->hook();
 #endif
 
+        cracking_hook_function(0x08105CAC, (int)custom_Touch_Item);
         cracking_hook_function(0x0811F232, (int)custom_G_AddEvent);
 		cracking_hook_function(0x080EBF24, (int)hook_BG_IsWeaponValid);
         cracking_hook_function(0x080DFC78, (int)custom_BG_AddPredictableEventToPlayerstate);
+        cracking_hook_function(0x080696BC, (int)custom_MSG_WriteDeltaStruct);
         cracking_hook_function(0x0806A200, (int)custom_MSG_WriteDeltaPlayerstate);
         cracking_hook_function(0x0808F302, (int)custom_SV_SendClientGameState);
         cracking_hook_function(0x0808F02E, (int)custom_SV_DropClient);
