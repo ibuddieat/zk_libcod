@@ -2096,6 +2096,9 @@ typedef struct
 	short neck;
 	short head;
 	short pelvis;
+    short pickup_ammo;
+    short pickup_weapon;
+    short pickup_health;
 } stringIndex_t;
 
 struct bgs_s

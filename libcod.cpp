@@ -19,6 +19,8 @@ cvar_t *cl_wwwDownload;
 cvar_t *sv_cracked;
 cvar_t *sv_noauthorize;
 cvar_t *g_debugEvents;
+cvar_t *g_logPickup;
+cvar_t *g_notifyPickup;
 cvar_t *g_playerCollision;
 cvar_t *g_playerEject;
 cvar_t *sv_allowRcon;
@@ -37,7 +39,7 @@ cHook *hook_set_anim;
 cHook *hook_init_opcode;
 cHook *hook_add_opcode;
 cHook *hook_print_codepos;
-cHook *hook_touch_item;
+cHook *hook_touch_item_auto;
 cHook *hook_g_tempentity;
 
 int codecallback_remotecommand = 0;
@@ -69,6 +71,8 @@ void hook_sv_init(const char *format, ...)
 	sv_cracked = Cvar_RegisterBool("sv_cracked", qfalse, CVAR_ARCHIVE);
 	sv_noauthorize = Cvar_RegisterBool("sv_noauthorize", qfalse, CVAR_ARCHIVE);
     g_debugEvents = Cvar_RegisterBool("g_debugEvents", qfalse, CVAR_ARCHIVE);
+    g_logPickup = Cvar_RegisterBool("g_logPickup", qfalse, CVAR_ARCHIVE);
+    g_notifyPickup = Cvar_RegisterBool("g_notifyPickup", qtrue, CVAR_ARCHIVE);
 	g_playerCollision = Cvar_RegisterBool("g_playerCollision", qtrue, CVAR_ARCHIVE);
 	g_playerEject = Cvar_RegisterBool("g_playerEject", qtrue, CVAR_ARCHIVE);
 	sv_allowRcon = Cvar_RegisterBool("sv_allowRcon", qtrue, CVAR_ARCHIVE);
@@ -76,6 +80,11 @@ void hook_sv_init(const char *format, ...)
 	fs_library = Cvar_RegisterString("fs_library", "", CVAR_ARCHIVE);
 	sv_downloadMessage = Cvar_RegisterString("sv_downloadMessage", "", CVAR_ARCHIVE);
 	fs_callbacks = Cvar_RegisterString("fs_callbacks", "", CVAR_ARCHIVE);
+    
+    // Register custom const strings (e.g., those used for notify calls)
+    scr_const.pickup_ammo = GScr_AllocString("pickup_ammo");
+    scr_const.pickup_weapon = GScr_AllocString("pickup_weapon");
+    scr_const.pickup_health = GScr_AllocString("pickup_health");
 
 	// Force download on clients
 	cl_allowDownload = Cvar_RegisterBool("cl_allowDownload", qtrue, CVAR_ARCHIVE | CVAR_SYSTEMINFO);
@@ -287,7 +296,7 @@ void custom_SV_DropClient( client_t *drop, const char *reason ) {
 	qboolean isBot = qfalse;
     char name[32];
     
-    Com_DPrintf( "custom_SV_DropClient for %s\n", drop->name );
+    Com_DPrintf("custom_SV_DropClient for %s\n", drop->name);
 
 	if ( drop->state == CS_ZOMBIE ) {
 		return;     // already dropped
@@ -297,7 +306,7 @@ void custom_SV_DropClient( client_t *drop, const char *reason ) {
     strcpy(name, drop->name);
     FUN_0808e1ea(drop);
 
-	Com_DPrintf( "Going to CS_ZOMBIE for %s\n", name );
+	Com_DPrintf("Going to CS_ZOMBIE for %s\n", name);
 	drop->state = CS_ZOMBIE;        // become free in a few seconds
 
     if ( drop->netchan.remoteAddress.type == NA_BOT ) {
@@ -385,40 +394,55 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
         I_strncpyz(name, (entity->client->sess).manualModeName, 0x40);
         I_CleanStr(name);
         
-        if ( bg_item->giType == IT_WEAPON ) {
-            G_LogPrintf("Weapon;%d;%d;%s;%s\n", SV_GetGuid((entity->s).number), (entity->s).number, name, BG_WeaponDefs(bg_item->giAmmoIndex)->szInternalName);
-        } else {
-            G_LogPrintf("Item;%d;%d;%s;%s\n", SV_GetGuid((entity->s).number), (entity->s).number, name, bg_item->classname);
+        if ( g_logPickup->boolean ) {
+            if ( bg_item->giType == IT_WEAPON ) {
+                Com_DPrintf("custom_Touch_Item client %d picked up weapon %s with count %d\n", client->ps.clientNum, BG_WeaponDefs(bg_item->giAmmoIndex)->szInternalName, bg_item->quantity);
+                G_LogPrintf("Weapon;%d;%d;%s;%s\n", SV_GetGuid((entity->s).number), (entity->s).number, name, BG_WeaponDefs(bg_item->giAmmoIndex)->szInternalName);
+            } else {
+                Com_DPrintf("custom_Touch_Item client %d picked up ammo %s\n", client->ps.clientNum, bg_item->classname);
+                G_LogPrintf("Item;%d;%d;%s;%s\n", SV_GetGuid((entity->s).number), (entity->s).number, name, bg_item->classname);
+            }
         }
         
+        respawn = qtrue;
         type = bg_item->giType;
         if ( type == IT_AMMO ) {
-            
-            Com_DPrintf( "custom_Touch_Item client %d picked up item %s\n", client->ps.clientNum, bg_item->classname );
-            
-            respawn = Pickup_Ammo(item, entity);
+            if ( g_notifyPickup->boolean ) {
+                Scr_Notify(entity, scr_const.pickup_ammo, 0);
+            } else {
+                respawn = Pickup_Ammo(item, entity);
+            }
         } else if ( type < 3 ) {
             if (type != IT_WEAPON) {
                 return;
             }
-            
-            Com_DPrintf( "custom_Touch_Item client %d picked up weapon %s with count %d\n", client->ps.clientNum, BG_WeaponDefs(bg_item->giAmmoIndex)->szInternalName, bg_item->quantity );
-            
-            respawn = Pickup_Weapon(item, entity, &event, touch);
+            if ( g_notifyPickup->boolean ) {
+                Scr_AddString(BG_WeaponDefs(bg_item->giAmmoIndex)->szInternalName);
+                Scr_Notify(entity, scr_const.pickup_weapon, 1);
+            } else {
+                respawn = Pickup_Weapon(item, entity, &event, touch);
+            }
         } else {
             if ( type != IT_HEALTH ) {
                 return;
             }
-            respawn = Pickup_Health(item, entity);
-        }
-        if (respawn != 0) {
-            if ( (entity->client->sess).predictItemPickup == 0 ) {
-                G_AddEvent(entity, event, (item->s).index);
+            if ( g_notifyPickup->boolean ) {
+                Scr_Notify(entity, scr_const.pickup_health, 0);
             } else {
-                G_AddPredictableEvent(entity, event, (item->s).index);
+                respawn = Pickup_Health(item, entity);
             }
-            G_FreeEntity(item);
         }
+        
+        if ( !respawn ) {
+            return;
+        }
+        
+        if ( (entity->client->sess).predictItemPickup == 0 ) {
+            G_AddEvent(entity, event, (item->s).index);
+        } else {
+            G_AddPredictableEvent(entity, event, (item->s).index);
+        }
+        G_FreeEntity(item);
     }
 }
 
@@ -625,8 +649,8 @@ char const *eventnames[] = {
 };
 
 void custom_BG_AddPredictableEventToPlayerstate( int event, int eventParm, playerState_t *ps ) {
-    if (event != EV_NONE) {
-        if (g_debugEvents->boolean)
+    if ( event != EV_NONE ) {
+        if ( g_debugEvents->boolean )
             Com_DPrintf("custom_BG_AddPredictableEventToPlayerstate() event %26s for client %2d\n", eventnames[event], ps->clientNum);
         
         /*
@@ -646,13 +670,13 @@ void custom_BG_AddPredictableEventToPlayerstate( int event, int eventParm, playe
 
 void custom_G_AddEvent (gentity_t * ent, int event, int eventParm) {
 	if ( ent->client ) {
-        if (g_debugEvents->boolean)
+        if ( g_debugEvents->boolean )
             Com_DPrintf("custom_G_AddEvent() event %26s for client %2d\n", eventnames[event], ent->client->ps.clientNum);
 		ent->client->ps.events[ent->client->ps.eventSequence & ( MAX_EVENTS - 1 )] = event;
 		ent->client->ps.eventParms[ent->client->ps.eventSequence & ( MAX_EVENTS - 1 )] = eventParm;
 		ent->client->ps.eventSequence++;
 	} else {
-        if (g_debugEvents->boolean)
+        if ( g_debugEvents->boolean )
             Com_DPrintf("custom_G_AddEvent() event %26s for entity %2d\n", eventnames[event], ent->s.number);
 		ent->s.events[ent->s.eventSequence & ( MAX_EVENTS - 1 )] = event;
 		ent->s.eventParms[ent->s.eventSequence & ( MAX_EVENTS - 1 )] = eventParm;
@@ -669,7 +693,7 @@ gentity_t* custom_G_TempEntity(vec3_t origin, int event)
 	gentity_t* (*sig)(vec3_t origin, int event);
 	*(int *)&sig = hook_g_tempentity->from;
 
-    if (g_debugEvents->boolean)
+    if ( g_debugEvents->boolean )
         Com_DPrintf("custom_G_TempEntity() event %26s at (%f,%f,%f)\n", eventnames[event], origin[0], origin[1], origin[2]);
     
     /*
@@ -1408,19 +1432,19 @@ void hook_scriptError(int a1, int a2, int a3, void *a4)
 }
 
 int player_sw_pickup[MAX_CLIENTS] = {1};
-int touch_item(gentity_t * item, gentity_t * entity, int touch)
+int touch_item_auto(gentity_t * item, gentity_t * entity, int touch)
 {
 	if (!player_sw_pickup[entity->client->ps.clientNum])
 		return 0;
 	
-	hook_touch_item->unhook();
+	hook_touch_item_auto->unhook();
 	
 	int (*sig)(gentity_t *, gentity_t *, int);
-	*(int *)&sig = hook_touch_item->from;
+	*(int *)&sig = hook_touch_item_auto->from;
 
 	int ret = sig(item, entity, touch);
 	
-	hook_touch_item->hook();
+	hook_touch_item_auto->hook();
 	
 	return ret;
 }
@@ -1719,7 +1743,7 @@ bool SVC_ApplyRconLimit( netadr_t from, bool badRconPassword )
     if ( SVC_RateLimitAddress( from, 10, 1000 ) )
     {
         if (!SVC_callback("RCON:ADDRESS", NET_AdrToString(from)))
-            Com_DPrintf( "SVC_RemoteCommand: rate limit from %s exceeded, dropping request\n", NET_AdrToString( from ) );
+            Com_DPrintf("SVC_RemoteCommand: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
         return true;
     }
 
@@ -1731,7 +1755,7 @@ bool SVC_ApplyRconLimit( netadr_t from, bool badRconPassword )
         if ( SVC_RateLimit( &bucket, 10, 1000 ) )
         {
             if (!SVC_callback("RCON:GLOBAL", NET_AdrToString(from)))
-                Com_DPrintf( "SVC_RemoteCommand: rate limit exceeded, dropping request\n" );
+                Com_DPrintf("SVC_RemoteCommand: rate limit exceeded, dropping request\n");
             return true;
         }
     }
@@ -2082,8 +2106,8 @@ public:
 		hook_player_eject->hook();
 		hook_fire_grenade = new cHook(0x0810C1F6, (int)fire_grenade);
 		hook_fire_grenade->hook();
-		hook_touch_item = new cHook(0x081037F0, int(touch_item));
-		hook_touch_item->hook();
+		hook_touch_item_auto = new cHook(0x081037F0, int(touch_item_auto));
+		hook_touch_item_auto->hook();
 
 #if COMPILE_PLAYER == 1
 		hook_play_movement = new cHook(0x0808F488, (int)play_movement);
@@ -2147,8 +2171,8 @@ public:
 		hook_player_eject->hook();
 		hook_fire_grenade = new cHook(0x0810E532, (int)fire_grenade);
 		hook_fire_grenade->hook();
-		hook_touch_item = new cHook(0x08105B24, int(touch_item));
-		hook_touch_item->hook();
+		hook_touch_item_auto = new cHook(0x08105B24, int(touch_item_auto));
+		hook_touch_item_auto->hook();
 
 #if COMPILE_PLAYER == 1
 		hook_play_movement = new cHook(0x08090D18, (int)play_movement);
@@ -2212,8 +2236,8 @@ public:
 		hook_player_eject->hook();
 		hook_fire_grenade = new cHook(0x0810E68E, (int)fire_grenade);
 		hook_fire_grenade->hook();
-		hook_touch_item = new cHook(0x08105C80, int(touch_item));
-		hook_touch_item->hook();
+		hook_touch_item_auto = new cHook(0x08105C80, int(touch_item_auto));
+		hook_touch_item_auto->hook();
 		hook_g_tempentity = new cHook(0x0811EFC4, (int)custom_G_TempEntity);
 		hook_g_tempentity->hook();
 

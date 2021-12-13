@@ -1145,7 +1145,16 @@ static const Scr_Notify_t Scr_Notify = (Scr_Notify_t)0x0811B182;
 #elif COD_VERSION == COD2_1_3
 static const Scr_Notify_t Scr_Notify = (Scr_Notify_t)0x0811B2DE;
 #endif
-    
+
+typedef unsigned short (*GScr_AllocString_t)(const char *s);
+#if COD_VERSION == COD2_1_0
+static const GScr_AllocString_t GScr_AllocString = (GScr_AllocString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const GScr_AllocString_t GScr_AllocString = (GScr_AllocString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const GScr_AllocString_t GScr_AllocString = (GScr_AllocString_t)0x081101B4;
+#endif   
+   
 typedef int (*Pickup_Ammo_t)(gentity_t *item, gentity_t *entity);
 #if COD_VERSION == COD2_1_0
 static const Pickup_Ammo_t Pickup_Ammo = (Pickup_Ammo_t)0x0; // Not tested
