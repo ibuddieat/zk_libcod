@@ -41,6 +41,7 @@ cHook *hook_add_opcode;
 cHook *hook_print_codepos;
 cHook *hook_touch_item_auto;
 cHook *hook_g_tempentity;
+cHook *hook_gscr_loadconsts;
 
 int codecallback_remotecommand = 0;
 int codecallback_playercommand = 0;
@@ -80,11 +81,6 @@ void hook_sv_init(const char *format, ...)
 	fs_library = Cvar_RegisterString("fs_library", "", CVAR_ARCHIVE);
 	sv_downloadMessage = Cvar_RegisterString("sv_downloadMessage", "", CVAR_ARCHIVE);
 	fs_callbacks = Cvar_RegisterString("fs_callbacks", "", CVAR_ARCHIVE);
-    
-    // Register custom const strings (e.g., those used for notify calls)
-    scr_const.pickup_ammo = GScr_AllocString("pickup_ammo");
-    scr_const.pickup_weapon = GScr_AllocString("pickup_weapon");
-    scr_const.pickup_health = GScr_AllocString("pickup_health");
 
 	// Force download on clients
 	cl_allowDownload = Cvar_RegisterBool("cl_allowDownload", qtrue, CVAR_ARCHIVE | CVAR_SYSTEMINFO);
@@ -355,6 +351,22 @@ void custom_SV_DropClient( client_t *drop, const char *reason ) {
 	}
 }
 
+void custom_gsc_loadconsts()
+{
+	hook_gscr_loadconsts->unhook();
+
+	void (*sig)(void);
+	*(int *)&sig = hook_gscr_loadconsts->from;
+    
+    scr_const.pickup_ammo = GScr_AllocString("pickup_ammo");
+    scr_const.pickup_weapon = GScr_AllocString("pickup_weapon");
+    scr_const.pickup_health = GScr_AllocString("pickup_health");
+
+	sig();
+    
+    hook_gscr_loadconsts->hook();
+}
+
 void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 {
     gclient_t * client;
@@ -417,8 +429,9 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
                 return;
             }
             if ( g_notifyPickup->boolean ) {
+                Scr_AddVector(item->r.currentOrigin);
                 Scr_AddString(BG_WeaponDefs(bg_item->giAmmoIndex)->szInternalName);
-                Scr_Notify(entity, scr_const.pickup_weapon, 1);
+                Scr_Notify(entity, scr_const.pickup_weapon, 2);
             } else {
                 respawn = Pickup_Weapon(item, entity, &event, touch);
             }
@@ -2240,6 +2253,8 @@ public:
 		hook_touch_item_auto->hook();
 		hook_g_tempentity = new cHook(0x0811EFC4, (int)custom_G_TempEntity);
 		hook_g_tempentity->hook();
+        hook_gscr_loadconsts = new cHook(0x081224F8, (int)custom_gsc_loadconsts);
+		hook_gscr_loadconsts->hook();
 
 #if COMPILE_PLAYER == 1
 		hook_play_movement = new cHook(0x08090DAC, (int)play_movement);
