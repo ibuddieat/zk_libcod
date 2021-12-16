@@ -1230,8 +1230,8 @@ typedef struct
 typedef struct client_s
 {
 	clientState_t	state;
-	int				unksnapshotvar;
-	int				delayDropMsg;
+	qboolean		delayed;
+	const char		*delayDropMsg;
 	char			userinfo[1024];
 	reliableCommands_t	reliableCommands[128];
 	int				reliableSequence;
