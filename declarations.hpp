@@ -1231,7 +1231,7 @@ typedef struct client_s
 {
 	clientState_t	state;
 	int				unksnapshotvar;
-	int				unksnapshotvar2;
+	int				delayDropMsg;
 	char			userinfo[1024];
 	reliableCommands_t	reliableCommands[128];
 	int				reliableSequence;

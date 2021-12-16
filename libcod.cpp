@@ -284,9 +284,6 @@ void hook_ClientUserinfoChanged(int clientNum)
 	Scr_FreeThread(ret);
 }
 
-typedef void (*FUN_0808e1ea_t)(client_t *client);
-FUN_0808e1ea_t FUN_0808e1ea = (FUN_0808e1ea_t)0x0808e1ea;
-
 typedef int (*FUN_081384cc_t)(const char *str);
 FUN_081384cc_t FUN_081384cc = (FUN_081384cc_t)0x081384cc;
 
@@ -302,9 +299,9 @@ void custom_SV_DropClient( client_t *drop, const char *reason ) {
 		return;	 // already dropped
 	}
 	
-	drop->unksnapshotvar2 = 0; // *(drop+8)
+	drop->delayDropMsg = 0;
 	strcpy(name, drop->name);
-	FUN_0808e1ea(drop);
+	SV_FreeClient(drop);
 
 	Com_DPrintf("Going to CS_ZOMBIE for %s\n", name);
 	drop->state = CS_ZOMBIE;		// become free in a few seconds

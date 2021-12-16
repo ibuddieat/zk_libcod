@@ -264,6 +264,15 @@ static const SV_SendServerCommand_t SV_SendServerCommand = (SV_SendServerCommand
 static const SV_SendServerCommand_t SV_SendServerCommand = (SV_SendServerCommand_t)0x08094A10;
 #endif
 
+typedef void (*SV_FreeClient_t)(client_t *client);
+#if COD_VERSION == COD2_1_0
+static const SV_FreeClient_t SV_FreeClient = (SV_FreeClient_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_FreeClient_t SV_FreeClient = (SV_FreeClient_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_FreeClient_t SV_FreeClient = (SV_FreeClient_t)0x0808E1EA;
+#endif
+
 typedef void (*SV_DropClient_t)(client_t *drop, const char *reason);
 #if COD_VERSION == COD2_1_0
 static const SV_DropClient_t SV_DropClient = (SV_DropClient_t)0x0808DC8C;
