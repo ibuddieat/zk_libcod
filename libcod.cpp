@@ -25,6 +25,7 @@ cvar_t *g_playerCollision;
 cvar_t *g_playerEject;
 cvar_t *sv_allowRcon;
 cvar_t *sv_limitLocalRcon;
+cvar_t *sv_logRcon;
 cvar_t *fs_library;
 cvar_t *sv_downloadMessage;
 cvar_t *fs_callbacks;
@@ -53,6 +54,8 @@ int codecallback_meleebutton = 0;
 int codecallback_usebutton = 0;
 int codecallback_attackbutton = 0;
 
+qboolean logRcon_enabled = qtrue;
+
 /* ... ... ... */
 
 void hook_sv_init(const char *format, ...)
@@ -71,13 +74,14 @@ void hook_sv_init(const char *format, ...)
 	// Register custom cvars
 	sv_cracked = Cvar_RegisterBool("sv_cracked", qfalse, CVAR_ARCHIVE);
 	sv_noauthorize = Cvar_RegisterBool("sv_noauthorize", qfalse, CVAR_ARCHIVE);
-    g_debugEvents = Cvar_RegisterBool("g_debugEvents", qfalse, CVAR_ARCHIVE);
-    g_logPickup = Cvar_RegisterBool("g_logPickup", qfalse, CVAR_ARCHIVE);
-    g_notifyPickup = Cvar_RegisterBool("g_notifyPickup", qtrue, CVAR_ARCHIVE);
+	g_debugEvents = Cvar_RegisterBool("g_debugEvents", qfalse, CVAR_ARCHIVE);
+	g_logPickup = Cvar_RegisterBool("g_logPickup", qfalse, CVAR_ARCHIVE);
+	g_notifyPickup = Cvar_RegisterBool("g_notifyPickup", qtrue, CVAR_ARCHIVE);
 	g_playerCollision = Cvar_RegisterBool("g_playerCollision", qtrue, CVAR_ARCHIVE);
 	g_playerEject = Cvar_RegisterBool("g_playerEject", qtrue, CVAR_ARCHIVE);
 	sv_allowRcon = Cvar_RegisterBool("sv_allowRcon", qtrue, CVAR_ARCHIVE);
-    sv_limitLocalRcon = Cvar_RegisterBool("sv_limitLocalRcon", qfalse, CVAR_ARCHIVE);
+	sv_limitLocalRcon = Cvar_RegisterBool("sv_limitLocalRcon", qfalse, CVAR_ARCHIVE);
+	sv_logRcon = Cvar_RegisterBool("sv_logRcon", qfalse, CVAR_ARCHIVE);
 	fs_library = Cvar_RegisterString("fs_library", "", CVAR_ARCHIVE);
 	sv_downloadMessage = Cvar_RegisterString("sv_downloadMessage", "", CVAR_ARCHIVE);
 	fs_callbacks = Cvar_RegisterString("fs_callbacks", "", CVAR_ARCHIVE);
@@ -290,24 +294,24 @@ void custom_SV_DropClient( client_t *drop, const char *reason ) {
 	int i, pb_test;
 	challenge_t *challenge;
 	qboolean isBot = qfalse;
-    char name[32];
-    
-    Com_DPrintf("custom_SV_DropClient for %s\n", drop->name);
+	char name[32];
+	
+	Com_DPrintf("custom_SV_DropClient for %s\n", drop->name);
 
 	if ( drop->state == CS_ZOMBIE ) {
-		return;     // already dropped
+		return;	 // already dropped
 	}
-    
-    drop->unksnapshotvar2 = 0; // *(drop+8)
-    strcpy(name, drop->name);
-    FUN_0808e1ea(drop);
+	
+	drop->unksnapshotvar2 = 0; // *(drop+8)
+	strcpy(name, drop->name);
+	FUN_0808e1ea(drop);
 
 	Com_DPrintf("Going to CS_ZOMBIE for %s\n", name);
-	drop->state = CS_ZOMBIE;        // become free in a few seconds
+	drop->state = CS_ZOMBIE;		// become free in a few seconds
 
-    if ( drop->netchan.remoteAddress.type == NA_BOT ) {
-        isBot = qtrue;
-    }
+	if ( drop->netchan.remoteAddress.type == NA_BOT ) {
+		isBot = qtrue;
+	}
 
 	if ( !isBot ) {
 		// see if we already have a challenge for this ip
@@ -321,21 +325,21 @@ void custom_SV_DropClient( client_t *drop, const char *reason ) {
 		}
 	}
 
-    pb_test = FUN_081384cc(reason);
-    if (!isBot && I_stricmp(reason, "EXE_DISCONNECTED") != 0) { // do not show kick message at bots
-        if (!pb_test) {
-            SV_SendServerCommand(0, 0, "e \"\x15%s^7 %s%s\"", name, "", reason);
-        } else {
-            SV_SendServerCommand(0, 0, "e \"\x15%s^7 %s%s\"", name, "\x14", reason);
-        }
-    }
-    Com_Printf("%i:%s %s\n", drop - svs.clients, name, reason);
-    SV_SendServerCommand(0, 1, "J %d", drop - svs.clients);
-    if (!pb_test) {
-        SV_SendServerCommand(drop, 1, "w \"%s^7 %s\" PB", name, reason);
-    } else {
-        SV_SendServerCommand(drop, 1, "w \"%s\"", reason);
-    }
+	pb_test = FUN_081384cc(reason);
+	if (!isBot && I_stricmp(reason, "EXE_DISCONNECTED") != 0) { // do not show kick message at bots
+		if (!pb_test) {
+			SV_SendServerCommand(0, 0, "e \"\x15%s^7 %s%s\"", name, "", reason);
+		} else {
+			SV_SendServerCommand(0, 0, "e \"\x15%s^7 %s%s\"", name, "\x14", reason);
+		}
+	}
+	Com_Printf("%i:%s %s\n", drop - svs.clients, name, reason);
+	SV_SendServerCommand(0, 1, "J %d", drop - svs.clients);
+	if (!pb_test) {
+		SV_SendServerCommand(drop, 1, "w \"%s^7 %s\" PB", name, reason);
+	} else {
+		SV_SendServerCommand(drop, 1, "w \"%s\"", reason);
+	}
 
 	// if this was the last client on the server, send a heartbeat
 	// to the master so it is known the server is empty
@@ -357,106 +361,109 @@ void custom_gsc_loadconsts()
 
 	void (*sig)(void);
 	*(int *)&sig = hook_gscr_loadconsts->from;
-    
-    scr_const.pickup_ammo = GScr_AllocString("pickup_ammo");
-    scr_const.pickup_weapon = GScr_AllocString("pickup_weapon");
-    scr_const.pickup_health = GScr_AllocString("pickup_health");
+	
+	scr_const.pickup_ammo = GScr_AllocString("pickup_ammo");
+	scr_const.pickup_weapon = GScr_AllocString("pickup_weapon");
+	scr_const.pickup_health = GScr_AllocString("pickup_health");
 
 	sig();
-    
-    hook_gscr_loadconsts->hook();
+	
+	hook_gscr_loadconsts->hook();
 }
 
 void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 {
-    gclient_t * client;
-    entity_event_t event;
-    gitem_t *bg_item;
-    char name[0x40];
-    int respawn;
-    itemType_t type;
-    
-    if ( !item->active ) {
-        return;
-    }
-    
-    item->active = 0;
-    client = entity->client;
-    
-    if ( !client || entity->healthPoints <= 0 || level.clientIsSpawning ) {
-        return;
-    }
+	gclient_t * client;
+	entity_event_t event;
+	gitem_t *bg_item;
+	char name[0x40];
+	int respawn;
+	itemType_t type;
+	
+	if ( !item->active ) {
+		return;
+	}
+	
+	item->active = 0;
+	client = entity->client;
+	
+	if ( !client || entity->healthPoints <= 0 || level.clientIsSpawning ) {
+		return;
+	}
 
-    event = EV_ITEM_PICKUP;
-    bg_item = &bg_itemlist;
-    bg_item += item->params.item[0].index;
-    
-    if ( !BG_CanItemBeGrabbed(&item->s, &entity->client->ps, touch) ) {
-        if ( (!touch && (item->s).clientNum != (entity->s).number) && bg_item->giType == IT_WEAPON ) {
-            if ( !(((entity->client->ps).weapons[bg_item->giAmmoIndex >> 5] >> (bg_item->giAmmoIndex & 0x1F)) & 1) ) {
-                if ( (BG_WeaponDefs(bg_item->giAmmoIndex)->impactType - 1) < 2) {
-                    SV_GameSendServerCommand(((int)(entity[-0x3dc11].r.absmax + 1) >> 4) * -0x75075075, 0, custom_va("%c \"GAME_CANT_GET_PRIMARY_WEAP_MESSAGE\"", 0x66));
-                }
-            } else {
-                SV_GameSendServerCommand(((int)(entity[-0x3dc11].r.absmax + 1) >> 4) * -0x75075075, 0, custom_va("%c \"GAME_PICKUP_CANTCARRYMOREAMMO\x14%s\"", 0x66, BG_WeaponDefs(bg_item->giAmmoIndex)->szDisplayName));
-            }
-        }
-    } else {
-        
-        I_strncpyz(name, (entity->client->sess).manualModeName, 0x40);
-        I_CleanStr(name);
-        
-        if ( g_logPickup->boolean ) {
-            if ( bg_item->giType == IT_WEAPON ) {
-                Com_DPrintf("custom_Touch_Item client %d picked up weapon %s with count %d\n", client->ps.clientNum, BG_WeaponDefs(bg_item->giAmmoIndex)->szInternalName, bg_item->quantity);
-                G_LogPrintf("Weapon;%d;%d;%s;%s\n", SV_GetGuid((entity->s).number), (entity->s).number, name, BG_WeaponDefs(bg_item->giAmmoIndex)->szInternalName);
-            } else {
-                Com_DPrintf("custom_Touch_Item client %d picked up ammo %s\n", client->ps.clientNum, bg_item->classname);
-                G_LogPrintf("Item;%d;%d;%s;%s\n", SV_GetGuid((entity->s).number), (entity->s).number, name, bg_item->classname);
-            }
-        }
-        
-        respawn = qtrue;
-        type = bg_item->giType;
-        if ( type == IT_AMMO ) {
-            if ( g_notifyPickup->boolean ) {
-                Scr_Notify(entity, scr_const.pickup_ammo, 0);
-            } else {
-                respawn = Pickup_Ammo(item, entity);
-            }
-        } else if ( type < 3 ) {
-            if (type != IT_WEAPON) {
-                return;
-            }
-            if ( g_notifyPickup->boolean ) {
-                Scr_AddVector(item->r.currentOrigin);
-                Scr_AddString(BG_WeaponDefs(bg_item->giAmmoIndex)->szInternalName);
-                Scr_Notify(entity, scr_const.pickup_weapon, 2);
-            } else {
-                respawn = Pickup_Weapon(item, entity, &event, touch);
-            }
-        } else {
-            if ( type != IT_HEALTH ) {
-                return;
-            }
-            if ( g_notifyPickup->boolean ) {
-                Scr_Notify(entity, scr_const.pickup_health, 0);
-            } else {
-                respawn = Pickup_Health(item, entity);
-            }
-        }
-        
-        if ( !respawn ) {
-            return;
-        }
-        
-        if ( (entity->client->sess).predictItemPickup == 0 ) {
-            G_AddEvent(entity, event, (item->s).index);
-        } else {
-            G_AddPredictableEvent(entity, event, (item->s).index);
-        }
-        G_FreeEntity(item);
-    }
+	event = EV_ITEM_PICKUP;
+	bg_item = &bg_itemlist;
+	bg_item += item->params.item[0].index;
+	
+	if ( !BG_CanItemBeGrabbed(&item->s, &entity->client->ps, touch) ) {
+		if ( (!touch && (item->s).clientNum != (entity->s).number) && bg_item->giType == IT_WEAPON ) {
+			if ( !(((entity->client->ps).weapons[bg_item->giAmmoIndex >> 5] >> (bg_item->giAmmoIndex & 0x1F)) & 1) ) {
+				if ( (BG_WeaponDefs(bg_item->giAmmoIndex)->impactType - 1) < 2) {
+					SV_GameSendServerCommand(((int)(entity[-0x3dc11].r.absmax + 1) >> 4) * -0x75075075, 0, custom_va("%c \"GAME_CANT_GET_PRIMARY_WEAP_MESSAGE\"", 0x66));
+				}
+			} else {
+				SV_GameSendServerCommand(((int)(entity[-0x3dc11].r.absmax + 1) >> 4) * -0x75075075, 0, custom_va("%c \"GAME_PICKUP_CANTCARRYMOREAMMO\x14%s\"", 0x66, BG_WeaponDefs(bg_item->giAmmoIndex)->szDisplayName));
+			}
+		}
+	} else {
+		
+		I_strncpyz(name, (entity->client->sess).manualModeName, 0x40);
+		I_CleanStr(name);
+		
+		if ( g_logPickup->boolean ) {
+			if ( bg_item->giType == IT_WEAPON ) {
+				Com_DPrintf("custom_Touch_Item client %d picked up weapon %s with count %d\n", client->ps.clientNum, BG_WeaponDefs(bg_item->giAmmoIndex)->szInternalName, bg_item->quantity);
+				G_LogPrintf("Weapon;%d;%d;%s;%s\n", SV_GetGuid((entity->s).number), (entity->s).number, name, BG_WeaponDefs(bg_item->giAmmoIndex)->szInternalName);
+			} else {
+				Com_DPrintf("custom_Touch_Item client %d picked up ammo %s\n", client->ps.clientNum, bg_item->classname);
+				G_LogPrintf("Item;%d;%d;%s;%s\n", SV_GetGuid((entity->s).number), (entity->s).number, name, bg_item->classname);
+			}
+		}
+		
+		respawn = qtrue;
+		type = bg_item->giType;
+		if ( type == IT_AMMO ) {
+			if ( g_notifyPickup->boolean ) {
+				Scr_Notify(entity, scr_const.pickup_ammo, 0);
+			} else {
+				respawn = Pickup_Ammo(item, entity);
+			}
+		} else if ( type < 3 ) {
+			if (type != IT_WEAPON) {
+				return;
+			}
+			if ( g_notifyPickup->boolean ) {
+				Scr_AddVector(item->r.currentAngles);
+				Scr_AddVector(item->r.currentOrigin);
+				Scr_AddInt(bg_item->quantity);
+				Scr_AddString(bg_item->display_name);
+				Scr_AddString(BG_WeaponDefs(bg_item->giAmmoIndex)->szInternalName);
+				Scr_Notify(entity, scr_const.pickup_weapon, 2);
+			} else {
+				respawn = Pickup_Weapon(item, entity, &event, touch);
+			}
+		} else {
+			if ( type != IT_HEALTH ) {
+				return;
+			}
+			if ( g_notifyPickup->boolean ) {
+				Scr_Notify(entity, scr_const.pickup_health, 0);
+			} else {
+				respawn = Pickup_Health(item, entity);
+			}
+		}
+		
+		if ( !respawn ) {
+			return;
+		}
+		
+		if ( (entity->client->sess).predictItemPickup == 0 ) {
+			G_AddEvent(entity, event, (item->s).index);
+		} else {
+			G_AddPredictableEvent(entity, event, (item->s).index);
+		}
+		G_FreeEntity(item);
+	}
 }
 
 char const *eventnames[] = {
@@ -470,7 +477,7 @@ char const *eventnames[] = {
 	"EV_FOOTSTEP_RUN_DIRT",
 	"EV_FOOTSTEP_RUN_FLESH",
 	"EV_FOOTSTEP_RUN_FOLIAGE",
-	"EV_FOOTSTEP_RUN_GLASS",      // 10
+	"EV_FOOTSTEP_RUN_GLASS",	  // 10
 	"EV_FOOTSTEP_RUN_GRASS",
 	"EV_FOOTSTEP_RUN_GRAVEL",
 	"EV_FOOTSTEP_RUN_ICE",
@@ -480,7 +487,7 @@ char const *eventnames[] = {
 	"EV_FOOTSTEP_RUN_PLASTER",
 	"EV_FOOTSTEP_RUN_ROCK",
 	"EV_FOOTSTEP_RUN_SAND",
-	"EV_FOOTSTEP_RUN_SNOW",       // 20
+	"EV_FOOTSTEP_RUN_SNOW",	   // 20
 	"EV_FOOTSTEP_RUN_WATER",
 	"EV_FOOTSTEP_RUN_WOOD",
 	"EV_FOOTSTEP_RUN_ASPHALT",
@@ -490,7 +497,7 @@ char const *eventnames[] = {
 	"EV_FOOTSTEP_WALK_CARPET",
 	"EV_FOOTSTEP_WALK_CLOTH",
 	"EV_FOOTSTEP_WALK_CONCRETE",
-	"EV_FOOTSTEP_WALK_DIRT",      // 30
+	"EV_FOOTSTEP_WALK_DIRT",	  // 30
 	"EV_FOOTSTEP_WALK_FLESH",
 	"EV_FOOTSTEP_WALK_FOLIAGE",
 	"EV_FOOTSTEP_WALK_GLASS",
@@ -520,7 +527,7 @@ char const *eventnames[] = {
 	"EV_FOOTSTEP_PRONE_GRASS",
 	"EV_FOOTSTEP_PRONE_GRAVEL",
 	"EV_FOOTSTEP_PRONE_ICE",
-	"EV_FOOTSTEP_PRONE_METAL",    // 60
+	"EV_FOOTSTEP_PRONE_METAL",	// 60
 	"EV_FOOTSTEP_PRONE_MUD",
 	"EV_FOOTSTEP_PRONE_PAPER",
 	"EV_FOOTSTEP_PRONE_PLASTER",
@@ -530,7 +537,7 @@ char const *eventnames[] = {
 	"EV_FOOTSTEP_PRONE_WATER",
 	"EV_FOOTSTEP_PRONE_WOOD",
 	"EV_FOOTSTEP_PRONE_ASPHALT",
-	"EV_JUMP_DEFAULT",            // 70
+	"EV_JUMP_DEFAULT",			// 70
 	"EV_JUMP_BARK",
 	"EV_JUMP_BRICK",
 	"EV_JUMP_CARPET",
@@ -540,7 +547,7 @@ char const *eventnames[] = {
 	"EV_JUMP_FLESH",
 	"EV_JUMP_FOLIAGE",
 	"EV_JUMP_GLASS",
-	"EV_JUMP_GRASS",              // 80
+	"EV_JUMP_GRASS",			  // 80
 	"EV_JUMP_GRAVEL",
 	"EV_JUMP_ICE",
 	"EV_JUMP_METAL",
@@ -550,7 +557,7 @@ char const *eventnames[] = {
 	"EV_JUMP_ROCK",
 	"EV_JUMP_SAND",
 	"EV_JUMP_SNOW",
-	"EV_JUMP_WATER",              // 90
+	"EV_JUMP_WATER",			  // 90
 	"EV_JUMP_WOOD",
 	"EV_JUMP_ASPHALT",
 	"EV_LANDING_DEFAULT",
@@ -560,7 +567,7 @@ char const *eventnames[] = {
 	"EV_LANDING_CLOTH",
 	"EV_LANDING_CONCRETE",
 	"EV_LANDING_DIRT",
-	"EV_LANDING_FLESH",           // 100
+	"EV_LANDING_FLESH",		   // 100
 	"EV_LANDING_FOLIAGE",
 	"EV_LANDING_GLASS",
 	"EV_LANDING_GRASS",
@@ -570,7 +577,7 @@ char const *eventnames[] = {
 	"EV_LANDING_MUD",
 	"EV_LANDING_PAPER",
 	"EV_LANDING_PLASTER",
-	"EV_LANDING_ROCK",            // 110
+	"EV_LANDING_ROCK",			// 110
 	"EV_LANDING_SAND",
 	"EV_LANDING_SNOW",
 	"EV_LANDING_WATER",
@@ -580,7 +587,7 @@ char const *eventnames[] = {
 	"EV_LANDING_PAIN_BARK",
 	"EV_LANDING_PAIN_BRICK",
 	"EV_LANDING_PAIN_CARPET",
-	"EV_LANDING_PAIN_CLOTH",      // 120
+	"EV_LANDING_PAIN_CLOTH",	  // 120
 	"EV_LANDING_PAIN_CONCRETE",
 	"EV_LANDING_PAIN_DIRT",
 	"EV_LANDING_PAIN_FLESH",
@@ -590,7 +597,7 @@ char const *eventnames[] = {
 	"EV_LANDING_PAIN_GRAVEL",
 	"EV_LANDING_PAIN_ICE",
 	"EV_LANDING_PAIN_METAL",
-	"EV_LANDING_PAIN_MUD",        // 130
+	"EV_LANDING_PAIN_MUD",		// 130
 	"EV_LANDING_PAIN_PAPER",
 	"EV_LANDING_PAIN_PLASTER",
 	"EV_LANDING_PAIN_ROCK",
@@ -600,7 +607,7 @@ char const *eventnames[] = {
 	"EV_LANDING_PAIN_WOOD",
 	"EV_LANDING_PAIN_ASPHALT",
 	"EV_FOLIAGE_SOUND",
-	"EV_STANCE_FORCE_STAND",      // 140
+	"EV_STANCE_FORCE_STAND",	  // 140
 	"EV_STANCE_FORCE_CROUCH",
 	"EV_STANCE_FORCE_PRONE",
 	"EV_STEP_VIEW",
@@ -610,7 +617,7 @@ char const *eventnames[] = {
 	"EV_EMPTYCLIP",
 	"EV_EMPTY_OFFHAND",
 	"EV_RESET_ADS",
-	"EV_RELOAD",                  // 150
+	"EV_RELOAD",				  // 150
 	"EV_RELOAD_FROM_EMPTY",
 	"EV_RELOAD_START",
 	"EV_RELOAD_END",
@@ -620,7 +627,7 @@ char const *eventnames[] = {
 	"EV_PULLBACK_WEAPON",
 	"EV_FIRE_WEAPON",
 	"EV_FIRE_WEAPONB",
-	"EV_FIRE_WEAPON_LASTSHOT",    // 160
+	"EV_FIRE_WEAPON_LASTSHOT",	// 160
 	"EV_RECHAMBER_WEAPON",
 	"EV_EJECT_BRASS",
 	"EV_MELEE_SWIPE",
@@ -630,7 +637,7 @@ char const *eventnames[] = {
 	"EV_SWITCH_OFFHAND",
 	"EV_BINOCULAR_ENTER",
 	"EV_BINOCULAR_EXIT",
-	"EV_BINOCULAR_FIRE",          // 170
+	"EV_BINOCULAR_FIRE",		  // 170
 	"EV_BINOCULAR_RELEASE",
 	"EV_BINOCULAR_DROP",
 	"EV_MELEE_HIT",
@@ -658,39 +665,39 @@ char const *eventnames[] = {
 	"EV_PLAY_FX_ON_TAG",
 	"EV_EARTHQUAKE",
 	"EV_GRENADE_SUICIDE",
-	"EV_OBITUARY"                 // 198
+	"EV_OBITUARY"				 // 198
 };
 
 void custom_BG_AddPredictableEventToPlayerstate( int event, int eventParm, playerState_t *ps ) {
-    if ( event != EV_NONE ) {
-        if ( g_debugEvents->boolean )
-            Com_DPrintf("custom_BG_AddPredictableEventToPlayerstate() event %26s for client %2d\n", eventnames[event], ps->clientNum);
-        
-        /*
-        // filter example:
-        // hide footsteps on dirt for player 0 (the player can still hear himself)
-        if (event == EV_FOOTSTEP_RUN_DIRT && ps->clientNum == 0) {
-            Com_DPrintf("custom_BG_AddPredictableEventToPlayerstate() filter event EV_FOOTSTEP_RUN_DIRT for client 0\n", eventnames[event], eventParm, ps->clientNum);
-            return;
-        }
-        */
-        
-        ps->events[ps->eventSequence & ( MAX_EVENTS - 1 )] = event & 0xff;
-        ps->eventParms[ps->eventSequence & ( MAX_EVENTS - 1 )] = eventParm & 0xff;
-        ps->eventSequence++;
-    }
+	if ( event != EV_NONE ) {
+		if ( g_debugEvents->boolean )
+			Com_DPrintf("custom_BG_AddPredictableEventToPlayerstate() event %26s for client %2d\n", eventnames[event], ps->clientNum);
+		
+		/*
+		// filter example:
+		// hide footsteps on dirt for player 0 (the player can still hear himself)
+		if (event == EV_FOOTSTEP_RUN_DIRT && ps->clientNum == 0) {
+			Com_DPrintf("custom_BG_AddPredictableEventToPlayerstate() filter event EV_FOOTSTEP_RUN_DIRT for client 0\n", eventnames[event], eventParm, ps->clientNum);
+			return;
+		}
+		*/
+		
+		ps->events[ps->eventSequence & ( MAX_EVENTS - 1 )] = event & 0xff;
+		ps->eventParms[ps->eventSequence & ( MAX_EVENTS - 1 )] = eventParm & 0xff;
+		ps->eventSequence++;
+	}
 }
 
 void custom_G_AddEvent (gentity_t * ent, int event, int eventParm) {
 	if ( ent->client ) {
-        if ( g_debugEvents->boolean )
-            Com_DPrintf("custom_G_AddEvent() event %26s for client %2d\n", eventnames[event], ent->client->ps.clientNum);
+		if ( g_debugEvents->boolean )
+			Com_DPrintf("custom_G_AddEvent() event %26s for client %2d\n", eventnames[event], ent->client->ps.clientNum);
 		ent->client->ps.events[ent->client->ps.eventSequence & ( MAX_EVENTS - 1 )] = event;
 		ent->client->ps.eventParms[ent->client->ps.eventSequence & ( MAX_EVENTS - 1 )] = eventParm;
 		ent->client->ps.eventSequence++;
 	} else {
-        if ( g_debugEvents->boolean )
-            Com_DPrintf("custom_G_AddEvent() event %26s for entity %2d\n", eventnames[event], ent->s.number);
+		if ( g_debugEvents->boolean )
+			Com_DPrintf("custom_G_AddEvent() event %26s for entity %2d\n", eventnames[event], ent->s.number);
 		ent->s.events[ent->s.eventSequence & ( MAX_EVENTS - 1 )] = event;
 		ent->s.eventParms[ent->s.eventSequence & ( MAX_EVENTS - 1 )] = eventParm;
 		ent->s.eventSequence++;
@@ -706,106 +713,106 @@ gentity_t* custom_G_TempEntity(vec3_t origin, int event)
 	gentity_t* (*sig)(vec3_t origin, int event);
 	*(int *)&sig = hook_g_tempentity->from;
 
-    if ( g_debugEvents->boolean )
-        Com_DPrintf("custom_G_TempEntity() event %26s at (%f,%f,%f)\n", eventnames[event], origin[0], origin[1], origin[2]);
-    
-    /*
-    // filter example:
-    // use with caution: this can cause script runtime errors (or worse) on
-    // some events, e.g., when using the obituary function, due to (then)
-    // undefined parameters
-    if (event == EV_PLAY_FX) {
-        event = EV_NONE;
-    }
-    */
+	if ( g_debugEvents->boolean )
+		Com_DPrintf("custom_G_TempEntity() event %26s at (%f,%f,%f)\n", eventnames[event], origin[0], origin[1], origin[2]);
+	
+	/*
+	// filter example:
+	// use with caution: this can cause script runtime errors (or worse) on
+	// some events, e.g., when using the obituary function, due to (then)
+	// undefined parameters
+	if (event == EV_PLAY_FX) {
+		event = EV_NONE;
+	}
+	*/
 	gentity_t* tempEntity = sig(origin, event);
-    
-    hook_g_tempentity->hook();
+	
+	hook_g_tempentity->hook();
 
 	return tempEntity;
 }
 
 int custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t *to, int force, int numFields, int indexBits, netField_t *entityStateFieldsPointer, int bChangeBit)
 {
-    int *toF;
-    int *fromF;
-    netField_t *field;
-    int lc;
-    int i;
+	int *toF;
+	int *fromF;
+	netField_t *field;
+	int lc;
+	int i;
 
-    /*if ( g_debugEvents->boolean ) {
-        Com_DPrintf("custom_MSG_WriteDeltaPlayerstate() for entity %d\n",to->number);
-    }*/
+	/*if ( g_debugEvents->boolean ) {
+		Com_DPrintf("custom_MSG_WriteDeltaPlayerstate() for entity %d\n",to->number);
+	}*/
 
-    if ( !to ) {
-        if (bChangeBit != 0) {
-            MSG_WriteBit1(msg);
-        }
-        MSG_WriteBits(msg,from->number,indexBits);
-        MSG_WriteBit1(msg);
-    } else {
-        lc = 0;
-        field = entityStateFieldsPointer;
-        for (i = 0; i < numFields; i++, field++) {
-            fromF = ( int * )( (byte *)from + field->offset );
-            toF = ( int * )( (byte *)to + field->offset );
-            if ( *fromF != *toF ) {
-                lc = i + 1;
-            }
-        }
-        if (lc == 0) {
-            if (force != 0) {
-                if (bChangeBit != 0) {
-                    MSG_WriteBit1(msg);
-                }
-                MSG_WriteBits(msg,to->number,indexBits);
-                MSG_WriteBit0(msg);
-                MSG_WriteBit0(msg);
-            }
-        } else {
-            if (bChangeBit != 0) {
-                MSG_WriteBit1(msg);
-            }
-            MSG_WriteBits(msg, to->number, indexBits);
-            MSG_WriteBit0(msg);
-            MSG_WriteBit1(msg);
-            MSG_WriteByte(msg, lc);
-            field = entityStateFieldsPointer;
-            for (i = 0; i < lc; i++, field++) {
-                MSG_WriteDeltaField(msg, (byte *)from, (byte *)to, field);
-            }
-        }
-    }
-    return i;
+	if ( !to ) {
+		if (bChangeBit != 0) {
+			MSG_WriteBit1(msg);
+		}
+		MSG_WriteBits(msg,from->number,indexBits);
+		MSG_WriteBit1(msg);
+	} else {
+		lc = 0;
+		field = entityStateFieldsPointer;
+		for (i = 0; i < numFields; i++, field++) {
+			fromF = ( int * )( (byte *)from + field->offset );
+			toF = ( int * )( (byte *)to + field->offset );
+			if ( *fromF != *toF ) {
+				lc = i + 1;
+			}
+		}
+		if (lc == 0) {
+			if (force != 0) {
+				if (bChangeBit != 0) {
+					MSG_WriteBit1(msg);
+				}
+				MSG_WriteBits(msg,to->number,indexBits);
+				MSG_WriteBit0(msg);
+				MSG_WriteBit0(msg);
+			}
+		} else {
+			if (bChangeBit != 0) {
+				MSG_WriteBit1(msg);
+			}
+			MSG_WriteBits(msg, to->number, indexBits);
+			MSG_WriteBit0(msg);
+			MSG_WriteBit1(msg);
+			MSG_WriteByte(msg, lc);
+			field = entityStateFieldsPointer;
+			for (i = 0; i < lc; i++, field++) {
+				MSG_WriteDeltaField(msg, (byte *)from, (byte *)to, field);
+			}
+		}
+	}
+	return i;
 }
 
 void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerState_t *to)
 {
-    playerState_t dummy;
-    int i, j, lc;
-    int *toF;
-    int *fromF;
-    netField_t *field;
-    float fullFloat;
-    int trunc;
-    int local_271c;
-    sbyte local_2714;
-    int local_2710;
-    int local_270c;
-    uint bits;
-    int clipbits;
-    int ammobits[7];
-    int statsbits;
+	playerState_t dummy;
+	int i, j, lc;
+	int *toF;
+	int *fromF;
+	netField_t *field;
+	float fullFloat;
+	int trunc;
+	int local_271c;
+	sbyte local_2714;
+	int local_2710;
+	int local_270c;
+	uint bits;
+	int clipbits;
+	int ammobits[7];
+	int statsbits;
 
-    /*if ( g_debugEvents->boolean ) {
-        Com_DPrintf("custom_MSG_WriteDeltaPlayerstate() for client %d\n",to->clientNum);
-    }*/
+	/*if ( g_debugEvents->boolean ) {
+		Com_DPrintf("custom_MSG_WriteDeltaPlayerstate() for client %d\n",to->clientNum);
+	}*/
 
-    if ( !from ) {
-        from = &dummy;
-        memset( &dummy, 0, sizeof(dummy) );
-    }
-    
+	if ( !from ) {
+		from = &dummy;
+		memset( &dummy, 0, sizeof(dummy) );
+	}
+	
 	lc = 0;
 	for ( i = 0, field = &playerStateFields; i < 0x69; i++, field++ ) {
 		fromF = ( int * )( (byte *)from + field->offset );
@@ -814,181 +821,181 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 			lc = i + 1;
 		}
 	}
-    
+	
 	MSG_WriteByte( msg, lc );
-    
-    field = &playerStateFields;
-    for (i = 0; i < lc; i++, field++) {
+	
+	field = &playerStateFields;
+	for (i = 0; i < lc; i++, field++) {
 		fromF = ( int * )( (byte *)from + field->offset );
 		toF = ( int * )( (byte *)to + field->offset );
-        
-        if ( *fromF == *toF ) {
-            MSG_WriteBit0(msg);
-        } else {
-            MSG_WriteBit1(msg);
-            
-            if (field->bits == 0) {
-                fullFloat = *(float *)toF;
-                trunc = (int)fullFloat;
-                
-                if ( trunc == fullFloat && trunc + FLOAT_INT_BIAS >= 0 && trunc + FLOAT_INT_BIAS < ( 1 << FLOAT_INT_BITS ) ) {
-                    MSG_WriteBit0(msg);
-                    MSG_WriteBits(msg, trunc + FLOAT_INT_BIAS, 5);
-                    MSG_WriteByte(msg, (char)((trunc + 0x1000) >> 5));
-                } else {
-                    MSG_WriteBit1(msg);
-                    MSG_WriteLong(msg, *toF);
-                }
-            } else {
-                if (field->bits == -100) {
-                    if (*toF == 0) {
-                        MSG_WriteBit0(msg);
-                    } else {
-                        MSG_WriteBit1(msg);
-                        MSG_WriteAngle16(msg, *(float *)toF);
-                    }
-                } else {
-                    local_270c = *toF;
-                    local_271c = field->bits;
-                    if (local_271c < 0) {
-                        local_271c = -local_271c;
-                    }
-                    local_2710 = local_271c;
-                    bits = local_271c & 7;
-                    if (bits != 0) {
-                        MSG_WriteBits(msg, local_270c,bits);
-                        local_2710 = local_271c - bits;
-                        local_2714 = (sbyte)bits;
-                        local_270c = local_270c >> local_2714;
-                    }
-                    while (local_2710 != 0) {
-                        MSG_WriteByte(msg,(char)local_270c);
-                        local_270c = local_270c >> 8;
-                        local_2710 = local_2710 + -8;
-                    }
-                }
-            }
-        }
-    }
-    
-    // Stats
-    statsbits = 0;
-    i = 0;
-    while (i < 6) {
-        if (to->stats[i] != from->stats[i]) {
-            statsbits = statsbits | 1 << ((byte)i & 0x1f);
-        }
-        i++;
-    }
-    if (statsbits == 0) {
-        MSG_WriteBit0(msg);
-    } else {
-        MSG_WriteBit1(msg);
-        MSG_WriteBits(msg,statsbits,6);
-        if ((statsbits & 1U) != 0) {
-            MSG_WriteShort(msg,to->stats[0]);
-        }
-        if ((statsbits & 2U) != 0) {
-            MSG_WriteShort(msg,to->stats[1]);
-        }
-        if ((statsbits & 4U) != 0) {
-            MSG_WriteShort(msg,to->stats[2]);
-        }
-        if ((statsbits & 8U) != 0) {
-            MSG_WriteBits(msg,to->stats[3],6);
-        }
-        if ((statsbits & 0x10U) != 0) {
-            MSG_WriteShort(msg,to->stats[4]);
-        }
-        if ((statsbits & 0x20U) != 0) {
-            MSG_WriteByte(msg,(char)to->stats[5]);
-        }
-    }
-    
-    // Ammo
-    j = 0;
-    while (j < 4) {
-        ammobits[j] = 0;
-        i = 0;
-        while (i < 0x10) {
-            if (to->ammo[j * 0x10 + i] != from->ammo[j * 0x10 + i]) {
-                ammobits[j] = 1 << ((byte)i & 0x1f) | ammobits[j];
-            }
-            i++;
-        }
-        j++;
-    }
-    if ((((ammobits[0] == 0) && (ammobits[1] == 0)) && (ammobits[2] == 0)) && (ammobits[3] == 0)) {
-        MSG_WriteBit0(msg);
-    } else {
-        MSG_WriteBit1(msg);
-        j = 0;
-        while (j < 4) {
-            if (ammobits[j] == 0) {
-                MSG_WriteBit0(msg);
-            } else {
-                MSG_WriteBit1(msg);
-                MSG_WriteShort(msg,ammobits[j]);
-                i = 0;
-                while (i < 0x10) {
-                    if ((ammobits[j] >> ((byte)i & 0x1f) & 1U) != 0) {
-                        MSG_WriteShort(msg,to->ammo[j * 0x10 + i]);
-                    }
-                    i++;
-                }
-            }
-            j++;
-        }
-    }
-    
-    // Clipammo
-    j = 0;
-    while (j < 4) {
-        clipbits = 0;
-        i = 0;
-        while (i < 0x10) {
-            if (to->ammoclip[j * 0x10 + i] != from->ammoclip[j * 0x10 + i]) {
-                clipbits = clipbits | 1 << ((byte)i & 0x1f);
-            }
-            i++;
-        }
-        if (clipbits == 0) {
-            MSG_WriteBit0(msg);
-        } else {
-            MSG_WriteBit1(msg);
-            MSG_WriteShort(msg,clipbits);
-            i = 0;
-            while (i < 0x10) {
-                if ((clipbits >> ((byte)i & 0x1f) & 1U) != 0) {
-                    MSG_WriteShort(msg,to->ammoclip[j * 0x10 + i]);
-                }
-                i++;
-            }
-        }
-        j++;
-    }
+		
+		if ( *fromF == *toF ) {
+			MSG_WriteBit0(msg);
+		} else {
+			MSG_WriteBit1(msg);
+			
+			if (field->bits == 0) {
+				fullFloat = *(float *)toF;
+				trunc = (int)fullFloat;
+				
+				if ( trunc == fullFloat && trunc + FLOAT_INT_BIAS >= 0 && trunc + FLOAT_INT_BIAS < ( 1 << FLOAT_INT_BITS ) ) {
+					MSG_WriteBit0(msg);
+					MSG_WriteBits(msg, trunc + FLOAT_INT_BIAS, 5);
+					MSG_WriteByte(msg, (char)((trunc + 0x1000) >> 5));
+				} else {
+					MSG_WriteBit1(msg);
+					MSG_WriteLong(msg, *toF);
+				}
+			} else {
+				if (field->bits == -100) {
+					if (*toF == 0) {
+						MSG_WriteBit0(msg);
+					} else {
+						MSG_WriteBit1(msg);
+						MSG_WriteAngle16(msg, *(float *)toF);
+					}
+				} else {
+					local_270c = *toF;
+					local_271c = field->bits;
+					if (local_271c < 0) {
+						local_271c = -local_271c;
+					}
+					local_2710 = local_271c;
+					bits = local_271c & 7;
+					if (bits != 0) {
+						MSG_WriteBits(msg, local_270c,bits);
+						local_2710 = local_271c - bits;
+						local_2714 = (sbyte)bits;
+						local_270c = local_270c >> local_2714;
+					}
+					while (local_2710 != 0) {
+						MSG_WriteByte(msg,(char)local_270c);
+						local_270c = local_270c >> 8;
+						local_2710 = local_2710 + -8;
+					}
+				}
+			}
+		}
+	}
+	
+	// Stats
+	statsbits = 0;
+	i = 0;
+	while (i < 6) {
+		if (to->stats[i] != from->stats[i]) {
+			statsbits = statsbits | 1 << ((byte)i & 0x1f);
+		}
+		i++;
+	}
+	if (statsbits == 0) {
+		MSG_WriteBit0(msg);
+	} else {
+		MSG_WriteBit1(msg);
+		MSG_WriteBits(msg,statsbits,6);
+		if ((statsbits & 1U) != 0) {
+			MSG_WriteShort(msg,to->stats[0]);
+		}
+		if ((statsbits & 2U) != 0) {
+			MSG_WriteShort(msg,to->stats[1]);
+		}
+		if ((statsbits & 4U) != 0) {
+			MSG_WriteShort(msg,to->stats[2]);
+		}
+		if ((statsbits & 8U) != 0) {
+			MSG_WriteBits(msg,to->stats[3],6);
+		}
+		if ((statsbits & 0x10U) != 0) {
+			MSG_WriteShort(msg,to->stats[4]);
+		}
+		if ((statsbits & 0x20U) != 0) {
+			MSG_WriteByte(msg,(char)to->stats[5]);
+		}
+	}
+	
+	// Ammo
+	j = 0;
+	while (j < 4) {
+		ammobits[j] = 0;
+		i = 0;
+		while (i < 0x10) {
+			if (to->ammo[j * 0x10 + i] != from->ammo[j * 0x10 + i]) {
+				ammobits[j] = 1 << ((byte)i & 0x1f) | ammobits[j];
+			}
+			i++;
+		}
+		j++;
+	}
+	if ((((ammobits[0] == 0) && (ammobits[1] == 0)) && (ammobits[2] == 0)) && (ammobits[3] == 0)) {
+		MSG_WriteBit0(msg);
+	} else {
+		MSG_WriteBit1(msg);
+		j = 0;
+		while (j < 4) {
+			if (ammobits[j] == 0) {
+				MSG_WriteBit0(msg);
+			} else {
+				MSG_WriteBit1(msg);
+				MSG_WriteShort(msg,ammobits[j]);
+				i = 0;
+				while (i < 0x10) {
+					if ((ammobits[j] >> ((byte)i & 0x1f) & 1U) != 0) {
+						MSG_WriteShort(msg,to->ammo[j * 0x10 + i]);
+					}
+					i++;
+				}
+			}
+			j++;
+		}
+	}
+	
+	// Clipammo
+	j = 0;
+	while (j < 4) {
+		clipbits = 0;
+		i = 0;
+		while (i < 0x10) {
+			if (to->ammoclip[j * 0x10 + i] != from->ammoclip[j * 0x10 + i]) {
+				clipbits = clipbits | 1 << ((byte)i & 0x1f);
+			}
+			i++;
+		}
+		if (clipbits == 0) {
+			MSG_WriteBit0(msg);
+		} else {
+			MSG_WriteBit1(msg);
+			MSG_WriteShort(msg,clipbits);
+			i = 0;
+			while (i < 0x10) {
+				if ((clipbits >> ((byte)i & 0x1f) & 1U) != 0) {
+					MSG_WriteShort(msg,to->ammoclip[j * 0x10 + i]);
+				}
+				i++;
+			}
+		}
+		j++;
+	}
 
-    // Objectives
-    if (!memcmp(from->objective, to->objective, sizeof(from->objective))) {
-        MSG_WriteBit0(msg);
-    } else {
-        MSG_WriteBit1(msg);
-        i = 0;
-        while (i < 0x10) {
-            MSG_WriteBits(msg, to->objective[i].state, 3);
-            MSG_WriteDeltaObjective(msg, &from->objective[i], &to->objective[i], 0, 6, &objectiveFields);
-            i++;
-        }
-    }
-    
-    // Huds
-    if (!memcmp(&from->hud, &to->hud, sizeof(from->hud))) {
-        MSG_WriteBit0(msg);
-    } else {
-        MSG_WriteBit1(msg);
-        MSG_WriteDeltaHudElems(msg, from->hud.archival, to->hud.archival, 0x1f);
-        MSG_WriteDeltaHudElems(msg, from->hud.current, to->hud.current, 0x1f);
-    }
+	// Objectives
+	if (!memcmp(from->objective, to->objective, sizeof(from->objective))) {
+		MSG_WriteBit0(msg);
+	} else {
+		MSG_WriteBit1(msg);
+		i = 0;
+		while (i < 0x10) {
+			MSG_WriteBits(msg, to->objective[i].state, 3);
+			MSG_WriteDeltaObjective(msg, &from->objective[i], &to->objective[i], 0, 6, &objectiveFields);
+			i++;
+		}
+	}
+	
+	// Huds
+	if (!memcmp(&from->hud, &to->hud, sizeof(from->hud))) {
+		MSG_WriteBit0(msg);
+	} else {
+		MSG_WriteBit1(msg);
+		MSG_WriteDeltaHudElems(msg, from->hud.archival, to->hud.archival, 0x1f);
+		MSG_WriteDeltaHudElems(msg, from->hud.current, to->hud.current, 0x1f);
+	}
 }
 
 int gamestate_size[MAX_CLIENTS] = {0};
@@ -996,16 +1003,18 @@ void custom_SV_SendClientGameState( client_t *client ) {
 	int			start;
 	entityState_t	*base, nullstate;
 	msg_t		msg;
-	byte		msgBuffer[MAX_MSGLEN];
-    
-    while(client->state != CS_FREE && client->netchan.unsentFragments){
+	byte		msgBuffer[MAX_MSGLEN]; // LargeLocal
+	
+	while(client->state != CS_FREE && client->netchan.unsentFragments){
 		SV_Netchan_TransmitNextFragment(&client->netchan);
 	}
 
  	Com_DPrintf("custom_SV_SendClientGameState() for %s\n", client->name);
 	Com_DPrintf("Going from CS_CONNECTED to CS_PRIMED for %s\n", client->name);
+
 	client->state = CS_PRIMED;
 	client->pureAuthentic = 0;
+	client->gamestateMessageNum = client->netchan.outgoingSequence;
 
 	// when we receive the first packet from the client, we will
 	// notice that it is from a different serverid and that the
@@ -1034,13 +1043,13 @@ void custom_SV_SendClientGameState( client_t *client ) {
 			MSG_WriteByte( &msg, svc_configstring );
 			MSG_WriteShort( &msg, start );
 			MSG_WriteBigString( &msg, sv.configstrings[start] );
-            //Com_DPrintf("Sending configstring %i to client %i: %s\n", start, client - svs.clients, sv.configstrings[start]);
+			//Com_DPrintf("Sending configstring %i to client %i: %s\n", start, client - svs.clients, sv.configstrings[start]);
 		}
 	}
 
 	// write the baselines
 	memset( &nullstate, 0, sizeof( nullstate ) ); // Com_Memset
-    
+	
 	for ( start = 0 ; start < MAX_GENTITIES; start++ ) {
 		base = &sv.svEntities[start].baseline.s;
 		if ( !base->number ) {
@@ -1053,10 +1062,10 @@ void custom_SV_SendClientGameState( client_t *client ) {
 	MSG_WriteByte( &msg, svc_EOF );
 	MSG_WriteLong( &msg, client - svs.clients );
 	MSG_WriteLong( &msg, sv.checksumFeed );
-    MSG_WriteByte( &msg, svc_EOF );
-    
-    Com_DPrintf("Sending %i bytes in gamestate to client: %i\n", msg.cursize, client - svs.clients);
-    gamestate_size[client - svs.clients] = int(msg.cursize);
+	MSG_WriteByte( &msg, svc_EOF );
+	
+	Com_DPrintf("Sending %i bytes in gamestate to client: %i\n", msg.cursize, client - svs.clients);
+	gamestate_size[client - svs.clients] = int(msg.cursize);
 
 	// deliver this to the client
 	SV_SendMessageToClient( &msg, client );
@@ -1069,34 +1078,34 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 	char errorMessage[COD2_MAX_STRINGLENGTH];
 
 	if (cl->state == CS_ACTIVE) {
-        //Com_DPrintf("clientDownload: Client already in game, name = '%s'\n", cl->downloadName);
+		//Com_DPrintf("clientDownload: Client already in game, name = '%s'\n", cl->downloadName);
 		return;
-    }
+	}
 	if (!*cl->downloadName) {
-        // Com_DPrintf("clientDownload: Nothing being downloaded\n");
+		// Com_DPrintf("clientDownload: Nothing being downloaded\n");
 		return;
-    }
+	}
 	if (strlen(cl->downloadName) < 4) {
-        // Com_DPrintf("clientDownload: File length too short\n");
+		// Com_DPrintf("clientDownload: File length too short\n");
 		return;
-    }
+	}
 	if (strcmp(&cl->downloadName[strlen(cl->downloadName) - 4], ".iwd") != 0) {
-        // Com_DPrintf("clientDownload: Not a iwd file\n");
+		// Com_DPrintf("clientDownload: Not a iwd file\n");
 		return;
-    }
+	}
 
 #if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
 	if ( cl->wwwDlAck ) {
-        // Com_DPrintf("clientDownload: wwwDl acknowleged\n");
+		// Com_DPrintf("clientDownload: wwwDl acknowleged\n");
 		return;
-    }
+	}
 #endif
 
 	if (strlen(sv_downloadMessage->string))
 	{
 		Com_sprintf(errorMessage, sizeof(errorMessage), sv_downloadMessage->string);
 
-        MSG_WriteByte( msg, svc_download );
+		MSG_WriteByte( msg, svc_download );
 		MSG_WriteShort( msg, 0 ); // client is expecting block zero
 		MSG_WriteLong( msg, -1 ); // illegal file size
 		MSG_WriteString( msg, errorMessage );
@@ -1651,7 +1660,7 @@ static leakyBucket_t *SVC_BucketForAddress( netadr_t address, int burst, int per
 
 		// Reclaim expired buckets
 		if ( bucket->lastTime > 0 && ( interval > ( burst * period ) ||
-		                               interval < 0 ) )
+									   interval < 0 ) )
 		{
 			if ( bucket->prev != NULL )
 			{
@@ -1752,67 +1761,79 @@ bool SVC_callback(const char * str, const char * ip)
 
 bool SVC_ApplyRconLimit( netadr_t from, bool badRconPassword )
 {
-    // Prevent using rcon as an amplifier and make dictionary attacks impractical
-    if ( SVC_RateLimitAddress( from, 10, 1000 ) )
-    {
-        if (!SVC_callback("RCON:ADDRESS", NET_AdrToString(from)))
-            Com_DPrintf("SVC_RemoteCommand: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
-        return true;
-    }
+	// Prevent using rcon as an amplifier and make dictionary attacks impractical
+	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
+	{
+		if (!SVC_callback("RCON:ADDRESS", NET_AdrToString(from)))
+			Com_DPrintf("SVC_RemoteCommand: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
+		return true;
+	}
 
-    if ( badRconPassword )
-    {
-        static leakyBucket_t bucket;
+	if ( badRconPassword )
+	{
+		static leakyBucket_t bucket;
 
-        // Make DoS via rcon impractical
-        if ( SVC_RateLimit( &bucket, 10, 1000 ) )
-        {
-            if (!SVC_callback("RCON:GLOBAL", NET_AdrToString(from)))
-                Com_DPrintf("SVC_RemoteCommand: rate limit exceeded, dropping request\n");
-            return true;
-        }
-    }
-    
-    return false;
+		// Make DoS via rcon impractical
+		if ( SVC_RateLimit( &bucket, 10, 1000 ) )
+		{
+			if (!SVC_callback("RCON:GLOBAL", NET_AdrToString(from)))
+				Com_DPrintf("SVC_RemoteCommand: rate limit exceeded, dropping request\n");
+			return true;
+		}
+	}
+	
+	return false;
 }
 
 void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 {
 	if (!sv_allowRcon->boolean)
 		return;
-    
-    bool badRconPassword = !strlen( rcon_password->string ) || strcmp(Cmd_Argv(1), rcon_password->string) != 0;
 	
-    if (!sv_limitLocalRcon->boolean)
-    {
-        unsigned char *ip = from.ip;
-    
-        if (!(ip[0] == 10 ||                                    // 10.0.0.0 – 10.255.255.255
-             (ip[0] == 172 && (ip[1] >= 16 && ip[1] <= 31)) ||  // 172.16.0.0 – 172.31.255.255
-             (ip[0] == 192 && ip[1] == 168)))                   // 192.168.0.0 – 192.168.255.255
-        {
-            if ( SVC_ApplyRconLimit( from, badRconPassword ) )
-                return;
-        }
-    }
-    else
-    {
-        if ( SVC_ApplyRconLimit( from, badRconPassword ) )
-            return;
-    }
-    
-	if (
-        codecallback_remotecommand && 
-        !badRconPassword && 
-        Scr_IsSystemActive() && 
-        strcmp(Cmd_Argv(2), "map") != 0 && 
-        strcmp(Cmd_Argv(2), "devmap") != 0 && 
-        strcmp(Cmd_Argv(2), "map_restart") != 0 && 
-        strcmp(Cmd_Argv(2), "fast_restart") != 0
-        )
+	bool badRconPassword = !strlen( rcon_password->string ) || strcmp(Cmd_Argv(1), rcon_password->string) != 0;
+	
+	if (!sv_limitLocalRcon->boolean)
 	{
-        msg->data[(int)msg->cursize] = '\0';
-        
+		unsigned char *ip = from.ip;
+	
+		if (!(ip[0] == 10 ||									// 10.0.0.0 – 10.255.255.255
+			 (ip[0] == 172 && (ip[1] >= 16 && ip[1] <= 31)) ||  // 172.16.0.0 – 172.31.255.255
+			 (ip[0] == 192 && ip[1] == 168)))				   // 192.168.0.0 – 192.168.255.255
+		{
+			if ( SVC_ApplyRconLimit( from, badRconPassword ) )
+				return;
+		}
+	}
+	else
+	{
+		if ( SVC_ApplyRconLimit( from, badRconPassword ) )
+			return;
+	}
+	
+	if ( logRcon_enabled && !sv_logRcon->boolean ) {
+		byte disable = 0;
+		memcpy((void *)rcon_from_string_offset, &disable, 1);
+		logRcon_enabled = qfalse;
+		Com_DPrintf("Disabled rcon messages logging\n");
+	} else if ( !logRcon_enabled && sv_logRcon->boolean ) {
+		byte enable = 0x52; // "R"
+		memcpy((void *)rcon_from_string_offset, &enable, 1);
+		logRcon_enabled = qtrue;
+		Com_DPrintf("Enabled rcon messages logging\n");
+	}
+	
+	if (
+		codecallback_remotecommand && 
+		!badRconPassword && 
+		Scr_IsSystemActive() && 
+		strcmp(Cmd_Argv(2), "map") != 0 && 
+		strcmp(Cmd_Argv(2), "devmap") != 0 && 
+		strcmp(Cmd_Argv(2), "map_restart") != 0 && 
+		strcmp(Cmd_Argv(2), "fast_restart") != 0
+		)
+	{
+		msg->data[(int)msg->cursize] = '\0';
+		
 		stackPushInt((int)msg);
 		stackPushString((char *)msg->data);
 		stackPushString(NET_AdrToString(from));
@@ -1822,7 +1843,7 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 		
 		return;
 	}
-
+	
 	#if COD_VERSION == COD2_1_0
 	int lasttime_offset = 0x0848B674;
 	#elif COD_VERSION == COD2_1_2
@@ -1830,9 +1851,9 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 	#elif COD_VERSION == COD2_1_3
 	int lasttime_offset = 0x0849FBF4;
 	#endif
-
+	
 	*(int *)lasttime_offset = 0;
-
+	
 	SVC_RemoteCommand(from, msg);
 }
 
@@ -2095,7 +2116,7 @@ public:
 		cracking_hook_call(0x0808F134, (int)hook_ClientUserinfoChanged);
 		cracking_hook_call(0x0807059F, (int)Scr_GetCustomFunction);
 		cracking_hook_call(0x080707C3, (int)Scr_GetCustomMethod);
-        cracking_hook_call(0x080E9524, (int)hook_findWeaponIndex);
+		cracking_hook_call(0x080E9524, (int)hook_findWeaponIndex);
 
 #if COMPILE_PLAYER == 1
 		cracking_hook_call(0x0808E18F, (int)hook_gamestate_info);
@@ -2105,7 +2126,7 @@ public:
 
 		hook_gametype_scripts = new cHook(0x0810DDEE, (int)hook_codscript_gametype_scripts);
 		hook_gametype_scripts->hook();
-        
+		
 		hook_init_opcode = new cHook(0x08076B9C, (int)custom_Scr_InitOpcodeLookup);
 		hook_init_opcode->hook();
 		hook_add_opcode = new cHook(0x08076D92, (int)custom_AddOpcodePos);
@@ -2162,7 +2183,7 @@ public:
 		cracking_hook_call(0x08070D3F, (int)Scr_GetCustomMethod);
 		cracking_hook_call(0x0808227A, (int)hook_scriptError);
 		cracking_hook_call(0x0808FCBE, (int)hook_bad_printf);
-        cracking_hook_call(0x080EBB14, (int)hook_findWeaponIndex);
+		cracking_hook_call(0x080EBB14, (int)hook_findWeaponIndex);
 
 #if COMPILE_PLAYER == 1
 		cracking_hook_call(0x0808F533, (int)hook_gamestate_info);
@@ -2170,13 +2191,13 @@ public:
 
 		hook_gametype_scripts = new cHook(0x0811012A, (int)hook_codscript_gametype_scripts);
 		hook_gametype_scripts->hook();
-        
-        hook_init_opcode = new cHook(0x08077110, (int)custom_Scr_InitOpcodeLookup);
-        hook_init_opcode->hook();
-        hook_add_opcode = new cHook(0x08077306, (int)custom_AddOpcodePos);
-        hook_add_opcode->hook();
-        hook_print_codepos = new cHook(0x0807832E, (int)custom_Scr_PrintPrevCodePos);
-        hook_print_codepos->hook();
+		
+		hook_init_opcode = new cHook(0x08077110, (int)custom_Scr_InitOpcodeLookup);
+		hook_init_opcode->hook();
+		hook_add_opcode = new cHook(0x08077306, (int)custom_AddOpcodePos);
+		hook_add_opcode->hook();
+		hook_print_codepos = new cHook(0x0807832E, (int)custom_Scr_PrintPrevCodePos);
+		hook_print_codepos->hook();
 		
 		hook_player_collision = new cHook(0x080F553E, (int)player_collision);
 		hook_player_collision->hook();
@@ -2227,8 +2248,8 @@ public:
 		cracking_hook_call(0x08070E0B, (int)Scr_GetCustomMethod);
 		cracking_hook_call(0x08082346, (int)hook_scriptError);
 		cracking_hook_call(0x0808FD52, (int)hook_bad_printf);
-        cracking_hook_call(0x080EBC58, (int)hook_findWeaponIndex);
-        
+		cracking_hook_call(0x080EBC58, (int)hook_findWeaponIndex);
+		
 #if COMPILE_PLAYER == 1
 		cracking_hook_call(0x0808F5C7, (int)hook_gamestate_info);
 #endif
@@ -2253,7 +2274,7 @@ public:
 		hook_touch_item_auto->hook();
 		hook_g_tempentity = new cHook(0x0811EFC4, (int)custom_G_TempEntity);
 		hook_g_tempentity->hook();
-        hook_gscr_loadconsts = new cHook(0x081224F8, (int)custom_gsc_loadconsts);
+		hook_gscr_loadconsts = new cHook(0x081224F8, (int)custom_gsc_loadconsts);
 		hook_gscr_loadconsts->hook();
 
 #if COMPILE_PLAYER == 1
@@ -2265,14 +2286,14 @@ public:
 		hook_set_anim->hook();
 #endif
 
-        cracking_hook_function(0x08105CAC, (int)custom_Touch_Item);
-        cracking_hook_function(0x0811F232, (int)custom_G_AddEvent);
+		cracking_hook_function(0x08105CAC, (int)custom_Touch_Item);
+		cracking_hook_function(0x0811F232, (int)custom_G_AddEvent);
 		cracking_hook_function(0x080EBF24, (int)hook_BG_IsWeaponValid);
-        cracking_hook_function(0x080DFC78, (int)custom_BG_AddPredictableEventToPlayerstate);
-        cracking_hook_function(0x080696BC, (int)custom_MSG_WriteDeltaStruct);
-        cracking_hook_function(0x0806A200, (int)custom_MSG_WriteDeltaPlayerstate);
-        cracking_hook_function(0x0808F302, (int)custom_SV_SendClientGameState);
-        cracking_hook_function(0x0808F02E, (int)custom_SV_DropClient);
+		cracking_hook_function(0x080DFC78, (int)custom_BG_AddPredictableEventToPlayerstate);
+		cracking_hook_function(0x080696BC, (int)custom_MSG_WriteDeltaStruct);
+		cracking_hook_function(0x0806A200, (int)custom_MSG_WriteDeltaPlayerstate);
+		cracking_hook_function(0x0808F302, (int)custom_SV_SendClientGameState);
+		cracking_hook_function(0x0808F02E, (int)custom_SV_DropClient);
 		cracking_hook_function(0x0808FDC2, (int)custom_SV_WriteDownloadToClient);
 		cracking_hook_function(0x080B7FA6, (int)custom_va);
 		cracking_hook_function(0x08090534, (int)hook_SV_VerifyIwds_f);
@@ -2292,13 +2313,13 @@ public:
 #endif
 
 #endif
-        gsc_weapons_init();
+		gsc_weapons_init();
 		printf("> [PLUGIN LOADED]\n");
 	}
 
 	~cCallOfDuty2Pro()
 	{
-        gsc_weapons_free();
+		gsc_weapons_free();
 		printf("> [PLUGIN UNLOADED]\n");
 	}
 };

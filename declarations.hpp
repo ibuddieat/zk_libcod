@@ -769,9 +769,9 @@ typedef struct entityState_s
 	int scale; // used as loopfxid, hintstring, ... and doesn't actually scale a player's model size
 	int dmgFlags;
 	int animMovetype;
-    float fTorsoHeight;
-    float fTorsoPitch;
-    float fWaistPitch;
+	float fTorsoHeight;
+	float fTorsoPitch;
+	float fWaistPitch;
 } entityState_t; // verified
 
 typedef struct
@@ -967,8 +967,8 @@ typedef struct playerState_s
 	int viewHeightLerpTarget;
 	int viewHeightLerpDown;
 	float viewHeightLerpPosAdj;
-    vec2_t viewAngleClampBase;
-    vec2_t viewAngleClampRange;
+	vec2_t viewAngleClampBase;
+	vec2_t viewAngleClampRange;
 	int	damageEvent;
 	int	damageYaw;
 	int	damagePitch;
@@ -978,9 +978,9 @@ typedef struct playerState_s
 	int	ammoclip[128]; // 836
 	uint weapons[2];
 	uint weaponold[2];
-    byte weaponslots[5];
-    uint weaponrechamber[2];
-    int unknown[2];
+	byte weaponslots[5];
+	uint weaponrechamber[2];
+	int unknown[2];
 	vec3_t mins;
 	vec3_t maxs;
 	float proneDirection;
@@ -992,8 +992,8 @@ typedef struct playerState_s
 	int	cursorHintString;
 	int	cursorHintEntIndex;
 	int iCompassFriendInfo;
-    float fTorsoHeight;
-    float fTorsoPitch;
+	float fTorsoHeight;
+	float fTorsoPitch;
 	float fWaistPitch;
 	float holdBreathScale;
 	int holdBreathTimer;
@@ -1120,39 +1120,39 @@ struct turretInfo_s
 
 struct item_ent_t
 {
-    int ammoCount;
-    int clipAmmoCount;
-    int index;
+	int ammoCount;
+	int clipAmmoCount;
+	int index;
 };
 
 struct trigger_ent_t
 {
-    int threshold;
-    int accumulate;
-    int timestamp;
-    int singleUserEntIndex;
-    byte requireLookAt;
+	int threshold;
+	int accumulate;
+	int timestamp;
+	int singleUserEntIndex;
+	byte requireLookAt;
 };
 
 struct mover_ent_t
 {
-    float decelTime;
-    float aDecelTime;
-    float speed;
-    float aSpeed;
-    float midTime;
-    float aMidTime;
-    vec3_t pos1;
-    vec3_t pos2;
-    vec3_t pos3;
-    vec3_t apos1;
-    vec3_t apos2;
-    vec3_t apos3;
+	float decelTime;
+	float aDecelTime;
+	float speed;
+	float aSpeed;
+	float midTime;
+	float aMidTime;
+	vec3_t pos1;
+	vec3_t pos2;
+	vec3_t pos3;
+	vec3_t apos1;
+	vec3_t apos2;
+	vec3_t apos3;
 };
 
 struct corpse_ent_t
 {
-    int deathAnimStartTime;
+	int deathAnimStartTime;
 };
 
 struct gentity_s
@@ -1193,7 +1193,7 @@ struct gentity_s
 		struct corpse_ent_t corpse;
 	} params;
 	int unknown2; // 516 ?
-    int unknown3; // 520 ?
+	int unknown3; // 520 ?
 	gentity_t** linkedEntities; // 524 ??
 	byte attachedModels[6]; // 528
 	u_int16_t attachedModelsIndexes; // 536 ?
@@ -1596,9 +1596,9 @@ typedef struct WeaponDef_t
 	snd_alias_list_t *fireSound;
 	snd_alias_list_t *fireSoundPlayer;
 	snd_alias_list_t *fireLoopSound;
-    snd_alias_list_t *fireLoopSoundPlayer;
-    snd_alias_list_t *fireStopSound;
-    snd_alias_list_t *fireStopSoundPlayer;
+	snd_alias_list_t *fireLoopSoundPlayer;
+	snd_alias_list_t *fireStopSound;
+	snd_alias_list_t *fireStopSoundPlayer;
 	snd_alias_list_t *fireLastSound;
 	snd_alias_list_t *fireLastSoundPlayer;
 	snd_alias_list_t *meleeSwipeSound;
@@ -1770,7 +1770,7 @@ typedef struct WeaponDef_t
 	float parallelBounce[23];
 	float perpendicularBounce[23];
 	FxEffectDef_t *projTrailEffect;
-    int projectileDLight; // here or after vProjectileColor
+	int projectileDLight; // here or after vProjectileColor
 	float vProjectileColor[3];
 	float fAdsAimPitch;
 	float fAdsCrosshairInFrac;
@@ -1846,11 +1846,11 @@ typedef struct WeaponDef_t
 	int minPlayerDamage;
 	float fMaxDamageRange;
 	float fMinDamageRange;
-    float destabilizationBaseTime;
-    float destabilizationTimeReductionRatio;
-    float destabilizationAngleMax;
-    int destabilizeDistance;
-    int unknown5; // here or before destabilize vars
+	float destabilizationBaseTime;
+	float destabilizationTimeReductionRatio;
+	float destabilizationAngleMax;
+	int destabilizeDistance;
+	int unknown5; // here or before destabilize vars
 	float locationDamageMultipliers[19];
 	const char *fireRumble;
 	const char *meleeImpactRumble;
@@ -2096,9 +2096,9 @@ typedef struct
 	short neck;
 	short head;
 	short pelvis;
-    short pickup_ammo;
-    short pickup_weapon;
-    short pickup_health;
+	short pickup_ammo;
+	short pickup_weapon;
+	short pickup_health;
 } stringIndex_t;
 
 struct bgs_s
@@ -2655,6 +2655,14 @@ static const int testclient_connect_string_offset = 0x0;  // Not tested
 static const int testclient_connect_string_offset = 0x0;  // Not tested
 #elif COD_VERSION == COD2_1_3
 static const int testclient_connect_string_offset = 0x0814ab20;
+#endif
+
+#if COD_VERSION == COD2_1_0
+static const int rcon_from_string_offset = 0x0;  // Not tested
+#elif COD_VERSION == COD2_1_2
+static const int rcon_from_string_offset = 0x0;  // Not tested
+#elif COD_VERSION == COD2_1_3
+static const int rcon_from_string_offset = 0x0814bC61;
 #endif
 
 #define scrVarPub (*((scrVarPub_t*)( varpub_offset )))
