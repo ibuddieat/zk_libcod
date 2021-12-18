@@ -303,6 +303,22 @@ void gsc_utils_putchar()
 	stackPushString( s );
 }
 
+void gsc_utils_logprintconsole()
+{
+	char *str;
+
+	if ( ! stackGetParams("s", &str))
+	{
+		stackError("gsc_utils_logprintconsole() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	Com_Printf("%s", str);
+
+	stackPushBool(qtrue);
+}
+
 void gsc_utils_getarraykeys()
 {
 	unsigned int arrIndex;

@@ -13,6 +13,7 @@ void gsc_utils_printf();
 void gsc_utils_sprintf();
 void gsc_utils_outofbandprint();
 void gsc_utils_putchar();
+void gsc_utils_logprintconsole();
 
 void gsc_utils_getarraykeys();
 void gsc_utils_getascii();

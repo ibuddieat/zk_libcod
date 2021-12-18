@@ -26,6 +26,7 @@ cvar_t *g_playerEject;
 cvar_t *sv_allowRcon;
 cvar_t *sv_limitLocalRcon;
 cvar_t *sv_logRcon;
+cvar_t *sv_logHeartbeat;
 cvar_t *fs_library;
 cvar_t *sv_downloadMessage;
 cvar_t *fs_callbacks;
@@ -43,6 +44,7 @@ cHook *hook_print_codepos;
 cHook *hook_touch_item_auto;
 cHook *hook_g_tempentity;
 cHook *hook_gscr_loadconsts;
+cHook *hook_sv_masterheartbeat;
 
 int codecallback_remotecommand = 0;
 int codecallback_playercommand = 0;
@@ -54,7 +56,8 @@ int codecallback_meleebutton = 0;
 int codecallback_usebutton = 0;
 int codecallback_attackbutton = 0;
 
-qboolean logRcon_enabled = qtrue;
+qboolean logRcon = qtrue;
+qboolean logHeartbeat = qtrue;
 
 /* ... ... ... */
 
@@ -82,6 +85,7 @@ void hook_sv_init(const char *format, ...)
 	sv_allowRcon = Cvar_RegisterBool("sv_allowRcon", qtrue, CVAR_ARCHIVE);
 	sv_limitLocalRcon = Cvar_RegisterBool("sv_limitLocalRcon", qfalse, CVAR_ARCHIVE);
 	sv_logRcon = Cvar_RegisterBool("sv_logRcon", qfalse, CVAR_ARCHIVE);
+	sv_logHeartbeat = Cvar_RegisterBool("sv_logHeartbeat", qfalse, CVAR_ARCHIVE);
 	fs_library = Cvar_RegisterString("fs_library", "", CVAR_ARCHIVE);
 	sv_downloadMessage = Cvar_RegisterString("sv_downloadMessage", "", CVAR_ARCHIVE);
 	fs_callbacks = Cvar_RegisterString("fs_callbacks", "", CVAR_ARCHIVE);
@@ -121,6 +125,38 @@ void hook_sv_spawnserver(const char *format, ...)
 	Com_Printf("%s", s);
 	
 	/* Do stuff after sv has been spawned here */
+}
+
+void custom_sv_masterheartbeat(const char *hbname)
+{
+	hook_sv_masterheartbeat->unhook();
+
+	void (*sig)(const char *hbname);
+	*(int *)&sig = hook_sv_masterheartbeat->from;
+
+	#if COD_VERSION == COD2_1_0
+	int sending_heartbeat_string_offset = 0x0;  // Not tested
+	#elif COD_VERSION == COD2_1_2
+	int sending_heartbeat_string_offset = 0x0;  // Not tested
+	#elif COD_VERSION == COD2_1_3
+	int sending_heartbeat_string_offset = 0x0814BBC0;
+	#endif
+
+	if ( logHeartbeat && !sv_logHeartbeat->boolean ) {
+		byte disable = 0;
+		memcpy((void *)sending_heartbeat_string_offset, &disable, 1);
+		logHeartbeat = qfalse;
+		Com_DPrintf("Disabled heartbeat logging\n");
+	} else if ( !logHeartbeat && sv_logHeartbeat->boolean ) {
+		byte enable = 0x53; // "S"
+		memcpy((void *)sending_heartbeat_string_offset, &enable, 1);
+		logHeartbeat = qtrue;
+		Com_DPrintf("Enabled heartbeat logging\n");
+	}
+
+	sig(hbname);
+	
+	hook_sv_masterheartbeat->hook();
 }
 
 int hook_codscript_gametype_scripts()
@@ -1807,15 +1843,23 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 			return;
 	}
 	
-	if ( logRcon_enabled && !sv_logRcon->boolean ) {
+	#if COD_VERSION == COD2_1_0
+	int rcon_from_string_offset = 0x0;  // Not tested
+	#elif COD_VERSION == COD2_1_2
+	int rcon_from_string_offset = 0x0;  // Not tested
+	#elif COD_VERSION == COD2_1_3
+	int rcon_from_string_offset = 0x0814bC61;
+	#endif
+	
+	if ( logRcon && !sv_logRcon->boolean ) {
 		byte disable = 0;
 		memcpy((void *)rcon_from_string_offset, &disable, 1);
-		logRcon_enabled = qfalse;
+		logRcon = qfalse;
 		Com_DPrintf("Disabled rcon messages logging\n");
-	} else if ( !logRcon_enabled && sv_logRcon->boolean ) {
+	} else if ( !logRcon && sv_logRcon->boolean ) {
 		byte enable = 0x52; // "R"
 		memcpy((void *)rcon_from_string_offset, &enable, 1);
-		logRcon_enabled = qtrue;
+		logRcon = qtrue;
 		Com_DPrintf("Enabled rcon messages logging\n");
 	}
 	
@@ -2273,6 +2317,8 @@ public:
 		hook_g_tempentity->hook();
 		hook_gscr_loadconsts = new cHook(0x081224F8, (int)custom_gsc_loadconsts);
 		hook_gscr_loadconsts->hook();
+		hook_sv_masterheartbeat = new cHook(0x08096ED6, (int)custom_sv_masterheartbeat);
+		hook_sv_masterheartbeat->hook();
 
 #if COMPILE_PLAYER == 1
 		hook_play_movement = new cHook(0x08090DAC, (int)play_movement);

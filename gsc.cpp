@@ -197,6 +197,7 @@ scr_function_t scriptFunctions[] =
 	{"sprintf", gsc_utils_sprintf, 0},
 	{"printoutofband", gsc_utils_outofbandprint, 0}, //
 	{"putchar", gsc_utils_putchar, 0}, //
+	{"logprintconsole", gsc_utils_logprintconsole, 0},
     
 	{"getarraykeys", gsc_utils_getarraykeys, 0},
 	{"getascii", gsc_utils_getascii, 0},

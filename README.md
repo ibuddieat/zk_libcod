@@ -16,6 +16,7 @@ Changes provided by this repository:
 - Added cvars:
   * `sv_limitLocalRcon` to whitelist internal IPs at rcon rate limiting
   * `sv_logRcon` to disable (successful) rcon command logging
+  * `sv_logHeartbeat` to disable logging of heartbeats that are sent to the master server
   * `g_debugEvents` to log events such as player footsteps, temporary entities etc.
   * `g_logPickup` to control logging of item pickup actions
   * `g_notifyPickup` to define whether to use the stock pickup logic or custom notify events
@@ -38,6 +39,7 @@ Changes provided by this repository:
   * `getentitycount()`
   * `setnexttestclientname(<name>)`
   * `resettestclientnaming()`
+  * `logprintconsole(<message>)`
 - Disabled several libcod functions that would make it easy to harm the server with malicious map scripts
 - Added/updated some missing/unknown declarations
 
