@@ -10,6 +10,7 @@ cvar_t *rcon_password;
 cvar_t *cl_allowDownload;
 cvar_t *sv_timeout;
 cvar_t *sv_zombietime;
+cvar_t *sv_padPackets;
 
 #if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
 cvar_t *sv_wwwDownload;
@@ -104,6 +105,7 @@ void hook_sv_init(const char *format, ...)
 	rcon_password = Cvar_FindVar("rcon_password");
 	sv_timeout = Cvar_FindVar("sv_timeout");
 	sv_zombietime = Cvar_FindVar("sv_zombietime");
+	sv_padPackets = Cvar_FindVar("sv_padPackets");
 
 #if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
 	sv_wwwDownload = Cvar_FindVar("sv_wwwDownload");
@@ -471,7 +473,7 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 				Scr_AddInt(bg_item->quantity);
 				Scr_AddString(bg_item->display_name);
 				Scr_AddString(BG_WeaponDefs(bg_item->giAmmoIndex)->szInternalName);
-				Scr_Notify(entity, scr_const.pickup_weapon, 2);
+				Scr_Notify(entity, scr_const.pickup_weapon, 5);
 			} else {
 				respawn = Pickup_Weapon(item, entity, &event, touch);
 			}
@@ -774,14 +776,14 @@ int custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t *
 	int i;
 
 	/*if ( g_debugEvents->boolean ) {
-		Com_DPrintf("custom_MSG_WriteDeltaPlayerstate() for entity %d\n",to->number);
+		Com_DPrintf("custom_MSG_WriteDeltaStruct() for entity %d\n",to->number);
 	}*/
 
 	if ( !to ) {
 		if (bChangeBit != 0) {
 			MSG_WriteBit1(msg);
 		}
-		MSG_WriteBits(msg,from->number,indexBits);
+		MSG_WriteBits(msg, from->number, indexBits);
 		MSG_WriteBit1(msg);
 	} else {
 		lc = 0;
@@ -798,7 +800,7 @@ int custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t *
 				if (bChangeBit != 0) {
 					MSG_WriteBit1(msg);
 				}
-				MSG_WriteBits(msg,to->number,indexBits);
+				MSG_WriteBits(msg, to->number, indexBits);
 				MSG_WriteBit0(msg);
 				MSG_WriteBit0(msg);
 			}
@@ -1028,6 +1030,173 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 		MSG_WriteBit1(msg);
 		MSG_WriteDeltaHudElems(msg, from->hud.archival, to->hud.archival, 0x1f);
 		MSG_WriteDeltaHudElems(msg, from->hud.current, to->hud.current, 0x1f);
+	}
+}
+
+void MSG_WriteDeltaClient(msg_t *msg, clientState_t *from, clientState_t *to, qboolean force)
+{
+	clientState_t nullstate;
+	
+	if ( !from ) {
+		from = &nullstate;
+		memset(&nullstate, 0, sizeof(nullstate));
+	}
+	
+	custom_MSG_WriteDeltaStruct(msg, (entityState_t *)&from->clientIndex, (entityState_t *)&to->clientIndex, force, 22, 6, &clientStateFields, 1);
+}
+
+void SV_EmitPacketEntities(int client, int from_num_entities, int from_first_entity, int num_entities, int first_entity, msg_t *msg)
+{
+	int newnum;
+	int oldnum;
+	int newindex;
+	int oldindex;
+	entityState_t *newent;
+	entityState_t *oldent;
+
+	newent = NULL;
+	oldent = NULL;
+	newindex = 0;
+	oldindex = 0;
+	while ( newindex < num_entities || oldindex < from_num_entities ) {
+		if ( newindex < num_entities ) {
+			newent = &svs.snapshotEntities[( first_entity + newindex ) % svs.numSnapshotEntities];
+			newnum = newent->number;
+		} else {
+			newnum = 9999;
+		}
+		
+		if ( oldindex < from_num_entities ) {
+			oldent = &svs.snapshotEntities[( from_first_entity + oldindex ) % svs.numSnapshotEntities];
+			oldnum = oldent->number;
+		} else {
+			oldnum = 9999;
+		}
+		
+		if ( newnum == oldnum ) {
+			MSG_WriteDeltaEntity(msg, oldent, newent, 0);
+			oldindex++;
+			newindex++;
+		} else if ( newnum < oldnum ) {
+			MSG_WriteDeltaEntity(msg, &sv.svEntities[newnum].baseline.s, newent, 1);
+			newindex++;
+		} else if ( oldnum < newnum ) {
+			MSG_WriteDeltaEntity(msg, oldent, NULL, 1);
+			oldindex++;
+		}
+	}
+	MSG_WriteBits(msg, 0x3ff, 10);
+}
+
+void SV_EmitPacketClients(int client, int from_num_clients, int from_first_client, int num_clients, int first_client, msg_t *msg)
+{
+	int newnum;
+	int oldnum;
+	int newindex;
+	int oldindex;
+	clientState_t *newcs;
+	clientState_t *oldcs;
+
+	newcs = NULL;
+	oldcs = NULL;
+	newindex = 0;
+	oldindex = 0;
+	while ( newindex < num_clients || oldindex < from_num_clients ) {
+		if ( newindex < num_clients ) {
+			newcs = svs.snapshotClients + ((newindex + first_client) % svs.numSnapshotClients) * 0x17;
+			newnum = newcs->clientIndex;
+		} else {
+			newnum = 9999;
+		}
+		
+		if ( oldindex < from_num_clients ) {
+			oldcs = svs.snapshotClients + ((oldindex + from_first_client) % svs.numSnapshotClients) * 0x17;
+			oldnum = oldcs->clientIndex;
+		} else {
+			oldnum = 9999;
+		}
+		
+		if ( newnum == oldnum ) {
+			MSG_WriteDeltaClient(msg, oldcs, newcs, 0);
+			oldindex++;
+			newindex++;
+		} else if ( newnum < oldnum ) {
+			MSG_WriteDeltaClient(msg, NULL, newcs, 1);
+			newindex++;
+		} else if ( oldnum < newnum ) {
+			MSG_WriteDeltaClient(msg, oldcs, NULL, 1);
+			oldindex++;
+		}
+	}
+	MSG_WriteBit0(msg);
+}
+
+void custom_SV_WriteSnapshotToClient(client_t *client, msg_t *msg)
+{
+	int from_first_client;
+	int from_num_clients;
+	int from_first_entity;
+	int from_num_entities;
+	int snapFlags;
+	int i;
+	int lastframe;
+	clientSnapshot_t *frame, *oldframe;
+	
+	frame = &client->frames[ client->netchan.outgoingSequence & PACKET_MASK ];
+
+	if ( client->deltaMessage < 1 || client->state != CS_ACTIVE ) {
+		oldframe = NULL;
+		lastframe = 0;
+	} else if (( client->netchan).outgoingSequence - client->deltaMessage < ( PACKET_BACKUP - 3 ) ) {
+		oldframe = &client->frames[ client->deltaMessage & PACKET_MASK ];
+		lastframe = client->netchan.outgoingSequence - client->deltaMessage;
+		if ( oldframe->first_entity < svs.nextSnapshotEntities - svs.numSnapshotEntities ) {
+			Com_DPrintf("%s: Delta request from out of date entities.\n", client->name);
+			oldframe = NULL;
+			lastframe = 0;
+		}
+	} else {
+		Com_DPrintf("%s: (writing snapshot) Snapshot delta request from out of date packet.\n", client->name);
+		oldframe = NULL;
+		lastframe = 0;
+	}
+	
+	MSG_WriteByte(msg, 6);
+	MSG_WriteLong(msg, svs.time);
+	MSG_WriteByte(msg, lastframe);
+	snapFlags = svs.snapFlagServerBit;
+	if ( client->rateDelayed != 0 ) {
+		snapFlags = svs.snapFlagServerBit | 1;
+	}
+	if ( client->state == CS_ACTIVE ) {
+		client->delayed = 1;
+	} else if ( client->state != CS_ZOMBIE ) {
+		client->delayed = 0;
+	}
+	if ( client->delayed == 0 ) {
+		snapFlags = snapFlags | 2;
+	}
+	
+	MSG_WriteByte(msg, snapFlags);
+	if ( oldframe == NULL ) {
+		custom_MSG_WriteDeltaPlayerstate(msg, NULL, &frame->ps);
+		from_num_entities = 0;
+		from_first_entity = 0;
+		from_num_clients = 0;
+		from_first_client = 0;
+	} else {
+		custom_MSG_WriteDeltaPlayerstate(msg, &oldframe->ps, &frame->ps);
+		from_num_entities = oldframe->num_entities;
+		from_first_entity = oldframe->first_entity;
+		from_num_clients = oldframe->num_clients;
+		from_first_client = oldframe->first_client;
+	}
+	
+	SV_EmitPacketEntities(client - svs.clients, from_num_entities, from_first_entity, frame->num_entities, frame->first_entity, msg);
+	SV_EmitPacketClients(client - svs.clients, from_num_clients, from_first_client, frame->num_clients, frame->first_client, msg);
+	
+	for ( i = 0; i < sv_padPackets->integer; i++ ) {
+		MSG_WriteByte(msg, 0);
 	}
 }
 

@@ -37,6 +37,7 @@
 #define MAX_CLIENTS 64
 #define MAX_CHALLENGES 1024
 #define PACKET_BACKUP 32
+#define PACKET_MASK ( PACKET_BACKUP - 1 )
 #define MAX_QPATH 64
 #define MAX_OSPATH 256
 #define FRAMETIME 50
@@ -109,7 +110,7 @@ typedef enum
 	CS_CONNECTED,
 	CS_PRIMED,
 	CS_ACTIVE
-} clientState_t;
+} clientConnectState_t;
 
 typedef enum
 {
@@ -736,6 +737,18 @@ typedef struct
 	vec3_t		trDelta;
 } trajectory_t;
 
+#define MAX_NETNAME 16
+
+typedef struct clientState_s
+{
+	int clientIndex;
+	team_t team;
+	int modelIndex;
+	char name[32];
+	int attachModelIndex[6];
+	int attachTagIndex[6];
+} clientState_t;
+
 typedef struct entityState_s
 {
 	int number;
@@ -1042,7 +1055,7 @@ typedef struct
 	int viewmodelIndex;
 	qboolean noSpectate;
 	int teamInfo;
-	int clientId;
+	int clientIndex;
 	sessionTeam_t team;
 	int model;
 	int attachedModels[6];
@@ -1155,6 +1168,21 @@ struct corpse_ent_t
 	int deathAnimStartTime;
 };
 
+// gentity_s->flags
+#define FL_GODMODE              0x1
+#define FL_DEMI_GODMODE         0x2
+#define FL_NOTARGET             0x4
+#define FL_NO_KNOCKBACK         0x8
+#define FL_DROPPED_ITEM         0x10
+#define FL_TURRET_UNKNOWN1      0x100
+#define FL_TURRET_UNKNOWN2      0x200
+#define FL_TURRET_UNKNOWN3      0x400
+#define FL_INVISIBLE            0x800
+#define FL_LINKTO_ENABLED       0x1000
+#define FL_GRENADE_TOUCH_DAMAGE 0x4000
+#define FL_MISSILE_UNKNOWN      0x10000
+#define FL_STABLE_MISSILE       0x20000
+
 struct gentity_s
 {
 	entityState_t s;
@@ -1229,7 +1257,7 @@ typedef struct
 
 typedef struct client_s
 {
-	clientState_t	state;
+	clientConnectState_t	state;
 	qboolean		delayed;
 	const char		*delayDropMsg;
 	char			userinfo[1024];
@@ -2642,6 +2670,14 @@ static const int objectiveFields_offset = 0x08142a20;
 #endif
 
 #if COD_VERSION == COD2_1_0
+static const int clientStateFields_offset = 0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const int clientStateFields_offset = 0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const int clientStateFields_offset = 0x08141F60;
+#endif
+
+#if COD_VERSION == COD2_1_0
 static const int bg_itemlist_offset = 0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
 static const int bg_itemlist_offset = 0x0; // Not tested
@@ -2671,6 +2707,7 @@ static const int testclient_connect_string_offset = 0x0814ab20;
 #define playerStateFields (*((netField_t*)( playerStateFields_offset )))
 #define entityStateFields (*((netField_t*)( entityStateFields_offset )))
 #define objectiveFields (*((netField_t*)( objectiveFields_offset )))
+#define clientStateFields (*((netField_t*)( clientStateFields_offset )))
 #define bg_itemlist (*((gitem_t*)( bg_itemlist_offset )))
 
 // Check for critical structure sizes and fail if not match
@@ -2688,6 +2725,7 @@ static const int testclient_connect_string_offset = 0x0814ab20;
  
  static_assert((sizeof(gentity_t) == 560), "ERROR: gentity_t size is invalid!");
  static_assert((sizeof(gclient_t) == 0x28A4), "ERROR: gclient_t size is invalid!");
+ static_assert((sizeof(clientState_t) == 0x5c), "ERROR: clientState_t size is invalid!");
  static_assert((sizeof(gitem_t) == 44), "ERROR: gitem_t size is invalid!");
  static_assert((sizeof(XModel_t) == 144), "ERROR: XModel_t size is invalid!");
  
