@@ -20,17 +20,6 @@ Changes provided by this repository:
   * `g_debugEvents` to log events such as player footsteps, temporary entities etc.
   * `g_logPickup` to control logging of item pickup actions
   * `g_notifyPickup` to define whether to use the stock pickup logic or custom notify events
-- Removed libcod cvars:
-  * `con_coloredPrints` as it may break incoming rcon commands, thus causing issues with BigBrotherBot
-- Reconstructed functions:
-  * `custom_Touch_Item` to gain more control over item pickup actions
-  * `custom_SV_DropClient` to disable bot disconnect messages
-  * `custom_SV_SendClientGameState` for miscellaneous game engine tests
-  * `custom_BG_AddPredictableEventToPlayerstate` to be able to filter events
-  * `custom_G_AddEvent` to be able to filter events
-  * `custom_G_TempEntity` to be able to filter events
-  * `custom_MSG_WriteDeltaPlayerstate`
-  * `custom_MSG_WriteDeltaStruct`
 - Added script code functions:
   * `<player> noclip("on|off|toggle")`
   * `<player> getinactivitytime()`
@@ -40,7 +29,28 @@ Changes provided by this repository:
   * `setnexttestclientname(<name>)`
   * `resettestclientnaming()`
   * `logprintconsole(<message>)`
-- Disabled several libcod functions that would make it easy to harm the server with malicious map scripts
+- Added script callback functions:
+  * `CodeCallback_Error`
+- Removed libcod cvars:
+  * `con_coloredPrints` as it may break incoming rcon commands, thus causing issues with BigBrotherBot
+- Reconstructed functions (see functions with `custom_` prefix in libcod.cpp):
+  * `Touch_Item` to gain more control over item pickup actions
+  * `SV_DropClient` to disable bot disconnect messages
+  * `SV_SendClientGameState` for miscellaneous game engine tests (e.g., connect configstrings)
+  * `BG_AddPredictableEventToPlayerstate` et sequentes to be able to filter events
+  * `G_AddEvent`
+  * `G_TempEntity`
+  * `MSG_WriteDeltaPlayerstate` et sequentes to be able to filter player/entity attributes
+  * `MSG_WriteDeltaStruct`
+  * `MSG_WriteDeltaClient`
+  * `SV_EmitPacketEntities`
+  * `SV_EmitPacketClients`
+  * `SV_WriteSnapshotToClient`
+  * `Com_Error` et sequentes to be able to pass errors to gsc code
+  * `Scr_Error`
+  * `RuntimeError_Debug`
+  * `RuntimeError`
+- Commented out several libcod functions that would make it easy to harm the server with malicious map scripts, thus currently breaking manymaps support
 - Added/updated some missing/unknown declarations
 
 Build requirements:
@@ -60,5 +70,5 @@ apt install libmysqlclient-dev:i386
 
 Creating the binary (written to `./bin`):
 ```
-./doit.sh cod2_1_3
+./doit.sh
 ```

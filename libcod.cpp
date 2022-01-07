@@ -56,6 +56,7 @@ int codecallback_client_spam = 0;
 int codecallback_meleebutton = 0;
 int codecallback_usebutton = 0;
 int codecallback_attackbutton = 0;
+int codecallback_error = 0;
 
 qboolean logRcon = qtrue;
 qboolean logHeartbeat = qtrue;
@@ -169,7 +170,7 @@ int hook_codscript_gametype_scripts()
 		strncpy(path_for_cb, fs_callbacks->string, sizeof(path_for_cb));
 	
 	hook_gametype_scripts->unhook();
-			
+	
 	codecallback_remotecommand = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_RemoteCommand", 0);
 	codecallback_playercommand = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_PlayerCommand", 0);
 	codecallback_userinfochanged = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_UserInfoChanged", 0);
@@ -179,7 +180,8 @@ int hook_codscript_gametype_scripts()
 	codecallback_meleebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MeleeButton", 0);
  	codecallback_usebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_UseButton", 0);
 	codecallback_attackbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_AttackButton", 0);
-
+	codecallback_error = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_Error", 0);
+	
 	int (*sig)();
 	*(int *)&sig = hook_gametype_scripts->from;
 	int ret = sig();
@@ -2292,6 +2294,178 @@ void custom_Scr_PrintPrevCodePos(int a1, char *a2, int a3)
 	hook_print_codepos->hook();
 }
 
+void custom_Com_Error(int type, const char *format, ...)
+{
+	Sys_EnterCriticalSectionInternal(2);
+	
+	#if COD_VERSION == COD2_1_0  // Not tested
+	int com_errorEntered = 0x0;
+	int va_string_156 = 0x0;
+	int unk1 = 0x0;
+	int unk2 = 0x0;
+	int com_fixedConsolePosition = 0x0;
+	#elif COD_VERSION == COD2_1_2  // Not tested
+	int com_errorEntered = 0x0;
+	int va_string_156 = 0x0;
+	int unk1 = 0x0;
+	int unk2 = 0x0;
+	int com_fixedConsolePosition = 0x0;
+	#elif COD_VERSION == COD2_1_3
+	int com_errorEntered = 0x081A21C0;
+	int va_string_156 = 0x081A2280;
+	int unk1 = 0x081A327F;
+	int unk2 = 0x081A2264;
+	int com_fixedConsolePosition = 0x081A21C4;
+	#endif
+	
+	if ( *(int *)com_errorEntered ) {
+		Sys_Error("recursive error after: %s", *(char *)va_string_156);
+	}
+	*(int *)com_errorEntered = 1;
+	
+	va_list va;
+	va_start(va, format);
+	vsnprintf((char *)va_string_156, 0x1000, format, va);
+	va_end(va);
+	
+	if ( codecallback_error )
+	{
+		stackPushString((char *)va_string_156);
+		stackPushString("Com_Error");
+		stackPushInt(scrVmPub.terminal_error);
+		short ret = Scr_ExecThread(codecallback_error, 3);
+		Scr_FreeThread(ret);
+	}
+	
+	*(byte *)unk1 = 0;
+	
+	if ( type != 1 ) {
+		if ( type == 4 || type == 6 ) {
+			type = 1;
+		} else if ( type == 5 ) {
+			type = 1;
+		} else {
+			*(int *)com_fixedConsolePosition = 0;
+		}
+	}
+	
+	*(int *)unk2 = type;
+	
+	Sys_LeaveCriticalSectionInternal(2);
+
+	longjmp((__jmp_buf_tag*)Sys_GetValue(2), -1);
+}
+
+void custom_Scr_Error(void)
+{
+	if ( !scrVarPub.evaluate && !scrCompilePub.script_loading )
+	{
+		if ( scrVarPub.developer && scrVmGlob.loading )
+		{
+			scrVmPub.terminal_error = 1;
+		}
+		if ( scrVmPub.function_count || scrVmPub.debugCode )
+		{
+			if ( codecallback_error )
+			{
+				stackPushString(scrVarPub.error_message);
+				stackPushString("Scr_Error");
+				stackPushInt(0);
+				short ret = Scr_ExecThread(codecallback_error, 3);
+				Scr_FreeThread(ret);
+			}
+			longjmp(&g_script_error[g_script_error_level], -1);
+		}
+	} else if ( !scrVmPub.terminal_error ) {
+		return;
+	}
+	custom_Com_Error(1, "\x15%s", scrVarPub.error_message);
+}
+
+void custom_RuntimeError_Debug(int channel, char *pos, int param_3, char *message)
+{
+	int i, j;
+	
+	if ( codecallback_error )
+	{
+		stackPushString(message);
+		stackPushString("RuntimeError_Debug");
+		stackPushInt(channel == 0);
+		short ret = Scr_ExecThread(codecallback_error, 3);
+		Scr_FreeThread(ret);
+	}
+
+	Com_PrintMessage(channel, custom_va("\n******* script runtime error *******\n%s: ", message));
+	custom_Scr_PrintPrevCodePos(channel, pos, param_3);
+	i = scrVmPub.function_count;
+	if (scrVmPub.function_count != 0) {
+		while (j = i + -1, 0 < j) {
+			Com_PrintMessage(channel, "called from:\n");
+			custom_Scr_PrintPrevCodePos(channel, (char *)scrVmPub.function_frame_start[i + -1].fs.pos, scrVmPub.function_frame_start[i + -1].fs.localId == 0);
+			i = j;
+		}
+		Com_PrintMessage(channel, "started from:\n");
+		custom_Scr_PrintPrevCodePos(channel, (char *)scrVmPub.function_frame_start[0].fs.pos, 1);
+	}
+	Com_PrintMessage(channel, "************************************\n");
+}
+
+void custom_RuntimeError(char *pos, int param_2, char *message, char *param_4)
+{
+	int channel_1, channel_2;
+	char *local_14;
+	char *local_10;
+	qboolean terminate;
+
+	if ( scrVarPub.developer || scrVmPub.terminal_error )
+	{
+		if (scrVmPub.debugCode == 0)
+		{
+			terminate = false;
+			if ( scrVmPub.abort_on_error || scrVmPub.terminal_error )
+			{
+				terminate = true;
+			}
+			if (terminate) {
+				channel_2 = 0;
+			} else {
+				channel_2 = 4;
+			}
+			custom_RuntimeError_Debug(channel_2, pos, param_2, message);
+			if (!terminate)
+			{
+				return;
+			}
+		} else {
+			Com_Printf("%s\n", message);
+			if ( !scrVmPub.terminal_error ) {
+				if ( codecallback_error )
+				{
+					stackPushString(message);
+					stackPushString("RuntimeError");
+					stackPushInt(0);
+					short ret = Scr_ExecThread(codecallback_error, 3);
+					Scr_FreeThread(ret);
+				}
+				return;
+			}
+		}
+		if (param_4 == NULL) {
+			local_10 = (char *)"";
+			local_14 = (char *)"";
+			param_4 = local_10;
+		} else {
+			local_14 = (char *)"\n";
+		}
+		if ( !scrVmPub.terminal_error ) {
+			channel_1 = 4;
+		} else {
+			channel_1 = 5;
+		}
+		custom_Com_Error(channel_1, "\x15script runtime error\n(see console for details)\n%s%s%s", message, local_14, param_4);
+	}
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -2512,6 +2686,10 @@ public:
 		cracking_hook_function(0x080907BA, (int)hook_SV_ResetPureClient_f);
 		cracking_hook_function(0x080963C8, (int)custom_SV_CalcPings);
 		cracking_hook_function(0x0809657E, (int)custom_SV_CheckTimeouts);
+		cracking_hook_function(0x08080050, (int)custom_Scr_Error);
+		cracking_hook_function(0x08061124, (int)custom_Com_Error);
+		cracking_hook_function(0x080788D2, (int)custom_RuntimeError);
+
 
 #if COMPILE_BOTS == 1
 		cracking_hook_function(0x0809676C, (int)custom_SV_BotUserMove);

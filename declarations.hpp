@@ -2,6 +2,7 @@
 #define _DECLARATIONS_HPP_
 
 #include <stdint.h>
+#include <setjmp.h>
 
 #define QDECL __attribute__((cdecl))
 
@@ -387,6 +388,36 @@ typedef struct
 	struct function_frame_t function_frame_start[32];
 	VariableValue stack[2048];
 } scrVmPub_t;
+
+typedef struct 
+{
+	int value_count;
+	int far_function_count;
+	unsigned int loadedscripts;
+	unsigned int scriptsPos;
+	unsigned int builtinFunc;
+	unsigned int builtinMeth;
+	uint16_t *canonicalStrings;
+	const char *in_ptr;
+	const char *parseBuf;
+	byte script_loading;
+	byte allowedBreakpoint;
+	int16_t pad;
+	int developer_statement;
+	char *opcodePos;
+	unsigned int programLen;
+	int func_table_size;
+	int *func_table[1024];
+} scrCompilePub_t;
+
+typedef struct 
+{
+	VariableValue eval_stack[2];
+	const char *dialog_error_message;
+	int loading;
+	int starttime;
+	unsigned int localVarsStack[2048];
+} scrVmGlob_t;
 
 typedef int	fileHandle_t;
 typedef void (*xfunction_t)();
@@ -2590,6 +2621,38 @@ static const int vmpub_offset = 0x083D8A80;
 #endif
 
 #if COD_VERSION == COD2_1_0
+static const int compilepub_offset = 0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const int compilepub_offset = 0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const int compilepub_offset = 0x08205C80;
+#endif
+
+#if COD_VERSION == COD2_1_0
+static const int vmglob_offset = 0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const int vmglob_offset = 0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const int vmglob_offset = 0x083DCE80;
+#endif
+
+#if COD_VERSION == COD2_1_0
+static const int g_script_error_offset = 0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const int g_script_error_offset = 0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const int g_script_error_offset = 0x083D7620;
+#endif
+
+#if COD_VERSION == COD2_1_0
+static const int g_script_error_level_offset = 0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const int g_script_error_level_offset = 0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const int g_script_error_level_offset = 0x083D8A3C;
+#endif
+
+#if COD_VERSION == COD2_1_0
 static const int sv_offset = 0x0842BC80;
 #elif COD_VERSION == COD2_1_2
 static const int sv_offset = 0x0843F180;
@@ -2697,6 +2760,10 @@ static const int testclient_connect_string_offset = 0x0814ab20;
 #define scrVmPub (*((scrVmPub_t*)( vmpub_offset )))
 #define scrVarGlob (((VariableValueInternal*)( varglob_offset )))
 #define scrVarGlob_high (((VariableValueInternal*)( varglob_offset + 16 * 32770 )))
+#define scrCompilePub (*((scrCompilePub_t*)( compilepub_offset )))
+#define scrVmGlob (*((scrVmGlob_t*)( vmglob_offset )))
+#define g_script_error (*((jmp_buf*)( g_script_error_offset )))
+#define g_script_error_level (*((int*)( g_script_error_level_offset )))
 #define sv (*((server_t*)( sv_offset )))
 #define svs (*((serverStatic_t*)( svs_offset )))
 #define level (*((level_locals_t*)( level_offset )))

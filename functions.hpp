@@ -102,6 +102,33 @@ static const SV_Cmd_ArgvBuffer_t SV_Cmd_ArgvBuffer = (SV_Cmd_ArgvBuffer_t)0x0806
 static const SV_Cmd_ArgvBuffer_t SV_Cmd_ArgvBuffer = (SV_Cmd_ArgvBuffer_t)0x08060278;
 #endif
 
+typedef void (*Sys_Error_t)(const char *fmt, ...);
+#if COD_VERSION == COD2_1_0
+static const Sys_Error_t Sys_Error = (Sys_Error_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Sys_Error_t Sys_Error = (Sys_Error_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Sys_Error_t Sys_Error = (Sys_Error_t)0x080D3B3C;
+#endif
+
+typedef void (*Sys_EnterCriticalSectionInternal_t)(int section);
+#if COD_VERSION == COD2_1_0
+static const Sys_EnterCriticalSectionInternal_t Sys_EnterCriticalSectionInternal = (Sys_EnterCriticalSectionInternal_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Sys_EnterCriticalSectionInternal_t Sys_EnterCriticalSectionInternal = (Sys_EnterCriticalSectionInternal_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Sys_EnterCriticalSectionInternal_t Sys_EnterCriticalSectionInternal = (Sys_EnterCriticalSectionInternal_t)0x080D6842;
+#endif
+
+typedef void (*Sys_LeaveCriticalSectionInternal_t)(int section);
+#if COD_VERSION == COD2_1_0
+static const Sys_LeaveCriticalSectionInternal_t Sys_LeaveCriticalSectionInternal = (Sys_LeaveCriticalSectionInternal_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Sys_LeaveCriticalSectionInternal_t Sys_LeaveCriticalSectionInternal = (Sys_LeaveCriticalSectionInternal_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Sys_LeaveCriticalSectionInternal_t Sys_LeaveCriticalSectionInternal = (Sys_LeaveCriticalSectionInternal_t)0x080D6864;
+#endif
+
 typedef void (*Com_Printf_t)(const char *format, ...);
 #if COD_VERSION == COD2_1_0
 static const Com_Printf_t Com_Printf = (Com_Printf_t)0x08060B2C;
@@ -127,6 +154,15 @@ static const Com_sprintf_t Com_sprintf = (Com_sprintf_t)0x080B5932;
 static const Com_sprintf_t Com_sprintf = (Com_sprintf_t)0x080B7DC6;
 #elif COD_VERSION == COD2_1_3
 static const Com_sprintf_t Com_sprintf = (Com_sprintf_t)0x080B7F0A;
+#endif
+
+typedef void (*Com_PrintMessage_t)(int channel, const char *message);
+#if COD_VERSION == COD2_1_0
+static const Com_PrintMessage_t Com_PrintMessage = (Com_PrintMessage_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Com_PrintMessage_t Com_PrintMessage = (Com_PrintMessage_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Com_PrintMessage_t Com_PrintMessage = (Com_PrintMessage_t)0x08060C20;
 #endif
 
 typedef void (*Cmd_AddCommand_t)(const char *cmd_name, xcommand_t function);
