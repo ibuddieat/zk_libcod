@@ -54,23 +54,9 @@ if [ "$1" == "clean" ]; then
 	rm objects_* -rf
 	rm bin -rf
 	exit 1
-
-elif [ "$1" == "cod2_1_0" ]; then
-	constants="-D COD_VERSION=COD2_1_0"
-
-elif [ "$1" == "cod2_1_2" ]; then
-	constants="-D COD_VERSION=COD2_1_2"
-
-elif [ "$1" == "cod2_1_3" ]; then
-	constants="-D COD_VERSION=COD2_1_3"
-
-elif [ "$1" == "" ]; then
-	echo "##### Please specify a command line option #####"
-	exit 0
-
 else
-	echo "##### Unrecognized command line option $1 #####"
-	exit 0
+	set -- "cod2_1_3"
+	constants="-D COD_VERSION=COD2_1_3"
 fi
 
 if [ -f extra/functions.hpp ]; then
