@@ -615,13 +615,31 @@ static const MSG_WriteData_t MSG_WriteData = (MSG_WriteData_t)0x0806804C;
 static const MSG_WriteData_t MSG_WriteData = (MSG_WriteData_t)0x08068044;
 #endif
 
-typedef void (*MSG_WriteDeltaField_t)(msg_t *msg, const byte *from, const byte *to, netField_t *field);
+typedef void (*MSG_WriteDeltaClient_t)(msg_t *msg, clientState_t *from, clientState_t *to, qboolean force);
+#if COD_VERSION == COD2_1_0
+static const MSG_WriteDeltaClient_t MSG_WriteDeltaClient = (MSG_WriteDeltaClient_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const MSG_WriteDeltaClient_t MSG_WriteDeltaClient = (MSG_WriteDeltaClient_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const MSG_WriteDeltaClient_t MSG_WriteDeltaClient = (MSG_WriteDeltaClient_t)0x080698E8;
+#endif
+
+typedef void (*MSG_WriteDeltaPlayerstate_t)(msg_t *msg, playerState_t *from, playerState_t *to);
+#if COD_VERSION == COD2_1_0
+static const MSG_WriteDeltaPlayerstate_t MSG_WriteDeltaPlayerstate = (MSG_WriteDeltaPlayerstate_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const MSG_WriteDeltaPlayerstate_t MSG_WriteDeltaPlayerstate = (MSG_WriteDeltaPlayerstate_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const MSG_WriteDeltaPlayerstate_t MSG_WriteDeltaPlayerstate = (MSG_WriteDeltaPlayerstate_t)0x0806A200;
+#endif
+
+typedef void (*MSG_WriteDeltaField_t)(msg_t *buf, byte *from, byte *to, netField_t *field);
 #if COD_VERSION == COD2_1_0
 static const MSG_WriteDeltaField_t MSG_WriteDeltaField = (MSG_WriteDeltaField_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
 static const MSG_WriteDeltaField_t MSG_WriteDeltaField = (MSG_WriteDeltaField_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
-static const MSG_WriteDeltaField_t MSG_WriteDeltaField = (MSG_WriteDeltaField_t)0x080692dc;
+static const MSG_WriteDeltaField_t MSG_WriteDeltaField = (MSG_WriteDeltaField_t)0x080692DC;
 #endif
 
 typedef void (*MSG_WriteDeltaEntity_t)(msg_t *msg, const entityState_t *from, const entityState_t *to, qboolean force);
@@ -649,6 +667,24 @@ static const MSG_WriteDeltaHudElems_t MSG_WriteDeltaHudElems = (MSG_WriteDeltaHu
 static const MSG_WriteDeltaHudElems_t MSG_WriteDeltaHudElems = (MSG_WriteDeltaHudElems_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const MSG_WriteDeltaHudElems_t MSG_WriteDeltaHudElems = (MSG_WriteDeltaHudElems_t)0x08069f84;
+#endif
+
+typedef void (*SV_EmitPacketEntities_t)(int client, int from_num_entities, int from_first_entity, int num_entities, int first_entity, msg_t *msg);
+#if COD_VERSION == COD2_1_0
+static const SV_EmitPacketEntities_t SV_EmitPacketEntities = (SV_EmitPacketEntities_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_EmitPacketEntities_t SV_EmitPacketEntities = (SV_EmitPacketEntities_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_EmitPacketEntities_t SV_EmitPacketEntities = (SV_EmitPacketEntities_t)0x08098308;
+#endif
+
+typedef void (*SV_EmitPacketClients_t)(int client, int from_num_clients, int from_first_client, int num_clients, int first_client, msg_t *msg);
+#if COD_VERSION == COD2_1_0
+static const SV_EmitPacketClients_t SV_EmitPacketClients = (SV_EmitPacketClients_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_EmitPacketClients_t SV_EmitPacketClients = (SV_EmitPacketClients_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_EmitPacketClients_t SV_EmitPacketClients = (SV_EmitPacketClients_t)0x0809847C;
 #endif
 
 typedef void (*SV_SendMessageToClient_t)(msg_t *msg, client_t *cl);
@@ -1225,6 +1261,69 @@ static const Pickup_Health_t Pickup_Health = (Pickup_Health_t)0x0; // Not tested
 static const Pickup_Health_t Pickup_Health = (Pickup_Health_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const Pickup_Health_t Pickup_Health = (Pickup_Health_t)0x081059C0;
+#endif
+
+typedef int (*LargeLocalConstructor_t)(LargeLocal *buf, int size);
+#if COD_VERSION == COD2_1_0
+static const LargeLocalConstructor_t LargeLocalConstructor = (LargeLocalConstructor_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const LargeLocalConstructor_t LargeLocalConstructor = (LargeLocalConstructor_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const LargeLocalConstructor_t LargeLocalConstructor = (LargeLocalConstructor_t)0x080AC58E;
+#endif
+
+typedef int (*LargeLocalGetBuf_t)(LargeLocal *buf);
+#if COD_VERSION == COD2_1_0
+static const LargeLocalGetBuf_t LargeLocalGetBuf = (LargeLocalGetBuf_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const LargeLocalGetBuf_t LargeLocalGetBuf = (LargeLocalGetBuf_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const LargeLocalGetBuf_t LargeLocalGetBuf = (LargeLocalGetBuf_t)0x080AC5D8;
+#endif
+
+typedef int (*LargeLocalDestructor_t)(LargeLocal *buf);
+#if COD_VERSION == COD2_1_0
+static const LargeLocalDestructor_t LargeLocalDestructor = (LargeLocalDestructor_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const LargeLocalDestructor_t LargeLocalDestructor = (LargeLocalDestructor_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const LargeLocalDestructor_t LargeLocalDestructor = (LargeLocalDestructor_t)0x080AC5C2;
+#endif
+
+typedef clientState_t * (*G_GetClientState_t)(int num);
+#if COD_VERSION == COD2_1_0
+static const G_GetClientState_t G_GetClientState = (G_GetClientState_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_GetClientState_t G_GetClientState = (G_GetClientState_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_GetClientState_t G_GetClientState = (G_GetClientState_t)0x08108E72;
+#endif
+
+typedef qboolean (*GetFollowPlayerState_t)(int clientNum, playerState_t *ps);
+#if COD_VERSION == COD2_1_0
+static const GetFollowPlayerState_t GetFollowPlayerState = (GetFollowPlayerState_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const GetFollowPlayerState_t GetFollowPlayerState = (GetFollowPlayerState_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const GetFollowPlayerState_t GetFollowPlayerState = (GetFollowPlayerState_t)0x080F6DEA;
+#endif
+
+typedef svEntity_t * (*SV_SvEntityForGentity_t)(gentity_t *gEnt);
+#if COD_VERSION == COD2_1_0
+static const SV_SvEntityForGentity_t SV_SvEntityForGentity = (SV_SvEntityForGentity_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_SvEntityForGentity_t SV_SvEntityForGentity = (SV_SvEntityForGentity_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_SvEntityForGentity_t SV_SvEntityForGentity = (SV_SvEntityForGentity_t)0x08091734;
+#endif
+
+typedef void (*MSG_WriteDeltaArchivedEntity_t)(msg_t *msg, archivedEntity_s *from, archivedEntity_s *to, int force);
+#if COD_VERSION == COD2_1_0
+static const MSG_WriteDeltaArchivedEntity_t MSG_WriteDeltaArchivedEntity = (MSG_WriteDeltaArchivedEntity_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const MSG_WriteDeltaArchivedEntity_t MSG_WriteDeltaArchivedEntity = (MSG_WriteDeltaArchivedEntity_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const MSG_WriteDeltaArchivedEntity_t MSG_WriteDeltaArchivedEntity = (MSG_WriteDeltaArchivedEntity_t)0x0806989A;
 #endif
 
 #endif

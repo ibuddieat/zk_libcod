@@ -52,6 +52,7 @@ typedef signed char sbyte;
 typedef struct gclient_s gclient_t;
 typedef struct gentity_s gentity_t;
 typedef int scr_entref_t;
+typedef int LargeLocal;
 
 typedef enum
 {
@@ -643,9 +644,9 @@ typedef enum
 
 typedef struct netField_s
 {
-    char *name;
-    int offset;
-    int bits;
+	char *name;
+	int offset;
+	int bits;
 } netField_t;
 
 typedef enum
@@ -1348,11 +1349,36 @@ typedef struct client_s
 #endif
 } client_t;
 
+typedef struct
+{
+	int svFlags;
+	int clientMask[2];
+	vec3_t absmin;
+	vec3_t absmax;
+} archivedEntityShared_t;
+
+typedef struct archivedEntity_s
+{
+	entityState_t s;
+	archivedEntityShared_t r;
+} archivedEntity_t;
+
 typedef struct archivedSnapshot_s
 {
 	int start;
 	int size;
 } archivedSnapshot_t;
+
+typedef struct cachedSnapshot_s
+{
+	int archivedFrame;
+	int time;
+	int num_entities;
+	int first_entity;
+	int num_clients;
+	int first_client;
+	int usesDelta;
+} cachedSnapshot_t;
 
 typedef struct cachedClient_s
 {
@@ -1376,12 +1402,14 @@ typedef struct
 	int 		archivedSnapshotEnabled;
 	int 		nextArchivedSnapshotFrames;
 	archivedSnapshot_t *archivedSnapshotFrames;
-	int 		*archivedSnapshotBuffer;
+	byte 		*archivedSnapshotBuffer;
 	int 		nextArchivedSnapshotBuffer;
 	int			nextCachedSnapshotEntities;
 	int 		nextCachedSnapshotClients;
 	int 		nextCachedSnapshotFrames;
-	cachedClient_t cachedSnapshotClients;
+	archivedEntity_t *cachedSnapshotEntities;
+	cachedClient_t *cachedSnapshotClients;
+	cachedSnapshot_t *cachedSnapshotFrames;
 	int			nextHeartbeatTime;
 	int 		nextStatusResponseTime;
 	challenge_t	challenges[1024];
@@ -1479,20 +1507,7 @@ typedef enum
 #define MAX_GENTITIES       ( 1 << GENTITYNUM_BITS )
 #define MAX_ENT_CLUSTERS    16
 #define MAX_BPS_WINDOW 		20
-
-typedef struct
-{
-	int svFlags;
-	int clientMask[2];
-	vec3_t absmin;
-	vec3_t absmax;
-} archivedEntityShared_t;
-
-typedef struct archivedEntity_s
-{
-	entityState_t s;
-	archivedEntityShared_t r;
-} archivedEntity_t;
+#define ARCHIVEDSSBUF_SIZE  0x2000000
 
 typedef struct svEntity_s
 {
