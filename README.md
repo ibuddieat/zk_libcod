@@ -1,7 +1,5 @@
 # libcod for \*.ZK.\* Zombie Knights
 
-This extension has its focus on Call of Duty&reg; 2 in version 1.3. Other versions are not supported.
-
 Initial fork path:
 
 <pre>
@@ -12,7 +10,13 @@ https://github.com/ibuddieat/zk_libcod (this repository)
             └─> <a href="https://github.com/kungfooman/libcod">kungfooman/libcod</a> (original libcod implementation)
 </pre>
 
-Changes provided by this repository:
+This extension ...
+- provides interoperability between the Call of Duty&reg; 2 server and other software components and/or advanced game modifications (so-called "mods")
+- intends to improve the overall game experience and security as the extended software (Call of Duty&reg; 2) is not maintained anymore since more than a decade
+- has its focus on Call of Duty&reg; 2 in version 1.3, other versions are not fully supported (unless the respective offsets are added)
+- is maintained for non-profit and educational purposes
+
+List of high-level changes provided by this repository:
 - Added cvars:
   * `sv_limitLocalRcon` to whitelist internal IPs at rcon rate limiting
   * `sv_logRcon` to disable (successful) rcon command logging
@@ -22,6 +26,7 @@ Changes provided by this repository:
   * `g_notifyPickup` to define whether to use the stock pickup logic or custom notify events
 - Added script code functions:
   * `<player> noclip("on|off|toggle")`
+  * `<player> setearthquakes("on|off|toggle")`
   * `<player> getinactivitytime()`
   * `getweaponfusetime(<weapon name>)`
   * `setweaponfusetime(<weapon name>, <time in ms>)`
@@ -33,7 +38,7 @@ Changes provided by this repository:
   * `CodeCallback_Error`
 - Removed libcod cvars:
   * `con_coloredPrints` as it may break incoming rcon commands, thus causing issues with BigBrotherBot
-- Reconstructed functions (see functions with `custom_` prefix in libcod.cpp):
+- Reconstructed functions (see functions with `custom_` prefix in `libcod.cpp`):
   * `Touch_Item` to gain more control over item pickup actions
   * `SV_DropClient` to disable bot disconnect messages
   * `SV_SendClientGameState` for miscellaneous game engine tests (e.g., connect configstrings)
@@ -43,8 +48,12 @@ Changes provided by this repository:
   * `MSG_WriteDeltaPlayerstate` et sequentes to be able to filter player/entity attributes
   * `MSG_WriteDeltaStruct`
   * `MSG_WriteDeltaClient`
+  * `MSG_WriteDeltaEntity`
+  * `MSG_WriteDeltaArchivedEntity`
   * `SV_EmitPacketEntities`
   * `SV_EmitPacketClients`
+  * `SV_ArchiveSnapshot`
+  * `SV_BuildClientSnapshot`
   * `SV_WriteSnapshotToClient`
   * `Com_Error` et sequentes to be able to pass errors to gsc code
   * `Scr_Error`

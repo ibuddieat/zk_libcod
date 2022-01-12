@@ -377,6 +377,7 @@ scr_method_t scriptMethods[] =
 	{"getweaponindexoffhand", gsc_player_getweaponindexoffhand, 0},
 	{"noclip", gsc_player_noclip, 0},
 	{"getinactivitytime", gsc_player_getinactivitytime, 0},
+	{"setearthquakes", gsc_player_set_earthquakes, 0},
 #endif
 
 #ifdef EXTRA_METHODS_INC

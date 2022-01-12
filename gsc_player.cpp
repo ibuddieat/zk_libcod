@@ -45,8 +45,8 @@ void gsc_player_item_pickup(scr_entref_t id)
 		return;
 	}
 	
-	extern int player_sw_pickup[MAX_CLIENTS];
-	player_sw_pickup[id] = canPickup;
+	extern int player_no_pickup[MAX_CLIENTS];
+	player_no_pickup[id] = !canPickup;
 	stackPushBool(qtrue);
 }
 
@@ -911,7 +911,7 @@ void gsc_player_set_anim(scr_entref_t id)
 	}
 
 	int animationIndex = 0;
-	extern int custom_animation[64];
+	extern int custom_animation[MAX_CLIENTS];
 
 	animationIndex = strcmp(animation, "none") ? BG_AnimationCheckForBad(animation) : 0;
 
@@ -1044,7 +1044,6 @@ void gsc_player_noclip(scr_entref_t id)
 	}
 
 	client_t *client = &svs.clients[id];
-
 	if ( !I_stricmp( noclip, "on" ) || atoi( noclip ) ) {
 		client->gentity->client->noclip = qtrue;
 	} else if ( !I_stricmp( noclip, "off" ) || !I_stricmp( noclip, "0" ) ) {
@@ -1052,7 +1051,6 @@ void gsc_player_noclip(scr_entref_t id)
 	} else {
 		client->gentity->client->noclip = !client->gentity->client->noclip;
 	}
-    
 	stackPushBool(qtrue);
 }
 
@@ -1067,6 +1065,35 @@ void gsc_player_getinactivitytime(scr_entref_t id)
 
 	client_t *client = &svs.clients[id];
 	stackPushInt(client->gentity->client->inactivityTime);
+}
+
+void gsc_player_set_earthquakes(scr_entref_t id)
+{
+	char *enabled;
+
+	if ( ! stackGetParams("s", &enabled))
+	{
+		stackError("gsc_player_set_earthquakes() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if (id >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_set_earthquakes() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	extern int player_no_earthquakes[MAX_CLIENTS];
+	if ( !I_stricmp( enabled, "on" ) || atoi( enabled ) ) {
+		player_no_earthquakes[id] = qfalse;
+	} else if ( !I_stricmp( enabled, "off" ) || !I_stricmp( enabled, "0" ) ) {
+		player_no_earthquakes[id] = qtrue;
+	} else {
+		player_no_earthquakes[id] = !player_no_earthquakes[id];
+	}
+	stackPushBool(qtrue);
 }
 
 #endif

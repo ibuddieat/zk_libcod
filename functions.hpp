@@ -1326,4 +1326,58 @@ static const MSG_WriteDeltaArchivedEntity_t MSG_WriteDeltaArchivedEntity = (MSG_
 static const MSG_WriteDeltaArchivedEntity_t MSG_WriteDeltaArchivedEntity = (MSG_WriteDeltaArchivedEntity_t)0x0806989A;
 #endif
 
+typedef void (*AddLeanToPosition_t)(float *position, float fViewYaw, float fLeanFrac, float fViewRoll, float fLeanDist);
+#if COD_VERSION == COD2_1_0
+static const AddLeanToPosition_t AddLeanToPosition = (AddLeanToPosition_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const AddLeanToPosition_t AddLeanToPosition = (AddLeanToPosition_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const AddLeanToPosition_t AddLeanToPosition = (AddLeanToPosition_t)0x080B8C98;
+#endif
+
+typedef void (*SV_AddEntitiesVisibleFromPoint_t)(float *point, int clientNum, snapshotEntityNumbers_t *eNums);
+#if COD_VERSION == COD2_1_0
+static const SV_AddEntitiesVisibleFromPoint_t SV_AddEntitiesVisibleFromPoint = (SV_AddEntitiesVisibleFromPoint_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_AddEntitiesVisibleFromPoint_t SV_AddEntitiesVisibleFromPoint = (SV_AddEntitiesVisibleFromPoint_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_AddEntitiesVisibleFromPoint_t SV_AddEntitiesVisibleFromPoint = (SV_AddEntitiesVisibleFromPoint_t)0x08098B98;
+#endif
+
+typedef void (*SV_AddCachedEntitiesVisibleFromPoint_t)(int from_num_entities, int from_first_entity, vec3_t origin, int clientNum, snapshotEntityNumbers_t *eNums);
+#if COD_VERSION == COD2_1_0
+static const SV_AddCachedEntitiesVisibleFromPoint_t SV_AddCachedEntitiesVisibleFromPoint = (SV_AddCachedEntitiesVisibleFromPoint_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_AddCachedEntitiesVisibleFromPoint_t SV_AddCachedEntitiesVisibleFromPoint = (SV_AddCachedEntitiesVisibleFromPoint_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_AddCachedEntitiesVisibleFromPoint_t SV_AddCachedEntitiesVisibleFromPoint = (SV_AddCachedEntitiesVisibleFromPoint_t)0x08098E32;
+#endif
+
+typedef int (*G_GetClientArchiveTime_t)(int clnum);
+#if COD_VERSION == COD2_1_0
+static const G_GetClientArchiveTime_t G_GetClientArchiveTime = (G_GetClientArchiveTime_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_GetClientArchiveTime_t G_GetClientArchiveTime = (G_GetClientArchiveTime_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_GetClientArchiveTime_t G_GetClientArchiveTime = (G_GetClientArchiveTime_t)0x08108E36;
+#endif
+
+typedef void (*G_SetClientArchiveTime_t)(int clnum, int time);
+#if COD_VERSION == COD2_1_0
+static const G_SetClientArchiveTime_t G_SetClientArchiveTime = (G_SetClientArchiveTime_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_SetClientArchiveTime_t G_SetClientArchiveTime = (G_SetClientArchiveTime_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_SetClientArchiveTime_t G_SetClientArchiveTime = (G_SetClientArchiveTime_t)0x08108E52;
+#endif
+
+typedef cachedSnapshot_t * (*SV_GetCachedSnapshot_t)(int *pArchiveTime);
+#if COD_VERSION == COD2_1_0
+static const SV_GetCachedSnapshot_t SV_GetCachedSnapshot = (SV_GetCachedSnapshot_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_GetCachedSnapshot_t SV_GetCachedSnapshot = (SV_GetCachedSnapshot_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_GetCachedSnapshot_t SV_GetCachedSnapshot = (SV_GetCachedSnapshot_t)0x08099C04;
+#endif
+
 #endif

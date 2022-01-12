@@ -1265,6 +1265,14 @@ struct gentity_s
 #define MAX_DOWNLOAD_BLKSIZE 1024
 #define MAX_DOWNLOAD_WINDOW 8
 
+#define MAX_SNAPSHOT_ENTITIES 1024
+
+typedef struct
+{
+	int numSnapshotEntities;
+	int snapshotEntities[MAX_SNAPSHOT_ENTITIES];
+} snapshotEntityNumbers_t;
+
 typedef struct
 {
 	playerState_t ps;
@@ -1383,8 +1391,8 @@ typedef struct cachedSnapshot_s
 typedef struct cachedClient_s
 {
 	int playerStateExists;
-	clientState_t *cs;
-	playerState_t *ps;
+	clientState_t cs;
+	playerState_t ps;
 } cachedClient_t;
 
 typedef struct
@@ -2756,6 +2764,14 @@ static const int clientStateFields_offset = 0x08141F60;
 #endif
 
 #if COD_VERSION == COD2_1_0
+static const int archivedEntityFields_offset = 0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const int archivedEntityFields_offset = 0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const int archivedEntityFields_offset = 0x08141AE0;
+#endif
+
+#if COD_VERSION == COD2_1_0
 static const int bg_itemlist_offset = 0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
 static const int bg_itemlist_offset = 0x0; // Not tested
@@ -2790,6 +2806,7 @@ static const int testclient_connect_string_offset = 0x0814ab20;
 #define entityStateFields (*((netField_t*)( entityStateFields_offset )))
 #define objectiveFields (*((netField_t*)( objectiveFields_offset )))
 #define clientStateFields (*((netField_t*)( clientStateFields_offset )))
+#define archivedEntityFields (*((netField_t*)( archivedEntityFields_offset )))
 #define bg_itemlist (*((gitem_t*)( bg_itemlist_offset )))
 
 // Check for critical structure sizes and fail if not match
