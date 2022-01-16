@@ -63,6 +63,23 @@ qboolean logRcon = qtrue;
 qboolean logHeartbeat = qtrue;
 qboolean dumpNetFields = qfalse; // testing flag
 
+int player_no_pickup[MAX_CLIENTS] = {0};
+int player_no_earthquakes[MAX_CLIENTS] = {0};
+int player_g_speed[MAX_CLIENTS] = {0};
+int player_g_gravity[MAX_CLIENTS] = {0};
+int custom_animation[MAX_CLIENTS] = {0};
+int clientfps[MAX_CLIENTS] = {0};
+int tempfps[MAX_CLIENTS] = {0};
+int fpstime[MAX_CLIENTS] = {0};
+int previousbuttons[MAX_CLIENTS] = {0};
+#if COMPILE_BOTS == 1
+int bot_buttons[MAX_CLIENTS] = {0};
+int bot_weapon[MAX_CLIENTS] = {0};
+char bot_forwardmove[MAX_CLIENTS] = {0};
+char bot_rightmove[MAX_CLIENTS] = {0};
+#endif
+int gamestate_size[MAX_CLIENTS] = {0};
+
 /* ... ... ... */
 
 void hook_sv_init(const char *format, ...)
@@ -1136,7 +1153,6 @@ void custom_MSG_WriteDeltaArchivedEntity(msg_t *msg, entityState_t *from, entity
 	custom_MSG_WriteDeltaStruct(msg, from, to, force, 0x44, 10, &archivedEntityFields, 0);
 }
 
-int player_no_earthquakes[MAX_CLIENTS] = {0};
 void custom_MSG_WriteDeltaEntity(msg_t *msg, entityState_t *from, entityState_t *to, qboolean force, int clientNum)
 {
 	if ( to )
@@ -1347,8 +1363,6 @@ void custom_SV_WriteSnapshotToClient(client_t *client, msg_t *msg)
 	}
 }
 
-int player_no_pickup[MAX_CLIENTS] = {0};
-int gamestate_size[MAX_CLIENTS] = {0};
 void custom_SV_SendClientGameState(client_t *client) {
 	int				start;
 	entityState_t	*base, nullstate;
@@ -1368,8 +1382,27 @@ void custom_SV_SendClientGameState(client_t *client) {
 	client->pureAuthentic = 0;
 	client->gamestateMessageNum = client->netchan.outgoingSequence;
 	client->gamestateMessageNum = client->netchan.outgoingSequence;
-	player_no_pickup[client - svs.clients] = 0; // libcod
-	player_no_earthquakes[client - svs.clients] = 0; // libcod
+	
+    /* New code start */
+	player_no_pickup[client - svs.clients] = 0;
+	player_no_earthquakes[client - svs.clients] = 0;
+	player_g_speed[client - svs.clients] = 0;
+	player_g_gravity[client - svs.clients] = 0;
+	custom_animation[client - svs.clients] = 0;
+	
+	clientfps[client - svs.clients] = 0;
+	tempfps[client - svs.clients] = 0;
+	fpstime[client - svs.clients] = 0;
+	previousbuttons[client - svs.clients] = 0;
+	
+#if COMPILE_BOTS == 1
+	bot_buttons[client - svs.clients] = 0;
+	bot_weapon[client - svs.clients] = 0;
+	bot_forwardmove[client - svs.clients] = 0;
+	bot_rightmove[client - svs.clients] = 0;
+#endif
+    /* New code end */
+	
 	MSG_Init(&msg, data, MAX_MSGLEN);
 	MSG_WriteLong(&msg, client->lastClientCommand);
 	SV_UpdateServerCommandsToClient(client, &msg);
@@ -1399,7 +1432,9 @@ void custom_SV_SendClientGameState(client_t *client) {
 	MSG_WriteLong(&msg, sv.checksumFeed);
 	MSG_WriteByte(&msg, svc_EOF);
 	Com_DPrintf("Sending %i bytes in gamestate to client: %i\n", msg.cursize, client - svs.clients);
+	
 	gamestate_size[client - svs.clients] = int(msg.cursize); // libcod
+	
 	SV_SendMessageToClient(&msg, client);
 	LargeLocalDestructor(&buf);
 }
@@ -1737,10 +1772,6 @@ void custom_SV_CheckTimeouts( void )
 }
 
 #if COMPILE_BOTS == 1
-int bot_buttons[MAX_CLIENTS] = {0};
-int bot_weapon[MAX_CLIENTS] = {0};
-char bot_forwardmove[MAX_CLIENTS] = {0};
-char bot_rightmove[MAX_CLIENTS] = {0};
 void custom_SV_BotUserMove(client_t *client)
 {
 	int num;
@@ -1833,10 +1864,6 @@ void hook_gamestate_info(const char *format, ...)
 	gamestate_size[clientnum] = gamestate;
 }
 
-int clientfps[MAX_CLIENTS] = {0};
-int tempfps[MAX_CLIENTS] = {0};
-int fpstime[MAX_CLIENTS] = {0};
-int previousbuttons[MAX_CLIENTS] = {0};
 int play_movement(client_t *cl, usercmd_t *ucmd)
 {
 	hook_play_movement->unhook();
@@ -1890,8 +1917,6 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 	return ret;
 }
 
-int player_g_speed[MAX_CLIENTS] = {0};
-int player_g_gravity[MAX_CLIENTS] = {0};
 int play_endframe(gentity_t *ent)
 {
 	hook_play_endframe->unhook();
@@ -1918,7 +1943,6 @@ int play_endframe(gentity_t *ent)
 	return ret;
 }
 
-int custom_animation[MAX_CLIENTS] = {0};
 int set_anim(playerState_t *ps, int animNum, animBodyPart_t bodyPart, int forceDuration, qboolean setTimer, qboolean isContinue, qboolean force)
 {
 	hook_set_anim->unhook();
@@ -2877,7 +2901,7 @@ LAB_0809b5f4:
 				svs.nextArchivedSnapshotBuffer += msg.cursize;
 				if ( 0x7ffffffd < svs.nextArchivedSnapshotBuffer )
 				{
-					custom_Com_Error(0,"\x15svs.nextArchivedSnapshotBuffer wrapped");
+					custom_Com_Error(0, "\x15svs.nextArchivedSnapshotBuffer wrapped");
 				}
 				freeBytes = ARCHIVEDSSBUF_SIZE - index;
 				
@@ -2892,7 +2916,7 @@ LAB_0809b5f4:
 				svs.nextArchivedSnapshotFrames++;
 				if ( i != 0x7ffffffc && 0x7ffffffc < svs.nextArchivedSnapshotFrames )
 				{
-					custom_Com_Error(0,"\x15svs.nextArchivedSnapshotFrames wrapped");
+					custom_Com_Error(0, "\x15svs.nextArchivedSnapshotFrames wrapped");
 				}
 				LargeLocalDestructor(&buf);
 			} else {
