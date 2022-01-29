@@ -24,10 +24,12 @@ List of high-level changes provided by this repository:
   * `g_debugEvents` to log events such as player footsteps, temporary entities etc.
   * `g_logPickup` to control logging of item pickup actions
   * `g_notifyPickup` to define whether to use the stock pickup logic or custom notify events
+  * `g_debugStaticModels` to print info about static models on map load
 - Added script code functions:
-  * `<player> noclip("on|off|toggle")`
-  * `<player> setearthquakes("on|off|toggle")`
   * `<player> getinactivitytime()`
+  * `<player> noclip("on|off|toggle")`
+  * `<player> playfxforplayer(<effect id>, <position of effect>, [<forward vector>], [<up vector>])`
+  * `<player> setearthquakes("on|off|toggle")`
   * `getweaponfusetime(<weapon name>)`
   * `setweaponfusetime(<weapon name>, <time in ms>)`
   * `getentitycount()`
@@ -59,6 +61,7 @@ List of high-level changes provided by this repository:
   * `Scr_Error`
   * `RuntimeError_Debug`
   * `RuntimeError`
+  * `CM_IsBadStaticModel` for `g_debugStaticModels` (this function name is a guess)
 - Commented out several libcod functions that would make it easy to harm the server with malicious map scripts, thus currently breaking manymaps support
 - Added/updated some missing/unknown declarations
 

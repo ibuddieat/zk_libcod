@@ -20,6 +20,7 @@ cvar_t *cl_wwwDownload;
 cvar_t *sv_cracked;
 cvar_t *sv_noauthorize;
 cvar_t *g_debugEvents;
+cvar_t *g_debugStaticModels;
 cvar_t *g_logPickup;
 cvar_t *g_notifyPickup;
 cvar_t *g_playerCollision;
@@ -99,6 +100,7 @@ void hook_sv_init(const char *format, ...)
 	sv_cracked = Cvar_RegisterBool("sv_cracked", qfalse, CVAR_ARCHIVE);
 	sv_noauthorize = Cvar_RegisterBool("sv_noauthorize", qfalse, CVAR_ARCHIVE);
 	g_debugEvents = Cvar_RegisterBool("g_debugEvents", qfalse, CVAR_ARCHIVE);
+	g_debugStaticModels = Cvar_RegisterBool("g_debugStaticModels", qfalse, CVAR_ARCHIVE);
 	g_logPickup = Cvar_RegisterBool("g_logPickup", qfalse, CVAR_ARCHIVE);
 	g_notifyPickup = Cvar_RegisterBool("g_notifyPickup", qtrue, CVAR_ARCHIVE);
 	g_playerCollision = Cvar_RegisterBool("g_playerCollision", qtrue, CVAR_ARCHIVE);
@@ -344,9 +346,6 @@ void hook_ClientUserinfoChanged(int clientNum)
 	short ret = Scr_ExecEntThread(&g_entities[clientNum], codecallback_userinfochanged, 1);
 	Scr_FreeThread(ret);
 }
-
-typedef int (*FUN_081384cc_t)(const char *str);
-FUN_081384cc_t FUN_081384cc = (FUN_081384cc_t)0x081384cc;
 
 void custom_SV_DropClient(client_t *drop, const char *reason) {
 	int i, pb_test;
@@ -789,16 +788,16 @@ void custom_G_AddEvent (gentity_t * ent, int event, int eventParm) {
 	ent->r.eventTime = level.time;
 }
 
-gentity_t* custom_G_TempEntity(vec3_t origin, int event)
+gentity_t* custom_G_TempEntity(vec3_t * origin, int event)
 {
 	hook_g_tempentity->unhook();
 
-	gentity_t* (*sig)(vec3_t origin, int event);
+	gentity_t* (*sig)(vec3_t * origin, int event);
 	*(int *)&sig = hook_g_tempentity->from;
 
 	if ( g_debugEvents->boolean )
 	{
-		Com_DPrintf("G_TempEntity() event %26s at (%f,%f,%f)\n", eventnames[event], origin[0], origin[1], origin[2]);
+		Com_DPrintf("G_TempEntity() event %26s at (%f,%f,%f)\n", eventnames[event], &origin[0], &origin[1], &origin[2]);
 	}
 	/*
 	// filter example:
@@ -1185,6 +1184,11 @@ void custom_MSG_WriteDeltaEntity(msg_t *msg, entityState_t *from, entityState_t 
 			{
 				to->eType = EV_NONE;
 			}
+		} else if ( (to->eType - 10) == EV_PLAY_FX ) {
+			if ( to->otherEntityNum && ! ( to->otherEntityNum == (clientNum + 1) ) )
+			{
+				to->eType = EV_NONE;
+			}
 		}
 	}
 	custom_MSG_WriteDeltaStruct(msg, from, to, force, 0x3b, 10, &entityStateFields, 0);
@@ -1383,7 +1387,7 @@ void custom_SV_SendClientGameState(client_t *client) {
 	client->gamestateMessageNum = client->netchan.outgoingSequence;
 	client->gamestateMessageNum = client->netchan.outgoingSequence;
 	
-    /* New code start */
+	/* New code start */
 	player_no_pickup[client - svs.clients] = 0;
 	player_no_earthquakes[client - svs.clients] = 0;
 	player_g_speed[client - svs.clients] = 0;
@@ -1401,7 +1405,7 @@ void custom_SV_SendClientGameState(client_t *client) {
 	bot_forwardmove[client - svs.clients] = 0;
 	bot_rightmove[client - svs.clients] = 0;
 #endif
-    /* New code end */
+	/* New code end */
 	
 	MSG_Init(&msg, data, MAX_MSGLEN);
 	MSG_WriteLong(&msg, client->lastClientCommand);
@@ -3050,15 +3054,15 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 					{
 						if ( clientNum > 31 )
 						{
-						   if ( aent->r.clientMask[1] & (1 << (clientNum - 32)) )
-						   {
-							   aent->s.eType = EV_NONE;
-						   }
+							if ( aent->r.clientMask[1] & (1 << (clientNum - 32)) )
+							{
+								aent->s.eType = EV_NONE;
+							}
 						} else {
-						   if ( aent->r.clientMask[0] & (1 << clientNum ) )
-						   {
-							   aent->s.eType = EV_NONE;
-						   }
+							if ( aent->r.clientMask[0] & (1 << clientNum ) )
+							{
+								aent->s.eType = EV_NONE;
+							}
 						}
 					}
 					/* New code end */
@@ -3090,6 +3094,41 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 			}
 		}
 	}
+}
+
+bool custom_CM_IsBadStaticModel(cStaticModel_t *model, char *src, float *origin, float *angles, float (*scale) [3])
+{
+	XModel_t *xmodel;
+
+	if ( src == NULL || *src == '\0' ) {
+		custom_Com_Error(1, "\x15Invalid static model name\n");
+	}
+	
+	if ( (*scale)[0] == 0.0 ) {
+		custom_Com_Error(1, "\x15Static model [%s] has x scale of 0.0\n", src);
+	}
+	
+	if ( (*scale)[1] == 0.0 ) {
+		custom_Com_Error(1, "\x15Static model [%s] has y scale of 0.0\n", src);
+	}
+	
+	if ( (*scale)[2] == 0.0 ) {
+		custom_Com_Error(1, "\x15Static model [%s] has z scale of 0.0\n", src);
+	}
+	
+	xmodel = CM_XModelPrecache(src);
+	if ( xmodel != NULL ) {
+		model->xmodel = xmodel;
+		// On the server side, scale is only used for trace functions (see model->invScaledAxis)
+		// The entity axis scale values are not synced to the players
+		CM_InitStaticModel(model, origin, angles, scale);
+		if ( g_debugStaticModels->boolean )
+		{
+			Com_Printf("Initialized static model [%s] with scale (%f, %f, %f) at (%f, %f, %f)\n", src, (*scale)[0], (*scale)[1], (*scale)[2], model->origin[0], model->origin[1], model->origin[2]);
+		}
+	}
+	
+	return xmodel != NULL;
 }
 
 class cCallOfDuty2Pro
@@ -3318,6 +3357,7 @@ public:
 		cracking_hook_function(0x080788D2, (int)custom_RuntimeError);
 		cracking_hook_function(0x0809B016, (int)custom_SV_ArchiveSnapshot);
 		cracking_hook_function(0x0809A408, (int)custom_SV_BuildClientSnapshot);
+		cracking_hook_function(0x080584F0, (int)custom_CM_IsBadStaticModel);
 
 #if COMPILE_BOTS == 1
 		cracking_hook_function(0x0809676C, (int)custom_SV_BotUserMove);

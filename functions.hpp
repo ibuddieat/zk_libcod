@@ -1092,7 +1092,7 @@ static const G_Spawn_t G_Spawn = (G_Spawn_t)0x0811E87A;
 static const G_Spawn_t G_Spawn = (G_Spawn_t)0x0811E9D6;
 #endif
 
-typedef gentity_t * (*G_TempEntity_t)(vec3_t origin, int event);
+typedef gentity_t * (*G_TempEntity_t)(vec3_t *origin, int event);
 #if COD_VERSION == COD2_1_0
 static const G_TempEntity_t G_TempEntity = (G_TempEntity_t)0x0811CB34;
 #elif COD_VERSION == COD2_1_2
@@ -1378,6 +1378,60 @@ static const SV_GetCachedSnapshot_t SV_GetCachedSnapshot = (SV_GetCachedSnapshot
 static const SV_GetCachedSnapshot_t SV_GetCachedSnapshot = (SV_GetCachedSnapshot_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const SV_GetCachedSnapshot_t SV_GetCachedSnapshot = (SV_GetCachedSnapshot_t)0x08099C04;
+#endif
+
+typedef XModel_t * (*CM_XModelPrecache_t)(const char *src);
+#if COD_VERSION == COD2_1_0
+static const CM_XModelPrecache_t CM_XModelPrecache = (CM_XModelPrecache_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const CM_XModelPrecache_t CM_XModelPrecache = (CM_XModelPrecache_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const CM_XModelPrecache_t CM_XModelPrecache = (CM_XModelPrecache_t)0x08058170;
+#endif
+
+typedef void (*CM_InitStaticModel_t)(cStaticModel_t *model, float *origin, float *angles, float (*scale) [3]);
+#if COD_VERSION == COD2_1_0
+static const CM_InitStaticModel_t CM_InitStaticModel = (CM_InitStaticModel_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const CM_InitStaticModel_t CM_InitStaticModel = (CM_InitStaticModel_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const CM_InitStaticModel_t CM_InitStaticModel = (CM_InitStaticModel_t)0x080583DC;
+#endif
+
+typedef void (*Scr_PlayFxError_t)(const char *error, int index); // Guessed function name
+#if COD_VERSION == COD2_1_0
+static const Scr_PlayFxError_t Scr_PlayFxError = (Scr_PlayFxError_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Scr_PlayFxError_t Scr_PlayFxError = (Scr_PlayFxError_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Scr_PlayFxError_t Scr_PlayFxError = (Scr_PlayFxError_t)0x08115034;
+#endif
+
+typedef int (*FUN_081384cc_t)(const char *str); // Some PunkBuster function
+#if COD_VERSION == COD2_1_0
+static const FUN_081384cc_t FUN_081384cc = (FUN_081384cc_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const FUN_081384cc_t FUN_081384cc = (FUN_081384cc_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const FUN_081384cc_t FUN_081384cc = (FUN_081384cc_t)0x081384cc;
+#endif
+
+typedef void (*AxisToAngles_t)(float *axis, float *angles);
+#if COD_VERSION == COD2_1_0
+static const AxisToAngles_t AxisToAngles = (AxisToAngles_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const AxisToAngles_t AxisToAngles = (AxisToAngles_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const AxisToAngles_t AxisToAngles = (AxisToAngles_t)0x080A9558;
+#endif
+
+typedef void (*VecToAngles_t)(float *vec, float *angles);
+#if COD_VERSION == COD2_1_0
+static const VecToAngles_t VecToAngles = (VecToAngles_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const VecToAngles_t VecToAngles = (VecToAngles_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const VecToAngles_t VecToAngles = (VecToAngles_t)0x080A4FE2;
 #endif
 
 #endif

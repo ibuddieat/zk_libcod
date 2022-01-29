@@ -59,5 +59,6 @@ void gsc_player_dropclient(scr_entref_t id);
 void gsc_player_noclip(scr_entref_t id);
 void gsc_player_getinactivitytime(scr_entref_t id);
 void gsc_player_set_earthquakes(scr_entref_t id);
+void gsc_utils_playfxforplayer(scr_entref_t id);
 
 #endif

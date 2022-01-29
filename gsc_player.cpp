@@ -172,7 +172,7 @@ void gsc_player_clientuserinfochanged(scr_entref_t id)
 		stackPushUndefined();
 		return;
 	}
-    
+	
 	ClientUserinfoChanged(id);
 	stackPushBool(qtrue);
 }
@@ -380,8 +380,8 @@ void gsc_player_stance_get(scr_entref_t id)
 	}
 
 	playerState_t *ps = SV_GameClientNum(id);
-    if (ps->pm_flags & PMF_CROUCH)
-        stackPushString("duck");
+	if (ps->pm_flags & PMF_CROUCH)
+		stackPushString("duck");
 	else if (ps->pm_flags & PMF_PRONE)
 		stackPushString("lie");
 	else
@@ -474,13 +474,13 @@ void gsc_player_getping(scr_entref_t id)
 
 void gsc_player_clientcommand(scr_entref_t id)
 {
-    if (id >= MAX_CLIENTS)
+	if (id >= MAX_CLIENTS)
 	{
 		stackError("gsc_player_clientcommand() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
-    
+	
 	ClientCommand(id);
 	stackPushBool(qtrue);
 }
@@ -708,7 +708,7 @@ void gsc_player_clearjumpstate(scr_entref_t id)
 	ps->pm_flags &= ~(PMF_JUMPING|PMF_SLIDING);
 	ps->pm_time = 0;
 	ps->jumpTime = 0;
-    ps->jumpOriginZ = 0;
+	ps->jumpOriginZ = 0;
 }
 
 void gsc_player_setg_speed(scr_entref_t id)
@@ -811,14 +811,14 @@ void gsc_player_setweaponfiremeleedelay(scr_entref_t id)
 		stackPushUndefined();
 		return;
 	}
-    
+	
 	if (id >= MAX_CLIENTS)
 	{
 		stackError("gsc_player_setweaponfiremeleedelay() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
-    
+	
 	if (delay < 0)
 	{
 		stackError("gsc_player_setweaponfiremeleedelay() param must be equal or above zero");
@@ -826,7 +826,7 @@ void gsc_player_setweaponfiremeleedelay(scr_entref_t id)
 		return;
 	}
 
-    playerState_t *ps = SV_GameClientNum(id);
+	playerState_t *ps = SV_GameClientNum(id);
 	ps->weaponDelay = delay;
 	stackPushBool(qtrue);
 }
@@ -1092,6 +1092,93 @@ void gsc_player_set_earthquakes(scr_entref_t id)
 		player_no_earthquakes[id] = qtrue;
 	} else {
 		player_no_earthquakes[id] = !player_no_earthquakes[id];
+	}
+	stackPushBool(qtrue);
+}
+
+void gsc_utils_playfxforplayer(scr_entref_t id)
+{
+	int args;
+	qboolean error;
+	int index;
+	vec3_t origin;
+	vec3_t forward_vec;
+	vec3_t up_vec;
+	vec3_t cross;
+	float temp;
+
+	args = Scr_GetNumParam();
+	error = qfalse;
+	switch ( args )
+	{
+		case 2:
+			if ( !stackGetParams("iv", &index, &origin) )
+				error = qtrue;
+			break;
+		case 3:
+			if ( !stackGetParams("ivv", &index, &origin, &forward_vec) )
+				error = qtrue;
+			break;
+		case 4:
+			if ( !stackGetParams("ivvv", &index, &origin, &forward_vec, &up_vec) )
+				error = qtrue;
+			break;
+		default:
+			stackError("gsc_utils_playfxforplayer() incorrect number of parameters");
+			stackPushUndefined();
+			return;
+	}
+
+	if ( error )
+	{
+		stackError("gsc_utils_playfxforplayer() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+	
+	if (id >= MAX_CLIENTS)
+	{
+		stackError("gsc_utils_playfxforplayer() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	gentity_t *ent = G_TempEntity(&origin, EV_PLAY_FX);
+	ent->s.eventParm = index & 0xff;
+	ent->s.otherEntityNum = id + 1;
+	
+	if ( args == 2 )
+	{
+		ent->s.apos.trBase[0] = -90.0;
+	} else {
+		temp = sqrt((forward_vec[0] * forward_vec[0]) + (forward_vec[1] * forward_vec[1]) + (forward_vec[2] * forward_vec[2]));
+		if ( temp == 0.0 )
+		{
+			Scr_PlayFxError("playFx called with (0 0 0) forward direction", index);
+		}
+		VectorScale(forward_vec, 1.0 / temp, forward_vec);
+		if ( args == 3 )
+		{
+			VecToAngles(forward_vec, ent->s.apos.trBase);
+		} else {
+			temp = sqrt((up_vec[0] * up_vec[0]) + (up_vec[1] * up_vec[1]) + (up_vec[2] * up_vec[2]));
+			if ( temp == 0.0 )
+			{
+				Scr_PlayFxError("playFx called with (0 0 0) up direction", index);
+			}
+			VectorScale(up_vec, 1.0 / temp, up_vec);
+			Vec3Cross(up_vec, forward_vec, cross);
+			
+			temp = sqrt((cross[0] * cross[0]) + (cross[1] * cross[1]) + (cross[2] * cross[2]));
+			if ( temp < 0.001 )
+			{
+				Scr_PlayFxError("playFx called an up direction 0 or 180 degrees from forward", index);
+			} else if ( temp < 0.999 ) {
+				VectorScale(cross, 1.0 / temp, cross);
+				Vec3Cross(forward_vec, cross, up_vec);
+			}
+			AxisToAngles(forward_vec, ent->s.apos.trBase);
+		}
 	}
 	stackPushBool(qtrue);
 }
