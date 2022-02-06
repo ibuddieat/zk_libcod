@@ -538,7 +538,7 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 		
 		if ( (entity->client->sess).predictItemPickup == 0 )
 		{
-			custom_G_AddEvent(entity, event, (item->s).index);
+			G_AddEvent(entity, event, (item->s).index);
 		} else {
 			G_AddPredictableEvent(entity, event, (item->s).index);
 		}
