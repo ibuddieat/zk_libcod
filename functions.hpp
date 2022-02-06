@@ -228,7 +228,7 @@ static const Scr_GetMethod_t Scr_GetMethod = (Scr_GetMethod_t)0x08117C8E;
 static const Scr_GetMethod_t Scr_GetMethod = (Scr_GetMethod_t)0x08117DEA;
 #endif
 
-typedef cvar_t* (*Cvar_FindVar_t)(const char *var_name);
+typedef cvar_t * (*Cvar_FindVar_t)(const char *var_name);
 #if COD_VERSION == COD2_1_0
 static const Cvar_FindVar_t Cvar_FindVar = (Cvar_FindVar_t)0x080B0AE4;
 #elif COD_VERSION == COD2_1_2
@@ -237,7 +237,7 @@ static const Cvar_FindVar_t Cvar_FindVar = (Cvar_FindVar_t)0x080B2D94;
 static const Cvar_FindVar_t Cvar_FindVar = (Cvar_FindVar_t)0x080B2ED8;
 #endif
 
-typedef cvar_t* (*Cvar_SetString_t)(const char *var_name, const char *var_value, unsigned short flags);
+typedef cvar_t * (*Cvar_SetString_t)(const char *var_name, const char *var_value, unsigned short flags);
 #if COD_VERSION == COD2_1_0
 static const Cvar_SetString_t Cvar_SetString = (Cvar_SetString_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
@@ -246,7 +246,7 @@ static const Cvar_SetString_t Cvar_SetString = (Cvar_SetString_t)0x0; // Not tes
 static const Cvar_SetString_t Cvar_SetString = (Cvar_SetString_t)0x080B4FA2;
 #endif
 
-typedef cvar_t* (*Cvar_RegisterBool_t)(const char *var_name, qboolean var_value, unsigned short flags);
+typedef cvar_t * (*Cvar_RegisterBool_t)(const char *var_name, qboolean var_value, unsigned short flags);
 #if COD_VERSION == COD2_1_0
 static const Cvar_RegisterBool_t Cvar_RegisterBool = (Cvar_RegisterBool_t)0x080B1B72;
 #elif COD_VERSION == COD2_1_2
@@ -255,7 +255,7 @@ static const Cvar_RegisterBool_t Cvar_RegisterBool = (Cvar_RegisterBool_t)0x080B
 static const Cvar_RegisterBool_t Cvar_RegisterBool = (Cvar_RegisterBool_t)0x080B3FD2;
 #endif
 
-typedef cvar_t* (*Cvar_RegisterString_t)(const char *var_name, const char *var_value, unsigned short flags);
+typedef cvar_t * (*Cvar_RegisterString_t)(const char *var_name, const char *var_value, unsigned short flags);
 #if COD_VERSION == COD2_1_0
 static const Cvar_RegisterString_t Cvar_RegisterString = (Cvar_RegisterString_t)0x080B1DD2;
 #elif COD_VERSION == COD2_1_2
@@ -354,7 +354,7 @@ static const Info_SetValueForKey_t Info_SetValueForKey = (Info_SetValueForKey_t)
 static const Info_SetValueForKey_t Info_SetValueForKey = (Info_SetValueForKey_t)0x080B85CE;
 #endif
 
-typedef char* (*Info_ValueForKey_t)(const char *s, const char *key);
+typedef char * (*Info_ValueForKey_t)(const char *s, const char *key);
 #if COD_VERSION == COD2_1_0
 static const Info_ValueForKey_t Info_ValueForKey = (Info_ValueForKey_t)0x080B5B30;
 #elif COD_VERSION == COD2_1_2
@@ -435,7 +435,7 @@ static const SVC_Status_t SVC_Status = (SVC_Status_t)0x08094BCC;
 static const SVC_Status_t SVC_Status = (SVC_Status_t)0x08094C84;
 #endif
 
-typedef const char* (*NET_AdrToString_t)(netadr_t a);
+typedef const char * (*NET_AdrToString_t)(netadr_t a);
 #if COD_VERSION == COD2_1_0
 static const NET_AdrToString_t NET_AdrToString = (NET_AdrToString_t)0x0806AD14;
 #elif COD_VERSION == COD2_1_2
@@ -813,7 +813,7 @@ static const Sys_IsLANAddress_t Sys_IsLANAddress = (Sys_IsLANAddress_t)0x080D54F
 static const Sys_IsLANAddress_t Sys_IsLANAddress = (Sys_IsLANAddress_t)0x080D5638;
 #endif
 
-typedef void (*LookAtKiller_t)(int self, int inflictor, int attacker);
+typedef void (*LookAtKiller_t)(gentity_t *self, gentity_t *inflictor, gentity_t *attacker);
 #if COD_VERSION == COD2_1_0
 static const LookAtKiller_t LookAtKiller = (LookAtKiller_t)0x080FF17A;
 #elif COD_VERSION == COD2_1_2
@@ -831,7 +831,7 @@ static const Scr_IsSystemActive_t Scr_IsSystemActive = (Scr_IsSystemActive_t)0x0
 static const Scr_IsSystemActive_t Scr_IsSystemActive = (Scr_IsSystemActive_t)0x08084678;
 #endif
 
-typedef void* (*Sys_GetValue_t)(int key);
+typedef void * (*Sys_GetValue_t)(int key);
 #if COD_VERSION == COD2_1_0
 static const Sys_GetValue_t Sys_GetValue = (Sys_GetValue_t)0x080D44A4;
 #elif COD_VERSION == COD2_1_2
@@ -840,7 +840,7 @@ static const Sys_GetValue_t Sys_GetValue = (Sys_GetValue_t)0x080D6A7C;
 static const Sys_GetValue_t Sys_GetValue = (Sys_GetValue_t)0x080D6BC0;
 #endif
 
-typedef void (*Sys_SetValue_t)(int key, void* value);
+typedef void (*Sys_SetValue_t)(int key, void *value);
 #if COD_VERSION == COD2_1_0
 static const Sys_SetValue_t Sys_SetValue = (Sys_SetValue_t)0x080D4492;
 #elif COD_VERSION == COD2_1_2
@@ -849,13 +849,40 @@ static const Sys_SetValue_t Sys_SetValue = (Sys_SetValue_t)0x080D6A6A;
 static const Sys_SetValue_t Sys_SetValue = (Sys_SetValue_t)0x080D6BAE;
 #endif
 
-typedef int (*Scr_GetEntity_t)(int a1);
+typedef int (*Scr_GetInt_t)(uint param);
+#if COD_VERSION == COD2_1_0
+static const Scr_GetInt_t Scr_GetInt = (Scr_GetInt_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Scr_GetInt_t Scr_GetInt = (Scr_GetInt_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Scr_GetInt_t Scr_GetInt = (Scr_GetInt_t)0x08084694;
+#endif
+
+typedef gentity_t * (*Scr_GetEntity_t)(int a1);
 #if COD_VERSION == COD2_1_0
 static const Scr_GetEntity_t Scr_GetEntity = (Scr_GetEntity_t)0x0810E03A;
 #elif COD_VERSION == COD2_1_2
 static const Scr_GetEntity_t Scr_GetEntity = (Scr_GetEntity_t)0x08110376;
 #elif COD_VERSION == COD2_1_3
 static const Scr_GetEntity_t Scr_GetEntity = (Scr_GetEntity_t)0x081104D2;
+#endif
+
+typedef gentity_t * (*Scr_GetEntityByRef_t)(int a1); // Guessed function name
+#if COD_VERSION == COD2_1_0
+static const Scr_GetEntityByRef_t Scr_GetEntityByRef = (Scr_GetEntityByRef_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Scr_GetEntityByRef_t Scr_GetEntityByRef = (Scr_GetEntityByRef_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Scr_GetEntityByRef_t Scr_GetEntityByRef = (Scr_GetEntityByRef_t)0x0811B16;
+#endif
+
+typedef unsigned int (*Scr_GetConstLowercaseString_t)(unsigned int param);
+#if COD_VERSION == COD2_1_0
+static const Scr_GetConstLowercaseString_t Scr_GetConstLowercaseString = (Scr_GetConstLowercaseString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Scr_GetConstLowercaseString_t Scr_GetConstLowercaseString = (Scr_GetConstLowercaseString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Scr_GetConstLowercaseString_t Scr_GetConstLowercaseString = (Scr_GetConstLowercaseString_t)0x08084A7C;
 #endif
 
 typedef void (*Scr_AddBool_t)(qboolean);
@@ -948,6 +975,15 @@ static const Scr_AddObject_t Scr_AddObject = (Scr_AddObject_t)0x0808511E;
 static const Scr_AddObject_t Scr_AddObject = (Scr_AddObject_t)0x080851EA;
 #endif
 
+typedef void (*Scr_ParamError_t)(int paramNum, const char *error);
+#if COD_VERSION == COD2_1_0
+static const Scr_ParamError_t Scr_ParamError = (Scr_ParamError_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Scr_ParamError_t Scr_ParamError = (Scr_ParamError_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Scr_ParamError_t Scr_ParamError = (Scr_ParamError_t)0x0808545C;
+#endif
+
 typedef int (*DirToByte_t)(vec3_t dir);
 #if COD_VERSION == COD2_1_0
 static const DirToByte_t DirToByte = (DirToByte_t)0x080A1C2A;
@@ -964,6 +1000,15 @@ static const G_LocationalTrace_t G_LocationalTrace = (G_LocationalTrace_t)0x0810
 static const G_LocationalTrace_t G_LocationalTrace = (G_LocationalTrace_t)0x0810A470;
 #elif COD_VERSION == COD2_1_3
 static const G_LocationalTrace_t G_LocationalTrace = (G_LocationalTrace_t)0x0810A5CC;
+#endif
+
+typedef const char * (*G_ModelName_t)(int index);
+#if COD_VERSION == COD2_1_0
+static const G_ModelName_t G_ModelName = (G_ModelName_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_ModelName_t G_ModelName = (G_ModelName_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_ModelName_t G_ModelName = (G_ModelName_t)0x0811D5B4;
 #endif
 
 typedef void (*G_AddEvent_t)(gentity_t *ent, int event, int eventParm);
@@ -1207,6 +1252,15 @@ static const DObjSkelExists_t DObjSkelExists = (DObjSkelExists_t)0x080B83A2;
 static const DObjSkelExists_t DObjSkelExists = (DObjSkelExists_t)0x080BA836;
 #elif COD_VERSION == COD2_1_3
 static const DObjSkelExists_t DObjSkelExists = (DObjSkelExists_t)0x080BA97A;
+#endif
+
+typedef int (*SV_DObjGetBoneIndex_t)(gentity_t *ent, uint boneIndex);
+#if COD_VERSION == COD2_1_0
+static const SV_DObjGetBoneIndex_t SV_DObjGetBoneIndex = (SV_DObjGetBoneIndex_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_DObjGetBoneIndex_t SV_DObjGetBoneIndex = (SV_DObjGetBoneIndex_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_DObjGetBoneIndex_t SV_DObjGetBoneIndex = (SV_DObjGetBoneIndex_t)0x080921AC;
 #endif
 
 typedef void (*BG_EvaluateTrajectory_t)(const trajectory_t *tr, int atTime, vec3_t result);

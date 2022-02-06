@@ -74,27 +74,24 @@ void gsc_player_lookatkiller(scr_entref_t id)
 		return;
 	}
 
-	int self_entity = Scr_GetEntity(id);
-
-	if (!ValidEntity(self_entity))
+	gentity_t *self_entity = Scr_GetEntity(id);
+	if (!self_entity)
 	{
 		stackError("gsc_player_lookatkiller() self_entity state is invalid");
 		stackPushUndefined();
 		return;
 	}
 
-	int inflictor_entity = Scr_GetEntity(inflictor);
-
-	if (!ValidEntity(inflictor_entity))
+	gentity_t *inflictor_entity = Scr_GetEntity(inflictor);
+	if (!inflictor_entity)
 	{
 		stackError("gsc_player_lookatkiller() inflictor_entity state is invalid");
 		stackPushUndefined();
 		return;
 	}
 
-	int attacker_entity = Scr_GetEntity(attacker);
-
-	if (!ValidEntity(attacker_entity))
+	gentity_t *attacker_entity = Scr_GetEntity(attacker);
+	if (!attacker_entity)
 	{
 		stackError("gsc_player_lookatkiller() attacker_entity state is invalid");
 		stackPushUndefined();
@@ -1180,6 +1177,53 @@ void gsc_utils_playfxforplayer(scr_entref_t id)
 			AxisToAngles(forward_vec, ent->s.apos.trBase);
 		}
 	}
+	stackPushBool(qtrue);
+}
+
+void gsc_utils_playfxontagforplayer(scr_entref_t id)
+{
+	int argc;
+	int index;
+    gentity_t *ent;
+    unsigned int tag_id;
+    char *tag_name;
+
+	if (id >= MAX_CLIENTS)
+	{
+		stackError("gsc_utils_playfxontagforplayer() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+    
+    argc = Scr_GetNumParam();
+    if ( argc != 3 )
+    {
+        Scr_Error("USAGE: playFxOnTagForPlayer <effect id from loadFx> <entity> <tag name>");
+    }
+    index = Scr_GetInt(0);
+    if ( index < 1 || 0x3f < index )
+    {
+        Scr_ParamError(0, custom_va("effect id %i is invalid\n", index));
+    }
+    ent = Scr_GetEntityByRef(1);
+    if ( ent->model == 0 )
+    {
+        Scr_ParamError(1, "cannot play fx on entity with no model");
+    }
+    tag_id = Scr_GetConstLowercaseString(2);
+    tag_name = SL_ConvertToString(tag_id);
+    if ( strchr(tag_name, 0x22) != 0 )
+    {
+        Scr_ParamError(2, "cannot use \" characters in tag names\n");
+    }
+    if ( SV_DObjGetBoneIndex(ent, tag_id) < 0 )
+    {
+        SV_DObjDumpInfo(ent);
+        Scr_ParamError(2, custom_va("tag \'%s\' does not exist on entity with model \'%s\'", tag_name, G_ModelName(ent->model)));
+    }
+    // TODO: filtering part for player
+    G_AddEvent(ent, EV_PLAY_FX_ON_TAG, G_FindConfigstringIndex(custom_va("%02d%s", index, tag_name), 0x38e, 0x100, 1, NULL));
+
 	stackPushBool(qtrue);
 }
 

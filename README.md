@@ -46,7 +46,6 @@ List of high-level changes provided by this repository:
   * `SV_SendClientGameState` for miscellaneous game engine tests (e.g., connect configstrings)
   * `BG_AddPredictableEventToPlayerstate` et sequentes to be able to filter events
   * `G_AddEvent`
-  * `G_TempEntity`
   * `MSG_WriteDeltaPlayerstate` et sequentes to be able to filter player/entity attributes
   * `MSG_WriteDeltaStruct`
   * `MSG_WriteDeltaClient`

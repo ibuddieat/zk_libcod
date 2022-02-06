@@ -538,7 +538,7 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 		
 		if ( (entity->client->sess).predictItemPickup == 0 )
 		{
-			G_AddEvent(entity, event, (item->s).index);
+			custom_G_AddEvent(entity, event, (item->s).index);
 		} else {
 			G_AddPredictableEvent(entity, event, (item->s).index);
 		}
@@ -748,7 +748,7 @@ char const *eventnames[] = {
 	"EV_OBITUARY"				 // 198
 };
 
-void custom_BG_AddPredictableEventToPlayerstate( int event, int eventParm, playerState_t *ps ) {
+void custom_BG_AddPredictableEventToPlayerstate(int event, int eventParm, playerState_t *ps) {
 	if ( event != EV_NONE ) {
 		if ( g_debugEvents->boolean )
 			Com_DPrintf("BG_AddPredictableEventToPlayerstate() event %26s for client %2d\n", eventnames[event], ps->clientNum);
@@ -769,7 +769,8 @@ void custom_BG_AddPredictableEventToPlayerstate( int event, int eventParm, playe
 	}
 }
 
-void custom_G_AddEvent (gentity_t * ent, int event, int eventParm) {
+void custom_G_AddEvent(gentity_t * ent, int event, int eventParm)
+{
 	if ( ent->client )
 	{
 		if ( g_debugEvents->boolean )
@@ -1154,14 +1155,14 @@ void custom_MSG_WriteDeltaArchivedEntity(msg_t *msg, entityState_t *from, entity
 
 void custom_MSG_WriteDeltaEntity(msg_t *msg, entityState_t *from, entityState_t *to, qboolean force, int clientNum)
 {
+	qboolean disable = qfalse;
+	client_t *client = &svs.clients[clientNum];
+	int spectatorClientNum = client->gentity->client->spectatorClient;
+
 	if ( to )
 	{
 		if ( (to->eType - 10) == EV_EARTHQUAKE )
 		{
-			qboolean disable;
-			client_t *client = &svs.clients[clientNum];
-			int spectatorClientNum = client->gentity->client->spectatorClient;
-			
 			if ( spectatorClientNum != -1 )
 			{
 				if ( !client->gentity->client->sess.archiveTime )
@@ -1179,18 +1180,33 @@ void custom_MSG_WriteDeltaEntity(msg_t *msg, entityState_t *from, entityState_t 
 					disable = qtrue;
 				}
 			}
-			
-			if ( disable )
-			{
-				to->eType = EV_NONE;
-			}
 		} else if ( (to->eType - 10) == EV_PLAY_FX ) {
-			if ( to->otherEntityNum && ! ( to->otherEntityNum == (clientNum + 1) ) )
+			if ( to->otherEntityNum )
 			{
-				to->eType = EV_NONE;
+				// effect is restricted to a player
+				if ( spectatorClientNum != -1 )
+				{
+					// client spectates someone (includes killcam)
+					if ( ! (to->otherEntityNum == (spectatorClientNum + 1)) )
+					{
+						disable = qtrue;
+					}
+				} else {
+					// client plays normally
+					if ( ! (to->otherEntityNum == (clientNum + 1)) )
+					{
+						disable = qtrue;
+					}
+				}
 			}
 		}
 	}
+
+	if ( disable )
+	{
+		to->eType = EV_NONE;
+	}
+
 	custom_MSG_WriteDeltaStruct(msg, from, to, force, 0x3b, 10, &entityStateFields, 0);
 }
 
