@@ -1396,11 +1396,12 @@ void custom_SV_SendClientGameState(client_t *client) {
 	{
 		SV_Netchan_TransmitNextFragment(&client->netchan);
 	}
+	
  	Com_DPrintf("SV_SendClientGameState() for %s\n", client->name);
 	Com_DPrintf("Going from CS_CONNECTED to CS_PRIMED for %s\n", client->name);
+	
 	client->state = CS_PRIMED;
 	client->pureAuthentic = 0;
-	client->gamestateMessageNum = client->netchan.outgoingSequence;
 	client->gamestateMessageNum = client->netchan.outgoingSequence;
 	
 	/* New code start */
@@ -1445,12 +1446,14 @@ void custom_SV_SendClientGameState(client_t *client) {
 			continue;
 		}
 		MSG_WriteByte(&msg, svc_baseline);
-		custom_MSG_WriteDeltaEntity(&msg, &nullstate, base, qtrue, client - svs.clients);
+		//custom_MSG_WriteDeltaEntity(&msg, &nullstate, base, qtrue, client - svs.clients);
+		MSG_WriteDeltaEntity(&msg, &nullstate, base, qtrue);
 	}
 	MSG_WriteByte(&msg, svc_EOF);
 	MSG_WriteLong(&msg, client - svs.clients);
 	MSG_WriteLong(&msg, sv.checksumFeed);
 	MSG_WriteByte(&msg, svc_EOF);
+	
 	Com_DPrintf("Sending %i bytes in gamestate to client: %i\n", msg.cursize, client - svs.clients);
 	
 	gamestate_size[client - svs.clients] = int(msg.cursize); // libcod
