@@ -48,6 +48,7 @@ cHook *hook_touch_item_auto;
 cHook *hook_g_tempentity;
 cHook *hook_gscr_loadconsts;
 cHook *hook_sv_masterheartbeat;
+cHook *hook_g_runframe;
 
 int codecallback_remotecommand = 0;
 int codecallback_playercommand = 0;
@@ -55,14 +56,28 @@ int codecallback_userinfochanged = 0;
 int codecallback_fire_grenade = 0;
 int codecallback_vid_restart = 0;
 int codecallback_client_spam = 0;
+int codecallback_error = 0;
+int codecallback_firebutton = 0;
 int codecallback_meleebutton = 0;
 int codecallback_usebutton = 0;
-int codecallback_attackbutton = 0;
-int codecallback_error = 0;
+int codecallback_reloadbutton = 0;
+int codecallback_leanleftbutton = 0;
+int codecallback_leanrightbutton = 0;
+int codecallback_pronebutton = 0;
+int codecallback_crouchbutton = 0;
+int codecallback_jumpbutton = 0;
+int codecallback_adsbutton = 0;
+int codecallback_meleebreathbutton = 0;
+int codecallback_holdbreathbutton = 0;
+int codecallback_fragbutton = 0;
+int codecallback_smokebutton = 0;
 
 qboolean logRcon = qtrue;
 qboolean logHeartbeat = qtrue;
 qboolean dumpNetFields = qfalse; // testing flag
+
+scr_error_t scr_errors[MAX_ERROR_BUFFER];
+int scr_errors_index = 0;
 
 int player_no_pickup[MAX_CLIENTS] = {0};
 int player_no_earthquakes[MAX_CLIENTS] = {0};
@@ -200,10 +215,21 @@ int hook_codscript_gametype_scripts()
 	codecallback_fire_grenade = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_FireGrenade", 0);
 	codecallback_vid_restart = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_VidRestart", 0);
 	codecallback_client_spam = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_CLSpam", 0);
+	codecallback_error = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_Error", 0);
+	codecallback_firebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_FireButton", 0);
 	codecallback_meleebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MeleeButton", 0);
  	codecallback_usebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_UseButton", 0);
-	codecallback_attackbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_AttackButton", 0);
-	codecallback_error = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_Error", 0);
+ 	codecallback_reloadbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_ReloadButton", 0);
+ 	codecallback_leanleftbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_LeanLeftButton", 0);
+ 	codecallback_leanrightbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_LeanRightButton", 0);
+ 	codecallback_pronebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_ProneButton", 0);
+ 	codecallback_crouchbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_CrouchButton", 0);
+ 	codecallback_jumpbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_JumpButton", 0);
+ 	codecallback_adsbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_AdsButton", 0);
+ 	codecallback_meleebreathbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MeleeBreathButton", 0);
+ 	codecallback_holdbreathbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_HoldBreathButton", 0);
+ 	codecallback_fragbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_FragButton", 0);
+ 	codecallback_smokebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_SmokeButton", 0);
 	
 	int (*sig)();
 	*(int *)&sig = hook_gametype_scripts->from;
@@ -1909,6 +1935,15 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 		tempfps[clientnum] = 0;
 	}
 	
+	if (ucmd->buttons & KEY_MASK_FIRE && !(previousbuttons[clientnum] & KEY_MASK_FIRE))
+	{
+		if(codecallback_firebutton)
+		{
+			short ret = Scr_ExecEntThread(cl->gentity, codecallback_firebutton, 0);
+			Scr_FreeThread(ret);
+		}
+	}
+	
 	if (ucmd->buttons & KEY_MASK_MELEE && !(previousbuttons[clientnum] & KEY_MASK_MELEE))
 	{
 		if(codecallback_meleebutton)
@@ -1927,11 +1962,101 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 		}
 	}
 
-	if (ucmd->buttons & KEY_MASK_FIRE && !(previousbuttons[clientnum] & KEY_MASK_FIRE))
+	if (ucmd->buttons & KEY_MASK_RELOAD && !(previousbuttons[clientnum] & KEY_MASK_RELOAD))
 	{
-		if(codecallback_attackbutton)
+		if(codecallback_reloadbutton)
 		{
-			short ret = Scr_ExecEntThread(cl->gentity, codecallback_attackbutton, 0);
+			short ret = Scr_ExecEntThread(cl->gentity, codecallback_reloadbutton, 0);
+			Scr_FreeThread(ret);
+		}
+	}
+	
+	if (ucmd->buttons & KEY_MASK_LEANLEFT && !(previousbuttons[clientnum] & KEY_MASK_LEANLEFT))
+	{
+		if(codecallback_leanleftbutton)
+		{
+			short ret = Scr_ExecEntThread(cl->gentity, codecallback_leanleftbutton, 0);
+			Scr_FreeThread(ret);
+		}
+	}
+	
+	if (ucmd->buttons & KEY_MASK_LEANRIGHT && !(previousbuttons[clientnum] & KEY_MASK_LEANRIGHT))
+	{
+		if(codecallback_leanrightbutton)
+		{
+			short ret = Scr_ExecEntThread(cl->gentity, codecallback_leanrightbutton, 0);
+			Scr_FreeThread(ret);
+		}
+	}
+	
+	if (ucmd->buttons & KEY_MASK_PRONE && !(previousbuttons[clientnum] & KEY_MASK_PRONE))
+	{
+		if(codecallback_pronebutton)
+		{
+			short ret = Scr_ExecEntThread(cl->gentity, codecallback_pronebutton, 0);
+			Scr_FreeThread(ret);
+		}
+	}
+	
+	if (ucmd->buttons & KEY_MASK_CROUCH && !(previousbuttons[clientnum] & KEY_MASK_CROUCH))
+	{
+		if(codecallback_crouchbutton)
+		{
+			short ret = Scr_ExecEntThread(cl->gentity, codecallback_crouchbutton, 0);
+			Scr_FreeThread(ret);
+		}
+	}
+	
+	if (ucmd->buttons & KEY_MASK_JUMP && !(previousbuttons[clientnum] & KEY_MASK_JUMP))
+	{
+		if(codecallback_jumpbutton)
+		{
+			short ret = Scr_ExecEntThread(cl->gentity, codecallback_jumpbutton, 0);
+			Scr_FreeThread(ret);
+		}
+	}
+	
+	if (ucmd->buttons & KEY_MASK_ADS_MODE && !(previousbuttons[clientnum] & KEY_MASK_ADS_MODE))
+	{
+		if(codecallback_adsbutton)
+		{
+			short ret = Scr_ExecEntThread(cl->gentity, codecallback_adsbutton, 0);
+			Scr_FreeThread(ret);
+		}
+	}
+	
+	if (ucmd->buttons & KEY_MASK_MELEE_BREATH && !(previousbuttons[clientnum] & KEY_MASK_MELEE_BREATH))
+	{
+		if(codecallback_meleebreathbutton)
+		{
+			short ret = Scr_ExecEntThread(cl->gentity, codecallback_meleebreathbutton, 0);
+			Scr_FreeThread(ret);
+		}
+	}
+	
+	if (ucmd->buttons & KEY_MASK_HOLDBREATH && !(previousbuttons[clientnum] & KEY_MASK_HOLDBREATH))
+	{
+		if(codecallback_holdbreathbutton)
+		{
+			short ret = Scr_ExecEntThread(cl->gentity, codecallback_holdbreathbutton, 0);
+			Scr_FreeThread(ret);
+		}
+	}
+	
+	if (ucmd->buttons & KEY_MASK_FRAG && !(previousbuttons[clientnum] & KEY_MASK_FRAG))
+	{
+		if(codecallback_fragbutton)
+		{
+			short ret = Scr_ExecEntThread(cl->gentity, codecallback_fragbutton, 0);
+			Scr_FreeThread(ret);
+		}
+	}
+	
+	if (ucmd->buttons & KEY_MASK_SMOKE && !(previousbuttons[clientnum] & KEY_MASK_SMOKE))
+	{
+		if(codecallback_smokebutton)
+		{
+			short ret = Scr_ExecEntThread(cl->gentity, codecallback_smokebutton, 0);
 			Scr_FreeThread(ret);
 		}
 	}
@@ -2470,6 +2595,35 @@ void custom_Scr_PrintPrevCodePos(int a1, char *a2, int a3)
 	hook_print_codepos->hook();
 }
 
+void Scr_CodeCallback_Error(qboolean terminal, qboolean emit, const char * internal_function, char *message)
+{
+	if ( codecallback_error && Scr_IsSystemActive() )
+	{
+		if ( terminal || emit ) {
+			stackPushString(message);
+			stackPushString(internal_function);
+			stackPushInt(terminal);
+			short ret = Scr_ExecThread(codecallback_error, 3);
+			Scr_FreeThread(ret);
+		} else {
+			// If the error is non-critical (not stopping the server), save it
+			// so we can emit it later at G_RunFrame which is a rather save
+			// spot compared to if we emit it directly here within the
+			// internals of the scripting engine where we risk crashing it
+			// with a segmentation fault
+			if ( scr_errors_index < ( MAX_ERROR_BUFFER - 1 ) )
+			{
+				scr_errors[scr_errors_index].time = svs.time;
+				strncpy(scr_errors[scr_errors_index].internal_function, internal_function, sizeof(scr_errors[scr_errors_index].internal_function));
+				strncpy(scr_errors[scr_errors_index].message, message, sizeof(scr_errors[scr_errors_index].message));
+				scr_errors_index++;
+			} else {
+				Com_DPrintf("Warning: errors buffer full, not calling CodeCallback_Error for that message\n");
+			}
+		}
+	}
+}
+
 void custom_Com_Error(int type, const char *format, ...)
 {
 	Sys_EnterCriticalSectionInternal(2);
@@ -2505,14 +2659,7 @@ void custom_Com_Error(int type, const char *format, ...)
 	vsnprintf((char *)va_string_156, 0x1000, format, va);
 	va_end(va);
 	
-	if ( codecallback_error )
-	{
-		stackPushString((char *)va_string_156);
-		stackPushString("Com_Error");
-		stackPushInt(scrVmPub.terminal_error);
-		short ret = Scr_ExecThread(codecallback_error, 3);
-		Scr_FreeThread(ret);
-	}
+	Scr_CodeCallback_Error(scrVmPub.terminal_error, qtrue, "Com_Error", (char *)va_string_156);
 	
 	*(byte *)unk1 = 0;
 	
@@ -2545,14 +2692,7 @@ void custom_Scr_Error(void)
 		}
 		if ( scrVmPub.function_count || scrVmPub.debugCode )
 		{
-			if ( codecallback_error )
-			{
-				stackPushString(scrVarPub.error_message);
-				stackPushString("Scr_Error");
-				stackPushInt(0);
-				short ret = Scr_ExecThread(codecallback_error, 3);
-				Scr_FreeThread(ret);
-			}
+			Scr_CodeCallback_Error(qfalse, qfalse, "Scr_Error", (char *)scrVarPub.error_message);
 			longjmp(&g_script_error[g_script_error_level], -1);
 		}
 	} else if ( !scrVmPub.terminal_error ) {
@@ -2564,16 +2704,8 @@ void custom_Scr_Error(void)
 void custom_RuntimeError_Debug(int channel, char *pos, int param_3, char *message)
 {
 	int i, j;
-	
-	if ( codecallback_error )
-	{
-		stackPushString(message);
-		stackPushString("RuntimeError_Debug");
-		stackPushInt(channel == 0);
-		short ret = Scr_ExecThread(codecallback_error, 3);
-		Scr_FreeThread(ret);
-	}
 
+	Scr_CodeCallback_Error(qfalse, qfalse, "RuntimeError_Debug", message);
 	Com_PrintMessage(channel, custom_va("\n******* script runtime error *******\n%s: ", message));
 	custom_Scr_PrintPrevCodePos(channel, pos, param_3);
 	i = scrVmPub.function_count;
@@ -2622,14 +2754,7 @@ void custom_RuntimeError(char *pos, int param_2, char *message, char *param_4)
 			Com_Printf("%s\n", message);
 			if ( !scrVmPub.terminal_error )
 			{
-				if ( codecallback_error )
-				{
-					stackPushString(message);
-					stackPushString("RuntimeError");
-					stackPushInt(0);
-					short ret = Scr_ExecThread(codecallback_error, 3);
-					Scr_FreeThread(ret);
-				}
+				Scr_CodeCallback_Error(qfalse, qfalse, "RuntimeError", message);
 				return;
 			}
 		}
@@ -2649,6 +2774,26 @@ void custom_RuntimeError(char *pos, int param_2, char *message, char *param_4)
 		}
 		custom_Com_Error(channel_1, "\x15script runtime error\n(see console for details)\n%s%s%s", message, local_14, param_4);
 	}
+}
+
+void custom_G_RunFrame(int levelTime)
+{
+	int i;
+	
+	hook_g_runframe->unhook();
+
+	void (*sig)(int levelTime);
+	*(int *)&sig = hook_g_runframe->from;
+	
+	for ( i = 0; i < scr_errors_index; i++ )
+	{
+		Scr_CodeCallback_Error(qfalse, qtrue, scr_errors[i].internal_function, scr_errors[i].message);
+	}
+	scr_errors_index = 0;
+	
+	sig(levelTime);
+	
+	hook_g_runframe->hook();
 }
 
 void custom_SV_ArchiveSnapshot(void)
@@ -2753,7 +2898,7 @@ LAB_0809b5f4:
 						svs.nextCachedSnapshotClients++;
 						if ( i != 0x7ffffffc && 0x7ffffffc < svs.nextCachedSnapshotClients )
 						{
-							custom_Com_Error(0,"\x15svs.nextCachedSnapshotClients wrapped");
+							custom_Com_Error(0, "\x15svs.nextCachedSnapshotClients wrapped");
 						}
 						cachedFrame->num_clients++;
 					}
@@ -2805,7 +2950,7 @@ LAB_0809b5f4:
 						svs.nextCachedSnapshotEntities++;
 						if ( i != 0x7ffffffc && 0x7ffffffc < svs.nextCachedSnapshotEntities ) 
 						{
-							custom_Com_Error(0,"\x15svs.nextCachedSnapshotEntities wrapped");
+							custom_Com_Error(0, "\x15svs.nextCachedSnapshotEntities wrapped");
 						}
 						cachedFrame->num_entities++;
 					}
@@ -2813,7 +2958,7 @@ LAB_0809b5f4:
 				svs.nextCachedSnapshotFrames++;
 				if (i != 0x7ffffffc && 0x7ffffffc < svs.nextCachedSnapshotFrames)
 				{
-					custom_Com_Error(0,"\x15svs.nextCachedSnapshotFrames wrapped");
+					custom_Com_Error(0, "\x15svs.nextCachedSnapshotFrames wrapped");
 				}
 			} else {
 				MSG_WriteBit0(&msg);
@@ -3346,6 +3491,8 @@ public:
 		hook_gscr_loadconsts->hook();
 		hook_sv_masterheartbeat = new cHook(0x08096ED6, (int)custom_sv_masterheartbeat);
 		hook_sv_masterheartbeat->hook();
+		hook_g_runframe = new cHook(0x0810A13A, (int)custom_G_RunFrame);
+		hook_g_runframe->hook();
 
 #if COMPILE_PLAYER == 1
 		hook_play_movement = new cHook(0x08090DAC, (int)play_movement);
@@ -3374,6 +3521,7 @@ public:
 		cracking_hook_function(0x08080050, (int)custom_Scr_Error);
 		cracking_hook_function(0x08061124, (int)custom_Com_Error);
 		cracking_hook_function(0x080788D2, (int)custom_RuntimeError);
+		cracking_hook_function(0x080787DC, (int)custom_RuntimeError_Debug);
 		cracking_hook_function(0x0809B016, (int)custom_SV_ArchiveSnapshot);
 		cracking_hook_function(0x0809A408, (int)custom_SV_BuildClientSnapshot);
 		cracking_hook_function(0x080584F0, (int)custom_CM_IsBadStaticModel);

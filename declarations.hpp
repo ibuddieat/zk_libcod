@@ -2478,6 +2478,14 @@ struct va_info_t
 	int index;
 };
 
+#define MAX_ERROR_BUFFER 64
+typedef struct src_error_s
+{
+    int time;
+    char internal_function[64];
+    char message[1024];
+} scr_error_t;
+
 #define	SVF_NOCLIENT  0x00000001
 #define	SVF_BROADCAST 0x00000008
 

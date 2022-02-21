@@ -36,8 +36,24 @@ List of high-level changes provided by this repository:
   * `setnexttestclientname(<name>)`
   * `resettestclientnaming()`
   * `logprintconsole(<message>)`
+- Changed script code functions:
+  * `<player> get_userinfo()` Now returns strings only, instead of string or undefined
 - Added script callback functions:
   * `CodeCallback_Error`
+  * `CodeCallback_FireButton`
+  * `CodeCallback_ReloadButton`
+  * `CodeCallback_LeanLeftButton`
+  * `CodeCallback_LeanRightButton`
+  * `CodeCallback_ProneButton`
+  * `CodeCallback_CrouchButton`
+  * `CodeCallback_JumpButton`
+  * `CodeCallback_AdsButton`
+  * `CodeCallback_MeleeBreathButton`
+  * `CodeCallback_HoldBreathButton`
+  * `CodeCallback_FragButton`
+  * `CodeCallback_SmokeButton`
+- Removed script callback functions:
+  * `CodeCallback_AttackButton`
 - Removed libcod cvars:
   * `con_coloredPrints` as it may break incoming rcon commands, thus causing issues with BigBrotherBot
 - Reconstructed functions (see functions with `custom_` prefix in `libcod.cpp`):
