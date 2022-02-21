@@ -198,7 +198,7 @@ void gsc_player_get_userinfo(scr_entref_t id)
 	if (strlen(val))
 		stackPushString(val);
 	else
-		stackPushUndefined();
+		stackPushString("");
 }
 
 void gsc_player_set_userinfo(scr_entref_t id)
