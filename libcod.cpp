@@ -1183,7 +1183,14 @@ void custom_MSG_WriteDeltaEntity(msg_t *msg, entityState_t *from, entityState_t 
 {
 	qboolean disable = qfalse;
 	client_t *client = &svs.clients[clientNum];
-	int spectatorClientNum = client->gentity->client->spectatorClient;
+	int spectatorClientNum;
+	
+	if ( client->gentity && client->gentity->client )
+	{
+		spectatorClientNum = client->gentity->client->spectatorClient;
+	} else {
+		spectatorClientNum = -1;
+	}
 
 	if ( to )
 	{
@@ -1472,8 +1479,7 @@ void custom_SV_SendClientGameState(client_t *client) {
 			continue;
 		}
 		MSG_WriteByte(&msg, svc_baseline);
-		//custom_MSG_WriteDeltaEntity(&msg, &nullstate, base, qtrue, client - svs.clients);
-		MSG_WriteDeltaEntity(&msg, &nullstate, base, qtrue);
+		custom_MSG_WriteDeltaEntity(&msg, &nullstate, base, qtrue, client - svs.clients);
 	}
 	MSG_WriteByte(&msg, svc_EOF);
 	MSG_WriteLong(&msg, client - svs.clients);
