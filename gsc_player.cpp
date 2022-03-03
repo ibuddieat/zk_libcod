@@ -1221,7 +1221,7 @@ void gsc_utils_playfxontagforplayer(scr_entref_t id)
         SV_DObjDumpInfo(ent);
         Scr_ParamError(2, custom_va("tag \'%s\' does not exist on entity with model \'%s\'", tag_name, G_ModelName(ent->model)));
     }
-    // TODO: filtering part for player
+    ent->s.attackerEntityNum = 1 + id; // reusing the attackerEntityNum field that is only used for obituary TempEntities
     G_AddEvent(ent, EV_PLAY_FX_ON_TAG, G_FindConfigstringIndex(custom_va("%02d%s", index, tag_name), 0x38e, 0x100, 1, NULL));
 
 	stackPushBool(qtrue);

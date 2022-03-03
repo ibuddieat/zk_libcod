@@ -379,7 +379,7 @@ scr_method_t scriptMethods[] =
 	{"getinactivitytime", gsc_player_getinactivitytime, 0},
 	{"setearthquakes", gsc_player_set_earthquakes, 0},
 	{"playfxforplayer", gsc_utils_playfxforplayer, 0},
-	/*{"playfxontagforplayer", gsc_utils_playfxontagforplayer, 0},*/
+	{"playfxontagforplayer", gsc_utils_playfxontagforplayer, 0},
 #endif
 
 #ifdef EXTRA_METHODS_INC

@@ -26,18 +26,19 @@ List of high-level changes provided by this repository:
   * `g_notifyPickup` to define whether to use the stock pickup logic or custom notify events
   * `g_debugStaticModels` to print info about static models on map load
 - Added script code functions:
-  * `<player> getinactivitytime()`
+  * `<player> getInactivityTime()`
   * `<player> noclip("on|off|toggle")`
-  * `<player> playfxforplayer(<effect id>, <position of effect>, [<forward vector>], [<up vector>])`
-  * `<player> setearthquakes("on|off|toggle")`
-  * `getweaponfusetime(<weapon name>)`
-  * `setweaponfusetime(<weapon name>, <time in ms>)`
-  * `getentitycount()`
-  * `setnexttestclientname(<name>)`
-  * `resettestclientnaming()`
-  * `logprintconsole(<message>)`
+  * `<player> playFxForPlayer(<effect id>, <position of effect>, [<forward vector>], [<up vector>])`
+  * `<player> playFxOnTagForPlayer(<effect id>, <entity>, <tag name>)`
+  * `<player> setEarthquakes("on|off|toggle")`
+  * `getWeaponFuseTime(<weapon name>)`
+  * `setWeaponFuseTime(<weapon name>, <time in ms>)`
+  * `getEntityCount()`
+  * `setNextTestClientName(<name>)`
+  * `resetTestClientNaming()`
+  * `logPrintConsole(<message>)`
 - Changed script code functions:
-  * `<player> get_userinfo()` Now returns strings only, instead of string or undefined
+  * `<player> get_userinfo()` now returns strings only, instead of string or undefined
 - Added script callback functions:
   * `CodeCallback_Error`
   * `CodeCallback_FireButton`
@@ -64,6 +65,7 @@ List of high-level changes provided by this repository:
   * `G_AddEvent`
   * `MSG_WriteDeltaPlayerstate` et sequentes to be able to filter player/entity attributes
   * `MSG_WriteDeltaStruct`
+  * `MSG_WriteDeltaField`
   * `MSG_WriteDeltaClient`
   * `MSG_WriteDeltaEntity`
   * `MSG_WriteDeltaArchivedEntity`
@@ -79,6 +81,7 @@ List of high-level changes provided by this repository:
   * `CM_IsBadStaticModel` for `g_debugStaticModels` (this function name is a guess)
 - Commented out several libcod functions that would make it easy to harm the server with malicious map scripts, thus currently breaking manymaps support
 - Added/updated some missing/unknown declarations
+- Fixed some minor bugs
 
 Build requirements:
 - gcc and g++ (with multilib on 64-bit x86 operating systems)

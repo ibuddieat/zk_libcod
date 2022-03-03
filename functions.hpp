@@ -615,42 +615,6 @@ static const MSG_WriteData_t MSG_WriteData = (MSG_WriteData_t)0x0806804C;
 static const MSG_WriteData_t MSG_WriteData = (MSG_WriteData_t)0x08068044;
 #endif
 
-typedef void (*MSG_WriteDeltaClient_t)(msg_t *msg, clientState_t *from, clientState_t *to, qboolean force);
-#if COD_VERSION == COD2_1_0
-static const MSG_WriteDeltaClient_t MSG_WriteDeltaClient = (MSG_WriteDeltaClient_t)0x0; // Not tested
-#elif COD_VERSION == COD2_1_2
-static const MSG_WriteDeltaClient_t MSG_WriteDeltaClient = (MSG_WriteDeltaClient_t)0x0; // Not tested
-#elif COD_VERSION == COD2_1_3
-static const MSG_WriteDeltaClient_t MSG_WriteDeltaClient = (MSG_WriteDeltaClient_t)0x080698E8;
-#endif
-
-typedef void (*MSG_WriteDeltaPlayerstate_t)(msg_t *msg, playerState_t *from, playerState_t *to);
-#if COD_VERSION == COD2_1_0
-static const MSG_WriteDeltaPlayerstate_t MSG_WriteDeltaPlayerstate = (MSG_WriteDeltaPlayerstate_t)0x0; // Not tested
-#elif COD_VERSION == COD2_1_2
-static const MSG_WriteDeltaPlayerstate_t MSG_WriteDeltaPlayerstate = (MSG_WriteDeltaPlayerstate_t)0x0; // Not tested
-#elif COD_VERSION == COD2_1_3
-static const MSG_WriteDeltaPlayerstate_t MSG_WriteDeltaPlayerstate = (MSG_WriteDeltaPlayerstate_t)0x0806A200;
-#endif
-
-typedef void (*MSG_WriteDeltaField_t)(msg_t *buf, byte *from, byte *to, netField_t *field);
-#if COD_VERSION == COD2_1_0
-static const MSG_WriteDeltaField_t MSG_WriteDeltaField = (MSG_WriteDeltaField_t)0x0; // Not tested
-#elif COD_VERSION == COD2_1_2
-static const MSG_WriteDeltaField_t MSG_WriteDeltaField = (MSG_WriteDeltaField_t)0x0; // Not tested
-#elif COD_VERSION == COD2_1_3
-static const MSG_WriteDeltaField_t MSG_WriteDeltaField = (MSG_WriteDeltaField_t)0x080692DC;
-#endif
-
-typedef void (*MSG_WriteDeltaEntity_t)(msg_t *msg, const entityState_t *from, const entityState_t *to, qboolean force);
-#if COD_VERSION == COD2_1_0
-static const MSG_WriteDeltaEntity_t MSG_WriteDeltaEntity = (MSG_WriteDeltaEntity_t)0x0; // Not tested
-#elif COD_VERSION == COD2_1_2
-static const MSG_WriteDeltaEntity_t MSG_WriteDeltaEntity = (MSG_WriteDeltaEntity_t)0x0; // Not tested
-#elif COD_VERSION == COD2_1_3
-static const MSG_WriteDeltaEntity_t MSG_WriteDeltaEntity = (MSG_WriteDeltaEntity_t)0x0806984C;
-#endif
-
 typedef void (*MSG_WriteDeltaObjective_t)(msg_t *msg, objective_t *from, objective_t *to, int lc, int numStateFields, netField_t *objFields);
 #if COD_VERSION == COD2_1_0
 static const MSG_WriteDeltaObjective_t MSG_WriteDeltaObjective = (MSG_WriteDeltaObjective_t)0x0; // Not tested
@@ -667,24 +631,6 @@ static const MSG_WriteDeltaHudElems_t MSG_WriteDeltaHudElems = (MSG_WriteDeltaHu
 static const MSG_WriteDeltaHudElems_t MSG_WriteDeltaHudElems = (MSG_WriteDeltaHudElems_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const MSG_WriteDeltaHudElems_t MSG_WriteDeltaHudElems = (MSG_WriteDeltaHudElems_t)0x08069f84;
-#endif
-
-typedef void (*SV_EmitPacketEntities_t)(int client, int from_num_entities, int from_first_entity, int num_entities, int first_entity, msg_t *msg);
-#if COD_VERSION == COD2_1_0
-static const SV_EmitPacketEntities_t SV_EmitPacketEntities = (SV_EmitPacketEntities_t)0x0; // Not tested
-#elif COD_VERSION == COD2_1_2
-static const SV_EmitPacketEntities_t SV_EmitPacketEntities = (SV_EmitPacketEntities_t)0x0; // Not tested
-#elif COD_VERSION == COD2_1_3
-static const SV_EmitPacketEntities_t SV_EmitPacketEntities = (SV_EmitPacketEntities_t)0x08098308;
-#endif
-
-typedef void (*SV_EmitPacketClients_t)(int client, int from_num_clients, int from_first_client, int num_clients, int first_client, msg_t *msg);
-#if COD_VERSION == COD2_1_0
-static const SV_EmitPacketClients_t SV_EmitPacketClients = (SV_EmitPacketClients_t)0x0; // Not tested
-#elif COD_VERSION == COD2_1_2
-static const SV_EmitPacketClients_t SV_EmitPacketClients = (SV_EmitPacketClients_t)0x0; // Not tested
-#elif COD_VERSION == COD2_1_3
-static const SV_EmitPacketClients_t SV_EmitPacketClients = (SV_EmitPacketClients_t)0x0809847C;
 #endif
 
 typedef void (*SV_SendMessageToClient_t)(msg_t *msg, client_t *cl);
@@ -858,7 +804,7 @@ static const Scr_GetInt_t Scr_GetInt = (Scr_GetInt_t)0x0; // Not tested
 static const Scr_GetInt_t Scr_GetInt = (Scr_GetInt_t)0x08084694;
 #endif
 
-typedef gentity_t * (*Scr_GetEntity_t)(int a1);
+typedef gentity_t * (*Scr_GetEntity_t)(unsigned int index);
 #if COD_VERSION == COD2_1_0
 static const Scr_GetEntity_t Scr_GetEntity = (Scr_GetEntity_t)0x0810E03A;
 #elif COD_VERSION == COD2_1_2
@@ -867,13 +813,13 @@ static const Scr_GetEntity_t Scr_GetEntity = (Scr_GetEntity_t)0x08110376;
 static const Scr_GetEntity_t Scr_GetEntity = (Scr_GetEntity_t)0x081104D2;
 #endif
 
-typedef gentity_t * (*Scr_GetEntityByRef_t)(int a1); // Guessed function name
+typedef gentity_t * (*Scr_GetEntityByRef_t)(unsigned int index); // Guessed function name
 #if COD_VERSION == COD2_1_0
 static const Scr_GetEntityByRef_t Scr_GetEntityByRef = (Scr_GetEntityByRef_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
 static const Scr_GetEntityByRef_t Scr_GetEntityByRef = (Scr_GetEntityByRef_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
-static const Scr_GetEntityByRef_t Scr_GetEntityByRef = (Scr_GetEntityByRef_t)0x0811B16;
+static const Scr_GetEntityByRef_t Scr_GetEntityByRef = (Scr_GetEntityByRef_t)0x0811B16E;
 #endif
 
 typedef unsigned int (*Scr_GetConstLowercaseString_t)(unsigned int param);
@@ -1369,15 +1315,6 @@ static const SV_SvEntityForGentity_t SV_SvEntityForGentity = (SV_SvEntityForGent
 static const SV_SvEntityForGentity_t SV_SvEntityForGentity = (SV_SvEntityForGentity_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const SV_SvEntityForGentity_t SV_SvEntityForGentity = (SV_SvEntityForGentity_t)0x08091734;
-#endif
-
-typedef void (*MSG_WriteDeltaArchivedEntity_t)(msg_t *msg, archivedEntity_s *from, archivedEntity_s *to, int force);
-#if COD_VERSION == COD2_1_0
-static const MSG_WriteDeltaArchivedEntity_t MSG_WriteDeltaArchivedEntity = (MSG_WriteDeltaArchivedEntity_t)0x0; // Not tested
-#elif COD_VERSION == COD2_1_2
-static const MSG_WriteDeltaArchivedEntity_t MSG_WriteDeltaArchivedEntity = (MSG_WriteDeltaArchivedEntity_t)0x0; // Not tested
-#elif COD_VERSION == COD2_1_3
-static const MSG_WriteDeltaArchivedEntity_t MSG_WriteDeltaArchivedEntity = (MSG_WriteDeltaArchivedEntity_t)0x0806989A;
 #endif
 
 typedef void (*AddLeanToPosition_t)(float *position, float fViewYaw, float fLeanFrac, float fViewRoll, float fLeanDist);

@@ -74,7 +74,6 @@ int codecallback_smokebutton = 0;
 
 qboolean logRcon = qtrue;
 qboolean logHeartbeat = qtrue;
-qboolean dumpNetFields = qfalse; // testing flag
 
 scr_error_t scr_errors[MAX_ERROR_BUFFER];
 int scr_errors_index = 0;
@@ -373,7 +372,8 @@ void hook_ClientUserinfoChanged(int clientNum)
 	Scr_FreeThread(ret);
 }
 
-void custom_SV_DropClient(client_t *drop, const char *reason) {
+void custom_SV_DropClient(client_t *drop, const char *reason)
+{
 	int i, pb_test;
 	challenge_t *challenge;
 	qboolean isBot = qfalse;
@@ -405,7 +405,8 @@ void custom_SV_DropClient(client_t *drop, const char *reason) {
 
 		for ( i = 0 ; i < MAX_CHALLENGES ; i++, challenge++ )
 		{
-			if ( NET_CompareAdr( drop->netchan.remoteAddress, challenge->adr ) ) {
+			if ( NET_CompareAdr( drop->netchan.remoteAddress, challenge->adr ) )
+			{
 				challenge->connected = qfalse;
 				break;
 			}
@@ -435,12 +436,15 @@ void custom_SV_DropClient(client_t *drop, const char *reason) {
 	// to the master so it is known the server is empty
 	// send a heartbeat now so the master will get up to date info
 	// if there is already a slot for this ip, reuse it
-	for ( i = 0 ; i < sv_maxclients->integer ; i++ ) {
-		if ( svs.clients[i].state >= CS_CONNECTED ) {
+	for ( i = 0 ; i < sv_maxclients->integer ; i++ )
+	{
+		if ( svs.clients[i].state >= CS_CONNECTED )
+		{
 			break;
 		}
 	}
-	if ( i == sv_maxclients->integer ) {
+	if ( i == sv_maxclients->integer )
+	{
 		SV_Heartbeat();
 	}
 }
@@ -774,8 +778,10 @@ char const *eventnames[] = {
 	"EV_OBITUARY"				 // 198
 };
 
-void custom_BG_AddPredictableEventToPlayerstate(int event, int eventParm, playerState_t *ps) {
-	if ( event != EV_NONE ) {
+void custom_BG_AddPredictableEventToPlayerstate(int event, int eventParm, playerState_t *ps)
+{
+	if ( event != EV_NONE )
+	{
 		if ( g_debugEvents->boolean )
 			Com_DPrintf("BG_AddPredictableEventToPlayerstate() event %26s for client %2d\n", eventnames[event], ps->clientNum);
 		
@@ -843,18 +849,106 @@ gentity_t* custom_G_TempEntity(vec3_t * origin, int event)
 	return tempEntity;
 }
 
-void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t *to, int force, int numFields, int indexBits, netField_t *stateFieldsPointer, int bChangeBit)
+void custom_MSG_WriteDeltaField(msg_t *buf, byte *from, byte *to, netField_t *field)
+{
+	int trunc;
+	float fullFloat;
+	int *fromF, *toF;
+	int32_t absbits;
+	uint8_t abs3bits;
+	int32_t absto;
+	
+	fromF = ( int * )( (byte *)from + field->offset );
+	toF = ( int * )( (byte *)to + field->offset );
+	
+	if ( *fromF == *toF )
+	{
+		MSG_WriteBit0(buf);
+	} else {
+		MSG_WriteBit1(buf);
+		if ( field->bits == 0 )
+		{
+			fullFloat = *(float *)toF;
+			trunc = (int)fullFloat;
+
+			if ( fullFloat == 0.0 )
+			{
+				MSG_WriteBit0(buf);
+			} else {
+				MSG_WriteBit1(buf);
+				if ( trunc == fullFloat && trunc + FLOAT_INT_BIAS >= 0 && trunc + FLOAT_INT_BIAS < ( 1 << FLOAT_INT_BITS ) )
+				{
+					MSG_WriteBit0(buf);
+					MSG_WriteBits(buf, trunc + FLOAT_INT_BIAS, 5);
+					MSG_WriteByte(buf, (char)((trunc + 0x1000) >> 5));
+				} else {
+					MSG_WriteBit1(buf);
+					MSG_WriteLong(buf, *toF);
+				}
+			}
+		} else if ( field->bits == -99 ) {
+			
+			fullFloat = *(float *)toF;
+			trunc = (int)fullFloat;
+			
+			if ( fullFloat == 0.0 )
+			{
+				MSG_WriteBit0(buf);
+			} else {
+				MSG_WriteBit1(buf);
+				if ( ( (float)trunc == fullFloat && ( -1 < trunc + 0x200 )) && ( trunc + 0x200 < 0x400 ) )
+				{
+					MSG_WriteBit0(buf);
+					MSG_WriteBits(buf, trunc + 0x200, 2);
+					MSG_WriteByte(buf, (trunc + 0x200) >> 2);
+				} else {
+					MSG_WriteBit1(buf);
+					MSG_WriteLong(buf, *toF);
+				}
+			}
+		} else if ( field->bits == -100 ) {
+			if ( *toF == 0 )
+			{
+				MSG_WriteBit0(buf);
+			} else {
+				MSG_WriteBit1(buf);
+				MSG_WriteAngle16(buf, *(float *)toF);
+			}
+		} else if ( *toF == 0 ) {
+			MSG_WriteBit0(buf);
+		} else {
+			MSG_WriteBit1(buf);
+			absto = *toF;
+			absbits = field->bits;
+			if ( absbits < 0 )
+			{
+				absbits *= -1;
+			}
+			abs3bits = absbits & 7;
+			if ( abs3bits )
+			{
+				MSG_WriteBits(buf, absto, abs3bits);
+				absbits -= abs3bits;
+				absto >>= abs3bits;
+			}
+			while( absbits )
+			{
+				MSG_WriteByte(buf, absto);
+				absto >>= 8;
+				absbits -= 8;
+			}
+		}
+	}
+}
+
+void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t *to, int force, int numFields, int indexBits, netField_t *stateFieldsPointer, int bChangeBit, int clientNum, int spectatorClientNum)
 {
 	int *toF;
 	int *fromF;
 	netField_t *field;
 	int lc;
 	int i;
-
-	/*if ( g_debugEvents->boolean )
-	{
-		Com_DPrintf("MSG_WriteDeltaStruct() for entity %d\n", to->number);
-	}*/
+	int attackerEntityNum = 0;
 
 	if ( !to )
 	{
@@ -868,26 +962,22 @@ void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t 
 		lc = 0;
 		field = stateFieldsPointer;
 
-		if( dumpNetFields )
-		{
-			Com_Printf("netField_t stateFields[] = {\n");
-		}
 		for ( i = 0; i < numFields; i++, field++ )
 		{
 			fromF = ( int * )( (byte *)from + field->offset );
 			toF = ( int * )( (byte *)to + field->offset );
-			if ( *fromF != *toF ) {
+			
+			/* new code start: playFxOnTagForPlayer */
+			if ( i == 49 )
+			{
+				attackerEntityNum = *toF;
+			}
+			/* new code end */
+			
+			if ( *fromF != *toF )
+			{
 				lc = i + 1;
 			}
-			if( dumpNetFields )
-			{
-				Com_Printf("{ NETF (%s), %i },\n", field->name, field->bits);
-			}
-		}
-		if( dumpNetFields )
-		{
-			Com_Printf("};\n");
-			dumpNetFields = qfalse;
 		}
 		
 		if ( !lc )
@@ -903,6 +993,7 @@ void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t 
 				MSG_WriteBit0(msg);
 			}
 		} else {
+			
 			if ( bChangeBit )
 			{
 				MSG_WriteBit1(msg);
@@ -911,10 +1002,22 @@ void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t 
 			MSG_WriteBit0(msg);
 			MSG_WriteBit1(msg);
 			MSG_WriteByte(msg, lc);
+			
 			field = stateFieldsPointer;
 			for ( i = 0; i < lc; i++, field++ )
 			{
-				MSG_WriteDeltaField(msg, (byte *)from, (byte *)to, field);
+				/* new code start: playFxOnTagForPlayer */
+				if ( numFields == 0x3b && ( i == 21 || i == 22 || i == 23 || i == 25 ) ) // entityStateFields
+				{
+					toF = ( int * )( (byte *)to + field->offset );
+					if ( *toF == EV_PLAY_FX_ON_TAG && clientNum != attackerEntityNum - 1 && spectatorClientNum != attackerEntityNum - 1 )
+					{
+						*toF = EV_NONE;
+					}
+				}
+				/* new code end */
+                
+				custom_MSG_WriteDeltaField(msg, (byte *)from, (byte *)to, field);
 			}
 		}
 	}
@@ -929,19 +1032,12 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 	netField_t *field;
 	float fullFloat;
 	int trunc;
-	int local_271c;
-	sbyte local_2714;
-	int local_2710;
-	int local_270c;
-	uint bits;
+	int32_t absbits;
+	uint8_t abs3bits;
+	int32_t absto;
 	int clipbits;
 	int ammobits[7];
 	int statsbits;
-
-	/*if ( g_debugEvents->boolean )
-	{
-		Com_DPrintf("MSG_WriteDeltaPlayerstate() for client %d\n",to->clientNum);
-	}*/
 
 	if ( !from )
 	{
@@ -954,7 +1050,9 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 	{
 		fromF = ( int * )( (byte *)from + field->offset );
 		toF = ( int * )( (byte *)to + field->offset );
-		if ( *fromF != *toF ) {
+		
+		if ( *fromF != *toF )
+		{
 			lc = i + 1;
 		}
 	}
@@ -988,7 +1086,8 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 					MSG_WriteLong(msg, *toF);
 				}
 			} else {
-				if (field->bits == -100) {
+				if ( field->bits == -100 )
+				{
 					if ( *toF == 0 )
 					{
 						MSG_WriteBit0(msg);
@@ -997,33 +1096,31 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 						MSG_WriteAngle16(msg, *(float *)toF);
 					}
 				} else {
-					local_270c = *toF;
-					local_271c = field->bits;
-					if (local_271c < 0)
+					absto = *toF;
+					absbits = field->bits;
+					if ( absbits < 0 )
 					{
-						local_271c = -local_271c;
+						absbits *= -1;
 					}
-					local_2710 = local_271c;
-					bits = local_271c & 7;
-					if ( bits )
+					abs3bits = absbits & 7;
+					if ( abs3bits )
 					{
-						MSG_WriteBits(msg, local_270c,bits);
-						local_2710 = local_271c - bits;
-						local_2714 = (sbyte)bits;
-						local_270c = local_270c >> local_2714;
+						MSG_WriteBits(msg, absto, abs3bits);
+						absbits -= abs3bits;
+						absto >>= abs3bits;
 					}
-					while ( local_2710 )
+					while( absbits )
 					{
-						MSG_WriteByte(msg, (char)local_270c);
-						local_270c = local_270c >> 8;
-						local_2710 = local_2710 + -8;
+						MSG_WriteByte(msg, absto);
+						absto >>= 8;
+						absbits -= 8;
 					}
 				}
 			}
 		}
 	}
 	
-	// Stats
+	// stats
 	statsbits = 0;
 	i = 0;
 	while ( i < 6 )
@@ -1034,32 +1131,39 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 		}
 		i++;
 	}
-	if ( !statsbits ) {
+	if ( !statsbits )
+	{
 		MSG_WriteBit0(msg);
 	} else {
 		MSG_WriteBit1(msg);
 		MSG_WriteBits(msg, statsbits, 6);
-		if ( statsbits & 1U ) {
+		if ( statsbits & 1U )
+		{
 			MSG_WriteShort(msg, to->stats[0]);
 		}
-		if ( statsbits & 2U ) {
+		if ( statsbits & 2U )
+		{
 			MSG_WriteShort(msg, to->stats[1]);
 		}
-		if ( statsbits & 4U ) {
+		if ( statsbits & 4U )
+		{
 			MSG_WriteShort(msg, to->stats[2]);
 		}
-		if ( statsbits & 8U ) {
+		if ( statsbits & 8U )
+		{
 			MSG_WriteBits(msg, to->stats[3],6);
 		}
-		if ( statsbits & 0x10U ) {
+		if ( statsbits & 0x10U )
+		{
 			MSG_WriteShort(msg, to->stats[4]);
 		}
-		if ( statsbits & 0x20U ) {
+		if ( statsbits & 0x20U )
+		{
 			MSG_WriteByte(msg, (char)to->stats[5]);
 		}
 	}
 	
-	// Ammo
+	// ammo
 	j = 0;
 	while ( j < 4 )
 	{
@@ -1103,7 +1207,7 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 		}
 	}
 	
-	// Clipammo
+	// clipammo
 	j = 0;
 	while ( j < 4 )
 	{
@@ -1111,7 +1215,8 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 		i = 0;
 		while ( i < 0x10 )
 		{
-			if ( to->ammoclip[j * 0x10 + i] != from->ammoclip[j * 0x10 + i] ) {
+			if ( to->ammoclip[j * 0x10 + i] != from->ammoclip[j * 0x10 + i] )
+			{
 				clipbits = clipbits | 1 << ((byte)i & 0x1f);
 			}
 			i++;
@@ -1135,7 +1240,7 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 		j++;
 	}
 
-	// Objectives
+	// objectives
 	if ( !memcmp(from->objective, to->objective, sizeof(from->objective)) )
 	{
 		MSG_WriteBit0(msg);
@@ -1150,7 +1255,7 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 		}
 	}
 	
-	// Huds
+	// huds
 	if ( !memcmp(&from->hud, &to->hud, sizeof(from->hud)) )
 	{
 		MSG_WriteBit0(msg);
@@ -1171,25 +1276,23 @@ void custom_MSG_WriteDeltaClient(msg_t *msg, clientState_t *from, clientState_t 
 		memset(&nullstate, 0, sizeof(nullstate));
 	}
 
-	custom_MSG_WriteDeltaStruct(msg, (entityState_t *)from, (entityState_t *)to, force, 0x16, 6, &clientStateFields, 1);
+	custom_MSG_WriteDeltaStruct(msg, (entityState_t *)from, (entityState_t *)to, force, 0x16, 6, &clientStateFields, 1, -1, -1);
 }
 
-void custom_MSG_WriteDeltaArchivedEntity(msg_t *msg, entityState_t *from, entityState_t *to, int force)
+void custom_MSG_WriteDeltaArchivedEntity(msg_t *msg, archivedEntity_s *from, archivedEntity_s *to, int force)
 {
-	custom_MSG_WriteDeltaStruct(msg, from, to, force, 0x44, 10, &archivedEntityFields, 0);
+	custom_MSG_WriteDeltaStruct(msg, (entityState_t *)from, (entityState_t *)to, force, 0x44, 10, &archivedEntityFields, 0, -1, -1);
 }
 
 void custom_MSG_WriteDeltaEntity(msg_t *msg, entityState_t *from, entityState_t *to, qboolean force, int clientNum)
 {
 	qboolean disable = qfalse;
 	client_t *client = &svs.clients[clientNum];
-	int spectatorClientNum;
+	int spectatorClientNum = -1;
 	
 	if ( client->gentity && client->gentity->client )
 	{
 		spectatorClientNum = client->gentity->client->spectatorClient;
-	} else {
-		spectatorClientNum = -1;
 	}
 
 	if ( to )
@@ -1240,7 +1343,7 @@ void custom_MSG_WriteDeltaEntity(msg_t *msg, entityState_t *from, entityState_t 
 		to->eType = EV_NONE;
 	}
 
-	custom_MSG_WriteDeltaStruct(msg, from, to, force, 0x3b, 10, &entityStateFields, 0);
+	custom_MSG_WriteDeltaStruct(msg, from, to, force, 0x3b, 10, &entityStateFields, 0, clientNum, spectatorClientNum);
 }
 
 void custom_SV_EmitPacketEntities(int client, int from_num_entities, int from_first_entity, int num_entities, int first_entity, msg_t *msg)
@@ -1416,7 +1519,8 @@ void custom_SV_WriteSnapshotToClient(client_t *client, msg_t *msg)
 	}
 }
 
-void custom_SV_SendClientGameState(client_t *client) {
+void custom_SV_SendClientGameState(client_t *client)
+{
 	int				start;
 	entityState_t	*base, nullstate;
 	msg_t			msg;
@@ -1437,7 +1541,7 @@ void custom_SV_SendClientGameState(client_t *client) {
 	client->pureAuthentic = 0;
 	client->gamestateMessageNum = client->netchan.outgoingSequence;
 	
-	/* New code start */
+	/* new code start */
 	player_no_pickup[client - svs.clients] = 0;
 	player_no_earthquakes[client - svs.clients] = 0;
 	player_g_speed[client - svs.clients] = 0;
@@ -1455,7 +1559,7 @@ void custom_SV_SendClientGameState(client_t *client) {
 	bot_forwardmove[client - svs.clients] = 0;
 	bot_rightmove[client - svs.clients] = 0;
 #endif
-	/* New code end */
+	/* new code end */
 	
 	MSG_Init(&msg, data, MAX_MSGLEN);
 	MSG_WriteLong(&msg, client->lastClientCommand);
@@ -1464,7 +1568,8 @@ void custom_SV_SendClientGameState(client_t *client) {
 	MSG_WriteLong(&msg, client->reliableSequence);
 	for ( start = 0; start < MAX_CONFIGSTRINGS; start++ )
 	{
-		if ( sv.configstrings[start][0] ) {
+		if ( sv.configstrings[start][0] )
+		{
 			MSG_WriteByte(&msg, svc_configstring);
 			MSG_WriteShort(&msg, start);
 			MSG_WriteBigString(&msg, sv.configstrings[start]);
@@ -1500,25 +1605,30 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 	int iwdFile;
 	char errorMessage[COD2_MAX_STRINGLENGTH];
 
-	if (cl->state == CS_ACTIVE) {
+	if (cl->state == CS_ACTIVE)
+	{
 		//Com_DPrintf("clientDownload: Client already in game, name = '%s'\n", cl->downloadName);
 		return;
 	}
-	if (!*cl->downloadName) {
+	if (!*cl->downloadName)
+	{
 		// Com_DPrintf("clientDownload: Nothing being downloaded\n");
 		return;
 	}
-	if (strlen(cl->downloadName) < 4) {
+	if (strlen(cl->downloadName) < 4)
+	{
 		// Com_DPrintf("clientDownload: File length too short\n");
 		return;
 	}
-	if (strcmp(&cl->downloadName[strlen(cl->downloadName) - 4], ".iwd") != 0) {
+	if (strcmp(&cl->downloadName[strlen(cl->downloadName) - 4], ".iwd") != 0)
+	{
 		// Com_DPrintf("clientDownload: Not a iwd file\n");
 		return;
 	}
 
 #if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
-	if ( cl->wwwDlAck ) {
+	if ( cl->wwwDlAck )
+	{
 		// Com_DPrintf("clientDownload: wwwDl acknowleged\n");
 		return;
 	}
@@ -2605,7 +2715,8 @@ void Scr_CodeCallback_Error(qboolean terminal, qboolean emit, const char * inter
 {
 	if ( codecallback_error && Scr_IsSystemActive() )
 	{
-		if ( terminal || emit ) {
+		if ( terminal || emit )
+		{
 			stackPushString(message);
 			stackPushString(internal_function);
 			stackPushInt(terminal);
@@ -2619,7 +2730,6 @@ void Scr_CodeCallback_Error(qboolean terminal, qboolean emit, const char * inter
 			// with a segmentation fault
 			if ( scr_errors_index < ( MAX_ERROR_BUFFER - 1 ) )
 			{
-				scr_errors[scr_errors_index].time = svs.time;
 				strncpy(scr_errors[scr_errors_index].internal_function, internal_function, sizeof(scr_errors[scr_errors_index].internal_function));
 				strncpy(scr_errors[scr_errors_index].message, message, sizeof(scr_errors[scr_errors_index].message));
 				scr_errors_index++;
@@ -2707,13 +2817,13 @@ void custom_Scr_Error(void)
 	custom_Com_Error(1, "\x15%s", scrVarPub.error_message);
 }
 
-void custom_RuntimeError_Debug(int channel, char *pos, int param_3, char *message)
+void custom_RuntimeError_Debug(int channel, char *pos, int index, char *message)
 {
 	int i, j;
 
 	Scr_CodeCallback_Error(qfalse, qfalse, "RuntimeError_Debug", message);
 	Com_PrintMessage(channel, custom_va("\n******* script runtime error *******\n%s: ", message));
-	custom_Scr_PrintPrevCodePos(channel, pos, param_3);
+	custom_Scr_PrintPrevCodePos(channel, pos, index);
 	i = scrVmPub.function_count;
 	if ( scrVmPub.function_count )
 	{
@@ -2729,7 +2839,7 @@ void custom_RuntimeError_Debug(int channel, char *pos, int param_3, char *messag
 	Com_PrintMessage(channel, "************************************\n");
 }
 
-void custom_RuntimeError(char *pos, int param_2, char *message, char *param_4)
+void custom_RuntimeError(char *pos, int index, char *message, char *param_4)
 {
 	int channel_1, channel_2;
 	char *local_14;
@@ -2751,7 +2861,7 @@ void custom_RuntimeError(char *pos, int param_2, char *message, char *param_4)
 			} else {
 				channel_2 = 4;
 			}
-			custom_RuntimeError_Debug(channel_2, pos, param_2, message);
+			custom_RuntimeError_Debug(channel_2, pos, index, message);
 			if ( !terminate )
 			{
 				return;
@@ -2862,7 +2972,7 @@ LAB_0809b5f4:
 				MSG_WriteLong(&msg, svs.time);
 				
 				nextCachedSnapFrames = svs.nextCachedSnapshotFrames;
-				if (svs.nextCachedSnapshotFrames < 0)
+				if ( svs.nextCachedSnapshotFrames < 0 )
 				{
 					nextCachedSnapFrames = svs.nextCachedSnapshotFrames + 0x1ff;
 				}
@@ -2880,7 +2990,7 @@ LAB_0809b5f4:
 					if ( CS_ZOMBIE < client->state )
 					{
 						nextCachedSnapClients = svs.nextCachedSnapshotClients;
-						if (svs.nextCachedSnapshotClients < 0)
+						if ( svs.nextCachedSnapshotClients < 0 )
 						{
 							nextCachedSnapClients = svs.nextCachedSnapshotClients + 0xfff;
 						}
@@ -2888,7 +2998,7 @@ LAB_0809b5f4:
 						cachedClient2 = cachedClient1;
 						
 						memcpy(&cachedClient1->cs, G_GetClientState(m), 0x5c);
-						MSG_WriteDeltaClient(&msg, NULL, &cachedClient2->cs, 1);
+						custom_MSG_WriteDeltaClient(&msg, NULL, &cachedClient2->cs, 1);
 						cachedClient1 = cachedClient2;
 						i = GetFollowPlayerState(m, &cachedClient2->ps);
 						cachedClient1->playerStateExists = i;
@@ -2898,7 +3008,7 @@ LAB_0809b5f4:
 							MSG_WriteBit0(&msg);
 						} else {
 							MSG_WriteBit1(&msg);
-							MSG_WriteDeltaPlayerstate(&msg, NULL, &cachedClient2->ps);
+							custom_MSG_WriteDeltaPlayerstate(&msg, NULL, &cachedClient2->ps);
 						}
 						i = svs.nextCachedSnapshotClients;
 						svs.nextCachedSnapshotClients++;
@@ -2933,7 +3043,7 @@ LAB_0809b5f4:
 						VectorCopy(gent->r.absmin, archEnt->r.absmin);
 						VectorCopy(gent->r.absmax, archEnt->r.absmax);
 						
-						/* New code start */
+						/* new code start: setEarthquakes */
 						if ( (archEnt->s.eType - 10) == EV_EARTHQUAKE )
 						{
 							for ( l = 0; l < sv_maxclients->integer; l++ )
@@ -2949,9 +3059,9 @@ LAB_0809b5f4:
 								}
 							}
 						}
-						/* New code end */
+						/* new code end */
 						
-						MSG_WriteDeltaArchivedEntity(&msg, &sv.svEntities[gent->s.number].baseline, archEnt, 1);
+						custom_MSG_WriteDeltaArchivedEntity(&msg, &sv.svEntities[gent->s.number].baseline, archEnt, 1);
 						i = svs.nextCachedSnapshotEntities;
 						svs.nextCachedSnapshotEntities++;
 						if ( i != 0x7ffffffc && 0x7ffffffc < svs.nextCachedSnapshotEntities ) 
@@ -2962,7 +3072,7 @@ LAB_0809b5f4:
 					}
 				}
 				svs.nextCachedSnapshotFrames++;
-				if (i != 0x7ffffffc && 0x7ffffffc < svs.nextCachedSnapshotFrames)
+				if ( i != 0x7ffffffc && 0x7ffffffc < svs.nextCachedSnapshotFrames )
 				{
 					custom_Com_Error(0, "\x15svs.nextCachedSnapshotFrames wrapped");
 				}
@@ -2973,7 +3083,8 @@ LAB_0809b5f4:
 				cachedClient2 = NULL;
 				clientNum = 0;
 				j = 0;
-				while ( clientNum < sv_maxclients->integer || j < cachedFrame->num_clients ) {
+				while ( clientNum < sv_maxclients->integer || j < cachedFrame->num_clients )
+				{
 					if ( clientNum < sv_maxclients->integer && svs.clients[clientNum].state < CS_CONNECTED )
 					{
 						clientNum++;
@@ -2993,7 +3104,7 @@ LAB_0809b5f4:
 						}
 						if ( clientNum == x )
 						{
-							MSG_WriteDeltaClient(&msg, &cachedClient2->cs, G_GetClientState(clientNum), 1);
+							custom_MSG_WriteDeltaClient(&msg, &cachedClient2->cs, G_GetClientState(clientNum), 1);
 							i = GetFollowPlayerState(clientNum, &ps);
 							if ( !i )
 							{
@@ -3005,7 +3116,7 @@ LAB_0809b5f4:
 							j++;
 							clientNum++;
 						} else if ( clientNum < x ) {
-							MSG_WriteDeltaClient(&msg, NULL, G_GetClientState(clientNum), 1);
+							custom_MSG_WriteDeltaClient(&msg, NULL, G_GetClientState(clientNum), 1);
 							i = GetFollowPlayerState(clientNum, &ps);
 							if ( !i )
 							{
@@ -3038,7 +3149,7 @@ LAB_0809b5f4:
 						VectorCopy(gent->r.absmin, to.r.absmin);
 						VectorCopy(gent->r.absmax, to.r.absmax);
 						
-						/* New code start */
+						/* new code start: setEarthquakes */
 						if ( (to.s.eType - 10) == EV_EARTHQUAKE )
 						{
 							for ( l = 0; l < sv_maxclients->integer; l++ )
@@ -3054,9 +3165,9 @@ LAB_0809b5f4:
 								}
 							}
 						}
-						/* New code end */
+						/* new code end */
 						
-						MSG_WriteDeltaArchivedEntity(&msg, &sv.svEntities[gent->s.number].baseline, &to, 1);
+						custom_MSG_WriteDeltaArchivedEntity(&msg, &sv.svEntities[gent->s.number].baseline, &to, 1);
 					}
 				}
 			}
@@ -3067,7 +3178,7 @@ LAB_0809b5f4:
 				archSnap->start = svs.nextArchivedSnapshotBuffer;
 				archSnap->size = msg.cursize;
 				nextArchSnapBuffer = svs.nextArchivedSnapshotBuffer;
-				if (svs.nextArchivedSnapshotBuffer < 0)
+				if ( svs.nextArchivedSnapshotBuffer < 0 )
 				{
 					nextArchSnapBuffer = svs.nextArchivedSnapshotBuffer + 0x1ffffff;
 				}
@@ -3219,7 +3330,7 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 						entState->time2 += snapTime;
 					}
 					
-					/* New code start */
+					/* new code start: setEarthquakes */
 					if ( (aent->s.eType - 10) == EV_EARTHQUAKE )
 					{
 						if ( clientNum > 31 )
@@ -3235,7 +3346,7 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 							}
 						}
 					}
-					/* New code end */
+					/* new code end */
 					
 					svs.nextSnapshotEntities++;
 					if ( svs.nextSnapshotEntities >= 0x7ffffffe )
@@ -3256,7 +3367,8 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 					clientState = &svs.snapshotClients[svs.nextSnapshotClients % svs.numSnapshotClients];
 					*clientState = cachedClient->cs;
 					svs.nextSnapshotClients++;
-					if ( svs.nextSnapshotClients >= 0x7ffffffe ) {
+					if ( svs.nextSnapshotClients >= 0x7ffffffe )
+					{
 						custom_Com_Error(0, "\x15svs.nextSnapshotClients wrapped");
 					}
 					frame->num_clients++;
@@ -3270,24 +3382,29 @@ bool custom_CM_IsBadStaticModel(cStaticModel_t *model, char *src, float *origin,
 {
 	XModel_t *xmodel;
 
-	if ( src == NULL || *src == '\0' ) {
+	if ( src == NULL || *src == '\0' )
+	{
 		custom_Com_Error(1, "\x15Invalid static model name\n");
 	}
 	
-	if ( (*scale)[0] == 0.0 ) {
+	if ( (*scale)[0] == 0.0 )
+	{
 		custom_Com_Error(1, "\x15Static model [%s] has x scale of 0.0\n", src);
 	}
 	
-	if ( (*scale)[1] == 0.0 ) {
+	if ( (*scale)[1] == 0.0 )
+	{
 		custom_Com_Error(1, "\x15Static model [%s] has y scale of 0.0\n", src);
 	}
 	
-	if ( (*scale)[2] == 0.0 ) {
+	if ( (*scale)[2] == 0.0 )
+	{
 		custom_Com_Error(1, "\x15Static model [%s] has z scale of 0.0\n", src);
 	}
 	
 	xmodel = CM_XModelPrecache(src);
-	if ( xmodel != NULL ) {
+	if ( xmodel != NULL )
+	{
 		model->xmodel = xmodel;
 		// On the server side, scale is only used for trace functions (see model->invScaledAxis)
 		// The entity axis scale values are not synced to the players
@@ -3513,8 +3630,6 @@ public:
 		cracking_hook_function(0x0811F232, (int)custom_G_AddEvent);
 		cracking_hook_function(0x080EBF24, (int)hook_BG_IsWeaponValid);
 		cracking_hook_function(0x080DFC78, (int)custom_BG_AddPredictableEventToPlayerstate);
-		cracking_hook_function(0x080696BC, (int)custom_MSG_WriteDeltaStruct);
-		cracking_hook_function(0x0806A200, (int)custom_MSG_WriteDeltaPlayerstate);
 		cracking_hook_function(0x080985C8, (int)custom_SV_WriteSnapshotToClient);
 		cracking_hook_function(0x0808F302, (int)custom_SV_SendClientGameState);
 		cracking_hook_function(0x0808F02E, (int)custom_SV_DropClient);
