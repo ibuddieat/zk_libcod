@@ -1093,7 +1093,7 @@ void gsc_player_set_earthquakes(scr_entref_t id)
 	stackPushBool(qtrue);
 }
 
-void gsc_utils_playfxforplayer(scr_entref_t id)
+void gsc_player_playfxforplayer(scr_entref_t id)
 {
 	int args;
 	qboolean error;
@@ -1180,7 +1180,7 @@ void gsc_utils_playfxforplayer(scr_entref_t id)
 	stackPushBool(qtrue);
 }
 
-void gsc_utils_playfxontagforplayer(scr_entref_t id)
+void gsc_player_playfxontagforplayer(scr_entref_t id)
 {
 	int argc;
 	int index;
@@ -1225,6 +1225,26 @@ void gsc_utils_playfxontagforplayer(scr_entref_t id)
     G_AddEvent(ent, EV_PLAY_FX_ON_TAG, G_FindConfigstringIndex(custom_va("%02d%s", index, tag_name), 0x38e, 0x100, 1, NULL));
 
 	stackPushBool(qtrue);
+}
+
+void gsc_player_getclienthudelemcount(scr_entref_t id)
+{
+	if (id >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_getclienthudelemcount() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+    int count = 0;
+    game_hudelem_t *g_hudelem = &g_hudelems;
+    for ( int i = 0; i < 0x400; i++, g_hudelem++ )
+    {
+        if ( ( g_hudelem->elem.type != HE_TYPE_FREE ) && ( g_hudelem->clientNum == id ) )
+            count++;
+    }
+    
+	stackPushInt(count);
 }
 
 #endif

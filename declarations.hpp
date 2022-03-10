@@ -942,8 +942,16 @@ typedef struct hudelem_s
 	float value;
 	int text;
 	float sort;
-	hudelem_color_t glowColor;
+	hudelem_color_t foreground;
 } hudelem_t; // verified
+
+typedef struct game_hudelem_s
+{
+	hudelem_t elem;
+	int clientNum;
+	int team;
+	int archived;
+} game_hudelem_t;
 
 typedef struct hudElemState_s
 {
@@ -2182,7 +2190,7 @@ typedef struct
 	short pickup_health;
 } stringIndex_t;
 
-struct bgs_s
+typedef struct bgs_s
 {
 	byte animScriptData[0xB3BC8u];
 	int multiplayer;
@@ -2198,7 +2206,7 @@ struct bgs_s
 	u_int16_t (*AttachWeapon)(struct DObjModel_s *, u_int16_t, struct clientInfo_t *);
 	struct DObj_s *(*GetDObj)(int, int);
 	void *(*AllocXAnim)(int);
-};
+} bgs_t;
 
 typedef struct
 {
@@ -2722,6 +2730,14 @@ static const int bgs_offset = 0x0860B420;
 #endif
 
 #if COD_VERSION == COD2_1_0
+static const int level_bgs_offset = 0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const int level_bgs_offset = 0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const int level_bgs_offset = 0x0864F9C0;
+#endif
+
+#if COD_VERSION == COD2_1_0
 static const int cm_offset = 0x08185BE0;
 #elif COD_VERSION == COD2_1_2
 static const int cm_offset = 0x08187D40;
@@ -2793,6 +2809,14 @@ static const int testclient_connect_string_offset = 0x0;  // Not tested
 static const int testclient_connect_string_offset = 0x0814ab20;
 #endif
 
+#if COD_VERSION == COD2_1_0
+static const int g_hudelems_offset = 0x0;  // Not tested
+#elif COD_VERSION == COD2_1_2
+static const int g_hudelems_offset = 0x0;  // Not tested
+#elif COD_VERSION == COD2_1_3
+static const int g_hudelems_offset = 0x08628F80;
+#endif
+
 #define scrVarPub (*((scrVarPub_t*)( varpub_offset )))
 #define scrVmPub (*((scrVmPub_t*)( vmpub_offset )))
 #define scrVarGlob (((VariableValueInternal*)( varglob_offset )))
@@ -2805,7 +2829,8 @@ static const int testclient_connect_string_offset = 0x0814ab20;
 #define svs (*((serverStatic_t*)( svs_offset )))
 #define level (*((level_locals_t*)( level_offset )))
 #define scr_const (*((stringIndex_t*)( const_offset )))
-#define level_bgs (*((bgs_s*)( bgs_offset )))
+#define bgs (*((bgs_t**)( bgs_offset )))
+#define level_bgs (*((bgs_t*)( level_bgs_offset )))
 #define cm (*((clipMap_t*)( cm_offset )))
 #define comBspGlob (*((comBspGlob_t*)( bspglob_offset )))
 #define playerStateFields (*((netField_t*)( playerStateFields_offset )))
@@ -2814,6 +2839,7 @@ static const int testclient_connect_string_offset = 0x0814ab20;
 #define clientStateFields (*((netField_t*)( clientStateFields_offset )))
 #define archivedEntityFields (*((netField_t*)( archivedEntityFields_offset )))
 #define bg_itemlist (*((gitem_t*)( bg_itemlist_offset )))
+#define g_hudelems (*((game_hudelem_t*)( g_hudelems_offset )))
 
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6
