@@ -35,5 +35,7 @@ void gsc_weapons_getweapondisplayname();
 void gsc_weapons_resetignoredweapons();
 void gsc_weapons_ignoreweapon();
 void gsc_weapons_setdefaultweapon();
+void gsc_weapons_getweaponitemammo(scr_entref_t id);
+void gsc_weapons_setweaponitemammo(scr_entref_t id);
 
 #endif

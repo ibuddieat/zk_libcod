@@ -383,6 +383,11 @@ scr_method_t scriptMethods[] =
 	{"getclienthudelemcount", gsc_player_getclienthudelemcount, 0},
 #endif
 
+#if COMPILE_WEAPONS == 1
+	{"getweaponitemammo", gsc_weapons_getweaponitemammo, 0},
+	{"setweaponitemammo", gsc_weapons_setweaponitemammo, 0},
+#endif
+
 #ifdef EXTRA_METHODS_INC
 #include "extra/methods.hpp"
 #endif
