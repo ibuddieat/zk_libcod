@@ -1956,6 +1956,30 @@ typedef enum
 
 typedef enum
 {
+    ANIM_ET_PAIN = 0x0,
+    ANIM_ET_DEATH = 0x1,
+    ANIM_ET_FIREWEAPON = 0x2,
+    ANIM_ET_JUMP = 0x3,
+    ANIM_ET_JUMPBK = 0x4,
+    ANIM_ET_LAND = 0x5,
+    ANIM_ET_DROPWEAPON = 0x6,
+    ANIM_ET_RAISEWEAPON = 0x7,
+    ANIM_ET_CLIMB_MOUNT = 0x8,      // no anim loaded
+    ANIM_ET_CLIMB_DISMOUNT = 0x9,   // no anim loaded
+    ANIM_ET_RELOAD = 0xA,
+    ANIM_ET_CROUCH_TO_PRONE = 0xB,
+    ANIM_ET_PRONE_TO_CROUCH = 0xC,
+    ANIM_ET_STAND_TO_CROUCH = 0xD,
+    ANIM_ET_CROUCH_TO_STAND = 0xE,
+    ANIM_ET_STAND_TO_PRONE = 0xF,   // no anim loaded
+    ANIM_ET_PRONE_TO_STAND = 0x10,
+    ANIM_ET_MELEEATTACK = 0x11,
+    ANIM_ET_SHELLSHOCK = 0x12,
+    NUM_ANIM_EVENTTYPES = 0x13
+} scriptAnimEventTypes_t;
+
+typedef enum
+{
 	IT_BAD,
 	IT_WEAPON,
 	IT_AMMO,

@@ -32,6 +32,7 @@ List of high-level changes provided by this repository:
   * `<player> playFxOnTagForPlayer(<effect id>, <entity>, <tag name>)`
   * `<player> setEarthquakes("on|off|toggle")`
   * `<player> getClientHudElemCount()`
+  * `<player> runScriptAnimation()`
   * `<weapon> getWeaponItemAmmo()`
   * `<weapon> setWeaponItemAmmo(<value>)`
   * `getWeaponFuseTime(<weapon name>)`

@@ -741,6 +741,15 @@ static const runtimeError_t runtimeError = (runtimeError_t)0x08078710;
 static const runtimeError_t runtimeError = (runtimeError_t)0x080787DC;
 #endif
 
+typedef int (*BG_AnimScriptEvent_t)(playerState_t *ps, scriptAnimEventTypes_t event, int isContinue, int force);
+#if COD_VERSION == COD2_1_0
+static const BG_AnimScriptEvent_t BG_AnimScriptEvent = (BG_AnimScriptEvent_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const BG_AnimScriptEvent_t BG_AnimScriptEvent = (BG_AnimScriptEvent_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const BG_AnimScriptEvent_t BG_AnimScriptEvent = (BG_AnimScriptEvent_t)0x080D96EE;
+#endif
+
 typedef int (*BG_AnimationIndexForString_t)(char *src);
 #if COD_VERSION == COD2_1_0
 static const BG_AnimationIndexForString_t BG_AnimationIndexForString = (BG_AnimationIndexForString_t)0x080D46AC;

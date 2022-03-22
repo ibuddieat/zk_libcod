@@ -1247,4 +1247,35 @@ void gsc_player_getclienthudelemcount(scr_entref_t id)
 	stackPushInt(count);
 }
 
+void gsc_player_runscriptanimation(scr_entref_t id)
+{
+	int scriptAnimEventType;
+    int isContinue;
+    int force;
+
+	if ( ! stackGetParams("iii", &scriptAnimEventType, &isContinue, &force))
+	{
+		stackError("gsc_player_runscriptanimation() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if (id >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_runscriptanimation() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( scriptAnimEventType < 0 || scriptAnimEventType >= NUM_ANIM_EVENTTYPES )
+	{
+		stackError("gsc_player_runscriptanimation() argument is not a valid scriptAnimEventType");
+		stackPushUndefined();
+		return;
+	}
+    
+	client_t *client = &svs.clients[id];
+	stackPushInt(BG_AnimScriptEvent(&client->gentity->client->ps, (scriptAnimEventTypes_t)scriptAnimEventType, isContinue, force));
+}
+
 #endif

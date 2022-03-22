@@ -381,6 +381,7 @@ scr_method_t scriptMethods[] =
 	{"playfxforplayer", gsc_player_playfxforplayer, 0},
 	{"playfxontagforplayer", gsc_player_playfxontagforplayer, 0},
 	{"getclienthudelemcount", gsc_player_getclienthudelemcount, 0},
+	{"runscriptanimation", gsc_player_runscriptanimation, 0},
 #endif
 
 #if COMPILE_WEAPONS == 1
