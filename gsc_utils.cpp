@@ -135,7 +135,7 @@ void gsc_utils_sendgameservercommand()
         "t": (int) openMenu()
         "u": closeMenu()
         "i": (str) chat message (team)
-        "v": (str) vstr exec
+        "v": (str) setClientCvar()
         "w": (str) disconnect message for the player that disconnected
         default: Com_Printf("Unknown client game command: %s\n", cmd);
     }
