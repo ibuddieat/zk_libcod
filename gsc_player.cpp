@@ -1041,13 +1041,20 @@ void gsc_player_noclip(scr_entref_t id)
 	}
 
 	client_t *client = &svs.clients[id];
-	if ( !I_stricmp( noclip, "on" ) || atoi( noclip ) ) {
+
+	if ( !I_stricmp( noclip, "on" ) || atoi( noclip ) )
+	{
 		client->gentity->client->noclip = qtrue;
-	} else if ( !I_stricmp( noclip, "off" ) || !I_stricmp( noclip, "0" ) ) {
+	}
+	else if ( !I_stricmp( noclip, "off" ) || !I_stricmp( noclip, "0" ) )
+	{
 		client->gentity->client->noclip = qfalse;
-	} else {
+	}
+	else
+	{
 		client->gentity->client->noclip = !client->gentity->client->noclip;
 	}
+
 	stackPushBool(qtrue);
 }
 
@@ -1083,14 +1090,21 @@ void gsc_player_set_earthquakes(scr_entref_t id)
 	}
 
 	extern int player_no_earthquakes[MAX_CLIENTS];
-	if ( !I_stricmp( enabled, "on" ) || atoi( enabled ) ) {
+
+	if ( !I_stricmp( enabled, "on" ) || atoi( enabled ) )
+	{
 		player_no_earthquakes[id] = qfalse;
-	} else if ( !I_stricmp( enabled, "off" ) || !I_stricmp( enabled, "0" ) ) {
+	}
+	else if ( !I_stricmp( enabled, "off" ) || !I_stricmp( enabled, "0" ) )
+	{
 		player_no_earthquakes[id] = qtrue;
-	} else {
+	}
+	else
+	{
 		player_no_earthquakes[id] = !player_no_earthquakes[id];
 	}
-	stackPushBool(qtrue);
+
+	stackPushInt(!player_no_earthquakes[id]);
 }
 
 void gsc_player_playfxforplayer(scr_entref_t id)
@@ -1143,21 +1157,26 @@ void gsc_player_playfxforplayer(scr_entref_t id)
 	gentity_t *ent = G_TempEntity(&origin, EV_PLAY_FX);
 	ent->s.eventParm = index & 0xff;
 	ent->s.otherEntityNum = id + 1;
-	
+
 	if ( args == 2 )
 	{
 		ent->s.apos.trBase[0] = -90.0;
-	} else {
+	}
+	else
+	{
 		temp = sqrt((forward_vec[0] * forward_vec[0]) + (forward_vec[1] * forward_vec[1]) + (forward_vec[2] * forward_vec[2]));
 		if ( temp == 0.0 )
 		{
 			Scr_PlayFxError("playFx called with (0 0 0) forward direction", index);
 		}
 		VectorScale(forward_vec, 1.0 / temp, forward_vec);
+
 		if ( args == 3 )
 		{
 			VecToAngles(forward_vec, ent->s.apos.trBase);
-		} else {
+		}
+		else
+		{
 			temp = sqrt((up_vec[0] * up_vec[0]) + (up_vec[1] * up_vec[1]) + (up_vec[2] * up_vec[2]));
 			if ( temp == 0.0 )
 			{
@@ -1165,18 +1184,21 @@ void gsc_player_playfxforplayer(scr_entref_t id)
 			}
 			VectorScale(up_vec, 1.0 / temp, up_vec);
 			Vec3Cross(up_vec, forward_vec, cross);
-			
+
 			temp = sqrt((cross[0] * cross[0]) + (cross[1] * cross[1]) + (cross[2] * cross[2]));
 			if ( temp < 0.001 )
 			{
 				Scr_PlayFxError("playFx called an up direction 0 or 180 degrees from forward", index);
-			} else if ( temp < 0.999 ) {
+			}
+			else if ( temp < 0.999 )
+			{
 				VectorScale(cross, 1.0 / temp, cross);
 				Vec3Cross(forward_vec, cross, up_vec);
 			}
 			AxisToAngles(forward_vec, ent->s.apos.trBase);
 		}
 	}
+
 	stackPushBool(qtrue);
 }
 
@@ -1184,9 +1206,9 @@ void gsc_player_playfxontagforplayer(scr_entref_t id)
 {
 	int argc;
 	int index;
-    gentity_t *ent;
-    unsigned int tag_id;
-    char *tag_name;
+	gentity_t *ent;
+	unsigned int tag_id;
+	char *tag_name;
 
 	if (id >= MAX_CLIENTS)
 	{
@@ -1194,35 +1216,40 @@ void gsc_player_playfxontagforplayer(scr_entref_t id)
 		stackPushUndefined();
 		return;
 	}
-    
-    argc = Scr_GetNumParam();
-    if ( argc != 3 )
-    {
-        Scr_Error("USAGE: playFxOnTagForPlayer <effect id from loadFx> <entity> <tag name>");
-    }
-    index = Scr_GetInt(0);
-    if ( index < 1 || 0x3f < index )
-    {
-        Scr_ParamError(0, custom_va("effect id %i is invalid\n", index));
-    }
-    ent = Scr_GetEntityByRef(1);
-    if ( ent->model == 0 )
-    {
-        Scr_ParamError(1, "cannot play fx on entity with no model");
-    }
-    tag_id = Scr_GetConstLowercaseString(2);
-    tag_name = SL_ConvertToString(tag_id);
-    if ( strchr(tag_name, 0x22) != 0 )
-    {
-        Scr_ParamError(2, "cannot use \" characters in tag names\n");
-    }
-    if ( SV_DObjGetBoneIndex(ent, tag_id) < 0 )
-    {
-        SV_DObjDumpInfo(ent);
-        Scr_ParamError(2, custom_va("tag \'%s\' does not exist on entity with model \'%s\'", tag_name, G_ModelName(ent->model)));
-    }
-    ent->s.attackerEntityNum = 1 + id; // reusing the attackerEntityNum field that is only used for obituary TempEntities
-    G_AddEvent(ent, EV_PLAY_FX_ON_TAG, G_FindConfigstringIndex(custom_va("%02d%s", index, tag_name), 0x38e, 0x100, 1, NULL));
+	
+	argc = Scr_GetNumParam();
+	if ( argc != 3 )
+	{
+		Scr_Error("USAGE: playFxOnTagForPlayer <effect id from loadFx> <entity> <tag name>");
+	}
+
+	index = Scr_GetInt(0);
+	if ( index < 1 || 0x3f < index )
+	{
+		Scr_ParamError(0, custom_va("effect id %i is invalid\n", index));
+	}
+
+	ent = Scr_GetEntityByRef(1);
+	if ( ent->model == 0 )
+	{
+		Scr_ParamError(1, "cannot play fx on entity with no model");
+	}
+
+	tag_id = Scr_GetConstLowercaseString(2);
+	tag_name = SL_ConvertToString(tag_id);
+	if ( strchr(tag_name, 0x22) != 0 )
+	{
+		Scr_ParamError(2, "cannot use \" characters in tag names\n");
+	}
+
+	if ( SV_DObjGetBoneIndex(ent, tag_id) < 0 )
+	{
+		SV_DObjDumpInfo(ent);
+		Scr_ParamError(2, custom_va("tag \'%s\' does not exist on entity with model \'%s\'", tag_name, G_ModelName(ent->model)));
+	}
+
+	ent->s.attackerEntityNum = 1 + id; // reusing the attackerEntityNum field that is only used for obituary TempEntities
+	G_AddEvent(ent, EV_PLAY_FX_ON_TAG, G_FindConfigstringIndex(custom_va("%02d%s", index, tag_name), 0x38e, 0x100, 1, NULL));
 
 	stackPushBool(qtrue);
 }
@@ -1236,22 +1263,22 @@ void gsc_player_getclienthudelemcount(scr_entref_t id)
 		return;
 	}
 
-    int count = 0;
-    game_hudelem_t *g_hudelem = &g_hudelems;
-    for ( int i = 0; i < 0x400; i++, g_hudelem++ )
-    {
-        if ( ( g_hudelem->elem.type != HE_TYPE_FREE ) && ( g_hudelem->clientNum == id ) )
-            count++;
-    }
-    
+	int count = 0;
+	game_hudelem_t *g_hudelem = &g_hudelems;
+	for ( int i = 0; i < 0x400; i++, g_hudelem++ )
+	{
+		if ( ( g_hudelem->elem.type != HE_TYPE_FREE ) && ( g_hudelem->clientNum == id ) )
+			count++;
+	}
+	
 	stackPushInt(count);
 }
 
 void gsc_player_runscriptanimation(scr_entref_t id)
 {
 	int scriptAnimEventType;
-    int isContinue;
-    int force;
+	int isContinue;
+	int force;
 
 	if ( ! stackGetParams("iii", &scriptAnimEventType, &isContinue, &force))
 	{
@@ -1273,9 +1300,62 @@ void gsc_player_runscriptanimation(scr_entref_t id)
 		stackPushUndefined();
 		return;
 	}
-    
+	
 	client_t *client = &svs.clients[id];
 	stackPushInt(BG_AnimScriptEvent(&client->gentity->client->ps, (scriptAnimEventTypes_t)scriptAnimEventType, isContinue, force));
+}
+
+void gsc_player_silent(scr_entref_t id)
+{
+	char *enabled;
+
+	if ( ! stackGetParams("s", &enabled))
+	{
+		stackError("gsc_player_silent() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if (id >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_silent() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	extern int player_silent[MAX_CLIENTS];
+	
+	/*
+	The silenced player can still hear some of his own actions that others cannot hear (e.g., landing sounds, gear rattle sounds, ...).
+	Other players can still hear melee swing & miss sounds if they're close enough.
+	*/
+	if ( !I_stricmp( enabled, "on" ) || atoi( enabled ) )
+	{
+		player_silent[id] = qtrue;
+	}
+	else if ( !I_stricmp( enabled, "off" ) || !I_stricmp( enabled, "0" ) )
+	{
+		player_silent[id] = qfalse;
+	}
+	else
+	{
+		player_silent[id] = !player_silent[id];
+	}
+
+	if ( player_silent[id] )
+	{
+		SV_GameSendServerCommand(id, 0, "v cg_footsteps \"0\"");
+		SV_GameSendServerCommand(id, 0, "v bg_foliagesnd_minspeed \"999\"");
+		SV_GameSendServerCommand(id, 0, "v bg_foliagesnd_maxspeed \"999\"");
+	}
+	else
+	{
+		SV_GameSendServerCommand(id, 0, "v cg_footsteps \"1\"");
+		SV_GameSendServerCommand(id, 0, "v bg_foliagesnd_minspeed \"40\"");
+		SV_GameSendServerCommand(id, 0, "v bg_foliagesnd_maxspeed \"180\"");
+	}
+
+	stackPushInt(player_silent[id]);
 }
 
 #endif

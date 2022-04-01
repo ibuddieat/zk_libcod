@@ -80,6 +80,7 @@ int scr_errors_index = 0;
 
 int player_no_pickup[MAX_CLIENTS] = {0};
 int player_no_earthquakes[MAX_CLIENTS] = {0};
+int player_silent[MAX_CLIENTS] = {0};
 int player_g_speed[MAX_CLIENTS] = {0};
 int player_g_gravity[MAX_CLIENTS] = {0};
 int custom_animation[MAX_CLIENTS] = {0};
@@ -785,15 +786,10 @@ void custom_BG_AddPredictableEventToPlayerstate(int event, int eventParm, player
 		if ( g_debugEvents->boolean )
 			Com_DPrintf("BG_AddPredictableEventToPlayerstate() event %26s for client %2d\n", eventnames[event], ps->clientNum);
 		
-		/*
-		// filter example:
-		// hide footsteps on dirt for player 0 (the player can still hear himself)
-		if (event == EV_FOOTSTEP_RUN_DIRT && ps->clientNum == 0)
-		{
-			Com_DPrintf("BG_AddPredictableEventToPlayerstate() filter event EV_FOOTSTEP_RUN_DIRT for client 0\n", eventnames[event], eventParm, ps->clientNum);
+		/* new code start: silent */
+		if ( ( ( event >= EV_FOOTSTEP_RUN_DEFAULT && event <= EV_FOLIAGE_SOUND ) || event == EV_NOAMMO ) && player_silent[ps->clientNum])
 			return;
-		}
-		*/
+		/* new code end */
 		
 		ps->events[ps->eventSequence & ( MAX_EVENTS - 1 )] = event & 0xff;
 		ps->eventParms[ps->eventSequence & ( MAX_EVENTS - 1 )] = eventParm & 0xff;
@@ -1016,7 +1012,7 @@ void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t 
 					}
 				}
 				/* new code end */
-                
+				
 				custom_MSG_WriteDeltaField(msg, (byte *)from, (byte *)to, field);
 			}
 		}
@@ -1544,6 +1540,7 @@ void custom_SV_SendClientGameState(client_t *client)
 	/* new code start */
 	player_no_pickup[client - svs.clients] = 0;
 	player_no_earthquakes[client - svs.clients] = 0;
+	player_silent[client - svs.clients] = 0;
 	player_g_speed[client - svs.clients] = 0;
 	player_g_gravity[client - svs.clients] = 0;
 	custom_animation[client - svs.clients] = 0;

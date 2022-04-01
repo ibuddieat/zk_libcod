@@ -63,5 +63,6 @@ void gsc_player_playfxforplayer(scr_entref_t id);
 void gsc_player_playfxontagforplayer(scr_entref_t id);
 void gsc_player_getclienthudelemcount(scr_entref_t id);
 void gsc_player_runscriptanimation(scr_entref_t id);
+void gsc_player_silent(scr_entref_t id);
 
 #endif

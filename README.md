@@ -26,13 +26,14 @@ List of high-level changes provided by this repository:
   * `g_notifyPickup` to define whether to use the stock pickup logic or custom notify events
   * `g_debugStaticModels` to print info about static models on map load
 - Added script code functions:
+  * `<player> getClientHudElemCount()`
   * `<player> getInactivityTime()`
   * `<player> noclip("on|off|toggle")`
   * `<player> playFxForPlayer(<effect id>, <position of effect>, [<forward vector>], [<up vector>])`
   * `<player> playFxOnTagForPlayer(<effect id>, <entity>, <tag name>)`
-  * `<player> setEarthquakes("on|off|toggle")`
-  * `<player> getClientHudElemCount()`
   * `<player> runScriptAnimation()`
+  * `<player> setEarthquakes("on|off|toggle")`
+  * `<player> silent("on|off|toggle")`
   * `<weapon> getWeaponItemAmmo()`
   * `<weapon> setWeaponItemAmmo(<value>)`
   * `getWeaponFuseTime(<weapon name>)`
