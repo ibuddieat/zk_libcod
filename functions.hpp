@@ -813,6 +813,42 @@ static const Scr_GetInt_t Scr_GetInt = (Scr_GetInt_t)0x0; // Not tested
 static const Scr_GetInt_t Scr_GetInt = (Scr_GetInt_t)0x08084694;
 #endif
 
+typedef void (*Scr_GetVector_t)(uint param, vec3_t *vec);
+#if COD_VERSION == COD2_1_0
+static const Scr_GetVector_t Scr_GetVector = (Scr_GetVector_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Scr_GetVector_t Scr_GetVector = (Scr_GetVector_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Scr_GetVector_t Scr_GetVector = (Scr_GetVector_t)0x08084D40;
+#endif
+
+typedef const char * (*Scr_GetString_t)(uint param);
+#if COD_VERSION == COD2_1_0
+static const Scr_GetString_t Scr_GetString = (Scr_GetString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Scr_GetString_t Scr_GetString = (Scr_GetString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Scr_GetString_t Scr_GetString = (Scr_GetString_t)0x08084BB2;
+#endif
+
+typedef int (*Scr_GetType_t)(uint param);
+#if COD_VERSION == COD2_1_0
+static const Scr_GetType_t Scr_GetType = (Scr_GetType_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Scr_GetType_t Scr_GetType = (Scr_GetType_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Scr_GetType_t Scr_GetType = (Scr_GetType_t)0x08084FF0;
+#endif
+
+typedef int (*Scr_GetPointerType_t)(uint param);
+#if COD_VERSION == COD2_1_0
+static const Scr_GetPointerType_t Scr_GetPointerType = (Scr_GetPointerType_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Scr_GetPointerType_t Scr_GetPointerType = (Scr_GetPointerType_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Scr_GetPointerType_t Scr_GetPointerType = (Scr_GetPointerType_t)0x08085098;
+#endif
+
 typedef gentity_t * (*Scr_GetEntity_t)(unsigned int index);
 #if COD_VERSION == COD2_1_0
 static const Scr_GetEntity_t Scr_GetEntity = (Scr_GetEntity_t)0x0810E03A;
@@ -1299,6 +1335,24 @@ static const LargeLocalDestructor_t LargeLocalDestructor = (LargeLocalDestructor
 static const LargeLocalDestructor_t LargeLocalDestructor = (LargeLocalDestructor_t)0x080AC5C2;
 #endif
 
+typedef int (*G_GetWeaponIndexForName_t)(const char *name);
+#if COD_VERSION == COD2_1_0
+static const G_GetWeaponIndexForName_t G_GetWeaponIndexForName = (G_GetWeaponIndexForName_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_GetWeaponIndexForName_t G_GetWeaponIndexForName = (G_GetWeaponIndexForName_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_GetWeaponIndexForName_t G_GetWeaponIndexForName = (G_GetWeaponIndexForName_t)0x08120DD0;
+#endif
+
+typedef int (*G_IndexForMeansOfDeath_t)(const char *meansOfDeath);
+#if COD_VERSION == COD2_1_0
+static const G_IndexForMeansOfDeath_t G_IndexForMeansOfDeath = (G_IndexForMeansOfDeath_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_IndexForMeansOfDeath_t G_IndexForMeansOfDeath = (G_IndexForMeansOfDeath_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_IndexForMeansOfDeath_t G_IndexForMeansOfDeath = (G_IndexForMeansOfDeath_t)0x081016FA;
+#endif
+
 typedef clientState_t * (*G_GetClientState_t)(int num);
 #if COD_VERSION == COD2_1_0
 static const G_GetClientState_t G_GetClientState = (G_GetClientState_t)0x0; // Not tested
@@ -1432,6 +1486,15 @@ static const VecToAngles_t VecToAngles = (VecToAngles_t)0x0; // Not tested
 static const VecToAngles_t VecToAngles = (VecToAngles_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const VecToAngles_t VecToAngles = (VecToAngles_t)0x080A4FE2;
+#endif
+
+typedef double (*Vec3DistanceSq_t)(vec3_t *v1, vec3_t *v2);
+#if COD_VERSION == COD2_1_0
+static const Vec3DistanceSq_t Vec3DistanceSq = (Vec3DistanceSq_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Vec3DistanceSq_t Vec3DistanceSq = (Vec3DistanceSq_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Vec3DistanceSq_t Vec3DistanceSq = (Vec3DistanceSq_t)0x080A4116;
 #endif
 
 #endif

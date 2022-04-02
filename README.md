@@ -44,6 +44,7 @@ List of high-level changes provided by this repository:
   * `logPrintConsole(<message>)`
 - Changed script code functions:
   * `<player> get_userinfo()` now returns strings only, instead of string or undefined
+  * `obituary(<victim>, <attacker>, <weapon>, <meansOfDeath>, [<team>], [<origin>], [<max. distance>])`
 - Added script callback functions:
   * `CodeCallback_Error`
   * `CodeCallback_FireButton`
@@ -80,7 +81,7 @@ List of high-level changes provided by this repository:
   * `SV_BuildClientSnapshot`
   * `SV_WriteSnapshotToClient`
   * `Com_Error` et sequentes to be able to pass errors to gsc code
-  * `Scr_Error`
+  * `Scr_ErrorInternal`
   * `RuntimeError_Debug`
   * `RuntimeError`
   * `CM_IsBadStaticModel` for `g_debugStaticModels` (this function name is a guess)
