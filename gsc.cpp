@@ -383,6 +383,7 @@ scr_method_t scriptMethods[] =
 	{"getclienthudelemcount", gsc_player_getclienthudelemcount, 0},
 	{"runscriptanimation", gsc_player_runscriptanimation, 0},
 	{"silent", gsc_player_silent, 0},
+	{"getgroundentity", gsc_player_getgroundentity, 0},
 #endif
 
 #if COMPILE_WEAPONS == 1

@@ -27,6 +27,7 @@ List of high-level changes provided by this repository:
   * `g_debugStaticModels` to print info about static models on map load
 - Added script code functions:
   * `<player> getClientHudElemCount()`
+  * `<player> getGroundEntity()`
   * `<player> getInactivityTime()`
   * `<player> noclip("on|off|toggle")`
   * `<player> playFxForPlayer(<effect id>, <position of effect>, [<forward vector>], [<up vector>])`

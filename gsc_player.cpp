@@ -1358,4 +1358,20 @@ void gsc_player_silent(scr_entref_t id)
 	stackPushInt(player_silent[id]);
 }
 
+void gsc_player_getgroundentity(scr_entref_t id)
+{
+	if (id >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_silent() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	client_t *client = &svs.clients[id];
+	if(client->gentity->client->ps.groundEntityNum == 0x3ff)
+		stackPushUndefined();
+	else
+		stackPushEntity(&g_entities[client->gentity->client->ps.groundEntityNum]);
+}
+
 #endif
