@@ -34,6 +34,8 @@ cvar_t *sv_downloadMessage;
 cvar_t *fs_callbacks;
 cvar_t *sv_fps;
 cvar_t *sv_timeoutMessages;
+cvar_t *sv_botKickMessages;
+cvar_t *sv_kickMessages;
 
 cHook *hook_gametype_scripts;
 cHook *hook_player_collision;
@@ -129,6 +131,8 @@ void hook_sv_init(const char *format, ...)
 	sv_downloadMessage = Cvar_RegisterString("sv_downloadMessage", "", CVAR_ARCHIVE);
 	fs_callbacks = Cvar_RegisterString("fs_callbacks", "", CVAR_ARCHIVE);
 	sv_timeoutMessages = Cvar_RegisterBool("sv_timeoutMessages", qfalse, CVAR_ARCHIVE);
+	sv_botKickMessages = Cvar_RegisterBool("sv_botKickMessages", qfalse, CVAR_ARCHIVE);
+	sv_kickMessages = Cvar_RegisterBool("sv_kickMessages", qfalse, CVAR_ARCHIVE);
 
 	// Force download on clients
 	cl_allowDownload = Cvar_RegisterBool("cl_allowDownload", qtrue, CVAR_ARCHIVE | CVAR_SYSTEMINFO);
@@ -382,13 +386,14 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 	int i, pb_test;
 	challenge_t *challenge;
 	qboolean isBot = qfalse;
+	qboolean showIngameMessage = qtrue;
 	char name[32];
 	
 	Com_DPrintf("SV_DropClient for %s\n", drop->name);
 
 	if ( drop->state == CS_ZOMBIE )
 	{
-		return;	 // already dropped
+		return;	// already dropped
 	}
 	
 	drop->delayDropMsg = 0;
@@ -396,7 +401,7 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 	SV_FreeClient(drop);
 
 	Com_DPrintf("Going to CS_ZOMBIE for %s\n", name);
-	drop->state = CS_ZOMBIE;		// become free in a few seconds
+	drop->state = CS_ZOMBIE; // become free in a few seconds
 
 	if ( drop->netchan.remoteAddress.type == NA_BOT )
 	{
@@ -419,21 +424,37 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 	}
 
 	pb_test = FUN_081384cc(reason);
-	if ( !isBot && I_stricmp(reason, "EXE_DISCONNECTED") != 0 ) // do not show kick message at bots
+
+	if ( isBot && I_stricmp(reason, "EXE_DISCONNECTED") == 0 && !sv_botKickMessages->boolean )
 	{
-		if ( sv_timeoutMessages->boolean || ( !sv_timeoutMessages->boolean && I_stricmp(reason, "EXE_TIMEDOUT") != 0 ) )
+		showIngameMessage = qfalse;
+	}
+
+	if ( !sv_kickMessages->boolean && I_stricmp(reason, "EXE_PLAYERKICKED") == 0 )
+	{
+		// this overrides enabled sv_botKickMessages
+		showIngameMessage = qfalse;
+	}
+
+	if ( !sv_timeoutMessages->boolean && I_stricmp(reason, "EXE_TIMEDOUT") == 0 )
+	{
+		showIngameMessage = qfalse;
+	}
+
+	if ( showIngameMessage )
+	{
+		if ( !pb_test )
 		{
-			if ( !pb_test )
-			{
-				SV_SendServerCommand(0, 0, "e \"\x15%s^7 %s%s\"", name, "", reason);
-			}
-			else
-			{
-				SV_SendServerCommand(0, 0, "e \"\x15%s^7 %s%s\"", name, "\x14", reason);
-			}
+			SV_SendServerCommand(0, 0, "e \"\x15%s^7 %s%s\"", name, "", reason);
+		}
+		else
+		{
+			SV_SendServerCommand(0, 0, "e \"\x15%s^7 %s%s\"", name, "\x14", reason);
 		}
 	}
+
 	Com_Printf("%i:%s %s\n", drop - svs.clients, name, reason);
+
 	SV_SendServerCommand(0, 1, "J %d", drop - svs.clients);
 	if ( !pb_test )
 	{
