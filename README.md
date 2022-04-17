@@ -49,7 +49,6 @@ List of high-level changes provided by this repository:
   * `obituary(<victim>, <attacker>, <weapon>, <meansOfDeath>, [<team>], [<origin>], [<max. distance>])`
 - Added script callback functions:
   * `CodeCallback_Error`
-  * `CodeCallback_FireButton`
   * `CodeCallback_ReloadButton`
   * `CodeCallback_LeanLeftButton`
   * `CodeCallback_LeanRightButton`
@@ -61,8 +60,6 @@ List of high-level changes provided by this repository:
   * `CodeCallback_HoldBreathButton`
   * `CodeCallback_FragButton`
   * `CodeCallback_SmokeButton`
-- Removed script callback functions:
-  * `CodeCallback_AttackButton`
 - Removed libcod cvars:
   * `con_coloredPrints` as it may break incoming rcon commands, thus causing issues with BigBrotherBot
 - Reconstructed functions (see functions with `custom_` prefix in `libcod.cpp`):

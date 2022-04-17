@@ -58,7 +58,7 @@ int codecallback_fire_grenade = 0;
 int codecallback_vid_restart = 0;
 int codecallback_client_spam = 0;
 int codecallback_error = 0;
-int codecallback_firebutton = 0;
+int codecallback_attackbutton = 0;
 int codecallback_meleebutton = 0;
 int codecallback_usebutton = 0;
 int codecallback_reloadbutton = 0;
@@ -220,7 +220,7 @@ int hook_codscript_gametype_scripts()
 	codecallback_vid_restart = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_VidRestart", 0);
 	codecallback_client_spam = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_CLSpam", 0);
 	codecallback_error = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_Error", 0);
-	codecallback_firebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_FireButton", 0);
+	codecallback_attackbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_AttackButton", 0);
 	codecallback_meleebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MeleeButton", 0);
  	codecallback_usebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_UseButton", 0);
  	codecallback_reloadbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_ReloadButton", 0);
@@ -2215,9 +2215,9 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 	
 	if (ucmd->buttons & KEY_MASK_FIRE && !(previousbuttons[clientnum] & KEY_MASK_FIRE))
 	{
-		if(codecallback_firebutton)
+		if(codecallback_attackbutton)
 		{
-			short ret = Scr_ExecEntThread(cl->gentity, codecallback_firebutton, 0);
+			short ret = Scr_ExecEntThread(cl->gentity, codecallback_attackbutton, 0);
 			Scr_FreeThread(ret);
 		}
 	}
