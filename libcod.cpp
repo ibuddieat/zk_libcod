@@ -33,7 +33,7 @@ cvar_t *fs_library;
 cvar_t *sv_downloadMessage;
 cvar_t *fs_callbacks;
 cvar_t *sv_fps;
-cvar_t *sv_timeout_messages;
+cvar_t *sv_timeoutMessages;
 
 cHook *hook_gametype_scripts;
 cHook *hook_player_collision;
@@ -128,7 +128,7 @@ void hook_sv_init(const char *format, ...)
 	fs_library = Cvar_RegisterString("fs_library", "", CVAR_ARCHIVE);
 	sv_downloadMessage = Cvar_RegisterString("sv_downloadMessage", "", CVAR_ARCHIVE);
 	fs_callbacks = Cvar_RegisterString("fs_callbacks", "", CVAR_ARCHIVE);
-	sv_timeout_messages = Cvar_RegisterBool("sv_timeout_messages", qfalse, CVAR_ARCHIVE);
+	sv_timeoutMessages = Cvar_RegisterBool("sv_timeoutMessages", qfalse, CVAR_ARCHIVE);
 
 	// Force download on clients
 	cl_allowDownload = Cvar_RegisterBool("cl_allowDownload", qtrue, CVAR_ARCHIVE | CVAR_SYSTEMINFO);
@@ -421,7 +421,7 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 	pb_test = FUN_081384cc(reason);
 	if ( !isBot && I_stricmp(reason, "EXE_DISCONNECTED") != 0 ) // do not show kick message at bots
 	{
-		if ( sv_timeout_messages->boolean || ( !sv_timeout_messages->boolean && I_stricmp(reason, "EXE_TIMEDOUT") != 0 ) )
+		if ( sv_timeoutMessages->boolean || ( !sv_timeoutMessages->boolean && I_stricmp(reason, "EXE_TIMEDOUT") != 0 ) )
 		{
 			if ( !pb_test )
 			{

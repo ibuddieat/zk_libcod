@@ -21,7 +21,7 @@ List of high-level changes provided by this repository:
   * `sv_limitLocalRcon` to whitelist internal IPs at rcon rate limiting
   * `sv_logRcon` to disable (successful) rcon command logging
   * `sv_logHeartbeat` to disable logging of heartbeats that are sent to the master server
-  * `sv_timeout_messages` to disable player timeout messages being shown to other players
+  * `sv_timeoutMessages` to disable player timeout messages being shown to other players
   * `g_debugEvents` to log events such as player footsteps, temporary entities etc.
   * `g_logPickup` to control logging of item pickup actions
   * `g_notifyPickup` to define whether to use the stock pickup logic or custom notify events
@@ -64,7 +64,7 @@ List of high-level changes provided by this repository:
   * `con_coloredPrints` as it may break incoming rcon commands, thus causing issues with BigBrotherBot
 - Reconstructed functions (see functions with `custom_` prefix in `libcod.cpp`):
   * `Touch_Item` to gain more control over item pickup actions
-  * `SV_DropClient` to disable bot disconnect messages and for sv_timeout_messages
+  * `SV_DropClient` to disable bot disconnect messages and for sv_timeoutMessages
   * `SV_SendClientGameState` for miscellaneous game engine tests (e.g., connect configstrings)
   * `BG_AddPredictableEventToPlayerstate` et sequentes to be able to filter events
   * `G_AddEvent`
