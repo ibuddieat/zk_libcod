@@ -24,6 +24,7 @@ List of high-level changes provided by this repository:
   * `sv_timeoutMessages` to disable player timeout messages being shown to other players
   * `sv_botKickMessages` to disable bot disconnect messages being shown to other players
   * `sv_kickMessages` to generally disable player kick messages being shown to other players
+  * `sv_disconnectMessages` to disable "Game session no longer available" messages
   * `g_debugEvents` to log events such as player footsteps, temporary entities etc.
   * `g_logPickup` to control logging of item pickup actions
   * `g_notifyPickup` to define whether to use the stock pickup logic or custom notify events

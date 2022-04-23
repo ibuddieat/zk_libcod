@@ -36,6 +36,7 @@ cvar_t *sv_fps;
 cvar_t *sv_timeoutMessages;
 cvar_t *sv_botKickMessages;
 cvar_t *sv_kickMessages;
+cvar_t *sv_disconnectMessages;
 
 cHook *hook_gametype_scripts;
 cHook *hook_player_collision;
@@ -133,6 +134,7 @@ void hook_sv_init(const char *format, ...)
 	sv_timeoutMessages = Cvar_RegisterBool("sv_timeoutMessages", qfalse, CVAR_ARCHIVE);
 	sv_botKickMessages = Cvar_RegisterBool("sv_botKickMessages", qfalse, CVAR_ARCHIVE);
 	sv_kickMessages = Cvar_RegisterBool("sv_kickMessages", qfalse, CVAR_ARCHIVE);
+	sv_disconnectMessages = Cvar_RegisterBool("sv_disconnectMessages", qfalse, CVAR_ARCHIVE);
 
 	// Force download on clients
 	cl_allowDownload = Cvar_RegisterBool("cl_allowDownload", qtrue, CVAR_ARCHIVE | CVAR_SYSTEMINFO);
@@ -437,6 +439,11 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 	}
 
 	if ( !sv_timeoutMessages->boolean && I_stricmp(reason, "EXE_TIMEDOUT") == 0 )
+	{
+		showIngameMessage = qfalse;
+	}
+
+	if ( !sv_disconnectMessages->boolean && I_stricmp(reason, "EXE_DISCONNECTED") == 0 )
 	{
 		showIngameMessage = qfalse;
 	}
