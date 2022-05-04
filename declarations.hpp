@@ -1207,6 +1207,17 @@ struct corpse_ent_t
 	int deathAnimStartTime;
 };
 
+typedef struct tagInfo_s
+{
+	struct gentity_s *parent;
+	struct gentity_s *next;
+	uint16_t name;
+	uint16_t pad;
+	int index;
+	float axis[4][3];
+	float parentInvAxis[4][3]; // ?
+} tagInfo_t;
+
 // gentity_s->flags
 #define FL_GODMODE              0x1
 #define FL_DEMI_GODMODE         0x2
@@ -1252,21 +1263,20 @@ struct gentity_s
 	int healthPoints; // 404
 	int reservedHealth; // 408 ?
 	int damage; // 412
-	int unknown1; // 416 count ?
+	int count; // 416
 	union { // 420
 		struct item_ent_t item[2];
 		struct trigger_ent_t trigger;
 		struct mover_ent_t mover;
 		struct corpse_ent_t corpse;
 	} params;
-	int unknown2; // 516 ?
-	int unknown3; // 520 ?
-	gentity_t** linkedEntities; // 524 ??
-	byte attachedModels[6]; // 528
-	u_int16_t attachedModelsIndexes; // 536 ?
-	u_int16_t numAttachedModels; // 538 ?
-	int animTree; // 540 ?
-	vec4_t color; // ?
+	int unknown1; // 516 ?
+	tagInfo_t *tagInfo; // 520
+	gentity_t *tagChildren; // 524
+	uint16_t attachModelNames[6];
+	uint16_t attachTagNames[6];
+	int useCount; // 552
+	gentity_t *nextFree; // 556
 }; // verified
 
 #define MAX_DOWNLOAD_BLKSIZE 1024
@@ -1956,26 +1966,26 @@ typedef enum
 
 typedef enum
 {
-    ANIM_ET_PAIN = 0x0,
-    ANIM_ET_DEATH = 0x1,
-    ANIM_ET_FIREWEAPON = 0x2,
-    ANIM_ET_JUMP = 0x3,
-    ANIM_ET_JUMPBK = 0x4,
-    ANIM_ET_LAND = 0x5,
-    ANIM_ET_DROPWEAPON = 0x6,
-    ANIM_ET_RAISEWEAPON = 0x7,
-    ANIM_ET_CLIMB_MOUNT = 0x8,      // no anim loaded
-    ANIM_ET_CLIMB_DISMOUNT = 0x9,   // no anim loaded
-    ANIM_ET_RELOAD = 0xA,
-    ANIM_ET_CROUCH_TO_PRONE = 0xB,
-    ANIM_ET_PRONE_TO_CROUCH = 0xC,
-    ANIM_ET_STAND_TO_CROUCH = 0xD,
-    ANIM_ET_CROUCH_TO_STAND = 0xE,
-    ANIM_ET_STAND_TO_PRONE = 0xF,   // no anim loaded
-    ANIM_ET_PRONE_TO_STAND = 0x10,
-    ANIM_ET_MELEEATTACK = 0x11,
-    ANIM_ET_SHELLSHOCK = 0x12,
-    NUM_ANIM_EVENTTYPES = 0x13
+	ANIM_ET_PAIN = 0x0,
+	ANIM_ET_DEATH = 0x1,
+	ANIM_ET_FIREWEAPON = 0x2,
+	ANIM_ET_JUMP = 0x3,
+	ANIM_ET_JUMPBK = 0x4,
+	ANIM_ET_LAND = 0x5,
+	ANIM_ET_DROPWEAPON = 0x6,
+	ANIM_ET_RAISEWEAPON = 0x7,
+	ANIM_ET_CLIMB_MOUNT = 0x8,	    // no anim loaded
+	ANIM_ET_CLIMB_DISMOUNT = 0x9,   // no anim loaded
+	ANIM_ET_RELOAD = 0xA,
+	ANIM_ET_CROUCH_TO_PRONE = 0xB,
+	ANIM_ET_PRONE_TO_CROUCH = 0xC,
+	ANIM_ET_STAND_TO_CROUCH = 0xD,
+	ANIM_ET_CROUCH_TO_STAND = 0xE,
+	ANIM_ET_STAND_TO_PRONE = 0xF,   // no anim loaded
+	ANIM_ET_PRONE_TO_STAND = 0x10,
+	ANIM_ET_MELEEATTACK = 0x11,
+	ANIM_ET_SHELLSHOCK = 0x12,
+	NUM_ANIM_EVENTTYPES = 0x13
 } scriptAnimEventTypes_t;
 
 typedef enum
@@ -2510,13 +2520,6 @@ struct va_info_t
 	int index;
 };
 
-#define MAX_ERROR_BUFFER 64
-typedef struct src_error_s
-{
-    char internal_function[64];
-    char message[1024];
-} scr_error_t;
-
 #define	SVF_NOCLIENT  0x00000001
 #define	SVF_BROADCAST 0x00000008
 
@@ -2841,6 +2844,14 @@ static const int g_hudelems_offset = 0x0;  // Not tested
 static const int g_hudelems_offset = 0x08628F80;
 #endif
 
+#if COD_VERSION == COD2_1_0  // Not tested
+static const int spawns_offset = 0x0;
+#elif COD_VERSION == COD2_1_2  // Not tested
+static const int spawns_offset = 0x0;
+#elif COD_VERSION == COD2_1_3
+static const int spawns_offset = 0x08188A00;
+#endif
+
 #define scrVarPub (*((scrVarPub_t*)( varpub_offset )))
 #define scrVmPub (*((scrVmPub_t*)( vmpub_offset )))
 #define scrVarGlob (((VariableValueInternal*)( varglob_offset )))
@@ -2864,6 +2875,7 @@ static const int g_hudelems_offset = 0x08628F80;
 #define archivedEntityFields (*((netField_t*)( archivedEntityFields_offset )))
 #define bg_itemlist (*((gitem_t*)( bg_itemlist_offset )))
 #define g_hudelems (*((game_hudelem_t*)( g_hudelems_offset )))
+#define spawns (*((int**)( spawns_offset )))
 
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6
@@ -2887,3 +2899,19 @@ static const int g_hudelems_offset = 0x08628F80;
 #endif
 
 #endif
+
+// Custom data types
+#define MAX_ERROR_BUFFER 64
+typedef struct src_error_s
+{
+	char internal_function[64];
+	char message[1024];
+} scr_error_t;
+
+typedef struct map_weapon_s
+{
+	char classname[COD2_MAX_STRINGLENGTH]; // Not sure if a classname can actually be that long
+	vec3_t origin;
+	vec3_t angles;
+	int count;
+} map_weapon_t;

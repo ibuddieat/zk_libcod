@@ -25,6 +25,7 @@ cvar_t *g_logPickup;
 cvar_t *g_notifyPickup;
 cvar_t *g_playerCollision;
 cvar_t *g_playerEject;
+cvar_t *g_spawnMapWeapons;
 cvar_t *sv_allowRcon;
 cvar_t *sv_limitLocalRcon;
 cvar_t *sv_logRcon;
@@ -75,6 +76,7 @@ int codecallback_meleebreathbutton = 0;
 int codecallback_holdbreathbutton = 0;
 int codecallback_fragbutton = 0;
 int codecallback_smokebutton = 0;
+int codecallback_mapweapons = 0;
 
 qboolean logRcon = qtrue;
 qboolean logHeartbeat = qtrue;
@@ -135,6 +137,7 @@ void hook_sv_init(const char *format, ...)
 	sv_botKickMessages = Cvar_RegisterBool("sv_botKickMessages", qfalse, CVAR_ARCHIVE);
 	sv_kickMessages = Cvar_RegisterBool("sv_kickMessages", qfalse, CVAR_ARCHIVE);
 	sv_disconnectMessages = Cvar_RegisterBool("sv_disconnectMessages", qfalse, CVAR_ARCHIVE);
+	g_spawnMapWeapons = Cvar_RegisterBool("g_spawnMapWeapons", qfalse, CVAR_ARCHIVE);
 
 	// Force download on clients
 	cl_allowDownload = Cvar_RegisterBool("cl_allowDownload", qtrue, CVAR_ARCHIVE | CVAR_SYSTEMINFO);
@@ -240,6 +243,7 @@ int hook_codscript_gametype_scripts()
  	codecallback_holdbreathbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_HoldBreathButton", 0);
  	codecallback_fragbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_FragButton", 0);
  	codecallback_smokebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_SmokeButton", 0);
+ 	codecallback_mapweapons = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MapWeapons", 0);
 	
 	int (*sig)();
 	*(int *)&sig = hook_gametype_scripts->from;
@@ -389,7 +393,7 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 	challenge_t *challenge;
 	qboolean isBot = qfalse;
 	qboolean showIngameMessage = qtrue;
-	char name[32];
+	char name[0x40];
 	
 	Com_DPrintf("SV_DropClient for %s\n", drop->name);
 
@@ -399,7 +403,7 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 	}
 	
 	drop->delayDropMsg = 0;
-	strcpy(name, drop->name);
+	I_strncpyz(name, drop->name, sizeof(name));
 	SV_FreeClient(drop);
 
 	Com_DPrintf("Going to CS_ZOMBIE for %s\n", name);
@@ -3622,6 +3626,114 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 	}
 }
 
+int num_map_weapons;
+map_weapon_t map_weapons[MAX_GENTITIES];
+void custom_G_CallSpawn(void)
+{
+	const char *classname;
+	gentity_t *ent;
+	gitem_t *item;
+	int **i;
+
+	G_SpawnString("classname", "", &classname);
+	if ( classname == NULL )
+	{
+		Com_Printf("G_CallSpawn: NULL classname\n");
+	}
+	else
+	{
+		/* new code start: map weapons callback */
+		if( !strncmp(classname, "weapon_", 7) && !g_spawnMapWeapons->boolean )
+		{
+			ent = G_Spawn();
+			G_SetEntityPlacement(ent); // guessed function name
+			if ( codecallback_mapweapons )
+			{
+				strncpy(map_weapons[num_map_weapons].classname, classname, sizeof(map_weapons[num_map_weapons].classname));
+				VectorCopy(ent->r.currentOrigin, map_weapons[num_map_weapons].origin);
+				VectorCopy(ent->r.currentAngles, map_weapons[num_map_weapons].angles);
+				map_weapons[num_map_weapons].count = ent->count;
+				num_map_weapons++;
+			}
+			G_FreeEntity(ent);
+			return;
+		}
+		/* new code end */
+		
+		item = G_GetItemForClassname(classname);
+		if ( item == NULL )
+		{
+			for ( i = &spawns; *i != NULL; i += 2 )
+			{
+				if ( !strcmp((const char *)*i, classname) )
+				{
+					if ( i[1] == (int *)G_FreeEntity )
+					{
+						return;
+					}
+					ent = G_Spawn();
+					G_SetEntityPlacement(ent);
+					((void (*)(gentity_t *))i[1])(ent);
+					return;
+				}
+			}
+			ent = G_Spawn();
+			G_SetEntityPlacement(ent);
+		}
+		else
+		{
+			ent = G_Spawn();
+			G_SetEntityPlacement(ent);
+			G_SpawnItem(ent, item);
+		}
+	}
+}
+
+void custom_G_SpawnEntitiesFromString(void)
+{
+	if ( !G_ParseSpawnVars(&level.spawnVars) )
+	{
+		custom_Com_Error(1, "\x15SpawnEntities: no entities");
+	}
+	SP_worldspawn();
+	
+	/* new code start: map weapons callback */
+	if ( codecallback_mapweapons )
+	{
+		num_map_weapons = 0;
+		memset(&map_weapons, 0, sizeof(map_weapons));
+	}
+	/* new code end */
+	
+	while( G_ParseSpawnVars(&level.spawnVars) )
+	{
+		custom_G_CallSpawn();
+	}
+	
+	/* new code start: map weapons callback */
+	if ( codecallback_mapweapons )
+	{
+		int i;
+		
+		stackPushArray();
+		for( i = 0; i < num_map_weapons; i++ )
+		{
+			stackPushString(map_weapons[i].classname);
+			stackPushArrayLast();
+			stackPushVector(map_weapons[i].origin);
+			stackPushArrayLast();
+			stackPushVector(map_weapons[i].angles);
+			stackPushArrayLast();
+			stackPushInt(map_weapons[i].count);
+			stackPushArrayLast();
+		}
+		stackPushInt(num_map_weapons);
+		short ret = Scr_ExecThread(codecallback_mapweapons, 2);
+		Scr_FreeThread(ret);
+	}
+	/* new code end */
+}
+
 bool custom_CM_IsBadStaticModel(cStaticModel_t *model, char *src, float *origin, float *angles, float (*scale) [3])
 {
 	XModel_t *xmodel;
@@ -3650,8 +3762,8 @@ bool custom_CM_IsBadStaticModel(cStaticModel_t *model, char *src, float *origin,
 	if ( xmodel != NULL )
 	{
 		model->xmodel = xmodel;
-		// On the server side, scale is only used for trace functions (see model->invScaledAxis)
-		// The entity axis scale values are not synced to the players
+		// on the server side, scale is only used for trace functions (see model->invScaledAxis)
+		// the entity axis scale values are not synced to the players
 		CM_InitStaticModel(model, origin, angles, scale);
 		if ( g_debugStaticModels->boolean )
 		{
@@ -3988,6 +4100,7 @@ public:
 		cracking_hook_function(0x080787DC, (int)custom_RuntimeError_Debug);
 		cracking_hook_function(0x0809B016, (int)custom_SV_ArchiveSnapshot);
 		cracking_hook_function(0x0809A408, (int)custom_SV_BuildClientSnapshot);
+		cracking_hook_function(0x0811B770, (int)custom_G_SpawnEntitiesFromString);
 		cracking_hook_function(0x080584F0, (int)custom_CM_IsBadStaticModel);
 		cracking_hook_function(0x08113128, (int)custom_Script_obituary);
 

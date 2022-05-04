@@ -29,6 +29,7 @@ List of high-level changes provided by this repository:
   * `g_logPickup` to control logging of item pickup actions
   * `g_notifyPickup` to define whether to use the stock pickup logic or custom notify events
   * `g_debugStaticModels` to print info about static models on map load
+  * `g_spawnMapWeapons` to control precaching & spawning of weapons in map files
 - Added script code functions:
   * `<player> getClientHudElemCount()`
   * `<player> getGroundEntity()`
@@ -51,6 +52,7 @@ List of high-level changes provided by this repository:
   * `<player> get_userinfo()` now returns strings only, instead of string or undefined
   * `obituary(<victim>, <attacker>, <weapon>, <meansOfDeath>, [<team>], [<origin>], [<max. distance>])`
 - Added script callback functions:
+  * `CodeCallback_MapWeapons`
   * `CodeCallback_Error`
   * `CodeCallback_ReloadButton`
   * `CodeCallback_LeanLeftButton`
@@ -87,6 +89,8 @@ List of high-level changes provided by this repository:
   * `RuntimeError_Debug`
   * `RuntimeError`
   * `CM_IsBadStaticModel` for `g_debugStaticModels` (this function name is a guess)
+  * `G_SpawnEntitiesFromString` et sequentes to provide map weapon info via CodeCallback_MapWeapons
+  * `G_CallSpawn`
 - Commented out several libcod functions that would make it easy to harm the server with malicious map scripts, thus currently breaking manymaps support
 - Added/updated some missing/unknown declarations
 - Fixed some minor bugs

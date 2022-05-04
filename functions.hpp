@@ -1002,6 +1002,51 @@ static const G_ModelName_t G_ModelName = (G_ModelName_t)0x0; // Not tested
 static const G_ModelName_t G_ModelName = (G_ModelName_t)0x0811D5B4;
 #endif
 
+typedef void (*G_SpawnString_t)(const char *key, const char *defaultString, const char **out);
+#if COD_VERSION == COD2_1_0
+static const G_SpawnString_t G_SpawnString = (G_SpawnString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_SpawnString_t G_SpawnString = (G_SpawnString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_SpawnString_t G_SpawnString = (G_SpawnString_t)0x0811A3DC;
+#endif
+
+typedef qboolean (*G_ParseSpawnVars_t)(SpawnVar *spawnVar);
+#if COD_VERSION == COD2_1_0
+static const G_ParseSpawnVars_t G_ParseSpawnVars = (G_ParseSpawnVars_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_ParseSpawnVars_t G_ParseSpawnVars = (G_ParseSpawnVars_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_ParseSpawnVars_t G_ParseSpawnVars = (G_ParseSpawnVars_t)0x080F3FD2;
+#endif
+
+typedef gitem_t * (*G_GetItemForClassname_t)(const char *classname);
+#if COD_VERSION == COD2_1_0
+static const G_GetItemForClassname_t G_GetItemForClassname = (G_GetItemForClassname_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_GetItemForClassname_t G_GetItemForClassname = (G_GetItemForClassname_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_GetItemForClassname_t G_GetItemForClassname = (G_GetItemForClassname_t)0x0811A9BA;
+#endif
+
+typedef void (*G_SetEntityPlacement_t)(gentity_t *ent);
+#if COD_VERSION == COD2_1_0
+static const G_SetEntityPlacement_t G_SetEntityPlacement = (G_SetEntityPlacement_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_SetEntityPlacement_t G_SetEntityPlacement = (G_SetEntityPlacement_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_SetEntityPlacement_t G_SetEntityPlacement = (G_SetEntityPlacement_t)0x0811A7B0;
+#endif
+
+typedef void (*G_SpawnItem_t)(gentity_s *ent, gitem_t *item);
+#if COD_VERSION == COD2_1_0
+static const G_SpawnItem_t G_SpawnItem = (G_SpawnItem_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_SpawnItem_t G_SpawnItem = (G_SpawnItem_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_SpawnItem_t G_SpawnItem = (G_SpawnItem_t)0x08107342;
+#endif
+
 typedef void (*G_AddEvent_t)(gentity_t *ent, int event, int eventParm);
 #if COD_VERSION == COD2_1_0
 static const G_AddEvent_t G_AddEvent = (G_AddEvent_t)0x0811CDA2;
@@ -1495,6 +1540,15 @@ static const Vec3DistanceSq_t Vec3DistanceSq = (Vec3DistanceSq_t)0x0; // Not tes
 static const Vec3DistanceSq_t Vec3DistanceSq = (Vec3DistanceSq_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const Vec3DistanceSq_t Vec3DistanceSq = (Vec3DistanceSq_t)0x080A4116;
+#endif
+
+typedef void (*SP_worldspawn_t)(void);
+#if COD_VERSION == COD2_1_0
+static const SP_worldspawn_t SP_worldspawn = (SP_worldspawn_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SP_worldspawn_t SP_worldspawn = (SP_worldspawn_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SP_worldspawn_t SP_worldspawn = (SP_worldspawn_t)0x0811B56A;
 #endif
 
 #endif
