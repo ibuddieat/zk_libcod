@@ -1,15 +1,5 @@
 # libcod for \*.ZK.\* Zombie Knights
 
-Initial fork path:
-
-<pre>
-https://github.com/ibuddieat/zk_libcod (this repository)
-└─> <a href="https://github.com/damage99/libcod">damage99/libcod</a>
-    └─> <a href="https://github.com/voron00/libcod">voron00/libcod</a>
-        └─> <a href="https://github.com/M-itch/libcod">M-itch/libcod</a>
-            └─> <a href="https://github.com/kungfooman/libcod">kungfooman/libcod</a> (original libcod implementation)
-</pre>
-
 This extension ...
 - provides interoperability between the Call of Duty&reg; 2 server and other software components and/or advanced game modifications (so-called "mods")
 - intends to improve the overall game experience and security as the extended software (Call of Duty&reg; 2) is not maintained anymore since more than a decade
@@ -101,7 +91,7 @@ Build requirements:
 - libstdc++5
 - MySQL client (if required by functionality)
 
-Requirements installation (for Ubuntu 18.04.5 LTS):
+Requirements installation (tested on Ubuntu 18.04.5 LTS):
 ```
 dpkg --add-architecture i386
 apt update
@@ -115,3 +105,20 @@ Creating the binary (written to `./bin`):
 ```
 ./doit.sh
 ```
+
+Initial fork path:
+
+<pre>
+https://github.com/ibuddieat/zk_libcod (this repository)
+└─> <a href="https://github.com/damage99/libcod">damage99/libcod</a>
+    └─> <a href="https://github.com/voron00/libcod">voron00/libcod</a>
+        └─> <a href="https://github.com/M-itch/libcod">M-itch/libcod</a>
+            └─> <a href="https://github.com/kungfooman/libcod">kungfooman/libcod</a> (original libcod implementation)
+</pre>
+
+Other important references:
+
+- Killtube~ (https://killtube.org/)
+- Enemy-Territory (https://github.com/id-Software/Enemy-Territory)
+- CoD4x Server (https://github.com/callofduty4x/CoD4x_Server)
+- Ghidra (https://github.com/NationalSecurityAgency/ghidra)
