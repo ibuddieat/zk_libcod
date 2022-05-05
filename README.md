@@ -28,7 +28,7 @@ List of high-level changes provided by this repository:
   * `<player> noclip("on|off|toggle")`
   * `<player> playFxForPlayer(<effect id>, <position of effect>, [<forward vector>], [<up vector>])`
   * `<player> playFxOnTagForPlayer(<effect id>, <entity>, <tag name>)`
-  * `<player> runScriptAnimation()`
+  * `<player> runScriptAnimation(<scriptAnimEventType>, <isContinue>, <force>)`
   * `<player> setEarthquakes("on|off|toggle")`
   * `<player> silent("on|off|toggle")`
   * `<weapon> getWeaponItemAmmo()`
