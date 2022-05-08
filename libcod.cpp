@@ -3720,19 +3720,24 @@ void custom_G_SpawnEntitiesFromString(void)
 	/* new code start: map weapons callback */
 	if ( codecallback_mapweapons )
 	{
-		int i;
-		
-		stackPushArray();
-		for( i = 0; i < num_map_weapons; i++ )
+		if ( !num_map_weapons )
 		{
-			stackPushString(map_weapons[i].classname);
-			stackPushArrayLast();
-			stackPushVector(map_weapons[i].origin);
-			stackPushArrayLast();
-			stackPushVector(map_weapons[i].angles);
-			stackPushArrayLast();
-			stackPushInt(map_weapons[i].count);
-			stackPushArrayLast();
+			stackPushUndefined();
+		}
+		else
+		{
+			stackPushArray();
+			for( int i = 0; i < num_map_weapons; i++ )
+			{
+				stackPushString(map_weapons[i].classname);
+				stackPushArrayLast();
+				stackPushVector(map_weapons[i].origin);
+				stackPushArrayLast();
+				stackPushVector(map_weapons[i].angles);
+				stackPushArrayLast();
+				stackPushInt(map_weapons[i].count);
+				stackPushArrayLast();
+			}
 		}
 		stackPushInt(num_map_weapons);
 		short ret = Scr_ExecThread(codecallback_mapweapons, 2);
