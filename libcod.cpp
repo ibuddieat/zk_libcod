@@ -55,6 +55,7 @@ cHook *hook_g_tempentity;
 cHook *hook_gscr_loadconsts;
 cHook *hook_sv_masterheartbeat;
 cHook *hook_g_runframe;
+cHook *hook_scr_loadlevel;
 
 int codecallback_remotecommand = 0;
 int codecallback_playercommand = 0;
@@ -500,7 +501,7 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 	}
 }
 
-void custom_gsc_loadconsts()
+void custom_GScr_LoadConsts(void)
 {
 	hook_gscr_loadconsts->unhook();
 
@@ -3716,7 +3717,15 @@ void custom_G_SpawnEntitiesFromString(void)
 	{
 		custom_G_CallSpawn();
 	}
-	
+}
+
+void custom_Scr_LoadLevel(void)
+{
+	hook_scr_loadlevel->unhook();
+
+	void (*sig)(void);
+	*(int *)&sig = hook_scr_loadlevel->from;
+
 	/* new code start: map weapons callback */
 	if ( codecallback_mapweapons )
 	{
@@ -3744,6 +3753,10 @@ void custom_G_SpawnEntitiesFromString(void)
 		Scr_FreeThread(ret);
 	}
 	/* new code end */
+
+	sig();
+
+	hook_scr_loadlevel->hook();
 }
 
 bool custom_CM_IsBadStaticModel(cStaticModel_t *model, char *src, float *origin, float *angles, float (*scale) [3])
@@ -4077,12 +4090,14 @@ public:
 		hook_touch_item_auto->hook();
 		hook_g_tempentity = new cHook(0x0811EFC4, (int)custom_G_TempEntity);
 		hook_g_tempentity->hook();
-		hook_gscr_loadconsts = new cHook(0x081224F8, (int)custom_gsc_loadconsts);
+		hook_gscr_loadconsts = new cHook(0x081224F8, (int)custom_GScr_LoadConsts);
 		hook_gscr_loadconsts->hook();
 		hook_sv_masterheartbeat = new cHook(0x08096ED6, (int)custom_sv_masterheartbeat);
 		hook_sv_masterheartbeat->hook();
 		hook_g_runframe = new cHook(0x0810A13A, (int)custom_G_RunFrame);
 		hook_g_runframe->hook();
+		hook_scr_loadlevel = new cHook(0x081101D0, (int)custom_Scr_LoadLevel);
+		hook_scr_loadlevel->hook();
 
 #if COMPILE_PLAYER == 1
 		hook_play_movement = new cHook(0x08090DAC, (int)play_movement);
