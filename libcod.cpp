@@ -3651,7 +3651,7 @@ void custom_G_CallSpawn(void)
 	else
 	{
 		/* new code start: map weapons callback */
-		if( !strncmp(classname, "weapon_", 7) && !g_spawnMapWeapons->boolean )
+		if ( !strncmp(classname, "weapon_", 7) && !g_spawnMapWeapons->boolean )
 		{
 			ent = G_Spawn();
 			G_SetEntityPlacement(ent); // guessed function name

@@ -384,6 +384,7 @@ scr_method_t scriptMethods[] =
 	{"runscriptanimation", gsc_player_runscriptanimation, 0},
 	{"silent", gsc_player_silent, 0},
 	{"getgroundentity", gsc_player_getgroundentity, 0},
+	{"islinkedto", gsc_player_islinkedto, 0},
 #endif
 
 #if COMPILE_WEAPONS == 1

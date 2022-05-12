@@ -1215,7 +1215,7 @@ typedef struct tagInfo_s
 	uint16_t pad;
 	int index;
 	float axis[4][3];
-	float parentInvAxis[4][3]; // ?
+	float parentInvAxis[4][3];
 } tagInfo_t;
 
 // gentity_s->flags

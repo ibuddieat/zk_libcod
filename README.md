@@ -25,6 +25,7 @@ List of high-level changes provided by this repository:
   * `<player> getClientHudElemCount()`
   * `<player> getGroundEntity()`
   * `<player> getInactivityTime()`
+  * `<player> isLinkedTo()`
   * `<player> noclip("on|off|toggle")`
   * `<player> playFxForPlayer(<effect id>, <position of effect>, [<forward vector>], [<up vector>])`
   * `<player> playFxOnTagForPlayer(<effect id>, <entity>, <tag name>)`
