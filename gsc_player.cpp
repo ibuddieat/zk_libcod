@@ -74,7 +74,7 @@ void gsc_player_lookatkiller(scr_entref_t id)
 		return;
 	}
 
-	gentity_t *self_entity = Scr_GetEntity(id);
+	gentity_t *self_entity = G_GetEntity(id);
 	if (!self_entity)
 	{
 		stackError("gsc_player_lookatkiller() self_entity state is invalid");
@@ -82,7 +82,7 @@ void gsc_player_lookatkiller(scr_entref_t id)
 		return;
 	}
 
-	gentity_t *inflictor_entity = Scr_GetEntity(inflictor);
+	gentity_t *inflictor_entity = G_GetEntity(inflictor);
 	if (!inflictor_entity)
 	{
 		stackError("gsc_player_lookatkiller() inflictor_entity state is invalid");
@@ -90,7 +90,7 @@ void gsc_player_lookatkiller(scr_entref_t id)
 		return;
 	}
 
-	gentity_t *attacker_entity = Scr_GetEntity(attacker);
+	gentity_t *attacker_entity = G_GetEntity(attacker);
 	if (!attacker_entity)
 	{
 		stackError("gsc_player_lookatkiller() attacker_entity state is invalid");
@@ -1229,7 +1229,7 @@ void gsc_player_playfxontagforplayer(scr_entref_t id)
 		Scr_ParamError(0, custom_va("effect id %i is invalid\n", index));
 	}
 
-	ent = Scr_GetEntityByRef(1);
+	ent = Scr_GetEntity(1);
 	if ( ent->model == 0 )
 	{
 		Scr_ParamError(1, "cannot play fx on entity with no model");

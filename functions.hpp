@@ -849,22 +849,22 @@ static const Scr_GetPointerType_t Scr_GetPointerType = (Scr_GetPointerType_t)0x0
 static const Scr_GetPointerType_t Scr_GetPointerType = (Scr_GetPointerType_t)0x08085098;
 #endif
 
-typedef gentity_t * (*Scr_GetEntity_t)(unsigned int index);
+typedef gentity_t * (*G_GetEntity_t)(unsigned int index); // Guessed function name
 #if COD_VERSION == COD2_1_0
-static const Scr_GetEntity_t Scr_GetEntity = (Scr_GetEntity_t)0x0810E03A;
+static const G_GetEntity_t G_GetEntity = (G_GetEntity_t)0x0810E03A;
 #elif COD_VERSION == COD2_1_2
-static const Scr_GetEntity_t Scr_GetEntity = (Scr_GetEntity_t)0x08110376;
+static const G_GetEntity_t G_GetEntity = (G_GetEntity_t)0x08110376;
 #elif COD_VERSION == COD2_1_3
-static const Scr_GetEntity_t Scr_GetEntity = (Scr_GetEntity_t)0x081104D2;
+static const G_GetEntity_t G_GetEntity = (G_GetEntity_t)0x081104D2;
 #endif
 
-typedef gentity_t * (*Scr_GetEntityByRef_t)(unsigned int index); // Guessed function name
+typedef gentity_t * (*Scr_GetEntity_t)(unsigned int index);
 #if COD_VERSION == COD2_1_0
-static const Scr_GetEntityByRef_t Scr_GetEntityByRef = (Scr_GetEntityByRef_t)0x0; // Not tested
+static const Scr_GetEntity_t Scr_GetEntity = (Scr_GetEntity_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
-static const Scr_GetEntityByRef_t Scr_GetEntityByRef = (Scr_GetEntityByRef_t)0x0; // Not tested
+static const Scr_GetEntity_t Scr_GetEntity = (Scr_GetEntity_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
-static const Scr_GetEntityByRef_t Scr_GetEntityByRef = (Scr_GetEntityByRef_t)0x0811B16E;
+static const Scr_GetEntity_t Scr_GetEntity = (Scr_GetEntity_t)0x0811B16E;
 #endif
 
 typedef unsigned int (*Scr_GetConstLowercaseString_t)(unsigned int param);
@@ -1029,13 +1029,31 @@ static const G_GetItemForClassname_t G_GetItemForClassname = (G_GetItemForClassn
 static const G_GetItemForClassname_t G_GetItemForClassname = (G_GetItemForClassname_t)0x0811A9BA;
 #endif
 
-typedef void (*G_SetEntityPlacement_t)(gentity_t *ent);
+typedef void (*G_SetEntityPlacement_t)(gentity_t *ent); // Guessed function name
 #if COD_VERSION == COD2_1_0
 static const G_SetEntityPlacement_t G_SetEntityPlacement = (G_SetEntityPlacement_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
 static const G_SetEntityPlacement_t G_SetEntityPlacement = (G_SetEntityPlacement_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const G_SetEntityPlacement_t G_SetEntityPlacement = (G_SetEntityPlacement_t)0x0811A7B0;
+#endif
+
+typedef char (*G_EntLinkToWithOffset_t)(gentity_t *ent, gentity_t *parent, unsigned int tagId, vec3_t *originOffset, vec3_t *anglesOffset);
+#if COD_VERSION == COD2_1_0
+static const G_EntLinkToWithOffset_t G_EntLinkToWithOffset = (G_EntLinkToWithOffset_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_EntLinkToWithOffset_t G_EntLinkToWithOffset = (G_EntLinkToWithOffset_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_EntLinkToWithOffset_t G_EntLinkToWithOffset = (G_EntLinkToWithOffset_t)0x0811DD4A;
+#endif
+
+typedef void (*G_GeneralLink_t)(gentity_t *ent);
+#if COD_VERSION == COD2_1_0
+static const G_GeneralLink_t G_GeneralLink = (G_GeneralLink_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_GeneralLink_t G_GeneralLink = (G_GeneralLink_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_GeneralLink_t G_GeneralLink = (G_GeneralLink_t)0x0811E316;
 #endif
 
 typedef void (*G_SpawnItem_t)(gentity_s *ent, gitem_t *item);
@@ -1524,7 +1542,7 @@ static const AxisToAngles_t AxisToAngles = (AxisToAngles_t)0x0; // Not tested
 static const AxisToAngles_t AxisToAngles = (AxisToAngles_t)0x080A9558;
 #endif
 
-typedef void (*VecToAngles_t)(float *vec, float *angles);
+typedef void (*VecToAngles_t)(vec3_t value1, vec3_t angles);
 #if COD_VERSION == COD2_1_0
 static const VecToAngles_t VecToAngles = (VecToAngles_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2

@@ -6,5 +6,7 @@
 
 void gsc_entity_setalive(scr_entref_t id);
 void gsc_entity_setbounds(scr_entref_t id);
+void gsc_entity_gettagangles(scr_entref_t id);
+void gsc_entity_gettagorigin(scr_entref_t id);
 
 #endif

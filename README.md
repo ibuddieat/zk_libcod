@@ -22,6 +22,8 @@ List of high-level changes provided by this repository:
   * `g_debugStaticModels` to print info about static models on map load
   * `g_spawnMapWeapons` to control precaching & spawning of weapons in map files
 - Added script code functions:
+  * `<entity> getTagAngles(<tag name>)`
+  * `<entity> getTagOrigin(<tag name>)`
   * `<player> getClientHudElemCount()`
   * `<player> getGroundEntity()`
   * `<player> getInactivityTime()`

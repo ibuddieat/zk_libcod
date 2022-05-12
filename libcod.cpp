@@ -3654,7 +3654,7 @@ void custom_G_CallSpawn(void)
 		if ( !strncmp(classname, "weapon_", 7) && !g_spawnMapWeapons->boolean )
 		{
 			ent = G_Spawn();
-			G_SetEntityPlacement(ent); // guessed function name
+			G_SetEntityPlacement(ent);
 			if ( codecallback_mapweapons )
 			{
 				strncpy(map_weapons[num_map_weapons].classname, classname, sizeof(map_weapons[num_map_weapons].classname));
@@ -3822,7 +3822,7 @@ void custom_Script_obituary(void)
 
 	sWeapon = G_GetWeaponIndexForName(Scr_GetString(2));
 	sMeansOfDeath = G_IndexForMeansOfDeath(Scr_GetString(3));
-	victim = Scr_GetEntityByRef(0);
+	victim = Scr_GetEntity(0);
 
 	// origin
 	if ( args < 6 )
@@ -3880,7 +3880,7 @@ void custom_Script_obituary(void)
 		type = Scr_GetPointerType(1);
 		if ( type == 0x15 )
 		{
-			attacker = Scr_GetEntityByRef(1);
+			attacker = Scr_GetEntity(1);
 			ent->s.attackerEntityNum = attacker->s.number;
 			goto LAB_081131e1;
 		}
