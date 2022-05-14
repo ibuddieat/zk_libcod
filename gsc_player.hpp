@@ -65,6 +65,5 @@ void gsc_player_getclienthudelemcount(scr_entref_t id);
 void gsc_player_runscriptanimation(scr_entref_t id);
 void gsc_player_silent(scr_entref_t id);
 void gsc_player_getgroundentity(scr_entref_t id);
-void gsc_player_islinkedto(scr_entref_t id);
 
 #endif

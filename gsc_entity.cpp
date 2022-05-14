@@ -215,4 +215,17 @@ void gsc_entity_hastag(scr_entref_t id)
     stackPushInt(1);
 }
 
+void gsc_player_islinkedto(scr_entref_t id)
+{
+	gentity_t *ent = &g_entities[id];
+	if ( ent->tagInfo )
+	{
+		stackPushEntity(&g_entities[ent->tagInfo->parent->s.number]);
+	}
+	else
+	{
+		stackPushUndefined();
+	}
+}
+
 #endif

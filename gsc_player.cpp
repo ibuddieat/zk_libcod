@@ -1374,25 +1374,4 @@ void gsc_player_getgroundentity(scr_entref_t id)
 		stackPushEntity(&g_entities[client->gentity->client->ps.groundEntityNum]);
 }
 
-void gsc_player_islinkedto(scr_entref_t id)
-{
-	if (id >= MAX_CLIENTS)
-	{
-		stackError("gsc_player_islinkedto() entity %i is not a player", id);
-		stackPushUndefined();
-		return;
-	}
-
-	client_t *client = &svs.clients[id];
-	gentity_t *ent = client->gentity;
-	if ( ent->tagInfo )
-	{
-		stackPushEntity(&g_entities[ent->tagInfo->parent->s.number]);
-	}
-	else
-	{
-		stackPushUndefined();
-	}
-}
-
 #endif

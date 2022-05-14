@@ -317,6 +317,7 @@ scr_method_t scriptMethods[] =
 	{"gettagorigin", gsc_entity_gettagorigin, 0},
 	{"gettagangles", gsc_entity_gettagangles, 0},
 	{"hastag", gsc_entity_hastag, 0},
+	{"islinkedto", gsc_entity_islinkedto, 0},
 #endif
 
 #if COMPILE_MYSQL_VORON == 1
@@ -387,7 +388,6 @@ scr_method_t scriptMethods[] =
 	{"runscriptanimation", gsc_player_runscriptanimation, 0},
 	{"silent", gsc_player_silent, 0},
 	{"getgroundentity", gsc_player_getgroundentity, 0},
-	{"islinkedto", gsc_player_islinkedto, 0},
 #endif
 
 #if COMPILE_WEAPONS == 1
