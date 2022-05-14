@@ -179,4 +179,40 @@ void gsc_entity_gettagorigin(scr_entref_t id)
     stackPushVector(origin);
 }
 
+void gsc_entity_hastag(scr_entref_t id)
+{
+	gentity_t *ent = &g_entities[id];
+    unsigned int tagId;
+    char *tagName;
+
+    tagId = Scr_GetConstLowercaseString(0);
+    tagName = SL_ConvertToString(tagId);
+    if ( !*tagName )
+    {
+        tagId = 0;
+    }
+
+    if ( !SV_DObjExists(ent) )
+    {
+        if ( !ent->model )
+        {
+            stackError("gsc_entity_hastag() entity has no model");
+            stackPushInt(0);
+            return;
+        }
+        stackError("gsc_entity_hastag() entity model \'%s\' is invalid", G_ModelName(ent->model));
+        stackPushInt(0);
+        return;
+    }
+    if ( tagId && SV_DObjGetBoneIndex(ent, tagId) < 0 )
+    {
+        SV_DObjDumpInfo(ent);
+        stackError("gsc_entity_hastag() tag \'%s\' does not exist in model \'%s\'", tagName, G_ModelName(ent->model));
+        stackPushInt(0);
+        return;
+    }
+
+    stackPushInt(1);
+}
+
 #endif

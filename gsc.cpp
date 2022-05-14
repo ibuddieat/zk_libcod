@@ -316,6 +316,7 @@ scr_method_t scriptMethods[] =
 	{"setBounds", gsc_entity_setbounds, 0},
 	{"gettagorigin", gsc_entity_gettagorigin, 0},
 	{"gettagangles", gsc_entity_gettagangles, 0},
+	{"hastag", gsc_entity_hastag, 0},
 #endif
 
 #if COMPILE_MYSQL_VORON == 1

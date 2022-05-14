@@ -24,6 +24,7 @@ List of high-level changes provided by this repository:
 - Added script code functions:
   * `<entity> getTagAngles(<tag name>)`
   * `<entity> getTagOrigin(<tag name>)`
+  * `<entity> hasTag(<tag name>)`
   * `<player> getClientHudElemCount()`
   * `<player> getGroundEntity()`
   * `<player> getInactivityTime()`
