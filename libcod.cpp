@@ -4065,10 +4065,6 @@ public:
 		cracking_hook_call(0x08082346, (int)hook_scriptError);
 		cracking_hook_call(0x0808FD52, (int)hook_bad_printf);
 		cracking_hook_call(0x080EBC58, (int)hook_findWeaponIndex);
-		
-#if COMPILE_PLAYER == 1
-		cracking_hook_call(0x0808F5C7, (int)hook_gamestate_info);
-#endif
 
 		hook_gametype_scripts = new cHook(0x08110286, (int)hook_codscript_gametype_scripts);
 		hook_gametype_scripts->hook();

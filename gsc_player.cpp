@@ -1040,19 +1040,19 @@ void gsc_player_noclip(scr_entref_t id)
 		return;
 	}
 
-	client_t *client = &svs.clients[id];
+	gentity_t *entity = &g_entities[id];
 
 	if ( !I_stricmp( noclip, "on" ) || atoi( noclip ) )
 	{
-		client->gentity->client->noclip = qtrue;
+		entity->client->noclip = qtrue;
 	}
 	else if ( !I_stricmp( noclip, "off" ) || !I_stricmp( noclip, "0" ) )
 	{
-		client->gentity->client->noclip = qfalse;
+		entity->client->noclip = qfalse;
 	}
 	else
 	{
-		client->gentity->client->noclip = !client->gentity->client->noclip;
+		entity->client->noclip = !entity->client->noclip;
 	}
 
 	stackPushBool(qtrue);
@@ -1067,8 +1067,8 @@ void gsc_player_getinactivitytime(scr_entref_t id)
 		return;
 	}
 
-	client_t *client = &svs.clients[id];
-	stackPushInt(client->gentity->client->inactivityTime);
+	gentity_t *entity = &g_entities[id];
+	stackPushInt(entity->client->inactivityTime);
 }
 
 void gsc_player_set_earthquakes(scr_entref_t id)
@@ -1301,8 +1301,8 @@ void gsc_player_runscriptanimation(scr_entref_t id)
 		return;
 	}
 	
-	client_t *client = &svs.clients[id];
-	stackPushInt(BG_AnimScriptEvent(&client->gentity->client->ps, (scriptAnimEventTypes_t)scriptAnimEventType, isContinue, force));
+	gentity_t *entity = &g_entities[id];
+	stackPushInt(BG_AnimScriptEvent(&entity->client->ps, (scriptAnimEventTypes_t)scriptAnimEventType, isContinue, force));
 }
 
 void gsc_player_silent(scr_entref_t id)
@@ -1367,11 +1367,11 @@ void gsc_player_getgroundentity(scr_entref_t id)
 		return;
 	}
 
-	client_t *client = &svs.clients[id];
-	if(client->gentity->client->ps.groundEntityNum == 0x3ff)
+	gentity_t *entity = &g_entities[id];
+	if(entity->client->ps.groundEntityNum == 0x3ff)
 		stackPushUndefined();
 	else
-		stackPushEntity(&g_entities[client->gentity->client->ps.groundEntityNum]);
+		stackPushEntity(&g_entities[entity->client->ps.groundEntityNum]);
 }
 
 void gsc_player_getentertime(scr_entref_t id)
