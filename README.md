@@ -27,6 +27,7 @@ List of high-level changes provided by this repository:
   * `<entity> hasTag(<tag name>)`
   * `<entity> isLinkedTo()`
   * `<player> getClientHudElemCount()`
+  * `<player> getEnterTime()`
   * `<player> getGroundEntity()`
   * `<player> getInactivityTime()`
   * `<player> noclip("on|off|toggle")`

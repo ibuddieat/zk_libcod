@@ -1374,4 +1374,17 @@ void gsc_player_getgroundentity(scr_entref_t id)
 		stackPushEntity(&g_entities[client->gentity->client->ps.groundEntityNum]);
 }
 
+void gsc_player_getentertime(scr_entref_t id)
+{
+	if (id >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_getentertime() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	gentity_t *entity = &g_entities[id];
+	stackPushInt(entity->client->sess.enterTime);
+}
+
 #endif
