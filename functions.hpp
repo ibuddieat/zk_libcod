@@ -264,6 +264,15 @@ static const Cvar_RegisterString_t Cvar_RegisterString = (Cvar_RegisterString_t)
 static const Cvar_RegisterString_t Cvar_RegisterString = (Cvar_RegisterString_t)0x080B4232;
 #endif
 
+typedef cvar_t * (*Cvar_RegisterInt_t)(const char * var_name, int var_value, int min_value, int max_value, unsigned short flags);
+#if COD_VERSION == COD2_1_0
+static const Cvar_RegisterInt_t Cvar_RegisterInt = (Cvar_RegisterInt_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Cvar_RegisterInt_t Cvar_RegisterInt = (Cvar_RegisterInt_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Cvar_RegisterInt_t Cvar_RegisterInt = (Cvar_RegisterInt_t)0x080B403A;
+#endif
+
 typedef void (*SV_ConnectionlessPacket_t)(netadr_t from, msg_t *msg);
 #if COD_VERSION == COD2_1_0
 static const SV_ConnectionlessPacket_t SV_ConnectionlessPacket = (SV_ConnectionlessPacket_t)0x08093F1E;
@@ -660,6 +669,15 @@ static const FS_SV_FOpenFileRead_t FS_SV_FOpenFileRead = (FS_SV_FOpenFileRead_t)
 static const FS_SV_FOpenFileRead_t FS_SV_FOpenFileRead = (FS_SV_FOpenFileRead_t)0x08064558;
 #endif
 
+typedef void (*FS_FCloseFile_t)(fileHandle_t fp);
+#if COD_VERSION == COD2_1_0
+static const FS_FCloseFile_t FS_FCloseFile = (FS_FCloseFile_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const FS_FCloseFile_t FS_FCloseFile = (FS_FCloseFile_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const FS_FCloseFile_t FS_FCloseFile = (FS_FCloseFile_t)0x0809EE54;
+#endif
+
 typedef int (*FS_iwIwd_t)(const char *a1, const char *a2);
 #if COD_VERSION == COD2_1_0
 static const FS_iwIwd_t FS_iwIwd = (FS_iwIwd_t)0x08064ECC;
@@ -667,15 +685,6 @@ static const FS_iwIwd_t FS_iwIwd = (FS_iwIwd_t)0x08064ECC;
 static const FS_iwIwd_t FS_iwIwd = (FS_iwIwd_t)0x0806532C;
 #elif COD_VERSION == COD2_1_3
 static const FS_iwIwd_t FS_iwIwd = (FS_iwIwd_t)0x08065324;
-#endif
-
-typedef signed int (*SV_WWWRedirectClient_t)(client_t *cl, msg_t *msg);
-#if COD_VERSION == COD2_1_0
-static const SV_WWWRedirectClient_t SV_WWWRedirectClient = (SV_WWWRedirectClient_t)0x0; // Does not exist in 1.0
-#elif COD_VERSION == COD2_1_2
-static const SV_WWWRedirectClient_t SV_WWWRedirectClient = (SV_WWWRedirectClient_t)0x0808FB78;
-#elif COD_VERSION == COD2_1_3
-static const SV_WWWRedirectClient_t SV_WWWRedirectClient = (SV_WWWRedirectClient_t)0x0808FC0C;
 #endif
 
 typedef WeaponDef_t * (*BG_WeaponDefs_t)(unsigned int weaponIndex);
@@ -705,7 +714,7 @@ static const BG_GetNumWeapons_t BG_GetNumWeapons = (BG_GetNumWeapons_t)0x080EB91
 static const BG_GetNumWeapons_t BG_GetNumWeapons = (BG_GetNumWeapons_t)0x080EBA56;
 #endif
 
-typedef signed int (*sub_80E9758_t)(int a1);
+typedef int (*sub_80E9758_t)(int a1);
 #if COD_VERSION == COD2_1_0
 static const sub_80E9758_t sub_80E9758 = (sub_80E9758_t)0x080E9758;
 #elif COD_VERSION == COD2_1_2
@@ -714,7 +723,7 @@ static const sub_80E9758_t sub_80E9758 = (sub_80E9758_t)0x080EBD48;
 static const sub_80E9758_t sub_80E9758 = (sub_80E9758_t)0x080EBE8C;
 #endif
 
-typedef int (*sub_80D9E84_t)(int a1, signed int a2);
+typedef int (*sub_80D9E84_t)(int a1, int a2);
 #if COD_VERSION == COD2_1_0
 static const sub_80D9E84_t sub_80D9E84 = (sub_80D9E84_t)0x080D9E84;
 #elif COD_VERSION == COD2_1_2

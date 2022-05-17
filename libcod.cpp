@@ -31,6 +31,8 @@ cvar_t *sv_limitLocalRcon;
 cvar_t *sv_logRcon;
 cvar_t *sv_logHeartbeat;
 cvar_t *fs_library;
+cvar_t *sv_wwwBaseURL;
+cvar_t *sv_wwwDlDisconnected;
 cvar_t *sv_downloadMessage;
 cvar_t *fs_callbacks;
 cvar_t *sv_fps;
@@ -140,7 +142,7 @@ void hook_sv_init(const char *format, ...)
 	sv_botKickMessages = Cvar_RegisterBool("sv_botKickMessages", qfalse, CVAR_ARCHIVE);
 	sv_kickMessages = Cvar_RegisterBool("sv_kickMessages", qfalse, CVAR_ARCHIVE);
 	sv_disconnectMessages = Cvar_RegisterBool("sv_disconnectMessages", qfalse, CVAR_ARCHIVE);
-	sv_wwwDlDisconnectedMessages = Cvar_RegisterBool("sv_wwwDlDisconnectedMessages", qfalse, CVAR_ARCHIVE);
+	sv_wwwDlDisconnectedMessages = Cvar_RegisterInt("sv_wwwDlDisconnectedMessages", 0, 0, 2, CVAR_ARCHIVE);
 
 	// Force download on clients
 	cl_allowDownload = Cvar_RegisterBool("cl_allowDownload", qtrue, CVAR_ARCHIVE | CVAR_SYSTEMINFO);
@@ -150,7 +152,9 @@ void hook_sv_init(const char *format, ...)
 	#endif
 
 	sv_maxclients = Cvar_FindVar("sv_maxclients");
+	sv_wwwBaseURL = Cvar_FindVar("sv_wwwBaseURL");
 	sv_allowDownload = Cvar_FindVar("sv_allowDownload");
+	sv_wwwDlDisconnected = Cvar_FindVar("sv_wwwDlDisconnected");
 	sv_pure = Cvar_FindVar("sv_pure");
 	developer = Cvar_FindVar("developer");
 	rcon_password = Cvar_FindVar("rcon_password");
@@ -401,9 +405,7 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 	Com_DPrintf("SV_DropClient for %s\n", drop->name);
 
 	if ( drop->state == CS_ZOMBIE )
-	{
 		return;	// already dropped
-	}
 	
 	drop->delayDropMsg = 0;
 	I_strncpyz(name, drop->name, sizeof(name));
@@ -413,9 +415,7 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 	drop->state = CS_ZOMBIE; // become free in a few seconds
 
 	if ( drop->netchan.remoteAddress.type == NA_BOT )
-	{
 		isBot = qtrue;
-	}
 
 	if ( !isBot )
 	{
@@ -435,54 +435,35 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 	pb_test = FUN_081384cc(reason);
 
 	if ( isBot && !sv_botKickMessages->boolean && I_stricmp(reason, "EXE_DISCONNECTED") == 0 )
-	{
 		showIngameMessage = qfalse;
-	}
 
 	if ( !sv_kickMessages->boolean && I_stricmp(reason, "EXE_PLAYERKICKED") == 0 )
-	{
-		// this overrides enabled sv_botKickMessages
-		showIngameMessage = qfalse;
-	}
+		showIngameMessage = qfalse; // this overrides enabled sv_botKickMessages
 
 	if ( !sv_timeoutMessages->boolean && I_stricmp(reason, "EXE_TIMEDOUT") == 0 )
-	{
 		showIngameMessage = qfalse;
-	}
 
 	if ( !sv_disconnectMessages->boolean && I_stricmp(reason, "EXE_DISCONNECTED") == 0 )
-	{
 		showIngameMessage = qfalse;
-	}
 
-	if ( !sv_wwwDlDisconnectedMessages->boolean && I_stricmp(reason, "PC_PATCH_1_1_DOWNLOADDISCONNECTED") == 0 )
-	{
+	if ( sv_wwwDlDisconnectedMessages->integer != 1 && I_stricmp(reason, "PC_PATCH_1_1_DOWNLOADDISCONNECTED") == 0 )
 		showIngameMessage = qfalse;
-	}
 
 	if ( showIngameMessage )
 	{
 		if ( !pb_test )
-		{
 			SV_SendServerCommand(0, 0, "e \"\x15%s^7 %s%s\"", name, "", reason);
-		}
 		else
-		{
 			SV_SendServerCommand(0, 0, "e \"\x15%s^7 %s%s\"", name, "\x14", reason);
-		}
 	}
 
 	Com_Printf("%i:%s %s\n", drop - svs.clients, name, reason);
 
 	SV_SendServerCommand(0, 1, "J %d", drop - svs.clients);
 	if ( !pb_test )
-	{
 		SV_SendServerCommand(drop, 1, "w \"%s^7 %s\" PB", name, reason);
-	}
 	else
-	{
 		SV_SendServerCommand(drop, 1, "w \"%s\"", reason);
-	}
 
 	// if this was the last client on the server, send a heartbeat
 	// to the master so it is known the server is empty
@@ -491,14 +472,10 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 	for ( i = 0 ; i < sv_maxclients->integer ; i++ )
 	{
 		if ( svs.clients[i].state >= CS_CONNECTED )
-		{
 			break;
-		}
 	}
 	if ( i == sv_maxclients->integer )
-	{
 		SV_Heartbeat();
-	}
 }
 
 void custom_GScr_LoadConsts(void)
@@ -1801,6 +1778,38 @@ void custom_SV_SendClientGameState(client_t *client)
 	LargeLocalDestructor(&buf);
 }
 
+int custom_SV_WWWRedirectClient(client_t *cl, msg_t *msg)
+{
+	long size;
+	fileHandle_t fp;
+
+	size = FS_SV_FOpenFileRead(cl->downloadName, &fp);
+	if ( !size )
+	{
+		Com_Printf("ERROR: Client \'%s\': couldn\'t extract file size for %s\n", cl->downloadName);
+	}
+	else
+	{
+		FS_FCloseFile(fp);
+		I_strncpyz(cl->wwwDownloadURL, custom_va("%s/%s", sv_wwwBaseURL->string, cl->downloadName), MAX_OSPATH);
+		Com_Printf("Redirecting client \'%s\' to %s\n", cl->name, cl->wwwDownloadURL);
+		cl->wwwDownloadStarted = 1;
+		MSG_WriteByte(msg, 5);
+		MSG_WriteShort(msg, -1);
+		MSG_WriteString(msg, cl->wwwDownloadURL);
+		MSG_WriteLong(msg, size);
+		MSG_WriteLong(msg, sv_wwwDlDisconnected->boolean != 0);
+
+		/* new code start */
+		if ( sv_wwwDlDisconnectedMessages->integer == 2 )
+			SV_SendServerCommand(0, 0, "f \"%s^7 downloads %s\"", cl->name, cl->downloadName);
+		/* new code end */
+
+		cl->downloadName[0] = '\0';
+	}
+	return size != 0;
+}
+
 void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 {
 	int curindex;
@@ -1808,32 +1817,20 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 	char errorMessage[COD2_MAX_STRINGLENGTH];
 
 	if (cl->state == CS_ACTIVE)
-	{
-		//Com_DPrintf("clientDownload: Client already in game, name = '%s'\n", cl->downloadName);
 		return;
-	}
+
 	if (!*cl->downloadName)
-	{
-		// Com_DPrintf("clientDownload: Nothing being downloaded\n");
 		return;
-	}
+
 	if (strlen(cl->downloadName) < 4)
-	{
-		// Com_DPrintf("clientDownload: File length too short\n");
 		return;
-	}
+
 	if (strcmp(&cl->downloadName[strlen(cl->downloadName) - 4], ".iwd") != 0)
-	{
-		// Com_DPrintf("clientDownload: Not a iwd file\n");
 		return;
-	}
 
 #if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
 	if ( cl->wwwDlAck )
-	{
-		// Com_DPrintf("clientDownload: wwwDl acknowleged\n");
 		return;
-	}
 #endif
 
 	if (strlen(sv_downloadMessage->string))
@@ -1854,7 +1851,7 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 	{
 		if (!cl->wwwDl_failed)
 		{
-			SV_WWWRedirectClient(cl, msg);
+			custom_SV_WWWRedirectClient(cl, msg);
 			return; // wwwDl redirect
 		}
 	}

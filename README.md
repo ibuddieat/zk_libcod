@@ -15,7 +15,7 @@ List of high-level changes provided by this repository:
   * `sv_botKickMessages` to disable bot disconnect messages being shown to other players
   * `sv_kickMessages` to generally disable player kick messages being shown to other players
   * `sv_disconnectMessages` to disable "Game session no longer available" messages
-  * `sv_wwwDlDisconnectedMessages` to disable misleading download messages being shown to other players
+  * `sv_wwwDlDisconnectedMessages` to adapt/hide download messages being shown to other players
   * `g_debugEvents` to log events such as player footsteps, temporary entities etc.
   * `g_logPickup` to control logging of item pickup actions
   * `g_notifyPickup` to define whether to use the stock pickup logic or custom notify events
@@ -87,6 +87,7 @@ List of high-level changes provided by this repository:
   * `CM_IsBadStaticModel` for `g_debugStaticModels` (this function name is a guess)
   * `G_SpawnEntitiesFromString` et sequentes to provide map weapon info via CodeCallback_MapWeapons
   * `G_CallSpawn`
+  * `SV_WWWRedirectClient` for `sv_wwwDlDisconnectedMessages`
 - Commented out several libcod functions that would make it easy to harm the server with malicious map scripts, thus currently breaking manymaps support
 - Added/updated some missing/unknown declarations
 - Fixed some minor bugs
