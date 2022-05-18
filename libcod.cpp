@@ -29,7 +29,7 @@ cvar_t *g_spawnMapWeapons;
 cvar_t *sv_allowRcon;
 cvar_t *sv_limitLocalRcon;
 cvar_t *sv_logRcon;
-cvar_t *sv_logHeartbeat;
+cvar_t *sv_logHeartbeats;
 cvar_t *fs_library;
 cvar_t *sv_wwwBaseURL;
 cvar_t *sv_wwwDlDisconnected;
@@ -126,23 +126,23 @@ void hook_sv_init(const char *format, ...)
 	sv_noauthorize = Cvar_RegisterBool("sv_noauthorize", qfalse, CVAR_ARCHIVE);
 	g_debugEvents = Cvar_RegisterBool("g_debugEvents", qfalse, CVAR_ARCHIVE);
 	g_debugStaticModels = Cvar_RegisterBool("g_debugStaticModels", qfalse, CVAR_ARCHIVE);
-	g_logPickup = Cvar_RegisterBool("g_logPickup", qfalse, CVAR_ARCHIVE);
-	g_notifyPickup = Cvar_RegisterBool("g_notifyPickup", qtrue, CVAR_ARCHIVE);
+	g_logPickup = Cvar_RegisterBool("g_logPickup", qtrue, CVAR_ARCHIVE);
+	g_notifyPickup = Cvar_RegisterBool("g_notifyPickup", qfalse, CVAR_ARCHIVE);
 	g_playerCollision = Cvar_RegisterBool("g_playerCollision", qtrue, CVAR_ARCHIVE);
 	g_playerEject = Cvar_RegisterBool("g_playerEject", qtrue, CVAR_ARCHIVE);
-	g_spawnMapWeapons = Cvar_RegisterBool("g_spawnMapWeapons", qfalse, CVAR_ARCHIVE);
+	g_spawnMapWeapons = Cvar_RegisterBool("g_spawnMapWeapons", qtrue, CVAR_ARCHIVE);
 	sv_allowRcon = Cvar_RegisterBool("sv_allowRcon", qtrue, CVAR_ARCHIVE);
-	sv_limitLocalRcon = Cvar_RegisterBool("sv_limitLocalRcon", qfalse, CVAR_ARCHIVE);
-	sv_logRcon = Cvar_RegisterBool("sv_logRcon", qfalse, CVAR_ARCHIVE);
-	sv_logHeartbeat = Cvar_RegisterBool("sv_logHeartbeat", qfalse, CVAR_ARCHIVE);
+	sv_limitLocalRcon = Cvar_RegisterBool("sv_limitLocalRcon", qtrue, CVAR_ARCHIVE);
+	sv_logRcon = Cvar_RegisterBool("sv_logRcon", qtrue, CVAR_ARCHIVE);
+	sv_logHeartbeats = Cvar_RegisterBool("sv_logHeartbeats", qtrue, CVAR_ARCHIVE);
 	fs_library = Cvar_RegisterString("fs_library", "", CVAR_ARCHIVE);
 	sv_downloadMessage = Cvar_RegisterString("sv_downloadMessage", "", CVAR_ARCHIVE);
 	fs_callbacks = Cvar_RegisterString("fs_callbacks", "", CVAR_ARCHIVE);
-	sv_timeoutMessages = Cvar_RegisterBool("sv_timeoutMessages", qfalse, CVAR_ARCHIVE);
-	sv_botKickMessages = Cvar_RegisterBool("sv_botKickMessages", qfalse, CVAR_ARCHIVE);
-	sv_kickMessages = Cvar_RegisterBool("sv_kickMessages", qfalse, CVAR_ARCHIVE);
-	sv_disconnectMessages = Cvar_RegisterBool("sv_disconnectMessages", qfalse, CVAR_ARCHIVE);
-	sv_wwwDlDisconnectedMessages = Cvar_RegisterInt("sv_wwwDlDisconnectedMessages", 0, 0, 2, CVAR_ARCHIVE);
+	sv_timeoutMessages = Cvar_RegisterBool("sv_timeoutMessages", qtrue, CVAR_ARCHIVE);
+	sv_botKickMessages = Cvar_RegisterBool("sv_botKickMessages", qtrue, CVAR_ARCHIVE);
+	sv_kickMessages = Cvar_RegisterBool("sv_kickMessages", qtrue, CVAR_ARCHIVE);
+	sv_disconnectMessages = Cvar_RegisterBool("sv_disconnectMessages", qtrue, CVAR_ARCHIVE);
+	sv_wwwDlDisconnectedMessages = Cvar_RegisterInt("sv_wwwDlDisconnectedMessages", 1, 0, 2, CVAR_ARCHIVE);
 
 	// Force download on clients
 	cl_allowDownload = Cvar_RegisterBool("cl_allowDownload", qtrue, CVAR_ARCHIVE | CVAR_SYSTEMINFO);
@@ -193,21 +193,21 @@ void custom_sv_masterheartbeat(const char *hbname)
 	*(int *)&sig = hook_sv_masterheartbeat->from;
 
 	#if COD_VERSION == COD2_1_0
-	int sending_heartbeat_string_offset = 0x0;  // Not tested
+	int sending_heartbeat_string_offset = 0x0; // Not tested
 	#elif COD_VERSION == COD2_1_2
-	int sending_heartbeat_string_offset = 0x0;  // Not tested
+	int sending_heartbeat_string_offset = 0x0; // Not tested
 	#elif COD_VERSION == COD2_1_3
 	int sending_heartbeat_string_offset = 0x0814BBC0;
 	#endif
 
-	if ( logHeartbeat && !sv_logHeartbeat->boolean )
+	if ( logHeartbeat && !sv_logHeartbeats->boolean )
 	{
 		byte disable = 0;
 		memcpy((void *)sending_heartbeat_string_offset, &disable, 1);
 		logHeartbeat = qfalse;
 		Com_DPrintf("Disabled heartbeat logging\n");
 	}
-	else if ( !logHeartbeat && sv_logHeartbeat->boolean )
+	else if ( !logHeartbeat && sv_logHeartbeats->boolean )
 	{
 		byte enable = 0x53; // "S"
 		memcpy((void *)sending_heartbeat_string_offset, &enable, 1);
@@ -546,12 +546,10 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 		{
 			if ( bg_item->giType == IT_WEAPON )
 			{
-				Com_DPrintf("Touch_Item client %d picked up weapon %s with count %d\n", client->ps.clientNum, BG_WeaponDefs(bg_item->giAmmoIndex)->szInternalName, bg_item->quantity);
 				G_LogPrintf("Weapon;%d;%d;%s;%s\n", SV_GetGuid((entity->s).number), (entity->s).number, name, BG_WeaponDefs(bg_item->giAmmoIndex)->szInternalName);
 			}
 			else
 			{
-				Com_DPrintf("Touch_Item client %d picked up ammo %s\n", client->ps.clientNum, bg_item->classname);
 				G_LogPrintf("Item;%d;%d;%s;%s\n", SV_GetGuid((entity->s).number), (entity->s).number, name, bg_item->classname);
 			}
 		}
