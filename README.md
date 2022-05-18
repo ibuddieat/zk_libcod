@@ -89,7 +89,7 @@ List of high-level changes provided by this repository:
   * `G_CallSpawn`
   * `SV_WWWRedirectClient` for `sv_wwwDlDisconnectedMessages`
 - Patched Com_PrintMessage so that strings that begin with a caret are printed properly
-- Commented out several libcod functions that would make it easy to harm the server with malicious map scripts, thus currently breaking manymaps support
+- Added compile flag `ENABLE_UNSAFE` to toggle the availability of potentially unsafe script functions that would make it easy to harm the server with malicious map scripts
 - Added/updated some missing/unknown declarations
 - Fixed some minor bugs
 

@@ -191,8 +191,10 @@ scr_function_t scriptFunctions[] =
 	{"remotecommand", gsc_utils_remotecommand, 0},
 	{"cmd_executestring", gsc_utils_executestring, 0},
 	{"sendgameservercommand", gsc_utils_sendgameservercommand, 0},
-	/* {"system", gsc_utils_system, 0}, */
-	
+#if ENABLE_UNSAFE == 1
+	{"system", gsc_utils_system, 0},
+#endif
+
 	{"printf", gsc_utils_printf, 0},
 	{"sprintf", gsc_utils_sprintf, 0},
 	{"printoutofband", gsc_utils_outofbandprint, 0}, //
@@ -203,7 +205,8 @@ scr_function_t scriptFunctions[] =
 	{"getascii", gsc_utils_getascii, 0},
 	{"toupper", gsc_utils_toupper, 0},
 
-	/* {"file_link", gsc_utils_file_link, 0},
+#if ENABLE_UNSAFE == 1
+	{"file_link", gsc_utils_file_link, 0},
 	{"file_unlink", gsc_utils_file_unlink, 0},
 	{"file_exists", gsc_utils_file_exists, 0},
 	{"FS_LoadDir", gsc_utils_FS_LoadDir, 0},
@@ -213,7 +216,8 @@ scr_function_t scriptFunctions[] =
 	{"fwrite", gsc_utils_fwrite, 0},
 	{"fclose", gsc_utils_fclose, 0},
 	{"fsize", gsc_utils_fsize, 0},
-	{"fremove", gsc_utils_fremove, 0}, */
+	{"fremove", gsc_utils_fremove, 0},
+#endif
 	
 	{"getsystemtime", gsc_utils_getsystemtime, 0}, //
 	{"getserverstarttime", gsc_utils_getserverstarttime, 0}, //
