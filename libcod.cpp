@@ -3895,6 +3895,26 @@ LAB_081131e1:
 	}
 }
 
+void com_printmessage_caret_patch(void)
+{
+	#if COD_VERSION == COD2_1_0
+	int caret_check_offset = 0x0; // Not tested
+	#elif COD_VERSION == COD2_1_2
+	int caret_check_offset = 0x0; // Not tested
+	#elif COD_VERSION == COD2_1_3
+	int caret_check_offset = 0x08060CCA;
+	#endif
+
+	// removes the following piece of code in Com_PrintMessage:
+	/*
+	if ( *message == '^' && message[1] != '\0' )
+	{
+		message += 2;
+	}
+	*/
+	memset((int *)caret_check_offset, 0x90, 23);
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -4134,7 +4154,7 @@ public:
 		cracking_hook_call(0x08095CB2, (int)hook_SV_GetChallenge);
 		cracking_hook_call(0x08095E1D, (int)hook_SVC_RemoteCommand);
 #endif
-
+		com_printmessage_caret_patch();
 #endif
 		gsc_weapons_init();
 		printf("> [PLUGIN LOADED]\n");
