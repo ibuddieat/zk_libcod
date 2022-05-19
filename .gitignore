@@ -1,32 +1,39 @@
-*
-!.gitignore
-!config.hpp
-!cracking.cpp
-!cracking.hpp
-!declarations.hpp
-!doit.sh
-!functions.hpp
-!gsc.cpp
-!gsc.hpp
-!gsc_bots.cpp
-!gsc_bots.hpp
-!gsc_entity.cpp
-!gsc_entity.hpp
-!gsc_exec.cpp
-!gsc_exec.hpp
-!gsc_level.cpp
-!gsc_level.hpp
-!gsc_memory.cpp
-!gsc_memory.hpp
-!gsc_mysql.cpp
-!gsc_mysql.hpp
-!gsc_mysql_voron.cpp
-!gsc_mysql_voron.hpp
-!gsc_player.cpp
-!gsc_player.hpp
-!gsc_utils.cpp
-!gsc_utils.hpp
-!gsc_weapons.cpp
-!gsc_weapons.hpp
-!libcod.cpp
-!README.md
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Libcod
+bin/**
+extra/**
+objects_cod2_1_0/**
+objects_cod2_1_2/**
+objects_cod2_1_3/**
