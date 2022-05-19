@@ -8,6 +8,7 @@
 /* default stuff */
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <math.h>
 #include <dlfcn.h> // dlcall
@@ -19,6 +20,7 @@
 #include <stddef.h> // offsetof
 #include <ctype.h> // toupper
 #include <time.h>  // getsystemtime
+#include <sys/time.h> // milliseconds
 #include <sys/stat.h> // fsize
 
 #include "config.hpp"
@@ -131,7 +133,7 @@ int stackGetParamObject(int param, unsigned int *value);
 xfunction_t Scr_GetCustomFunction(const char **fname, qboolean *fdev);
 xmethod_t Scr_GetCustomMethod(const char **fname, qboolean *fdev);
 
-uint64_t Sys_Milliseconds(void);
+uint64_t Sys_MilliSeconds64(void);
 char *custom_va(const char *format, ...);
 
 #endif

@@ -120,6 +120,24 @@ static const Sys_EnterCriticalSectionInternal_t Sys_EnterCriticalSectionInternal
 static const Sys_EnterCriticalSectionInternal_t Sys_EnterCriticalSectionInternal = (Sys_EnterCriticalSectionInternal_t)0x080D6842;
 #endif
 
+typedef void * (*Sys_GetValue_t)(int key);
+#if COD_VERSION == COD2_1_0
+static const Sys_GetValue_t Sys_GetValue = (Sys_GetValue_t)0x080D44A4;
+#elif COD_VERSION == COD2_1_2
+static const Sys_GetValue_t Sys_GetValue = (Sys_GetValue_t)0x080D6A7C;
+#elif COD_VERSION == COD2_1_3
+static const Sys_GetValue_t Sys_GetValue = (Sys_GetValue_t)0x080D6BC0;
+#endif
+
+typedef int (*Sys_IsLANAddress_t)(netadr_t adr);
+#if COD_VERSION == COD2_1_0
+static const Sys_IsLANAddress_t Sys_IsLANAddress = (Sys_IsLANAddress_t)0x080D2FC8;
+#elif COD_VERSION == COD2_1_2
+static const Sys_IsLANAddress_t Sys_IsLANAddress = (Sys_IsLANAddress_t)0x080D54F4;
+#elif COD_VERSION == COD2_1_3
+static const Sys_IsLANAddress_t Sys_IsLANAddress = (Sys_IsLANAddress_t)0x080D5638;
+#endif
+
 typedef void (*Sys_LeaveCriticalSectionInternal_t)(int section);
 #if COD_VERSION == COD2_1_0
 static const Sys_LeaveCriticalSectionInternal_t Sys_LeaveCriticalSectionInternal = (Sys_LeaveCriticalSectionInternal_t)0x0; // Not tested
@@ -127,6 +145,24 @@ static const Sys_LeaveCriticalSectionInternal_t Sys_LeaveCriticalSectionInternal
 static const Sys_LeaveCriticalSectionInternal_t Sys_LeaveCriticalSectionInternal = (Sys_LeaveCriticalSectionInternal_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const Sys_LeaveCriticalSectionInternal_t Sys_LeaveCriticalSectionInternal = (Sys_LeaveCriticalSectionInternal_t)0x080D6864;
+#endif
+
+typedef int (*Sys_MilliSeconds_t)(void);
+#if COD_VERSION == COD2_1_0
+static const Sys_MilliSeconds_t Sys_MilliSeconds = (Sys_MilliSeconds_t)0x080D3728;
+#elif COD_VERSION == COD2_1_2
+static const Sys_MilliSeconds_t Sys_MilliSeconds = (Sys_MilliSeconds_t)0x080D5C54;
+#elif COD_VERSION == COD2_1_3
+static const Sys_MilliSeconds_t Sys_MilliSeconds = (Sys_MilliSeconds_t)0x080D5D98;
+#endif
+
+typedef void (*Sys_SetValue_t)(int key, void *value);
+#if COD_VERSION == COD2_1_0
+static const Sys_SetValue_t Sys_SetValue = (Sys_SetValue_t)0x080D4492;
+#elif COD_VERSION == COD2_1_2
+static const Sys_SetValue_t Sys_SetValue = (Sys_SetValue_t)0x080D6A6A;
+#elif COD_VERSION == COD2_1_3
+static const Sys_SetValue_t Sys_SetValue = (Sys_SetValue_t)0x080D6BAE;
 #endif
 
 typedef void (*Com_Printf_t)(const char *format, ...);
@@ -480,6 +516,15 @@ static const SV_GetChallenge_t SV_GetChallenge = (SV_GetChallenge_t)0x0808D0C2;
 static const SV_GetChallenge_t SV_GetChallenge = (SV_GetChallenge_t)0x0808D18E;
 #endif
 
+typedef void (*SV_DirectConnect_t)(netadr_t from);
+#if COD_VERSION == COD2_1_0
+static const SV_DirectConnect_t SV_DirectConnect = (SV_DirectConnect_t)0x0808D0E6;
+#elif COD_VERSION == COD2_1_2
+static const SV_DirectConnect_t SV_DirectConnect = (SV_DirectConnect_t)0x0808E1EA;
+#elif COD_VERSION == COD2_1_3
+static const SV_DirectConnect_t SV_DirectConnect = (SV_DirectConnect_t)0x0808E2AA;
+#endif
+
 typedef void (*SVC_Info_t)(netadr_t from);
 #if COD_VERSION == COD2_1_0
 static const SVC_Info_t SVC_Info = (SVC_Info_t)0x08093980;
@@ -813,15 +858,6 @@ static const BG_AnimationIndexForString_t BG_AnimationIndexForString = (BG_Anima
 static const BG_AnimationIndexForString_t BG_AnimationIndexForString = (BG_AnimationIndexForString_t)0x080D6DD0;
 #endif
 
-typedef int (*Sys_IsLANAddress_t)(netadr_t adr);
-#if COD_VERSION == COD2_1_0
-static const Sys_IsLANAddress_t Sys_IsLANAddress = (Sys_IsLANAddress_t)0x080D2FC8;
-#elif COD_VERSION == COD2_1_2
-static const Sys_IsLANAddress_t Sys_IsLANAddress = (Sys_IsLANAddress_t)0x080D54F4;
-#elif COD_VERSION == COD2_1_3
-static const Sys_IsLANAddress_t Sys_IsLANAddress = (Sys_IsLANAddress_t)0x080D5638;
-#endif
-
 typedef void (*LookAtKiller_t)(gentity_t *self, gentity_t *inflictor, gentity_t *attacker);
 #if COD_VERSION == COD2_1_0
 static const LookAtKiller_t LookAtKiller = (LookAtKiller_t)0x080FF17A;
@@ -838,24 +874,6 @@ static const Scr_IsSystemActive_t Scr_IsSystemActive = (Scr_IsSystemActive_t)0x0
 static const Scr_IsSystemActive_t Scr_IsSystemActive = (Scr_IsSystemActive_t)0x080845AC;
 #elif COD_VERSION == COD2_1_3
 static const Scr_IsSystemActive_t Scr_IsSystemActive = (Scr_IsSystemActive_t)0x08084678;
-#endif
-
-typedef void * (*Sys_GetValue_t)(int key);
-#if COD_VERSION == COD2_1_0
-static const Sys_GetValue_t Sys_GetValue = (Sys_GetValue_t)0x080D44A4;
-#elif COD_VERSION == COD2_1_2
-static const Sys_GetValue_t Sys_GetValue = (Sys_GetValue_t)0x080D6A7C;
-#elif COD_VERSION == COD2_1_3
-static const Sys_GetValue_t Sys_GetValue = (Sys_GetValue_t)0x080D6BC0;
-#endif
-
-typedef void (*Sys_SetValue_t)(int key, void *value);
-#if COD_VERSION == COD2_1_0
-static const Sys_SetValue_t Sys_SetValue = (Sys_SetValue_t)0x080D4492;
-#elif COD_VERSION == COD2_1_2
-static const Sys_SetValue_t Sys_SetValue = (Sys_SetValue_t)0x080D6A6A;
-#elif COD_VERSION == COD2_1_3
-static const Sys_SetValue_t Sys_SetValue = (Sys_SetValue_t)0x080D6BAE;
 #endif
 
 typedef int (*Scr_GetInt_t)(uint param);

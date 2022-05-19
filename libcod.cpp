@@ -2139,13 +2139,13 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 
 	clientframes[clientnum]++;
 
-	if ( Sys_Milliseconds() - clientframetime[clientnum] >= 1000 )
+	if ( Sys_MilliSeconds64() - clientframetime[clientnum] >= 1000 )
 	{
 		if (clientframes[clientnum] > 1000)
 			clientframes[clientnum] = 1000;
 
 		clientfps[clientnum] = clientframes[clientnum];
-		clientframetime[clientnum] = Sys_Milliseconds();
+		clientframetime[clientnum] = Sys_MilliSeconds64();
 		clientframes[clientnum] = 0;
 	}
 	
@@ -2359,7 +2359,7 @@ static leakyBucket_t *SVC_BucketForAddress( netadr_t address, int burst, int per
 	leakyBucket_t *bucket = NULL;
 	int	i;
 	long hash = SVC_HashForAddress( address );
-	uint64_t now = Sys_Milliseconds();
+	int now = Sys_MilliSeconds();
 
 	for ( bucket = bucketHashes[ hash ]; bucket; bucket = bucket->next )
 	{
@@ -2418,7 +2418,7 @@ bool SVC_RateLimit( leakyBucket_t *bucket, int burst, int period )
 {
 	if ( bucket != NULL )
 	{
-		uint64_t now = Sys_Milliseconds();
+		int now = Sys_MilliSeconds();
 		int interval = now - bucket->lastTime;
 		int expired = interval / period;
 		int expiredRemainder = interval % period;
@@ -2595,6 +2595,26 @@ void hook_SV_GetChallenge(netadr_t from)
 	}
 
 	SV_GetChallenge(from);
+}
+
+void hook_SV_DirectConnect(netadr_t from)
+{
+	// Prevent using connect as an amplifier
+	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
+	{
+		Com_DPrintf( "SV_DirectConnect: rate limit from %s exceeded, dropping request\n", NET_AdrToString( from ) );
+		return;
+	}
+
+	// Allow connect to be DoSed relatively easily, but prevent
+	// excess outbound bandwidth usage when being flooded inbound
+	if ( SVC_RateLimit( &outboundLeakyBucket, 10, 100 ) )
+	{
+		Com_DPrintf( "SV_DirectConnect: rate limit exceeded, dropping request\n" );
+		return;
+	}
+
+	SV_DirectConnect(from);
 }
 
 void hook_SVC_Info(netadr_t from)
@@ -3823,8 +3843,9 @@ public:
 			#if COMPILE_RATELIMITER == 1
 				cracking_hook_call(0x08094081, (int)hook_SVC_Info);
 				cracking_hook_call(0x0809403E, (int)hook_SVC_Status);
-				cracking_hook_call(0x080940C4, (int)hook_SV_GetChallenge);
 				cracking_hook_call(0x08094191, (int)hook_SVC_RemoteCommand);
+				cracking_hook_call(0x080940C4, (int)hook_SV_GetChallenge);
+				cracking_hook_call(0x08094107, (int)hook_SV_DirectConnect);
 			#endif
 
 		#elif COD_VERSION == COD2_1_2
@@ -3894,8 +3915,9 @@ public:
 			#if COMPILE_RATELIMITER == 1
 				cracking_hook_call(0x08095B8E, (int)hook_SVC_Info);
 				cracking_hook_call(0x08095ADA, (int)hook_SVC_Status);
-				cracking_hook_call(0x08095BF8, (int)hook_SV_GetChallenge);
 				cracking_hook_call(0x08095D63, (int)hook_SVC_RemoteCommand);
+				cracking_hook_call(0x08095BF8, (int)hook_SV_GetChallenge);
+				cracking_hook_call(0x08095CB2, (int)hook_SV_DirectConnect);
 			#endif
 
 		#elif COD_VERSION == COD2_1_3
@@ -3986,8 +4008,9 @@ public:
 			#if COMPILE_RATELIMITER == 1
 				cracking_hook_call(0x08095C48, (int)hook_SVC_Info);
 				cracking_hook_call(0x08095B94, (int)hook_SVC_Status);
-				cracking_hook_call(0x08095CB2, (int)hook_SV_GetChallenge);
 				cracking_hook_call(0x08095E1D, (int)hook_SVC_RemoteCommand);
+				cracking_hook_call(0x08095CB2, (int)hook_SV_GetChallenge);
+				cracking_hook_call(0x08095D6C, (int)hook_SV_DirectConnect);
 			#endif
 		#endif
 
