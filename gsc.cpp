@@ -187,13 +187,17 @@ scr_function_t scriptFunctions[] =
 	{"binarybuffer_read", gsc_binarybuffer_read, 0},
 #endif
 
+#if COMPILE_PLAYER == 1
+	{"kick2", gsc_player_kick2, 0},
+#endif
+
 #if COMPILE_UTILS == 1
 	{"remotecommand", gsc_utils_remotecommand, 0},
 	{"cmd_executestring", gsc_utils_executestring, 0},
 	{"sendgameservercommand", gsc_utils_sendgameservercommand, 0},
-#if ENABLE_UNSAFE == 1
-	{"system", gsc_utils_system, 0},
-#endif
+	#if ENABLE_UNSAFE == 1
+		{"system", gsc_utils_system, 0},
+	#endif
 
 	{"printf", gsc_utils_printf, 0},
 	{"sprintf", gsc_utils_sprintf, 0},
@@ -205,19 +209,19 @@ scr_function_t scriptFunctions[] =
 	{"getascii", gsc_utils_getascii, 0},
 	{"toupper", gsc_utils_toupper, 0},
 
-#if ENABLE_UNSAFE == 1
-	{"file_link", gsc_utils_file_link, 0},
-	{"file_unlink", gsc_utils_file_unlink, 0},
-	{"file_exists", gsc_utils_file_exists, 0},
-	{"FS_LoadDir", gsc_utils_FS_LoadDir, 0},
-	{"scandir", gsc_utils_scandir, 0},
-	{"fopen", gsc_utils_fopen, 0},
-	{"fread", gsc_utils_fread, 0},
-	{"fwrite", gsc_utils_fwrite, 0},
-	{"fclose", gsc_utils_fclose, 0},
-	{"fsize", gsc_utils_fsize, 0},
-	{"fremove", gsc_utils_fremove, 0},
-#endif
+	#if ENABLE_UNSAFE == 1
+		{"file_link", gsc_utils_file_link, 0},
+		{"file_unlink", gsc_utils_file_unlink, 0},
+		{"file_exists", gsc_utils_file_exists, 0},
+		{"FS_LoadDir", gsc_utils_FS_LoadDir, 0},
+		{"scandir", gsc_utils_scandir, 0},
+		{"fopen", gsc_utils_fopen, 0},
+		{"fread", gsc_utils_fread, 0},
+		{"fwrite", gsc_utils_fwrite, 0},
+		{"fclose", gsc_utils_fclose, 0},
+		{"fsize", gsc_utils_fsize, 0},
+		{"fremove", gsc_utils_fremove, 0},
+	#endif
 	
 	{"getsystemtime", gsc_utils_getsystemtime, 0}, //
 	{"getserverstarttime", gsc_utils_getserverstarttime, 0}, //
@@ -380,7 +384,6 @@ scr_method_t scriptMethods[] =
 	{"isusingturret", gsc_player_isusingturret, 0},
 	{"lookatkiller", gsc_player_lookatkiller, 0},
 	{"isbot", gsc_player_isbot, 0},
-	{"dropclient", gsc_player_dropclient, 0},
 	{"getcurrentoffhandslotammo", gsc_player_getcurrentoffhandslotammo, 0},
 	{"getweaponindexoffhand", gsc_player_getweaponindexoffhand, 0},
 	{"noclip", gsc_player_noclip, 0},

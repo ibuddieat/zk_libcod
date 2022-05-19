@@ -929,18 +929,33 @@ void gsc_player_getcooktime(scr_entref_t id)
 	stackPushInt(ps->grenadeTimeLeft);
 }
 
-void gsc_player_dropclient(scr_entref_t id)
+void gsc_player_kick2()
 {
-	char * msg;
+	int id;
+	char* msg;
+	char tmp[128];
 
-	if ( ! stackGetParams("s", &msg))
+	if ( ! stackGetParams("is", &id, &msg))
 	{
-		stackError("gsc_drop_client() one or more arguments is undefined or has a wrong type");
+		stackError("gsc_player_kick2() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
-	
-	client_t * client = &svs.clients[id];
+
+	if (id >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_kick2() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	client_t *client = &svs.clients[id];
+
+	if (client == NULL)
+	{
+		stackPushUndefined();
+		return;
+	}
 
 	if (client->netchan.remoteAddress.type == NA_LOOPBACK)
 	{
@@ -948,7 +963,10 @@ void gsc_player_dropclient(scr_entref_t id)
 		return;
 	}
 
-	SV_DropClient(client, msg);
+	strncpy(tmp, msg, sizeof(tmp));
+	tmp[sizeof(tmp)] = '\0';
+
+	SV_DropClient(client, tmp);
 	stackPushBool(qtrue);
 }
 
