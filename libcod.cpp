@@ -103,8 +103,8 @@ int player_g_speed[MAX_CLIENTS] = {0};
 int player_g_gravity[MAX_CLIENTS] = {0};
 int custom_animation[MAX_CLIENTS] = {0};
 int clientfps[MAX_CLIENTS] = {0};
-int tempfps[MAX_CLIENTS] = {0};
-int fpstime[MAX_CLIENTS] = {0};
+int clientframes[MAX_CLIENTS] = {0};
+uint64_t clientframetime[MAX_CLIENTS] = {0};
 int previousbuttons[MAX_CLIENTS] = {0};
 #if COMPILE_BOTS == 1
 	int bot_buttons[MAX_CLIENTS] = {0};
@@ -1625,16 +1625,16 @@ void custom_SV_SendClientGameState(client_t *client)
 	custom_animation[client - svs.clients] = 0;
 	
 	clientfps[client - svs.clients] = 0;
-	tempfps[client - svs.clients] = 0;
-	fpstime[client - svs.clients] = 0;
+	clientframes[client - svs.clients] = 0;
+	clientframetime[client - svs.clients] = 0;
 	previousbuttons[client - svs.clients] = 0;
 	
-#if COMPILE_BOTS == 1
-	bot_buttons[client - svs.clients] = 0;
-	bot_weapon[client - svs.clients] = 0;
-	bot_forwardmove[client - svs.clients] = 0;
-	bot_rightmove[client - svs.clients] = 0;
-#endif
+	#if COMPILE_BOTS == 1
+		bot_buttons[client - svs.clients] = 0;
+		bot_weapon[client - svs.clients] = 0;
+		bot_forwardmove[client - svs.clients] = 0;
+		bot_rightmove[client - svs.clients] = 0;
+	#endif
 	/* New code end */
 	
 	MSG_Init(&msg, data, MAX_MSGLEN);
@@ -2137,16 +2137,16 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 
 	int clientnum = cl - svs.clients;
 
-	tempfps[clientnum]++;
+	clientframes[clientnum]++;
 
-	if ( level.time - fpstime[clientnum] >= 1000 )
+	if ( Sys_Milliseconds() - clientframetime[clientnum] >= 1000 )
 	{
-		if (tempfps[clientnum] > 1000)
-			tempfps[clientnum] = 1000;
+		if (clientframes[clientnum] > 1000)
+			clientframes[clientnum] = 1000;
 
-		clientfps[clientnum] = tempfps[clientnum];
-		fpstime[clientnum] = level.time;
-		tempfps[clientnum] = 0;
+		clientfps[clientnum] = clientframes[clientnum];
+		clientframetime[clientnum] = Sys_Milliseconds();
+		clientframes[clientnum] = 0;
 	}
 	
 	if ( ucmd->buttons & KEY_MASK_FIRE && !(previousbuttons[clientnum] & KEY_MASK_FIRE) )
