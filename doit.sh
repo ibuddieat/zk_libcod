@@ -134,6 +134,19 @@ if grep -q "COMPILE_WEAPONS 1" config.hpp; then
 	$cc $options $constants -c gsc_weapons.cpp -o objects_$1/gsc_weapons.opp
 fi
 
+if [ "$(< config.hpp grep '#define COMPILE_BSP' | grep -o '[0-9]')" == "1" ]; then
+	echo "##### COMPILE $1 BSP.CPP #####"
+	$cc $options $constants -c bsp.cpp -o objects_"$1"/bsp.opp
+fi
+
+if [ "$(< config.hpp grep '#define COMPILE_JUMP' | grep -o '[0-9]')" == "1" ]; then
+	echo "##### COMPILE $1 JUMP.CPP #####"
+	$cc $options $constants -c jump.cpp -o objects_"$1"/jump.opp
+fi
+
+echo "##### COMPILE $1 LIBCOD.CPP #####"
+$cc $options $constants -c libcod.cpp -o objects_$1/libcod.opp
+
 if [ -d extra ]; then
 	echo "##### COMPILE $1 EXTRAS #####"
 	cd extra
@@ -144,9 +157,6 @@ if [ -d extra ]; then
 	done
 	cd ..
 fi
-
-echo "##### COMPILE $1 LIBCOD.CPP #####"
-$cc $options $constants -c libcod.cpp -o objects_$1/libcod.opp
 
 echo "##### LINKING lib$1.so #####"
 objects="$(ls objects_$1/*.opp)"

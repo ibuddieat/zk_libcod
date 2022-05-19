@@ -393,6 +393,10 @@ scr_method_t scriptMethods[] =
 	{"silent", gsc_player_silent, 0},
 	{"getgroundentity", gsc_player_getgroundentity, 0},
 	{"getentertime", gsc_player_getentertime, 0},
+#if COMPILE_JUMP == 1
+	{"setjump_height", gsc_player_setjump_height, 0},
+	{"setjump_slowdownenable", gsc_player_setjump_slowdownenable, 0},
+#endif
 #endif
 
 #if COMPILE_WEAPONS == 1

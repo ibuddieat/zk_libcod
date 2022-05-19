@@ -39,6 +39,8 @@ void gsc_player_isonladder(scr_entref_t id);
 void gsc_player_isusingturret(scr_entref_t id);
 void gsc_player_getjumpslowdowntimer(scr_entref_t id);
 void gsc_player_clearjumpstate(scr_entref_t id);
+void gsc_player_setjump_slowdownenable(scr_entref_t id);
+void gsc_player_setjump_height(scr_entref_t id);
 void gsc_player_setg_speed(scr_entref_t id);
 void gsc_player_setg_gravity(scr_entref_t id);
 void gsc_player_getg_speed(scr_entref_t id);

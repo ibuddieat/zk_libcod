@@ -22,12 +22,16 @@
 #include <sys/stat.h> // fsize
 
 #include "config.hpp"
-#include "declarations.hpp" //voron tak reshil :)
+#include "declarations.hpp" // voron tak reshil :)
 #include "cracking.hpp"
 #include "functions.hpp"
 
 #if COMPILE_BOTS == 1
 #include "gsc_bots.hpp"
+#endif
+
+#if COMPILE_BSP == 1
+#include "bsp.hpp"
 #endif
 
 #if COMPILE_ENTITY == 1
@@ -36,6 +40,10 @@
 
 #if COMPILE_EXEC == 1
 #include "gsc_exec.hpp"
+#endif
+
+#if COMPILE_JUMP == 1
+#include "jump.hpp"
 #endif
 
 #if COMPILE_LEVEL == 1

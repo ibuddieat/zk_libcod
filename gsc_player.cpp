@@ -1387,4 +1387,68 @@ void gsc_player_getentertime(scr_entref_t id)
 	stackPushInt(entity->client->sess.enterTime);
 }
 
+#if COMPILE_JUMP == 1
+void gsc_player_setjump_height(scr_entref_t id)
+{
+	float jump_height;
+
+	if ( ! stackGetParams("f", &jump_height))
+	{
+		stackError("gsc_player_setjump_height() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if (id >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_setjump_height() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	extern bool player_jump_height_enabled[MAX_CLIENTS];
+	extern float player_jump_height[MAX_CLIENTS];
+
+	if (jump_height < 0)
+		player_jump_height_enabled[id] = false;
+	else
+	{
+		player_jump_height_enabled[id] = true;
+		player_jump_height[id] = jump_height;
+	}
+	stackPushBool(qtrue);
+}
+
+void gsc_player_setjump_slowdownenable(scr_entref_t id)
+{
+	int slowdown;
+
+	if ( ! stackGetParams("i", &slowdown))
+	{
+		stackError("gsc_player_setjump_slowdownenable() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if (id >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_setjump_slowdownenable() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	extern bool player_jump_slowdownenable_enabled[MAX_CLIENTS];
+	extern bool player_jump_slowdownenable[MAX_CLIENTS];
+
+	if (slowdown == -1)
+		player_jump_slowdownenable_enabled[id] = false;
+	else
+	{
+		player_jump_slowdownenable_enabled[id] = true;
+		player_jump_slowdownenable[id] = slowdown;
+	}
+	stackPushBool(qtrue);
+}
+#endif
+
 #endif

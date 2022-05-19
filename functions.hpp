@@ -210,6 +210,51 @@ static const FS_LoadDir_t FS_LoadDir = (FS_LoadDir_t)0x080A22D8;
 static const FS_LoadDir_t FS_LoadDir = (FS_LoadDir_t)0x080A241C;
 #endif
 
+typedef void (*FS_Printf_t)(fileHandle_t h, const char *fmt, ...);
+#if COD_VERSION == COD2_1_0
+static const FS_Printf_t FS_Printf = (FS_Printf_t)0x0809E52A;
+#elif COD_VERSION == COD2_1_2
+static const FS_Printf_t FS_Printf = (FS_Printf_t)0x080A05E8;
+#elif COD_VERSION == COD2_1_3
+static const FS_Printf_t FS_Printf = (FS_Printf_t)0x080A072C;
+#endif
+
+typedef fileHandle_t (*FS_FOpenFileWrite_t)(const char* filename);
+#if COD_VERSION == COD2_1_0
+static const FS_FOpenFileWrite_t FS_FOpenFileWrite = (FS_FOpenFileWrite_t)0x0809CDDE;
+#elif COD_VERSION == COD2_1_2
+static const FS_FOpenFileWrite_t FS_FOpenFileWrite = (FS_FOpenFileWrite_t)0x0809EE9C;
+#elif COD_VERSION == COD2_1_3
+static const FS_FOpenFileWrite_t FS_FOpenFileWrite = (FS_FOpenFileWrite_t)0x0809EFE0;
+#endif
+
+typedef long (*FS_SV_FOpenFileRead_t)(const char *filename, fileHandle_t *fp);
+#if COD_VERSION == COD2_1_0
+static const FS_SV_FOpenFileRead_t FS_SV_FOpenFileRead = (FS_SV_FOpenFileRead_t)0x08064100;
+#elif COD_VERSION == COD2_1_2
+static const FS_SV_FOpenFileRead_t FS_SV_FOpenFileRead = (FS_SV_FOpenFileRead_t)0x08064560;
+#elif COD_VERSION == COD2_1_3
+static const FS_SV_FOpenFileRead_t FS_SV_FOpenFileRead = (FS_SV_FOpenFileRead_t)0x08064558;
+#endif
+
+typedef void (*FS_FCloseFile_t)(fileHandle_t fp);
+#if COD_VERSION == COD2_1_0
+static const FS_FCloseFile_t FS_FCloseFile = (FS_FCloseFile_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const FS_FCloseFile_t FS_FCloseFile = (FS_FCloseFile_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const FS_FCloseFile_t FS_FCloseFile = (FS_FCloseFile_t)0x0809EE54;
+#endif
+
+typedef int (*FS_iwIwd_t)(const char *a1, const char *a2);
+#if COD_VERSION == COD2_1_0
+static const FS_iwIwd_t FS_iwIwd = (FS_iwIwd_t)0x08064ECC;
+#elif COD_VERSION == COD2_1_2
+static const FS_iwIwd_t FS_iwIwd = (FS_iwIwd_t)0x0806532C;
+#elif COD_VERSION == COD2_1_3
+static const FS_iwIwd_t FS_iwIwd = (FS_iwIwd_t)0x08065324;
+#endif
+
 typedef xfunction_t (*Scr_GetFunction_t)(const char** v_functionName, qboolean* v_developer);
 #if COD_VERSION == COD2_1_0
 static const Scr_GetFunction_t Scr_GetFunction = (Scr_GetFunction_t)0x08115824;
@@ -271,6 +316,15 @@ static const Cvar_RegisterInt_t Cvar_RegisterInt = (Cvar_RegisterInt_t)0x0; // N
 static const Cvar_RegisterInt_t Cvar_RegisterInt = (Cvar_RegisterInt_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const Cvar_RegisterInt_t Cvar_RegisterInt = (Cvar_RegisterInt_t)0x080B403A;
+#endif
+
+typedef cvar_t* (*Cvar_RegisterFloat_t)(const char* var_name, float var_value, float var_min, float var_max, unsigned short flags);
+#if COD_VERSION == COD2_1_0
+static const Cvar_RegisterFloat_t Cvar_RegisterFloat = (Cvar_RegisterFloat_t)0x080B1C2C;
+#elif COD_VERSION == COD2_1_2
+static const Cvar_RegisterFloat_t Cvar_RegisterFloat = (Cvar_RegisterFloat_t)0x080B3F48;
+#elif COD_VERSION == COD2_1_3
+static const Cvar_RegisterFloat_t Cvar_RegisterFloat = (Cvar_RegisterFloat_t)0x080B408C;
 #endif
 
 typedef void (*SV_ConnectionlessPacket_t)(netadr_t from, msg_t *msg);
@@ -660,33 +714,6 @@ static const SV_Netchan_TransmitNextFragment_t SV_Netchan_TransmitNextFragment =
 static const SV_Netchan_TransmitNextFragment_t SV_Netchan_TransmitNextFragment = (SV_Netchan_TransmitNextFragment_t)0x08097610;
 #endif
 
-typedef long (*FS_SV_FOpenFileRead_t)(const char *filename, fileHandle_t *fp);
-#if COD_VERSION == COD2_1_0
-static const FS_SV_FOpenFileRead_t FS_SV_FOpenFileRead = (FS_SV_FOpenFileRead_t)0x08064100;
-#elif COD_VERSION == COD2_1_2
-static const FS_SV_FOpenFileRead_t FS_SV_FOpenFileRead = (FS_SV_FOpenFileRead_t)0x08064560;
-#elif COD_VERSION == COD2_1_3
-static const FS_SV_FOpenFileRead_t FS_SV_FOpenFileRead = (FS_SV_FOpenFileRead_t)0x08064558;
-#endif
-
-typedef void (*FS_FCloseFile_t)(fileHandle_t fp);
-#if COD_VERSION == COD2_1_0
-static const FS_FCloseFile_t FS_FCloseFile = (FS_FCloseFile_t)0x0; // Not tested
-#elif COD_VERSION == COD2_1_2
-static const FS_FCloseFile_t FS_FCloseFile = (FS_FCloseFile_t)0x0; // Not tested
-#elif COD_VERSION == COD2_1_3
-static const FS_FCloseFile_t FS_FCloseFile = (FS_FCloseFile_t)0x0809EE54;
-#endif
-
-typedef int (*FS_iwIwd_t)(const char *a1, const char *a2);
-#if COD_VERSION == COD2_1_0
-static const FS_iwIwd_t FS_iwIwd = (FS_iwIwd_t)0x08064ECC;
-#elif COD_VERSION == COD2_1_2
-static const FS_iwIwd_t FS_iwIwd = (FS_iwIwd_t)0x0806532C;
-#elif COD_VERSION == COD2_1_3
-static const FS_iwIwd_t FS_iwIwd = (FS_iwIwd_t)0x08065324;
-#endif
-
 typedef WeaponDef_t * (*BG_WeaponDefs_t)(unsigned int weaponIndex);
 #if COD_VERSION == COD2_1_0
 static const BG_WeaponDefs_t BG_WeaponDefs = (BG_WeaponDefs_t)0x080E9270;
@@ -748,6 +775,24 @@ static const runtimeError_t runtimeError = (runtimeError_t)0x0807818C;
 static const runtimeError_t runtimeError = (runtimeError_t)0x08078710;
 #elif COD_VERSION == COD2_1_3
 static const runtimeError_t runtimeError = (runtimeError_t)0x080787DC;
+#endif
+
+typedef StanceState (*PM_GetEffectiveStance_t)(struct playerState_s *ps);
+#if COD_VERSION == COD2_1_0
+static const PM_GetEffectiveStance_t PM_GetEffectiveStance = (PM_GetEffectiveStance_t)0x080DEE0E;
+#elif COD_VERSION == COD2_1_2
+static const PM_GetEffectiveStance_t PM_GetEffectiveStance = (PM_GetEffectiveStance_t)0x080E13EE;
+#elif COD_VERSION == COD2_1_3
+static const PM_GetEffectiveStance_t PM_GetEffectiveStance = (PM_GetEffectiveStance_t)0x080E1532;
+#endif
+
+typedef unsigned int (*PM_GroundSurfaceType_t)(pml_t *pml);
+#if COD_VERSION == COD2_1_0
+static const PM_GroundSurfaceType_t PM_GroundSurfaceType = (PM_GroundSurfaceType_t)0x080DFAFC;
+#elif COD_VERSION == COD2_1_2
+static const PM_GroundSurfaceType_t PM_GroundSurfaceType = (PM_GroundSurfaceType_t)0x080E20DC;
+#elif COD_VERSION == COD2_1_3
+static const PM_GroundSurfaceType_t PM_GroundSurfaceType = (PM_GroundSurfaceType_t)0x080E2220;
 #endif
 
 typedef int (*BG_AnimScriptEvent_t)(playerState_t *ps, scriptAnimEventTypes_t event, int isContinue, int force);
@@ -1335,6 +1380,15 @@ static const BG_EvaluateTrajectory_t BG_EvaluateTrajectory = (BG_EvaluateTraject
 static const BG_EvaluateTrajectory_t BG_EvaluateTrajectory = (BG_EvaluateTrajectory_t)0x080DF5D4;
 #endif
 
+typedef void (*BG_AddPredictableEventToPlayerstate_t)(int newEvent, unsigned int eventParm, playerState_s *ps);
+#if COD_VERSION == COD2_1_0
+static const BG_AddPredictableEventToPlayerstate_t BG_AddPredictableEventToPlayerstate = (BG_AddPredictableEventToPlayerstate_t)0x080DD554;
+#elif COD_VERSION == COD2_1_2
+static const BG_AddPredictableEventToPlayerstate_t BG_AddPredictableEventToPlayerstate = (BG_AddPredictableEventToPlayerstate_t)0x080DFB34;
+#elif COD_VERSION == COD2_1_3
+static const BG_AddPredictableEventToPlayerstate_t BG_AddPredictableEventToPlayerstate = (BG_AddPredictableEventToPlayerstate_t)0x080DFC78;
+#endif
+
 typedef void (*Scr_Notify_t)(gentity_t *ent, unsigned short constString, unsigned int numArgs);
 #if COD_VERSION == COD2_1_0
 static const Scr_Notify_t Scr_Notify = (Scr_Notify_t)0x08118E4E;
@@ -1567,6 +1621,15 @@ static const Vec3DistanceSq_t Vec3DistanceSq = (Vec3DistanceSq_t)0x0; // Not tes
 static const Vec3DistanceSq_t Vec3DistanceSq = (Vec3DistanceSq_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const Vec3DistanceSq_t Vec3DistanceSq = (Vec3DistanceSq_t)0x080A4116;
+#endif
+
+typedef vec_t (*Vec3Normalize_t)(vec3_t v);
+#if COD_VERSION == COD2_1_0
+static const Vec3Normalize_t Vec3Normalize = (Vec3Normalize_t)0x080A20C0;
+#elif COD_VERSION == COD2_1_2
+static const Vec3Normalize_t Vec3Normalize = (Vec3Normalize_t)0x080A42E0;
+#elif COD_VERSION == COD2_1_3
+static const Vec3Normalize_t Vec3Normalize = (Vec3Normalize_t)0x080A4424;
 #endif
 
 typedef void (*SP_worldspawn_t)(void);
