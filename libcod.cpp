@@ -1,24 +1,29 @@
 #include "gsc.hpp"
 
-/* ... ... ... */
-
-cvar_t *sv_maxclients;
-cvar_t *sv_allowDownload;
-cvar_t *sv_pure;
+// Stock cvars
+cvar_t *cl_allowDownload;
 cvar_t *developer;
 cvar_t *rcon_password;
-cvar_t *cl_allowDownload;
+cvar_t *sv_allowDownload;
+cvar_t *sv_fps;
+cvar_t *sv_maxclients;
+cvar_t *sv_padPackets;
+cvar_t *sv_pure;
 cvar_t *sv_timeout;
 cvar_t *sv_zombietime;
-cvar_t *sv_padPackets;
-
 #if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
-cvar_t *sv_wwwDownload;
-cvar_t *cl_wwwDownload;
+	cvar_t *cl_wwwDownload;
+	cvar_t *sv_wwwBaseURL;
+	cvar_t *sv_wwwDlDisconnected;
+	cvar_t *sv_wwwDownload;
 #endif
 
-cvar_t *sv_cracked;
-cvar_t *sv_noauthorize;
+// Custom cvars
+#if COMPILE_UTILS == 1
+	cvar_t *con_coloredPrints;
+#endif
+cvar_t *fs_callbacks;
+cvar_t *fs_library;
 cvar_t *g_debugEvents;
 cvar_t *g_debugStaticModels;
 cvar_t *g_logPickup;
@@ -27,20 +32,19 @@ cvar_t *g_playerCollision;
 cvar_t *g_playerEject;
 cvar_t *g_spawnMapWeapons;
 cvar_t *sv_allowRcon;
-cvar_t *sv_limitLocalRcon;
-cvar_t *sv_logRcon;
-cvar_t *sv_logHeartbeats;
-cvar_t *fs_library;
-cvar_t *sv_wwwBaseURL;
-cvar_t *sv_wwwDlDisconnected;
-cvar_t *sv_downloadMessage;
-cvar_t *fs_callbacks;
-cvar_t *sv_fps;
-cvar_t *sv_timeoutMessages;
 cvar_t *sv_botKickMessages;
-cvar_t *sv_kickMessages;
+cvar_t *sv_cracked;
 cvar_t *sv_disconnectMessages;
-cvar_t *sv_wwwDlDisconnectedMessages;
+cvar_t *sv_downloadMessage;
+cvar_t *sv_kickMessages;
+cvar_t *sv_limitLocalRcon;
+cvar_t *sv_logHeartbeats;
+cvar_t *sv_logRcon;
+cvar_t *sv_noauthorize;
+cvar_t *sv_timeoutMessages;
+#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
+	cvar_t *sv_wwwDlDisconnectedMessages;
+#endif
 
 cHook *hook_gametype_scripts;
 cHook *hook_player_collision;
@@ -53,34 +57,38 @@ cHook *hook_init_opcode;
 cHook *hook_add_opcode;
 cHook *hook_print_codepos;
 cHook *hook_touch_item_auto;
+cHook *hook_developer_prints;
+cHook *hook_standard_prints;
 cHook *hook_g_tempentity;
 cHook *hook_gscr_loadconsts;
 cHook *hook_sv_masterheartbeat;
 cHook *hook_g_runframe;
 cHook *hook_scr_loadgametype;
 
-int codecallback_remotecommand = 0;
-int codecallback_playercommand = 0;
-int codecallback_userinfochanged = 0;
-int codecallback_fire_grenade = 0;
-int codecallback_vid_restart = 0;
 int codecallback_client_spam = 0;
+int codecallback_dprintf = 0;
 int codecallback_error = 0;
+int codecallback_fire_grenade = 0;
+int codecallback_mapweapons = 0;
+int codecallback_playercommand = 0;
+int codecallback_remotecommand = 0;
+int codecallback_userinfochanged = 0;
+int codecallback_vid_restart = 0;
+
+int codecallback_adsbutton = 0;
 int codecallback_attackbutton = 0;
-int codecallback_meleebutton = 0;
-int codecallback_usebutton = 0;
-int codecallback_reloadbutton = 0;
+int codecallback_crouchbutton = 0;
+int codecallback_fragbutton = 0;
+int codecallback_holdbreathbutton = 0;
+int codecallback_jumpbutton = 0;
 int codecallback_leanleftbutton = 0;
 int codecallback_leanrightbutton = 0;
-int codecallback_pronebutton = 0;
-int codecallback_crouchbutton = 0;
-int codecallback_jumpbutton = 0;
-int codecallback_adsbutton = 0;
 int codecallback_meleebreathbutton = 0;
-int codecallback_holdbreathbutton = 0;
-int codecallback_fragbutton = 0;
+int codecallback_meleebutton = 0;
+int codecallback_pronebutton = 0;
+int codecallback_reloadbutton = 0;
 int codecallback_smokebutton = 0;
-int codecallback_mapweapons = 0;
+int codecallback_usebutton = 0;
 
 qboolean logRcon = qtrue;
 qboolean logHeartbeat = qtrue;
@@ -99,14 +107,12 @@ int tempfps[MAX_CLIENTS] = {0};
 int fpstime[MAX_CLIENTS] = {0};
 int previousbuttons[MAX_CLIENTS] = {0};
 #if COMPILE_BOTS == 1
-int bot_buttons[MAX_CLIENTS] = {0};
-int bot_weapon[MAX_CLIENTS] = {0};
-char bot_forwardmove[MAX_CLIENTS] = {0};
-char bot_rightmove[MAX_CLIENTS] = {0};
+	int bot_buttons[MAX_CLIENTS] = {0};
+	int bot_weapon[MAX_CLIENTS] = {0};
+	char bot_forwardmove[MAX_CLIENTS] = {0};
+	char bot_rightmove[MAX_CLIENTS] = {0};
 #endif
 int gamestate_size[MAX_CLIENTS] = {0};
-
-/* ... ... ... */
 
 void hook_sv_init(const char *format, ...)
 {
@@ -121,9 +127,30 @@ void hook_sv_init(const char *format, ...)
 
 	/* Do stuff after sv has been initialized here */
 	
+	// Get references to stock cvars
+	cl_allowDownload = Cvar_RegisterBool("cl_allowDownload", qtrue, CVAR_ARCHIVE | CVAR_SYSTEMINFO); // Force-enable download for clients
+	developer = Cvar_FindVar("developer");
+	rcon_password = Cvar_FindVar("rcon_password");
+	sv_allowDownload = Cvar_FindVar("sv_allowDownload");
+	sv_fps = Cvar_FindVar("sv_fps");
+	sv_maxclients = Cvar_FindVar("sv_maxclients");
+	sv_padPackets = Cvar_FindVar("sv_padPackets");
+	sv_pure = Cvar_FindVar("sv_pure");
+	sv_timeout = Cvar_FindVar("sv_timeout");
+	sv_zombietime = Cvar_FindVar("sv_zombietime");
+	#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
+		cl_wwwDownload = Cvar_RegisterBool("cl_wwwDownload", qtrue, CVAR_ARCHIVE | CVAR_SYSTEMINFO); // Force-enable wwwDownload for clients
+		sv_wwwBaseURL = Cvar_FindVar("sv_wwwBaseURL");
+		sv_wwwDlDisconnected = Cvar_FindVar("sv_wwwDlDisconnected");
+		sv_wwwDownload = Cvar_FindVar("sv_wwwDownload");
+	#endif
+
 	// Register custom cvars
-	sv_cracked = Cvar_RegisterBool("sv_cracked", qfalse, CVAR_ARCHIVE);
-	sv_noauthorize = Cvar_RegisterBool("sv_noauthorize", qfalse, CVAR_ARCHIVE);
+	#if COMPILE_UTILS == 1
+		con_coloredPrints = Cvar_RegisterBool("con_coloredPrints", qfalse, CVAR_ARCHIVE);
+	#endif
+	fs_callbacks = Cvar_RegisterString("fs_callbacks", "", CVAR_ARCHIVE);
+	fs_library = Cvar_RegisterString("fs_library", "", CVAR_ARCHIVE);
 	g_debugEvents = Cvar_RegisterBool("g_debugEvents", qfalse, CVAR_ARCHIVE);
 	g_debugStaticModels = Cvar_RegisterBool("g_debugStaticModels", qfalse, CVAR_ARCHIVE);
 	g_logPickup = Cvar_RegisterBool("g_logPickup", qtrue, CVAR_ARCHIVE);
@@ -132,41 +159,19 @@ void hook_sv_init(const char *format, ...)
 	g_playerEject = Cvar_RegisterBool("g_playerEject", qtrue, CVAR_ARCHIVE);
 	g_spawnMapWeapons = Cvar_RegisterBool("g_spawnMapWeapons", qtrue, CVAR_ARCHIVE);
 	sv_allowRcon = Cvar_RegisterBool("sv_allowRcon", qtrue, CVAR_ARCHIVE);
-	sv_limitLocalRcon = Cvar_RegisterBool("sv_limitLocalRcon", qtrue, CVAR_ARCHIVE);
-	sv_logRcon = Cvar_RegisterBool("sv_logRcon", qtrue, CVAR_ARCHIVE);
-	sv_logHeartbeats = Cvar_RegisterBool("sv_logHeartbeats", qtrue, CVAR_ARCHIVE);
-	fs_library = Cvar_RegisterString("fs_library", "", CVAR_ARCHIVE);
-	sv_downloadMessage = Cvar_RegisterString("sv_downloadMessage", "", CVAR_ARCHIVE);
-	fs_callbacks = Cvar_RegisterString("fs_callbacks", "", CVAR_ARCHIVE);
-	sv_timeoutMessages = Cvar_RegisterBool("sv_timeoutMessages", qtrue, CVAR_ARCHIVE);
 	sv_botKickMessages = Cvar_RegisterBool("sv_botKickMessages", qtrue, CVAR_ARCHIVE);
-	sv_kickMessages = Cvar_RegisterBool("sv_kickMessages", qtrue, CVAR_ARCHIVE);
+	sv_cracked = Cvar_RegisterBool("sv_cracked", qfalse, CVAR_ARCHIVE);
 	sv_disconnectMessages = Cvar_RegisterBool("sv_disconnectMessages", qtrue, CVAR_ARCHIVE);
-	sv_wwwDlDisconnectedMessages = Cvar_RegisterInt("sv_wwwDlDisconnectedMessages", 1, 0, 2, CVAR_ARCHIVE);
-
-	// Force download on clients
-	cl_allowDownload = Cvar_RegisterBool("cl_allowDownload", qtrue, CVAR_ARCHIVE | CVAR_SYSTEMINFO);
-
+	sv_downloadMessage = Cvar_RegisterString("sv_downloadMessage", "", CVAR_ARCHIVE);
+	sv_kickMessages = Cvar_RegisterBool("sv_kickMessages", qtrue, CVAR_ARCHIVE);
+	sv_limitLocalRcon = Cvar_RegisterBool("sv_limitLocalRcon", qtrue, CVAR_ARCHIVE);
+	sv_logHeartbeats = Cvar_RegisterBool("sv_logHeartbeats", qtrue, CVAR_ARCHIVE);
+	sv_logRcon = Cvar_RegisterBool("sv_logRcon", qtrue, CVAR_ARCHIVE);
+	sv_noauthorize = Cvar_RegisterBool("sv_noauthorize", qfalse, CVAR_ARCHIVE);
+	sv_timeoutMessages = Cvar_RegisterBool("sv_timeoutMessages", qtrue, CVAR_ARCHIVE);
 	#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
-		cl_wwwDownload = Cvar_RegisterBool("cl_wwwDownload", qtrue, CVAR_ARCHIVE | CVAR_SYSTEMINFO);
+		sv_wwwDlDisconnectedMessages = Cvar_RegisterInt("sv_wwwDlDisconnectedMessages", 1, 0, 2, CVAR_ARCHIVE);
 	#endif
-
-	sv_maxclients = Cvar_FindVar("sv_maxclients");
-	sv_wwwBaseURL = Cvar_FindVar("sv_wwwBaseURL");
-	sv_allowDownload = Cvar_FindVar("sv_allowDownload");
-	sv_wwwDlDisconnected = Cvar_FindVar("sv_wwwDlDisconnected");
-	sv_pure = Cvar_FindVar("sv_pure");
-	developer = Cvar_FindVar("developer");
-	rcon_password = Cvar_FindVar("rcon_password");
-	sv_timeout = Cvar_FindVar("sv_timeout");
-	sv_zombietime = Cvar_FindVar("sv_zombietime");
-	sv_padPackets = Cvar_FindVar("sv_padPackets");
-	sv_fps = Cvar_FindVar("sv_fps");
-
-#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
-	sv_wwwDownload = Cvar_FindVar("sv_wwwDownload");
-#endif
-
 }
 
 void hook_bad_printf(const char *format, ...) {}
@@ -183,6 +188,8 @@ void hook_sv_spawnserver(const char *format, ...)
 	Com_Printf("%s", s);
 	
 	/* Do stuff after sv has been spawned here */
+
+	hook_developer_prints->hook();
 }
 
 void custom_sv_masterheartbeat(const char *hbname)
@@ -193,11 +200,11 @@ void custom_sv_masterheartbeat(const char *hbname)
 	*(int *)&sig = hook_sv_masterheartbeat->from;
 
 	#if COD_VERSION == COD2_1_0
-	int sending_heartbeat_string_offset = 0x0; // Not tested
+		int sending_heartbeat_string_offset = 0x0; // Not tested
 	#elif COD_VERSION == COD2_1_2
-	int sending_heartbeat_string_offset = 0x0; // Not tested
+		int sending_heartbeat_string_offset = 0x0; // Not tested
 	#elif COD_VERSION == COD2_1_3
-	int sending_heartbeat_string_offset = 0x0814BBC0;
+		int sending_heartbeat_string_offset = 0x0814BBC0;
 	#endif
 
 	if ( logHeartbeat && !sv_logHeartbeats->boolean )
@@ -224,34 +231,36 @@ int hook_codscript_gametype_scripts()
 {
 	char path_for_cb[512] = "maps/mp/gametypes/_callbacksetup";
 	
-	if (strlen(fs_callbacks->string))
+	if ( strlen(fs_callbacks->string) )
 		strncpy(path_for_cb, fs_callbacks->string, sizeof(path_for_cb));
 	
 	hook_gametype_scripts->unhook();
 	
-	codecallback_remotecommand = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_RemoteCommand", 0);
-	codecallback_playercommand = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_PlayerCommand", 0);
-	codecallback_userinfochanged = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_UserInfoChanged", 0);
-	codecallback_fire_grenade = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_FireGrenade", 0);
-	codecallback_vid_restart = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_VidRestart", 0);
 	codecallback_client_spam = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_CLSpam", 0);
+	codecallback_dprintf = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_DPrintf", 0);
 	codecallback_error = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_Error", 0);
+	codecallback_fire_grenade = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_FireGrenade", 0);
+	codecallback_mapweapons = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MapWeapons", 0);
+	codecallback_playercommand = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_PlayerCommand", 0);
+	codecallback_remotecommand = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_RemoteCommand", 0);
+	codecallback_userinfochanged = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_UserInfoChanged", 0);
+	codecallback_vid_restart = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_VidRestart", 0);
+	
+	codecallback_adsbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_AdsButton", 0);
 	codecallback_attackbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_AttackButton", 0);
-	codecallback_meleebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MeleeButton", 0);
- 	codecallback_usebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_UseButton", 0);
- 	codecallback_reloadbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_ReloadButton", 0);
+	codecallback_crouchbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_CrouchButton", 0);
+	codecallback_fragbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_FragButton", 0);
+	codecallback_holdbreathbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_HoldBreathButton", 0);
+	codecallback_jumpbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_JumpButton", 0);
  	codecallback_leanleftbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_LeanLeftButton", 0);
  	codecallback_leanrightbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_LeanRightButton", 0);
- 	codecallback_pronebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_ProneButton", 0);
- 	codecallback_crouchbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_CrouchButton", 0);
- 	codecallback_jumpbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_JumpButton", 0);
- 	codecallback_adsbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_AdsButton", 0);
- 	codecallback_meleebreathbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MeleeBreathButton", 0);
- 	codecallback_holdbreathbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_HoldBreathButton", 0);
- 	codecallback_fragbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_FragButton", 0);
- 	codecallback_smokebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_SmokeButton", 0);
- 	codecallback_mapweapons = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MapWeapons", 0);
-	
+	codecallback_meleebreathbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MeleeBreathButton", 0);
+	codecallback_meleebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MeleeButton", 0);
+	codecallback_pronebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_ProneButton", 0);
+	codecallback_reloadbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_ReloadButton", 0);
+	codecallback_smokebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_SmokeButton", 0);
+ 	codecallback_usebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_UseButton", 0);
+
 	int (*sig)();
 	*(int *)&sig = hook_gametype_scripts->from;
 	int ret = sig();
@@ -269,7 +278,7 @@ int player_collision(int a1)
 
 	int ret;
 
-	if (g_playerCollision->boolean)
+	if ( g_playerCollision->boolean )
 		ret = sig(a1);
 	else
 		ret = 0;
@@ -288,7 +297,7 @@ int player_eject(int a1)
 
 	int ret;
 
-	if (g_playerEject->boolean)
+	if ( g_playerEject->boolean )
 		ret = sig(a1);
 	else
 		ret = 0;
@@ -309,7 +318,7 @@ gentity_t* fire_grenade(gentity_t *self, vec3_t start, vec3_t dir, int weapon, i
 
 	hook_fire_grenade->hook();
 
-	if (codecallback_fire_grenade)
+	if ( codecallback_fire_grenade && Scr_IsSystemActive() )
 	{
 		WeaponDef_t *def = BG_WeaponDefs(weapon);
 		stackPushString(def->szInternalName);
@@ -324,10 +333,10 @@ gentity_t* fire_grenade(gentity_t *self, vec3_t start, vec3_t dir, int weapon, i
 void hook_ClientCommand(int clientNum)
 {
 
-	if (!Scr_IsSystemActive())
+	if ( !Scr_IsSystemActive() )
 		return;
 			
-	if ( ! codecallback_playercommand)
+	if ( !codecallback_playercommand )
 	{	
 		ClientCommand(clientNum);
 		return;
@@ -335,14 +344,14 @@ void hook_ClientCommand(int clientNum)
 
 	stackPushArray();
 	int args = Cmd_Argc();
-	for (int i = 0; i < args; i++)
+	for ( int i = 0; i < args; i++ )
 	{
 		char tmp[COD2_MAX_STRINGLENGTH];
 		SV_Cmd_ArgvBuffer(i, tmp, sizeof(tmp));
-		if(i == 1 && tmp[0] >= 20 && tmp[0] <= 22)
+		if( i == 1 && tmp[0] >= 20 && tmp[0] <= 22 )
 		{
 			char *part = strtok(tmp + 1, " ");
-			while(part != NULL)
+			while( part != NULL )
 			{
 				stackPushString(part);
 				stackPushArrayLast();
@@ -362,7 +371,7 @@ void hook_ClientCommand(int clientNum)
 
 int hook_isLanAddress(netadr_t adr)
 {
-	if (sv_noauthorize->boolean)
+	if ( sv_noauthorize->boolean )
 		return 1;
 
 	return Sys_IsLANAddress(adr);
@@ -372,7 +381,7 @@ const char* hook_AuthorizeState(int arg)
 {
 	const char *s = Cmd_Argv(arg);
 
-	if (sv_cracked->boolean && strcmp(s, "deny") == 0)
+	if ( sv_cracked->boolean && strcmp(s, "deny") == 0 )
 		return "accept";
 
 	return s;
@@ -380,16 +389,16 @@ const char* hook_AuthorizeState(int arg)
 
 void hook_ClientUserinfoChanged(int clientNum)
 {
-	if (!Scr_IsSystemActive())
+	if ( !Scr_IsSystemActive() )
 		return;
 		
-	if ( ! codecallback_userinfochanged)
+	if ( !codecallback_userinfochanged )
 	{	
 		ClientUserinfoChanged(clientNum);
 		return;
 	}
 			
-	stackPushInt(clientNum); // one parameter is required
+	stackPushInt(clientNum); // One parameter is required
 	short ret = Scr_ExecEntThread(&g_entities[clientNum], codecallback_userinfochanged, 1);
 	Scr_FreeThread(ret);
 }
@@ -405,21 +414,21 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 	Com_DPrintf("SV_DropClient for %s\n", drop->name);
 
 	if ( drop->state == CS_ZOMBIE )
-		return;	// already dropped
+		return;	// Already dropped
 	
 	drop->delayDropMsg = 0;
 	I_strncpyz(name, drop->name, sizeof(name));
 	SV_FreeClient(drop);
 
 	Com_DPrintf("Going to CS_ZOMBIE for %s\n", name);
-	drop->state = CS_ZOMBIE; // become free in a few seconds
+	drop->state = CS_ZOMBIE; // Become free in a few seconds
 
 	if ( drop->netchan.remoteAddress.type == NA_BOT )
 		isBot = qtrue;
 
 	if ( !isBot )
 	{
-		// see if we already have a challenge for this ip
+		// See if we already have a challenge for this ip
 		challenge = &svs.challenges[0];
 
 		for ( i = 0 ; i < MAX_CHALLENGES ; i++, challenge++ )
@@ -438,7 +447,7 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 		showIngameMessage = qfalse;
 
 	if ( !sv_kickMessages->boolean && I_stricmp(reason, "EXE_PLAYERKICKED") == 0 )
-		showIngameMessage = qfalse; // this overrides enabled sv_botKickMessages
+		showIngameMessage = qfalse; // This overrides enabled sv_botKickMessages
 
 	if ( !sv_timeoutMessages->boolean && I_stricmp(reason, "EXE_TIMEDOUT") == 0 )
 		showIngameMessage = qfalse;
@@ -465,10 +474,10 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 	else
 		SV_SendServerCommand(drop, 1, "w \"%s\"", reason);
 
-	// if this was the last client on the server, send a heartbeat
-	// to the master so it is known the server is empty
-	// send a heartbeat now so the master will get up to date info
-	// if there is already a slot for this ip, reuse it
+	/* If this was the last client on the server, send a heartbeat
+	   to the master so it is known the server is empty
+	   send a heartbeat now so the master will get up to date info
+	   if there is already a slot for this ip, reuse it */
 	for ( i = 0 ; i < sv_maxclients->integer ; i++ )
 	{
 		if ( svs.clients[i].state >= CS_CONNECTED )
@@ -504,17 +513,13 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 	itemType_t type;
 	
 	if ( !item->active )
-	{
 		return;
-	}
 	
 	item->active = 0;
 	client = entity->client;
 	
 	if ( !client || entity->healthPoints <= 0 || level.clientIsSpawning )
-	{
 		return;
-	}
 
 	event = EV_ITEM_PICKUP;
 	bg_item = &bg_itemlist;
@@ -527,13 +532,11 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 			if ( !(((entity->client->ps).weapons[bg_item->giAmmoIndex >> 5] >> (bg_item->giAmmoIndex & 0x1F)) & 1) )
 			{
 				if ( (BG_WeaponDefs(bg_item->giAmmoIndex)->impactType - 1) < 2)
-				{
-					SV_GameSendServerCommand(((int)(entity[-0x3dc11].r.absmax + 1) >> 4) * -0x75075075, 0, custom_va("%c \"GAME_CANT_GET_PRIMARY_WEAP_MESSAGE\"", 0x66));
-				}
+					SV_GameSendServerCommand(entity - g_entities, 0, custom_va("%c \"GAME_CANT_GET_PRIMARY_WEAP_MESSAGE\"", 0x66));
 			}
 			else
 			{
-				SV_GameSendServerCommand(((int)(entity[-0x3dc11].r.absmax + 1) >> 4) * -0x75075075, 0, custom_va("%c \"GAME_PICKUP_CANTCARRYMOREAMMO\x14%s\"", 0x66, BG_WeaponDefs(bg_item->giAmmoIndex)->szDisplayName));
+				SV_GameSendServerCommand(entity - g_entities, 0, custom_va("%c \"GAME_PICKUP_CANTCARRYMOREAMMO\x14%s\"", 0x66, BG_WeaponDefs(bg_item->giAmmoIndex)->szDisplayName));
 			}
 		}
 	}
@@ -545,13 +548,9 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 		if ( g_logPickup->boolean )
 		{
 			if ( bg_item->giType == IT_WEAPON )
-			{
 				G_LogPrintf("Weapon;%d;%d;%s;%s\n", SV_GetGuid((entity->s).number), (entity->s).number, name, BG_WeaponDefs(bg_item->giAmmoIndex)->szInternalName);
-			}
 			else
-			{
 				G_LogPrintf("Item;%d;%d;%s;%s\n", SV_GetGuid((entity->s).number), (entity->s).number, name, bg_item->classname);
-			}
 		}
 		
 		respawn = qtrue;
@@ -559,20 +558,15 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 		if ( type == IT_AMMO )
 		{
 			if ( g_notifyPickup->boolean )
-			{
 				Scr_Notify(entity, scr_const.pickup_ammo, 0);
-			}
 			else
-			{
 				respawn = Pickup_Ammo(item, entity);
-			}
 		}
 		else if ( type < 3 )
 		{
 			if ( type != IT_WEAPON )
-			{
 				return;
-			}
+
 			if ( g_notifyPickup->boolean )
 			{
 				Scr_AddVector(item->r.currentAngles);
@@ -590,32 +584,21 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 		else
 		{
 			if ( type != IT_HEALTH )
-			{
 				return;
-			}
+			
 			if ( g_notifyPickup->boolean )
-			{
 				Scr_Notify(entity, scr_const.pickup_health, 0);
-			}
 			else
-			{
 				respawn = Pickup_Health(item, entity);
-			}
 		}
 		
 		if ( !respawn )
-		{
 			return;
-		}
 		
 		if ( (entity->client->sess).predictItemPickup == 0 )
-		{
 			G_AddEvent(entity, event, (item->s).index);
-		}
 		else
-		{
 			G_AddPredictableEvent(entity, event, (item->s).index);
-		}
 		G_FreeEntity(item);
 	}
 }
@@ -631,7 +614,7 @@ char const *eventnames[] = {
 	"EV_FOOTSTEP_RUN_DIRT",
 	"EV_FOOTSTEP_RUN_FLESH",
 	"EV_FOOTSTEP_RUN_FOLIAGE",
-	"EV_FOOTSTEP_RUN_GLASS",	  // 10
+	"EV_FOOTSTEP_RUN_GLASS", // 10
 	"EV_FOOTSTEP_RUN_GRASS",
 	"EV_FOOTSTEP_RUN_GRAVEL",
 	"EV_FOOTSTEP_RUN_ICE",
@@ -641,7 +624,7 @@ char const *eventnames[] = {
 	"EV_FOOTSTEP_RUN_PLASTER",
 	"EV_FOOTSTEP_RUN_ROCK",
 	"EV_FOOTSTEP_RUN_SAND",
-	"EV_FOOTSTEP_RUN_SNOW",	   // 20
+	"EV_FOOTSTEP_RUN_SNOW", // 20
 	"EV_FOOTSTEP_RUN_WATER",
 	"EV_FOOTSTEP_RUN_WOOD",
 	"EV_FOOTSTEP_RUN_ASPHALT",
@@ -651,7 +634,7 @@ char const *eventnames[] = {
 	"EV_FOOTSTEP_WALK_CARPET",
 	"EV_FOOTSTEP_WALK_CLOTH",
 	"EV_FOOTSTEP_WALK_CONCRETE",
-	"EV_FOOTSTEP_WALK_DIRT",	  // 30
+	"EV_FOOTSTEP_WALK_DIRT", // 30
 	"EV_FOOTSTEP_WALK_FLESH",
 	"EV_FOOTSTEP_WALK_FOLIAGE",
 	"EV_FOOTSTEP_WALK_GLASS",
@@ -661,7 +644,7 @@ char const *eventnames[] = {
 	"EV_FOOTSTEP_WALK_METAL",
 	"EV_FOOTSTEP_WALK_MUD",
 	"EV_FOOTSTEP_WALK_PAPER",
-	"EV_FOOTSTEP_WALK_PLASTER",   // 40
+	"EV_FOOTSTEP_WALK_PLASTER", // 40
 	"EV_FOOTSTEP_WALK_ROCK",
 	"EV_FOOTSTEP_WALK_SAND",
 	"EV_FOOTSTEP_WALK_SNOW",
@@ -671,7 +654,7 @@ char const *eventnames[] = {
 	"EV_FOOTSTEP_PRONE_DEFAULT",
 	"EV_FOOTSTEP_PRONE_BARK",
 	"EV_FOOTSTEP_PRONE_BRICK",
-	"EV_FOOTSTEP_PRONE_CARPET",   // 50
+	"EV_FOOTSTEP_PRONE_CARPET", // 50
 	"EV_FOOTSTEP_PRONE_CLOTH",
 	"EV_FOOTSTEP_PRONE_CONCRETE",
 	"EV_FOOTSTEP_PRONE_DIRT",
@@ -681,7 +664,7 @@ char const *eventnames[] = {
 	"EV_FOOTSTEP_PRONE_GRASS",
 	"EV_FOOTSTEP_PRONE_GRAVEL",
 	"EV_FOOTSTEP_PRONE_ICE",
-	"EV_FOOTSTEP_PRONE_METAL",	// 60
+	"EV_FOOTSTEP_PRONE_METAL", // 60
 	"EV_FOOTSTEP_PRONE_MUD",
 	"EV_FOOTSTEP_PRONE_PAPER",
 	"EV_FOOTSTEP_PRONE_PLASTER",
@@ -691,7 +674,7 @@ char const *eventnames[] = {
 	"EV_FOOTSTEP_PRONE_WATER",
 	"EV_FOOTSTEP_PRONE_WOOD",
 	"EV_FOOTSTEP_PRONE_ASPHALT",
-	"EV_JUMP_DEFAULT",			// 70
+	"EV_JUMP_DEFAULT", // 70
 	"EV_JUMP_BARK",
 	"EV_JUMP_BRICK",
 	"EV_JUMP_CARPET",
@@ -701,7 +684,7 @@ char const *eventnames[] = {
 	"EV_JUMP_FLESH",
 	"EV_JUMP_FOLIAGE",
 	"EV_JUMP_GLASS",
-	"EV_JUMP_GRASS",			  // 80
+	"EV_JUMP_GRASS", // 80
 	"EV_JUMP_GRAVEL",
 	"EV_JUMP_ICE",
 	"EV_JUMP_METAL",
@@ -711,7 +694,7 @@ char const *eventnames[] = {
 	"EV_JUMP_ROCK",
 	"EV_JUMP_SAND",
 	"EV_JUMP_SNOW",
-	"EV_JUMP_WATER",			  // 90
+	"EV_JUMP_WATER", // 90
 	"EV_JUMP_WOOD",
 	"EV_JUMP_ASPHALT",
 	"EV_LANDING_DEFAULT",
@@ -721,7 +704,7 @@ char const *eventnames[] = {
 	"EV_LANDING_CLOTH",
 	"EV_LANDING_CONCRETE",
 	"EV_LANDING_DIRT",
-	"EV_LANDING_FLESH",		   // 100
+	"EV_LANDING_FLESH", // 100
 	"EV_LANDING_FOLIAGE",
 	"EV_LANDING_GLASS",
 	"EV_LANDING_GRASS",
@@ -731,7 +714,7 @@ char const *eventnames[] = {
 	"EV_LANDING_MUD",
 	"EV_LANDING_PAPER",
 	"EV_LANDING_PLASTER",
-	"EV_LANDING_ROCK",			// 110
+	"EV_LANDING_ROCK", // 110
 	"EV_LANDING_SAND",
 	"EV_LANDING_SNOW",
 	"EV_LANDING_WATER",
@@ -741,7 +724,7 @@ char const *eventnames[] = {
 	"EV_LANDING_PAIN_BARK",
 	"EV_LANDING_PAIN_BRICK",
 	"EV_LANDING_PAIN_CARPET",
-	"EV_LANDING_PAIN_CLOTH",	  // 120
+	"EV_LANDING_PAIN_CLOTH", // 120
 	"EV_LANDING_PAIN_CONCRETE",
 	"EV_LANDING_PAIN_DIRT",
 	"EV_LANDING_PAIN_FLESH",
@@ -751,7 +734,7 @@ char const *eventnames[] = {
 	"EV_LANDING_PAIN_GRAVEL",
 	"EV_LANDING_PAIN_ICE",
 	"EV_LANDING_PAIN_METAL",
-	"EV_LANDING_PAIN_MUD",		// 130
+	"EV_LANDING_PAIN_MUD", // 130
 	"EV_LANDING_PAIN_PAPER",
 	"EV_LANDING_PAIN_PLASTER",
 	"EV_LANDING_PAIN_ROCK",
@@ -761,7 +744,7 @@ char const *eventnames[] = {
 	"EV_LANDING_PAIN_WOOD",
 	"EV_LANDING_PAIN_ASPHALT",
 	"EV_FOLIAGE_SOUND",
-	"EV_STANCE_FORCE_STAND",	  // 140
+	"EV_STANCE_FORCE_STAND", // 140
 	"EV_STANCE_FORCE_CROUCH",
 	"EV_STANCE_FORCE_PRONE",
 	"EV_STEP_VIEW",
@@ -771,7 +754,7 @@ char const *eventnames[] = {
 	"EV_EMPTYCLIP",
 	"EV_EMPTY_OFFHAND",
 	"EV_RESET_ADS",
-	"EV_RELOAD",				  // 150
+	"EV_RELOAD", // 150
 	"EV_RELOAD_FROM_EMPTY",
 	"EV_RELOAD_START",
 	"EV_RELOAD_END",
@@ -781,7 +764,7 @@ char const *eventnames[] = {
 	"EV_PULLBACK_WEAPON",
 	"EV_FIRE_WEAPON",
 	"EV_FIRE_WEAPONB",
-	"EV_FIRE_WEAPON_LASTSHOT",	// 160
+	"EV_FIRE_WEAPON_LASTSHOT", // 160
 	"EV_RECHAMBER_WEAPON",
 	"EV_EJECT_BRASS",
 	"EV_MELEE_SWIPE",
@@ -791,7 +774,7 @@ char const *eventnames[] = {
 	"EV_SWITCH_OFFHAND",
 	"EV_BINOCULAR_ENTER",
 	"EV_BINOCULAR_EXIT",
-	"EV_BINOCULAR_FIRE",		  // 170
+	"EV_BINOCULAR_FIRE", // 170
 	"EV_BINOCULAR_RELEASE",
 	"EV_BINOCULAR_DROP",
 	"EV_MELEE_HIT",
@@ -801,7 +784,7 @@ char const *eventnames[] = {
 	"EV_FIRE_QUADBARREL_2",
 	"EV_BULLET_TRACER",
 	"EV_SOUND_ALIAS",
-	"EV_SOUND_ALIAS_AS_MASTER",   // 180
+	"EV_SOUND_ALIAS_AS_MASTER", // 180
 	"EV_BULLET_HIT_SMALL",
 	"EV_BULLET_HIT_LARGE",
 	"EV_SHOTGUN_HIT",
@@ -811,7 +794,7 @@ char const *eventnames[] = {
 	"EV_GRENADE_BOUNCE",
 	"EV_GRENADE_EXPLODE",
 	"EV_ROCKET_EXPLODE",
-	"EV_ROCKET_EXPLODE_NOMARKS",  // 190
+	"EV_ROCKET_EXPLODE_NOMARKS", // 190
 	"EV_CUSTOM_EXPLODE",
 	"EV_CUSTOM_EXPLODE_NOMARKS",
 	"EV_BULLET",
@@ -819,7 +802,7 @@ char const *eventnames[] = {
 	"EV_PLAY_FX_ON_TAG",
 	"EV_EARTHQUAKE",
 	"EV_GRENADE_SUICIDE",
-	"EV_OBITUARY"				 // 198
+	"EV_OBITUARY" // 198
 };
 
 void custom_BG_AddPredictableEventToPlayerstate(int event, int eventParm, playerState_t *ps)
@@ -829,10 +812,10 @@ void custom_BG_AddPredictableEventToPlayerstate(int event, int eventParm, player
 		if ( g_debugEvents->boolean )
 			Com_DPrintf("BG_AddPredictableEventToPlayerstate() event %26s for client %2d\n", eventnames[event], ps->clientNum);
 		
-		/* new code start: silent */
-		if ( ( ( event >= EV_FOOTSTEP_RUN_DEFAULT && event <= EV_FOLIAGE_SOUND ) || event == EV_NOAMMO ) && player_silent[ps->clientNum])
+		/* New code start: silent */
+		if ( ( ( event >= EV_FOOTSTEP_RUN_DEFAULT && event <= EV_FOLIAGE_SOUND ) || event == EV_NOAMMO ) && player_silent[ps->clientNum] )
 			return;
-		/* new code end */
+		/* New code end */
 		
 		ps->events[ps->eventSequence & ( MAX_EVENTS - 1 )] = event & 0xff;
 		ps->eventParms[ps->eventSequence & ( MAX_EVENTS - 1 )] = eventParm & 0xff;
@@ -870,21 +853,18 @@ gentity_t* custom_G_TempEntity(vec3_t * origin, int event)
 	*(int *)&sig = hook_g_tempentity->from;
 
 	if ( g_debugEvents->boolean )
-	{
 		Com_DPrintf("G_TempEntity() event %26s at (%f,%f,%f)\n", eventnames[event], &origin[0], &origin[1], &origin[2]);
-	}
-	/*
-	// filter example:
-	// use with caution: this can cause script runtime errors (or worse) on
-	// some events, e.g., when using the obituary function, due to (then)
-	// undefined parameters
+
+	/* filter example:
+	   use with caution: this can cause script runtime errors (or worse) on
+	   some events, e.g., when using the obituary function, due to (then)
+	   undefined parameters
+
 	if (event == EV_PLAY_FX)
-	{
 		event = EV_NONE;
-	}
 	*/
 	gentity_t* tempEntity = sig(origin, event);
-	
+
 	hook_g_tempentity->hook();
 
 	return tempEntity;
@@ -982,9 +962,7 @@ void custom_MSG_WriteDeltaField(msg_t *buf, byte *from, byte *to, netField_t *fi
 			absto = *toF;
 			absbits = field->bits;
 			if ( absbits < 0 )
-			{
 				absbits *= -1;
-			}
 			abs3bits = absbits & 7;
 			if ( abs3bits )
 			{
@@ -1009,17 +987,15 @@ void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t 
 	netField_t *field;
 	int lc;
 	int i;
-	int attackerEntityNum = 0;				  	// playFxOnTagForPlayer
-	int team;								   	// obituary
-	vec3_t origin;							  	// obituary
-	int max_distance;						   	// obituary
+	int attackerEntityNum = 0; // For playFxOnTagForPlayer
+	int team; // For obituary
+	vec3_t origin; 	// For obituary
+	int max_distance; // For obituary
 
 	if ( !to )
 	{
 		if ( bChangeBit )
-		{
 			MSG_WriteBit1(msg);
-		}
 		MSG_WriteBits(msg, from->number, indexBits);
 		MSG_WriteBit1(msg);
 	}
@@ -1033,40 +1009,26 @@ void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t 
 			fromF = ( int * )( (byte *)from + field->offset );
 			toF = ( int * )( (byte *)to + field->offset );
 			
-			/* new code start: playFxOnTagForPlayer */
+			/* New code start: playFxOnTagForPlayer */
 			if ( i == 49 )
-			{
 				attackerEntityNum = *toF;
-			}
-			/* new code end */
+			/* New code end */
 			
-			/* new code start: obituary */
+			/* New code start: obituary */
 			if ( i == 17 ) // scale
-			{
 				team = *toF;
-			}
 			else if ( i == 58 ) // dmgFlags
-			{
 				max_distance = *toF;
-			}
 			else if ( i == 2 ) // pos.trBase[0]
-			{
 				origin[0] = *(vec_t *)toF;
-			}
 			else if ( i == 1 ) // pos.trBase[1]
-			{
 				origin[1] = *(vec_t *)toF;
-			}
 			else if ( i == 8 ) // pos.trBase[2]
-			{
 				origin[2] = *(vec_t *)toF;
-			}
-			/* new code end */
+			/* New code end */
 			
 			if ( *fromF != *toF )
-			{
 				lc = i + 1;
-			}
 		}
 		
 		if ( !lc )
@@ -1074,9 +1036,7 @@ void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t 
 			if ( force )
 			{
 				if ( bChangeBit )
-				{
 					MSG_WriteBit1(msg);
-				}
 				MSG_WriteBits(msg, to->number, indexBits);
 				MSG_WriteBit0(msg);
 				MSG_WriteBit0(msg);
@@ -1086,9 +1046,7 @@ void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t 
 		{
 			
 			if ( bChangeBit )
-			{
 				MSG_WriteBit1(msg);
-			}
 			MSG_WriteBits(msg, to->number, indexBits);
 			MSG_WriteBit0(msg);
 			MSG_WriteBit1(msg);
@@ -1097,18 +1055,16 @@ void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t 
 			field = stateFieldsPointer;
 			for ( i = 0; i < lc; i++, field++ )
 			{
-				/* new code start: playFxOnTagForPlayer */
+				/* New code start: playFxOnTagForPlayer */
 				if ( numFields == 0x3b && ( i == 21 || i == 22 || i == 23 || i == 25 ) ) // entityStateFields: events[0], ..., events[3]
 				{
 					toF = ( int * )( (byte *)to + field->offset );
 					if ( *toF == EV_PLAY_FX_ON_TAG && clientNum != attackerEntityNum - 1 && spectatorClientNum != attackerEntityNum - 1 )
-					{
 						*toF = EV_NONE;
-					}
 				}
-				/* new code end */
+				/* New code end */
 				
-				/* new code start: obituary */
+				/* New code start: obituary */
 				if ( numFields == 0x3b && i == 12 ) // entityStateFields: eType
 				{
 					toF = ( int * )( (byte *)to + field->offset );
@@ -1124,22 +1080,18 @@ void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t 
 						if ( team )
 						{
 							if ( team != player_team && ( ( player_team == 1 && team == 6 ) || ( player_team == 2 && team == 5 ) || ( player_team == 3 && team == 4 ) ) )
-							{
 								*toF = EV_NONE;
-							}
 						}
 						
 						if ( max_distance > 0 )
 						{
 							double distance = Vec3DistanceSq(&client->gentity->r.currentOrigin, &origin);
 							if ( (int)distance > ( max_distance * max_distance ) )
-							{
 								*toF = EV_NONE;
-							}
 						}
 					}
 				}
-				/* new code end */
+				/* New code end */
 				
 				custom_MSG_WriteDeltaField(msg, (byte *)from, (byte *)to, field);
 			}
@@ -1176,9 +1128,7 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 		toF = ( int * )( (byte *)to + field->offset );
 		
 		if ( *fromF != *toF )
-		{
 			lc = i + 1;
-		}
 	}
 	
 	MSG_WriteByte( msg, lc );
@@ -1233,9 +1183,7 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 					absto = *toF;
 					absbits = field->bits;
 					if ( absbits < 0 )
-					{
 						absbits *= -1;
-					}
 					abs3bits = absbits & 7;
 					if ( abs3bits )
 					{
@@ -1254,15 +1202,12 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 		}
 	}
 	
-	// stats
 	statsbits = 0;
 	i = 0;
 	while ( i < 6 )
 	{
 		if ( to->stats[i] != from->stats[i] )
-		{
 			statsbits = statsbits | 1 << ((byte)i & 0x1f);
-		}
 		i++;
 	}
 	if ( !statsbits )
@@ -1274,32 +1219,19 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 		MSG_WriteBit1(msg);
 		MSG_WriteBits(msg, statsbits, 6);
 		if ( statsbits & 1U )
-		{
 			MSG_WriteShort(msg, to->stats[0]);
-		}
 		if ( statsbits & 2U )
-		{
 			MSG_WriteShort(msg, to->stats[1]);
-		}
 		if ( statsbits & 4U )
-		{
 			MSG_WriteShort(msg, to->stats[2]);
-		}
 		if ( statsbits & 8U )
-		{
 			MSG_WriteBits(msg, to->stats[3],6);
-		}
 		if ( statsbits & 0x10U )
-		{
 			MSG_WriteShort(msg, to->stats[4]);
-		}
 		if ( statsbits & 0x20U )
-		{
 			MSG_WriteByte(msg, (char)to->stats[5]);
-		}
 	}
 	
-	// ammo
 	j = 0;
 	while ( j < 4 )
 	{
@@ -1308,9 +1240,7 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 		while ( i < 0x10 )
 		{
 			if ( to->ammo[j * 0x10 + i] != from->ammo[j * 0x10 + i] )
-			{
 				ammobits[j] = 1 << ((byte)i & 0x1f) | ammobits[j];
-			}
 			i++;
 		}
 		j++;
@@ -1337,9 +1267,7 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 				while ( i < 0x10 )
 				{
 					if ( (ammobits[j] >> ((byte)i & 0x1f) & 1U) != 0 )
-					{
 						MSG_WriteShort(msg, to->ammo[j * 0x10 + i]);
-					}
 					i++;
 				}
 			}
@@ -1347,7 +1275,6 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 		}
 	}
 	
-	// clipammo
 	j = 0;
 	while ( j < 4 )
 	{
@@ -1356,9 +1283,7 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 		while ( i < 0x10 )
 		{
 			if ( to->ammoclip[j * 0x10 + i] != from->ammoclip[j * 0x10 + i] )
-			{
 				clipbits = clipbits | 1 << ((byte)i & 0x1f);
-			}
 			i++;
 		}
 		if ( !clipbits )
@@ -1373,16 +1298,13 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 			while ( i < 0x10 )
 			{
 				if ( clipbits >> ((byte)i & 0x1f) & 1U )
-				{
 					MSG_WriteShort(msg, to->ammoclip[j * 0x10 + i]);
-				}
 				i++;
 			}
 		}
 		j++;
 	}
 
-	// objectives
 	if ( !memcmp(from->objective, to->objective, sizeof(from->objective)) )
 	{
 		MSG_WriteBit0(msg);
@@ -1399,7 +1321,6 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 		}
 	}
 	
-	// huds
 	if ( !memcmp(&from->hud, &to->hud, sizeof(from->hud)) )
 	{
 		MSG_WriteBit0(msg);
@@ -1437,9 +1358,7 @@ void custom_MSG_WriteDeltaEntity(msg_t *msg, entityState_t *from, entityState_t 
 	int spectatorClientNum = -1;
 	
 	if ( client->gentity && client->gentity->client )
-	{
 		spectatorClientNum = client->gentity->client->spectatorClient;
-	}
 
 	if ( to )
 	{
@@ -1449,51 +1368,41 @@ void custom_MSG_WriteDeltaEntity(msg_t *msg, entityState_t *from, entityState_t 
 			{
 				if ( !client->gentity->client->sess.archiveTime )
 				{
-					// client spectates someone and is not in killcam
+					// Client spectates someone and is not in killcam
 					if ( player_no_earthquakes[spectatorClientNum] )
-					{
 						disable = qtrue;
-					}
 				}
 			}
 			else
 			{
-				// client plays normally
+				// Client plays normally
 				if ( player_no_earthquakes[clientNum] )
-				{
 					disable = qtrue;
-				}
 			}
 		}
 		else if ( (to->eType - 10) == EV_PLAY_FX )
 		{
 			if ( to->otherEntityNum )
 			{
-				// effect is restricted to a player
+				// Effect is restricted to a player
 				if ( spectatorClientNum != -1 )
 				{
-					// client spectates someone (includes killcam)
+					// Client spectates someone (includes killcam)
 					if ( ! (to->otherEntityNum == (spectatorClientNum + 1)) )
-					{
 						disable = qtrue;
-					}
 				}
 				else
 				{
-					// client plays normally
+					// Client plays normally
 					if ( ! (to->otherEntityNum == (clientNum + 1)) )
-					{
 						disable = qtrue;
-					}
 				}
 			}
 		}
 	}
 
 	if ( disable )
-	{
 		to->eType = EV_NONE;
-	}
 
 	custom_MSG_WriteDeltaStruct(msg, from, to, force, 0x3b, 10, &entityStateFields, 0, clientNum, spectatorClientNum);
 }
@@ -1652,22 +1561,16 @@ void custom_SV_WriteSnapshotToClient(client_t *client, msg_t *msg)
 	MSG_WriteByte(msg, lastframe);
 	snapFlags = svs.snapFlagServerBit;
 	if ( client->rateDelayed != 0 )
-	{
 		snapFlags = svs.snapFlagServerBit | 1;
-	}
+
 	if ( client->state == CS_ACTIVE )
-	{
 		client->delayed = 1;
-	}
 	else if ( client->state != CS_ZOMBIE )
-	{
 		client->delayed = 0;
-	}
+
 	if ( client->delayed == 0 )
-	{
 		snapFlags = snapFlags | 2;
-	}
-	
+
 	MSG_WriteByte(msg, snapFlags);
 	if ( oldframe == NULL )
 	{
@@ -1690,9 +1593,7 @@ void custom_SV_WriteSnapshotToClient(client_t *client, msg_t *msg)
 	custom_SV_EmitPacketClients(client - svs.clients, from_num_clients, from_first_client, client->frames[frame_index].num_clients, client->frames[frame_index].first_client, msg);
 	
 	for ( i = 0; i < sv_padPackets->integer; i++ )
-	{
 		MSG_WriteByte(msg, 0);
-	}
 }
 
 void custom_SV_SendClientGameState(client_t *client)
@@ -1706,9 +1607,7 @@ void custom_SV_SendClientGameState(client_t *client)
 	LargeLocalConstructor(&buf, MAX_MSGLEN);
 	data = (byte *)LargeLocalGetBuf(&buf);
 	while ( client->state != CS_FREE && client->netchan.unsentFragments )
-	{
 		SV_Netchan_TransmitNextFragment(&client->netchan);
-	}
 	
  	Com_DPrintf("SV_SendClientGameState() for %s\n", client->name);
 	Com_DPrintf("Going from CS_CONNECTED to CS_PRIMED for %s\n", client->name);
@@ -1717,7 +1616,7 @@ void custom_SV_SendClientGameState(client_t *client)
 	client->pureAuthentic = 0;
 	client->gamestateMessageNum = client->netchan.outgoingSequence;
 	
-	/* new code start */
+	/* New code start */
 	player_no_pickup[client - svs.clients] = 0;
 	player_no_earthquakes[client - svs.clients] = 0;
 	player_silent[client - svs.clients] = 0;
@@ -1736,7 +1635,7 @@ void custom_SV_SendClientGameState(client_t *client)
 	bot_forwardmove[client - svs.clients] = 0;
 	bot_rightmove[client - svs.clients] = 0;
 #endif
-	/* new code end */
+	/* New code end */
 	
 	MSG_Init(&msg, data, MAX_MSGLEN);
 	MSG_WriteLong(&msg, client->lastClientCommand);
@@ -1757,9 +1656,7 @@ void custom_SV_SendClientGameState(client_t *client)
 	{
 		base = &sv.svEntities[start].baseline.s;
 		if ( !base->number )
-		{
 			continue;
-		}
 		MSG_WriteByte(&msg, svc_baseline);
 		custom_MSG_WriteDeltaEntity(&msg, &nullstate, base, qtrue, client - svs.clients);
 	}
@@ -1770,7 +1667,7 @@ void custom_SV_SendClientGameState(client_t *client)
 	
 	Com_DPrintf("Sending %i bytes in gamestate to client: %i\n", msg.cursize, client - svs.clients);
 	
-	gamestate_size[client - svs.clients] = int(msg.cursize); // libcod
+	gamestate_size[client - svs.clients] = int(msg.cursize); // New code
 	
 	SV_SendMessageToClient(&msg, client);
 	LargeLocalDestructor(&buf);
@@ -1798,10 +1695,10 @@ int custom_SV_WWWRedirectClient(client_t *cl, msg_t *msg)
 		MSG_WriteLong(msg, size);
 		MSG_WriteLong(msg, sv_wwwDlDisconnected->boolean != 0);
 
-		/* new code start */
+		/* New code start */
 		if ( sv_wwwDlDisconnectedMessages->integer == 2 )
 			SV_SendServerCommand(0, 0, "f \"%s^7 downloads %s\"", cl->name, cl->downloadName);
-		/* new code end */
+		/* New code end */
 
 		cl->downloadName[0] = '\0';
 	}
@@ -1814,63 +1711,62 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 	int iwdFile;
 	char errorMessage[COD2_MAX_STRINGLENGTH];
 
-	if (cl->state == CS_ACTIVE)
+	if ( cl->state == CS_ACTIVE )
 		return;
 
-	if (!*cl->downloadName)
+	if ( !*cl->downloadName )
 		return;
 
-	if (strlen(cl->downloadName) < 4)
+	if ( strlen(cl->downloadName) < 4 )
 		return;
 
-	if (strcmp(&cl->downloadName[strlen(cl->downloadName) - 4], ".iwd") != 0)
+	if ( strcmp(&cl->downloadName[strlen(cl->downloadName) - 4], ".iwd") != 0 )
 		return;
 
-#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
-	if ( cl->wwwDlAck )
-		return;
-#endif
+	#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
+		if ( cl->wwwDlAck )
+			return;
+	#endif
 
-	if (strlen(sv_downloadMessage->string))
+	if ( strlen(sv_downloadMessage->string) )
 	{
 		Com_sprintf(errorMessage, sizeof(errorMessage), sv_downloadMessage->string);
 
 		MSG_WriteByte( msg, svc_download );
-		MSG_WriteShort( msg, 0 ); // client is expecting block zero
-		MSG_WriteLong( msg, -1 ); // illegal file size
+		MSG_WriteShort( msg, 0 ); // Client is expecting block zero
+		MSG_WriteLong( msg, -1 ); // Illegal file size
 		MSG_WriteString( msg, errorMessage );
 
 		*cl->downloadName = 0;
 		return; // Download message instead of download
 	}
 
-#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
-	if (sv_wwwDownload->boolean && cl->wwwDownload)
-	{
-		if (!cl->wwwDl_failed)
+	#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
+		if ( sv_wwwDownload->boolean && cl->wwwDownload )
 		{
-			custom_SV_WWWRedirectClient(cl, msg);
-			return; // wwwDl redirect
+			if ( !cl->wwwDl_failed )
+			{
+				custom_SV_WWWRedirectClient(cl, msg);
+				return; // wwwDl redirect
+			}
 		}
-	}
-#endif
+	#endif
 
 	// Hardcode client variables to make max download speed for everyone
 	cl->state = CS_CONNECTED;
 	cl->rate = 25000;
 	cl->snapshotMsec = 50;
 
-	if (!cl->download)
+	if ( !cl->download )
 	{
 		// We open the file here
-
 		Com_Printf("clientDownload: %d : begining \"%s\"\n", cl - svs.clients, cl->downloadName);
 
 		iwdFile = FS_iwIwd(cl->downloadName, "main");
 
 		if ( !sv_allowDownload->integer || iwdFile || ( cl->downloadSize = FS_SV_FOpenFileRead( cl->downloadName, &cl->download ) ) <= 0 )
 		{
-			// cannot auto-download file
+			// Cannot auto-download file
 			if (iwdFile)
 			{
 				Com_Printf("clientDownload: %d : \"%s\" cannot download iwd files\n", cl - svs.clients, cl->downloadName);
@@ -1880,7 +1776,7 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 			{
 				Com_Printf("clientDownload: %d : \"%s\" download disabled\n", cl - svs.clients, cl->downloadName);
 
-				if (sv_pure->boolean)
+				if ( sv_pure->boolean )
 					Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_AUTODL_SERVERDISABLED_PURE\x15%s", cl->downloadName);
 				else
 					Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_AUTODL_SERVERDISABLED\x15%s", cl->downloadName);
@@ -1892,8 +1788,8 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 			}
 
 			MSG_WriteByte( msg, svc_download );
-			MSG_WriteShort( msg, 0 ); // client is expecting block zero
-			MSG_WriteLong( msg, -1 ); // illegal file size
+			MSG_WriteShort( msg, 0 ); // Client is expecting block zero
+			MSG_WriteLong( msg, -1 ); // Illegal file size
 			MSG_WriteString( msg, errorMessage );
 
 			*cl->downloadName = 0;
@@ -1907,16 +1803,16 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 	}
 
 	// Perform any reads that we need to
-	while (cl->downloadCurrentBlock - cl->downloadClientBlock < MAX_DOWNLOAD_WINDOW && cl->downloadSize != cl->downloadCount)
+	while ( cl->downloadCurrentBlock - cl->downloadClientBlock < MAX_DOWNLOAD_WINDOW && cl->downloadSize != cl->downloadCount )
 	{
 		curindex = (cl->downloadCurrentBlock % MAX_DOWNLOAD_WINDOW);
 
-		if (!cl->downloadBlocks[curindex])
+		if ( !cl->downloadBlocks[curindex] )
 			cl->downloadBlocks[curindex] = (unsigned char *)Z_MallocInternal(MAX_DOWNLOAD_BLKSIZE);
 
 		cl->downloadBlockSize[curindex] = FS_Read( cl->downloadBlocks[curindex], MAX_DOWNLOAD_BLKSIZE, cl->download );
 
-		if (cl->downloadBlockSize[curindex] < 0)
+		if ( cl->downloadBlockSize[curindex] < 0 )
 		{
 			// EOF right now
 			cl->downloadCount = cl->downloadSize;
@@ -1930,7 +1826,7 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 	}
 
 	// Check to see if we have eof condition and add the EOF block
-	if (cl->downloadCount == cl->downloadSize && !cl->downloadEOF && cl->downloadCurrentBlock - cl->downloadClientBlock < MAX_DOWNLOAD_WINDOW)
+	if ( cl->downloadCount == cl->downloadSize && !cl->downloadEOF && cl->downloadCurrentBlock - cl->downloadClientBlock < MAX_DOWNLOAD_WINDOW )
 	{
 		cl->downloadBlockSize[cl->downloadCurrentBlock % MAX_DOWNLOAD_WINDOW] = 0;
 		cl->downloadCurrentBlock++;
@@ -1940,16 +1836,16 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 	// Write out the next section of the file, if we have already reached our window,
 	// automatically start retransmitting
 
-	if (cl->downloadClientBlock == cl->downloadCurrentBlock)
+	if ( cl->downloadClientBlock == cl->downloadCurrentBlock )
 		return; // Nothing to transmit
 
-	if (cl->downloadXmitBlock == cl->downloadCurrentBlock)
+	if ( cl->downloadXmitBlock == cl->downloadCurrentBlock )
 	{
 		// We have transmitted the complete window, should we start resending?
 
-		//FIXME:  This uses a hardcoded one second timeout for lost blocks
-		//the timeout should be based on client rate somehow
-		if (svs.time - cl->downloadSendTime > 1000)
+		// FIXME: This uses a hardcoded one second timeout for lost blocks
+		// The timeout should be based on client rate somehow
+		if ( svs.time - cl->downloadSendTime > 1000 )
 			cl->downloadXmitBlock = cl->downloadClientBlock;
 		else
 			return;
@@ -1961,7 +1857,7 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 	MSG_WriteByte( msg, svc_download );
 	MSG_WriteShort( msg, cl->downloadXmitBlock );
 
-	// block zero is special, contains file size
+	// Block zero is special, contains file size
 	if ( cl->downloadXmitBlock == 0 )
 		MSG_WriteLong( msg, cl->downloadSize );
 
@@ -2021,7 +1917,7 @@ char *custom_va(const char *format, ...)
 
 void hook_SV_VerifyIwds_f(client_t *cl)
 {
-	if (sv_pure->boolean)
+	if ( sv_pure->boolean )
 		cl->pureAuthentic = 1;
 }
 
@@ -2029,9 +1925,9 @@ void hook_SV_ResetPureClient_f(client_t *cl)
 {
 	cl->pureAuthentic = 0;
 
-	if (codecallback_vid_restart && Scr_IsSystemActive())
+	if ( codecallback_vid_restart && Scr_IsSystemActive() )
 	{	
-		if (cl->gentity == NULL)
+		if ( cl->gentity == NULL )
 			return;
 		
 		stackPushInt(cl - svs.clients);
@@ -2041,7 +1937,7 @@ void hook_SV_ResetPureClient_f(client_t *cl)
 }
 
 // Adds bot pings and removes spam on 1.2 and 1.3
-void custom_SV_CalcPings( void )
+void custom_SV_CalcPings(void)
 {
 	int i, j;
 	client_t *cl;
@@ -2108,28 +2004,30 @@ void custom_SV_CheckTimeouts( void )
 
 	for ( i = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ )
 	{
-		// message times may be wrong across a changelevel
-		if (cl->lastPacketTime > svs.time)
+		// Message times may be wrong across a changelevel
+		if ( cl->lastPacketTime > svs.time )
 			cl->lastPacketTime = svs.time;
 
-		if (cl->state == CS_ZOMBIE && cl->lastPacketTime < zombiepoint)
+		if ( cl->state == CS_ZOMBIE && cl->lastPacketTime < zombiepoint )
 		{
-			cl->state = CS_FREE; // can now be reused
+			cl->state = CS_FREE; // Can now be reused
 			continue;
 		}
 
-		if (cl->state >= CS_CONNECTED && cl->lastPacketTime < droppoint)
+		if ( cl->state >= CS_CONNECTED && cl->lastPacketTime < droppoint )
 		{
-			// wait several frames so a debugger session doesn't
+			// Wait several frames so a debugger session doesn't
 			// cause a timeout
 			if ( ++cl->timeoutCount > 5 )
 			{
 				SV_DropClient(cl, "EXE_TIMEDOUT");
-				cl->state = CS_FREE; // don't bother with zombie state
+				cl->state = CS_FREE; // Don't bother with zombie state
 			}
 		}
 		else
+		{
 			cl->timeoutCount = 0;
+		}
 	}
 }
 
@@ -2139,7 +2037,7 @@ void custom_SV_BotUserMove(client_t *client)
 	int num;
 	usercmd_t ucmd = {0};
 
-	if (client->gentity == NULL)
+	if ( client->gentity == NULL )
 		return;
 
 	num = client - svs.clients;
@@ -2148,15 +2046,15 @@ void custom_SV_BotUserMove(client_t *client)
 	playerState_t *ps = SV_GameClientNum(num);
 	gentity_t *ent = SV_GentityNum(num);
 
-	if (bot_weapon[num])
+	if ( bot_weapon[num] )
 		ucmd.weapon = (byte)(bot_weapon[num] & 0xFF);
 	else
 		ucmd.weapon = (byte)(ps->weapon & 0xFF);
 
-	if (ent->client == NULL)
+	if ( ent->client == NULL )
 		return;
 
-	if (ent->client->sess.archiveTime == 0)
+	if ( ent->client->sess.archiveTime == 0 )
 	{
 		ucmd.buttons = bot_buttons[num];
 
@@ -2173,7 +2071,7 @@ void custom_SV_BotUserMove(client_t *client)
 
 void hook_scriptError(int a1, int a2, int a3, void *a4)
 {
-	if (developer->integer == 2)
+	if ( developer->integer == 2 )
 		runtimeError(0, a1, a2, a3);
 	else
 		scriptError(a1, a2, a3, a4);
@@ -2214,11 +2112,11 @@ void hook_gamestate_info(const char *format, ...)
 	int clientnum = 0;
 	tok = strtok(s, " ");
 
-	for (int i = 0; tok != NULL; i++)
+	for ( int i = 0; tok != NULL; i++ )
 	{
-		if (i == 1)
+		if ( i == 1 )
 			gamestate = atoi(tok);
-		if (i == 7)
+		if ( i == 7 )
 			clientnum = atoi(tok);
 		tok = strtok(NULL, " ");
 	}
@@ -2241,133 +2139,133 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 
 	tempfps[clientnum]++;
 
-	if (svs.time - fpstime[clientnum] >= 1000)
+	if ( svs.time - fpstime[clientnum] >= 1000 )
 	{
 		clientfps[clientnum] = tempfps[clientnum];
 		fpstime[clientnum] = svs.time;
 		tempfps[clientnum] = 0;
 	}
 	
-	if (ucmd->buttons & KEY_MASK_FIRE && !(previousbuttons[clientnum] & KEY_MASK_FIRE))
+	if ( ucmd->buttons & KEY_MASK_FIRE && !(previousbuttons[clientnum] & KEY_MASK_FIRE) )
 	{
-		if(codecallback_attackbutton)
+		if ( codecallback_attackbutton )
 		{
 			short ret = Scr_ExecEntThread(cl->gentity, codecallback_attackbutton, 0);
 			Scr_FreeThread(ret);
 		}
 	}
 	
-	if (ucmd->buttons & KEY_MASK_MELEE && !(previousbuttons[clientnum] & KEY_MASK_MELEE))
+	if ( ucmd->buttons & KEY_MASK_MELEE && !(previousbuttons[clientnum] & KEY_MASK_MELEE) )
 	{
-		if(codecallback_meleebutton)
+		if ( codecallback_meleebutton )
 		{
 			short ret = Scr_ExecEntThread(cl->gentity, codecallback_meleebutton, 0);
 			Scr_FreeThread(ret);
 		}
 	}
 
-	if (ucmd->buttons & KEY_MASK_USE && !(previousbuttons[clientnum] & KEY_MASK_USE))
+	if ( ucmd->buttons & KEY_MASK_USE && !(previousbuttons[clientnum] & KEY_MASK_USE) )
 	{
-		if(codecallback_usebutton)
+		if ( codecallback_usebutton )
 		{
 			short ret = Scr_ExecEntThread(cl->gentity, codecallback_usebutton, 0);
 			Scr_FreeThread(ret);
 		}
 	}
 
-	if (ucmd->buttons & KEY_MASK_RELOAD && !(previousbuttons[clientnum] & KEY_MASK_RELOAD))
+	if ( ucmd->buttons & KEY_MASK_RELOAD && !(previousbuttons[clientnum] & KEY_MASK_RELOAD) )
 	{
-		if(codecallback_reloadbutton)
+		if( codecallback_reloadbutton )
 		{
 			short ret = Scr_ExecEntThread(cl->gentity, codecallback_reloadbutton, 0);
 			Scr_FreeThread(ret);
 		}
 	}
 	
-	if (ucmd->buttons & KEY_MASK_LEANLEFT && !(previousbuttons[clientnum] & KEY_MASK_LEANLEFT))
+	if ( ucmd->buttons & KEY_MASK_LEANLEFT && !(previousbuttons[clientnum] & KEY_MASK_LEANLEFT) )
 	{
-		if(codecallback_leanleftbutton)
+		if ( codecallback_leanleftbutton )
 		{
 			short ret = Scr_ExecEntThread(cl->gentity, codecallback_leanleftbutton, 0);
 			Scr_FreeThread(ret);
 		}
 	}
 	
-	if (ucmd->buttons & KEY_MASK_LEANRIGHT && !(previousbuttons[clientnum] & KEY_MASK_LEANRIGHT))
+	if ( ucmd->buttons & KEY_MASK_LEANRIGHT && !(previousbuttons[clientnum] & KEY_MASK_LEANRIGHT) )
 	{
-		if(codecallback_leanrightbutton)
+		if ( codecallback_leanrightbutton )
 		{
 			short ret = Scr_ExecEntThread(cl->gentity, codecallback_leanrightbutton, 0);
 			Scr_FreeThread(ret);
 		}
 	}
 	
-	if (ucmd->buttons & KEY_MASK_PRONE && !(previousbuttons[clientnum] & KEY_MASK_PRONE))
+	if ( ucmd->buttons & KEY_MASK_PRONE && !(previousbuttons[clientnum] & KEY_MASK_PRONE) )
 	{
-		if(codecallback_pronebutton)
+		if ( codecallback_pronebutton )
 		{
 			short ret = Scr_ExecEntThread(cl->gentity, codecallback_pronebutton, 0);
 			Scr_FreeThread(ret);
 		}
 	}
 	
-	if (ucmd->buttons & KEY_MASK_CROUCH && !(previousbuttons[clientnum] & KEY_MASK_CROUCH))
+	if ( ucmd->buttons & KEY_MASK_CROUCH && !(previousbuttons[clientnum] & KEY_MASK_CROUCH) )
 	{
-		if(codecallback_crouchbutton)
+		if ( codecallback_crouchbutton )
 		{
 			short ret = Scr_ExecEntThread(cl->gentity, codecallback_crouchbutton, 0);
 			Scr_FreeThread(ret);
 		}
 	}
 	
-	if (ucmd->buttons & KEY_MASK_JUMP && !(previousbuttons[clientnum] & KEY_MASK_JUMP))
+	if ( ucmd->buttons & KEY_MASK_JUMP && !(previousbuttons[clientnum] & KEY_MASK_JUMP) )
 	{
-		if(codecallback_jumpbutton)
+		if ( codecallback_jumpbutton )
 		{
 			short ret = Scr_ExecEntThread(cl->gentity, codecallback_jumpbutton, 0);
 			Scr_FreeThread(ret);
 		}
 	}
 	
-	if (ucmd->buttons & KEY_MASK_ADS_MODE && !(previousbuttons[clientnum] & KEY_MASK_ADS_MODE))
+	if ( ucmd->buttons & KEY_MASK_ADS_MODE && !(previousbuttons[clientnum] & KEY_MASK_ADS_MODE) )
 	{
-		if(codecallback_adsbutton)
+		if ( codecallback_adsbutton )
 		{
 			short ret = Scr_ExecEntThread(cl->gentity, codecallback_adsbutton, 0);
 			Scr_FreeThread(ret);
 		}
 	}
 	
-	if (ucmd->buttons & KEY_MASK_MELEE_BREATH && !(previousbuttons[clientnum] & KEY_MASK_MELEE_BREATH))
+	if ( ucmd->buttons & KEY_MASK_MELEE_BREATH && !(previousbuttons[clientnum] & KEY_MASK_MELEE_BREATH) )
 	{
-		if(codecallback_meleebreathbutton)
+		if ( codecallback_meleebreathbutton )
 		{
 			short ret = Scr_ExecEntThread(cl->gentity, codecallback_meleebreathbutton, 0);
 			Scr_FreeThread(ret);
 		}
 	}
 	
-	if (ucmd->buttons & KEY_MASK_HOLDBREATH && !(previousbuttons[clientnum] & KEY_MASK_HOLDBREATH))
+	if ( ucmd->buttons & KEY_MASK_HOLDBREATH && !(previousbuttons[clientnum] & KEY_MASK_HOLDBREATH) )
 	{
-		if(codecallback_holdbreathbutton)
+		if ( codecallback_holdbreathbutton )
 		{
 			short ret = Scr_ExecEntThread(cl->gentity, codecallback_holdbreathbutton, 0);
 			Scr_FreeThread(ret);
 		}
 	}
 	
-	if (ucmd->buttons & KEY_MASK_FRAG && !(previousbuttons[clientnum] & KEY_MASK_FRAG))
+	if ( ucmd->buttons & KEY_MASK_FRAG && !(previousbuttons[clientnum] & KEY_MASK_FRAG) )
 	{
-		if(codecallback_fragbutton)
+		if ( codecallback_fragbutton )
 		{
 			short ret = Scr_ExecEntThread(cl->gentity, codecallback_fragbutton, 0);
 			Scr_FreeThread(ret);
 		}
 	}
 	
-	if (ucmd->buttons & KEY_MASK_SMOKE && !(previousbuttons[clientnum] & KEY_MASK_SMOKE))
+	if ( ucmd->buttons & KEY_MASK_SMOKE && !(previousbuttons[clientnum] & KEY_MASK_SMOKE) )
 	{
-		if(codecallback_smokebutton)
+		if ( codecallback_smokebutton )
 		{
 			short ret = Scr_ExecEntThread(cl->gentity, codecallback_smokebutton, 0);
 			Scr_FreeThread(ret);
@@ -2389,14 +2287,14 @@ int play_endframe(gentity_t *ent)
 
 	hook_play_endframe->hook();
 
-	if (ent->client->sess.state == STATE_PLAYING)
+	if ( ent->client->sess.state == STATE_PLAYING )
 	{
 		int num = ent - g_entities;
 
-		if (player_g_speed[num] > 0)
+		if ( player_g_speed[num] > 0 )
 			ent->client->ps.speed = player_g_speed[num];
 
-		if (player_g_gravity[num] > 0)
+		if ( player_g_gravity[num] > 0 )
 			ent->client->ps.gravity = player_g_gravity[num];
 
 	}
@@ -2413,7 +2311,7 @@ int set_anim(playerState_t *ps, int animNum, animBodyPart_t bodyPart, int forceD
 
 	int ret;
 
-	if (!custom_animation[ps->clientNum])
+	if ( !custom_animation[ps->clientNum] )
 		ret = sig(ps, animNum, bodyPart, forceDuration, setTimer, isContinue, force);
 	else
 		ret = sig(ps, custom_animation[ps->clientNum], bodyPart, forceDuration, qtrue, isContinue, qtrue);
@@ -2463,9 +2361,7 @@ static leakyBucket_t *SVC_BucketForAddress( netadr_t address, int burst, int per
 	for ( bucket = bucketHashes[ hash ]; bucket; bucket = bucket->next )
 	{
 		if ( memcmp( bucket->adr, address.ip, 4 ) == 0 )
-		{
 			return bucket;
-		}
 	}
 
 	for ( i = 0; i < MAX_BUCKETS; i++ )
@@ -2480,18 +2376,12 @@ static leakyBucket_t *SVC_BucketForAddress( netadr_t address, int burst, int per
 									   interval < 0 ) )
 		{
 			if ( bucket->prev != NULL )
-			{
 				bucket->prev->next = bucket->next;
-			}
 			else
-			{
 				bucketHashes[ bucket->hash ] = bucket->next;
-			}
 
 			if ( bucket->next != NULL )
-			{
 				bucket->next->prev = bucket->prev;
-			}
 
 			memset( bucket, 0, sizeof( leakyBucket_t ) );
 		}
@@ -2508,9 +2398,7 @@ static leakyBucket_t *SVC_BucketForAddress( netadr_t address, int burst, int per
 			// Add to the head of the relevant hash chain
 			bucket->next = bucketHashes[ hash ];
 			if ( bucketHashes[ hash ] != NULL )
-			{
 				bucketHashes[ hash ]->prev = bucket;
-			}
 
 			bucket->prev = NULL;
 			bucketHashes[ hash ] = bucket;
@@ -2546,7 +2434,6 @@ bool SVC_RateLimit( leakyBucket_t *bucket, int burst, int period )
 		if ( bucket->burst < burst )
 		{
 			bucket->burst++;
-
 			return false;
 		}
 	}
@@ -2563,13 +2450,13 @@ bool SVC_RateLimitAddress( netadr_t from, int burst, int period )
 
 bool SVC_callback(const char * str, const char * ip)
 {	
-	if( codecallback_client_spam && Scr_IsSystemActive())
+	if ( codecallback_client_spam && Scr_IsSystemActive() )
 	{
 		stackPushString(ip);
 		stackPushString(str);
 		short ret = Scr_ExecThread(codecallback_client_spam, 2);
 		Scr_FreeThread(ret);
-		
+
 		return true;
 	}
 	
@@ -2581,7 +2468,7 @@ bool SVC_ApplyRconLimit( netadr_t from, bool badRconPassword )
 	// Prevent using rcon as an amplifier and make dictionary attacks impractical
 	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
 	{
-		if (!SVC_callback("RCON:ADDRESS", NET_AdrToString(from)))
+		if ( !SVC_callback("RCON:ADDRESS", NET_AdrToString(from)) )
 			Com_DPrintf("SVC_RemoteCommand: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
 		return true;
 	}
@@ -2593,7 +2480,7 @@ bool SVC_ApplyRconLimit( netadr_t from, bool badRconPassword )
 		// Make DoS via rcon impractical
 		if ( SVC_RateLimit( &bucket, 10, 1000 ) )
 		{
-			if (!SVC_callback("RCON:GLOBAL", NET_AdrToString(from)))
+			if ( !SVC_callback("RCON:GLOBAL", NET_AdrToString(from)) )
 				Com_DPrintf("SVC_RemoteCommand: rate limit exceeded, dropping request\n");
 			return true;
 		}
@@ -2604,18 +2491,18 @@ bool SVC_ApplyRconLimit( netadr_t from, bool badRconPassword )
 
 void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 {
-	if (!sv_allowRcon->boolean)
+	if ( !sv_allowRcon->boolean )
 		return;
 	
 	bool badRconPassword = !strlen( rcon_password->string ) || strcmp(Cmd_Argv(1), rcon_password->string) != 0;
 	
-	if (!sv_limitLocalRcon->boolean)
+	if ( !sv_limitLocalRcon->boolean )
 	{
 		unsigned char *ip = from.ip;
 	
-		if (!(ip[0] == 10 ||									// 10.0.0.0 – 10.255.255.255
-			 (ip[0] == 172 && (ip[1] >= 16 && ip[1] <= 31)) ||  // 172.16.0.0 – 172.31.255.255
-			 (ip[0] == 192 && ip[1] == 168)))				   // 192.168.0.0 – 192.168.255.255
+		if ( !(ip[0] == 10 ||									// 10.0.0.0 – 10.255.255.255
+			  (ip[0] == 172 && (ip[1] >= 16 && ip[1] <= 31)) || // 172.16.0.0 – 172.31.255.255
+			  (ip[0] == 192 && ip[1] == 168)) )				    // 192.168.0.0 – 192.168.255.255
 		{
 			if ( SVC_ApplyRconLimit( from, badRconPassword ) )
 				return;
@@ -2628,11 +2515,11 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 	}
 	
 	#if COD_VERSION == COD2_1_0
-	int rcon_from_string_offset = 0x0;  // Not tested
+		int rcon_from_string_offset = 0x0; // Not tested
 	#elif COD_VERSION == COD2_1_2
-	int rcon_from_string_offset = 0x0;  // Not tested
+		int rcon_from_string_offset = 0x0; // Not tested
 	#elif COD_VERSION == COD2_1_3
-	int rcon_from_string_offset = 0x0814bC61;
+		int rcon_from_string_offset = 0x0814bC61;
 	#endif
 	
 	if ( logRcon && !sv_logRcon->boolean )
@@ -2673,11 +2560,11 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 	}
 	
 	#if COD_VERSION == COD2_1_0
-	int lasttime_offset = 0x0848B674;
+		int lasttime_offset = 0x0848B674;
 	#elif COD_VERSION == COD2_1_2
-	int lasttime_offset = 0x0849EB74;
+		int lasttime_offset = 0x0849EB74;
 	#elif COD_VERSION == COD2_1_3
-	int lasttime_offset = 0x0849FBF4;
+		int lasttime_offset = 0x0849FBF4;
 	#endif
 	
 	*(int *)lasttime_offset = 0;
@@ -2690,7 +2577,7 @@ void hook_SV_GetChallenge(netadr_t from)
 	// Prevent using getchallenge as an amplifier
 	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
 	{
-		if (!SVC_callback("CHALLENGE:ADDRESS", NET_AdrToString(from)))
+		if ( !SVC_callback("CHALLENGE:ADDRESS", NET_AdrToString(from)) )
 			Com_DPrintf("SV_GetChallenge: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
 		return;
 	}
@@ -2699,7 +2586,7 @@ void hook_SV_GetChallenge(netadr_t from)
 	// excess outbound bandwidth usage when being flooded inbound
 	if ( SVC_RateLimit( &outboundLeakyBucket, 10, 100 ) )
 	{
-		if (!SVC_callback("CHALLENGE:GLOBAL", NET_AdrToString(from)))
+		if ( !SVC_callback("CHALLENGE:GLOBAL", NET_AdrToString(from)) )
 			Com_DPrintf("SV_GetChallenge: rate limit exceeded, dropping request\n");
 		return;
 	}
@@ -2712,7 +2599,7 @@ void hook_SVC_Info(netadr_t from)
 	// Prevent using getinfo as an amplifier
 	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
 	{
-		if (!SVC_callback("INFO:ADDRESS", NET_AdrToString(from)))
+		if ( !SVC_callback("INFO:ADDRESS", NET_AdrToString(from)) )
 			Com_DPrintf("SVC_Info: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
 		return;
 	}
@@ -2721,7 +2608,7 @@ void hook_SVC_Info(netadr_t from)
 	// excess outbound bandwidth usage when being flooded inbound
 	if ( SVC_RateLimit( &outboundLeakyBucket, 10, 100 ) )
 	{
-		if (!SVC_callback("INFO:GLOBAL", NET_AdrToString(from)))
+		if ( !SVC_callback("INFO:GLOBAL", NET_AdrToString(from)) )
 			Com_DPrintf("SVC_Info: rate limit exceeded, dropping request\n");
 		return;
 	}
@@ -2734,7 +2621,7 @@ void hook_SVC_Status(netadr_t from)
 	// Prevent using getstatus as an amplifier
 	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
 	{
-		if (!SVC_callback("STATUS:ADDRESS", NET_AdrToString(from)))
+		if ( !SVC_callback("STATUS:ADDRESS", NET_AdrToString(from)) )
 			Com_DPrintf("SVC_Status: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
 		return;
 	}
@@ -2743,7 +2630,7 @@ void hook_SVC_Status(netadr_t from)
 	// excess outbound bandwidth usage when being flooded inbound
 	if ( SVC_RateLimit( &outboundLeakyBucket, 10, 100 ) )
 	{
-		if (!SVC_callback("STATUS:GLOBAL", NET_AdrToString(from)))
+		if ( !SVC_callback("STATUS:GLOBAL", NET_AdrToString(from)) )
 			Com_DPrintf("SVC_Status: rate limit exceeded, dropping request\n");
 		return;
 	}
@@ -2760,37 +2647,37 @@ void manymaps_prepare(const char *mapname, int read)
 	cvar_t *fs_game = Cvar_FindVar("fs_game");
 	cvar_t *map = Cvar_FindVar("mapname");
 
-	if (strlen(fs_library->string))
+	if ( strlen(fs_library->string) )
 		strncpy(library_path, fs_library->string, sizeof(library_path));
 	else
 		snprintf(library_path, sizeof(library_path), "%s/%s/Library", fs_homepath->string, fs_game->string);
 
 	snprintf(map_check, sizeof(map_check), "%s/%s.iwd", library_path, mapname);
 
-#if COD_VERSION == COD2_1_0
-	const char *stock_maps[] = { "mp_breakout", "mp_brecourt", "mp_burgundy", "mp_carentan", "mp_dawnville", "mp_decoy", "mp_downtown", "mp_farmhouse", "mp_leningrad", "mp_matmata", "mp_railyard", "mp_toujane", "mp_trainstation" };
-#else
-	const char *stock_maps[] = { "mp_breakout", "mp_brecourt", "mp_burgundy", "mp_carentan", "mp_dawnville", "mp_decoy", "mp_downtown", "mp_farmhouse", "mp_leningrad", "mp_matmata", "mp_railyard", "mp_toujane", "mp_trainstation", "mp_rhine", "mp_harbor" };
-#endif
+	#if COD_VERSION == COD2_1_0
+		const char *stock_maps[] = { "mp_breakout", "mp_brecourt", "mp_burgundy", "mp_carentan", "mp_dawnville", "mp_decoy", "mp_downtown", "mp_farmhouse", "mp_leningrad", "mp_matmata", "mp_railyard", "mp_toujane", "mp_trainstation" };
+	#else
+		const char *stock_maps[] = { "mp_breakout", "mp_brecourt", "mp_burgundy", "mp_carentan", "mp_dawnville", "mp_decoy", "mp_downtown", "mp_farmhouse", "mp_leningrad", "mp_matmata", "mp_railyard", "mp_toujane", "mp_trainstation", "mp_rhine", "mp_harbor" };
+	#endif
 
 	bool map_found = false, from_stock_map = false;
 
-	for (int i = 0; i < int( sizeof(stock_maps) / sizeof(stock_maps[0]) ); i++)
+	for ( int i = 0; i < int( sizeof(stock_maps) / sizeof(stock_maps[0]) ); i++ )
 	{
-		if (strcmp(map->string, stock_maps[i]) == 0)
+		if ( strcmp(map->string, stock_maps[i]) == 0 )
 		{
 			from_stock_map = true;
 			break;
 		}
 	}
 
-	for (int i = 0; i < int( sizeof(stock_maps) / sizeof(stock_maps[0]) ); i++)
+	for ( int i = 0; i < int( sizeof(stock_maps) / sizeof(stock_maps[0]) ); i++ )
 	{
-		if (strcmp(mapname, stock_maps[i]) == 0)
+		if ( strcmp(mapname, stock_maps[i]) == 0 )
 		{
 			map_found = true;
 
-			if (from_stock_map) // When changing from stock map to stock map do not trigger manymap
+			if ( from_stock_map ) // When changing from stock map to stock map do not trigger manymap
 				return;
 			else
 				break;
@@ -2799,7 +2686,7 @@ void manymaps_prepare(const char *mapname, int read)
 
 	int map_exists = access(map_check, F_OK) != -1;
 
-	if (!map_exists && !map_found)
+	if ( !map_exists && !map_found )
 		return;
 
 	DIR *dir;
@@ -2807,18 +2694,18 @@ void manymaps_prepare(const char *mapname, int read)
 
 	dir = opendir(library_path);
 
-	if (!dir)
+	if ( !dir )
 		return;
 
-	while ((dir_ent = readdir(dir)) != NULL)
+	while ( (dir_ent = readdir(dir)) != NULL )
 	{
-		if (strcmp(dir_ent->d_name, ".") == 0 || strcmp(dir_ent->d_name, "..") == 0)
+		if ( strcmp(dir_ent->d_name, ".") == 0 || strcmp(dir_ent->d_name, "..") == 0 )
 			continue;
 
 		char fileDelete[512];
 		snprintf(fileDelete, sizeof(fileDelete), "%s/%s/%s", fs_homepath->string, fs_game->string, dir_ent->d_name);
 
-		if (access(fileDelete, F_OK) != -1)
+		if ( access(fileDelete, F_OK) != -1 )
 		{
 			int unlink_success = unlink(fileDelete) == 0;
 			printf("manymaps> REMOVED OLD LINK: %s result of unlink: %s\n", fileDelete, unlink_success?"success":"failed");
@@ -2827,19 +2714,19 @@ void manymaps_prepare(const char *mapname, int read)
 
 	closedir(dir);
 
-	if (map_exists)
+	if ( map_exists )
 	{
 		char src[512], dst[512];
 
 		snprintf(src, sizeof(src), "%s/%s.iwd", library_path, mapname);
 		snprintf(dst, sizeof(dst), "%s/%s/%s.iwd", fs_homepath->string, fs_game->string, mapname);
 
-		if (access(src, F_OK) != -1)
+		if ( access(src, F_OK) != -1 )
 		{
 			int link_success = symlink(src, dst) == 0;
 			printf("manymaps> NEW LINK: src=%s dst=%s result of link: %s\n", src, dst, link_success?"success":"failed");
 
-			if (link_success && read == -1) // FS_LoadDir is needed when empty.iwd is missing (then .d3dbsp isn't referenced anywhere)
+			if ( link_success && read == -1 ) // FS_LoadDir is needed when empty.iwd is missing (then .d3dbsp isn't referenced anywhere)
 				FS_LoadDir(fs_homepath->string, fs_game->string);
 		}
 	}
@@ -2850,7 +2737,7 @@ int hook_findMap(const char *qpath, void **buffer)
 	int read = FS_ReadFile(qpath, buffer);
 	manymaps_prepare(Cmd_Argv(1), read);
 
-	if (read != -1)
+	if ( read != -1 )
 		return read;
 	else
 		return FS_ReadFile(qpath, buffer);
@@ -2868,7 +2755,7 @@ void custom_Scr_InitOpcodeLookup()
 	vars->developer = 1;
 	GE_Scr_InitOpcodeLookup();
 	
-	if(!developer->integer)
+	if( !developer->integer )
 		vars->developer = 0;
 	
 	hook_init_opcode->hook();
@@ -2886,7 +2773,7 @@ void custom_AddOpcodePos(int a1, int a2)
 	vars->developer = 1;
 	GE_AddOpcodePos(a1, a2);
 	
-	if(!developer->integer)
+	if( !developer->integer )
 		vars->developer = 0;
 	
 	hook_add_opcode->hook();
@@ -2904,10 +2791,55 @@ void custom_Scr_PrintPrevCodePos(int a1, char *a2, int a3)
 	vars->developer = 1;
 	GE_Scr_PrintPrevCodePos(a1, a2, a3);
 	
-	if(!developer->integer)
+	if( !developer->integer )
 		vars->developer = 0;
 	
 	hook_print_codepos->hook();
+}
+
+void hook_Com_Printf(const char *format, ...)
+{
+	char s[COD2_MAX_STRINGLENGTH];
+	va_list va;
+
+	va_start(va, format);
+	vsnprintf(s, sizeof(s), format, va);
+	va_end(va);
+	
+	if ( Scr_IsSystemActive() && con_coloredPrints->boolean )
+	{
+		Sys_AnsiColorPrint(s);
+	}
+	else
+	{
+		hook_standard_prints->unhook();
+		Com_Printf("%s", s);
+		hook_standard_prints->hook();
+	}
+}
+
+void hook_Com_DPrintf(const char *format, ...)
+{
+	char s[COD2_MAX_STRINGLENGTH];
+	va_list va;
+
+	va_start(va, format);
+	vsnprintf(s, sizeof(s), format, va);
+	va_end(va);
+	
+	if ( codecallback_dprintf && Scr_IsSystemActive() )
+	{
+		stackPushString(s);
+		short ret = Scr_ExecThread(codecallback_dprintf, 1);
+		Scr_FreeThread(ret);
+	
+		return;
+	}
+
+	if ( !developer->integer )
+		return;
+	
+	Com_Printf("%s", s);
 }
 
 void Scr_CodeCallback_Error(qboolean terminal, qboolean emit, const char * internal_function, char *message)
@@ -2924,11 +2856,11 @@ void Scr_CodeCallback_Error(qboolean terminal, qboolean emit, const char * inter
 		}
 		else
 		{
-			// If the error is non-critical (not stopping the server), save it
-			// so we can emit it later at G_RunFrame which is a rather save
-			// spot compared to if we emit it directly here within the
-			// internals of the scripting engine where we risk crashing it
-			// with a segmentation fault
+			/* If the error is non-critical (not stopping the server), save it
+			   so we can emit it later at G_RunFrame which is a rather save
+			   spot compared to if we emit it directly here within the
+			   internals of the scripting engine where we risk crashing it
+			   with a segmentation fault */
 			if ( scr_errors_index < ( MAX_ERROR_BUFFER - 1 ) )
 			{
 				strncpy(scr_errors[scr_errors_index].internal_function, internal_function, sizeof(scr_errors[scr_errors_index].internal_function));
@@ -2947,24 +2879,24 @@ void custom_Com_Error(int type, const char *format, ...)
 {
 	Sys_EnterCriticalSectionInternal(2);
 	
-	#if COD_VERSION == COD2_1_0  // Not tested
-	int com_errorEntered = 0x0;
-	int va_string_156 = 0x0;
-	int unk1 = 0x0;
-	int unk2 = 0x0;
-	int com_fixedConsolePosition = 0x0;
-	#elif COD_VERSION == COD2_1_2  // Not tested
-	int com_errorEntered = 0x0;
-	int va_string_156 = 0x0;
-	int unk1 = 0x0;
-	int unk2 = 0x0;
-	int com_fixedConsolePosition = 0x0;
+	#if COD_VERSION == COD2_1_0 // Not tested
+		int com_errorEntered = 0x0;
+		int va_string_156 = 0x0;
+		int unk1 = 0x0;
+		int unk2 = 0x0;
+		int com_fixedConsolePosition = 0x0;
+	#elif COD_VERSION == COD2_1_2 // Not tested
+		int com_errorEntered = 0x0;
+		int va_string_156 = 0x0;
+		int unk1 = 0x0;
+		int unk2 = 0x0;
+		int com_fixedConsolePosition = 0x0;
 	#elif COD_VERSION == COD2_1_3
-	int com_errorEntered = 0x081A21C0;
-	int va_string_156 = 0x081A2280;
-	int unk1 = 0x081A327F;
-	int unk2 = 0x081A2264;
-	int com_fixedConsolePosition = 0x081A21C4;
+		int com_errorEntered = 0x081A21C0;
+		int va_string_156 = 0x081A2280;
+		int unk1 = 0x081A327F;
+		int unk2 = 0x081A2264;
+		int com_fixedConsolePosition = 0x081A21C4;
 	#endif
 	
 	if ( *(int *)com_errorEntered )
@@ -2985,17 +2917,11 @@ void custom_Com_Error(int type, const char *format, ...)
 	if ( type != 1 )
 	{
 		if ( type == 4 || type == 6 )
-		{
 			type = 1;
-		}
 		else if ( type == 5 )
-		{
 			type = 1;
-		}
 		else
-		{
 			*(int *)com_fixedConsolePosition = 0;
-		}
 	}
 	
 	*(int *)unk2 = type;
@@ -3061,22 +2987,16 @@ void custom_RuntimeError(char *pos, int index, char *message, char *param_4)
 		{
 			terminate = false;
 			if ( scrVmPub.abort_on_error || scrVmPub.terminal_error )
-			{
 				terminate = true;
-			}
+			
 			if ( terminate )
-			{
 				channel_2 = 0;
-			}
 			else
-			{
 				channel_2 = 4;
-			}
+			
 			custom_RuntimeError_Debug(channel_2, pos, index, message);
 			if ( !terminate )
-			{
 				return;
-			}
 		}
 		else
 		{
@@ -3098,13 +3018,10 @@ void custom_RuntimeError(char *pos, int index, char *message, char *param_4)
 			local_14 = (char *)"\n";
 		}
 		if ( !scrVmPub.terminal_error )
-		{
 			channel_1 = 4;
-		}
 		else
-		{
 			channel_1 = 5;
-		}
+		
 		custom_Com_Error(channel_1, "\x15script runtime error\n(see console for details)\n%s%s%s", message, local_14, param_4);
 	}
 }
@@ -3119,9 +3036,8 @@ void custom_G_RunFrame(int levelTime)
 	*(int *)&sig = hook_g_runframe->from;
 	
 	for ( i = 0; i < scr_errors_index; i++ )
-	{
 		Scr_CodeCallback_Error(qfalse, qtrue, scr_errors[i].internal_function, scr_errors[i].message);
-	}
+	
 	scr_errors_index = 0;
 	
 	sig(levelTime);
@@ -3177,9 +3093,7 @@ void custom_SV_ArchiveSnapshot(void)
 				if ( m < n ) goto LAB_0809b5f4;
 				cachedFrameIndex = m;
 				if ( m < 0 )
-				{
 					cachedFrameIndex = i + 0x1fe;
-				}
 				cachedFrame = svs.cachedSnapshotFrames + m + (cachedFrameIndex >> 9) * -0x200;
 				i = m;
 			} while ( cachedFrame->archivedFrame < svs.nextArchivedSnapshotFrames - sv_fps->integer || cachedFrame->usesDelta );
@@ -3192,9 +3106,7 @@ LAB_0809b5f4:
 				
 				nextCachedSnapFrames = svs.nextCachedSnapshotFrames;
 				if ( svs.nextCachedSnapshotFrames < 0 )
-				{
 					nextCachedSnapFrames = svs.nextCachedSnapshotFrames + 0x1ff;
-				}
 				cachedFrame = svs.cachedSnapshotFrames + svs.nextCachedSnapshotFrames + (nextCachedSnapFrames >> 9) * -0x200;
 				cachedFrame->archivedFrame = svs.nextArchivedSnapshotFrames;
 				cachedFrame->num_entities = 0;
@@ -3210,9 +3122,7 @@ LAB_0809b5f4:
 					{
 						nextCachedSnapClients = svs.nextCachedSnapshotClients;
 						if ( svs.nextCachedSnapshotClients < 0 )
-						{
 							nextCachedSnapClients = svs.nextCachedSnapshotClients + 0xfff;
-						}
 						cachedClient1 = svs.cachedSnapshotClients + svs.nextCachedSnapshotClients + (nextCachedSnapClients >> 0xc) * -0x1000;
 						cachedClient2 = cachedClient1;
 						
@@ -3234,9 +3144,7 @@ LAB_0809b5f4:
 						i = svs.nextCachedSnapshotClients;
 						svs.nextCachedSnapshotClients++;
 						if ( i != 0x7ffffffc && 0x7ffffffc < svs.nextCachedSnapshotClients )
-						{
 							custom_Com_Error(0, "\x15svs.nextCachedSnapshotClients wrapped");
-						}
 						cachedFrame->num_clients++;
 					}
 				}
@@ -3249,22 +3157,18 @@ LAB_0809b5f4:
 					{
 						nextCachedSnapEnts = svs.nextCachedSnapshotEntities;
 						if (svs.nextCachedSnapshotEntities < 0)
-						{
 							nextCachedSnapEnts = svs.nextCachedSnapshotEntities + 0x3fff;
-						}
 						archEnt = svs.cachedSnapshotEntities + svs.nextCachedSnapshotEntities + (nextCachedSnapEnts >> 0xe) * -0x4000;
 						memcpy(archEnt, gent, 0xF0);
 						archEnt->r.svFlags = gent->r.svFlags;
 						if ( gent->r.broadcastTime )
-						{
 							archEnt->r.svFlags = archEnt->r.svFlags | 8;
-						}
 						archEnt->r.clientMask[0] = gent->r.clientMask[0];
 						archEnt->r.clientMask[1] = gent->r.clientMask[1];
 						VectorCopy(gent->r.absmin, archEnt->r.absmin);
 						VectorCopy(gent->r.absmax, archEnt->r.absmax);
 						
-						/* new code start: setEarthquakes */
+						/* New code start: setEarthquakes */
 						if ( (archEnt->s.eType - 10) == EV_EARTHQUAKE )
 						{
 							for ( l = 0; l < sv_maxclients->integer; l++ )
@@ -3272,33 +3176,25 @@ LAB_0809b5f4:
 								if ( player_no_earthquakes[l] )
 								{
 									if ( l > 31 )
-									{
 										archEnt->r.clientMask[1] |= 1 << (l - 32);
-									}
 									else
-									{
 										archEnt->r.clientMask[0] |= 1 << l;
-									}
 								}
 							}
 						}
-						/* new code end */
+						/* New code end */
 						
 						custom_MSG_WriteDeltaArchivedEntity(&msg, &sv.svEntities[gent->s.number].baseline, archEnt, 1);
 						i = svs.nextCachedSnapshotEntities;
 						svs.nextCachedSnapshotEntities++;
-						if ( i != 0x7ffffffc && 0x7ffffffc < svs.nextCachedSnapshotEntities ) 
-						{
+						if ( i != 0x7ffffffc && 0x7ffffffc < svs.nextCachedSnapshotEntities )
 							custom_Com_Error(0, "\x15svs.nextCachedSnapshotEntities wrapped");
-						}
 						cachedFrame->num_entities++;
 					}
 				}
 				svs.nextCachedSnapshotFrames++;
 				if ( i != 0x7ffffffc && 0x7ffffffc < svs.nextCachedSnapshotFrames )
-				{
 					custom_Com_Error(0, "\x15svs.nextCachedSnapshotFrames wrapped");
-				}
 			}
 			else
 			{
@@ -3321,9 +3217,7 @@ LAB_0809b5f4:
 							i = cachedFrame->first_client + j;
 							cachedFrameIndex2 = i;
 							if ( i < 0 )
-							{
 								cachedFrameIndex2 = i + 0xfff;
-							}
 							cachedClient2 = svs.cachedSnapshotClients + i + (cachedFrameIndex2 >> 0xc) * -0x1000;
 							x = cachedClient2->cs.clientIndex;
 						}
@@ -3378,15 +3272,13 @@ LAB_0809b5f4:
 						memcpy(&to.s, &gent->s, sizeof(entityState_t));
 						to.r.svFlags = gent->r.svFlags;
 						if ( gent->r.broadcastTime )
-						{
 							to.r.svFlags |= 8u;
-						}
 						to.r.clientMask[0] = gent->r.clientMask[0];
 						to.r.clientMask[1] = gent->r.clientMask[1];
 						VectorCopy(gent->r.absmin, to.r.absmin);
 						VectorCopy(gent->r.absmax, to.r.absmax);
 						
-						/* new code start: setEarthquakes */
+						/* New code start: setEarthquakes */
 						if ( (to.s.eType - 10) == EV_EARTHQUAKE )
 						{
 							for ( l = 0; l < sv_maxclients->integer; l++ )
@@ -3394,17 +3286,13 @@ LAB_0809b5f4:
 								if ( player_no_earthquakes[l] )
 								{
 									if ( l > 31 )
-									{
 										to.r.clientMask[1] |= 1 << (l - 32);
-									}
 									else
-									{
 										to.r.clientMask[0] |= 1 << l;
-									}
 								}
 							}
 						}
-						/* new code end */
+						/* New code end */
 						
 						custom_MSG_WriteDeltaArchivedEntity(&msg, &sv.svEntities[gent->s.number].baseline, &to, 1);
 					}
@@ -3418,15 +3306,11 @@ LAB_0809b5f4:
 				archSnap->size = msg.cursize;
 				nextArchSnapBuffer = svs.nextArchivedSnapshotBuffer;
 				if ( svs.nextArchivedSnapshotBuffer < 0 )
-				{
 					nextArchSnapBuffer = svs.nextArchivedSnapshotBuffer + 0x1ffffff;
-				}
 				index = svs.nextArchivedSnapshotBuffer + (nextArchSnapBuffer >> 0x19) * -0x2000000;
 				svs.nextArchivedSnapshotBuffer += msg.cursize;
 				if ( 0x7ffffffd < svs.nextArchivedSnapshotBuffer )
-				{
 					custom_Com_Error(0, "\x15svs.nextArchivedSnapshotBuffer wrapped");
-				}
 				freeBytes = ARCHIVEDSSBUF_SIZE - index;
 				
 				if ( freeBytes < msg.cursize )
@@ -3441,9 +3325,7 @@ LAB_0809b5f4:
 				i = svs.nextArchivedSnapshotFrames;
 				svs.nextArchivedSnapshotFrames++;
 				if ( i != 0x7ffffffc && 0x7ffffffc < svs.nextArchivedSnapshotFrames )
-				{
 					custom_Com_Error(0, "\x15svs.nextArchivedSnapshotFrames wrapped");
-				}
 				LargeLocalDestructor(&buf);
 			}
 			else
@@ -3498,20 +3380,14 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 			cachedSnap = SV_GetCachedSnapshot(&archiveTime);
 			G_SetClientArchiveTime(clientNum, archiveTime);
 			if ( !cachedSnap )
-			{
 				snapTime = 0;
-			}
 			else
-			{
 				snapTime = svs.time - cachedSnap->time;
-			}
 			ps = SV_GameClientNum(clientNum);
 			frame->ps = *ps;
 			clientNum = frame->ps.clientNum;
 			if ( clientNum < 0 || clientNum >= MAX_GENTITIES )
-			{
 				custom_Com_Error(1, "\x15SV_BuildClientSnapshot: bad gEnt");
-			}
 			VectorCopy(ps->origin, org);
 			org[2] += ps->viewHeightCurrent;
 			AddLeanToPosition(org, ps->viewangles[1], ps->leanf, 16.0, 20.0);
@@ -3525,9 +3401,7 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 					*entState = ent->s;
 					svs.nextSnapshotEntities++;
 					if ( svs.nextSnapshotEntities >= 0x7ffffffe )
-					{
 						custom_Com_Error(0, "\x15svs.nextSnapshotEntities wrapped");
-					}
 					frame->num_entities++;
 				}
 				snapClient = svs.clients;
@@ -3541,9 +3415,7 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 						
 						svs.nextSnapshotClients++;
 						if ( svs.nextSnapshotClients >= 0x7ffffffe )
-						{
 							custom_Com_Error(0, "\x15svs.nextSnapshotClients wrapped");
-						}
 						frame->num_clients++;
 					}
 				}
@@ -3556,54 +3428,38 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 					j = cachedSnap->first_entity + entityNumbers.snapshotEntities[i];
 					cachedSnapEnts = j;
 					if ( j < 0 )
-					{
 						cachedSnapEnts = j + 0x3fff;
-					}
 					aent = svs.cachedSnapshotEntities + j + (cachedSnapEnts >> 0xe) * -0x4000;
 					entState = svs.snapshotEntities + svs.nextSnapshotEntities % svs.numSnapshotEntities;
 					*entState = aent->s;
 					if ( entState->pos.trTime )
-					{
 						entState->pos.trTime += snapTime;
-					}
 					if ( entState->apos.trTime )
-					{
 						entState->apos.trTime += snapTime;
-					}
 					if ( entState->time )
-					{
 						entState->time += snapTime;
-					}
 					if ( entState->time2 )
-					{
 						entState->time2 += snapTime;
-					}
 					
-					/* new code start: setEarthquakes */
+					/* New code start: setEarthquakes */
 					if ( (aent->s.eType - 10) == EV_EARTHQUAKE )
 					{
 						if ( clientNum > 31 )
 						{
 							if ( aent->r.clientMask[1] & (1 << (clientNum - 32)) )
-							{
 								aent->s.eType = EV_NONE;
-							}
 						}
 						else
 						{
 							if ( aent->r.clientMask[0] & (1 << clientNum ) )
-							{
 								aent->s.eType = EV_NONE;
-							}
 						}
 					}
-					/* new code end */
+					/* New code end */
 					
 					svs.nextSnapshotEntities++;
 					if ( svs.nextSnapshotEntities >= 0x7ffffffe )
-					{
 						custom_Com_Error(0, "\x15svs.nextSnapshotEntities wrapped");
-					}
 					frame->num_entities++;
 				}
 				for (i = 0; i < cachedSnap->num_clients; i++)
@@ -3611,17 +3467,13 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 					j = cachedSnap->first_client + i;
 					cachedSnapClients = j;
 					if ( j < 0 )
-					{
 						cachedSnapClients = j + 0xfff;
-					}
 					cachedClient = svs.cachedSnapshotClients + j + (cachedSnapClients >> 0xc) * -0x1000;
 					clientState = &svs.snapshotClients[svs.nextSnapshotClients % svs.numSnapshotClients];
 					*clientState = cachedClient->cs;
 					svs.nextSnapshotClients++;
 					if ( svs.nextSnapshotClients >= 0x7ffffffe )
-					{
 						custom_Com_Error(0, "\x15svs.nextSnapshotClients wrapped");
-					}
 					frame->num_clients++;
 				}
 			}
@@ -3645,7 +3497,7 @@ void custom_G_CallSpawn(void)
 	}
 	else
 	{
-		/* new code start: map weapons callback */
+		/* New code start: map weapons callback */
 		if ( !strncmp(classname, "weapon_", 7) && !g_spawnMapWeapons->boolean )
 		{
 			ent = G_Spawn();
@@ -3661,7 +3513,7 @@ void custom_G_CallSpawn(void)
 			G_FreeEntity(ent);
 			return;
 		}
-		/* new code end */
+		/* New code end */
 		
 		item = G_GetItemForClassname(classname);
 		if ( item == NULL )
@@ -3670,10 +3522,8 @@ void custom_G_CallSpawn(void)
 			{
 				if ( !strcmp((const char *)*i, classname) )
 				{
-					if ( i[1] == (int *)G_FreeEntity )
-					{
-						return;
-					}
+					if ( i[1] == (int *)G_FreeEntity ) 
+						return; 
 					ent = G_Spawn();
 					G_SetEntityPlacement(ent);
 					((void (*)(gentity_t *))i[1])(ent);
@@ -3694,24 +3544,20 @@ void custom_G_CallSpawn(void)
 
 void custom_G_SpawnEntitiesFromString(void)
 {
-	if ( !G_ParseSpawnVars(&level.spawnVars) )
-	{
-		custom_Com_Error(1, "\x15SpawnEntities: no entities");
-	}
+	if ( !G_ParseSpawnVars(&level.spawnVars) ) 
+		custom_Com_Error(1, "\x15SpawnEntities: no entities"); 
 	SP_worldspawn();
 	
-	/* new code start: map weapons callback */
+	/* New code start: map weapons callback */
 	if ( codecallback_mapweapons )
 	{
 		num_map_weapons = 0;
 		memset(&map_weapons, 0, sizeof(map_weapons));
 	}
-	/* new code end */
+	/* New code end */
 	
 	while( G_ParseSpawnVars(&level.spawnVars) )
-	{
 		custom_G_CallSpawn();
-	}
 }
 
 void custom_Scr_LoadGameType(void)
@@ -3721,7 +3567,7 @@ void custom_Scr_LoadGameType(void)
 	void (*sig)(void);
 	*(int *)&sig = hook_scr_loadgametype->from;
 
-	/* new code start: map weapons callback */
+	/* New code start: map weapons callback */
 	if ( codecallback_mapweapons )
 	{
 		if ( !num_map_weapons )
@@ -3747,7 +3593,7 @@ void custom_Scr_LoadGameType(void)
 		short ret = Scr_ExecThread(codecallback_mapweapons, 2);
 		Scr_FreeThread(ret);
 	}
-	/* new code end */
+	/* New code end */
 
 	sig();
 
@@ -3759,36 +3605,26 @@ bool custom_CM_IsBadStaticModel(cStaticModel_t *model, char *src, float *origin,
 	XModel_t *xmodel;
 
 	if ( src == NULL || *src == '\0' )
-	{
 		custom_Com_Error(1, "\x15Invalid static model name\n");
-	}
 	
 	if ( (*scale)[0] == 0.0 )
-	{
 		custom_Com_Error(1, "\x15Static model [%s] has x scale of 0.0\n", src);
-	}
 	
 	if ( (*scale)[1] == 0.0 )
-	{
 		custom_Com_Error(1, "\x15Static model [%s] has y scale of 0.0\n", src);
-	}
 	
 	if ( (*scale)[2] == 0.0 )
-	{
 		custom_Com_Error(1, "\x15Static model [%s] has z scale of 0.0\n", src);
-	}
 	
 	xmodel = CM_XModelPrecache(src);
 	if ( xmodel != NULL )
 	{
 		model->xmodel = xmodel;
-		// on the server side, scale is only used for trace functions (see model->invScaledAxis)
-		// the entity axis scale values are not synced to the players
+		// On the server side, scale is only used for trace functions (see model->invScaledAxis)
+		// The entity axis scale values are not synced to the players
 		CM_InitStaticModel(model, origin, angles, scale);
 		if ( g_debugStaticModels->boolean )
-		{
 			Com_Printf("Initialized static model [%s] with scale (%f, %f, %f) at (%f, %f, %f)\n", src, (*scale)[0], (*scale)[1], (*scale)[2], model->origin[0], model->origin[1], model->origin[2]);
-		}
 	}
 	
 	return xmodel != NULL;
@@ -3811,15 +3647,13 @@ void custom_Script_obituary(void)
 	
 	args = Scr_GetNumParam();
 	if ( args < 4 || args > 7 )
-	{
 		Scr_Error("Incorrect number of parameters");
-	}
 
 	sWeapon = G_GetWeaponIndexForName(Scr_GetString(2));
 	sMeansOfDeath = G_IndexForMeansOfDeath(Scr_GetString(3));
 	victim = Scr_GetEntity(0);
 
-	// origin
+	// Custom origin
 	if ( args < 6 )
 	{
 		ent = G_TempEntity(&vec3_origin, EV_OBITUARY);
@@ -3830,43 +3664,29 @@ void custom_Script_obituary(void)
 		ent = G_TempEntity(&origin, EV_OBITUARY);
 	}
 	
-	// team (default 0 = all)
+	// Custom team (default 0 = all)
 	if ( args == 5 || args == 7 )
 	{
 		team_str = Scr_GetString(4);
 		if ( !strcmp(team_str, "axis") )
-		{
 			team = 1;
-		}
 		else if ( !strcmp(team_str, "allies") )
-		{
 			team = 2;
-		}
 		else if ( !strcmp(team_str, "spectator") )
-		{
 			team = 3;
-		}
 		else if ( !strcmp(team_str, "allies+axis") || !strcmp(team_str, "axis+allies") )
-		{
 			team = 4;
-		}
 		else if ( !strcmp(team_str, "spectator+axis") || !strcmp(team_str, "axis+spectator") )
-		{
 			team = 5;
-		}
 		else if ( !strcmp(team_str, "spectator+allies") || !strcmp(team_str, "allies+spectator") )
-		{
 			team = 6;
-		}
 	}
-	ent->s.scale = team; // reusing the scale field that is otherwise not used at obituary TempEntities
+	ent->s.scale = team; // Reusing the scale field that is otherwise not used at obituary TempEntities
 	
-	// max. distance
+	// Custom max. distance
 	if ( args > 5 )
-	{
 		distance = Scr_GetInt(args - 1);
-	}
-	ent->s.dmgFlags = distance; // reusing the dmgFlags field that is otherwise not used at obituary TempEntities
+	ent->s.dmgFlags = distance; // Reusing the dmgFlags field that is otherwise not used at obituary TempEntities
 	
 	ent->s.otherEntityNum = victim->s.number;
 	type = Scr_GetType(1);
@@ -3884,26 +3704,22 @@ void custom_Script_obituary(void)
 LAB_081131e1:
 	ent->r.svFlags = 8;
 	if ( sMeansOfDeath == 7 || sMeansOfDeath == 8 || sMeansOfDeath == 0xc || sMeansOfDeath == 0xb || sMeansOfDeath == 9 )
-	{
 		ent->s.eventParm = sMeansOfDeath | 0x80;
-	}
 	else
-	{
 		ent->s.eventParm = sWeapon;
-	}
 }
 
 void com_printmessage_caret_patch(void)
 {
 	#if COD_VERSION == COD2_1_0
-	int caret_check_offset = 0x0; // Not tested
+		int caret_check_offset = 0x0; // Not tested
 	#elif COD_VERSION == COD2_1_2
-	int caret_check_offset = 0x0; // Not tested
+		int caret_check_offset = 0x0; // Not tested
 	#elif COD_VERSION == COD2_1_3
-	int caret_check_offset = 0x08060CCA;
+		int caret_check_offset = 0x08060CCA;
 	#endif
 
-	// removes the following piece of code in Com_PrintMessage:
+	// Removes the following piece of code from Com_PrintMessage:
 	/*
 	if ( *message == '^' && message[1] != '\0' )
 	{
@@ -3918,242 +3734,261 @@ class cCallOfDuty2Pro
 public:
 	cCallOfDuty2Pro()
 	{
-		// dont inherit lib of parent
+		// Don't inherit lib of parent
 		unsetenv("LD_PRELOAD");
 		
-		// otherwise the printf()'s are printed at crash/end on older os/compiler versions
+		// Otherwise the printf()'s are printed at crash/end on older os/compiler versions
 		setbuf(stdout, NULL);
 
-#if COD_VERSION == COD2_1_0
-		printf("> [LIBCOD] Compiled for: CoD2 1.0\n");
-#elif COD_VERSION == COD2_1_2
-		printf("> [LIBCOD] Compiled for: CoD2 1.2\n");
-#elif COD_VERSION == COD2_1_3
-		printf("> [LIBCOD] Compiled for: CoD2 1.3\n");
-#endif
+		#if COD_VERSION == COD2_1_0
+			printf("> [LIBCOD] Compiled for: CoD2 1.0\n");
+		#elif COD_VERSION == COD2_1_2
+			printf("> [LIBCOD] Compiled for: CoD2 1.2\n");
+		#elif COD_VERSION == COD2_1_3
+			printf("> [LIBCOD] Compiled for: CoD2 1.3\n");
+		#endif
 
 		printf("> [LIBCOD] Compiled %s %s using GCC %s\n", __DATE__, __TIME__, __VERSION__);
 
-		// allow to write in executable memory
+		// Allow to write in executable memory
 		mprotect((void *)0x08048000, 0x135000, PROT_READ | PROT_WRITE | PROT_EXEC);
 
-#if COD_VERSION == COD2_1_0
-		cracking_hook_call(0x08061FE7, (int)hook_sv_init);
-		cracking_hook_call(0x08091D0C, (int)hook_sv_spawnserver);
-		cracking_hook_call(0x0808F281, (int)hook_ClientCommand);
-		cracking_hook_call(0x0808C8C0, (int)hook_AuthorizeState);
-		cracking_hook_call(0x0808BFCA, (int)hook_isLanAddress);
-		cracking_hook_call(0x0808AD00, (int)hook_findMap);
-		cracking_hook_call(0x0808F134, (int)hook_ClientUserinfoChanged);
-		cracking_hook_call(0x0807059F, (int)Scr_GetCustomFunction);
-		cracking_hook_call(0x080707C3, (int)Scr_GetCustomMethod);
-		cracking_hook_call(0x080E9524, (int)hook_findWeaponIndex);
+		#if COD_VERSION == COD2_1_0
+			cracking_hook_call(0x08061FE7, (int)hook_sv_init);
+			cracking_hook_call(0x08091D0C, (int)hook_sv_spawnserver);
+			cracking_hook_call(0x0808F281, (int)hook_ClientCommand);
+			cracking_hook_call(0x0808C8C0, (int)hook_AuthorizeState);
+			cracking_hook_call(0x0808BFCA, (int)hook_isLanAddress);
+			cracking_hook_call(0x0808AD00, (int)hook_findMap);
+			cracking_hook_call(0x0808F134, (int)hook_ClientUserinfoChanged);
+			cracking_hook_call(0x0807059F, (int)Scr_GetCustomFunction);
+			cracking_hook_call(0x080707C3, (int)Scr_GetCustomMethod);
+			cracking_hook_call(0x080E9524, (int)hook_findWeaponIndex);
 
-#if COMPILE_PLAYER == 1
-		cracking_hook_call(0x0808E18F, (int)hook_gamestate_info);
-#endif
+			#if COMPILE_PLAYER == 1
+				cracking_hook_call(0x0808E18F, (int)hook_gamestate_info);
+			#endif
 
-		cracking_hook_call(0x08081CFE, (int)hook_scriptError);
+			cracking_hook_call(0x08081CFE, (int)hook_scriptError);
 
-		hook_gametype_scripts = new cHook(0x0810DDEE, (int)hook_codscript_gametype_scripts);
-		hook_gametype_scripts->hook();
-		
-		hook_init_opcode = new cHook(0x08076B9C, (int)custom_Scr_InitOpcodeLookup);
-		hook_init_opcode->hook();
-		hook_add_opcode = new cHook(0x08076D92, (int)custom_AddOpcodePos);
-		hook_add_opcode->hook();
-		hook_print_codepos = new cHook(0x08077DBA, (int)custom_Scr_PrintPrevCodePos);
-		hook_print_codepos->hook();
-		
-		hook_player_collision = new cHook(0x080F2F2E, (int)player_collision);
-		hook_player_collision->hook();
-		hook_player_eject = new cHook(0x080F474A, (int)player_eject);
-		hook_player_eject->hook();
-		hook_fire_grenade = new cHook(0x0810C1F6, (int)fire_grenade);
-		hook_fire_grenade->hook();
-		hook_touch_item_auto = new cHook(0x081037F0, int(touch_item_auto));
-		hook_touch_item_auto->hook();
+			hook_gametype_scripts = new cHook(0x0810DDEE, (int)hook_codscript_gametype_scripts);
+			hook_gametype_scripts->hook();
 
-#if COMPILE_PLAYER == 1
-		hook_play_movement = new cHook(0x0808F488, (int)play_movement);
-		hook_play_movement->hook();
-		hook_play_endframe = new cHook(0x080F4DBE, (int)play_endframe);
-		hook_play_endframe->hook();
-		hook_set_anim = new cHook(0x080D69B2, (int)set_anim);
-		hook_set_anim->hook();
-#endif
+			hook_developer_prints = new cHook(0x08060B7C, (int)hook_Com_DPrintf);
+			#if COMPILE_UTILS == 1
+				hook_standard_prints = new cHook(0x08060B2C, int(hook_Com_Printf));
+				hook_standard_prints->hook();
+			#endif
 
-		cracking_hook_function(0x080E97F0, (int)hook_BG_IsWeaponValid);
-		cracking_hook_function(0x0808E544, (int)custom_SV_WriteDownloadToClient);
-		cracking_hook_function(0x080B59CE, (int)custom_va);
-		cracking_hook_function(0x0808EC66, (int)hook_SV_VerifyIwds_f);
-		cracking_hook_function(0x0808EEEC, (int)hook_SV_ResetPureClient_f);
-		cracking_hook_function(0x0809443E, (int)custom_SV_CalcPings);
-		cracking_hook_function(0x080945AC, (int)custom_SV_CheckTimeouts);
+			hook_init_opcode = new cHook(0x08076B9C, (int)custom_Scr_InitOpcodeLookup);
+			hook_init_opcode->hook();
+			hook_add_opcode = new cHook(0x08076D92, (int)custom_AddOpcodePos);
+			hook_add_opcode->hook();
+			hook_print_codepos = new cHook(0x08077DBA, (int)custom_Scr_PrintPrevCodePos);
+			hook_print_codepos->hook();
 
-#if COMPILE_BOTS == 1
-		cracking_hook_function(0x0809479A, (int)custom_SV_BotUserMove);
-#endif
+			hook_player_collision = new cHook(0x080F2F2E, (int)player_collision);
+			hook_player_collision->hook();
+			hook_player_eject = new cHook(0x080F474A, (int)player_eject);
+			hook_player_eject->hook();
+			hook_fire_grenade = new cHook(0x0810C1F6, (int)fire_grenade);
+			hook_fire_grenade->hook();
+			hook_touch_item_auto = new cHook(0x081037F0, int(touch_item_auto));
+			hook_touch_item_auto->hook();
 
-#if COMPILE_RATELIMITER == 1
-		cracking_hook_call(0x08094081, (int)hook_SVC_Info);
-		cracking_hook_call(0x0809403E, (int)hook_SVC_Status);
-		cracking_hook_call(0x080940C4, (int)hook_SV_GetChallenge);
-		cracking_hook_call(0x08094191, (int)hook_SVC_RemoteCommand);
-#endif
+			#if COMPILE_PLAYER == 1
+				hook_play_movement = new cHook(0x0808F488, (int)play_movement);
+				hook_play_movement->hook();
+				hook_play_endframe = new cHook(0x080F4DBE, (int)play_endframe);
+				hook_play_endframe->hook();
+				hook_set_anim = new cHook(0x080D69B2, (int)set_anim);
+				hook_set_anim->hook();
+			#endif
 
-#elif COD_VERSION == COD2_1_2
-		cracking_hook_call(0x08062301, (int)hook_sv_init);
-		cracking_hook_call(0x08093572, (int)hook_sv_spawnserver);
-		cracking_hook_call(0x08090B0C, (int)hook_ClientCommand);
-		cracking_hook_call(0x0808DA52, (int)hook_AuthorizeState);
-		cracking_hook_call(0x0808D22E, (int)hook_isLanAddress);
-		cracking_hook_call(0x0808BCFC, (int)hook_findMap);
-		cracking_hook_call(0x080909BE, (int)hook_ClientUserinfoChanged);
-		cracking_hook_call(0x08070B1B, (int)Scr_GetCustomFunction);
-		cracking_hook_call(0x08070D3F, (int)Scr_GetCustomMethod);
-		cracking_hook_call(0x0808227A, (int)hook_scriptError);
-		cracking_hook_call(0x0808FCBE, (int)hook_bad_printf);
-		cracking_hook_call(0x080EBB14, (int)hook_findWeaponIndex);
+			cracking_hook_function(0x080E97F0, (int)hook_BG_IsWeaponValid);
+			cracking_hook_function(0x0808E544, (int)custom_SV_WriteDownloadToClient);
+			cracking_hook_function(0x080B59CE, (int)custom_va);
+			cracking_hook_function(0x0808EC66, (int)hook_SV_VerifyIwds_f);
+			cracking_hook_function(0x0808EEEC, (int)hook_SV_ResetPureClient_f);
+			cracking_hook_function(0x0809443E, (int)custom_SV_CalcPings);
+			cracking_hook_function(0x080945AC, (int)custom_SV_CheckTimeouts);
 
-#if COMPILE_PLAYER == 1
-		cracking_hook_call(0x0808F533, (int)hook_gamestate_info);
-#endif
+			#if COMPILE_BOTS == 1
+				cracking_hook_function(0x0809479A, (int)custom_SV_BotUserMove);
+			#endif
 
-		hook_gametype_scripts = new cHook(0x0811012A, (int)hook_codscript_gametype_scripts);
-		hook_gametype_scripts->hook();
-		
-		hook_init_opcode = new cHook(0x08077110, (int)custom_Scr_InitOpcodeLookup);
-		hook_init_opcode->hook();
-		hook_add_opcode = new cHook(0x08077306, (int)custom_AddOpcodePos);
-		hook_add_opcode->hook();
-		hook_print_codepos = new cHook(0x0807832E, (int)custom_Scr_PrintPrevCodePos);
-		hook_print_codepos->hook();
-		
-		hook_player_collision = new cHook(0x080F553E, (int)player_collision);
-		hook_player_collision->hook();
-		hook_player_eject = new cHook(0x080F6D5A, (int)player_eject);
-		hook_player_eject->hook();
-		hook_fire_grenade = new cHook(0x0810E532, (int)fire_grenade);
-		hook_fire_grenade->hook();
-		hook_touch_item_auto = new cHook(0x08105B24, int(touch_item_auto));
-		hook_touch_item_auto->hook();
+			#if COMPILE_RATELIMITER == 1
+				cracking_hook_call(0x08094081, (int)hook_SVC_Info);
+				cracking_hook_call(0x0809403E, (int)hook_SVC_Status);
+				cracking_hook_call(0x080940C4, (int)hook_SV_GetChallenge);
+				cracking_hook_call(0x08094191, (int)hook_SVC_RemoteCommand);
+			#endif
 
-#if COMPILE_PLAYER == 1
-		hook_play_movement = new cHook(0x08090D18, (int)play_movement);
-		hook_play_movement->hook();
-		hook_play_endframe = new cHook(0x080F73D2, (int)play_endframe);
-		hook_play_endframe->hook();
-		hook_set_anim = new cHook(0x080D8F92, (int)set_anim);
-		hook_set_anim->hook();
-#endif
+		#elif COD_VERSION == COD2_1_2
+			cracking_hook_call(0x08062301, (int)hook_sv_init);
+			cracking_hook_call(0x08093572, (int)hook_sv_spawnserver);
+			cracking_hook_call(0x08090B0C, (int)hook_ClientCommand);
+			cracking_hook_call(0x0808DA52, (int)hook_AuthorizeState);
+			cracking_hook_call(0x0808D22E, (int)hook_isLanAddress);
+			cracking_hook_call(0x0808BCFC, (int)hook_findMap);
+			cracking_hook_call(0x080909BE, (int)hook_ClientUserinfoChanged);
+			cracking_hook_call(0x08070B1B, (int)Scr_GetCustomFunction);
+			cracking_hook_call(0x08070D3F, (int)Scr_GetCustomMethod);
+			cracking_hook_call(0x0808227A, (int)hook_scriptError);
+			cracking_hook_call(0x0808FCBE, (int)hook_bad_printf);
+			cracking_hook_call(0x080EBB14, (int)hook_findWeaponIndex);
 
-		cracking_hook_function(0x080EBDE0, (int)hook_BG_IsWeaponValid);
-		cracking_hook_function(0x0808FD2E, (int)custom_SV_WriteDownloadToClient);
-		cracking_hook_function(0x080B7E62, (int)custom_va);
-		cracking_hook_function(0x080904A0, (int)hook_SV_VerifyIwds_f);
-		cracking_hook_function(0x08090726, (int)hook_SV_ResetPureClient_f);
-		cracking_hook_function(0x0809630E, (int)custom_SV_CalcPings);
-		cracking_hook_function(0x080964C4, (int)custom_SV_CheckTimeouts);
+			#if COMPILE_PLAYER == 1
+				cracking_hook_call(0x0808F533, (int)hook_gamestate_info);
+			#endif
 
-#if COMPILE_BOTS == 1
-		cracking_hook_function(0x080966B2, (int)custom_SV_BotUserMove);
-#endif
+			hook_gametype_scripts = new cHook(0x0811012A, (int)hook_codscript_gametype_scripts);
+			hook_gametype_scripts->hook();
 
-#if COMPILE_RATELIMITER == 1
-		cracking_hook_call(0x08095B8E, (int)hook_SVC_Info);
-		cracking_hook_call(0x08095ADA, (int)hook_SVC_Status);
-		cracking_hook_call(0x08095BF8, (int)hook_SV_GetChallenge);
-		cracking_hook_call(0x08095D63, (int)hook_SVC_RemoteCommand);
-#endif
+			hook_developer_prints = new cHook(0x08060E42, (int)hook_Com_DPrintf);
+			#if COMPILE_UTILS == 1
+				hook_standard_prints = new cHook(0x08060DF2, int(hook_Com_Printf));
+				hook_standard_prints->hook();
+			#endif
 
-#elif COD_VERSION == COD2_1_3
-		cracking_hook_call(0x080622F9, (int)hook_sv_init);
-		cracking_hook_call(0x0809362A, (int)hook_sv_spawnserver);
-		cracking_hook_call(0x08090BA0, (int)hook_ClientCommand);
-		cracking_hook_call(0x0808DB12, (int)hook_AuthorizeState);
-		cracking_hook_call(0x0808D2FA, (int)hook_isLanAddress);
-		cracking_hook_call(0x0808BDC8, (int)hook_findMap);
-		cracking_hook_call(0x08090A52, (int)hook_ClientUserinfoChanged);
-		cracking_hook_call(0x08070BE7, (int)Scr_GetCustomFunction);
-		cracking_hook_call(0x08070E0B, (int)Scr_GetCustomMethod);
-		cracking_hook_call(0x08082346, (int)hook_scriptError);
-		cracking_hook_call(0x0808FD52, (int)hook_bad_printf);
-		cracking_hook_call(0x080EBC58, (int)hook_findWeaponIndex);
+			hook_init_opcode = new cHook(0x08077110, (int)custom_Scr_InitOpcodeLookup);
+			hook_init_opcode->hook();
+			hook_add_opcode = new cHook(0x08077306, (int)custom_AddOpcodePos);
+			hook_add_opcode->hook();
+			hook_print_codepos = new cHook(0x0807832E, (int)custom_Scr_PrintPrevCodePos);
+			hook_print_codepos->hook();
 
-		hook_gametype_scripts = new cHook(0x08110286, (int)hook_codscript_gametype_scripts);
-		hook_gametype_scripts->hook();
+			hook_player_collision = new cHook(0x080F553E, (int)player_collision);
+			hook_player_collision->hook();
+			hook_player_eject = new cHook(0x080F6D5A, (int)player_eject);
+			hook_player_eject->hook();
+			hook_fire_grenade = new cHook(0x0810E532, (int)fire_grenade);
+			hook_fire_grenade->hook();
+			hook_touch_item_auto = new cHook(0x08105B24, int(touch_item_auto));
+			hook_touch_item_auto->hook();
 
-		hook_init_opcode = new cHook(0x080771DC, (int)custom_Scr_InitOpcodeLookup);
-		hook_init_opcode->hook();
-		hook_add_opcode = new cHook(0x080773D2, (int)custom_AddOpcodePos);
-		hook_add_opcode->hook();
-		hook_print_codepos = new cHook(0x080783FA, (int)custom_Scr_PrintPrevCodePos);
-		hook_print_codepos->hook();
-		
-		hook_player_collision = new cHook(0x080F5682, (int)player_collision);
-		hook_player_collision->hook();
-		hook_player_eject = new cHook(0x080F6E9E, (int)player_eject);
-		hook_player_eject->hook();
-		hook_fire_grenade = new cHook(0x0810E68E, (int)fire_grenade);
-		hook_fire_grenade->hook();
-		hook_touch_item_auto = new cHook(0x08105C80, int(touch_item_auto));
-		hook_touch_item_auto->hook();
-		hook_g_tempentity = new cHook(0x0811EFC4, (int)custom_G_TempEntity);
-		hook_g_tempentity->hook();
-		hook_gscr_loadconsts = new cHook(0x081224F8, (int)custom_GScr_LoadConsts);
-		hook_gscr_loadconsts->hook();
-		hook_sv_masterheartbeat = new cHook(0x08096ED6, (int)custom_sv_masterheartbeat);
-		hook_sv_masterheartbeat->hook();
-		hook_g_runframe = new cHook(0x0810A13A, (int)custom_G_RunFrame);
-		hook_g_runframe->hook();
-		hook_scr_loadgametype = new cHook(0x081182F4, (int)custom_Scr_LoadGameType);
-		hook_scr_loadgametype->hook();
+			#if COMPILE_PLAYER == 1
+				hook_play_movement = new cHook(0x08090D18, (int)play_movement);
+				hook_play_movement->hook();
+				hook_play_endframe = new cHook(0x080F73D2, (int)play_endframe);
+				hook_play_endframe->hook();
+				hook_set_anim = new cHook(0x080D8F92, (int)set_anim);
+				hook_set_anim->hook();
+			#endif
 
-#if COMPILE_PLAYER == 1
-		hook_play_movement = new cHook(0x08090DAC, (int)play_movement);
-		hook_play_movement->hook();
-		hook_play_endframe = new cHook(0x080F7516, (int)play_endframe);
-		hook_play_endframe->hook();
-		hook_set_anim = new cHook(0x080D90D6, (int)set_anim);
-		hook_set_anim->hook();
-#endif
+			cracking_hook_function(0x080EBDE0, (int)hook_BG_IsWeaponValid);
+			cracking_hook_function(0x0808FD2E, (int)custom_SV_WriteDownloadToClient);
+			cracking_hook_function(0x080B7E62, (int)custom_va);
+			cracking_hook_function(0x080904A0, (int)hook_SV_VerifyIwds_f);
+			cracking_hook_function(0x08090726, (int)hook_SV_ResetPureClient_f);
+			cracking_hook_function(0x0809630E, (int)custom_SV_CalcPings);
+			cracking_hook_function(0x080964C4, (int)custom_SV_CheckTimeouts);
 
-		cracking_hook_function(0x08105CAC, (int)custom_Touch_Item);
-		cracking_hook_function(0x0811F232, (int)custom_G_AddEvent);
-		cracking_hook_function(0x080EBF24, (int)hook_BG_IsWeaponValid);
-		cracking_hook_function(0x080DFC78, (int)custom_BG_AddPredictableEventToPlayerstate);
-		cracking_hook_function(0x080985C8, (int)custom_SV_WriteSnapshotToClient);
-		cracking_hook_function(0x0808F302, (int)custom_SV_SendClientGameState);
-		cracking_hook_function(0x0808F02E, (int)custom_SV_DropClient);
-		cracking_hook_function(0x0808FDC2, (int)custom_SV_WriteDownloadToClient);
-		cracking_hook_function(0x080B7FA6, (int)custom_va);
-		cracking_hook_function(0x08090534, (int)hook_SV_VerifyIwds_f);
-		cracking_hook_function(0x080907BA, (int)hook_SV_ResetPureClient_f);
-		cracking_hook_function(0x080963C8, (int)custom_SV_CalcPings);
-		cracking_hook_function(0x0809657E, (int)custom_SV_CheckTimeouts);
-		cracking_hook_function(0x08080050, (int)custom_Scr_ErrorInternal);
-		cracking_hook_function(0x08061124, (int)custom_Com_Error);
-		cracking_hook_function(0x080788D2, (int)custom_RuntimeError);
-		cracking_hook_function(0x080787DC, (int)custom_RuntimeError_Debug);
-		cracking_hook_function(0x0809B016, (int)custom_SV_ArchiveSnapshot);
-		cracking_hook_function(0x0809A408, (int)custom_SV_BuildClientSnapshot);
-		cracking_hook_function(0x0811B770, (int)custom_G_SpawnEntitiesFromString);
-		cracking_hook_function(0x080584F0, (int)custom_CM_IsBadStaticModel);
-		cracking_hook_function(0x08113128, (int)custom_Script_obituary);
+			#if COMPILE_BOTS == 1
+				cracking_hook_function(0x080966B2, (int)custom_SV_BotUserMove);
+			#endif
 
-#if COMPILE_BOTS == 1
-		cracking_hook_function(0x0809676C, (int)custom_SV_BotUserMove);
-#endif
+			#if COMPILE_RATELIMITER == 1
+				cracking_hook_call(0x08095B8E, (int)hook_SVC_Info);
+				cracking_hook_call(0x08095ADA, (int)hook_SVC_Status);
+				cracking_hook_call(0x08095BF8, (int)hook_SV_GetChallenge);
+				cracking_hook_call(0x08095D63, (int)hook_SVC_RemoteCommand);
+			#endif
 
-#if COMPILE_RATELIMITER == 1
-		cracking_hook_call(0x08095C48, (int)hook_SVC_Info);
-		cracking_hook_call(0x08095B94, (int)hook_SVC_Status);
-		cracking_hook_call(0x08095CB2, (int)hook_SV_GetChallenge);
-		cracking_hook_call(0x08095E1D, (int)hook_SVC_RemoteCommand);
-#endif
+		#elif COD_VERSION == COD2_1_3
+			cracking_hook_call(0x080622F9, (int)hook_sv_init);
+			cracking_hook_call(0x0809362A, (int)hook_sv_spawnserver);
+			cracking_hook_call(0x08090BA0, (int)hook_ClientCommand);
+			cracking_hook_call(0x0808DB12, (int)hook_AuthorizeState);
+			cracking_hook_call(0x0808D2FA, (int)hook_isLanAddress);
+			cracking_hook_call(0x0808BDC8, (int)hook_findMap);
+			cracking_hook_call(0x08090A52, (int)hook_ClientUserinfoChanged);
+			cracking_hook_call(0x08070BE7, (int)Scr_GetCustomFunction);
+			cracking_hook_call(0x08070E0B, (int)Scr_GetCustomMethod);
+			cracking_hook_call(0x08082346, (int)hook_scriptError);
+			cracking_hook_call(0x0808FD52, (int)hook_bad_printf);
+			cracking_hook_call(0x080EBC58, (int)hook_findWeaponIndex);
+
+			hook_gametype_scripts = new cHook(0x08110286, (int)hook_codscript_gametype_scripts);
+			hook_gametype_scripts->hook();
+
+			hook_developer_prints = new cHook(0x08060E3A, (int)hook_Com_DPrintf);
+			#if COMPILE_UTILS == 1
+				hook_standard_prints = new cHook(0x08060DEA, int(hook_Com_Printf));
+				hook_standard_prints->hook();
+			#endif
+
+			hook_init_opcode = new cHook(0x080771DC, (int)custom_Scr_InitOpcodeLookup);
+			hook_init_opcode->hook();
+			hook_add_opcode = new cHook(0x080773D2, (int)custom_AddOpcodePos);
+			hook_add_opcode->hook();
+			hook_print_codepos = new cHook(0x080783FA, (int)custom_Scr_PrintPrevCodePos);
+			hook_print_codepos->hook();
+			
+			hook_player_collision = new cHook(0x080F5682, (int)player_collision);
+			hook_player_collision->hook();
+			hook_player_eject = new cHook(0x080F6E9E, (int)player_eject);
+			hook_player_eject->hook();
+			hook_fire_grenade = new cHook(0x0810E68E, (int)fire_grenade);
+			hook_fire_grenade->hook();
+			hook_touch_item_auto = new cHook(0x08105C80, int(touch_item_auto));
+			hook_touch_item_auto->hook();
+			hook_g_tempentity = new cHook(0x0811EFC4, (int)custom_G_TempEntity);
+			hook_g_tempentity->hook();
+			hook_gscr_loadconsts = new cHook(0x081224F8, (int)custom_GScr_LoadConsts);
+			hook_gscr_loadconsts->hook();
+			hook_sv_masterheartbeat = new cHook(0x08096ED6, (int)custom_sv_masterheartbeat);
+			hook_sv_masterheartbeat->hook();
+			hook_g_runframe = new cHook(0x0810A13A, (int)custom_G_RunFrame);
+			hook_g_runframe->hook();
+			hook_scr_loadgametype = new cHook(0x081182F4, (int)custom_Scr_LoadGameType);
+			hook_scr_loadgametype->hook();
+
+			#if COMPILE_PLAYER == 1
+				hook_play_movement = new cHook(0x08090DAC, (int)play_movement);
+				hook_play_movement->hook();
+				hook_play_endframe = new cHook(0x080F7516, (int)play_endframe);
+				hook_play_endframe->hook();
+				hook_set_anim = new cHook(0x080D90D6, (int)set_anim);
+				hook_set_anim->hook();
+			#endif
+
+			cracking_hook_function(0x08105CAC, (int)custom_Touch_Item);
+			cracking_hook_function(0x0811F232, (int)custom_G_AddEvent);
+			cracking_hook_function(0x080EBF24, (int)hook_BG_IsWeaponValid);
+			cracking_hook_function(0x080DFC78, (int)custom_BG_AddPredictableEventToPlayerstate);
+			cracking_hook_function(0x080985C8, (int)custom_SV_WriteSnapshotToClient);
+			cracking_hook_function(0x0808F302, (int)custom_SV_SendClientGameState);
+			cracking_hook_function(0x0808F02E, (int)custom_SV_DropClient);
+			cracking_hook_function(0x0808FDC2, (int)custom_SV_WriteDownloadToClient);
+			cracking_hook_function(0x080B7FA6, (int)custom_va);
+			cracking_hook_function(0x08090534, (int)hook_SV_VerifyIwds_f);
+			cracking_hook_function(0x080907BA, (int)hook_SV_ResetPureClient_f);
+			cracking_hook_function(0x080963C8, (int)custom_SV_CalcPings);
+			cracking_hook_function(0x0809657E, (int)custom_SV_CheckTimeouts);
+			cracking_hook_function(0x08080050, (int)custom_Scr_ErrorInternal);
+			cracking_hook_function(0x08061124, (int)custom_Com_Error);
+			cracking_hook_function(0x080788D2, (int)custom_RuntimeError);
+			cracking_hook_function(0x080787DC, (int)custom_RuntimeError_Debug);
+			cracking_hook_function(0x0809B016, (int)custom_SV_ArchiveSnapshot);
+			cracking_hook_function(0x0809A408, (int)custom_SV_BuildClientSnapshot);
+			cracking_hook_function(0x0811B770, (int)custom_G_SpawnEntitiesFromString);
+			cracking_hook_function(0x080584F0, (int)custom_CM_IsBadStaticModel);
+			cracking_hook_function(0x08113128, (int)custom_Script_obituary);
+
+			#if COMPILE_BOTS == 1
+				cracking_hook_function(0x0809676C, (int)custom_SV_BotUserMove);
+			#endif
+
+			#if COMPILE_RATELIMITER == 1
+				cracking_hook_call(0x08095C48, (int)hook_SVC_Info);
+				cracking_hook_call(0x08095B94, (int)hook_SVC_Status);
+				cracking_hook_call(0x08095CB2, (int)hook_SV_GetChallenge);
+				cracking_hook_call(0x08095E1D, (int)hook_SVC_RemoteCommand);
+			#endif
+		#endif
+
 		com_printmessage_caret_patch();
-#endif
 		gsc_weapons_init();
 		printf("> [PLUGIN LOADED]\n");
 	}
@@ -4168,9 +4003,9 @@ public:
 cCallOfDuty2Pro *pro;
 
 // lol, single again: because it got loaded two times now
-// both now: able to load with wrapper AND directly
+// Both now: able to load with wrapper AND directly
 // IMPORTANT: file needs "lib" infront of name, otherwise it wont be loaded
-// will be called when LD_PRELOAD is referencing this .so
+// Will be called when LD_PRELOAD is referencing this .so
 
 void __attribute__ ((constructor)) lib_load(void)
 {

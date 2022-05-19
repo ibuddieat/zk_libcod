@@ -8,19 +8,19 @@ This extension ...
 
 List of high-level changes provided by this repository:
 - Added cvars:
-  * `sv_limitLocalRcon` to whitelist internal IPs at rcon rate limiting
-  * `sv_logRcon` to disable (successful) rcon command logging
-  * `sv_logHeartbeat` to disable logging of heartbeats that are sent to the master server
-  * `sv_timeoutMessages` to disable player timeout messages being shown to other players
-  * `sv_botKickMessages` to disable bot disconnect messages being shown to other players
-  * `sv_kickMessages` to generally disable player kick messages being shown to other players
-  * `sv_disconnectMessages` to disable "Game session no longer available" messages
-  * `sv_wwwDlDisconnectedMessages` to adapt/hide download messages being shown to other players
   * `g_debugEvents` to log events such as player footsteps, temporary entities etc.
+  * `g_debugStaticModels` to print info about static models on map load
   * `g_logPickup` to control logging of item pickup actions
   * `g_notifyPickup` to define whether to use the stock pickup logic or custom notify events
-  * `g_debugStaticModels` to print info about static models on map load
   * `g_spawnMapWeapons` to control precaching & spawning of weapons in map files
+  * `sv_disconnectMessages` to disable "Game session no longer available" messages
+  * `sv_botKickMessages` to disable bot disconnect messages being shown to other players
+  * `sv_kickMessages` to generally disable player kick messages being shown to other players
+  * `sv_limitLocalRcon` to whitelist internal IPs at rcon rate limiting
+  * `sv_logHeartbeats` to disable logging of heartbeats that are sent to the master server
+  * `sv_logRcon` to disable (successful) rcon command logging
+  * `sv_timeoutMessages` to disable player timeout messages being shown to other players
+  * `sv_wwwDlDisconnectedMessages` to adapt/hide download messages being shown to other players
 - Added script code functions:
   * `<entity> getTagAngles(<tag name>)`
   * `<entity> getTagOrigin(<tag name>)`
@@ -61,8 +61,6 @@ List of high-level changes provided by this repository:
   * `CodeCallback_HoldBreathButton`
   * `CodeCallback_FragButton`
   * `CodeCallback_SmokeButton`
-- Removed libcod cvars:
-  * `con_coloredPrints` as it may break incoming rcon commands, thus causing issues with BigBrotherBot
 - Reconstructed functions (see functions with `custom_` prefix in `libcod.cpp`):
   * `Touch_Item` to gain more control over item pickup actions
   * `SV_DropClient` to filter disconnect messages via various cvars
@@ -92,6 +90,7 @@ List of high-level changes provided by this repository:
 - Added compile flag `ENABLE_UNSAFE` to toggle the availability of potentially unsafe script functions that would make it easy to harm the server with malicious map scripts
 - Added/updated some missing/unknown declarations
 - Fixed some minor bugs
+- Aligned some coding styles
 
 Build requirements:
 - gcc and g++ (with multilib on 64-bit x86 operating systems)

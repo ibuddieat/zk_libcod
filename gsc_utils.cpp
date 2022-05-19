@@ -1,6 +1,81 @@
 #include "gsc_utils.hpp"
 
 #if COMPILE_UTILS == 1
+
+/*
+=================
+Sys_AnsiColorPrint
+Transform Q3 colour codes to ANSI escape sequences
+=================
+*/
+#define MAXPRINTMSG 1024
+#define ColorIndex(c)	(((c) - '0') & 0x07)
+#define Q_COLOR_ESCAPE	'^'
+#define Q_IsColorString(p)	((p) && *(p) == Q_COLOR_ESCAPE && *((p)+1) && isdigit(*((p)+1))) // ^[0-9]
+void Sys_AnsiColorPrint(const char *msg)
+{
+	static char buffer[ MAXPRINTMSG ];
+	int         length = 0;
+	static int  q3ToAnsi[8] =
+	{
+		30, // COLOR_BLACK
+		31, // COLOR_RED
+		32, // COLOR_GREEN
+		33, // COLOR_YELLOW
+		34, // COLOR_BLUE
+		36, // COLOR_CYAN
+		35, // COLOR_MAGENTA
+		0   // COLOR_WHITE
+	};
+
+	while ( *msg )
+	{
+		if ( Q_IsColorString(msg) || *msg == '\n' )
+		{
+			// First empty the buffer
+			if ( length > 0 )
+			{
+				buffer[length] = '\0';
+				fputs(buffer, stdout);
+				length = 0;
+			}
+
+			if ( *msg == '\n' )
+			{
+				// Issue a reset and then the newline
+				fputs("\033[0m\n", stdout);
+				msg++;
+			}
+			else
+			{
+				// Print the color code
+				snprintf(buffer, sizeof(buffer), "\033[1;%dm", q3ToAnsi[ColorIndex(*(msg + 1))]);
+				fputs(buffer, stdout);
+				msg += 2;
+			}
+		}
+		else
+		{
+			if ( length >= MAXPRINTMSG - 1 )
+				break;
+
+			buffer[length] = *msg;
+			length++;
+			msg++;
+		}
+	}
+
+	// Empty anything still left in the buffer
+	if ( length > 0 )
+	{
+		buffer[length] = '\0';
+		fputs(buffer, stdout);
+		// Issue a reset at the end
+		fputs("\033[0m", stdout);
+	}
+}
+
+extern cvar_t *con_coloredPrints;
 int stackPrintParam(int param)
 {
 	if (param >= Scr_GetNumParam())
@@ -11,7 +86,10 @@ int stackPrintParam(int param)
 	case STACK_STRING:
 		char *str;
 		stackGetParamString(param, &str); // no error checking, since we know it's a string
-		printf("%s", str);
+		if ( con_coloredPrints->boolean )
+			Sys_AnsiColorPrint(str);
+		else
+			printf("%s", str);
 		return 1;
 
 	case STACK_VECTOR:
