@@ -3752,6 +3752,32 @@ void com_printmessage_caret_patch(void)
 	memset((int *)caret_check_offset, 0x90, 23);
 }
 
+qboolean custom_SV_MapExists(const char *name)
+{
+	// First try stock mechanism
+	qboolean found = FS_ReadFile(custom_va("maps/mp/%s.%s", SV_GetMapBaseName(name), GetBspExtension()), 0) >= 0;
+	if ( !found )
+	{
+		char library_path[512], map_check[512];
+		
+		cvar_t *fs_homepath = Cvar_FindVar("fs_homepath");
+		cvar_t *fs_game = Cvar_FindVar("fs_game");
+
+		if ( strlen(fs_library->string) )
+			strncpy(library_path, fs_library->string, sizeof(library_path));
+		else
+			snprintf(library_path, sizeof(library_path), "%s/%s/Library", fs_homepath->string, fs_game->string);
+
+		snprintf(map_check, sizeof(map_check), "%s/%s.iwd", library_path, name);
+
+		return access(map_check, F_OK) != -1;
+	}
+	else
+	{
+		return qtrue;
+	}
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -4000,6 +4026,7 @@ public:
 			cracking_hook_function(0x0811B770, (int)custom_G_SpawnEntitiesFromString);
 			cracking_hook_function(0x080584F0, (int)custom_CM_IsBadStaticModel);
 			cracking_hook_function(0x08113128, (int)custom_Script_obituary);
+			cracking_hook_function(0x08092302, (int)custom_SV_MapExists);
 
 			#if COMPILE_BOTS == 1
 				cracking_hook_function(0x0809676C, (int)custom_SV_BotUserMove);

@@ -86,11 +86,12 @@ List of high-level changes provided by this repository:
   * `G_SpawnEntitiesFromString` et sequentes to provide map weapon info via CodeCallback_MapWeapons
   * `G_CallSpawn`
   * `SV_WWWRedirectClient` for `sv_wwwDlDisconnectedMessages`
+  * `SV_MapExists` for manymaps support
 - Patched Com_PrintMessage so that strings that begin with a caret are printed properly
 - Added compile flag `ENABLE_UNSAFE` to toggle the availability of potentially unsafe script functions that would make it easy to harm the server with malicious map scripts
 - Added/updated some missing/unknown declarations
 - Fixed some minor bugs
-- Aligned some coding styles
+- Tried to align some coding styles
 
 Build requirements:
 - gcc and g++ (with multilib on 64-bit x86 operating systems)

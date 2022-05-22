@@ -1659,4 +1659,22 @@ static const SP_worldspawn_t SP_worldspawn = (SP_worldspawn_t)0x0; // Not tested
 static const SP_worldspawn_t SP_worldspawn = (SP_worldspawn_t)0x0811B56A;
 #endif
 
+typedef const char * (*SV_GetMapBaseName_t)(const char *mapname);
+#if COD_VERSION == COD2_1_0
+static const SV_GetMapBaseName_t SV_GetMapBaseName = (SV_GetMapBaseName_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_GetMapBaseName_t SV_GetMapBaseName = (SV_GetMapBaseName_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_GetMapBaseName_t SV_GetMapBaseName = (SV_GetMapBaseName_t)0x0808BD32;
+#endif
+
+typedef char * (*GetBspExtension_t)(void);
+#if COD_VERSION == COD2_1_0
+static const GetBspExtension_t GetBspExtension = (GetBspExtension_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const GetBspExtension_t GetBspExtension = (GetBspExtension_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const GetBspExtension_t GetBspExtension = (GetBspExtension_t)0x080A36FE;
+#endif
+
 #endif
