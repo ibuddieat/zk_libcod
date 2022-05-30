@@ -1,0 +1,69 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>obituary( &lt;victim&gt;, &lt;attacker&gt;, &lt;weapon&gt;, &lt;means of death&gt;, &lt;team&gt;, &lt;origin&gt;, &lt;max. distance&gt; )</H1>
+<HR>
+<BODY BGCOLOR='B0C4DE'>
+<I>
+Module: HUD<BR>
+MP Only<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Create an obituary for a character. The optional parameters allow the obituary hud to be shown for a specific set of teams only, and/or to players that are in a certain range of a defined position only. Valid teams are:</p>
+<UL>
+<LI>"allies", "axis", "spectator"</LI>
+<LI>combinations of two teams like: "allies+axis" or "spectator+axis"</LI>
+</UL>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+obituary(self, attacker, sWeapon, sMeansOfDeath, "allies", self.origin, 512);
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;victim&gt; The victim entity</LI>
+<LI>2 : &lt;attacker&gt; The attacker entity</LI>
+<LI>3 : &lt;weapon&gt; The weapon name</LI>
+<LI>4 : &lt;weapon&gt; The means of death as a string</LI>
+</UL></TR></TD></TABLE>
+<BR><BR>
+<H2>Optional Args</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;team&gt; The team to show the hud to</LI>
+<LI>2 : &lt;origin&gt; The position to use for max. distance comparison (requires the 3rd optional parameter)</LI>
+<LI>3 : &lt;max. distance&gt; The maximum 3D distance players have to be located within to be able to see the hud</LI>
+</UL></TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>

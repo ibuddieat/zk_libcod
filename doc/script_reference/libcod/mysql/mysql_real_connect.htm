@@ -1,0 +1,58 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>mysql_real_connect( &lt;mysql&gt;, &lt;host&gt;, &lt;user&gt;, &lt;pass&gt;, &lt;db&gt;, &lt;port&gt; )</H1>
+<HR>
+<BODY BGCOLOR='B0C4DE'>
+<I>
+Module: MySQL<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Attempts to establish a connection to a MySQL database engine. Returns a connection handle if the connection was successful or 0.</p>
+
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+connection_handler = mysql_real_connect( mysql_handler, "localhost", "username", "password", "database", 3306);
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;mysql&gt; initialized MYSQL handler</LI>
+<LI>2 : &lt;host&gt; host where the database runs on (like localhost)</LI>
+<LI>3 : &lt;user&gt; username of the database</LI>
+<LI>4 : &lt;pass&gt; the password of the username</LI>
+<LI>5 : &lt;db&gt; database name</LI>
+<LI>6 : &lt;port&gt; database port (default 3306)</LI>
+</UL></TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>

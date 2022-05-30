@@ -1,0 +1,75 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>PlayerLinkTo( &lt;linkto entity&gt;, &lt;tag&gt;, &lt;viewpercentag fraction&gt;, &lt;right arc&gt;, &lt;left arc&gt;, &lt;top arc&gt;, &lt;bottom arc&gt;, &lt;collide&gt; )</H1>
+<HR>
+<BODY BGCOLOR='B0C4DE'>
+<I>
+Module: Player<BR>
+SP Only<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Attaches the player to an entity.  Any entity rotation is added to the player's view, allow the player to look around.  Rotating the parent entity/tag will not move the player's eye position, but only the player's view angles.  Thus, the player's eye position is locked in place, always directly above the parent tag.</p>
+
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Call this on:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+A Player Entity
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+level.player PlayerLinkTo( vehicle, "tag_player", 0.5 );
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;linkto entity&gt; The entity to attach the player to.</LI>
+</UL></TR></TD></TABLE>
+<BR><BR>
+<H2>Optional Args</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;tag&gt; The tag to attach the player to.</LI>
+<LI>2 : &lt;view fraction&gt; How much the change in the tag's rotation effects the players view.  Defaults to 0.</LI>
+<LI>3 : &lt;right arc&gt; Angle to clamp view to the right.  Defaults to 180.</LI>
+<LI>4 : &lt;left arc&gt; Angle to clamp view to the left.  Defaults to 180.</LI>
+<LI>5 : &lt;top arc&gt; Angle to clamp view to the top.  Defaults to 180.</LI>
+<LI>6 : &lt;bottom arc&gt; Angle to clamp view to the bottom.  Defaults to 180.</LI>
+<LI>7 : &lt;collide&gt; true/false: Whether the player is to collide with geo, preventing the player from entering solid (but will try to keep the player as close as possible to the parent)</LI>
+</UL></TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>

@@ -1,0 +1,63 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>Line( &lt;start&gt;, &lt;end&gt;, &lt;color&gt;, &lt;depthTest&gt;, &lt;duration&gt; )</H1>
+<HR>
+<BODY BGCOLOR='B0C4DE'>
+<I>
+Module: Debug<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Draw a debug line on screen</p>
+
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+Line( self.origin, self.origin + forwardFar, (0.9, 0.7, 0.6), false );
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;start&gt; start vector position of the line</LI>
+<LI>2 : &lt;end&gt; end vector position of the line</LI>
+</UL></TR></TD></TABLE>
+<BR><BR>
+<H2>Optional Args</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;color&gt; RGB color of the line in a vector, defaults to white</LI>
+<LI>2 : &lt;depthTest&gt; whether to only draw the line when it is in front of objects, defaults to false.  Depth test is only supported on pc.</LI>
+<LI>3 : &lt;duration&gt; How many server frames the line should persist through.</LI>
+</UL></TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>

@@ -1,0 +1,69 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>ShellShock( &lt;shellshockname&gt;, &lt;duration&gt;, overrideCheat )</H1>
+<HR>
+<BODY BGCOLOR='B0C4DE'>
+<I>
+Module: Player<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Start a shell shock sequence for the player. The shell shock must be precached, otherwise calling this script will cause a script error.</p>
+
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Call this on:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+&lt;player&gt;
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+self ShellShock( "death", 5 );
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;shellshockname&gt;</LI>
+<LI>2 : &lt;duration&gt; duration in seconds. The duration must be between 0 and 60 seconds. </LI>
+</UL></TR></TD></TABLE>
+<BR><BR>
+<H2>Optional Args</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;overrideCheat&gt; Certain player cheats can disable this function, set this true to force the issue.</LI>
+</UL></TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>

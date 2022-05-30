@@ -1,42 +1,9 @@
-# Prerequisites
-*.d
-
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
-
-# Libcod
-bin/**
-extra/**
-objects_cod2_1_0/**
-objects_cod2_1_2/**
-objects_cod2_1_3/**
+# Libcod compilation
+code/bin/**
+code/extra/**
+code/objects_cod2_1_0/**
+code/objects_cod2_1_2/**
+code/objects_cod2_1_3/**
 
 # Debugger files
-.gdb_history
+code/.gdb_history

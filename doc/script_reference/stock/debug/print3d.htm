@@ -1,0 +1,64 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>Print3d( &lt;origin&gt;, &lt;text&gt;, &lt;color&gt;, &lt;alpha&gt;, &lt;scale&gt;, &lt;duration&gt; )</H1>
+<HR>
+<BODY BGCOLOR='B0C4DE'>
+<I>
+Module: Debug<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Draw 3d text on screen</p>
+
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+Print3d( start, "START", (1.0, 0.8, 0.5), 1, 3 );
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;origin&gt; 3d position of text to be drawn</LI>
+<LI>2 : &lt;text&gt; The text to draw on the screen</LI>
+</UL></TR></TD></TABLE>
+<BR><BR>
+<H2>Optional Args</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;color&gt; RGB color of the line in a vector, defaults to white</LI>
+<LI>2 : &lt;alpha&gt; alpha value of the text (how transparent), defaults to 1</LI>
+<LI>3 : &lt;scale&gt; size scale of the text, defaults to 1</LI>
+<LI>4 : &lt;duration&gt; How many server frames the text should persist through.</LI>
+</UL></TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>

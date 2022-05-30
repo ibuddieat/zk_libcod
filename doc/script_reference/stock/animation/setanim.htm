@@ -1,0 +1,76 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>SetAnim( &lt;animation&gt;, &lt;weight&gt;, &lt;time&gt;, &lt;rate&gt; )</H1>
+<HR>
+<BODY BGCOLOR='B0C4DE'>
+<I>
+Module: Animation<BR>
+SP Only<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>SetAnim and all of its variants set the weight of an animation (or a node in the animtree) to a given value over a given time. They also set the speed at which the animation plays. All of the ancestors of the animation will also have their weight set to 1 over the given time so that the animation is visible. Each variant of this function has different behavior depending on the words in the function name:</p>
+<p>"Flagged": These functions take an additional argument &lt;notifyname&gt; (first in the argument list) which is a string that is notified for every notetrack in the animation. For instance, if the string "runanim" is used, it would be typical to waittill("runanim", "end") to wait for the end of the animation. &lt;animation&gt; must be an actual animation and not a non-leaf node of the animtree.</p>
+<p>"Knob": These functions turn the weight of any siblings of the animation to zero as the animation's weight is turned up. The effect is that after the given time, the animation is the only one out of its siblings that is playing. Note that the descendents of the siblings of the animation will not be turned off directly. (For this, use ClearAnim.)</p>
+<p>"All": Works only with "Knob." Not available with both "Limited" and "Flagged" at the same time. These functions take an additional argument &lt;root&gt; (after the animation argument). &lt;root&gt; must be an ancestor of &lt;animation&gt; in the tree. This has the additional effect that "Knob" has on all nodes from the animation up to (but not including) &lt;root&gt;, so that this animation is the only one in its area of the tree which is playing.</p>
+<p>"Limited": These functions do not change the goal weight of the ancestors of &lt;animation&gt; (If "KnobAll" is used, this means the ancestors of &lt;root&gt;). This means that the animation might not be visible if any of its ancestors currently have a weight of 0. However, when its ancestors' weight is changed, it will become visible.</p>
+<p>"Restart": These functions cause the animation to restart. If they had been previously playing, without this they would continue from their current time.</p>
+
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Call this on:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+&lt;entity&gt;
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+self SetAnim( %precombatrun1, 1, 0.1, 1 );
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;animation&gt; The animation or animtree node to change.</LI>
+</UL></TR></TD></TABLE>
+<BR><BR>
+<H2>Optional Args</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;weight&gt; Goal weight of this animation. Defaults to 1.0.</LI>
+<LI>2 : &lt;time&gt; Time to transition to this weight in seconds. Defaults to 0.2.</LI>
+<LI>3 : &lt;rate&gt; Playback rate of the animation. Defaults to 1.0.</LI>
+</UL></TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>

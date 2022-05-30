@@ -1,0 +1,86 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>Client Spam</H1>
+<HR>
+<BODY BGCOLOR='B0C4DE'>
+<I>
+Module: Callbacks<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Calls CodeCallback_CLSpam() in maps/mp/gametypes/_callbacksetup.gsc each time a certain request threshold is exceeded for a client.</p>
+</H3>
+</TR></TD></TABLE>
+<p>Note: The existance of the callback function is checked only once on server start. Functions added later are not taken into account, even after a map switch.</p>
+
+<BR><BR>
+<H2>Parameters:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;type&gt;: Type of request that was spammed (e.g., RCON:ADDRESS).</LI>
+<LI>2 : &lt;ip&gt; IP address of the spamming client.</LI>
+</UL></TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+CodeCallback_CLSpam(type, ip)
+{
+    CONST_TimesForBan = 40;
+
+    sm = strtok(type, ":");
+    svc = sm[0];
+    type = sm[1];
+
+    switch(svc) {
+        case "RCON": break;
+        case "CHALLENGE": break;
+        case "INFO": break;
+        case "STATUS":
+            if(type == "ADDRESS") {
+                if(!isDefined(level.locked_ip[ip]))
+                    level.locked_ip[ip] = 0;
+
+                level.locked_ip[ip]++;
+                
+                if(level.locked_ip[ip] >= CONST_TimesForBan) {
+                    //level.locked_ip[ip] = 0;
+                    ip_without_port = strtok(ip, ":")[0];
+                    system("iptables -A INPUT -s " + ip_without_port + " -j DROP"); // This would require the server to run as root
+                    printf("[CLSpam] IP: " + ip + " banned! Reason: " + type + " [TIMES: " + level.locked_ip[ip] + "]\n");
+                    level.locked_ip[ip] = 0;
+                } else {
+                    printf("SVC_Status: global limit\n");
+                }
+            } break;
+        default: break;
+    }
+}
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>

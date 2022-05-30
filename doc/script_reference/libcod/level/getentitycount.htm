@@ -1,0 +1,48 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>getEntityCount()</H1>
+<HR>
+<BODY BGCOLOR='B0C4DE'>
+<I>
+Module: Level<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Get the number of currently present entities, including temporary entities. This does not include entities that are rendered/handled on the client side only (e.g., entities spawned for effects). The returned number may not change on each call of spawn(), as the server may use pre-allocated entities before creating new ones.</p>
+
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+if(getEntityCount() >= 1000)
+    iprintLnBold("Warning: Server close to entity limit!");
+ent = spawn("script_model", origin);
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>
