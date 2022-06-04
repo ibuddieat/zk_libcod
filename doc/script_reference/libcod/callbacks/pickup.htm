@@ -1,0 +1,71 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>Pickup</H1>
+<HR>
+<BODY BGCOLOR='B0C4DE'>
+<I>
+Module: Callbacks<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Calls CodeCallback_Pickup() in maps/mp/gametypes/_callbacksetup.gsc if a weapon, ammo, or health is picked up by a player. For ammo and health, only the first parameter is defined. The item/entity is removed automatically.</p>
+</H3>
+</TR></TD></TABLE>
+<p>Note: The existance of the callback function is checked only once on server start. Functions added later are not taken into account, even after a map switch.</p>
+
+<BR><BR>
+<H2>Called on:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+The player
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Parameters:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;type&gt;: The type of the item that was picked up (either "ammo", "weapon", or "health").</LI>
+<LI>2 : &lt;weapon&gt;: Weapon file name of the picked up weapon.</LI>
+<LI>3 : &lt;name&gt;: The weapon name as displayed in the player hud.</LI>
+<LI>4 : &lt;quantity&gt;: The ammo count of the picked up weapon.</LI>
+<LI>5 : &lt;origin&gt;: The origin of the picked up weapon.</LI>
+<LI>6 : &lt;angles&gt;: The angles of the picked up weapon.</LI>
+</UL></TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+CodeCallback_Pickup(type, weapon, name, quantity, origin, angles)
+{
+    if(type == "weapon")
+        self setWeaponSlotWeapon("primary", weapon);
+}
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>

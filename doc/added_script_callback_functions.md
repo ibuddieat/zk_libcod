@@ -1,6 +1,7 @@
 Added script callback functions:
   * `CodeCallback_Error`
-  * `CodeCallback_MapWeapons`
+  * `CodeCallback_MapWeaponsLoad`
+  * `CodeCallback_Pickup`
   * `CodeCallback_AdsButton`
   * `CodeCallback_CrouchButton`
   * `CodeCallback_FragButton`

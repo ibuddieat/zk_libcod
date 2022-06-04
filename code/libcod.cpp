@@ -27,7 +27,6 @@ cvar_t *fs_library;
 cvar_t *g_debugEvents;
 cvar_t *g_debugStaticModels;
 cvar_t *g_logPickup;
-cvar_t *g_notifyPickup;
 cvar_t *g_playerCollision;
 cvar_t *g_playerEject;
 cvar_t *g_spawnMapWeapons;
@@ -60,7 +59,6 @@ cHook *hook_touch_item_auto;
 cHook *hook_developer_prints;
 cHook *hook_standard_prints;
 cHook *hook_g_tempentity;
-cHook *hook_gscr_loadconsts;
 cHook *hook_sv_masterheartbeat;
 cHook *hook_g_runframe;
 cHook *hook_scr_loadgametype;
@@ -69,7 +67,8 @@ int codecallback_client_spam = 0;
 int codecallback_dprintf = 0;
 int codecallback_error = 0;
 int codecallback_fire_grenade = 0;
-int codecallback_mapweapons = 0;
+int codecallback_map_weapons_load = 0;
+int codecallback_pickup = 0;
 int codecallback_playercommand = 0;
 int codecallback_remotecommand = 0;
 int codecallback_userinfochanged = 0;
@@ -154,7 +153,6 @@ void hook_sv_init(const char *format, ...)
 	g_debugEvents = Cvar_RegisterBool("g_debugEvents", qfalse, CVAR_ARCHIVE);
 	g_debugStaticModels = Cvar_RegisterBool("g_debugStaticModels", qfalse, CVAR_ARCHIVE);
 	g_logPickup = Cvar_RegisterBool("g_logPickup", qtrue, CVAR_ARCHIVE);
-	g_notifyPickup = Cvar_RegisterBool("g_notifyPickup", qfalse, CVAR_ARCHIVE);
 	g_playerCollision = Cvar_RegisterBool("g_playerCollision", qtrue, CVAR_ARCHIVE);
 	g_playerEject = Cvar_RegisterBool("g_playerEject", qtrue, CVAR_ARCHIVE);
 	g_spawnMapWeapons = Cvar_RegisterBool("g_spawnMapWeapons", qtrue, CVAR_ARCHIVE);
@@ -240,7 +238,8 @@ int hook_codscript_gametype_scripts()
 	codecallback_dprintf = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_DPrintf", 0);
 	codecallback_error = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_Error", 0);
 	codecallback_fire_grenade = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_FireGrenade", 0);
-	codecallback_mapweapons = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MapWeapons", 0);
+	codecallback_map_weapons_load = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MapWeaponsLoad", 0);
+	codecallback_pickup = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_Pickup", 0);
 	codecallback_playercommand = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_PlayerCommand", 0);
 	codecallback_remotecommand = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_RemoteCommand", 0);
 	codecallback_userinfochanged = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_UserInfoChanged", 0);
@@ -486,22 +485,6 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 		SV_Heartbeat();
 }
 
-void custom_GScr_LoadConsts(void)
-{
-	hook_gscr_loadconsts->unhook();
-
-	void (*sig)(void);
-	*(int *)&sig = hook_gscr_loadconsts->from;
-	
-	scr_const.pickup_ammo = GScr_AllocString("pickup_ammo");
-	scr_const.pickup_weapon = GScr_AllocString("pickup_weapon");
-	scr_const.pickup_health = GScr_AllocString("pickup_health");
-
-	sig();
-	
-	hook_gscr_loadconsts->hook();
-}
-
 void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 {
 	gclient_t * client;
@@ -556,24 +539,32 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 		type = bg_item->giType;
 		if ( type == IT_AMMO )
 		{
-			if ( g_notifyPickup->boolean )
-				Scr_Notify(entity, scr_const.pickup_ammo, 0);
+			if ( codecallback_pickup && Scr_IsSystemActive() )
+			{
+				stackPushString("ammo");
+				short ret = Scr_ExecEntThread(entity, codecallback_pickup, 1);
+				Scr_FreeThread(ret);
+			}
 			else
+			{
 				respawn = Pickup_Ammo(item, entity);
+			}
 		}
 		else if ( type < 3 )
 		{
 			if ( type != IT_WEAPON )
 				return;
 
-			if ( g_notifyPickup->boolean )
+			if ( codecallback_pickup && Scr_IsSystemActive() )
 			{
-				Scr_AddVector(item->r.currentAngles);
-				Scr_AddVector(item->r.currentOrigin);
-				Scr_AddInt(bg_item->quantity);
-				Scr_AddString(bg_item->display_name);
-				Scr_AddString(BG_WeaponDefs(bg_item->giAmmoIndex)->szInternalName);
-				Scr_Notify(entity, scr_const.pickup_weapon, 5);
+				stackPushVector(item->r.currentAngles);
+				stackPushVector(item->r.currentOrigin);
+				stackPushInt(bg_item->quantity);
+				stackPushString(bg_item->display_name);
+				stackPushString(BG_WeaponDefs(bg_item->giAmmoIndex)->szInternalName);
+				stackPushString("weapon");
+				short ret = Scr_ExecEntThread(entity, codecallback_pickup, 6);
+				Scr_FreeThread(ret);
 			}
 			else
 			{
@@ -585,10 +576,16 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 			if ( type != IT_HEALTH )
 				return;
 			
-			if ( g_notifyPickup->boolean )
-				Scr_Notify(entity, scr_const.pickup_health, 0);
+			if ( codecallback_pickup && Scr_IsSystemActive() )
+			{
+				stackPushString("health");
+				short ret = Scr_ExecEntThread(entity, codecallback_pickup, 1);
+				Scr_FreeThread(ret);
+			}
 			else
+			{
 				respawn = Pickup_Health(item, entity);
+			}
 		}
 		
 		if ( !respawn )
@@ -3523,7 +3520,7 @@ void custom_G_CallSpawn(void)
 		{
 			ent = G_Spawn();
 			G_SetEntityPlacement(ent);
-			if ( codecallback_mapweapons )
+			if ( codecallback_map_weapons_load )
 			{
 				strncpy(map_weapons[num_map_weapons].classname, classname, sizeof(map_weapons[num_map_weapons].classname));
 				VectorCopy(ent->r.currentOrigin, map_weapons[num_map_weapons].origin);
@@ -3570,7 +3567,7 @@ void custom_G_SpawnEntitiesFromString(void)
 	SP_worldspawn();
 	
 	/* New code start: map weapons callback */
-	if ( codecallback_mapweapons )
+	if ( codecallback_map_weapons_load )
 	{
 		num_map_weapons = 0;
 		memset(&map_weapons, 0, sizeof(map_weapons));
@@ -3589,7 +3586,7 @@ void custom_Scr_LoadGameType(void)
 	*(int *)&sig = hook_scr_loadgametype->from;
 
 	/* New code start: map weapons callback */
-	if ( codecallback_mapweapons )
+	if ( codecallback_map_weapons_load )
 	{
 		if ( !num_map_weapons )
 		{
@@ -3611,7 +3608,7 @@ void custom_Scr_LoadGameType(void)
 			}
 		}
 		stackPushInt(num_map_weapons);
-		short ret = Scr_ExecThread(codecallback_mapweapons, 2);
+		short ret = Scr_ExecThread(codecallback_map_weapons_load, 2);
 		Scr_FreeThread(ret);
 	}
 	/* New code end */
@@ -3984,8 +3981,6 @@ public:
 			hook_touch_item_auto->hook();
 			hook_g_tempentity = new cHook(0x0811EFC4, (int)custom_G_TempEntity);
 			hook_g_tempentity->hook();
-			hook_gscr_loadconsts = new cHook(0x081224F8, (int)custom_GScr_LoadConsts);
-			hook_gscr_loadconsts->hook();
 			hook_sv_masterheartbeat = new cHook(0x08096ED6, (int)custom_sv_masterheartbeat);
 			hook_sv_masterheartbeat->hook();
 			hook_g_runframe = new cHook(0x0810A13A, (int)custom_G_RunFrame);

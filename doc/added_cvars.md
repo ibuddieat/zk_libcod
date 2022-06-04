@@ -2,7 +2,6 @@ Added cvars:
   * `g_debugEvents` to log events such as player footsteps, temporary entities etc.
   * `g_debugStaticModels` to print info about static models on map load
   * `g_logPickup` to control logging of item pickup actions
-  * `g_notifyPickup` to define whether to use the stock pickup logic or custom notify events
   * `g_spawnMapWeapons` to control precaching & spawning of weapons in map files
   * `sv_disconnectMessages` to disable "Game session no longer available" messages
   * `sv_botKickMessages` to disable bot disconnect messages being shown to other players
