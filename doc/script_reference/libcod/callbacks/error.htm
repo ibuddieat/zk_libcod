@@ -52,7 +52,7 @@ CodeCallback_Error(critical, internal_function, message)
     if(critical || internal_function == "Com_Error") {
         logPrintConsole("Aight imma head out!\n");
     } else {
-		// If developer mode is on, check console_mp_server.log for details
+        // If developer mode is on, check console_mp_server.log for details
         iprintLn("error: " + message);
     }
 }

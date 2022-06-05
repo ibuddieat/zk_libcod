@@ -162,7 +162,7 @@ static const Sys_Print_t Sys_Print = (Sys_Print_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
 static const Sys_Print_t Sys_Print = (Sys_Print_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
-static const Sys_Print_t Sys_Print = (Sys_Print_t)0x080d4AE0;
+static const Sys_Print_t Sys_Print = (Sys_Print_t)0x080D4AE0;
 #endif
 
 typedef void (*Sys_SetValue_t)(int key, void *value);
