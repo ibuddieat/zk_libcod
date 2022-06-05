@@ -156,6 +156,15 @@ static const Sys_MilliSeconds_t Sys_MilliSeconds = (Sys_MilliSeconds_t)0x080D5C5
 static const Sys_MilliSeconds_t Sys_MilliSeconds = (Sys_MilliSeconds_t)0x080D5D98;
 #endif
 
+typedef void (*Sys_Print_t)(const char *msg);
+#if COD_VERSION == COD2_1_0
+static const Sys_Print_t Sys_Print = (Sys_Print_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Sys_Print_t Sys_Print = (Sys_Print_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Sys_Print_t Sys_Print = (Sys_Print_t)0x080d4AE0;
+#endif
+
 typedef void (*Sys_SetValue_t)(int key, void *value);
 #if COD_VERSION == COD2_1_0
 static const Sys_SetValue_t Sys_SetValue = (Sys_SetValue_t)0x080D4492;

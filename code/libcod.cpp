@@ -57,7 +57,7 @@ cHook *hook_add_opcode;
 cHook *hook_print_codepos;
 cHook *hook_touch_item_auto;
 cHook *hook_developer_prints;
-cHook *hook_standard_prints;
+cHook *hook_console_print;
 cHook *hook_g_tempentity;
 cHook *hook_sv_masterheartbeat;
 cHook *hook_g_runframe;
@@ -1677,13 +1677,13 @@ int custom_SV_WWWRedirectClient(client_t *cl, msg_t *msg)
 	size = FS_SV_FOpenFileRead(cl->downloadName, &fp);
 	if ( !size )
 	{
-		Com_Printf("ERROR: Client \'%s\': couldn\'t extract file size for %s\n", cl->downloadName);
+		Com_Printf("ERROR: Client \'%s\'^7: couldn\'t extract file size for %s\n", cl->name, cl->downloadName);
 	}
 	else
 	{
 		FS_FCloseFile(fp);
 		I_strncpyz(cl->wwwDownloadURL, custom_va("%s/%s", sv_wwwBaseURL->string, cl->downloadName), MAX_OSPATH);
-		Com_Printf("Redirecting client \'%s\' to %s\n", cl->name, cl->wwwDownloadURL);
+		Com_Printf("Redirecting client \'%s\'^7 to %s\n", cl->name, cl->wwwDownloadURL);
 		cl->wwwDownloadStarted = 1;
 		MSG_WriteByte(msg, 5);
 		MSG_WriteShort(msg, -1);
@@ -2815,24 +2815,17 @@ void custom_Scr_PrintPrevCodePos(int a1, char *a2, int a3)
 	hook_print_codepos->hook();
 }
 
-void hook_Com_Printf(const char *format, ...)
+void hook_Sys_Print(const char *msg)
 {
-	char s[COD2_MAX_STRINGLENGTH];
-	va_list va;
-
-	va_start(va, format);
-	vsnprintf(s, sizeof(s), format, va);
-	va_end(va);
-	
 	if ( Scr_IsSystemActive() && con_coloredPrints->boolean )
 	{
-		Sys_AnsiColorPrint(s);
+		Sys_AnsiColorPrint(msg);
 	}
 	else
 	{
-		hook_standard_prints->unhook();
-		Com_Printf("%s", s);
-		hook_standard_prints->hook();
+		hook_console_print->unhook();
+		Sys_Print(msg);
+		hook_console_print->hook();
 	}
 }
 
@@ -3820,8 +3813,8 @@ public:
 
 			hook_developer_prints = new cHook(0x08060B7C, (int)hook_Com_DPrintf);
 			#if COMPILE_UTILS == 1
-				hook_standard_prints = new cHook(0x08060B2C, int(hook_Com_Printf));
-				hook_standard_prints->hook();
+				hook_console_print = new cHook(0x0, int(hook_Sys_Print)); // Not tested
+				hook_console_print->hook();
 			#endif
 
 			hook_init_opcode = new cHook(0x08076B9C, (int)custom_Scr_InitOpcodeLookup);
@@ -3892,8 +3885,8 @@ public:
 
 			hook_developer_prints = new cHook(0x08060E42, (int)hook_Com_DPrintf);
 			#if COMPILE_UTILS == 1
-				hook_standard_prints = new cHook(0x08060DF2, int(hook_Com_Printf));
-				hook_standard_prints->hook();
+				hook_console_print = new cHook(0x0, int(hook_Sys_Print)); // Not tested
+				hook_console_print->hook();
 			#endif
 
 			hook_init_opcode = new cHook(0x08077110, (int)custom_Scr_InitOpcodeLookup);
@@ -3960,8 +3953,8 @@ public:
 
 			hook_developer_prints = new cHook(0x08060E3A, (int)hook_Com_DPrintf);
 			#if COMPILE_UTILS == 1
-				hook_standard_prints = new cHook(0x08060DEA, int(hook_Com_Printf));
-				hook_standard_prints->hook();
+				hook_console_print = new cHook(0x080d4AE0, int(hook_Sys_Print));
+				hook_console_print->hook();
 			#endif
 
 			hook_init_opcode = new cHook(0x080771DC, (int)custom_Scr_InitOpcodeLookup);
