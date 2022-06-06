@@ -2545,10 +2545,16 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 		strcmp(Cmd_Argv(2), "fast_restart") != 0
 		)
 	{
-		msg->data[(int)msg->cursize] = '\0';
-		
 		stackPushInt((int)msg);
-		stackPushString((char *)msg->data);
+		stackPushArray();
+		int args = Cmd_Argc();
+		for (int i = 2; i < args; i++)
+		{
+			char tmp[COD2_MAX_STRINGLENGTH];
+			SV_Cmd_ArgvBuffer(i, tmp, sizeof(tmp));
+			stackPushString(tmp);
+			stackPushArrayLast();
+		}
 		stackPushString(NET_AdrToString(from));
 	
 		short ret = Scr_ExecThread(codecallback_remotecommand, 3);
