@@ -170,54 +170,6 @@ void gsc_utils_sendgameservercommand()
 		stackPushUndefined();
 		return;
 	}
-    
-    /*
-    Parsed on client in CG_ServerCommand (0x4d1b80 in 1.3)
-    
-    switch(cmd) {
-        "B": calls CG_MapRestart
-        "C": (int) switchToOffHand()
-        "D": (int, str, float, float, float) deactivateReverb()
-        "E": (int, int, float) setChannelVolumes()
-        "F": (int, str, float, float, float) deactivateChannelVolumes()
-        "G": (int) setTeamScore (allies or axis, didn't test)
-        "H": (int) setTeamScore (allies or axis, didn't test)
-        "I": (str) giveWeapon() (str indicates type, includes item pickup stuff)
-             (str) setNormalHealth() ("0")
-        "J": (int) is sent on player disconnect (in SV_DropClient)
-        "K": closeIngameMenu()
-        "a": (int) switchToWeapon()
-        "b": (int, ...) scoreboard info (/+score)
-             b <num players> <?> <?> <player n id> <player n score> <player n ping> <player n deaths> <player n status icon id>
-             Example with 2 players:
-             b 2 0 0 1 3 29 0 0
-                     0 0 43 4 0
-             3 Players:
-             b 3 0 0 1 0 32 0 0
-                     2 0 61 0 0 
-                     0 0 48 1 0
-        "d": (int, str) update of configstrings, e.g., when changing sv_voice, or functions like:
-             (int, str) playSound(), ambientPlay()
-             (int, str) playFx(), playFxOnTag()
-             (int, int, int, float, float, float, float, int) setExpFog()
-        "e": (str) error message, like iprintLn(), sent to active players on kick() etc.
-        "f": (str) iprintLn()
-        "g": (str) iprintLnBold()
-        "h": (str) chat message (all)
-        "i": (str) chat message (team)
-        "o": (str) musicPlay()
-        "p": (int) musicStop()
-        "q": (int) soundFade()
-        "r": (int, str, float, float, float) setReverb()
-        "s": (int) playLocalSound()
-        "t": (int) openMenu()
-        "u": closeMenu()
-        "i": (str) chat message (team)
-        "v": (str) setClientCvar()
-        "w": (str) disconnect message for the player that disconnected
-        default: Com_Printf("Unknown client game command: %s\n", cmd);
-    }
-    */
 
 	SV_GameSendServerCommand(clientNum, 0, message);
 	stackPushBool(qtrue);

@@ -27,8 +27,51 @@ Module: Utils<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Sends a game server command to the client.</p>
+<p>Sends a game server command to the client, where it is parsed in CG_ServerCommand(). Example commands and their use:</p>
 </H3>
+</TD></TR>
+<TR><TD BGCOLOR="222222">
+<PRE>
+"B": calls CG_MapRestart()
+"C": (int) switchToOffHand()
+"D": (int, str, float, float, float) deactivateReverb()
+"E": (int, int, float) setChannelVolumes()
+"F": (int, str, float, float, float) deactivateChannelVolumes()
+"G": (int) setTeamScore() for axis
+"H": (int) setTeamScore() for allies
+"I": (str) giveWeapon() (str indicates type, includes item pickup stuff)
+     (str) setNormalHealth()
+"J": (int) is sent on player disconnect
+"K": closeIngameMenu()
+"a": (int) switchToWeapon()
+"b": (int, int, int, ...) scoreboard info (/+score)
+        b <num players> <axis score> <allies score> <player n id> <player n score> <player n ping> <player n deaths> <player n status icon id>
+        Example with 2 players:
+        b 2 0 0 1 3 29 0 0
+                0 0 43 4 0
+        Example with 3 Players:
+        b 3 0 0 1 0 32 0 0
+                2 0 61 0 0 
+                0 0 48 1 0
+"d": (int, str) update of configstrings, e.g., when changing sv_voice, or at the use of functions like:
+     (int, str) playSound(), ambientPlay()
+     (int, str) playFx(), playFxOnTag()
+     (int, int, int, float, float, float, float, int) setExpFog()
+"e": (str) error message, like iprintLn(), sent to active players on kick() etc.
+"f": (str) iprintLn()
+"g": (str) iprintLnBold()
+"h": (str) chat message
+"i": (str) team chat message
+"o": (str) musicPlay()
+"p": (int) musicStop()
+"q": (int) soundFade()
+"r": (int, str, float, float, float) setReverb()
+"s": (int) playLocalSound()
+"t": (int) openMenu()
+"u": closeMenu()
+"v": (str) setClientCvar()
+"w": (str) disconnect message for the player that disconnected
+</PRE>
 </TR></TD></TABLE>
 <BR><BR>
 <H2>Example:</H2>
@@ -36,7 +79,7 @@ Module: Utils<BR>
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
- sendgameservercommand(player getentitynumber(), "h \"console: " + message + "\"");
+sendgameservercommand(player getentitynumber(), "h \"console: " + message + "\"");
 </PRE>
 </H3>
 </TR></TD></TABLE>
