@@ -3,6 +3,7 @@ Added script code functions:
   * `<entity> getTagOrigin(<tag name>)`
   * `<entity> hasTag(<tag name>)`
   * `<entity> isLinkedTo()`
+  * `<player> earthquakeForPlayer(<scale>, <duration>, <source>, <radius>)`
   * `<player> getClientHudElemCount()`
   * `<player> getEnterTime()`
   * `<player> getGroundEntity()`
