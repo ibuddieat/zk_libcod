@@ -1376,11 +1376,12 @@ void custom_MSG_WriteDeltaEntity(msg_t *msg, entityState_t *from, entityState_t 
 					disable = qtrue;
 			}
 		}
-		else if ( (to->eType - 10) == EV_PLAY_FX )
+
+		if ( (to->eType - 10) == EV_PLAY_FX || (to->eType - 10) == EV_EARTHQUAKE )
 		{
 			if ( to->otherEntityNum )
 			{
-				// Effect is restricted to a player
+				// Effect/Earthquake is restricted to a player
 				if ( spectatorClientNum != -1 )
 				{
 					// Client spectates someone (includes killcam)

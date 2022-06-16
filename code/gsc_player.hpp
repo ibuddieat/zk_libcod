@@ -61,6 +61,7 @@ void gsc_player_kick2();
 void gsc_player_noclip(scr_entref_t id);
 void gsc_player_getinactivitytime(scr_entref_t id);
 void gsc_player_set_earthquakes(scr_entref_t id);
+void gsc_player_earthquakeforplayer(scr_entref_t id);
 void gsc_player_playfxforplayer(scr_entref_t id);
 void gsc_player_playfxontagforplayer(scr_entref_t id);
 void gsc_player_getclienthudelemcount(scr_entref_t id);

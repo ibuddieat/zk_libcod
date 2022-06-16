@@ -389,6 +389,7 @@ scr_method_t scriptMethods[] =
 	{"noclip", gsc_player_noclip, 0},
 	{"getinactivitytime", gsc_player_getinactivitytime, 0},
 	{"setearthquakes", gsc_player_set_earthquakes, 0},
+	{"earthquakeforplayer", gsc_player_earthquakeforplayer, 0},
 	{"playfxforplayer", gsc_player_playfxforplayer, 0},
 	{"playfxontagforplayer", gsc_player_playfxontagforplayer, 0},
 	{"getclienthudelemcount", gsc_player_getclienthudelemcount, 0},

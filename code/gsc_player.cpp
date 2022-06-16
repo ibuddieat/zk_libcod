@@ -1125,6 +1125,53 @@ void gsc_player_set_earthquakes(scr_entref_t id)
 	stackPushInt(!player_no_earthquakes[id]);
 }
 
+void gsc_player_earthquakeforplayer(scr_entref_t id)
+{
+	float scale;
+	float duration;
+	vec3_t source;
+	float radius;
+
+	if ( !stackGetParams("ffvf", &scale, &duration, &source, &radius) )
+	{
+		stackError("gsc_player_earthquakeforplayer() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if (id >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_earthquakeforplayer() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	duration = floorf((duration * 1000.0) + 0.5);
+
+	if ( scale <= 0.0 )
+	{
+		Scr_ParamError(0, "Scale must be greater than 0");
+	}
+
+	if ( (int)duration < 1 )
+	{
+		Scr_ParamError(1, "duration must be greater than 0");
+	}
+
+	if ( radius <= 0.0 )
+	{
+		Scr_ParamError(3, "Radius must be greater than 0");
+	}
+
+	gentity_t *ent = G_TempEntity(&source, EV_EARTHQUAKE);
+	ent->s.angles2[0] = scale;
+	ent->s.time = (int)duration;
+	ent->s.angles2[1] = radius;
+	ent->s.otherEntityNum = id + 1;
+
+	stackPushBool(qtrue);
+}
+
 void gsc_player_playfxforplayer(scr_entref_t id)
 {
 	int args;
