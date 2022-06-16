@@ -48,16 +48,31 @@ Module: Callbacks<BR>
 <PRE>
 CodeCallback_MapWeaponsLoad(num, info)
 {
+    level.map_weapons = [];
     // Spawn weapons as if the callback wouldn't exist
     for(i = 0; i < (num * 4); i += 4) {
-        classname = info[i];
-        origin = info[i + 1];
-        angles = info[i + 2];
-        count = info[i + 3];
-        precacheItem(getSubStr(classname, 7));
-        ent = spawn(classname, origin);
-        ent.count = count;
-        ent.angles = angles;
+        weapon = spawnStruct();
+        weapon.classname = info[i];
+        weapon.origin = info[i + 1];
+        weapon.angles = info[i + 2];
+        weapon.count = info[i + 3];
+        precacheItem(getSubStr(weapon.classname, 7));
+        level.map_weapons[level.map_weapons.size] = weapon;
+    }
+    level thread MapWeaponsSpawn();
+}
+
+MapWeaponsSpawn()
+{
+    wait 0.05; // Required for libcod weapon functions to work properly at that point
+    for(i = 0; i < level.map_weapons.size; i++) {
+        item = level.map_weapons[i];
+        ent = spawn(item.classname, item.origin);
+        if(!item.count)
+            item.count = getWeaponMaxAmmo(getSubStr(item.classname, 7));
+        ent setWeaponItemAmmo(item.count);
+        ent.count = item.count;
+        ent.angles = item.angles;
         ent setModel("");
     }
 }
