@@ -57,7 +57,7 @@ function collapseAll()
 	collapse("mysql");
 	collapse("player");
 	collapse("system");
-	collapse("utils");
+	collapse("turret");
 	collapse("weapons");
 	
 	collapse("Callbacks");
@@ -112,7 +112,7 @@ function expandAll()
 	expand("mysql");
 	expand("player");
 	expand("system");
-	expand("utils");
+	expand("turret");
 	expand("weapons");
 	
 	expand("Callbacks");
@@ -170,6 +170,7 @@ function expandAll()
 <A HREF="libcod/callbacks/dprintf.htm" TARGET="main" >Debug Prints</a><br>
 <A HREF="libcod/callbacks/error.htm" TARGET="main" >Errors</a><br>
 <A HREF="libcod/callbacks/firegrenade.htm" TARGET="main" >Grenade Spawns</a><br>
+<A HREF="libcod/callbacks/mapturretsload.htm" TARGET="main" >Map Turrets Load</a><br>
 <A HREF="libcod/callbacks/mapweaponsload.htm" TARGET="main" >Map Weapons Load</a><br>
 <A HREF="libcod/callbacks/pickup.htm" TARGET="main" >Pickup</a><br>
 <A HREF="libcod/callbacks/playercommand.htm" TARGET="main" >Player Commands</a><br>
@@ -331,29 +332,30 @@ function expandAll()
 </div>
 <SPAN CLASS='class1'><a href="" onClick="switchMenu('system'); return false;" title='Expand/Collapse System'>System</a><br></SPAN>
 <div id='system' CLASS='cmdlist'>
+<A HREF="libcod/system/cmd_executestring.htm" TARGET="main" >Cmd_ExecuteString</a><br>
+<A HREF="libcod/system/file_exists.htm" TARGET="main" >file_exists</a><br>
+<A HREF="libcod/system/file_link.htm" TARGET="main" >file_link</a><br>
+<A HREF="libcod/system/file_unlink.htm" TARGET="main" >file_unlink</a><br>
+<A HREF="libcod/system/float.htm" TARGET="main" >float</a><br>
+<A HREF="libcod/system/fs_loaddir.htm" TARGET="main" >FS_LoadDir</a><br>
+<A HREF="libcod/system/getascii.htm" TARGET="main" >getAscii</a><br>
+<A HREF="libcod/system/getlasttestclientnumber.htm" TARGET="main" >getLastTestClientNumber</a><br>
+<A HREF="libcod/system/getlocaltime.htm" TARGET="main" >getLocalTime</a><br>
+<A HREF="libcod/system/getserverstarttime.htm" TARGET="main" >getServerStartTime</a><br>
+<A HREF="libcod/system/getsysmilliseconds.htm" TARGET="main" >getSysMilliseconds</a><br>
+<A HREF="libcod/system/getsystemtime.htm" TARGET="main" >getSystemTime</a><br>
+<A HREF="libcod/system/gettype.htm" TARGET="main" >getType</a><br>
 <A HREF="libcod/system/logprintconsole.htm" TARGET="main" >logPrintConsole</a><br>
+<A HREF="libcod/system/printf.htm" TARGET="main" >printf</a><br>
+<A HREF="libcod/system/sendgameservercommand.htm" TARGET="main" >sendGameServerCommand</a><br>
+<A HREF="libcod/system/sprintf.htm" TARGET="main" >sprintf</a><br>
+<A HREF="libcod/system/sqrt.htm" TARGET="main" >sqrt</a><br>
+<A HREF="libcod/system/sqrtInv.htm" TARGET="main" >sqrtInv</a><br>
+<A HREF="libcod/system/system.htm" TARGET="main" >system</a><br>
 </div>
-<SPAN CLASS='class1'><a href="" onClick="switchMenu('utils'); return false;" title='Expand/Collapse Utils'>Utils</a><br></SPAN>
-<div id='utils' CLASS='cmdlist'>
-<A HREF="libcod/utils/cmd_executestring.htm" TARGET="main" >Cmd_ExecuteString</a><br>
-<A HREF="libcod/utils/file_exists.htm" TARGET="main" >file_exists</a><br>
-<A HREF="libcod/utils/file_link.htm" TARGET="main" >file_link</a><br>
-<A HREF="libcod/utils/file_unlink.htm" TARGET="main" >file_unlink</a><br>
-<A HREF="libcod/utils/float.htm" TARGET="main" >float</a><br>
-<A HREF="libcod/utils/fs_loaddir.htm" TARGET="main" >FS_LoadDir</a><br>
-<A HREF="libcod/utils/getascii.htm" TARGET="main" >getAscii</a><br>
-<A HREF="libcod/utils/getlasttestclientnumber.htm" TARGET="main" >getLastTestClientNumber</a><br>
-<A HREF="libcod/utils/getlocaltime.htm" TARGET="main" >getLocalTime</a><br>
-<A HREF="libcod/utils/getserverstarttime.htm" TARGET="main" >getServerStartTime</a><br>
-<A HREF="libcod/utils/getsysmilliseconds.htm" TARGET="main" >getSysMilliseconds</a><br>
-<A HREF="libcod/utils/getsystemtime.htm" TARGET="main" >getSystemTime</a><br>
-<A HREF="libcod/utils/gettype.htm" TARGET="main" >getType</a><br>
-<A HREF="libcod/utils/printf.htm" TARGET="main" >printf</a><br>
-<A HREF="libcod/utils/sendgameservercommand.htm" TARGET="main" >sendGameServerCommand</a><br>
-<A HREF="libcod/utils/sprintf.htm" TARGET="main" >sprintf</a><br>
-<A HREF="libcod/utils/sqrt.htm" TARGET="main" >sqrt</a><br>
-<A HREF="libcod/utils/sqrtInv.htm" TARGET="main" >sqrtInv</a><br>
-<A HREF="libcod/utils/system.htm" TARGET="main" >system</a><br>
+<SPAN CLASS='class1'><a href="" onClick="switchMenu('turret'); return false;" title='Expand/Collapse Turret'>Turret</a><br></SPAN>
+<div id='Turret' CLASS='cmdlist'>
+<A HREF="libcod/turret/isusingturret.htm" TARGET="main" >isUsingTurret</a><br>
 </div>
 <SPAN CLASS='class1'><a href="" onClick="switchMenu('weapons'); return false;" title='Expand/Collapse Weapons'>Weapons</a><br></SPAN>
 <div id='weapons' CLASS='cmdlist'>

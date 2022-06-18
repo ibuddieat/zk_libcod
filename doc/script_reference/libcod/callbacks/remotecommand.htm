@@ -27,7 +27,7 @@ Module: Callbacks<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Calls CodeCallback_RemoteCommand() in maps/mp/gametypes/_callbacksetup.gsc when an authenticated remote (rcon) command is received. Requires self RemoteCommand(from, messagePointer); to be executed for the command to be processed as usual. Commands not causing this callback to be invoked are:</p>
+<p>Calls CodeCallback_RemoteCommand() in maps/mp/gametypes/_callbacksetup.gsc when an authenticated remote (rcon) command is received. Requires self remoteCommand(from, messagePointer); to be executed for the command to be processed as usual. Commands not causing this callback to be invoked are:</p>
 <UL>
 <LI>map</LI>
 <LI>devmap</LI>
@@ -56,7 +56,7 @@ Module: Callbacks<BR>
 CodeCallback_RemoteCommand(from, message, messagePointer)
 {
     // Parse command for further actions
-    RemoteCommand(from, messagePointer);
+    remoteCommand(from, messagePointer);
 }
 </PRE>
 </H3>

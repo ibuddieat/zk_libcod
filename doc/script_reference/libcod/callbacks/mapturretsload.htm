@@ -1,0 +1,98 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>Map Turrets Load</H1>
+<HR>
+<BODY BGCOLOR='B0C4DE'>
+<I>
+Module: Callbacks<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Calls CodeCallback_MapTurretsLoad() in maps/mp/gametypes/_callbacksetup.gsc right after <a href="mapweaponsload.htm">Map Weapons Load</a>, once on server start and again for every map change. If the value of the g_spawnMapTurrets cvar equals false, information about turrets that would have been loaded from the map file is provided and the turrets are neither spawned, nor precached.</p>
+</H3>
+</TR></TD></TABLE>
+<p>Note: The existance of the callback function is checked only once on server start. Functions added later are not taken into account, even after a map switch.</p>
+
+<BR><BR>
+<H2>Parameters:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;num&gt;: Number of turrets loaded from the map file, or zero if the value of the g_spawnMapTurrets cvar equals true.</LI>
+<LI>2 : &lt;info&gt; Array of size 11 * num, or undefined if the value of the g_spawnMapTurrets cvar equals true. Provides the following attributes for each turret: classname (string), origin (vector), angles (vector), toparc (int), bottomarc (int), leftarc (int), rightarc (int), model (string), weaponinfo (string), export (int), script_gameobjectname (string).</LI>
+</UL></TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+CodeCallback_MapTurretsLoad(num, info)
+{
+    level.map_turrets = [];
+    // Spawn turrets as if the callback wouldn't exist
+    for(i = 0; i < (num * 11); i += 11) {
+        turret = spawnStruct();
+        turret.classname = info[i];
+        turret.origin = info[i + 1];
+        turret.angles = info[i + 2];
+        turret.toparc = info[i + 3];
+        turret.bottomarc = info[i + 4];
+        turret.leftarc = info[i + 5];
+        turret.rightarc = info[i + 6];
+        turret.model = info[i + 7];
+        turret.weaponinfo = info[i + 8];
+        turret.export = info[i + 9];
+        turret.script_gameobjectname = info[i + 10];
+        precacheTurret(turret.weaponinfo);
+        level.map_turrets[level.map_turrets.size] = turret;
+    }
+    level thread MapTurretsSpawn();
+}
+
+MapTurretsSpawn()
+{
+    wait 0.05; // Required for libcod weapon functions to work properly at that point
+    for(i = 0; i < level.map_turrets.size; i++) {
+        turret = level.map_turrets[i];
+        if(turret.script_gameobjectname != getCvar("g_gametype") && turret.script_gameobjectname != "")
+            continue;
+        ent = spawnTurret(turret.classname, turret.origin, turret.weaponinfo);
+        ent.angles = turret.angles;            
+        ent setModel(turret.model);
+        if(turret.toparc != -1)
+            ent setTopArc(turret.toparc);
+        if(turret.bottomarc != -1)
+            ent setBottomArc(turret.bottomarc);
+        if(turret.leftarc != -1)
+            ent setLeftArc(turret.leftarc);
+        if(turret.rightarc != -1)
+            ent setRightArc(turret.rightarc);
+        ent.weaponinfo = turret.weaponinfo;
+    }
+}
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>
