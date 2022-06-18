@@ -1110,6 +1110,33 @@ static const G_GetItemForClassname_t G_GetItemForClassname = (G_GetItemForClassn
 static const G_GetItemForClassname_t G_GetItemForClassname = (G_GetItemForClassname_t)0x0811A9BA;
 #endif
 
+typedef void (*G_SetOrigin_t)(gentity_t *ent, vec3_t *origin);
+#if COD_VERSION == COD2_1_0
+static const G_SetOrigin_t G_SetOrigin = (G_SetOrigin_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_SetOrigin_t G_SetOrigin = (G_SetOrigin_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_SetOrigin_t G_SetOrigin = (G_SetOrigin_t)0x0811F3C6;
+#endif
+
+typedef void (*G_SetAngle_t)(gentity_t *ent, vec3_t *angle);
+#if COD_VERSION == COD2_1_0
+static const G_SetAngle_t G_SetAngle = (G_SetAngle_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_SetAngle_t G_SetAngle = (G_SetAngle_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_SetAngle_t G_SetAngle = (G_SetAngle_t)0x0811F426;
+#endif
+
+typedef void (*G_ParseEntityField_t)(const char *key, const char *value, gentity_t *ent);
+#if COD_VERSION == COD2_1_0
+static const G_ParseEntityField_t G_ParseEntityField = (G_ParseEntityField_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_ParseEntityField_t G_ParseEntityField = (G_ParseEntityField_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_ParseEntityField_t G_ParseEntityField = (G_ParseEntityField_t)0x0811A610;
+#endif
+
 typedef void (*G_SetEntityPlacement_t)(gentity_t *ent); // Guessed function name
 #if COD_VERSION == COD2_1_0
 static const G_SetEntityPlacement_t G_SetEntityPlacement = (G_SetEntityPlacement_t)0x0; // Not tested

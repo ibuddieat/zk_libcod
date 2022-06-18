@@ -2923,3 +2923,18 @@ typedef struct map_weapon_s
 	vec3_t angles;
 	int count;
 } map_weapon_t;
+
+typedef struct map_turret_s
+{
+	char classname[COD2_MAX_STRINGLENGTH]; // Not sure if a classname can actually be that long
+	vec3_t origin;
+	vec3_t angles;
+	int toparc;
+	int bottomarc;
+	int leftarc;
+	int rightarc;
+	char model[MAX_OSPATH];
+	char weaponinfo[MAX_OSPATH];
+	int script_export;
+	char script_gameobjectname[MAX_QPATH];
+} map_turret_t;

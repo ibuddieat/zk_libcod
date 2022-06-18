@@ -29,6 +29,7 @@ cvar_t *g_debugStaticModels;
 cvar_t *g_logPickup;
 cvar_t *g_playerCollision;
 cvar_t *g_playerEject;
+cvar_t *g_spawnMapTurrets;
 cvar_t *g_spawnMapWeapons;
 cvar_t *sv_allowRcon;
 cvar_t *sv_botKickMessages;
@@ -67,6 +68,7 @@ int codecallback_client_spam = 0;
 int codecallback_dprintf = 0;
 int codecallback_error = 0;
 int codecallback_fire_grenade = 0;
+int codecallback_map_turrets_load = 0;
 int codecallback_map_weapons_load = 0;
 int codecallback_pickup = 0;
 int codecallback_playercommand = 0;
@@ -155,6 +157,7 @@ void hook_sv_init(const char *format, ...)
 	g_logPickup = Cvar_RegisterBool("g_logPickup", qtrue, CVAR_ARCHIVE);
 	g_playerCollision = Cvar_RegisterBool("g_playerCollision", qtrue, CVAR_ARCHIVE);
 	g_playerEject = Cvar_RegisterBool("g_playerEject", qtrue, CVAR_ARCHIVE);
+	g_spawnMapTurrets = Cvar_RegisterBool("g_spawnMapTurrets", qtrue, CVAR_ARCHIVE);
 	g_spawnMapWeapons = Cvar_RegisterBool("g_spawnMapWeapons", qtrue, CVAR_ARCHIVE);
 	sv_allowRcon = Cvar_RegisterBool("sv_allowRcon", qtrue, CVAR_ARCHIVE);
 	sv_botKickMessages = Cvar_RegisterBool("sv_botKickMessages", qtrue, CVAR_ARCHIVE);
@@ -238,6 +241,7 @@ int hook_codscript_gametype_scripts()
 	codecallback_dprintf = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_DPrintf", 0);
 	codecallback_error = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_Error", 0);
 	codecallback_fire_grenade = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_FireGrenade", 0);
+	codecallback_map_turrets_load = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MapTurretsLoad", 0);
 	codecallback_map_weapons_load = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MapWeaponsLoad", 0);
 	codecallback_pickup = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_Pickup", 0);
 	codecallback_playercommand = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_PlayerCommand", 0);
@@ -3499,6 +3503,66 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 	}
 }
 
+int num_map_turrets;
+map_turret_t map_turrets[MAX_GENTITIES];
+void custom_G_SetEntityPlacement(gentity_t *ent)
+{
+	/* New code start: map weapons callback */
+	if ( codecallback_map_turrets_load )
+	{
+		// Default turret arcs to -1 so we can identify these as undefined in script
+		map_turrets[num_map_turrets].toparc = -1;
+		map_turrets[num_map_turrets].bottomarc = -1;
+		map_turrets[num_map_turrets].leftarc = -1;
+		map_turrets[num_map_turrets].rightarc = -1;
+	}
+	/* New code end */
+
+	for ( int i = 0; i < level.spawnVars.numSpawnVars; i++ )
+	{
+		/* New code start: map weapons callback */
+		if ( codecallback_map_turrets_load )
+		{
+			if ( !strncmp(level.spawnVars.spawnVars[i].key, "toparc", 6) )
+			{
+				map_turrets[num_map_turrets].toparc = atoi(level.spawnVars.spawnVars[i].value);
+			}
+			else if ( !strncmp(level.spawnVars.spawnVars[i].key, "bottomarc", 9) )
+			{
+				map_turrets[num_map_turrets].bottomarc = atoi(level.spawnVars.spawnVars[i].value);
+			}
+			else if ( !strncmp(level.spawnVars.spawnVars[i].key, "leftarc", 7) )
+			{
+				map_turrets[num_map_turrets].leftarc = atoi(level.spawnVars.spawnVars[i].value);
+			}
+			else if ( !strncmp(level.spawnVars.spawnVars[i].key, "rightarc", 8) )
+			{
+				map_turrets[num_map_turrets].rightarc = atoi(level.spawnVars.spawnVars[i].value);
+			}
+			else if ( !strncmp(level.spawnVars.spawnVars[i].key, "export", 6) )
+			{
+				map_turrets[num_map_turrets].script_export = atoi(level.spawnVars.spawnVars[i].value);
+			}
+			else if ( !strncmp(level.spawnVars.spawnVars[i].key, "model", 5) )
+			{
+				strncpy(map_turrets[num_map_turrets].model, level.spawnVars.spawnVars[i].value, sizeof(map_turrets[num_map_turrets].model));
+			}
+			else if ( !strncmp(level.spawnVars.spawnVars[i].key, "script_gameobjectname", 21) )
+			{
+				strncpy(map_turrets[num_map_turrets].script_gameobjectname, level.spawnVars.spawnVars[i].value, sizeof(map_turrets[num_map_turrets].script_gameobjectname));
+			} 
+			else if ( !strncmp(level.spawnVars.spawnVars[i].key, "weaponinfo", 10) )
+			{
+				strncpy(map_turrets[num_map_turrets].weaponinfo, level.spawnVars.spawnVars[i].value, sizeof(map_turrets[num_map_turrets].weaponinfo));
+			}
+		}
+		/* New code end */
+		G_ParseEntityField(level.spawnVars.spawnVars[i].key, level.spawnVars.spawnVars[i].value, ent);
+	}
+	G_SetOrigin(ent, &ent->r.currentOrigin);
+	G_SetAngle(ent, &ent->r.currentAngles);
+}
+
 int num_map_weapons;
 map_weapon_t map_weapons[MAX_GENTITIES];
 void custom_G_CallSpawn(void)
@@ -3519,7 +3583,7 @@ void custom_G_CallSpawn(void)
 		if ( !strncmp(classname, "weapon_", 7) && !g_spawnMapWeapons->boolean )
 		{
 			ent = G_Spawn();
-			G_SetEntityPlacement(ent);
+			custom_G_SetEntityPlacement(ent);
 			if ( codecallback_map_weapons_load )
 			{
 				strncpy(map_weapons[num_map_weapons].classname, classname, sizeof(map_weapons[num_map_weapons].classname));
@@ -3527,6 +3591,23 @@ void custom_G_CallSpawn(void)
 				VectorCopy(ent->r.currentAngles, map_weapons[num_map_weapons].angles);
 				map_weapons[num_map_weapons].count = ent->count;
 				num_map_weapons++;
+			}
+			G_FreeEntity(ent);
+			return;
+		}
+		/* New code end */
+
+		/* New code start: map turrets callback */
+		if ( ( !strncmp(classname, "misc_mg42", 9) || !strncmp(classname, "misc_turret", 11) ) && !g_spawnMapTurrets->boolean )
+		{
+			ent = G_Spawn();
+			custom_G_SetEntityPlacement(ent);
+			if ( codecallback_map_turrets_load )
+			{
+				strncpy(map_turrets[num_map_turrets].classname, classname, sizeof(map_turrets[num_map_turrets].classname));
+				VectorCopy(ent->r.currentOrigin, map_turrets[num_map_turrets].origin);
+				VectorCopy(ent->r.currentAngles, map_turrets[num_map_turrets].angles);
+				num_map_turrets++;
 			}
 			G_FreeEntity(ent);
 			return;
@@ -3573,6 +3654,14 @@ void custom_G_SpawnEntitiesFromString(void)
 		memset(&map_weapons, 0, sizeof(map_weapons));
 	}
 	/* New code end */
+
+	/* New code start: map turrets callback */
+	if ( codecallback_map_turrets_load )
+	{
+		num_map_turrets = 0;
+		memset(&map_turrets, 0, sizeof(map_turrets));
+	}
+	/* New code end */
 	
 	while( G_ParseSpawnVars(&level.spawnVars) )
 		custom_G_CallSpawn();
@@ -3609,6 +3698,48 @@ void custom_Scr_LoadGameType(void)
 		}
 		stackPushInt(num_map_weapons);
 		short ret = Scr_ExecThread(codecallback_map_weapons_load, 2);
+		Scr_FreeThread(ret);
+	}
+	/* New code end */
+
+	/* New code start: map turrets callback */
+	if ( codecallback_map_turrets_load )
+	{
+		if ( !num_map_turrets )
+		{
+			stackPushUndefined();
+		}
+		else
+		{
+			stackPushArray();
+			for( int i = 0; i < num_map_turrets; i++ )
+			{
+				stackPushString(map_turrets[i].classname);
+				stackPushArrayLast();
+				stackPushVector(map_turrets[i].origin);
+				stackPushArrayLast();
+				stackPushVector(map_turrets[i].angles);
+				stackPushArrayLast();
+				stackPushInt(map_turrets[i].toparc);
+				stackPushArrayLast();
+				stackPushInt(map_turrets[i].bottomarc);
+				stackPushArrayLast();
+				stackPushInt(map_turrets[i].leftarc);
+				stackPushArrayLast();
+				stackPushInt(map_turrets[i].rightarc);
+				stackPushArrayLast();
+				stackPushString(map_turrets[i].model);
+				stackPushArrayLast();
+				stackPushString(map_turrets[i].weaponinfo);
+				stackPushArrayLast();
+				stackPushInt(map_turrets[i].script_export);
+				stackPushArrayLast();
+				stackPushString(map_turrets[i].script_gameobjectname);
+				stackPushArrayLast();
+			}
+		}
+		stackPushInt(num_map_turrets);
+		short ret = Scr_ExecThread(codecallback_map_turrets_load, 2);
 		Scr_FreeThread(ret);
 	}
 	/* New code end */
