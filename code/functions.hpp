@@ -1164,7 +1164,7 @@ static const G_GeneralLink_t G_GeneralLink = (G_GeneralLink_t)0x0; // Not tested
 static const G_GeneralLink_t G_GeneralLink = (G_GeneralLink_t)0x0811E316;
 #endif
 
-typedef void (*G_SpawnItem_t)(gentity_s *ent, gitem_t *item);
+typedef void (*G_SpawnItem_t)(gentity_t *ent, gitem_t *item);
 #if COD_VERSION == COD2_1_0
 static const G_SpawnItem_t G_SpawnItem = (G_SpawnItem_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
@@ -1189,6 +1189,15 @@ static const G_AddPredictableEvent_t G_AddPredictableEvent = (G_AddPredictableEv
 static const G_AddPredictableEvent_t G_AddPredictableEvent = (G_AddPredictableEvent_t)0x0811F0A0;
 #elif COD_VERSION == COD2_1_3
 static const G_AddPredictableEvent_t G_AddPredictableEvent = (G_AddPredictableEvent_t)0x0811F1FC;
+#endif
+
+typedef void (*G_ClientStopUsingTurret_t)(gentity_t *turret);
+#if COD_VERSION == COD2_1_0
+static const G_ClientStopUsingTurret_t G_ClientStopUsingTurret = (G_ClientStopUsingTurret_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_ClientStopUsingTurret_t G_ClientStopUsingTurret = (G_ClientStopUsingTurret_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_ClientStopUsingTurret_t G_ClientStopUsingTurret = (G_ClientStopUsingTurret_t)0x0810B9A4;
 #endif
 
 typedef playerState_t * (*SV_GameClientNum_t)(int num);

@@ -20,7 +20,8 @@ Reconstructed game functions:
   * `RuntimeError_Debug`
   * `RuntimeError`
   * `CM_IsBadStaticModel` for `g_debugStaticModels` (this function name is a guess)
-  * `G_SpawnEntitiesFromString` et sequentes to provide map weapon info via CodeCallback_MapWeapons
+  * `G_SpawnEntitiesFromString` et sequentes to provide map weapon/turret info via new script callback functions
+  * `G_SetEntityPlacement` (this function name is a guess)
   * `G_CallSpawn`
   * `SV_WWWRedirectClient` for `sv_wwwDlDisconnectedMessages`
   * `SV_MapExists` for manymaps support

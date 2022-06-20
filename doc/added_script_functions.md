@@ -14,6 +14,7 @@ Added script code functions:
   * `<player> runScriptAnimation(<scriptAnimEventType>, <isContinue>, <force>)`
   * `<player> setEarthquakes("on|off|toggle")`
   * `<player> silent("on|off|toggle")`
+  * `<player> stopUseTurret()`
   * `<weapon> getWeaponItemAmmo()`
   * `<weapon> setWeaponItemAmmo(<value>)`
   * `getWeaponFuseTime(<weapon name>)`

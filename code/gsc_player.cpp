@@ -678,6 +678,29 @@ void gsc_player_isusingturret(scr_entref_t id)
 	stackPushBool(entity->s.eFlags & EF_USETURRET ? qtrue : qfalse);
 }
 
+void gsc_player_stopuseturret(scr_entref_t id)
+{
+	gentity_t *entity = &g_entities[id];
+
+	if (entity->client == NULL)
+	{
+		stackError("gsc_player_stopuseturret() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( entity->client->ps.pm_flags & PMF_VIEWLOCKED && entity->s.eFlags & EF_USETURRET )
+	{
+		G_ClientStopUsingTurret(&level.gentities[entity->client->ps.viewlocked_entNum]);
+		stackPushBool(qtrue);
+	}
+	else
+	{
+		stackPushBool(qfalse);
+	}
+
+}
+
 void gsc_player_getjumpslowdowntimer(scr_entref_t id)
 {
 	if (id >= MAX_CLIENTS)

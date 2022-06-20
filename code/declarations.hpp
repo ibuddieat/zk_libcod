@@ -2573,6 +2573,7 @@ struct va_info_t
 #define PMF_SLIDING 			512
 #define PMF_MELEE 				8192
 #define PMF_JUMPING 			524288
+#define PMF_VIEWLOCKED			8388608 // name guessed
 #define PMF_SPECTATING 			16777216
 #define PMF_DISABLEWEAPON 		67108864
 

@@ -3,16 +3,16 @@
 This extension ...
 - provides interoperability between the Call of Duty&reg; 2 server and other software components and/or advanced game modifications (so-called "mods")
 - intends to improve the overall game experience and security as the extended software (Call of Duty&reg; 2) is not maintained anymore since more than a decade
-- has its focus on Call of Duty&reg; 2 in version 1.3, other versions are not fully supported (unless the respective offsets/structs are added)
+- has its focus on Call of Duty&reg; 2 Multiplayer in version 1.3, other versions are not fully supported (unless the respective offsets/structs are added)
 - was implemented for non-profit and educational purposes
 
 List of high-level changes provided by this repository:
 - [Added cvars](doc/added_cvars.md)
+- [Added script callback functions](doc/added_script_callback_functions.md)
 - [Added script code functions](doc/added_script_functions.md)
 - Changed script code functions:
   * `<player> get_userinfo()` now returns strings only, instead of string or undefined
   * `obituary(<victim>, <attacker>, <weapon>, <meansOfDeath>, [<team>], [<origin>], [<max. distance>])`
-- [Added script callback functions](doc/added_script_callback_functions.md)
 - [Reconstructed some game functions](doc/reconstructed_functions.md) to be able to implement the extensions mentioned above
 - Patched `Com_PrintMessage` so that strings that begin with a caret are printed properly
 - Added compile flag `ENABLE_UNSAFE` to toggle the availability of potentially unsafe script functions that would make it easy to harm the server with malicious map scripts
