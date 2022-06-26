@@ -11,9 +11,7 @@
 - [Added cvars](doc/added_cvars.md)
 - [Added script callback functions](doc/added_script_callback_functions.md)
 - [Added script code functions](doc/added_script_functions.md)
-- Changed script code functions:
-  * `<player> get_userinfo()` now returns strings only, instead of string or undefined
-  * `obituary(<victim>, <attacker>, <weapon>, <meansOfDeath>, [<team>], [<origin>], [<max. distance>])`
+- [Changed script code functions](doc/changed_script_functions.md)
 - [Reconstructed some game functions](doc/reconstructed_functions.md) to be able to implement the extensions mentioned above
 - Patched `Com_PrintMessage` so that strings that begin with a caret are printed properly
 - Added compile flag `ENABLE_UNSAFE` to toggle the availability of potentially unsafe script functions that would make it easy to harm the server with malicious map scripts
@@ -44,6 +42,7 @@ cd code
 ```
 
 **Initial fork path**
+<br>A big thank you to everyone involved in the development of the following projects:
 <pre>
   Code:
 https://github.com/ibuddieat/zk_libcod (this repository)
@@ -67,4 +66,8 @@ We then started to add more and more functions to our fork, and especially since
 - Enemy-Territory (https://github.com/id-Software/Enemy-Territory)
 - CoD4x Server (https://github.com/callofduty4x/CoD4x_Server)
 - Ghidra (https://github.com/NationalSecurityAgency/ghidra)
-- \*.ZK.\* Zombie Knights (https://discord.gg/8g9uWW5)
+- \*.ZK.\* Zombie Knights (https://discord.gg/f9uS49Hhcs)
+
+**Further notes**
+
+The release notes are aligned with other (private) \*.ZK.\* repositories, therefore these notes do not necessarily reflect what is new in *this* repository. This might change in the future.

@@ -26,4 +26,4 @@ Reconstructed game functions:
   * `SV_WWWRedirectClient` for `sv_wwwDlDisconnectedMessages`
   * `SV_MapExists` for manymaps support
 
-Note: Usually they can be found with the `custom_` prefix in [libcod.cpp](../code/libcod.cpp).
+Note: Usually they can be found with the `custom_` prefix in [libcod.cpp](../code/libcod.cpp). Also, this list does not include simple hooks that call the original game function.
