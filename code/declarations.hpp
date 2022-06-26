@@ -2861,6 +2861,14 @@ static const int spawns_offset = 0x0;
 static const int spawns_offset = 0x08188A00;
 #endif
 
+#if COD_VERSION == COD2_1_0  // Not tested
+static const int entity_event_names_offset = 0x0;
+#elif COD_VERSION == COD2_1_2  // Not tested
+static const int entity_event_names_offset = 0x0;
+#elif COD_VERSION == COD2_1_3
+static const int entity_event_names_offset = 0x08184DA0;
+#endif
+
 #define scrVarPub (*((scrVarPub_t*)( varpub_offset )))
 #define scrVmPub (*((scrVmPub_t*)( vmpub_offset )))
 #define scrVarGlob (((VariableValueInternal*)( varglob_offset )))
@@ -2885,6 +2893,7 @@ static const int spawns_offset = 0x08188A00;
 #define bg_itemlist (*((gitem_t*)( bg_itemlist_offset )))
 #define g_hudelems (*((game_hudelem_t*)( g_hudelems_offset )))
 #define spawns (*((int**)( spawns_offset )))
+#define entity_event_names (*((const char**)( entity_event_names_offset )))
 
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6

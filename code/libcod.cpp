@@ -603,214 +603,12 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 	}
 }
 
-char const *eventnames[] = {
-	"EV_NONE",
-	"EV_FOOTSTEP_RUN_DEFAULT",
-	"EV_FOOTSTEP_RUN_BARK",
-	"EV_FOOTSTEP_RUN_BRICK",
-	"EV_FOOTSTEP_RUN_CARPET",
-	"EV_FOOTSTEP_RUN_CLOTH",
-	"EV_FOOTSTEP_RUN_CONCRETE",
-	"EV_FOOTSTEP_RUN_DIRT",
-	"EV_FOOTSTEP_RUN_FLESH",
-	"EV_FOOTSTEP_RUN_FOLIAGE",
-	"EV_FOOTSTEP_RUN_GLASS", // 10
-	"EV_FOOTSTEP_RUN_GRASS",
-	"EV_FOOTSTEP_RUN_GRAVEL",
-	"EV_FOOTSTEP_RUN_ICE",
-	"EV_FOOTSTEP_RUN_METAL",
-	"EV_FOOTSTEP_RUN_MUD",
-	"EV_FOOTSTEP_RUN_PAPER",
-	"EV_FOOTSTEP_RUN_PLASTER",
-	"EV_FOOTSTEP_RUN_ROCK",
-	"EV_FOOTSTEP_RUN_SAND",
-	"EV_FOOTSTEP_RUN_SNOW", // 20
-	"EV_FOOTSTEP_RUN_WATER",
-	"EV_FOOTSTEP_RUN_WOOD",
-	"EV_FOOTSTEP_RUN_ASPHALT",
-	"EV_FOOTSTEP_WALK_DEFAULT",
-	"EV_FOOTSTEP_WALK_BARK",
-	"EV_FOOTSTEP_WALK_BRICK",
-	"EV_FOOTSTEP_WALK_CARPET",
-	"EV_FOOTSTEP_WALK_CLOTH",
-	"EV_FOOTSTEP_WALK_CONCRETE",
-	"EV_FOOTSTEP_WALK_DIRT", // 30
-	"EV_FOOTSTEP_WALK_FLESH",
-	"EV_FOOTSTEP_WALK_FOLIAGE",
-	"EV_FOOTSTEP_WALK_GLASS",
-	"EV_FOOTSTEP_WALK_GRASS",
-	"EV_FOOTSTEP_WALK_GRAVEL",
-	"EV_FOOTSTEP_WALK_ICE",
-	"EV_FOOTSTEP_WALK_METAL",
-	"EV_FOOTSTEP_WALK_MUD",
-	"EV_FOOTSTEP_WALK_PAPER",
-	"EV_FOOTSTEP_WALK_PLASTER", // 40
-	"EV_FOOTSTEP_WALK_ROCK",
-	"EV_FOOTSTEP_WALK_SAND",
-	"EV_FOOTSTEP_WALK_SNOW",
-	"EV_FOOTSTEP_WALK_WATER",
-	"EV_FOOTSTEP_WALK_WOOD",
-	"EV_FOOTSTEP_WALK_ASPHALT",
-	"EV_FOOTSTEP_PRONE_DEFAULT",
-	"EV_FOOTSTEP_PRONE_BARK",
-	"EV_FOOTSTEP_PRONE_BRICK",
-	"EV_FOOTSTEP_PRONE_CARPET", // 50
-	"EV_FOOTSTEP_PRONE_CLOTH",
-	"EV_FOOTSTEP_PRONE_CONCRETE",
-	"EV_FOOTSTEP_PRONE_DIRT",
-	"EV_FOOTSTEP_PRONE_FLESH",
-	"EV_FOOTSTEP_PRONE_FOLIAGE",
-	"EV_FOOTSTEP_PRONE_GLASS",
-	"EV_FOOTSTEP_PRONE_GRASS",
-	"EV_FOOTSTEP_PRONE_GRAVEL",
-	"EV_FOOTSTEP_PRONE_ICE",
-	"EV_FOOTSTEP_PRONE_METAL", // 60
-	"EV_FOOTSTEP_PRONE_MUD",
-	"EV_FOOTSTEP_PRONE_PAPER",
-	"EV_FOOTSTEP_PRONE_PLASTER",
-	"EV_FOOTSTEP_PRONE_ROCK",
-	"EV_FOOTSTEP_PRONE_SAND",
-	"EV_FOOTSTEP_PRONE_SNOW",
-	"EV_FOOTSTEP_PRONE_WATER",
-	"EV_FOOTSTEP_PRONE_WOOD",
-	"EV_FOOTSTEP_PRONE_ASPHALT",
-	"EV_JUMP_DEFAULT", // 70
-	"EV_JUMP_BARK",
-	"EV_JUMP_BRICK",
-	"EV_JUMP_CARPET",
-	"EV_JUMP_CLOTH",
-	"EV_JUMP_CONCRETE",
-	"EV_JUMP_DIRT",
-	"EV_JUMP_FLESH",
-	"EV_JUMP_FOLIAGE",
-	"EV_JUMP_GLASS",
-	"EV_JUMP_GRASS", // 80
-	"EV_JUMP_GRAVEL",
-	"EV_JUMP_ICE",
-	"EV_JUMP_METAL",
-	"EV_JUMP_MUD",
-	"EV_JUMP_PAPER",
-	"EV_JUMP_PLASTER",
-	"EV_JUMP_ROCK",
-	"EV_JUMP_SAND",
-	"EV_JUMP_SNOW",
-	"EV_JUMP_WATER", // 90
-	"EV_JUMP_WOOD",
-	"EV_JUMP_ASPHALT",
-	"EV_LANDING_DEFAULT",
-	"EV_LANDING_BARK",
-	"EV_LANDING_BRICK",
-	"EV_LANDING_CARPET",
-	"EV_LANDING_CLOTH",
-	"EV_LANDING_CONCRETE",
-	"EV_LANDING_DIRT",
-	"EV_LANDING_FLESH", // 100
-	"EV_LANDING_FOLIAGE",
-	"EV_LANDING_GLASS",
-	"EV_LANDING_GRASS",
-	"EV_LANDING_GRAVEL",
-	"EV_LANDING_ICE",
-	"EV_LANDING_METAL",
-	"EV_LANDING_MUD",
-	"EV_LANDING_PAPER",
-	"EV_LANDING_PLASTER",
-	"EV_LANDING_ROCK", // 110
-	"EV_LANDING_SAND",
-	"EV_LANDING_SNOW",
-	"EV_LANDING_WATER",
-	"EV_LANDING_WOOD",
-	"EV_LANDING_ASPHALT",
-	"EV_LANDING_PAIN_DEFAULT",
-	"EV_LANDING_PAIN_BARK",
-	"EV_LANDING_PAIN_BRICK",
-	"EV_LANDING_PAIN_CARPET",
-	"EV_LANDING_PAIN_CLOTH", // 120
-	"EV_LANDING_PAIN_CONCRETE",
-	"EV_LANDING_PAIN_DIRT",
-	"EV_LANDING_PAIN_FLESH",
-	"EV_LANDING_PAIN_FOLIAGE",
-	"EV_LANDING_PAIN_GLASS",
-	"EV_LANDING_PAIN_GRASS",
-	"EV_LANDING_PAIN_GRAVEL",
-	"EV_LANDING_PAIN_ICE",
-	"EV_LANDING_PAIN_METAL",
-	"EV_LANDING_PAIN_MUD", // 130
-	"EV_LANDING_PAIN_PAPER",
-	"EV_LANDING_PAIN_PLASTER",
-	"EV_LANDING_PAIN_ROCK",
-	"EV_LANDING_PAIN_SAND",
-	"EV_LANDING_PAIN_SNOW",
-	"EV_LANDING_PAIN_WATER",
-	"EV_LANDING_PAIN_WOOD",
-	"EV_LANDING_PAIN_ASPHALT",
-	"EV_FOLIAGE_SOUND",
-	"EV_STANCE_FORCE_STAND", // 140
-	"EV_STANCE_FORCE_CROUCH",
-	"EV_STANCE_FORCE_PRONE",
-	"EV_STEP_VIEW",
-	"EV_ITEM_PICKUP",
-	"EV_AMMO_PICKUP",
-	"EV_NOAMMO",
-	"EV_EMPTYCLIP",
-	"EV_EMPTY_OFFHAND",
-	"EV_RESET_ADS",
-	"EV_RELOAD", // 150
-	"EV_RELOAD_FROM_EMPTY",
-	"EV_RELOAD_START",
-	"EV_RELOAD_END",
-	"EV_RAISE_WEAPON",
-	"EV_PUTAWAY_WEAPON",
-	"EV_WEAPON_ALT",
-	"EV_PULLBACK_WEAPON",
-	"EV_FIRE_WEAPON",
-	"EV_FIRE_WEAPONB",
-	"EV_FIRE_WEAPON_LASTSHOT", // 160
-	"EV_RECHAMBER_WEAPON",
-	"EV_EJECT_BRASS",
-	"EV_MELEE_SWIPE",
-	"EV_FIRE_MELEE",
-	"EV_PREP_OFFHAND",
-	"EV_USE_OFFHAND",
-	"EV_SWITCH_OFFHAND",
-	"EV_BINOCULAR_ENTER",
-	"EV_BINOCULAR_EXIT",
-	"EV_BINOCULAR_FIRE", // 170
-	"EV_BINOCULAR_RELEASE",
-	"EV_BINOCULAR_DROP",
-	"EV_MELEE_HIT",
-	"EV_MELEE_MISS",
-	"EV_FIRE_WEAPON_MG42",
-	"EV_FIRE_QUADBARREL_1",
-	"EV_FIRE_QUADBARREL_2",
-	"EV_BULLET_TRACER",
-	"EV_SOUND_ALIAS",
-	"EV_SOUND_ALIAS_AS_MASTER", // 180
-	"EV_BULLET_HIT_SMALL",
-	"EV_BULLET_HIT_LARGE",
-	"EV_SHOTGUN_HIT",
-	"EV_BULLET_HIT_AP",
-	"EV_BULLET_HIT_CLIENT_SMALL",
-	"EV_BULLET_HIT_CLIENT_LARGE",
-	"EV_GRENADE_BOUNCE",
-	"EV_GRENADE_EXPLODE",
-	"EV_ROCKET_EXPLODE",
-	"EV_ROCKET_EXPLODE_NOMARKS", // 190
-	"EV_CUSTOM_EXPLODE",
-	"EV_CUSTOM_EXPLODE_NOMARKS",
-	"EV_BULLET",
-	"EV_PLAY_FX",
-	"EV_PLAY_FX_ON_TAG",
-	"EV_EARTHQUAKE",
-	"EV_GRENADE_SUICIDE",
-	"EV_OBITUARY" // 198
-};
-
 void custom_BG_AddPredictableEventToPlayerstate(int event, int eventParm, playerState_t *ps)
 {
 	if ( event != EV_NONE )
 	{
 		if ( g_debugEvents->boolean )
-			Com_DPrintf("BG_AddPredictableEventToPlayerstate() event %26s for client %2d\n", eventnames[event], ps->clientNum);
+			Com_DPrintf("BG_AddPredictableEventToPlayerstate() event %26s for client %2d\n", *(&entity_event_names + event), ps->clientNum);
 		
 		/* New code start: silent */
 		if ( ( ( event >= EV_FOOTSTEP_RUN_DEFAULT && event <= EV_FOLIAGE_SOUND ) || event == EV_NOAMMO ) && player_silent[ps->clientNum] )
@@ -828,7 +626,7 @@ void custom_G_AddEvent(gentity_t * ent, int event, int eventParm)
 	if ( ent->client )
 	{
 		if ( g_debugEvents->boolean )
-			Com_DPrintf("G_AddEvent() event %26s for client %2d\n", eventnames[event], ent->client->ps.clientNum);
+			Com_DPrintf("G_AddEvent() event %26s for client %2d\n", *(&entity_event_names + event), ent->client->ps.clientNum);
 		ent->client->ps.events[ent->client->ps.eventSequence & ( MAX_EVENTS - 1 )] = event;
 		ent->client->ps.eventParms[ent->client->ps.eventSequence & ( MAX_EVENTS - 1 )] = eventParm;
 		ent->client->ps.eventSequence++;
@@ -836,7 +634,7 @@ void custom_G_AddEvent(gentity_t * ent, int event, int eventParm)
 	else
 	{
 		if ( g_debugEvents->boolean )
-			Com_DPrintf("G_AddEvent() event %26s for entity %2d\n", eventnames[event], ent->s.number);
+			Com_DPrintf("G_AddEvent() event %26s for entity %2d\n", *(&entity_event_names + event), ent->s.number);
 		ent->s.events[ent->s.eventSequence & ( MAX_EVENTS - 1 )] = event;
 		ent->s.eventParms[ent->s.eventSequence & ( MAX_EVENTS - 1 )] = eventParm;
 		ent->s.eventSequence++;
@@ -853,9 +651,9 @@ gentity_t* custom_G_TempEntity(vec3_t * origin, int event)
 	*(int *)&sig = hook_g_tempentity->from;
 
 	if ( g_debugEvents->boolean )
-		Com_DPrintf("G_TempEntity() event %26s at (%f,%f,%f)\n", eventnames[event], &origin[0], &origin[1], &origin[2]);
+		Com_DPrintf("G_TempEntity() event %26s at (%f,%f,%f)\n", *(&entity_event_names + event), &origin[0], &origin[1], &origin[2]);
 
-	/* filter example:
+	/* Filter example:
 	   use with caution: this can cause script runtime errors (or worse) on
 	   some events, e.g., when using the obituary function, due to (then)
 	   undefined parameters
