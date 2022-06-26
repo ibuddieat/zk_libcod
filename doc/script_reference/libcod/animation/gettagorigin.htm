@@ -50,6 +50,25 @@ headorg = self getTagOrigin("j_head");
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+// This function implemented in pure gsc code
+getTagOrigin(tag)
+{
+    ent = spawn("script_origin", self.origin);
+    ent linkTo(self, tag, (0, 0, 0), (0, 0, 0));
+    wait 0.05; // This wait is required so that the script_origin has time to get its origin updated
+    origin = ent.origin;
+    ent delete();
+    return origin;
+}
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
 <H2>Required Args:</H2>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
