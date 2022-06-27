@@ -2948,3 +2948,13 @@ typedef struct map_turret_s
 	int script_export;
 	char script_gameobjectname[MAX_QPATH];
 } map_turret_t;
+
+#define MAX_NOTIFY_BUFFER 4096 // Triggers cause a lot of notify (we might want to filter these to avoid lag)
+#define MAX_NOTIFY_PARAMS 16 // The script engine can handle hundreds of parameters, here we set a limit for CodeCallback_Notify
+typedef struct scr_notify_s
+{
+	unsigned int entId;
+	unsigned int constString;
+	unsigned int argc;
+	VariableValue arguments[MAX_NOTIFY_PARAMS];
+} scr_notify_t;

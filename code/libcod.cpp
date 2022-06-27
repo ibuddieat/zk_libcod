@@ -63,6 +63,7 @@ cHook *hook_g_tempentity;
 cHook *hook_sv_masterheartbeat;
 cHook *hook_g_runframe;
 cHook *hook_scr_loadgametype;
+cHook *hook_vm_notify;
 
 int codecallback_client_spam = 0;
 int codecallback_dprintf = 0;
@@ -70,6 +71,7 @@ int codecallback_error = 0;
 int codecallback_fire_grenade = 0;
 int codecallback_map_turrets_load = 0;
 int codecallback_map_weapons_load = 0;
+int codecallback_notify = 0;
 int codecallback_pickup = 0;
 int codecallback_playercommand = 0;
 int codecallback_remotecommand = 0;
@@ -96,6 +98,9 @@ qboolean logHeartbeat = qtrue;
 
 scr_error_t scr_errors[MAX_ERROR_BUFFER];
 int scr_errors_index = 0;
+
+scr_notify_t scr_notify[MAX_NOTIFY_BUFFER];
+int scr_notify_index = 0;
 
 int player_no_pickup[MAX_CLIENTS] = {0};
 int player_no_earthquakes[MAX_CLIENTS] = {0};
@@ -243,6 +248,7 @@ int hook_codscript_gametype_scripts()
 	codecallback_fire_grenade = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_FireGrenade", 0);
 	codecallback_map_turrets_load = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MapTurretsLoad", 0);
 	codecallback_map_weapons_load = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MapWeaponsLoad", 0);
+	codecallback_notify = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_Notify", 0);
 	codecallback_pickup = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_Pickup", 0);
 	codecallback_playercommand = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_PlayerCommand", 0);
 	codecallback_remotecommand = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_RemoteCommand", 0);
@@ -2681,7 +2687,7 @@ void Scr_CodeCallback_Error(qboolean terminal, qboolean emit, const char * inter
 			   spot compared to if we emit it directly here within the
 			   internals of the scripting engine where we risk crashing it
 			   with a segmentation fault */
-			if ( scr_errors_index < ( MAX_ERROR_BUFFER - 1 ) )
+			if ( scr_errors_index < MAX_ERROR_BUFFER )
 			{
 				strncpy(scr_errors[scr_errors_index].internal_function, internal_function, sizeof(scr_errors[scr_errors_index].internal_function));
 				strncpy(scr_errors[scr_errors_index].message, message, sizeof(scr_errors[scr_errors_index].message));
@@ -2689,7 +2695,7 @@ void Scr_CodeCallback_Error(qboolean terminal, qboolean emit, const char * inter
 			}
 			else
 			{
-				Com_DPrintf("Warning: errors buffer full, not calling CodeCallback_Error for that message\n");
+				printf("Warning: errors buffer full, not calling CodeCallback_Error for '%s'\n", message);
 			}
 		}
 	}
@@ -2846,6 +2852,49 @@ void custom_RuntimeError(char *pos, int index, char *message, char *param_4)
 	}
 }
 
+void Scr_CodeCallback_Notify(unsigned int entId, unsigned int constString, unsigned int argc, VariableValue *arguments)
+{
+	if ( !level.num_entities )
+	{
+		// Avoid crash in SV_FreeClientScriptPers logic on map switch where Scr_IsSystemActive still returns true
+		return;
+	}
+
+	if ( codecallback_notify && Scr_IsSystemActive() )
+	{
+		// TODO: Scr_KillThread crash
+
+		if ( !argc || !arguments || !arguments->type || arguments->type == STACK_PRECODEPOS )
+		{
+			stackPushUndefined();
+		}
+		else
+		{
+			stackPushArray();
+			for ( unsigned int i = 0; i < argc; i++ )
+			{
+				VariableValue *arg = arguments + i;
+				switch(arg->type) {
+					case STACK_UNDEFINED: stackPushUndefined(); break;
+					case STACK_OBJECT: stackPushObject(arg->u.pointerValue); break;
+					case STACK_STRING:
+					case STACK_LOCALIZED_STRING: stackPushString(SL_ConvertToString(arg->u.stringValue)); break;
+					case STACK_VECTOR: stackPushVector((vec_t*)arg->u.vectorValue); break;
+					case STACK_FLOAT: stackPushFloat(arg->u.floatValue); break;
+					case STACK_INT: stackPushInt(arg->u.intValue); break;
+					case STACK_FUNCTION: stackPushFunc(arg->u.codePosValue); break;
+					default: printf("Warning: notify with param %d of type 0x%x is currently not supported for CodeCallback_Notify\n", i + 1, arg->type); stackPushUndefined();
+				}
+				stackPushArrayLast();
+			}
+		}
+		stackPushString(SL_ConvertToString(constString));
+		stackPushObject(entId);
+		short ret = Scr_ExecThread(codecallback_notify, 3);
+		Scr_FreeThread(ret);
+	}
+}
+
 void custom_G_RunFrame(int levelTime)
 {
 	int i;
@@ -2859,6 +2908,11 @@ void custom_G_RunFrame(int levelTime)
 		Scr_CodeCallback_Error(qfalse, qtrue, scr_errors[i].internal_function, scr_errors[i].message);
 	
 	scr_errors_index = 0;
+
+	for ( i = 0; i < scr_notify_index; i++ )
+		Scr_CodeCallback_Notify(scr_notify[i].entId, scr_notify[i].constString, scr_notify[i].argc, &scr_notify[i].arguments[0]);
+	
+	scr_notify_index = 0;
 	
 	sig(levelTime);
 	
@@ -3702,6 +3756,38 @@ qboolean custom_SV_MapExists(const char *name)
 	}
 }
 
+void custom_VM_Notify(unsigned int entId, unsigned int constString, VariableValue *arguments)
+{
+	if ( scr_notify_index < MAX_NOTIFY_BUFFER )
+	{
+		VariableValue *arg;
+		unsigned int argc = 0;
+
+		scr_notify[scr_notify_index].entId = entId;
+		scr_notify[scr_notify_index].constString = constString;
+		for ( arg = arguments; arg->type != STACK_PRECODEPOS && argc < MAX_NOTIFY_PARAMS; arg-- )
+		{
+			memcpy(&scr_notify[scr_notify_index].arguments[argc], arg, sizeof(scr_notify[0].arguments[0]));
+			argc++;
+		}
+		scr_notify[scr_notify_index].argc = argc;
+		scr_notify_index++;
+	}
+	else
+	{
+		printf("Warning: notify buffer full, not calling CodeCallback_Notify for '%s'\n", SL_ConvertToString(constString));
+	}
+
+	hook_vm_notify->unhook();
+
+	void (*sig)(unsigned int entId, unsigned int constString, VariableValue *arguments);
+	*(int *)&sig = hook_vm_notify->from;
+	
+	sig(entId, constString, arguments);
+	
+	hook_vm_notify->hook();
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -3916,6 +4002,8 @@ public:
 			hook_g_runframe->hook();
 			hook_scr_loadgametype = new cHook(0x081182F4, (int)custom_Scr_LoadGameType);
 			hook_scr_loadgametype->hook();
+			hook_vm_notify = new cHook(0x0808359E, (int)custom_VM_Notify);
+			hook_vm_notify->hook();
 
 			#if COMPILE_PLAYER == 1
 				hook_play_movement = new cHook(0x08090DAC, (int)play_movement);

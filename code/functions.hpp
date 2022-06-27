@@ -957,6 +957,15 @@ static const Scr_GetConstLowercaseString_t Scr_GetConstLowercaseString = (Scr_Ge
 static const Scr_GetConstLowercaseString_t Scr_GetConstLowercaseString = (Scr_GetConstLowercaseString_t)0x08084A7C;
 #endif
 
+typedef void (*IncInParam_t)(void);
+#if COD_VERSION == COD2_1_0
+static const IncInParam_t IncInParam = (IncInParam_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const IncInParam_t IncInParam = (IncInParam_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const IncInParam_t IncInParam = (IncInParam_t)0x08083DF8;
+#endif
+
 typedef void (*Scr_AddBool_t)(qboolean);
 #if COD_VERSION == COD2_1_0
 static const Scr_AddBool_t Scr_AddBool = (Scr_AddBool_t)0x08084AF8;

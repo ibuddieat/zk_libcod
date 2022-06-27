@@ -105,6 +105,8 @@
 #define STACK_ARRAY 22
 #define STACK_REMOVED_THREAD 23
 
+void Scr_AddFunc(const char *value);
+
 #define stackPushUndefined Scr_AddUndefined
 #define stackPushBool Scr_AddBool
 #define stackPushInt Scr_AddInt
@@ -115,6 +117,7 @@
 #define stackPushArray Scr_MakeArray
 #define stackPushArrayLast Scr_AddArray
 #define stackPushObject Scr_AddObject
+#define stackPushFunc Scr_AddFunc
 
 int stackGetParamType(int param);
 const char *stackGetParamTypeAsString(int param);

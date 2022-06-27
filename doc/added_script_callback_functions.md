@@ -2,6 +2,7 @@ Added script callback functions:
   * `CodeCallback_Error`
   * `CodeCallback_MapTurretsLoad`
   * `CodeCallback_MapWeaponsLoad`
+  * `CodeCallback_Notify`
   * `CodeCallback_Pickup`
   * `CodeCallback_AdsButton`
   * `CodeCallback_CrouchButton`

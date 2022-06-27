@@ -89,6 +89,12 @@ const char *stackGetParamTypeAsString(int param)
 		return "UNKNOWN TYPE";
 	}
 }
+void Scr_AddFunc(const char *value)
+{
+	IncInParam();
+	scrVmPub.top->type = STACK_FUNCTION;
+	scrVmPub.top->u.codePosValue = value;
+}
 void NULL_FUNC_ENTITY(scr_entref_t id) {}
 void NULL_FUNC(void) {}
 
