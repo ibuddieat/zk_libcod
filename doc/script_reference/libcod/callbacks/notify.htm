@@ -49,9 +49,6 @@ Module: Callbacks<BR>
 <PRE>
 CodeCallback_Notify(entity, message, args)
 {
-    if(!isDefined(entity)) // Removed entity/thread
-        return;
-
     if(message == "trigger" || message == "touch") // Avoids console/CPU spam via the following logPrintConsole calls
         return;
 
@@ -63,8 +60,11 @@ CodeCallback_Notify(entity, message, args)
             } else if(type == "FUNCTION") {
                 logPrintConsole("Script notify arg[" + i + "] is a function, calling ...\n");
                 [[args[i]]]();
-            } else
+            } else if(isDefined(args[i])) {
                 logPrintConsole("Script notify arg[" + i + "] = '" + args[i] + "' (type " + type + ")\n");
+            } else {
+                logPrintConsole("Script notify arg[" + i + "] is undefined\n");
+            }
         }
     } else {
         logPrintConsole("Script notify without args\n");

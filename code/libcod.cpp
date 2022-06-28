@@ -2852,6 +2852,41 @@ void custom_RuntimeError(char *pos, int index, char *message, char *param_4)
 	}
 }
 
+void tryFindObject(VariableValue *arg, unsigned int constString)
+{
+	// Check if our object reference is still valid
+	unsigned int objectId = arg->u.pointerValue;
+	unsigned int varId = FindVariable(objectId, 0x1fffe);
+	if ( varId )
+	{
+		objectId = FindObject(varId);
+		if ( objectId )
+			stackPushObject(arg->u.pointerValue);
+		else
+			stackPushUndefined();
+	}
+	else
+	{
+		// If not, try to regain the object from the game entities
+		gentity_t *ent;
+		for ( int i = 0; i < MAX_GENTITIES; i++ )
+		{
+			ent = &g_entities[i];
+			if ( ent )
+			{
+				varId = Scr_GetEntityId(i, 0);
+				if ( varId && varId == objectId )
+				{
+					stackPushEntity(&g_entities[i]);
+					return;
+				}
+			}
+		}
+		printf("Warning: notify param for '%s' with unknown object reference %d\n", SL_ConvertToString(constString), objectId);
+		stackPushUndefined();
+	}
+}
+
 void Scr_CodeCallback_Notify(unsigned int entId, unsigned int constString, unsigned int argc, VariableValue *arguments)
 {
 	if ( !level.num_entities )
@@ -2860,9 +2895,19 @@ void Scr_CodeCallback_Notify(unsigned int entId, unsigned int constString, unsig
 		return;
 	}
 
-	if ( codecallback_notify && Scr_IsSystemActive() )
+	if ( Scr_IsSystemActive() )
 	{
-		// TODO: Scr_KillThread crash
+		unsigned int varId, objectId;
+
+		// Check if our object reference is still valid
+		varId = FindVariable(entId, 0x1fffe);
+  		if ( varId ) {
+    		objectId = FindObject(varId);
+			if ( !objectId )
+				return;
+		} else {
+			return;
+		}
 
 		if ( !argc || !arguments || !arguments->type || arguments->type == STACK_PRECODEPOS )
 		{
@@ -2876,7 +2921,7 @@ void Scr_CodeCallback_Notify(unsigned int entId, unsigned int constString, unsig
 				VariableValue *arg = arguments + i;
 				switch(arg->type) {
 					case STACK_UNDEFINED: stackPushUndefined(); break;
-					case STACK_OBJECT: stackPushObject(arg->u.pointerValue); break;
+					case STACK_OBJECT: tryFindObject(arg, constString); break;
 					case STACK_STRING:
 					case STACK_LOCALIZED_STRING: stackPushString(SL_ConvertToString(arg->u.stringValue)); break;
 					case STACK_VECTOR: stackPushVector((vec_t*)arg->u.vectorValue); break;
@@ -3756,7 +3801,7 @@ qboolean custom_SV_MapExists(const char *name)
 	}
 }
 
-void custom_VM_Notify(unsigned int entId, unsigned int constString, VariableValue *arguments)
+void Scr_QueueNotifyForCallback(unsigned int entId, unsigned int constString, VariableValue *arguments)
 {
 	if ( scr_notify_index < MAX_NOTIFY_BUFFER )
 	{
@@ -3777,6 +3822,12 @@ void custom_VM_Notify(unsigned int entId, unsigned int constString, VariableValu
 	{
 		printf("Warning: notify buffer full, not calling CodeCallback_Notify for '%s'\n", SL_ConvertToString(constString));
 	}
+}
+
+void custom_VM_Notify(unsigned int entId, unsigned int constString, VariableValue *arguments)
+{
+	if ( codecallback_notify )
+		Scr_QueueNotifyForCallback(entId, constString, arguments);
 
 	hook_vm_notify->unhook();
 

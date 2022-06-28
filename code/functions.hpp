@@ -1731,4 +1731,31 @@ static const GetBspExtension_t GetBspExtension = (GetBspExtension_t)0x0; // Not 
 static const GetBspExtension_t GetBspExtension = (GetBspExtension_t)0x080A36FE;
 #endif
 
+typedef unsigned int (*FindVariable_t)(unsigned int parentId, unsigned int unsignedValue);
+#if COD_VERSION == COD2_1_0
+static const FindVariable_t FindVariable = (FindVariable_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const FindVariable_t FindVariable = (FindVariable_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const FindVariable_t FindVariable = (FindVariable_t)0x0807C184;
+#endif
+
+typedef unsigned int (*FindObject_t)(unsigned int id);
+#if COD_VERSION == COD2_1_0
+static const FindObject_t FindObject = (FindObject_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const FindObject_t FindObject = (FindObject_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const FindObject_t FindObject = (FindObject_t)0x0807D16E;
+#endif
+
+typedef unsigned int (*Scr_GetEntityId_t)(int entnum, unsigned int classnum);
+#if COD_VERSION == COD2_1_0
+static const Scr_GetEntityId_t Scr_GetEntityId = (Scr_GetEntityId_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Scr_GetEntityId_t Scr_GetEntityId = (Scr_GetEntityId_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Scr_GetEntityId_t Scr_GetEntityId = (Scr_GetEntityId_t)0x0807E9F8;
+#endif
+
 #endif
