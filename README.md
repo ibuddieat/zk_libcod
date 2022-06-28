@@ -19,6 +19,7 @@
 - Fixed some minor bugs
 - Tried to align some coding styles
 - Added documentation for script callback functions (stock and libcod)
+  + For details, see the updated [Script Docs](https://www.ibuddie.at/libcod/index.html)
 
 **Build requirements**
 - gcc and g++ (with multilib on 64-bit x86 operating systems)
