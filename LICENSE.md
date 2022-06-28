@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2022 iBuddie
+Copyright (c) 2022 iBuddie<br>
 Copyright (c) 2022 Maxim Kuzmichev
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
