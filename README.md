@@ -3,7 +3,7 @@
 **This extension ...**
 - provides interoperability between the Call of Duty&reg; 2 server and other software components and/or advanced game modifications (so-called "mods")
 - intends to improve the overall game experience and security as the extended software (Call of Duty&reg; 2) is not maintained anymore since more than a decade
-- has its focus on Call of Duty&reg; 2 Multiplayer in version 1.3, other versions are not fully supported (unless the respective offsets/structs are added)
+- has its focus on the Linux variant of Call of Duty&reg; 2 Multiplayer in version 1.3, other versions are not fully supported (unless the respective offsets/structs are added)
 - was implemented for non-profit and educational purposes
 
 **List of high-level changes provided by this repository**
