@@ -83,7 +83,6 @@ int codecallback_attackbutton = 0;
 int codecallback_crouchbutton = 0;
 int codecallback_fragbutton = 0;
 int codecallback_holdbreathbutton = 0;
-int codecallback_jumpbutton = 0;
 int codecallback_leanleftbutton = 0;
 int codecallback_leanrightbutton = 0;
 int codecallback_meleebreathbutton = 0;
@@ -91,6 +90,7 @@ int codecallback_meleebutton = 0;
 int codecallback_pronebutton = 0;
 int codecallback_reloadbutton = 0;
 int codecallback_smokebutton = 0;
+int codecallback_standbutton = 0;
 int codecallback_usebutton = 0;
 
 qboolean logRcon = qtrue;
@@ -260,7 +260,6 @@ int hook_codscript_gametype_scripts()
 	codecallback_crouchbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_CrouchButton", 0);
 	codecallback_fragbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_FragButton", 0);
 	codecallback_holdbreathbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_HoldBreathButton", 0);
-	codecallback_jumpbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_JumpButton", 0);
  	codecallback_leanleftbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_LeanLeftButton", 0);
  	codecallback_leanrightbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_LeanRightButton", 0);
 	codecallback_meleebreathbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MeleeBreathButton", 0);
@@ -268,6 +267,7 @@ int hook_codscript_gametype_scripts()
 	codecallback_pronebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_ProneButton", 0);
 	codecallback_reloadbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_ReloadButton", 0);
 	codecallback_smokebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_SmokeButton", 0);
+	codecallback_standbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_StandButton", 0);
  	codecallback_usebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_UseButton", 0);
 
 	int (*sig)();
@@ -2027,9 +2027,9 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 	
 	if ( ucmd->buttons & KEY_MASK_JUMP && !(previousbuttons[clientnum] & KEY_MASK_JUMP) )
 	{
-		if ( codecallback_jumpbutton )
+		if ( codecallback_standbutton )
 		{
-			short ret = Scr_ExecEntThread(cl->gentity, codecallback_jumpbutton, 0);
+			short ret = Scr_ExecEntThread(cl->gentity, codecallback_standbutton, 0);
 			Scr_FreeThread(ret);
 		}
 	}

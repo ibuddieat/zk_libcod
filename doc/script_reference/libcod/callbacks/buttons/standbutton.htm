@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>Jump Button</H1>
+<H1>Stand Button</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
@@ -27,7 +27,7 @@ Module: Callbacks<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Calls CodeCallback_JumpButton() in maps/mp/gametypes/_callbacksetup.gsc when a client presses the jump button, but only if the player currently is in prone or crouch stance.</p>
+<p>Calls CodeCallback_StandButton() in maps/mp/gametypes/_callbacksetup.gsc when a client presses the stand/jump button, but only if the player currently is in prone or crouch stance.</p>
 </H3>
 </TR></TD></TABLE>
 <p>Note: The existance of the callback function is checked only once on server start. Functions added later are not taken into account, even after a map switch.</p>
@@ -46,9 +46,9 @@ The player
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-CodeCallback_JumpButton()
+CodeCallback_StandButton()
 {
-    self iprintLnBold("CodeCallback_JumpButton");
+    self iprintLnBold("CodeCallback_StandButton");
 }
 </PRE>
 </H3>
