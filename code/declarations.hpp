@@ -239,6 +239,7 @@ typedef struct cvar_s
 #define CVAR_CHEAT			128
 #define	CVAR_TEMP			256
 #define CVAR_NORESTART		1024
+#define CVAR_UNSAFE         4096
 #define	CVAR_USER_CREATED	16384
 
 struct VariableStackBuffer

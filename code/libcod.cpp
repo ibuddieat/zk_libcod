@@ -7,6 +7,7 @@ cvar_t *rcon_password;
 cvar_t *sv_allowDownload;
 cvar_t *sv_fps;
 cvar_t *sv_maxclients;
+cvar_t *sv_maxRate;
 cvar_t *sv_padPackets;
 cvar_t *sv_pure;
 cvar_t *sv_timeout;
@@ -64,6 +65,7 @@ cHook *hook_sv_masterheartbeat;
 cHook *hook_g_runframe;
 cHook *hook_scr_loadgametype;
 cHook *hook_vm_notify;
+cHook *hook_sv_init;
 
 int codecallback_client_spam = 0;
 int codecallback_dprintf = 0;
@@ -120,7 +122,22 @@ int previousbuttons[MAX_CLIENTS] = {0};
 #endif
 int gamestate_size[MAX_CLIENTS] = {0};
 
-void hook_sv_init(const char *format, ...)
+void custom_SV_Init(void)
+{
+	/* Register stock cvars here with different settings */
+	sv_maxRate = Cvar_RegisterInt("sv_maxRate", 0, 0, 2500000, CVAR_ARCHIVE | CVAR_SERVERINFO | CVAR_UNSAFE);
+
+	hook_sv_init->unhook();
+
+	void (*sig)(void);
+	*(int *)&sig = hook_sv_init->from;
+	
+	sig();
+	
+	hook_sv_init->hook();
+}
+
+void hook_common_init_complete_print(const char *format, ...)
 {
 	char s[COD2_MAX_STRINGLENGTH];
 	va_list va;
@@ -3864,7 +3881,7 @@ public:
 		mprotect((void *)0x08048000, 0x135000, PROT_READ | PROT_WRITE | PROT_EXEC);
 
 		#if COD_VERSION == COD2_1_0
-			cracking_hook_call(0x08061FE7, (int)hook_sv_init);
+			cracking_hook_call(0x08061FE7, (int)hook_common_init_complete_print);
 			cracking_hook_call(0x08091D0C, (int)hook_sv_spawnserver);
 			cracking_hook_call(0x0808F281, (int)hook_ClientCommand);
 			cracking_hook_call(0x0808C8C0, (int)hook_AuthorizeState);
@@ -3936,7 +3953,7 @@ public:
 			#endif
 
 		#elif COD_VERSION == COD2_1_2
-			cracking_hook_call(0x08062301, (int)hook_sv_init);
+			cracking_hook_call(0x08062301, (int)hook_common_init_complete_print);
 			cracking_hook_call(0x08093572, (int)hook_sv_spawnserver);
 			cracking_hook_call(0x08090B0C, (int)hook_ClientCommand);
 			cracking_hook_call(0x0808DA52, (int)hook_AuthorizeState);
@@ -4008,7 +4025,7 @@ public:
 			#endif
 
 		#elif COD_VERSION == COD2_1_3
-			cracking_hook_call(0x080622F9, (int)hook_sv_init);
+			cracking_hook_call(0x080622F9, (int)hook_common_init_complete_print);
 			cracking_hook_call(0x0809362A, (int)hook_sv_spawnserver);
 			cracking_hook_call(0x08090BA0, (int)hook_ClientCommand);
 			cracking_hook_call(0x0808DB12, (int)hook_AuthorizeState);
@@ -4055,6 +4072,8 @@ public:
 			hook_scr_loadgametype->hook();
 			hook_vm_notify = new cHook(0x0808359E, (int)custom_VM_Notify);
 			hook_vm_notify->hook();
+			hook_sv_init = new cHook(0x08093ADC, (int)custom_SV_Init);
+			hook_sv_init->hook();
 
 			#if COMPILE_PLAYER == 1
 				hook_play_movement = new cHook(0x08090DAC, (int)play_movement);
