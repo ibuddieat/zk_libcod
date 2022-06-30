@@ -37,7 +37,7 @@ Module: Callbacks<BR>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;type&gt;: Type of request that was spammed (e.g., RCON:ADDRESS).</LI>
+<LI>1 : &lt;type&gt; Type of request that was spammed (e.g., RCON:ADDRESS).</LI>
 <LI>2 : &lt;ip&gt; IP address of the spamming client.</LI>
 </UL></TR></TD></TABLE>
 <BR><BR>
@@ -48,7 +48,8 @@ Module: Callbacks<BR>
 <PRE>
 CodeCallback_CLSpam(type, ip)
 {
-    CONST_TimesForBan = 40;
+    level.locked_ip = [];
+    CONST_TimesForBan = 40; // Consider adjusting this based on regular traffic statistics
 
     sm = strtok(type, ":");
     svc = sm[0];
@@ -60,6 +61,9 @@ CodeCallback_CLSpam(type, ip)
         case "INFO": break;
         case "STATUS":
             if(type == "ADDRESS") {
+                if(level.locked_ip.size > 100) // Avoid excessive script variable allocation
+                    level.locked_ip = [];
+
                 if(!isDefined(level.locked_ip[ip]))
                     level.locked_ip[ip] = 0;
 
