@@ -314,6 +314,7 @@ scr_method_t scriptMethods[] =
 {
 
 #if COMPILE_BOTS == 1
+	{"setwalkvalues", gsc_bots_set_walkvalues, 0},
 	{"setwalkdir", gsc_bots_set_walkdir, 0},
 	{"setlean", gsc_bots_set_lean, 0},
 	{"setbotstance", gsc_bots_set_stance, 0},

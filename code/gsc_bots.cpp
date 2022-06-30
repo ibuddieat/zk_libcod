@@ -2,6 +2,23 @@
 
 #if COMPILE_BOTS == 1
 
+void gsc_bots_set_walkvalues(scr_entref_t id)
+{
+    extern char bot_forwardmove[MAX_CLIENTS];
+    extern char bot_rightmove[MAX_CLIENTS];
+    int fwcount;
+    int rgcount;
+
+    if ( ! stackGetParams("ii", &fwcount, &rgcount))
+    {
+        stackError("gsc_bots_set_walkvalues() arguments are undefined or have a wrong type");
+        stackPushUndefined();
+        return;
+    }
+    bot_forwardmove[id] = fwcount;
+    bot_rightmove[id] = rgcount;
+}
+
 void gsc_bots_set_walkdir(scr_entref_t id)
 {
 	char *dir;
