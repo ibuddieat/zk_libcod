@@ -124,7 +124,8 @@ int gamestate_size[MAX_CLIENTS] = {0};
 
 void custom_SV_Init(void)
 {
-	/* Register stock cvars here with different settings */
+	/* Register stock cvars here with different settings, scheme:
+	cvar_t *cvar = Cvar_Register<Type>(var_name, default value, min. value, max. value, flags); */
 	sv_maxRate = Cvar_RegisterInt("sv_maxRate", 0, 0, 25000, CVAR_ARCHIVE | CVAR_SERVERINFO | CVAR_UNSAFE);
 
 	hook_sv_init->unhook();

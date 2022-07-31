@@ -1,16 +1,57 @@
 Added cvars:
-  * `g_debugEvents` to log events such as player footsteps, temporary entities etc.
-  * `g_debugStaticModels` to print info about static models on map load
-  * `g_logPickup` to control logging of item pickup actions
-  * `g_spawnMapTurrets` to control precaching & spawning of turrets in map files
-  * `g_spawnMapWeapons` to control precaching & spawning of weapons in map files
-  * `sv_disconnectMessages` to disable "Game session no longer available" messages
-  * `sv_botKickMessages` to disable bot disconnect messages being shown to other players
-  * `sv_kickMessages` to generally disable player kick messages being shown to other players
-  * `sv_limitLocalRcon` to whitelist internal IPs at rcon rate limiting
-  * `sv_logHeartbeats` to disable logging of heartbeats that are sent to the master server
-  * `sv_logRcon` to disable (successful) rcon command logging
-  * `sv_timeoutMessages` to disable player timeout messages being shown to other players
-  * `sv_wwwDlDisconnectedMessages` to adapt/hide download messages being shown to other players
+  * `g_debugEvents`
+    * Type: Boolean
+    * Default: False
+    * Effect: Toggle debug logging of events such as player footsteps, spawn of temporary entities etc.
+  * `g_debugStaticModels`
+    * Type: Boolean
+    * Default: False
+    * Effect: Toggle logging of info about static models on map load.
+  * `g_logPickup`
+    * Type: Boolean
+    * Default: True
+    * Effect: Toggle game logging of item pickup actions.
+  * `g_spawnMapTurrets`
+    * Type: Boolean
+    * Default: True
+    * Effect: If false, turrets loaded from map files are neither precached nor spawned. Instead, the list of loaded turrets is sent to the `CodeCallback_MapTurretsLoad` script callback function.
+  * `g_spawnMapWeapons`
+    * Type: Boolean
+    * Default: True
+    * Effect: If false, weapons loaded from map files are neither precached nor spawned. Instead, the list of loaded weapons is sent to the `CodeCallback_MapWeaponsLoad` script callback function.
+  * `sv_disconnectMessages`
+    * Type: Boolean
+    * Default: True
+    * Effect: Toggle output of "Game session no longer available" game messages.
+  * `sv_botKickMessages`
+    * Type: Boolean
+    * Default: True
+    * Effect: Toggle output of bot disconnect game messages.
+  * `sv_kickMessages`
+    * Type: Boolean
+    * Default: True
+    * Effect: Generally toggle output of player kick game messages. If false, this overrides enabled `sv_botKickMessages`.
+  * `sv_limitLocalRcon`
+    * Type: Boolean
+    * Default: True
+    * Effect: Toggle whitelisting of internal IP address ranges at rcon rate limiter.
+  * `sv_logHeartbeats`
+    * Type: Boolean
+    * Default: True
+    * Effect: Toggle logging of heartbeats that are sent to the master server.
+  * `sv_logRcon`
+    * Type: Boolean
+    * Default: True
+    * Effect: Toggle logging of successful rcon commands.
+  * `sv_timeoutMessages`
+    * Type: Boolean
+    * Default: True
+    * Effect: Toggle output of player timeout game messages.
+  * `sv_wwwDlDisconnectedMessages`
+    * Type: Integer
+    * Default: 1
+    * Min. Value: 0
+    * Max. Value: 2
+    * Effect: Toggle output of download-disconnected game messages. A value of `2` prints the relative path to the file requested by the connecting player.
 
 Note: All default values of the cvars listed above are defined to preserve the stock behavior of the game.
