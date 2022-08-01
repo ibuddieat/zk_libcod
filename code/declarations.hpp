@@ -657,15 +657,6 @@ enum StanceState
 	CL_STANCE_DIVE_TO_PRONE = 0x3,
 };
 
-typedef enum
-{
-	TRACE_HITTYPE_NONE = 0x0,
-	TRACE_HITTYPE_ENTITY = 0x1,
-	TRACE_HITTYPE_DYNENT_MODEL = 0x2,
-	TRACE_HITTYPE_DYNENT_BRUSH = 0x3,
-	TRACE_HITTYPE_GLASS = 0x4
-} TraceHitType;
-
 typedef struct trace_s
 {
 	float fraction;
@@ -673,15 +664,10 @@ typedef struct trace_s
 	int surfaceFlags;
 	int contents;
 	const char *material;
-	TraceHitType hitType;
+	int entityNum;
 	u_int16_t hitId;
-	u_int16_t modelIndex;
-	u_int16_t partName;
-	u_int16_t partGroup;
 	byte allsolid;
 	byte startsolid;
-	byte walkable;
-	byte padding;
 } trace_t;
 
 typedef struct leakyBucket_s leakyBucket_t;
@@ -2105,7 +2091,7 @@ typedef struct DObj_s
 
 struct pmove_t
 {
-	struct playerState_s *ps;
+	playerState_t *ps;
 	usercmd_t cmd;
 	usercmd_t oldcmd;
 	int tracemask;
