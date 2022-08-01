@@ -892,24 +892,27 @@ void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t 
 					toF = ( int * )( (byte *)to + field->offset );
 					if ( ( *toF - 10 ) == EV_OBITUARY )
 					{
-						client_t *client;
+						client_t *client = NULL;
 						if ( spectatorClientNum != -1 )
 							client = &svs.clients[spectatorClientNum];
-						else
+						else if ( clientNum != -1 )
 							client = &svs.clients[clientNum];
 
-						int player_team = client->gentity->client->sess.team;
-						if ( team )
+						if ( client )
 						{
-							if ( team != player_team && ( ( player_team == 1 && team == 6 ) || ( player_team == 2 && team == 5 ) || ( player_team == 3 && team == 4 ) ) )
-								*toF = EV_NONE;
-						}
-						
-						if ( max_distance > 0 )
-						{
-							double distance = Vec3DistanceSq(&client->gentity->r.currentOrigin, &origin);
-							if ( (int)distance > ( max_distance * max_distance ) )
-								*toF = EV_NONE;
+							int player_team = client->gentity->client->sess.team;
+							if ( team )
+							{
+								if ( team != player_team && ( ( player_team == 1 && team == 6 ) || ( player_team == 2 && team == 5 ) || ( player_team == 3 && team == 4 ) ) )
+									*toF = EV_NONE;
+							}
+							
+							if ( max_distance > 0 )
+							{
+								double distance = Vec3DistanceSq(&client->gentity->r.currentOrigin, &origin);
+								if ( (int)distance > ( max_distance * max_distance ) )
+									*toF = EV_NONE;
+							}
 						}
 					}
 				}
