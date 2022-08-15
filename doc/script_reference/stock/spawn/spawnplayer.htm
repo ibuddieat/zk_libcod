@@ -15,11 +15,11 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>Objective_Add( &lt;objective_number&gt;, &lt;state&gt;, &lt;text&gt;, &lt;position&gt;, &lt;iconshader&gt; )</H1>
+<H1>Spawn( &lt;origin&gt;, &lt;angles&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
-Module: Objective<BR>
+Module: Spawn<BR>
 </I>
 
 <BR>
@@ -27,7 +27,7 @@ Module: Objective<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Adds a new objective </p>
+<p>Spawns the player at the given position and with the given orientation.</p>
 
 </H3>
 </TR></TD></TABLE>
@@ -37,7 +37,7 @@ Module: Objective<BR>
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-Objective_Add( objective_number, "active", objective_text, (closest.bomb.origin) );
+self spawn(origin, angles);
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -46,17 +46,8 @@ Objective_Add( objective_number, "active", objective_text, (closest.bomb.origin)
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;objective_number&gt; The number of the objective to add</LI>
-<LI>2 : &lt;state&gt; A string value representing the state of the objective. Valid states are "empty", "active", "invisible", "done", "current" and "failed"</LI>
-</UL></TR></TD></TABLE>
-<BR><BR>
-<H2>Optional Args</H2>
-<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
-<TR><TD BGCOLOR="C0D4EE">
-<UL>
-<LI>1 : &lt;text&gt; The text to use for the objective. This should be a valid localized text reference. Not present in MP</LI>
-<LI>2 : &lt;position&gt; The position of the objective</LI>
-<LI>3 : &lt;iconshader&gt; The objective icon to embed</LI>
+<LI>1 : &lt;origin&gt; The position where the player is to be spawned (vector)</LI>
+<LI>2 : &lt;angles&gt; The orientation of the player after spawn (vector)</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>
