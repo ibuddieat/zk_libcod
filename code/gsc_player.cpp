@@ -1471,6 +1471,19 @@ void gsc_player_getentertime(scr_entref_t id)
 	stackPushInt(entity->client->sess.enterTime);
 }
 
+void gsc_player_getplayerstateflags(scr_entref_t id)
+{
+	if (id >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_getplayerstateflags() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	gentity_t *entity = &g_entities[id];
+	stackPushInt(entity->client->ps.pm_flags);
+}
+
 #if COMPILE_JUMP == 1
 void gsc_player_setjump_height(scr_entref_t id)
 {

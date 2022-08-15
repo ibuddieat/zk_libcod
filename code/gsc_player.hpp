@@ -70,5 +70,6 @@ void gsc_player_silent(scr_entref_t id);
 void gsc_player_getgroundentity(scr_entref_t id);
 void gsc_player_getentertime(scr_entref_t id);
 void gsc_player_stopuseturret(scr_entref_t id);
+void gsc_player_getplayerstateflags(scr_entref_t id);
 
 #endif
