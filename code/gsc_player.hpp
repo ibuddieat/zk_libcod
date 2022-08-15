@@ -71,5 +71,10 @@ void gsc_player_getgroundentity(scr_entref_t id);
 void gsc_player_getentertime(scr_entref_t id);
 void gsc_player_stopuseturret(scr_entref_t id);
 void gsc_player_getplayerstateflags(scr_entref_t id);
+void gsc_player_objective_player_add(scr_entref_t id);
+void gsc_player_objective_player_delete(scr_entref_t id);
+void gsc_player_objective_player_icon(scr_entref_t id);
+void gsc_player_objective_player_position(scr_entref_t id);
+void gsc_player_objective_player_state(scr_entref_t id);
 
 #endif

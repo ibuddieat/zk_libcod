@@ -104,6 +104,7 @@ int scr_errors_index = 0;
 scr_notify_t scr_notify[MAX_NOTIFY_BUFFER];
 int scr_notify_index = 0;
 
+objective_t player_objectives[MAX_CLIENTS][16];
 int player_no_pickup[MAX_CLIENTS] = {0};
 int player_no_earthquakes[MAX_CLIENTS] = {0};
 int player_silent[MAX_CLIENTS] = {0};
@@ -1443,6 +1444,7 @@ void custom_SV_SendClientGameState(client_t *client)
 	client->gamestateMessageNum = client->netchan.outgoingSequence;
 	
 	/* New code start */
+	memset(&player_objectives[client - svs.clients], 0, sizeof(player_objectives[client - svs.clients]));
 	player_no_pickup[client - svs.clients] = 0;
 	player_no_earthquakes[client - svs.clients] = 0;
 	player_silent[client - svs.clients] = 0;
@@ -2923,7 +2925,7 @@ void Scr_CodeCallback_Notify(unsigned int entId, unsigned int constString, unsig
 		// Check if our object reference is still valid
 		varId = FindVariable(entId, 0x1fffe);
   		if ( varId ) {
-    		objectId = FindObject(varId);
+			objectId = FindObject(varId);
 			if ( !objectId )
 				return;
 		} else {
@@ -3860,6 +3862,56 @@ void custom_VM_Notify(unsigned int entId, unsigned int constString, VariableValu
 	hook_vm_notify->hook();
 }
 
+void G_UpdateSingleObjective(objective_t *from, objective_t *to)
+{
+	from->state = to->state;
+	from->origin[0] = to->origin[0];
+	from->origin[1] = to->origin[1];
+	from->origin[2] = to->origin[2];
+	from->entNum = to->entNum;
+	from->teamNum = to->teamNum;
+	from->icon = to->icon;
+}
+
+void custom_G_UpdateObjectives(void)
+{
+	int i, j;
+	gclient_s *client;
+	sessionTeam_t team;
+	objective_t *obj;
+
+	for ( i = 0; i < level.maxclients; i++ )
+	{
+		if ( level.gentities[i].r.inuse != 0 )
+		{
+			client = level.gentities[i].client;
+			team = ((level.gentities[i].client)->sess).team;
+			for ( j = 0; j < 16; j++ )
+			{
+				/* New code start: per-player objective functions */
+				obj = &player_objectives[i][j];
+				if ( obj->state != OBJST_EMPTY )
+				{
+					G_UpdateSingleObjective(&(client->ps).objective[j], obj);
+				}
+				else
+				{
+				/* New code end */
+					obj = &level.objectives[j];
+					if ((obj->state == OBJST_EMPTY) || ((obj->teamNum != 0 && (obj->teamNum != team))))
+					{
+						(client->ps).objective[j].state = OBJST_EMPTY;
+					}
+					else
+					{
+						G_UpdateSingleObjective(&(client->ps).objective[j], obj);
+					}
+				}
+			}
+		}
+	}
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -4111,6 +4163,8 @@ public:
 			cracking_hook_function(0x080584F0, (int)custom_CM_IsBadStaticModel);
 			cracking_hook_function(0x08113128, (int)custom_Script_obituary);
 			cracking_hook_function(0x08092302, (int)custom_SV_MapExists);
+			cracking_hook_function(0x08092302, (int)custom_SV_MapExists);
+			cracking_hook_function(0x08109CE0, (int)custom_G_UpdateObjectives); // Guessed function name
 
 			#if COMPILE_BOTS == 1
 				cracking_hook_function(0x0809676C, (int)custom_SV_BotUserMove);

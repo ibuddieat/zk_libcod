@@ -406,6 +406,11 @@ scr_method_t scriptMethods[] =
 	{"getentertime", gsc_player_getentertime, 0},
 	{"stopuseturret", gsc_player_stopuseturret, 0},
 	{"getplayerstateflags", gsc_player_getplayerstateflags, 0},
+	{"objective_player_add", gsc_player_objective_player_add, 0},
+	{"objective_player_delete", gsc_player_objective_player_delete, 0},
+	{"objective_player_icon", gsc_player_objective_player_icon, 0},
+	{"objective_player_position", gsc_player_objective_player_position, 0},
+	{"objective_player_state", gsc_player_objective_player_state, 0},
 #if COMPILE_JUMP == 1
 	{"setjump_height", gsc_player_setjump_height, 0},
 	{"setjump_slowdownenable", gsc_player_setjump_slowdownenable, 0},

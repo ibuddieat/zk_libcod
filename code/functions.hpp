@@ -948,6 +948,15 @@ static const Scr_GetEntity_t Scr_GetEntity = (Scr_GetEntity_t)0x0; // Not tested
 static const Scr_GetEntity_t Scr_GetEntity = (Scr_GetEntity_t)0x0811B16E;
 #endif
 
+typedef unsigned short (*Scr_GetConstString_t)(unsigned int param);
+#if COD_VERSION == COD2_1_0
+static const Scr_GetConstString_t Scr_GetConstString = (Scr_GetConstString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Scr_GetConstString_t Scr_GetConstString = (Scr_GetConstString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Scr_GetConstString_t Scr_GetConstString = (Scr_GetConstString_t)0x08084A08;
+#endif
+
 typedef unsigned int (*Scr_GetConstLowercaseString_t)(unsigned int param);
 #if COD_VERSION == COD2_1_0
 static const Scr_GetConstLowercaseString_t Scr_GetConstLowercaseString = (Scr_GetConstLowercaseString_t)0x0; // Not tested
@@ -1756,6 +1765,15 @@ static const Scr_GetEntityId_t Scr_GetEntityId = (Scr_GetEntityId_t)0x0; // Not 
 static const Scr_GetEntityId_t Scr_GetEntityId = (Scr_GetEntityId_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const Scr_GetEntityId_t Scr_GetEntityId = (Scr_GetEntityId_t)0x0807E9F8;
+#endif
+
+typedef void (*SetObjectiveIcon_t)(objective_t *obj, unsigned int index);
+#if COD_VERSION == COD2_1_0
+static const SetObjectiveIcon_t SetObjectiveIcon = (SetObjectiveIcon_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SetObjectiveIcon_t SetObjectiveIcon = (SetObjectiveIcon_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SetObjectiveIcon_t SetObjectiveIcon = (SetObjectiveIcon_t)0x081128CE;
 #endif
 
 #endif
