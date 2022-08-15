@@ -1034,7 +1034,74 @@ void gsc_player_clienthasclientmuted(scr_entref_t id)
 		return;
 	}
 
+	if (id2 >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_clienthasclientmuted() entity %i is not a player", id2);
+		stackPushUndefined();
+		return;
+	}
+
 	stackPushInt(SV_ClientHasClientMuted(id, id2));
+}
+
+void gsc_player_muteclient(scr_entref_t id)
+{
+	int id2;
+
+	if ( ! stackGetParams("i", &id2))
+	{
+		stackError("gsc_player_muteclient() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if (id >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_muteclient() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	if (id2 >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_muteclient() entity %i is not a player", id2);
+		stackPushUndefined();
+		return;
+	}
+
+	client_t *client = &svs.clients[id];
+	client->mutedClients[id2] = 1;
+	stackPushBool(qtrue);
+}
+
+void gsc_player_unmuteclient(scr_entref_t id)
+{
+	int id2;
+
+	if ( ! stackGetParams("i", &id2))
+	{
+		stackError("gsc_player_unmuteclient() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if (id >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_unmuteclient() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	if (id2 >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_unmuteclient() entity %i is not a player", id2);
+		stackPushUndefined();
+		return;
+	}
+
+	client_t *client = &svs.clients[id];
+	client->mutedClients[id2] = 0;
+	stackPushBool(qtrue);
 }
 
 void gsc_player_getlastgamestatesize(scr_entref_t id)

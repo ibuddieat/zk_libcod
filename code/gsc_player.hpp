@@ -52,6 +52,8 @@ void gsc_player_set_anim(scr_entref_t id);
 void gsc_player_getcooktime(scr_entref_t id);
 void gsc_player_setguid(scr_entref_t id);
 void gsc_player_clienthasclientmuted(scr_entref_t id);
+void gsc_player_muteclient(scr_entref_t id);
+void gsc_player_unmuteclient(scr_entref_t id);
 void gsc_player_getlastgamestatesize(scr_entref_t id);
 void gsc_player_getfps(scr_entref_t id);
 void gsc_player_lookatkiller(scr_entref_t id);

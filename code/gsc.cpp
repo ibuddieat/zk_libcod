@@ -384,6 +384,8 @@ scr_method_t scriptMethods[] =
 	{"getcooktime", gsc_player_getcooktime, 0},
 	{"setguid", gsc_player_setguid, 0},
 	{"clienthasclientmuted", gsc_player_clienthasclientmuted, 0},
+	{"muteclient", gsc_player_muteclient, 0},
+	{"unmuteclient", gsc_player_unmuteclient, 0},
 	{"getlastgamestate", gsc_player_getlastgamestatesize, 0},
 	{"getfps", gsc_player_getfps, 0},
 	{"ismantling", gsc_player_ismantling, 0},
