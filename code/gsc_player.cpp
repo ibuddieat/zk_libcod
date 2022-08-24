@@ -508,11 +508,11 @@ void gsc_player_getlastmsg(scr_entref_t id)
 	stackPushInt(svs.time - client->lastPacketTime);
 }
 
-void gsc_player_getclientstate(scr_entref_t id)
+void gsc_player_getclientconnectstate(scr_entref_t id)
 {
 	if (id >= MAX_CLIENTS)
 	{
-		stackError("gsc_player_getclientstate() entity %i is not a player", id);
+		stackError("gsc_player_getclientconnectstate() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}

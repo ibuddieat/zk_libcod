@@ -364,7 +364,7 @@ scr_method_t scriptMethods[] =
 	{"getLastConnectTime", gsc_player_getlastconnecttime, 0},
 	{"getLastMSG", gsc_player_getlastmsg, 0},
 	{"getAddressType", gsc_player_addresstype, 0},
-	{"getClientState", gsc_player_getclientstate, 0},
+	{"getClientConnectState", gsc_player_getclientconnectstate, 0},
 	{"renameClient", gsc_player_renameclient, 0},
 	{"get_userinfo", gsc_player_get_userinfo, 0},
 	{"set_userinfo", gsc_player_set_userinfo, 0},

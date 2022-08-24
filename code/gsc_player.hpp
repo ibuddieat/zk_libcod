@@ -28,7 +28,7 @@ void gsc_player_clientuserinfochanged(scr_entref_t id);
 void gsc_player_clientcommand(scr_entref_t id);
 void gsc_player_getlastconnecttime(scr_entref_t id);
 void gsc_player_getlastmsg(scr_entref_t id);
-void gsc_player_getclientstate(scr_entref_t id);
+void gsc_player_getclientconnectstate(scr_entref_t id);
 void gsc_player_addresstype(scr_entref_t id);
 void gsc_player_renameclient(scr_entref_t id);
 void gsc_player_outofbandprint(scr_entref_t id);
