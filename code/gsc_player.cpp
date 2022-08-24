@@ -689,7 +689,7 @@ void gsc_player_stopuseturret(scr_entref_t id)
 		return;
 	}
 
-	if ( entity->client->ps.pm_flags & PMF_VIEWLOCKED && entity->s.eFlags & EF_USETURRET )
+	if ( entity->client->ps.pm_flags & PMF_VIEWLOCKED && entity->client->ps.eFlags & EF_USETURRET )
 	{
 		G_ClientStopUsingTurret(&level.gentities[entity->client->ps.viewlocked_entNum]);
 		stackPushBool(qtrue);

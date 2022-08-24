@@ -4163,7 +4163,6 @@ public:
 			cracking_hook_function(0x080584F0, (int)custom_CM_IsBadStaticModel);
 			cracking_hook_function(0x08113128, (int)custom_Script_obituary);
 			cracking_hook_function(0x08092302, (int)custom_SV_MapExists);
-			cracking_hook_function(0x08092302, (int)custom_SV_MapExists);
 			cracking_hook_function(0x08109CE0, (int)custom_G_UpdateObjectives); // Guessed function name
 
 			#if COMPILE_BOTS == 1
