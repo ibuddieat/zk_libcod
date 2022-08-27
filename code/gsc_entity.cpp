@@ -228,4 +228,25 @@ void gsc_entity_islinkedto(scr_entref_t id)
 	}
 }
 
+void gsc_entity_getturretowner(scr_entref_t id)
+{
+	gentity_t *ent = &g_entities[id];
+	if ( ent->pTurretInfo )
+	{
+        if ( ent->r.ownerNum == 0x3ff )
+        {
+            stackPushUndefined();
+        }
+        else
+        {
+            stackPushEntity(&g_entities[ent->r.ownerNum]);
+        }
+	}
+	else
+	{
+        stackError("gsc_entity_getturretowner() entity is not a turret");
+		stackPushUndefined();
+	}
+}
+
 #endif
