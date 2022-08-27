@@ -1,4 +1,4 @@
-Added script code functions:
+New script code methods:
   * `<bot> setWalkValues(<forward_count>, <right_count>)`
   * `<entity> getTagAngles(<tag name>)`
   * `<entity> getTagOrigin(<tag name>)`
@@ -24,11 +24,14 @@ Added script code functions:
   * `<player> silent("on|off|toggle")`
   * `<player> stopUseTurret()`
   * `<player> unmuteClient(<id>)`
+  * `<turret> getTurretOwner()`
   * `<weapon> getWeaponItemAmmo()`
   * `<weapon> setWeaponItemAmmo(<value>)`
+
+New script code functions:
   * `getWeaponFuseTime(<weapon name>)`
   * `setWeaponFuseTime(<weapon name>, <time in ms>)`
   * `getEntityCount()`
-  * `setNextTestClientName(<name>)`
-  * `resetTestClientNaming()`
   * `logPrintConsole(<message>)`
+  * `resetTestClientNaming()`
+  * `setNextTestClientName(<name>)`
