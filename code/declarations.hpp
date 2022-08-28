@@ -1950,6 +1950,16 @@ typedef struct WeaponDef_t
 	const char *meleeImpactRumble;
 } WeaponDef_t;
 
+struct weaponParms
+{
+	float forward[3];
+	float right[3];
+	float up[3];
+	float muzzleTrace[3];
+	float gunForward[3];
+	WeaponDef_t* weapDef;
+};
+
 typedef enum
 {
 	ANIM_BP_UNUSED,

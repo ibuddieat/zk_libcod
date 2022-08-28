@@ -851,6 +851,93 @@ void gsc_player_setweaponfiremeleedelay(scr_entref_t id)
 	stackPushBool(qtrue);
 }
 
+void gsc_player_setmeleeheightscale(scr_entref_t id)
+{
+	float old_scale, new_scale;
+
+	if ( ! stackGetParams("f", &new_scale))
+	{
+		stackError("gsc_player_setmeleeheightscale() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if (id >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_setmeleeheightscale() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	extern float player_meleeHeightScale[MAX_CLIENTS];
+
+	old_scale = player_meleeHeightScale[id];
+	if ( new_scale < 0 )
+	{
+		new_scale = 0.0;
+	}
+	player_meleeHeightScale[id] = new_scale;
+	stackPushFloat(old_scale);
+}
+
+void gsc_player_setmeleerangescale(scr_entref_t id)
+{
+	float old_scale, new_scale;
+
+	if ( ! stackGetParams("f", &new_scale))
+	{
+		stackError("gsc_player_setmeleerangescale() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if (id >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_setmeleerangescale() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	extern float player_meleeRangeScale[MAX_CLIENTS];
+
+	old_scale = player_meleeRangeScale[id];
+	if ( new_scale < 0 )
+	{
+		new_scale = 0.0;
+	}
+	player_meleeRangeScale[id] = new_scale;
+	stackPushFloat(old_scale);
+}
+
+void gsc_player_setmeleewidthscale(scr_entref_t id)
+{
+	float old_scale, new_scale;
+
+	if ( ! stackGetParams("f", &new_scale))
+	{
+		stackError("gsc_player_setmeleewidthscale() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if (id >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_setmeleewidthscale() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	extern float player_meleeWidthScale[MAX_CLIENTS];
+
+	old_scale = player_meleeWidthScale[id];
+	if ( new_scale < 0 )
+	{
+		new_scale = 0.0;
+	}
+	player_meleeWidthScale[id] = new_scale;
+	stackPushFloat(old_scale);
+}
+
 int BG_AnimationCheckForBad(char *anim)
 {
 	int i, v6, v8;

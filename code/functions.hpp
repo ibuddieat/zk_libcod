@@ -777,6 +777,15 @@ static const BG_WeaponDefs_t BG_WeaponDefs = (BG_WeaponDefs_t)0x080EB860;
 static const BG_WeaponDefs_t BG_WeaponDefs = (BG_WeaponDefs_t)0x080EB9A4;
 #endif
 
+typedef WeaponDef_t * (*BG_GetWeaponDef_t)(unsigned int weaponIndex);
+#if COD_VERSION == COD2_1_0
+static const BG_GetWeaponDef_t BG_GetWeaponDef = (BG_GetWeaponDef_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const BG_GetWeaponDef_t BG_GetWeaponDef = (BG_GetWeaponDef_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const BG_GetWeaponDef_t BG_GetWeaponDef = (BG_GetWeaponDef_t)0x080EB9A4;
+#endif
+
 typedef int (*BG_FindWeaponIndexForName_t)(const char *name);
 #if COD_VERSION == COD2_1_0
 static const BG_FindWeaponIndexForName_t BG_FindWeaponIndexForName = (BG_FindWeaponIndexForName_t)0x080E949C;
@@ -793,6 +802,15 @@ static const BG_GetNumWeapons_t BG_GetNumWeapons = (BG_GetNumWeapons_t)0x080E932
 static const BG_GetNumWeapons_t BG_GetNumWeapons = (BG_GetNumWeapons_t)0x080EB912;
 #elif COD_VERSION == COD2_1_3
 static const BG_GetNumWeapons_t BG_GetNumWeapons = (BG_GetNumWeapons_t)0x080EBA56;
+#endif
+
+typedef void (*Weapon_Melee_t)(gentity_t *inflictor, weaponParms *wp, float range, float width, float height);
+#if COD_VERSION == COD2_1_0
+static const Weapon_Melee_t Weapon_Melee = (Weapon_Melee_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Weapon_Melee_t Weapon_Melee = (Weapon_Melee_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Weapon_Melee_t Weapon_Melee = (Weapon_Melee_t)0x0811F844;
 #endif
 
 typedef int (*sub_80E9758_t)(int a1);
@@ -1216,6 +1234,24 @@ static const G_ClientStopUsingTurret_t G_ClientStopUsingTurret = (G_ClientStopUs
 static const G_ClientStopUsingTurret_t G_ClientStopUsingTurret = (G_ClientStopUsingTurret_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const G_ClientStopUsingTurret_t G_ClientStopUsingTurret = (G_ClientStopUsingTurret_t)0x0810B9A4;
+#endif
+
+typedef void (*G_GetPlayerViewOrigin_t)(gentity_t *ent, float *origin);
+#if COD_VERSION == COD2_1_0
+static const G_GetPlayerViewOrigin_t G_GetPlayerViewOrigin = (G_GetPlayerViewOrigin_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_GetPlayerViewOrigin_t G_GetPlayerViewOrigin = (G_GetPlayerViewOrigin_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_GetPlayerViewOrigin_t G_GetPlayerViewOrigin = (G_GetPlayerViewOrigin_t)0x080F8916;
+#endif
+
+typedef void (*G_GetPlayerViewDirection_t)(gentity_t *ent, float *forward, float *right, float *up);
+#if COD_VERSION == COD2_1_0
+static const G_GetPlayerViewDirection_t G_GetPlayerViewDirection = (G_GetPlayerViewDirection_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_GetPlayerViewDirection_t G_GetPlayerViewDirection = (G_GetPlayerViewDirection_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_GetPlayerViewDirection_t G_GetPlayerViewDirection = (G_GetPlayerViewDirection_t)0x080F8AF8;
 #endif
 
 typedef playerState_t * (*SV_GameClientNum_t)(int num);

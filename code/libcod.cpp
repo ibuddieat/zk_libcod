@@ -3,6 +3,9 @@
 // Stock cvars
 cvar_t *cl_allowDownload;
 cvar_t *developer;
+cvar_t *player_meleeHeight;
+cvar_t *player_meleeRange;
+cvar_t *player_meleeWidth;
 cvar_t *rcon_password;
 cvar_t *sv_allowDownload;
 cvar_t *sv_fps;
@@ -66,6 +69,7 @@ cHook *hook_g_runframe;
 cHook *hook_scr_loadgametype;
 cHook *hook_vm_notify;
 cHook *hook_sv_init;
+cHook *hook_g_processipbans;
 
 int codecallback_client_spam = 0;
 int codecallback_dprintf = 0;
@@ -105,6 +109,9 @@ scr_notify_t scr_notify[MAX_NOTIFY_BUFFER];
 int scr_notify_index = 0;
 
 objective_t player_objectives[MAX_CLIENTS][16];
+float player_meleeHeightScale[MAX_CLIENTS] = {0.0}; // Defaults to 1.0 on connect
+float player_meleeRangeScale[MAX_CLIENTS] = {0.0}; // Defaults to 1.0 on connect
+float player_meleeWidthScale[MAX_CLIENTS] = {0.0}; // Defaults to 1.0 on connect
 int player_no_pickup[MAX_CLIENTS] = {0};
 int player_no_earthquakes[MAX_CLIENTS] = {0};
 int player_silent[MAX_CLIENTS] = {0};
@@ -139,7 +146,7 @@ void custom_SV_Init(void)
 	hook_sv_init->hook();
 }
 
-void hook_common_init_complete_print(const char *format, ...)
+void common_init_complete_print(const char *format, ...)
 {
 	char s[COD2_MAX_STRINGLENGTH];
 	va_list va;
@@ -197,6 +204,24 @@ void hook_common_init_complete_print(const char *format, ...)
 	#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
 		sv_wwwDlDisconnectedMessages = Cvar_RegisterInt("sv_wwwDlDisconnectedMessages", 1, 0, 2, CVAR_ARCHIVE);
 	#endif
+}
+
+void custom_G_ProcessIPBans()
+{
+	/* This is right after G_RegisterCvars, giving us access to variables that
+	are not yet defined at the common_init_complete_print hook */
+	player_meleeHeight = Cvar_FindVar("player_meleeHeight");
+	player_meleeRange = Cvar_FindVar("player_meleeRange");
+	player_meleeWidth = Cvar_FindVar("player_meleeWidth");
+
+	hook_g_processipbans->unhook();
+
+	void (*sig)(void);
+	*(int *)&sig = hook_g_processipbans->from;
+	
+	sig();
+	
+	hook_g_processipbans->hook();
 }
 
 void hook_bad_printf(const char *format, ...) {}
@@ -1445,6 +1470,9 @@ void custom_SV_SendClientGameState(client_t *client)
 	
 	/* New code start */
 	memset(&player_objectives[client - svs.clients], 0, sizeof(player_objectives[client - svs.clients]));
+	player_meleeHeightScale[client - svs.clients] = 1.0;
+	player_meleeRangeScale[client - svs.clients] = 1.0;
+	player_meleeWidthScale[client - svs.clients] = 1.0;
 	player_no_pickup[client - svs.clients] = 0;
 	player_no_earthquakes[client - svs.clients] = 0;
 	player_silent[client - svs.clients] = 0;
@@ -3912,6 +3940,33 @@ void custom_G_UpdateObjectives(void)
 	}
 }
 
+void custom_FireWeaponMelee(gentity_t *player)
+{
+	weaponParms wp;
+	int id;
+	float range, width, height;
+
+	if ( (player->client->ps.eFlags & EF_USETURRET) == 0 || player->active == 0 )
+	{
+		id = player->client->ps.clientNum;
+		wp.weapDef = BG_GetWeaponDef(player->s.weapon);
+		G_GetPlayerViewOrigin(player, wp.muzzleTrace);
+		G_GetPlayerViewDirection(player, wp.forward, wp.right, wp.up);
+
+		/* Stock values from G_RegisterCvars:
+		player_meleeRange = Cvar_RegisterFloat("player_meleeRange", 64.0, 0.0, 1000.0, CVAR_CHEAT | CVAR_UNSAFE);
+		player_meleeWidth = Cvar_RegisterFloat("player_meleeWidth", 10.0, 0.0, 1000.0, CVAR_CHEAT | CVAR_UNSAFE);
+		player_meleeHeight = Cvar_RegisterFloat("player_meleeHeight", 10.0, 0.0, 1000.0, CVAR_CHEAT | CVAR_UNSAFE);
+		*/
+
+		range = player_meleeRange->floatval * player_meleeRangeScale[id];
+		width = player_meleeWidth->floatval * player_meleeWidthScale[id];
+		height = player_meleeHeight->floatval * player_meleeHeightScale[id];
+
+		Weapon_Melee(player, &wp, range, width, height);
+	}
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -3937,7 +3992,7 @@ public:
 		mprotect((void *)0x08048000, 0x135000, PROT_READ | PROT_WRITE | PROT_EXEC);
 
 		#if COD_VERSION == COD2_1_0
-			cracking_hook_call(0x08061FE7, (int)hook_common_init_complete_print);
+			cracking_hook_call(0x08061FE7, (int)common_init_complete_print);
 			cracking_hook_call(0x08091D0C, (int)hook_sv_spawnserver);
 			cracking_hook_call(0x0808F281, (int)hook_ClientCommand);
 			cracking_hook_call(0x0808C8C0, (int)hook_AuthorizeState);
@@ -4009,7 +4064,7 @@ public:
 			#endif
 
 		#elif COD_VERSION == COD2_1_2
-			cracking_hook_call(0x08062301, (int)hook_common_init_complete_print);
+			cracking_hook_call(0x08062301, (int)common_init_complete_print);
 			cracking_hook_call(0x08093572, (int)hook_sv_spawnserver);
 			cracking_hook_call(0x08090B0C, (int)hook_ClientCommand);
 			cracking_hook_call(0x0808DA52, (int)hook_AuthorizeState);
@@ -4081,7 +4136,7 @@ public:
 			#endif
 
 		#elif COD_VERSION == COD2_1_3
-			cracking_hook_call(0x080622F9, (int)hook_common_init_complete_print);
+			cracking_hook_call(0x080622F9, (int)common_init_complete_print);
 			cracking_hook_call(0x0809362A, (int)hook_sv_spawnserver);
 			cracking_hook_call(0x08090BA0, (int)hook_ClientCommand);
 			cracking_hook_call(0x0808DB12, (int)hook_AuthorizeState);
@@ -4130,6 +4185,8 @@ public:
 			hook_vm_notify->hook();
 			hook_sv_init = new cHook(0x08093ADC, (int)custom_SV_Init);
 			hook_sv_init->hook();
+			hook_g_processipbans = new cHook(0x0811BB60, (int)custom_G_ProcessIPBans);
+			hook_g_processipbans->hook();
 
 			#if COMPILE_PLAYER == 1
 				hook_play_movement = new cHook(0x08090DAC, (int)play_movement);
@@ -4164,6 +4221,7 @@ public:
 			cracking_hook_function(0x08113128, (int)custom_Script_obituary);
 			cracking_hook_function(0x08092302, (int)custom_SV_MapExists);
 			cracking_hook_function(0x08109CE0, (int)custom_G_UpdateObjectives); // Guessed function name
+			cracking_hook_function(0x08120A70, (int)custom_FireWeaponMelee);
 
 			#if COMPILE_BOTS == 1
 				cracking_hook_function(0x0809676C, (int)custom_SV_BotUserMove);

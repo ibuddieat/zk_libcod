@@ -21,6 +21,9 @@ New script code methods:
   * `<player> playFxOnTagForPlayer(<effect id>, <entity>, <tag name>)`
   * `<player> runScriptAnimation(<scriptAnimEventType>, <isContinue>, <force>)`
   * `<player> setEarthquakes("on|off|toggle")`
+  * `<player> setMeleeHeightScale(<scale>)`
+  * `<player> setMeleeRangeScale(<scale>)`
+  * `<player> setMeleeWidthScale(<scale>)`
   * `<player> silent("on|off|toggle")`
   * `<player> stopUseTurret()`
   * `<player> unmuteClient(<id>)`
