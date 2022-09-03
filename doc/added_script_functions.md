@@ -11,7 +11,7 @@ New script code methods:
   * `<player> getGroundEntity()`
   * `<player> getInactivityTime()`
   * `<player> getPlayerstateFlags()`
-  * `<player> muteClient(<id>)`
+  * `<player> muteClient(<player>)`
   * `<player> noclip("on|off|toggle")`
   * `<player> objective_player_add(<objective_number>, <state>, <position>, <iconshader>)`
   * `<player> objective_player_delete(<objective_number>)`
@@ -28,7 +28,7 @@ New script code methods:
   * `<player> setMeleeWidthScale(<scale>)`
   * `<player> silent("on|off|toggle")`
   * `<player> stopUseTurret()`
-  * `<player> unmuteClient(<id>)`
+  * `<player> unmuteClient(<player>)`
   * `<turret> getTurretOwner()`
   * `<weapon> getWeaponItemAmmo()`
   * `<weapon> setWeaponItemAmmo(<value>)`
