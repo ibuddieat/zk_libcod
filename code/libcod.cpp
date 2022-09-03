@@ -925,7 +925,8 @@ void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t 
 						else if ( clientNum != -1 )
 							client = &svs.clients[clientNum];
 
-						if ( client )
+						// ClientDisconnect() nulls parts of clientSession_t
+						if ( client && client->gentity->client->sess.connected == CON_CONNECTED )
 						{
 							int player_team = client->gentity->client->sess.team;
 							if ( team )
