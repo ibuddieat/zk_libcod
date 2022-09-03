@@ -821,6 +821,35 @@ void gsc_player_getg_gravity(scr_entref_t id)
 	stackPushInt(entity->client->ps.gravity);
 }
 
+void gsc_player_setfirerangescale(scr_entref_t id)
+{
+	float old_scale, new_scale;
+
+	if ( ! stackGetParams("f", &new_scale))
+	{
+		stackError("gsc_player_setfirerangescale() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if (id >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_setfirerangescale() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	extern float player_fireRangeScale[MAX_CLIENTS];
+
+	old_scale = player_fireRangeScale[id];
+	if ( new_scale < 0 )
+	{
+		new_scale = 0.0;
+	}
+	player_fireRangeScale[id] = new_scale;
+	stackPushFloat(old_scale);
+}
+
 void gsc_player_setweaponfiremeleedelay(scr_entref_t id)
 {
 	int delay;

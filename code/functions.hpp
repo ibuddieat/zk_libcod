@@ -1830,4 +1830,41 @@ static const fire_grenade_t fire_grenade = (fire_grenade_t)0x0810E532;
 static const fire_grenade_t fire_grenade = (fire_grenade_t)0x0810E68E;
 #endif
 
+typedef void (*G_AntiLagRewindClientPos_t)(int offset, antilagClientStore *antilagStore);
+#if COD_VERSION == COD2_1_0
+static const G_AntiLagRewindClientPos_t G_AntiLagRewindClientPos = (G_AntiLagRewindClientPos_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_AntiLagRewindClientPos_t G_AntiLagRewindClientPos = (G_AntiLagRewindClientPos_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_AntiLagRewindClientPos_t G_AntiLagRewindClientPos = (G_AntiLagRewindClientPos_t)0x0811FC76;
+#endif
+
+typedef void (*G_AntiLag_RestoreClientPos_t)(antilagClientStore *antilagStore);
+#if COD_VERSION == COD2_1_0
+static const G_AntiLag_RestoreClientPos_t G_AntiLag_RestoreClientPos = (G_AntiLag_RestoreClientPos_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_AntiLag_RestoreClientPos_t G_AntiLag_RestoreClientPos = (G_AntiLag_RestoreClientPos_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_AntiLag_RestoreClientPos_t G_AntiLag_RestoreClientPos = (G_AntiLag_RestoreClientPos_t)0x0811FDEC;
+#endif
+
+typedef void (*Bullet_Endpos_t)(float spread, float *end, weaponParms *wp, float distance);
+#if COD_VERSION == COD2_1_0
+static const Bullet_Endpos_t Bullet_Endpos = (Bullet_Endpos_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Bullet_Endpos_t Bullet_Endpos = (Bullet_Endpos_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Bullet_Endpos_t Bullet_Endpos = (Bullet_Endpos_t)0x0811FAC8;
+#endif
+
+typedef void (*Bullet_Fire_Extended_t)(gentity_t *source, gentity_t *inflictor, vec3_t *start, vec3_t *end, float damage, int recursion, weaponParms *wp, gentity_t *target, int offset);
+#if COD_VERSION == COD2_1_0
+static const Bullet_Fire_Extended_t Bullet_Fire_Extended = (Bullet_Fire_Extended_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Bullet_Fire_Extended_t Bullet_Fire_Extended = (Bullet_Fire_Extended_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Bullet_Fire_Extended_t Bullet_Fire_Extended = (Bullet_Fire_Extended_t)0x0811FE90;
+#endif
+
+
 #endif

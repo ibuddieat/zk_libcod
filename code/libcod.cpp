@@ -112,6 +112,7 @@ objective_t player_objectives[MAX_CLIENTS][16];
 float player_meleeHeightScale[MAX_CLIENTS] = {0.0}; // Defaults to 1.0 on connect
 float player_meleeRangeScale[MAX_CLIENTS] = {0.0}; // Defaults to 1.0 on connect
 float player_meleeWidthScale[MAX_CLIENTS] = {0.0}; // Defaults to 1.0 on connect
+float player_fireRangeScale[MAX_CLIENTS] = {0.0}; // Defaults to 1.0 on connect
 int player_no_pickup[MAX_CLIENTS] = {0};
 int player_no_earthquakes[MAX_CLIENTS] = {0};
 int player_silent[MAX_CLIENTS] = {0};
@@ -1473,6 +1474,7 @@ void custom_SV_SendClientGameState(client_t *client)
 	player_meleeHeightScale[client - svs.clients] = 1.0;
 	player_meleeRangeScale[client - svs.clients] = 1.0;
 	player_meleeWidthScale[client - svs.clients] = 1.0;
+	player_fireRangeScale[client - svs.clients] = 1.0;
 	player_no_pickup[client - svs.clients] = 0;
 	player_no_earthquakes[client - svs.clients] = 0;
 	player_silent[client - svs.clients] = 0;
@@ -3969,6 +3971,47 @@ void custom_FireWeaponMelee(gentity_t *player)
 	}
 }
 
+void custom_Bullet_Fire_Spread(gentity_t *source, gentity_t *inflictor, weaponParms *wp, int offset, float spread) // Guessed function name
+{
+	int i;
+	vec3_t start, end;
+
+	/* New code start: per-player min. fire distance */
+	int id = inflictor->client->ps.clientNum;
+	float distance = wp->weapDef->fMinDamageRange * player_fireRangeScale[id];
+	/* New code end */
+
+	VectorCopy(wp->muzzleTrace, start);
+	for ( i = 0; i < wp->weapDef->shotCount; i++ )
+	{
+		Bullet_Endpos(spread, end, wp, distance);
+		Bullet_Fire_Extended(source, inflictor, &start, &end, 1.0, 0, wp, source, offset);
+	}
+}
+
+void custom_Bullet_Fire(gentity_t *inflictor, float spread, weaponParms *wp, gentity_t *source, int offset)
+{
+	antilagClientStore antilagStore;
+	vec3_t end;
+
+	G_AntiLagRewindClientPos(offset, &antilagStore);
+	if ( wp->weapDef->weapClass == WEAPCLASS_SPREAD )
+	{
+		custom_Bullet_Fire_Spread(source, inflictor, wp, offset, spread);
+	}
+	else
+	{
+		/* New code start: per-player min. fire distance */
+		int id = inflictor->client->ps.clientNum;
+		float distance = 8192.0 * player_fireRangeScale[id];
+		/* New code end */
+
+		Bullet_Endpos(spread, end, wp, distance);
+		Bullet_Fire_Extended(source, inflictor, &wp->muzzleTrace, &end, 1.0, 0, wp, source, offset);
+	}
+	G_AntiLag_RestoreClientPos(&antilagStore);
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -4224,6 +4267,7 @@ public:
 			cracking_hook_function(0x08092302, (int)custom_SV_MapExists);
 			cracking_hook_function(0x08109CE0, (int)custom_G_UpdateObjectives); // Guessed function name
 			cracking_hook_function(0x08120A70, (int)custom_FireWeaponMelee);
+			cracking_hook_function(0x08120484, (int)custom_Bullet_Fire);
 
 			#if COMPILE_BOTS == 1
 				cracking_hook_function(0x0809676C, (int)custom_SV_BotUserMove);

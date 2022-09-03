@@ -45,6 +45,7 @@ void gsc_player_setg_speed(scr_entref_t id);
 void gsc_player_setg_gravity(scr_entref_t id);
 void gsc_player_getg_speed(scr_entref_t id);
 void gsc_player_getg_gravity(scr_entref_t id);
+void gsc_player_setfirerangescale(scr_entref_t id);
 void gsc_player_setweaponfiremeleedelay(scr_entref_t id);
 void gsc_player_setmeleeheightscale(scr_entref_t id);
 void gsc_player_setmeleerangescale(scr_entref_t id);

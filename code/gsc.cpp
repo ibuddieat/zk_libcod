@@ -378,6 +378,7 @@ scr_method_t scriptMethods[] =
 	{"setg_gravity", gsc_player_setg_gravity, 0},
 	{"getg_speed", gsc_player_getg_speed, 0},
 	{"getg_gravity", gsc_player_getg_gravity, 0},
+	{"setfirerangescale", gsc_player_setfirerangescale, 0},
 	{"setweaponfiremeleedelay", gsc_player_setweaponfiremeleedelay, 0},
 	{"setmeleeheightscale", gsc_player_setmeleeheightscale, 0},
 	{"setmeleerangescale", gsc_player_setmeleerangescale, 0},

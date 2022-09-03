@@ -1960,6 +1960,12 @@ struct weaponParms
 	WeaponDef_t* weapDef;
 };
 
+struct antilagClientStore
+{
+	vec3_t realClientPositions[MAX_CLIENTS];
+	byte clientMoved[MAX_CLIENTS];
+};
+
 typedef enum
 {
 	ANIM_BP_UNUSED,
