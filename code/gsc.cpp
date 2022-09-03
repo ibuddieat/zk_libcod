@@ -426,6 +426,7 @@ scr_method_t scriptMethods[] =
 #if COMPILE_WEAPONS == 1
 	{"getweaponitemammo", gsc_weapons_getweaponitemammo, 0},
 	{"setweaponitemammo", gsc_weapons_setweaponitemammo, 0},
+	{"spawngrenade", gsc_weapons_spawngrenade, 0},
 #endif
 
 #ifdef EXTRA_METHODS_INC

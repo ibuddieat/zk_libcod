@@ -360,23 +360,23 @@ int player_eject(int a1)
 	return ret;
 }
 
-gentity_t* fire_grenade(gentity_t *self, vec3_t start, vec3_t dir, int weapon, int time)
+gentity_t* custom_fire_grenade(gentity_t *attacker, vec3_t start, vec3_t dir, int weaponIndex, int fuseTime)
 {
 	hook_fire_grenade->unhook();
 
-	gentity_t* (*sig)(gentity_t *self, vec3_t start, vec3_t dir, int weapon, int time);
+	gentity_t* (*sig)(gentity_t *attacker, vec3_t start, vec3_t dir, int weaponIndex, int fuseTime);
 	*(int *)&sig = hook_fire_grenade->from;
 
-	gentity_t* grenade = sig(self, start, dir, weapon, time);
+	gentity_t* grenade = sig(attacker, start, dir, weaponIndex, fuseTime);
 
 	hook_fire_grenade->hook();
 
 	if ( codecallback_fire_grenade && Scr_IsSystemActive() )
 	{
-		WeaponDef_t *def = BG_WeaponDefs(weapon);
+		WeaponDef_t *def = BG_WeaponDefs(weaponIndex);
 		stackPushString(def->szInternalName);
 		stackPushEntity(grenade);
-		short ret = Scr_ExecEntThread(self, codecallback_fire_grenade, 2);
+		short ret = Scr_ExecEntThread(attacker, codecallback_fire_grenade, 2);
 		Scr_FreeThread(ret);
 	}
 
@@ -3959,9 +3959,11 @@ void custom_FireWeaponMelee(gentity_t *player)
 		player_meleeHeight = Cvar_RegisterFloat("player_meleeHeight", 10.0, 0.0, 1000.0, CVAR_CHEAT | CVAR_UNSAFE);
 		*/
 
+		/* New code start: per-player melee values */
 		range = player_meleeRange->floatval * player_meleeRangeScale[id];
 		width = player_meleeWidth->floatval * player_meleeWidthScale[id];
 		height = player_meleeHeight->floatval * player_meleeHeightScale[id];
+		/* New code end */
 
 		Weapon_Melee(player, &wp, range, width, height);
 	}
@@ -4029,7 +4031,7 @@ public:
 			hook_player_collision->hook();
 			hook_player_eject = new cHook(0x080F474A, (int)player_eject);
 			hook_player_eject->hook();
-			hook_fire_grenade = new cHook(0x0810C1F6, (int)fire_grenade);
+			hook_fire_grenade = new cHook(0x0810C1F6, (int)custom_fire_grenade);
 			hook_fire_grenade->hook();
 			hook_touch_item_auto = new cHook(0x081037F0, int(touch_item_auto));
 			hook_touch_item_auto->hook();
@@ -4101,7 +4103,7 @@ public:
 			hook_player_collision->hook();
 			hook_player_eject = new cHook(0x080F6D5A, (int)player_eject);
 			hook_player_eject->hook();
-			hook_fire_grenade = new cHook(0x0810E532, (int)fire_grenade);
+			hook_fire_grenade = new cHook(0x0810E532, (int)custom_fire_grenade);
 			hook_fire_grenade->hook();
 			hook_touch_item_auto = new cHook(0x08105B24, int(touch_item_auto));
 			hook_touch_item_auto->hook();
@@ -4169,7 +4171,7 @@ public:
 			hook_player_collision->hook();
 			hook_player_eject = new cHook(0x080F6E9E, (int)player_eject);
 			hook_player_eject->hook();
-			hook_fire_grenade = new cHook(0x0810E68E, (int)fire_grenade);
+			hook_fire_grenade = new cHook(0x0810E68E, (int)custom_fire_grenade);
 			hook_fire_grenade->hook();
 			hook_touch_item_auto = new cHook(0x08105C80, int(touch_item_auto));
 			hook_touch_item_auto->hook();

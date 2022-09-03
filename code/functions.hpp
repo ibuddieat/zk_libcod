@@ -912,6 +912,15 @@ static const Scr_GetInt_t Scr_GetInt = (Scr_GetInt_t)0x0; // Not tested
 static const Scr_GetInt_t Scr_GetInt = (Scr_GetInt_t)0x08084694;
 #endif
 
+typedef float (*Scr_GetFloat_t)(uint param);
+#if COD_VERSION == COD2_1_0
+static const Scr_GetFloat_t Scr_GetFloat = (Scr_GetFloat_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Scr_GetFloat_t Scr_GetFloat = (Scr_GetFloat_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Scr_GetFloat_t Scr_GetFloat = (Scr_GetFloat_t)0x08084968;
+#endif
+
 typedef void (*Scr_GetVector_t)(uint param, vec3_t *vec);
 #if COD_VERSION == COD2_1_0
 static const Scr_GetVector_t Scr_GetVector = (Scr_GetVector_t)0x0; // Not tested
@@ -1810,6 +1819,15 @@ static const SetObjectiveIcon_t SetObjectiveIcon = (SetObjectiveIcon_t)0x0; // N
 static const SetObjectiveIcon_t SetObjectiveIcon = (SetObjectiveIcon_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const SetObjectiveIcon_t SetObjectiveIcon = (SetObjectiveIcon_t)0x081128CE;
+#endif
+
+typedef gentity_t * (*fire_grenade_t)(gentity_t *attacker, vec3_t *start, vec3_t *dir, int weaponIndex, int fuseTime);
+#if COD_VERSION == COD2_1_0
+static const fire_grenade_t fire_grenade = (fire_grenade_t)0x0810C1F6;
+#elif COD_VERSION == COD2_1_2
+static const fire_grenade_t fire_grenade = (fire_grenade_t)0x0810E532;
+#elif COD_VERSION == COD2_1_3
+static const fire_grenade_t fire_grenade = (fire_grenade_t)0x0810E68E;
 #endif
 
 #endif

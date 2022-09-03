@@ -6,7 +6,7 @@ qboolean isValidWeaponId(int id)
 {
 	int weps = BG_GetNumWeapons();
 
-	if (id >= weps || id < 0 || weps == 0)
+	if ( id >= weps || id <= 0 || weps == 0 )
 		return qfalse;
 
 	return qtrue;
@@ -794,22 +794,10 @@ bool isOnIgnoreList(char* weapon) {
 }
 
 int hook_findWeaponIndex(char* weapon) {
-	typedef int (*findIndexWeapon_t)(char* weapon);
-	#if COD_VERSION == COD2_1_0
-		findIndexWeapon_t findIndexWeapon = (findIndexWeapon_t)0x080E949C;
-	#elif COD_VERSION == COD2_1_2
-		findIndexWeapon_t findIndexWeapon = (findIndexWeapon_t)0x080EBA8C;
-	#elif COD_VERSION == COD2_1_3
-		findIndexWeapon_t findIndexWeapon = (findIndexWeapon_t)0x080EBBD0;
-	#else
-		#warning findIndexWeapon_t findIndexWeapon = NULL;
-		findIndexWeapon_t findIndexWeapon = (findIndexWeapon_t)NULL;
-	#endif
-	
 	if(isOnIgnoreList(weapon))
-		return findIndexWeapon(defaultweapon_mp);
+		return BG_FindWeaponIndexForName(defaultweapon_mp);
 	else
-		return findIndexWeapon(weapon);
+		return BG_FindWeaponIndexForName(weapon);
 }
 
 void gsc_weapons_resetignoredweapons() {
@@ -939,6 +927,65 @@ void gsc_weapons_setweaponitemammo(scr_entref_t id)
         stackPushUndefined();
         return;
     }
+}
+
+void gsc_weapons_spawngrenade(scr_entref_t id)
+{
+	int args;
+	gentity_t *owner;
+	int weaponIndex;
+	WeaponDef_t *weapon;
+	vec3_t origin;
+	vec3_t dir = {0, 0, 0};
+	vec3_t velocity = {0, 0, 0};
+	int fuseTime;
+	gentity_t *grenade;
+
+	args = Scr_GetNumParam();
+	owner = &g_entities[id];
+
+	if ( args < 2 || args > 5 )
+	{
+		stackError("gsc_weapons_spawngrenade() wrong number of arguments");
+		stackPushUndefined();
+		return;
+	}
+
+	weaponIndex = BG_FindWeaponIndexForName(Scr_GetString(0));
+
+	if (!isValidWeaponId(weaponIndex))
+	{
+		stackError("gsc_weapons_spawngrenade() weapon index is out of bounds");
+		stackPushUndefined();
+		return;
+	}
+
+	weapon = BG_WeaponDefs(weaponIndex);
+	Scr_GetVector(1, &origin);
+
+	if ( args > 2 )
+	{
+		Scr_GetVector(2, &dir);
+	}
+
+	if ( args > 3 )
+	{
+		Scr_GetVector(3, &velocity);
+	}
+
+	if ( args > 4 )
+	{
+		fuseTime = (int)(Scr_GetFloat(4) * 1000); 
+	}
+	else
+	{
+		fuseTime = weapon->fuseTime;
+	}
+
+	grenade = fire_grenade(owner, &origin, &dir, weaponIndex, fuseTime);
+	Vec3Normalize(dir);
+	VectorMA(grenade->s.pos.trDelta, DotProduct(velocity, dir), dir, grenade->s.pos.trDelta);
+	stackPushEntity(grenade);
 }
 
 #endif

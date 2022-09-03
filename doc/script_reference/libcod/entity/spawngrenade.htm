@@ -1,0 +1,69 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>spawnGrenade( &lt;weapon&gt;, &lt;origin&gt;, [&lt;direction&gt;], [&lt;velocity&gt;], [&lt;fuseTime&gt;] )</H1>
+<HR>
+<BODY BGCOLOR='B0C4DE'>
+<I>
+Module: Weapons<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Spawns a new grenade and returns a reference to the grenade.</p>
+
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+//attacker = spawn("script_origin", (0, 0, 0)); // world as attacker
+attacker = self;
+origin = self getTagOrigin("tag_weapon_right");
+dir = anglesToForward(self getPlayerAngles());
+velocity = maps\mp\_utility::vectorScale(dir, 512);
+fuseTime = 3;
+attacker spawnGrenade("frag_grenade_german_mp", origin, dir, velocity, fuseTime);
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;weapon&gt; The name of the weapon item to spawn (constant string)</LI>
+<LI>2 : &lt;origin&gt; The position where the grenade is to be spawned (vector)</LI>
+</UL></TR></TD></TABLE>
+<BR><BR>
+<H2>Optional Args</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;direction&gt; The orientation in which the grenade is to be spawned (vector)</LI>
+<LI>2 : &lt;velocity&gt; The grenade's velocity on spawn (vector)</LI>
+<LI>3 : &lt;fuseTime&gt; The remaining fuse time of the grenade in seconds</LI>
+</UL></TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>
