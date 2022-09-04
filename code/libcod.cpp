@@ -2539,7 +2539,10 @@ void manymaps_prepare(const char *mapname, int read)
 	else
 		snprintf(library_path, sizeof(library_path), "%s/%s/Library", fs_homepath->string, fs_game->string);
 
-	snprintf(map_check, sizeof(map_check), "%s/%s.iwd", library_path, mapname);
+	if ( snprintf(map_check, sizeof(map_check), "%s/%s.iwd", library_path, mapname) > (int)sizeof(map_check) )
+	{
+		Com_Printf("Warning: Manymaps map check path is too long, truncated");
+	}
 
 	#if COD_VERSION == COD2_1_0
 		const char *stock_maps[] = { "mp_breakout", "mp_brecourt", "mp_burgundy", "mp_carentan", "mp_dawnville", "mp_decoy", "mp_downtown", "mp_farmhouse", "mp_leningrad", "mp_matmata", "mp_railyard", "mp_toujane", "mp_trainstation" };
@@ -2605,8 +2608,14 @@ void manymaps_prepare(const char *mapname, int read)
 	{
 		char src[512], dst[512];
 
-		snprintf(src, sizeof(src), "%s/%s.iwd", library_path, mapname);
-		snprintf(dst, sizeof(dst), "%s/%s/%s.iwd", fs_homepath->string, fs_game->string, mapname);
+		if ( snprintf(src, sizeof(src), "%s/%s.iwd", library_path, mapname) > (int)sizeof(src) )
+		{
+			Com_Printf("Warning: Manymaps file delete path is too long, truncated");
+		}
+		if ( snprintf(dst, sizeof(dst), "%s/%s/%s.iwd", fs_homepath->string, fs_game->string, mapname) > (int)sizeof(dst) )
+		{
+			Com_Printf("Warning: Manymaps file delete path is too long, truncated");
+		}
 
 		if ( access(src, F_OK) != -1 )
 		{
@@ -3845,7 +3854,10 @@ qboolean custom_SV_MapExists(const char *name)
 		else
 			snprintf(library_path, sizeof(library_path), "%s/%s/Library", fs_homepath->string, fs_game->string);
 
-		snprintf(map_check, sizeof(map_check), "%s/%s.iwd", library_path, name);
+		if ( snprintf(map_check, sizeof(map_check), "%s/%s.iwd", library_path, name) > (int)sizeof(map_check) )
+		{
+			Com_Printf("Warning: Manymaps map check path is too long, truncated");
+		}
 
 		return access(map_check, F_OK) != -1;
 	}

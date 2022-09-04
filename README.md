@@ -21,12 +21,16 @@
 - Added documentation for script callback functions (stock and libcod)
   + For details, see the updated [Script Docs](https://www.ibuddie.at/libcod/index.html)
 
+**Supported/Tested GCC+OS**
+- gcc (Ubuntu 9.4.0-1ubuntu1~20.04.1) 9.4.0
+- gcc (Ubuntu 7.5.0-3ubuntu1~18.04) 7.5.0
+
 **Build requirements**
 - gcc and g++ (with multilib on 64-bit x86 operating systems)
 - libstdc++5
 - MySQL client (if required by functionality)
 
-**Requirements installation (tested on Ubuntu 18.04.5 LTS)**
+**Requirements installation (for Ubuntu 18.04.5 LTS)**
 ```
 dpkg --add-architecture i386
 apt update
