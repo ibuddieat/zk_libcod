@@ -15,11 +15,11 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>unmutePlayer( &lt;player&gt; )</H1>
+<H1>silent( &lt;mode&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
-Module: Player<BR>
+Module: Sound<BR>
 </I>
 
 <BR>
@@ -27,7 +27,12 @@ Module: Player<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Unmutes player B for player A.</p>
+<p>Enables/disables some sounds that a player emits during gameplay. Further notes:</p>
+<UL>
+<LI>Hides footstep, landing, jumping, and foliage sounds for the player so that other players cannot hear them</LI>
+<LI>Other players can still hear melee swing & miss sounds if they are close enough</LI>
+<LI>Silenced players can still hear some of their own actions that others cannot hear (e.g., landing, gear rattle)</LI>
+</UL>
 
 </H3>
 </TR></TD></TABLE>
@@ -36,7 +41,7 @@ Module: Player<BR>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-Player A
+The player
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -45,7 +50,7 @@ Player A
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-player_a unmutePlayer(player_b);
+self silent("on");
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -54,7 +59,7 @@ player_a unmutePlayer(player_b);
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;player&gt; The player to mute for player A.</LI>
+<LI>1 : &lt;mode&gt; The mode to switch to: "on", "off", or "toggle".</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>

@@ -15,11 +15,11 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>mutePlayer( &lt;player&gt; )</H1>
+<H1>stopSoundFile()</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
-Module: Player<BR>
+Module: Sound<BR>
 </I>
 
 <BR>
@@ -27,7 +27,7 @@ Module: Player<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Mutes player B for player A.</p>
+<p>Stops sound playback that was initiated via <a href="../sound/playsoundfile.htm">playSoundFile</a>. Returns whether a sound was playing. A script notify with string sound_file_stop is emit if a sound was playing.</p>
 
 </H3>
 </TR></TD></TABLE>
@@ -36,7 +36,7 @@ Module: Player<BR>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-Player A
+The player
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -45,17 +45,10 @@ Player A
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-player_a mutePlayer(player_b);
+self stopSoundFile();
 </PRE>
 </H3>
 </TR></TD></TABLE>
-<BR><BR>
-<H2>Required Args:</H2>
-<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
-<TR><TD BGCOLOR="C0D4EE">
-<UL>
-<LI>1 : &lt;player&gt; The player to unmute for player A.</LI>
-</UL></TR></TD></TABLE>
 <BR>
 </BODY>
 </HTML>

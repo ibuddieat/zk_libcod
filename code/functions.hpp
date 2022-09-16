@@ -1713,13 +1713,13 @@ static const Scr_PlayFxError_t Scr_PlayFxError = (Scr_PlayFxError_t)0x0; // Not 
 static const Scr_PlayFxError_t Scr_PlayFxError = (Scr_PlayFxError_t)0x08115034;
 #endif
 
-typedef int (*FUN_081384cc_t)(const char *str); // Some PunkBuster function
+typedef const char * (*SEH_StringEd_GetString_t)(const char *pszReference);
 #if COD_VERSION == COD2_1_0
-static const FUN_081384cc_t FUN_081384cc = (FUN_081384cc_t)0x0; // Not tested
+static const SEH_StringEd_GetString_t SEH_StringEd_GetString = (SEH_StringEd_GetString_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
-static const FUN_081384cc_t FUN_081384cc = (FUN_081384cc_t)0x0; // Not tested
+static const SEH_StringEd_GetString_t SEH_StringEd_GetString = (SEH_StringEd_GetString_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
-static const FUN_081384cc_t FUN_081384cc = (FUN_081384cc_t)0x081384cc;
+static const SEH_StringEd_GetString_t SEH_StringEd_GetString = (SEH_StringEd_GetString_t)0x081384cc;
 #endif
 
 typedef void (*AxisToAngles_t)(float *axis, float *angles);
@@ -1866,5 +1866,13 @@ static const Bullet_Fire_Extended_t Bullet_Fire_Extended = (Bullet_Fire_Extended
 static const Bullet_Fire_Extended_t Bullet_Fire_Extended = (Bullet_Fire_Extended_t)0x0811FE90;
 #endif
 
+typedef void (*SV_QueueVoicePacket_t)(int talkerNum, int clientNum, VoicePacket_t *voicePacket);
+#if COD_VERSION == COD2_1_0
+static const SV_QueueVoicePacket_t SV_QueueVoicePacket = (SV_QueueVoicePacket_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_QueueVoicePacket_t SV_QueueVoicePacket = (SV_QueueVoicePacket_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_QueueVoicePacket_t SV_QueueVoicePacket = (SV_QueueVoicePacket_t)0x0809C21C;
+#endif
 
 #endif

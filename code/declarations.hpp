@@ -36,6 +36,7 @@
 
 #define MAX_CLIENTS 64
 #define MAX_CHALLENGES 1024
+#define MAX_VOICEPACKETS 40
 #define PACKET_BACKUP 32
 #define PACKET_MASK ( PACKET_BACKUP - 1 )
 #define MAX_QPATH 64
@@ -1301,10 +1302,10 @@ typedef struct
 #pragma pack(1)
 typedef struct
 {
-	char num;
+	char talkerNum;
 	char data[256];
 	int dataLen;
-} voices_t;
+} VoicePacket_t;
 #pragma pack(pop)
 
 typedef struct client_s
@@ -1360,7 +1361,7 @@ typedef struct client_s
 	short			clscriptid;
 	int				bot;
 	int				serverId;
-	voices_t		voicedata[40];
+	VoicePacket_t	voicedata[MAX_VOICEPACKETS];
 	int				unsentVoiceData;
 	byte			mutedClients[MAX_CLIENTS];
 	byte			hasVoip;
@@ -2230,9 +2231,10 @@ typedef struct
 	short neck;
 	short head;
 	short pelvis;
-	short pickup_ammo;
-	short pickup_weapon;
-	short pickup_health;
+	#if COMPILE_CUSTOM_VOICE == 1
+	short sound_file_done;
+	short sound_file_stop;
+	#endif
 } stringIndex_t;
 
 typedef struct bgs_s
@@ -2961,3 +2963,6 @@ typedef struct scr_notify_s
 	unsigned int argc;
 	VariableValue arguments[MAX_NOTIFY_PARAMS];
 } scr_notify_t;
+
+#define MAX_CUSTOMSOUNDDURATION 30 // Seconds
+#define MAX_CACHEDVOICEPACKETS (MAX_CUSTOMSOUNDDURATION * 50) // 50 voice packets per second

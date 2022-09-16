@@ -23,27 +23,36 @@
 
 **Supported/Tested GCC+OS**
 - gcc (Ubuntu 9.4.0-1ubuntu1~20.04.1) 9.4.0
-- gcc (Ubuntu 7.5.0-3ubuntu1~18.04) 7.5.0
+- gcc (Ubuntu 7.5.0-3ubuntu1~18.04) 7.5.0 (with Speex)
 
 **Build requirements**
 - gcc and g++ (with multilib on 64-bit x86 operating systems)
 - libstdc++5
 - MySQL client (if required by functionality)
+- Speex 1.1.9 (can be disabled in [config.hpp](code/config.hpp))
 
-**Requirements installation (for Ubuntu 18.04.5 LTS)**
+**Base requirements installation (for 64-bit Ubuntu 18.04.5 LTS)**
 ```
-dpkg --add-architecture i386
-apt update
-apt install gcc-multilib
-apt install g++-multilib
-apt install libstdc++5:i386
+sudo dpkg --add-architecture i386
+sudo apt update
+sudo apt install gcc-multilib g++-multilib libstdc++5:i386
+```
+
+**MySQL requirements installation (for 64-bit Ubuntu 18.04.5 LTS)**
+```
 apt install libmysqlclient-dev:i386
 ```
+
+**Speex installation (for 64-bit Ubuntu 18.04.5 LTS)**
+- [Here](doc/install_speex.md)
 
 **Creating the binary (written to `./code/bin`)**
 ```
 cd code
 ./doit.sh
+
+# Or without speex:
+./doit.sh nospeex
 ```
 
 **Initial fork path**
@@ -67,11 +76,12 @@ Another limitation that bothered us was that, after a few months, we intended to
 We then started to add more and more functions to our fork, and especially since late 2021 we're adding (and usually also documenting) whatever feels necessary to help us implementing new features and/or mods.
 
 **Other important references**
+- \*.ZK.\* Zombie Knights (https://discord.gg/f9uS49Hhcs)
 - Killtube~ (https://killtube.org/)
 - Enemy-Territory (https://github.com/id-Software/Enemy-Territory)
 - CoD4x Server (https://github.com/callofduty4x/CoD4x_Server)
 - Ghidra (https://github.com/NationalSecurityAgency/ghidra)
-- \*.ZK.\* Zombie Knights (https://discord.gg/f9uS49Hhcs)
+- The Speex Project (https://www.speex.org/)
 
 **Further notes**
 - The release notes are aligned with other (private) \*.ZK.\* repositories, therefore these notes do not necessarily reflect what is new in *this* repository. This might change in the future.

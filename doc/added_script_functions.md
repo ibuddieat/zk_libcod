@@ -11,6 +11,7 @@ New script code methods:
   * `<player> getGroundEntity()`
   * `<player> getInactivityTime()`
   * `<player> getPlayerstateFlags()`
+  * `<player> isPlayingSoundFile()`
   * `<player> muteClient(<player>)`
   * `<player> noclip("on|off|toggle")`
   * `<player> objective_player_add(<objective_number>, <state>, <position>, <iconshader>)`
@@ -20,6 +21,7 @@ New script code methods:
   * `<player> objective_player_state(<objective_number>, <state>)`
   * `<player> playFxForPlayer(<effect id>, <position of effect>, [<forward vector>], [<up vector>])`
   * `<player> playFxOnTagForPlayer(<effect id>, <entity>, <tag name>)`
+  * `<player> playSoundFile(<path>, [<source player>])`
   * `<player> runScriptAnimation(<scriptAnimEventType>, <isContinue>, <force>)`
   * `<player> setEarthquakes("on|off|toggle")`
   * `<player> setFireRangeScale(<scale>)`
@@ -27,6 +29,7 @@ New script code methods:
   * `<player> setMeleeRangeScale(<scale>)`
   * `<player> setMeleeWidthScale(<scale>)`
   * `<player> silent("on|off|toggle")`
+  * `<player> stopSoundFile()`
   * `<player> stopUseTurret()`
   * `<player> unmuteClient(<player>)`
   * `<turret> getTurretOwner()`

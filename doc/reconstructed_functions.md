@@ -27,5 +27,6 @@ Reconstructed game functions:
   * `SV_MapExists` for manymaps support
   * `G_UpdateObjectives` for per-player objectives (this function name is a guess)
   * `FireWeaponMelee` for per-player melee values
+  * `SV_QueueVoicePacket` for voice data dump/modification
 
 Note: Usually they can be found with the `custom_` prefix in [libcod.cpp](../code/libcod.cpp). Also, this list does not include simple hooks that call the original game function.

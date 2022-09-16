@@ -6,7 +6,9 @@
 # ./doit.sh cod2_1_3
 
 cc="g++"
-options="-I. -m32 -fPIC -Wall" # -g -ggdb -Wno-write-strings - not full warnings
+options="-I. -m32 -fPIC -Wall"
+# -g -ggdb -O0 // debug build without optimization
+# -Wno-write-strings // not full warnings
 
 mysql_variant=0
 
@@ -53,6 +55,12 @@ if [ "$1" == "clean" ]; then
 else
 	set -- "cod2_1_3"
 	constants="-D COD_VERSION=COD2_1_3"
+fi
+
+if [ "$1" == "nospeex" ]; then
+	speex_link=""
+else
+	speex_link="-lspeex"
 fi
 
 if [ -f extra/functions.hpp ]; then
@@ -156,7 +164,7 @@ fi
 
 echo "##### LINKING lib$1.so #####"
 objects="$(ls objects_$1/*.opp)"
-$cc -m32 -shared -L/lib32 -o bin/lib$1.so -ldl $objects -lpthread $mysql_link
+$cc -m32 -shared -L/lib32 -o bin/lib$1.so -ldl $objects -lpthread $mysql_link $speex_link
 rm objects_$1 -r
 
 if [ mysql_variant > 0 ]; then

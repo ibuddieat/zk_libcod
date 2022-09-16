@@ -7,6 +7,10 @@ Added cvars:
     * Type: Boolean
     * Default: False
     * Effect: Toggle logging of info about static models on map load.
+  * `g_dumpVoiceData`
+    * Type: Boolean
+    * Default: False
+    * Effect: Toggle storage of voice data into voiceData.spx, similar to voice.wav for clients if winvoice_save_voice is set to "1". Data is speex-encoded.
   * `g_logPickup`
     * Type: Boolean
     * Default: True

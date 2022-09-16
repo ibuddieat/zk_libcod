@@ -14,22 +14,24 @@ cvar_t *sv_maxRate;
 cvar_t *sv_padPackets;
 cvar_t *sv_pure;
 cvar_t *sv_timeout;
+cvar_t *sv_voiceQuality;
 cvar_t *sv_zombietime;
 #if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
-	cvar_t *cl_wwwDownload;
-	cvar_t *sv_wwwBaseURL;
-	cvar_t *sv_wwwDlDisconnected;
-	cvar_t *sv_wwwDownload;
+cvar_t *cl_wwwDownload;
+cvar_t *sv_wwwBaseURL;
+cvar_t *sv_wwwDlDisconnected;
+cvar_t *sv_wwwDownload;
 #endif
 
 // Custom cvars
 #if COMPILE_UTILS == 1
-	cvar_t *con_coloredPrints;
+cvar_t *con_coloredPrints;
 #endif
 cvar_t *fs_callbacks;
 cvar_t *fs_library;
 cvar_t *g_debugEvents;
 cvar_t *g_debugStaticModels;
+cvar_t *g_dumpVoiceData;
 cvar_t *g_logPickup;
 cvar_t *g_playerCollision;
 cvar_t *g_playerEject;
@@ -47,7 +49,7 @@ cvar_t *sv_logRcon;
 cvar_t *sv_noauthorize;
 cvar_t *sv_timeoutMessages;
 #if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
-	cvar_t *sv_wwwDlDisconnectedMessages;
+cvar_t *sv_wwwDlDisconnectedMessages;
 #endif
 
 cHook *hook_gametype_scripts;
@@ -64,6 +66,7 @@ cHook *hook_touch_item_auto;
 cHook *hook_developer_prints;
 cHook *hook_console_print;
 cHook *hook_g_tempentity;
+cHook *hook_gscr_loadconsts;
 cHook *hook_sv_masterheartbeat;
 cHook *hook_g_runframe;
 cHook *hook_scr_loadgametype;
@@ -108,6 +111,13 @@ int scr_errors_index = 0;
 scr_notify_t scr_notify[MAX_NOTIFY_BUFFER];
 int scr_notify_index = 0;
 
+FILE *voiceData;
+#if COMPILE_CUSTOM_VOICE == 1
+int lastCustomVoiceDataTime = 0;
+VoicePacket_t player_voiceData[MAX_CLIENTS][MAX_CACHEDVOICEPACKETS];
+int player_sentVoiceData[MAX_CLIENTS] = {0};
+int player_unsentVoiceData[MAX_CLIENTS] = {0};
+#endif
 objective_t player_objectives[MAX_CLIENTS][16];
 float player_meleeHeightScale[MAX_CLIENTS] = {0.0}; // Defaults to 1.0 on connect
 float player_meleeRangeScale[MAX_CLIENTS] = {0.0}; // Defaults to 1.0 on connect
@@ -118,18 +128,18 @@ int player_no_earthquakes[MAX_CLIENTS] = {0};
 int player_silent[MAX_CLIENTS] = {0};
 int player_g_speed[MAX_CLIENTS] = {0};
 int player_g_gravity[MAX_CLIENTS] = {0};
+int gamestate_size[MAX_CLIENTS] = {0};
 int custom_animation[MAX_CLIENTS] = {0};
 int clientfps[MAX_CLIENTS] = {0};
 int clientframes[MAX_CLIENTS] = {0};
 uint64_t clientframetime[MAX_CLIENTS] = {0};
 int previousbuttons[MAX_CLIENTS] = {0};
 #if COMPILE_BOTS == 1
-	int bot_buttons[MAX_CLIENTS] = {0};
-	int bot_weapon[MAX_CLIENTS] = {0};
-	char bot_forwardmove[MAX_CLIENTS] = {0};
-	char bot_rightmove[MAX_CLIENTS] = {0};
+int bot_buttons[MAX_CLIENTS] = {0};
+int bot_weapon[MAX_CLIENTS] = {0};
+char bot_forwardmove[MAX_CLIENTS] = {0};
+char bot_rightmove[MAX_CLIENTS] = {0};
 #endif
-int gamestate_size[MAX_CLIENTS] = {0};
 
 void custom_SV_Init(void)
 {
@@ -170,22 +180,24 @@ void common_init_complete_print(const char *format, ...)
 	sv_padPackets = Cvar_FindVar("sv_padPackets");
 	sv_pure = Cvar_FindVar("sv_pure");
 	sv_timeout = Cvar_FindVar("sv_timeout");
+	sv_voiceQuality = Cvar_FindVar("sv_voiceQuality");
 	sv_zombietime = Cvar_FindVar("sv_zombietime");
 	#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
-		cl_wwwDownload = Cvar_RegisterBool("cl_wwwDownload", qtrue, CVAR_ARCHIVE | CVAR_SYSTEMINFO); // Force-enable wwwDownload for clients
-		sv_wwwBaseURL = Cvar_FindVar("sv_wwwBaseURL");
-		sv_wwwDlDisconnected = Cvar_FindVar("sv_wwwDlDisconnected");
-		sv_wwwDownload = Cvar_FindVar("sv_wwwDownload");
+	cl_wwwDownload = Cvar_RegisterBool("cl_wwwDownload", qtrue, CVAR_ARCHIVE | CVAR_SYSTEMINFO); // Force-enable wwwDownload for clients
+	sv_wwwBaseURL = Cvar_FindVar("sv_wwwBaseURL");
+	sv_wwwDlDisconnected = Cvar_FindVar("sv_wwwDlDisconnected");
+	sv_wwwDownload = Cvar_FindVar("sv_wwwDownload");
 	#endif
 
 	// Register custom cvars
 	#if COMPILE_UTILS == 1
-		con_coloredPrints = Cvar_RegisterBool("con_coloredPrints", qfalse, CVAR_ARCHIVE);
+	con_coloredPrints = Cvar_RegisterBool("con_coloredPrints", qfalse, CVAR_ARCHIVE);
 	#endif
 	fs_callbacks = Cvar_RegisterString("fs_callbacks", "", CVAR_ARCHIVE);
 	fs_library = Cvar_RegisterString("fs_library", "", CVAR_ARCHIVE);
 	g_debugEvents = Cvar_RegisterBool("g_debugEvents", qfalse, CVAR_ARCHIVE);
 	g_debugStaticModels = Cvar_RegisterBool("g_debugStaticModels", qfalse, CVAR_ARCHIVE);
+	g_dumpVoiceData = Cvar_RegisterBool("g_dumpVoiceData", qfalse, CVAR_ARCHIVE);
 	g_logPickup = Cvar_RegisterBool("g_logPickup", qtrue, CVAR_ARCHIVE);
 	g_playerCollision = Cvar_RegisterBool("g_playerCollision", qtrue, CVAR_ARCHIVE);
 	g_playerEject = Cvar_RegisterBool("g_playerEject", qtrue, CVAR_ARCHIVE);
@@ -203,8 +215,17 @@ void common_init_complete_print(const char *format, ...)
 	sv_noauthorize = Cvar_RegisterBool("sv_noauthorize", qfalse, CVAR_ARCHIVE);
 	sv_timeoutMessages = Cvar_RegisterBool("sv_timeoutMessages", qtrue, CVAR_ARCHIVE);
 	#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
-		sv_wwwDlDisconnectedMessages = Cvar_RegisterInt("sv_wwwDlDisconnectedMessages", 1, 0, 2, CVAR_ARCHIVE);
+	sv_wwwDlDisconnectedMessages = Cvar_RegisterInt("sv_wwwDlDisconnectedMessages", 1, 0, 2, CVAR_ARCHIVE);
 	#endif
+
+	if ( g_dumpVoiceData->boolean )
+	{
+		voiceData = fopen("voiceData.spx", "ab");	
+		if ( !voiceData )
+		{
+			Com_Printf("Warning: Could not open file voiceData.spx\n");
+		}
+	}
 }
 
 void custom_G_ProcessIPBans()
@@ -223,6 +244,27 @@ void custom_G_ProcessIPBans()
 	sig();
 	
 	hook_g_processipbans->hook();
+}
+
+void custom_GScr_LoadConsts(void)
+{
+	hook_gscr_loadconsts->unhook();
+
+	void (*sig)(void);
+	*(int *)&sig = hook_gscr_loadconsts->from;
+
+	/* Allocate custom strings for Scr_Notify() here, scheme:
+	scr_const.custom = GScr_AllocString("custom_string");
+	Note: This new reference also has to be added to stringIndex_t in declarations.hpp
+	*/
+	#if COMPILE_CUSTOM_VOICE == 1
+	scr_const.sound_file_done = GScr_AllocString("sound_file_done");
+	scr_const.sound_file_stop = GScr_AllocString("sound_file_stop");
+	#endif
+
+	sig();
+
+	hook_gscr_loadconsts->hook();
 }
 
 void hook_bad_printf(const char *format, ...) {}
@@ -251,11 +293,11 @@ void custom_sv_masterheartbeat(const char *hbname)
 	*(int *)&sig = hook_sv_masterheartbeat->from;
 
 	#if COD_VERSION == COD2_1_0
-		int sending_heartbeat_string_offset = 0x0; // Not tested
+	int sending_heartbeat_string_offset = 0x0; // Not tested
 	#elif COD_VERSION == COD2_1_2
-		int sending_heartbeat_string_offset = 0x0; // Not tested
+	int sending_heartbeat_string_offset = 0x0; // Not tested
 	#elif COD_VERSION == COD2_1_3
-		int sending_heartbeat_string_offset = 0x0814BBC0;
+	int sending_heartbeat_string_offset = 0x0814BBC0;
 	#endif
 
 	if ( logHeartbeat && !sv_logHeartbeats->boolean )
@@ -458,9 +500,10 @@ void hook_ClientUserinfoChanged(int clientNum)
 
 void custom_SV_DropClient(client_t *drop, const char *reason)
 {
-	int i, pb_test;
+	int i;
 	challenge_t *challenge;
 	qboolean isBot = qfalse;
+	const char *translatedReason;
 	qboolean showIngameMessage = qtrue;
 	char name[0x40];
 	
@@ -494,8 +537,6 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 		}
 	}
 
-	pb_test = FUN_081384cc(reason);
-
 	if ( isBot && !sv_botKickMessages->boolean && I_stricmp(reason, "EXE_DISCONNECTED") == 0 )
 		showIngameMessage = qfalse;
 
@@ -511,9 +552,11 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 	if ( sv_wwwDlDisconnectedMessages->integer != 1 && I_stricmp(reason, "PC_PATCH_1_1_DOWNLOADDISCONNECTED") == 0 )
 		showIngameMessage = qfalse;
 
+	translatedReason = SEH_StringEd_GetString(reason);
+
 	if ( showIngameMessage )
 	{
-		if ( !pb_test )
+		if ( !translatedReason )
 			SV_SendServerCommand(0, 0, "e \"\x15%s^7 %s%s\"", name, "", reason);
 		else
 			SV_SendServerCommand(0, 0, "e \"\x15%s^7 %s%s\"", name, "\x14", reason);
@@ -522,7 +565,7 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 	Com_Printf("%i:%s %s\n", drop - svs.clients, name, reason);
 
 	SV_SendServerCommand(0, 1, "J %d", drop - svs.clients);
-	if ( !pb_test )
+	if ( !translatedReason )
 		SV_SendServerCommand(drop, 1, "w \"%s^7 %s\" PB", name, reason);
 	else
 		SV_SendServerCommand(drop, 1, "w \"%s\"", reason);
@@ -1471,6 +1514,11 @@ void custom_SV_SendClientGameState(client_t *client)
 	client->gamestateMessageNum = client->netchan.outgoingSequence;
 	
 	/* New code start */
+	#if COMPILE_CUSTOM_VOICE == 1
+	memset(&player_voiceData[client - svs.clients], 0, sizeof(player_voiceData[client - svs.clients]));
+	player_sentVoiceData[client - svs.clients] = 0;
+	player_unsentVoiceData[client - svs.clients] = 0;
+	#endif
 	memset(&player_objectives[client - svs.clients], 0, sizeof(player_objectives[client - svs.clients]));
 	player_meleeHeightScale[client - svs.clients] = 1.0;
 	player_meleeRangeScale[client - svs.clients] = 1.0;
@@ -1489,10 +1537,10 @@ void custom_SV_SendClientGameState(client_t *client)
 	previousbuttons[client - svs.clients] = 0;
 	
 	#if COMPILE_BOTS == 1
-		bot_buttons[client - svs.clients] = 0;
-		bot_weapon[client - svs.clients] = 0;
-		bot_forwardmove[client - svs.clients] = 0;
-		bot_rightmove[client - svs.clients] = 0;
+	bot_buttons[client - svs.clients] = 0;
+	bot_weapon[client - svs.clients] = 0;
+	bot_forwardmove[client - svs.clients] = 0;
+	bot_rightmove[client - svs.clients] = 0;
 	#endif
 	/* New code end */
 	
@@ -1583,8 +1631,8 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 		return;
 
 	#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
-		if ( cl->wwwDlAck )
-			return;
+	if ( cl->wwwDlAck )
+		return;
 	#endif
 
 	if ( strlen(sv_downloadMessage->string) )
@@ -1601,14 +1649,14 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 	}
 
 	#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
-		if ( sv_wwwDownload->boolean && cl->wwwDownload )
+	if ( sv_wwwDownload->boolean && cl->wwwDownload )
+	{
+		if ( !cl->wwwDl_failed )
 		{
-			if ( !cl->wwwDl_failed )
-			{
-				custom_SV_WWWRedirectClient(cl, msg);
-				return; // wwwDl redirect
-			}
+			custom_SV_WWWRedirectClient(cl, msg);
+			return; // wwwDl redirect
 		}
+	}
 	#endif
 
 	// Hardcode client variables to make max download speed for everyone
@@ -2363,7 +2411,7 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 	
 		if ( !(ip[0] == 10 ||									// 10.0.0.0 – 10.255.255.255
 			  (ip[0] == 172 && (ip[1] >= 16 && ip[1] <= 31)) || // 172.16.0.0 – 172.31.255.255
-			  (ip[0] == 192 && ip[1] == 168)) )				    // 192.168.0.0 – 192.168.255.255
+			  (ip[0] == 192 && ip[1] == 168)) )					// 192.168.0.0 – 192.168.255.255
 		{
 			if ( SVC_ApplyRconLimit( from, badRconPassword ) )
 				return;
@@ -2376,11 +2424,11 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 	}
 	
 	#if COD_VERSION == COD2_1_0
-		int rcon_from_string_offset = 0x0; // Not tested
+	int rcon_from_string_offset = 0x0; // Not tested
 	#elif COD_VERSION == COD2_1_2
-		int rcon_from_string_offset = 0x0; // Not tested
+	int rcon_from_string_offset = 0x0; // Not tested
 	#elif COD_VERSION == COD2_1_3
-		int rcon_from_string_offset = 0x0814bC61;
+	int rcon_from_string_offset = 0x0814bC61;
 	#endif
 	
 	if ( logRcon && !sv_logRcon->boolean )
@@ -2427,11 +2475,11 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 	}
 	
 	#if COD_VERSION == COD2_1_0
-		int lasttime_offset = 0x0848B674;
+	int lasttime_offset = 0x0848B674;
 	#elif COD_VERSION == COD2_1_2
-		int lasttime_offset = 0x0849EB74;
+	int lasttime_offset = 0x0849EB74;
 	#elif COD_VERSION == COD2_1_3
-		int lasttime_offset = 0x0849FBF4;
+	int lasttime_offset = 0x0849FBF4;
 	#endif
 	
 	*(int *)lasttime_offset = 0;
@@ -2545,9 +2593,9 @@ void manymaps_prepare(const char *mapname, int read)
 	}
 
 	#if COD_VERSION == COD2_1_0
-		const char *stock_maps[] = { "mp_breakout", "mp_brecourt", "mp_burgundy", "mp_carentan", "mp_dawnville", "mp_decoy", "mp_downtown", "mp_farmhouse", "mp_leningrad", "mp_matmata", "mp_railyard", "mp_toujane", "mp_trainstation" };
+	const char *stock_maps[] = { "mp_breakout", "mp_brecourt", "mp_burgundy", "mp_carentan", "mp_dawnville", "mp_decoy", "mp_downtown", "mp_farmhouse", "mp_leningrad", "mp_matmata", "mp_railyard", "mp_toujane", "mp_trainstation" };
 	#else
-		const char *stock_maps[] = { "mp_breakout", "mp_brecourt", "mp_burgundy", "mp_carentan", "mp_dawnville", "mp_decoy", "mp_downtown", "mp_farmhouse", "mp_leningrad", "mp_matmata", "mp_railyard", "mp_toujane", "mp_trainstation", "mp_rhine", "mp_harbor" };
+	const char *stock_maps[] = { "mp_breakout", "mp_brecourt", "mp_burgundy", "mp_carentan", "mp_dawnville", "mp_decoy", "mp_downtown", "mp_farmhouse", "mp_leningrad", "mp_matmata", "mp_railyard", "mp_toujane", "mp_trainstation", "mp_rhine", "mp_harbor" };
 	#endif
 
 	bool map_found = false, from_stock_map = false;
@@ -2610,11 +2658,11 @@ void manymaps_prepare(const char *mapname, int read)
 
 		if ( snprintf(src, sizeof(src), "%s/%s.iwd", library_path, mapname) > (int)sizeof(src) )
 		{
-			Com_Printf("Warning: Manymaps file delete path is too long, truncated");
+			Com_Printf("Warning: Manymaps source path is too long, truncated");
 		}
 		if ( snprintf(dst, sizeof(dst), "%s/%s/%s.iwd", fs_homepath->string, fs_game->string, mapname) > (int)sizeof(dst) )
 		{
-			Com_Printf("Warning: Manymaps file delete path is too long, truncated");
+			Com_Printf("Warning: Manymaps destination path is too long, truncated");
 		}
 
 		if ( access(src, F_OK) != -1 )
@@ -2769,23 +2817,23 @@ void custom_Com_Error(int type, const char *format, ...)
 	Sys_EnterCriticalSectionInternal(2);
 	
 	#if COD_VERSION == COD2_1_0 // Not tested
-		int com_errorEntered = 0x0;
-		int va_string_156 = 0x0;
-		int unk1 = 0x0;
-		int unk2 = 0x0;
-		int com_fixedConsolePosition = 0x0;
+	int com_errorEntered = 0x0;
+	int va_string_156 = 0x0;
+	int unk1 = 0x0;
+	int unk2 = 0x0;
+	int com_fixedConsolePosition = 0x0;
 	#elif COD_VERSION == COD2_1_2 // Not tested
-		int com_errorEntered = 0x0;
-		int va_string_156 = 0x0;
-		int unk1 = 0x0;
-		int unk2 = 0x0;
-		int com_fixedConsolePosition = 0x0;
+	int com_errorEntered = 0x0;
+	int va_string_156 = 0x0;
+	int unk1 = 0x0;
+	int unk2 = 0x0;
+	int com_fixedConsolePosition = 0x0;
 	#elif COD_VERSION == COD2_1_3
-		int com_errorEntered = 0x081A21C0;
-		int va_string_156 = 0x081A2280;
-		int unk1 = 0x081A327F;
-		int unk2 = 0x081A2264;
-		int com_fixedConsolePosition = 0x081A21C4;
+	int com_errorEntered = 0x081A21C0;
+	int va_string_156 = 0x081A2280;
+	int unk1 = 0x081A327F;
+	int unk2 = 0x081A2264;
+	int com_fixedConsolePosition = 0x081A21C4;
 	#endif
 	
 	if ( *(int *)com_errorEntered )
@@ -3011,17 +3059,51 @@ void custom_G_RunFrame(int levelTime)
 
 	void (*sig)(int levelTime);
 	*(int *)&sig = hook_g_runframe->from;
-	
+
+	// Process CodeCallback_Error queue
 	for ( i = 0; i < scr_errors_index; i++ )
+	{
 		Scr_CodeCallback_Error(qfalse, qtrue, scr_errors[i].internal_function, scr_errors[i].message);
-	
+	}
 	scr_errors_index = 0;
 
+	// Process CodeCallback_Notify queue
 	for ( i = 0; i < scr_notify_index; i++ )
+	{
 		Scr_CodeCallback_Notify(scr_notify[i].entId, scr_notify[i].constString, scr_notify[i].argc, &scr_notify[i].arguments[0]);
-	
+	}
 	scr_notify_index = 0;
-	
+
+#if COMPILE_CUSTOM_VOICE == 1
+	// Process custom voice data queue
+	// Send at most 10 packets every 4th server frame
+	if ( level.time >= lastCustomVoiceDataTime + (4 * FRAMETIME) )
+	{
+		client_t *client = svs.clients;
+		int id;
+		for ( i = 0; i < sv_maxclients->integer; i++, client++ )
+		{
+			id = client - svs.clients;
+			if ( player_unsentVoiceData[id] > 0 )
+			{
+				for ( int ctr = 0; ctr < 10; player_sentVoiceData[id]++, ctr++ )
+				{
+					VoicePacket_t *voicePacket = &player_voiceData[id][player_sentVoiceData[id]];
+					SV_QueueVoicePacket(voicePacket->talkerNum, id, voicePacket);
+					if ( player_sentVoiceData[id] >= player_unsentVoiceData[id] )
+					{
+						Scr_Notify(client->gentity, scr_const.sound_file_done, 0);
+						player_unsentVoiceData[id] = 0;
+						player_sentVoiceData[id] = 0;
+						break;
+					}
+				}
+			}
+		}
+		lastCustomVoiceDataTime = level.time;
+	}
+#endif
+
 	sig(levelTime);
 	
 	hook_g_runframe->hook();
@@ -3821,15 +3903,14 @@ LAB_081131e1:
 void com_printmessage_caret_patch(void)
 {
 	#if COD_VERSION == COD2_1_0
-		int caret_check_offset = 0x0; // Not tested
+	int caret_check_offset = 0x0; // Not tested
 	#elif COD_VERSION == COD2_1_2
-		int caret_check_offset = 0x0; // Not tested
+	int caret_check_offset = 0x0; // Not tested
 	#elif COD_VERSION == COD2_1_3
-		int caret_check_offset = 0x08060CCA;
+	int caret_check_offset = 0x08060CCA;
 	#endif
 
-	// Removes the following piece of code from Com_PrintMessage:
-	/*
+	/* Removes the following piece of code from Com_PrintMessage:
 	if ( *message == '^' && message[1] != '\0' )
 	{
 		message += 2;
@@ -4025,6 +4106,36 @@ void custom_Bullet_Fire(gentity_t *inflictor, float spread, weaponParms *wp, gen
 	G_AntiLag_RestoreClientPos(&antilagStore);
 }
 
+void custom_SV_QueueVoicePacket(int talkerNum, int clientNum, VoicePacket_t *voicePacket)
+{
+	/* New code start: voice chat dump */
+	if ( voiceData && g_dumpVoiceData->boolean )
+	{
+		char voiceLogData[(256*4)+1];
+		char voiceLogEntry[(256*4)+64]; // {"talker": "64", "client": "64", "data": ""}\n
+
+		char *pos = voiceLogData;
+		for ( int i = 0; i < voicePacket->dataLen; i++ )
+		{
+			pos += sprintf(pos, "\\x%02hhX", voicePacket->data[i]);
+		}
+
+		snprintf(voiceLogEntry, sizeof(voiceLogEntry), "{\"talker\": \"%02i\", \"client\": \"%02i\", \"data\": \"%s\"}\n", talkerNum, clientNum, voiceLogData);
+		fwrite(&voiceLogEntry, strlen(voiceLogEntry), 1, voiceData);
+		fflush(voiceData);
+	}
+	/* New code end */
+
+	client_t *client = svs.clients;
+	if ( svs.clients[clientNum].unsentVoiceData < MAX_VOICEPACKETS )
+	{
+		svs.clients[clientNum].voicedata[svs.clients[clientNum].unsentVoiceData].dataLen = voicePacket->dataLen;
+		memcpy(client[clientNum].voicedata[client[clientNum].unsentVoiceData].data, voicePacket->data,voicePacket->dataLen);
+		client[clientNum].voicedata[client[clientNum].unsentVoiceData].talkerNum = (char)talkerNum;
+		client[clientNum].unsentVoiceData++;
+	}
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -4037,11 +4148,11 @@ public:
 		setbuf(stdout, NULL);
 
 		#if COD_VERSION == COD2_1_0
-			printf("> [LIBCOD] Compiled for: CoD2 1.0\n");
+		printf("> [LIBCOD] Compiled for: CoD2 1.0\n");
 		#elif COD_VERSION == COD2_1_2
-			printf("> [LIBCOD] Compiled for: CoD2 1.2\n");
+		printf("> [LIBCOD] Compiled for: CoD2 1.2\n");
 		#elif COD_VERSION == COD2_1_3
-			printf("> [LIBCOD] Compiled for: CoD2 1.3\n");
+		printf("> [LIBCOD] Compiled for: CoD2 1.3\n");
 		#endif
 
 		printf("> [LIBCOD] Compiled %s %s using GCC %s\n", __DATE__, __TIME__, __VERSION__);
@@ -4050,249 +4161,251 @@ public:
 		mprotect((void *)0x08048000, 0x135000, PROT_READ | PROT_WRITE | PROT_EXEC);
 
 		#if COD_VERSION == COD2_1_0
-			cracking_hook_call(0x08061FE7, (int)common_init_complete_print);
-			cracking_hook_call(0x08091D0C, (int)hook_sv_spawnserver);
-			cracking_hook_call(0x0808F281, (int)hook_ClientCommand);
-			cracking_hook_call(0x0808C8C0, (int)hook_AuthorizeState);
-			cracking_hook_call(0x0808BFCA, (int)hook_isLanAddress);
-			cracking_hook_call(0x0808AD00, (int)hook_findMap);
-			cracking_hook_call(0x0808F134, (int)hook_ClientUserinfoChanged);
-			cracking_hook_call(0x0807059F, (int)Scr_GetCustomFunction);
-			cracking_hook_call(0x080707C3, (int)Scr_GetCustomMethod);
-			cracking_hook_call(0x080E9524, (int)hook_findWeaponIndex);
+		cracking_hook_call(0x08061FE7, (int)common_init_complete_print);
+		cracking_hook_call(0x08091D0C, (int)hook_sv_spawnserver);
+		cracking_hook_call(0x0808F281, (int)hook_ClientCommand);
+		cracking_hook_call(0x0808C8C0, (int)hook_AuthorizeState);
+		cracking_hook_call(0x0808BFCA, (int)hook_isLanAddress);
+		cracking_hook_call(0x0808AD00, (int)hook_findMap);
+		cracking_hook_call(0x0808F134, (int)hook_ClientUserinfoChanged);
+		cracking_hook_call(0x0807059F, (int)Scr_GetCustomFunction);
+		cracking_hook_call(0x080707C3, (int)Scr_GetCustomMethod);
+		cracking_hook_call(0x080E9524, (int)hook_findWeaponIndex);
 
-			#if COMPILE_PLAYER == 1
-				cracking_hook_call(0x0808E18F, (int)hook_gamestate_info);
-			#endif
+		#if COMPILE_PLAYER == 1
+		cracking_hook_call(0x0808E18F, (int)hook_gamestate_info);
+		#endif
 
-			cracking_hook_call(0x08081CFE, (int)hook_scriptError);
+		cracking_hook_call(0x08081CFE, (int)hook_scriptError);
 
-			hook_gametype_scripts = new cHook(0x0810DDEE, (int)hook_codscript_gametype_scripts);
-			hook_gametype_scripts->hook();
+		hook_gametype_scripts = new cHook(0x0810DDEE, (int)hook_codscript_gametype_scripts);
+		hook_gametype_scripts->hook();
+		hook_developer_prints = new cHook(0x08060B7C, (int)hook_Com_DPrintf);
+		#if COMPILE_UTILS == 1
+		hook_console_print = new cHook(0x0, int(hook_Sys_Print)); // Not tested
+		hook_console_print->hook();
+		#endif
 
-			hook_developer_prints = new cHook(0x08060B7C, (int)hook_Com_DPrintf);
-			#if COMPILE_UTILS == 1
-				hook_console_print = new cHook(0x0, int(hook_Sys_Print)); // Not tested
-				hook_console_print->hook();
-			#endif
+		hook_init_opcode = new cHook(0x08076B9C, (int)custom_Scr_InitOpcodeLookup);
+		hook_init_opcode->hook();
+		hook_add_opcode = new cHook(0x08076D92, (int)custom_AddOpcodePos);
+		hook_add_opcode->hook();
+		hook_print_codepos = new cHook(0x08077DBA, (int)custom_Scr_PrintPrevCodePos);
+		hook_print_codepos->hook();
 
-			hook_init_opcode = new cHook(0x08076B9C, (int)custom_Scr_InitOpcodeLookup);
-			hook_init_opcode->hook();
-			hook_add_opcode = new cHook(0x08076D92, (int)custom_AddOpcodePos);
-			hook_add_opcode->hook();
-			hook_print_codepos = new cHook(0x08077DBA, (int)custom_Scr_PrintPrevCodePos);
-			hook_print_codepos->hook();
+		hook_player_collision = new cHook(0x080F2F2E, (int)player_collision);
+		hook_player_collision->hook();
+		hook_player_eject = new cHook(0x080F474A, (int)player_eject);
+		hook_player_eject->hook();
+		hook_fire_grenade = new cHook(0x0810C1F6, (int)custom_fire_grenade);
+		hook_fire_grenade->hook();
+		hook_touch_item_auto = new cHook(0x081037F0, int(touch_item_auto));
+		hook_touch_item_auto->hook();
 
-			hook_player_collision = new cHook(0x080F2F2E, (int)player_collision);
-			hook_player_collision->hook();
-			hook_player_eject = new cHook(0x080F474A, (int)player_eject);
-			hook_player_eject->hook();
-			hook_fire_grenade = new cHook(0x0810C1F6, (int)custom_fire_grenade);
-			hook_fire_grenade->hook();
-			hook_touch_item_auto = new cHook(0x081037F0, int(touch_item_auto));
-			hook_touch_item_auto->hook();
+		#if COMPILE_PLAYER == 1
+		hook_play_movement = new cHook(0x0808F488, (int)play_movement);
+		hook_play_movement->hook();
+		hook_play_endframe = new cHook(0x080F4DBE, (int)play_endframe);
+		hook_play_endframe->hook();
+		hook_set_anim = new cHook(0x080D69B2, (int)set_anim);
+		hook_set_anim->hook();
+		#endif
 
-			#if COMPILE_PLAYER == 1
-				hook_play_movement = new cHook(0x0808F488, (int)play_movement);
-				hook_play_movement->hook();
-				hook_play_endframe = new cHook(0x080F4DBE, (int)play_endframe);
-				hook_play_endframe->hook();
-				hook_set_anim = new cHook(0x080D69B2, (int)set_anim);
-				hook_set_anim->hook();
-			#endif
+		cracking_hook_function(0x080E97F0, (int)hook_BG_IsWeaponValid);
+		cracking_hook_function(0x0808E544, (int)custom_SV_WriteDownloadToClient);
+		cracking_hook_function(0x080B59CE, (int)custom_va);
+		cracking_hook_function(0x0808EC66, (int)hook_SV_VerifyIwds_f);
+		cracking_hook_function(0x0808EEEC, (int)hook_SV_ResetPureClient_f);
+		cracking_hook_function(0x0809443E, (int)custom_SV_CalcPings);
+		cracking_hook_function(0x080945AC, (int)custom_SV_CheckTimeouts);
 
-			cracking_hook_function(0x080E97F0, (int)hook_BG_IsWeaponValid);
-			cracking_hook_function(0x0808E544, (int)custom_SV_WriteDownloadToClient);
-			cracking_hook_function(0x080B59CE, (int)custom_va);
-			cracking_hook_function(0x0808EC66, (int)hook_SV_VerifyIwds_f);
-			cracking_hook_function(0x0808EEEC, (int)hook_SV_ResetPureClient_f);
-			cracking_hook_function(0x0809443E, (int)custom_SV_CalcPings);
-			cracking_hook_function(0x080945AC, (int)custom_SV_CheckTimeouts);
+		#if COMPILE_BOTS == 1
+		cracking_hook_function(0x0809479A, (int)custom_SV_BotUserMove);
+		#endif
 
-			#if COMPILE_BOTS == 1
-				cracking_hook_function(0x0809479A, (int)custom_SV_BotUserMove);
-			#endif
-
-			#if COMPILE_RATELIMITER == 1
-				cracking_hook_call(0x08094081, (int)hook_SVC_Info);
-				cracking_hook_call(0x0809403E, (int)hook_SVC_Status);
-				cracking_hook_call(0x08094191, (int)hook_SVC_RemoteCommand);
-				cracking_hook_call(0x080940C4, (int)hook_SV_GetChallenge);
-				cracking_hook_call(0x08094107, (int)hook_SV_DirectConnect);
-			#endif
+		#if COMPILE_RATELIMITER == 1
+		cracking_hook_call(0x08094081, (int)hook_SVC_Info);
+		cracking_hook_call(0x0809403E, (int)hook_SVC_Status);
+		cracking_hook_call(0x08094191, (int)hook_SVC_RemoteCommand);
+		cracking_hook_call(0x080940C4, (int)hook_SV_GetChallenge);
+		cracking_hook_call(0x08094107, (int)hook_SV_DirectConnect);
+		#endif
 
 		#elif COD_VERSION == COD2_1_2
-			cracking_hook_call(0x08062301, (int)common_init_complete_print);
-			cracking_hook_call(0x08093572, (int)hook_sv_spawnserver);
-			cracking_hook_call(0x08090B0C, (int)hook_ClientCommand);
-			cracking_hook_call(0x0808DA52, (int)hook_AuthorizeState);
-			cracking_hook_call(0x0808D22E, (int)hook_isLanAddress);
-			cracking_hook_call(0x0808BCFC, (int)hook_findMap);
-			cracking_hook_call(0x080909BE, (int)hook_ClientUserinfoChanged);
-			cracking_hook_call(0x08070B1B, (int)Scr_GetCustomFunction);
-			cracking_hook_call(0x08070D3F, (int)Scr_GetCustomMethod);
-			cracking_hook_call(0x0808227A, (int)hook_scriptError);
-			cracking_hook_call(0x0808FCBE, (int)hook_bad_printf);
-			cracking_hook_call(0x080EBB14, (int)hook_findWeaponIndex);
+		cracking_hook_call(0x08062301, (int)common_init_complete_print);
+		cracking_hook_call(0x08093572, (int)hook_sv_spawnserver);
+		cracking_hook_call(0x08090B0C, (int)hook_ClientCommand);
+		cracking_hook_call(0x0808DA52, (int)hook_AuthorizeState);
+		cracking_hook_call(0x0808D22E, (int)hook_isLanAddress);
+		cracking_hook_call(0x0808BCFC, (int)hook_findMap);
+		cracking_hook_call(0x080909BE, (int)hook_ClientUserinfoChanged);
+		cracking_hook_call(0x08070B1B, (int)Scr_GetCustomFunction);
+		cracking_hook_call(0x08070D3F, (int)Scr_GetCustomMethod);
+		cracking_hook_call(0x0808227A, (int)hook_scriptError);
+		cracking_hook_call(0x0808FCBE, (int)hook_bad_printf);
+		cracking_hook_call(0x080EBB14, (int)hook_findWeaponIndex);
 
-			#if COMPILE_PLAYER == 1
-				cracking_hook_call(0x0808F533, (int)hook_gamestate_info);
-			#endif
+		#if COMPILE_PLAYER == 1
+		cracking_hook_call(0x0808F533, (int)hook_gamestate_info);
+		#endif
 
-			hook_gametype_scripts = new cHook(0x0811012A, (int)hook_codscript_gametype_scripts);
-			hook_gametype_scripts->hook();
+		hook_gametype_scripts = new cHook(0x0811012A, (int)hook_codscript_gametype_scripts);
+		hook_gametype_scripts->hook();
 
-			hook_developer_prints = new cHook(0x08060E42, (int)hook_Com_DPrintf);
-			#if COMPILE_UTILS == 1
-				hook_console_print = new cHook(0x0, int(hook_Sys_Print)); // Not tested
-				hook_console_print->hook();
-			#endif
+		hook_developer_prints = new cHook(0x08060E42, (int)hook_Com_DPrintf);
+		#if COMPILE_UTILS == 1
+		hook_console_print = new cHook(0x0, int(hook_Sys_Print)); // Not tested
+		hook_console_print->hook();
+		#endif
 
-			hook_init_opcode = new cHook(0x08077110, (int)custom_Scr_InitOpcodeLookup);
-			hook_init_opcode->hook();
-			hook_add_opcode = new cHook(0x08077306, (int)custom_AddOpcodePos);
-			hook_add_opcode->hook();
-			hook_print_codepos = new cHook(0x0807832E, (int)custom_Scr_PrintPrevCodePos);
-			hook_print_codepos->hook();
+		hook_init_opcode = new cHook(0x08077110, (int)custom_Scr_InitOpcodeLookup);
+		hook_init_opcode->hook();
+		hook_add_opcode = new cHook(0x08077306, (int)custom_AddOpcodePos);
+		hook_add_opcode->hook();
+		hook_print_codepos = new cHook(0x0807832E, (int)custom_Scr_PrintPrevCodePos);
+		hook_print_codepos->hook();
 
-			hook_player_collision = new cHook(0x080F553E, (int)player_collision);
-			hook_player_collision->hook();
-			hook_player_eject = new cHook(0x080F6D5A, (int)player_eject);
-			hook_player_eject->hook();
-			hook_fire_grenade = new cHook(0x0810E532, (int)custom_fire_grenade);
-			hook_fire_grenade->hook();
-			hook_touch_item_auto = new cHook(0x08105B24, int(touch_item_auto));
-			hook_touch_item_auto->hook();
+		hook_player_collision = new cHook(0x080F553E, (int)player_collision);
+		hook_player_collision->hook();
+		hook_player_eject = new cHook(0x080F6D5A, (int)player_eject);
+		hook_player_eject->hook();
+		hook_fire_grenade = new cHook(0x0810E532, (int)custom_fire_grenade);
+		hook_fire_grenade->hook();
+		hook_touch_item_auto = new cHook(0x08105B24, int(touch_item_auto));
+		hook_touch_item_auto->hook();
 
-			#if COMPILE_PLAYER == 1
-				hook_play_movement = new cHook(0x08090D18, (int)play_movement);
-				hook_play_movement->hook();
-				hook_play_endframe = new cHook(0x080F73D2, (int)play_endframe);
-				hook_play_endframe->hook();
-				hook_set_anim = new cHook(0x080D8F92, (int)set_anim);
-				hook_set_anim->hook();
-			#endif
+		#if COMPILE_PLAYER == 1
+		hook_play_movement = new cHook(0x08090D18, (int)play_movement);
+		hook_play_movement->hook();
+		hook_play_endframe = new cHook(0x080F73D2, (int)play_endframe);
+		hook_play_endframe->hook();
+		hook_set_anim = new cHook(0x080D8F92, (int)set_anim);
+		hook_set_anim->hook();
+		#endif
 
-			cracking_hook_function(0x080EBDE0, (int)hook_BG_IsWeaponValid);
-			cracking_hook_function(0x0808FD2E, (int)custom_SV_WriteDownloadToClient);
-			cracking_hook_function(0x080B7E62, (int)custom_va);
-			cracking_hook_function(0x080904A0, (int)hook_SV_VerifyIwds_f);
-			cracking_hook_function(0x08090726, (int)hook_SV_ResetPureClient_f);
-			cracking_hook_function(0x0809630E, (int)custom_SV_CalcPings);
-			cracking_hook_function(0x080964C4, (int)custom_SV_CheckTimeouts);
+		cracking_hook_function(0x080EBDE0, (int)hook_BG_IsWeaponValid);
+		cracking_hook_function(0x0808FD2E, (int)custom_SV_WriteDownloadToClient);
+		cracking_hook_function(0x080B7E62, (int)custom_va);
+		cracking_hook_function(0x080904A0, (int)hook_SV_VerifyIwds_f);
+		cracking_hook_function(0x08090726, (int)hook_SV_ResetPureClient_f);
+		cracking_hook_function(0x0809630E, (int)custom_SV_CalcPings);
+		cracking_hook_function(0x080964C4, (int)custom_SV_CheckTimeouts);
 
-			#if COMPILE_BOTS == 1
-				cracking_hook_function(0x080966B2, (int)custom_SV_BotUserMove);
-			#endif
+		#if COMPILE_BOTS == 1
+		cracking_hook_function(0x080966B2, (int)custom_SV_BotUserMove);
+		#endif
 
-			#if COMPILE_RATELIMITER == 1
-				cracking_hook_call(0x08095B8E, (int)hook_SVC_Info);
-				cracking_hook_call(0x08095ADA, (int)hook_SVC_Status);
-				cracking_hook_call(0x08095D63, (int)hook_SVC_RemoteCommand);
-				cracking_hook_call(0x08095BF8, (int)hook_SV_GetChallenge);
-				cracking_hook_call(0x08095CB2, (int)hook_SV_DirectConnect);
-			#endif
+		#if COMPILE_RATELIMITER == 1
+		cracking_hook_call(0x08095B8E, (int)hook_SVC_Info);
+		cracking_hook_call(0x08095ADA, (int)hook_SVC_Status);
+		cracking_hook_call(0x08095D63, (int)hook_SVC_RemoteCommand);
+		cracking_hook_call(0x08095BF8, (int)hook_SV_GetChallenge);
+		cracking_hook_call(0x08095CB2, (int)hook_SV_DirectConnect);
+		#endif
 
 		#elif COD_VERSION == COD2_1_3
-			cracking_hook_call(0x080622F9, (int)common_init_complete_print);
-			cracking_hook_call(0x0809362A, (int)hook_sv_spawnserver);
-			cracking_hook_call(0x08090BA0, (int)hook_ClientCommand);
-			cracking_hook_call(0x0808DB12, (int)hook_AuthorizeState);
-			cracking_hook_call(0x0808D2FA, (int)hook_isLanAddress);
-			cracking_hook_call(0x0808BDC8, (int)hook_findMap);
-			cracking_hook_call(0x08090A52, (int)hook_ClientUserinfoChanged);
-			cracking_hook_call(0x08070BE7, (int)Scr_GetCustomFunction);
-			cracking_hook_call(0x08070E0B, (int)Scr_GetCustomMethod);
-			cracking_hook_call(0x08082346, (int)hook_scriptError);
-			cracking_hook_call(0x0808FD52, (int)hook_bad_printf);
-			cracking_hook_call(0x080EBC58, (int)hook_findWeaponIndex);
+		cracking_hook_call(0x080622F9, (int)common_init_complete_print);
+		cracking_hook_call(0x0809362A, (int)hook_sv_spawnserver);
+		cracking_hook_call(0x08090BA0, (int)hook_ClientCommand);
+		cracking_hook_call(0x0808DB12, (int)hook_AuthorizeState);
+		cracking_hook_call(0x0808D2FA, (int)hook_isLanAddress);
+		cracking_hook_call(0x0808BDC8, (int)hook_findMap);
+		cracking_hook_call(0x08090A52, (int)hook_ClientUserinfoChanged);
+		cracking_hook_call(0x08070BE7, (int)Scr_GetCustomFunction);
+		cracking_hook_call(0x08070E0B, (int)Scr_GetCustomMethod);
+		cracking_hook_call(0x08082346, (int)hook_scriptError);
+		cracking_hook_call(0x0808FD52, (int)hook_bad_printf);
+		cracking_hook_call(0x080EBC58, (int)hook_findWeaponIndex);
 
-			hook_gametype_scripts = new cHook(0x08110286, (int)hook_codscript_gametype_scripts);
-			hook_gametype_scripts->hook();
+		hook_gametype_scripts = new cHook(0x08110286, (int)hook_codscript_gametype_scripts);
+		hook_gametype_scripts->hook();
 
-			hook_developer_prints = new cHook(0x08060E3A, (int)hook_Com_DPrintf);
-			#if COMPILE_UTILS == 1
-				hook_console_print = new cHook(0x080d4AE0, int(hook_Sys_Print));
-				hook_console_print->hook();
-			#endif
+		hook_developer_prints = new cHook(0x08060E3A, (int)hook_Com_DPrintf);
+		#if COMPILE_UTILS == 1
+		hook_console_print = new cHook(0x080d4AE0, int(hook_Sys_Print));
+		hook_console_print->hook();
+		#endif
 
-			hook_init_opcode = new cHook(0x080771DC, (int)custom_Scr_InitOpcodeLookup);
-			hook_init_opcode->hook();
-			hook_add_opcode = new cHook(0x080773D2, (int)custom_AddOpcodePos);
-			hook_add_opcode->hook();
-			hook_print_codepos = new cHook(0x080783FA, (int)custom_Scr_PrintPrevCodePos);
-			hook_print_codepos->hook();
-			
-			hook_player_collision = new cHook(0x080F5682, (int)player_collision);
-			hook_player_collision->hook();
-			hook_player_eject = new cHook(0x080F6E9E, (int)player_eject);
-			hook_player_eject->hook();
-			hook_fire_grenade = new cHook(0x0810E68E, (int)custom_fire_grenade);
-			hook_fire_grenade->hook();
-			hook_touch_item_auto = new cHook(0x08105C80, int(touch_item_auto));
-			hook_touch_item_auto->hook();
-			hook_g_tempentity = new cHook(0x0811EFC4, (int)custom_G_TempEntity);
-			hook_g_tempentity->hook();
-			hook_sv_masterheartbeat = new cHook(0x08096ED6, (int)custom_sv_masterheartbeat);
-			hook_sv_masterheartbeat->hook();
-			hook_g_runframe = new cHook(0x0810A13A, (int)custom_G_RunFrame);
-			hook_g_runframe->hook();
-			hook_scr_loadgametype = new cHook(0x081182F4, (int)custom_Scr_LoadGameType);
-			hook_scr_loadgametype->hook();
-			hook_vm_notify = new cHook(0x0808359E, (int)custom_VM_Notify);
-			hook_vm_notify->hook();
-			hook_sv_init = new cHook(0x08093ADC, (int)custom_SV_Init);
-			hook_sv_init->hook();
-			hook_g_processipbans = new cHook(0x0811BB60, (int)custom_G_ProcessIPBans);
-			hook_g_processipbans->hook();
+		hook_init_opcode = new cHook(0x080771DC, (int)custom_Scr_InitOpcodeLookup);
+		hook_init_opcode->hook();
+		hook_add_opcode = new cHook(0x080773D2, (int)custom_AddOpcodePos);
+		hook_add_opcode->hook();
+		hook_print_codepos = new cHook(0x080783FA, (int)custom_Scr_PrintPrevCodePos);
+		hook_print_codepos->hook();
+		
+		hook_player_collision = new cHook(0x080F5682, (int)player_collision);
+		hook_player_collision->hook();
+		hook_player_eject = new cHook(0x080F6E9E, (int)player_eject);
+		hook_player_eject->hook();
+		hook_fire_grenade = new cHook(0x0810E68E, (int)custom_fire_grenade);
+		hook_fire_grenade->hook();
+		hook_touch_item_auto = new cHook(0x08105C80, int(touch_item_auto));
+		hook_touch_item_auto->hook();
+		hook_g_tempentity = new cHook(0x0811EFC4, (int)custom_G_TempEntity);
+		hook_g_tempentity->hook();
+		hook_gscr_loadconsts = new cHook(0x081224F8, (int)custom_GScr_LoadConsts);
+		hook_gscr_loadconsts->hook();
+		hook_sv_masterheartbeat = new cHook(0x08096ED6, (int)custom_sv_masterheartbeat);
+		hook_sv_masterheartbeat->hook();
+		hook_g_runframe = new cHook(0x0810A13A, (int)custom_G_RunFrame);
+		hook_g_runframe->hook();
+		hook_scr_loadgametype = new cHook(0x081182F4, (int)custom_Scr_LoadGameType);
+		hook_scr_loadgametype->hook();
+		hook_vm_notify = new cHook(0x0808359E, (int)custom_VM_Notify);
+		hook_vm_notify->hook();
+		hook_sv_init = new cHook(0x08093ADC, (int)custom_SV_Init);
+		hook_sv_init->hook();
+		hook_g_processipbans = new cHook(0x0811BB60, (int)custom_G_ProcessIPBans);
+		hook_g_processipbans->hook();
 
-			#if COMPILE_PLAYER == 1
-				hook_play_movement = new cHook(0x08090DAC, (int)play_movement);
-				hook_play_movement->hook();
-				hook_play_endframe = new cHook(0x080F7516, (int)play_endframe);
-				hook_play_endframe->hook();
-				hook_set_anim = new cHook(0x080D90D6, (int)set_anim);
-				hook_set_anim->hook();
-			#endif
+		#if COMPILE_PLAYER == 1
+		hook_play_movement = new cHook(0x08090DAC, (int)play_movement);
+		hook_play_movement->hook();
+		hook_play_endframe = new cHook(0x080F7516, (int)play_endframe);
+		hook_play_endframe->hook();
+		hook_set_anim = new cHook(0x080D90D6, (int)set_anim);
+		hook_set_anim->hook();
+		#endif
 
-			cracking_hook_function(0x08105CAC, (int)custom_Touch_Item);
-			cracking_hook_function(0x0811F232, (int)custom_G_AddEvent);
-			cracking_hook_function(0x080EBF24, (int)hook_BG_IsWeaponValid);
-			cracking_hook_function(0x080DFC78, (int)custom_BG_AddPredictableEventToPlayerstate);
-			cracking_hook_function(0x080985C8, (int)custom_SV_WriteSnapshotToClient);
-			cracking_hook_function(0x0808F302, (int)custom_SV_SendClientGameState);
-			cracking_hook_function(0x0808F02E, (int)custom_SV_DropClient);
-			cracking_hook_function(0x0808FDC2, (int)custom_SV_WriteDownloadToClient);
-			cracking_hook_function(0x080B7FA6, (int)custom_va);
-			cracking_hook_function(0x08090534, (int)hook_SV_VerifyIwds_f);
-			cracking_hook_function(0x080907BA, (int)hook_SV_ResetPureClient_f);
-			cracking_hook_function(0x080963C8, (int)custom_SV_CalcPings);
-			cracking_hook_function(0x0809657E, (int)custom_SV_CheckTimeouts);
-			cracking_hook_function(0x08080050, (int)custom_Scr_ErrorInternal);
-			cracking_hook_function(0x08061124, (int)custom_Com_Error);
-			cracking_hook_function(0x080788D2, (int)custom_RuntimeError);
-			cracking_hook_function(0x080787DC, (int)custom_RuntimeError_Debug);
-			cracking_hook_function(0x0809B016, (int)custom_SV_ArchiveSnapshot);
-			cracking_hook_function(0x0809A408, (int)custom_SV_BuildClientSnapshot);
-			cracking_hook_function(0x0811B770, (int)custom_G_SpawnEntitiesFromString);
-			cracking_hook_function(0x080584F0, (int)custom_CM_IsBadStaticModel);
-			cracking_hook_function(0x08113128, (int)custom_Script_obituary);
-			cracking_hook_function(0x08092302, (int)custom_SV_MapExists);
-			cracking_hook_function(0x08109CE0, (int)custom_G_UpdateObjectives); // Guessed function name
-			cracking_hook_function(0x08120A70, (int)custom_FireWeaponMelee);
-			cracking_hook_function(0x08120484, (int)custom_Bullet_Fire);
+		cracking_hook_function(0x08105CAC, (int)custom_Touch_Item);
+		cracking_hook_function(0x0811F232, (int)custom_G_AddEvent);
+		cracking_hook_function(0x080EBF24, (int)hook_BG_IsWeaponValid);
+		cracking_hook_function(0x080DFC78, (int)custom_BG_AddPredictableEventToPlayerstate);
+		cracking_hook_function(0x080985C8, (int)custom_SV_WriteSnapshotToClient);
+		cracking_hook_function(0x0808F302, (int)custom_SV_SendClientGameState);
+		cracking_hook_function(0x0808F02E, (int)custom_SV_DropClient);
+		cracking_hook_function(0x0808FDC2, (int)custom_SV_WriteDownloadToClient);
+		cracking_hook_function(0x080B7FA6, (int)custom_va);
+		cracking_hook_function(0x08090534, (int)hook_SV_VerifyIwds_f);
+		cracking_hook_function(0x080907BA, (int)hook_SV_ResetPureClient_f);
+		cracking_hook_function(0x080963C8, (int)custom_SV_CalcPings);
+		cracking_hook_function(0x0809657E, (int)custom_SV_CheckTimeouts);
+		cracking_hook_function(0x08080050, (int)custom_Scr_ErrorInternal);
+		cracking_hook_function(0x08061124, (int)custom_Com_Error);
+		cracking_hook_function(0x080788D2, (int)custom_RuntimeError);
+		cracking_hook_function(0x080787DC, (int)custom_RuntimeError_Debug);
+		cracking_hook_function(0x0809B016, (int)custom_SV_ArchiveSnapshot);
+		cracking_hook_function(0x0809A408, (int)custom_SV_BuildClientSnapshot);
+		cracking_hook_function(0x0811B770, (int)custom_G_SpawnEntitiesFromString);
+		cracking_hook_function(0x080584F0, (int)custom_CM_IsBadStaticModel);
+		cracking_hook_function(0x08113128, (int)custom_Script_obituary);
+		cracking_hook_function(0x08092302, (int)custom_SV_MapExists);
+		cracking_hook_function(0x08109CE0, (int)custom_G_UpdateObjectives); // Guessed function name
+		cracking_hook_function(0x08120A70, (int)custom_FireWeaponMelee);
+		cracking_hook_function(0x08120484, (int)custom_Bullet_Fire);
+		cracking_hook_function(0x0809C21C, (int)custom_SV_QueueVoicePacket);
 
-			#if COMPILE_BOTS == 1
-				cracking_hook_function(0x0809676C, (int)custom_SV_BotUserMove);
-			#endif
+		#if COMPILE_BOTS == 1
+		cracking_hook_function(0x0809676C, (int)custom_SV_BotUserMove);
+		#endif
 
-			#if COMPILE_RATELIMITER == 1
-				cracking_hook_call(0x08095C48, (int)hook_SVC_Info);
-				cracking_hook_call(0x08095B94, (int)hook_SVC_Status);
-				cracking_hook_call(0x08095E1D, (int)hook_SVC_RemoteCommand);
-				cracking_hook_call(0x08095CB2, (int)hook_SV_GetChallenge);
-				cracking_hook_call(0x08095D6C, (int)hook_SV_DirectConnect);
-			#endif
+		#if COMPILE_RATELIMITER == 1
+		cracking_hook_call(0x08095C48, (int)hook_SVC_Info);
+		cracking_hook_call(0x08095B94, (int)hook_SVC_Status);
+		cracking_hook_call(0x08095E1D, (int)hook_SVC_RemoteCommand);
+		cracking_hook_call(0x08095CB2, (int)hook_SV_GetChallenge);
+		cracking_hook_call(0x08095D6C, (int)hook_SV_DirectConnect);
+		#endif
 		#endif
 
 		com_printmessage_caret_patch();
@@ -4303,6 +4416,10 @@ public:
 	~cCallOfDuty2Pro()
 	{
 		gsc_weapons_free();
+		if ( voiceData )
+		{
+			fclose(voiceData);
+		}
 		printf("> [PLUGIN UNLOADED]\n");
 	}
 };
