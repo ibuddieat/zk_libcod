@@ -2009,6 +2009,13 @@ void gsc_player_playsoundfile(scr_entref_t id)
 		return;
 	}
 
+	if ( svs.clients[source].state < CS_CONNECTED )
+	{
+		stackError("gsc_player_playsoundfile() entity %i is not connected", source);
+		stackPushUndefined();
+		return;
+	}
+
 	if ( player_unsentVoiceData[id] > 0 )
 	{
 		player_unsentVoiceData[id] = 0;

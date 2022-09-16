@@ -3084,12 +3084,13 @@ void custom_G_RunFrame(int levelTime)
 		for ( i = 0; i < sv_maxclients->integer; i++, client++ )
 		{
 			id = client - svs.clients;
+			if ( svs.clients[id].state < CS_CONNECTED )
+				continue;
+
 			if ( player_unsentVoiceData[id] > 0 )
 			{
 				for ( int ctr = 0; ctr < 10; player_sentVoiceData[id]++, ctr++ )
 				{
-					VoicePacket_t *voicePacket = &player_voiceData[id][player_sentVoiceData[id]];
-					SV_QueueVoicePacket(voicePacket->talkerNum, id, voicePacket);
 					if ( player_sentVoiceData[id] >= player_unsentVoiceData[id] )
 					{
 						Scr_Notify(client->gentity, scr_const.sound_file_done, 0);
@@ -3097,6 +3098,15 @@ void custom_G_RunFrame(int levelTime)
 						player_sentVoiceData[id] = 0;
 						break;
 					}
+					VoicePacket_t *voicePacket = &player_voiceData[id][player_sentVoiceData[id]];
+					if ( svs.clients[(int)voicePacket->talkerNum].state < CS_CONNECTED )
+					{
+						Scr_Notify(client->gentity, scr_const.sound_file_done, 0);
+						player_unsentVoiceData[id] = 0;
+						player_sentVoiceData[id] = 0;
+						break;
+					}
+					SV_QueueVoicePacket(voicePacket->talkerNum, id, voicePacket);
 				}
 			}
 		}
