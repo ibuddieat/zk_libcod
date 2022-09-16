@@ -1918,7 +1918,7 @@ void Encode_SetOptions(void *encoder)
 {
 	int g_encoder_samplerate = 8192;
 	int g_encoder_quality = sv_voiceQuality->integer;
-	int enabled = 1;
+	int enabled = 0;
 	speex_encoder_ctl(encoder, SPEEX_SET_SAMPLING_RATE /* 24 */, &g_encoder_samplerate);
 	speex_encoder_ctl(encoder, SPEEX_SET_QUALITY /* 4 */, &g_encoder_quality);
 	speex_encoder_ctl(encoder, SPEEX_SET_VAD /* 30 */, &enabled); // Voice Activity Detection (VAD) status
