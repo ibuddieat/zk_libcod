@@ -1,5 +1,20 @@
 #include "gsc_utils.hpp"
 
+#if COMPILE_CUSTOM_VOICE == 1
+#include <speex/speex.h>
+#include <pthread.h>
+
+struct encoder_async_task
+{
+	encoder_async_task *prev;
+	encoder_async_task *next;
+	char filePath[COD2_MAX_STRINGLENGTH];
+	int callback;
+	int soundIndex;
+	unsigned int levelId;
+};
+#endif
+
 #if COMPILE_UTILS == 1
 
 /*
@@ -990,5 +1005,216 @@ void gsc_utils_gettype()
 	}
 
 	stackPushString( stackGetParamTypeAsString(0) );
+}
+#endif
+
+
+#if COMPILE_CUSTOM_VOICE == 1
+
+#define FRAME_SIZE 160
+
+extern VoicePacket_t voiceDataStore[MAX_CUSTOMSOUNDS][MAX_STOREDVOICEPACKETS];
+extern cvar_t *sv_voiceQuality;
+encoder_async_task *first_encoder_async_task = NULL;
+extern int currentMaxSoundIndex;
+
+int QueueCustomVoicePacket(char *data, int dataLen, int soundIndex, int packetIndex)
+{
+	VoicePacket_t *voicePacket = &voiceDataStore[soundIndex][packetIndex];
+	memcpy(voicePacket->data, data, dataLen);
+	voicePacket->dataLen = dataLen;
+	return 1;
+}
+
+void Encode_SetOptions(void *encoder)
+{
+	int g_encoder_samplerate = 8192;
+	int g_encoder_quality = sv_voiceQuality->integer;
+	int enabled = 0;
+	speex_encoder_ctl(encoder, SPEEX_SET_SAMPLING_RATE /* 24 */, &g_encoder_samplerate);
+	speex_encoder_ctl(encoder, SPEEX_SET_QUALITY /* 4 */, &g_encoder_quality);
+	speex_encoder_ctl(encoder, SPEEX_SET_VAD /* 30 */, &enabled); // Voice Activity Detection (VAD) status
+	speex_encoder_ctl(encoder, SPEEX_SET_DTX /* 34 */, &enabled); // Discontinuous Transmission (DTX)
+}
+
+void *encode_async(void *newtask)
+{
+	encoder_async_task *task = (encoder_async_task*)newtask;
+	FILE *file = fopen(task->filePath, "r");
+	int result = 0;
+
+	if ( file != NULL )    
+	{
+		// Reset song data for this slot
+		memset(&voiceDataStore[task->soundIndex], 0, sizeof(voiceDataStore[0]));
+
+		/*
+		The following encoding procedure is based on:
+		https://gitlab.xiph.org/xiph/speex/-/blob/Speex-1.1.9/doc/sampleenc.c
+
+		License:
+		Copyright 2002-2004 Xiph.org Foundation, Jean-Marc Valin, David Rowe, EpicGames
+
+		Redistribution and use in source and binary forms, with or without
+		modification, are permitted provided that the following conditions
+		are met:
+
+		- Redistributions of source code must retain the above copyright
+		notice, this list of conditions and the following disclaimer.
+
+		- Redistributions in binary form must reproduce the above copyright
+		notice, this list of conditions and the following disclaimer in the
+		documentation and/or other materials provided with the distribution.
+
+		- Neither the name of the Xiph.org Foundation nor the names of its
+		contributors may be used to endorse or promote products derived from
+		this software without specific prior written permission.
+
+		THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+		``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+		LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+		A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR
+		CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+		EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+		PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+		PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+		LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+		NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+		SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+		*/
+		short in[FRAME_SIZE];
+		float input[FRAME_SIZE];
+		char cbits[200];
+		int nbBytes;
+		void *g_encoder;
+		SpeexBits encodeBits;
+		int i, packetIndex;
+
+		/* Create a new encoder state in narrowband mode */
+		g_encoder = speex_encoder_init(&speex_nb_mode);
+		speex_bits_init(&encodeBits);
+		Encode_SetOptions(g_encoder);
+
+		for ( packetIndex = 0; packetIndex <= MAX_STOREDVOICEPACKETS; packetIndex++ )
+		{
+			if ( packetIndex == MAX_STOREDVOICEPACKETS )
+			{
+				result = 1;
+				break;
+			}
+
+			/* Read a 16 bits/sample audio frame */
+			fread(in, sizeof(short), FRAME_SIZE, file);
+			if ( feof(file) )
+				break;
+
+			for ( i = 0; i < FRAME_SIZE; i++ )
+				input[i] = in[i];
+
+			speex_bits_reset(&encodeBits);
+			speex_encode(g_encoder, input, &encodeBits);
+			nbBytes = speex_bits_write(&encodeBits, cbits, 200);
+			if ( !QueueCustomVoicePacket(cbits, nbBytes, task->soundIndex, packetIndex) )
+				break;
+		}
+		speex_encoder_destroy(g_encoder);
+		speex_bits_destroy(&encodeBits);
+		fclose(file);
+	}
+	else
+	{
+		stackError("gsc_utils_loadsoundfile() input file could not be opened");
+		result = 2;
+	}
+
+	if ( Scr_IsSystemActive() )
+	{
+		stackPushInt(result);
+		stackPushInt(task->soundIndex);
+		short ret = Scr_ExecThread(task->callback, 2);
+		Scr_FreeThread(ret);
+	}
+
+	if ( task->next != NULL )
+		task->next->prev = task->prev;
+
+	if ( task->prev != NULL )
+		task->prev->next = task->next;
+	else
+		first_encoder_async_task = task->next;
+
+	delete task;
+	return NULL;
+}
+
+void gsc_utils_loadsoundfile()
+{
+	char *filePath;
+	int callback;
+	int soundIndex;
+
+	if ( !stackGetParamString(0, &filePath) )
+	{
+		stackError("gsc_utils_loadsoundfile() requires a file path (string) as first argument");
+		stackPushInt(0);
+		return;
+	}
+
+	if ( !stackGetParamFunction(1, &callback) )
+	{
+		stackError("gsc_utils_loadsoundfile() requires a callback function as second argument");
+		stackPushInt(0);
+		return;
+	}
+
+	if ( !stackGetParamInt(2, &soundIndex) )
+	{
+		soundIndex = ++currentMaxSoundIndex;
+	}
+
+	if ( !soundIndex || soundIndex >= MAX_CUSTOMSOUNDS )
+	{
+		stackError("gsc_utils_loadsoundfile() invalid sound index, valid range is 0-%d", MAX_CUSTOMSOUNDS-1);
+		stackPushInt(0);
+		return;
+	}
+
+	encoder_async_task *current = first_encoder_async_task;
+
+	while ( current != NULL && current->next != NULL )
+		current = current->next;
+
+	encoder_async_task *newtask = new encoder_async_task;
+
+	strncpy(newtask->filePath, filePath, COD2_MAX_STRINGLENGTH - 1);
+	newtask->prev = current;
+	newtask->next = NULL;
+	newtask->filePath[COD2_MAX_STRINGLENGTH - 1] = '\0';
+	newtask->callback = callback;
+	newtask->soundIndex = soundIndex;
+	newtask->levelId = scrVarPub.levelId;
+
+	if ( current != NULL )
+		current->next = newtask;
+	else
+		first_encoder_async_task = newtask;
+	
+	pthread_t encoder_doer;
+
+	if ( pthread_create(&encoder_doer, NULL, encode_async, newtask) != 0 )
+	{
+		stackError("gsc_utils_loadsoundfile() error creating encoder async handler thread");
+		stackPushInt(0);
+		return;
+	}
+
+	if ( pthread_detach(encoder_doer) != 0 )
+	{
+		stackError("gsc_utils_loadsoundfile() error detaching encoder async handler thread");
+		stackPushInt(0);
+		return;
+	}
+
+	stackPushInt(currentMaxSoundIndex);
 }
 #endif

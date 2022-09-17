@@ -111,12 +111,14 @@ int scr_errors_index = 0;
 scr_notify_t scr_notify[MAX_NOTIFY_BUFFER];
 int scr_notify_index = 0;
 
-FILE *voiceData;
+FILE *voiceDataDumpFile;
 #if COMPILE_CUSTOM_VOICE == 1
+int currentMaxSoundIndex = 0;
 int lastCustomVoiceDataTime = 0;
-VoicePacket_t player_voiceData[MAX_CLIENTS][MAX_CACHEDVOICEPACKETS];
-int player_sentVoiceData[MAX_CLIENTS] = {0};
-int player_unsentVoiceData[MAX_CLIENTS] = {0};
+VoicePacket_t voiceDataStore[MAX_CUSTOMSOUNDS][MAX_STOREDVOICEPACKETS];
+int player_currentSoundTalker[MAX_CLIENTS] = {0};
+int player_currentSoundIndex[MAX_CLIENTS] = {0};
+int player_sentVoiceDataIndex[MAX_CLIENTS] = {0};
 #endif
 objective_t player_objectives[MAX_CLIENTS][16];
 float player_meleeHeightScale[MAX_CLIENTS] = {0.0}; // Defaults to 1.0 on connect
@@ -220,8 +222,8 @@ void common_init_complete_print(const char *format, ...)
 
 	if ( g_dumpVoiceData->boolean )
 	{
-		voiceData = fopen("voiceData.spx", "ab");	
-		if ( !voiceData )
+		voiceDataDumpFile = fopen("voiceData.spx", "ab");	
+		if ( !voiceDataDumpFile )
 		{
 			Com_Printf("Warning: Could not open file voiceData.spx\n");
 		}
@@ -1515,9 +1517,9 @@ void custom_SV_SendClientGameState(client_t *client)
 	
 	/* New code start */
 	#if COMPILE_CUSTOM_VOICE == 1
-	memset(&player_voiceData[client - svs.clients], 0, sizeof(player_voiceData[client - svs.clients]));
-	player_sentVoiceData[client - svs.clients] = 0;
-	player_unsentVoiceData[client - svs.clients] = 0;
+	player_currentSoundTalker[client - svs.clients] = 0;
+	player_currentSoundIndex[client - svs.clients] = 0;
+	player_sentVoiceDataIndex[client - svs.clients] = 0;
 	#endif
 	memset(&player_objectives[client - svs.clients], 0, sizeof(player_objectives[client - svs.clients]));
 	player_meleeHeightScale[client - svs.clients] = 1.0;
@@ -3087,25 +3089,20 @@ void custom_G_RunFrame(int levelTime)
 			if ( svs.clients[id].state < CS_CONNECTED )
 				continue;
 
-			if ( player_unsentVoiceData[id] > 0 )
+			if ( player_currentSoundIndex[id] )
 			{
-				for ( int ctr = 0; ctr < 10; player_sentVoiceData[id]++, ctr++ )
+				for ( int ctr = 0; ctr < 10 && player_sentVoiceDataIndex[id] < MAX_STOREDVOICEPACKETS; player_sentVoiceDataIndex[id]++, ctr++ )
 				{
-					if ( player_sentVoiceData[id] >= player_unsentVoiceData[id] )
+					VoicePacket_t *voicePacket = &voiceDataStore[player_currentSoundIndex[id]][player_sentVoiceDataIndex[id]];
+					if ( svs.clients[player_currentSoundTalker[id]].state < CS_CONNECTED || !voicePacket->dataLen )
 					{
-						Scr_Notify(client->gentity, scr_const.sound_file_done, 0);
-						player_unsentVoiceData[id] = 0;
-						player_sentVoiceData[id] = 0;
+						player_currentSoundTalker[id] = 0;
+						player_currentSoundIndex[id] = 0;
+						player_sentVoiceDataIndex[id] = 0;
+						Scr_Notify(&g_entities[id], scr_const.sound_file_done, 0);
 						break;
 					}
-					VoicePacket_t *voicePacket = &player_voiceData[id][player_sentVoiceData[id]];
-					if ( svs.clients[(int)voicePacket->talkerNum].state < CS_CONNECTED )
-					{
-						Scr_Notify(client->gentity, scr_const.sound_file_done, 0);
-						player_unsentVoiceData[id] = 0;
-						player_sentVoiceData[id] = 0;
-						break;
-					}
+					voicePacket->talkerNum = player_currentSoundTalker[id];
 					SV_QueueVoicePacket(voicePacket->talkerNum, id, voicePacket);
 				}
 			}
@@ -4119,7 +4116,7 @@ void custom_Bullet_Fire(gentity_t *inflictor, float spread, weaponParms *wp, gen
 void custom_SV_QueueVoicePacket(int talkerNum, int clientNum, VoicePacket_t *voicePacket)
 {
 	/* New code start: voice chat dump */
-	if ( voiceData && g_dumpVoiceData->boolean )
+	if ( voiceDataDumpFile && g_dumpVoiceData->boolean )
 	{
 		char voiceLogData[(256*4)+1];
 		char voiceLogEntry[(256*4)+64]; // {"talker": "64", "client": "64", "data": ""}\n
@@ -4131,8 +4128,8 @@ void custom_SV_QueueVoicePacket(int talkerNum, int clientNum, VoicePacket_t *voi
 		}
 
 		snprintf(voiceLogEntry, sizeof(voiceLogEntry), "{\"talker\": \"%02i\", \"client\": \"%02i\", \"data\": \"%s\"}\n", talkerNum, clientNum, voiceLogData);
-		fwrite(&voiceLogEntry, strlen(voiceLogEntry), 1, voiceData);
-		fflush(voiceData);
+		fwrite(&voiceLogEntry, strlen(voiceLogEntry), 1, voiceDataDumpFile);
+		fflush(voiceDataDumpFile);
 	}
 	/* New code end */
 
@@ -4426,9 +4423,9 @@ public:
 	~cCallOfDuty2Pro()
 	{
 		gsc_weapons_free();
-		if ( voiceData )
+		if ( voiceDataDumpFile )
 		{
-			fclose(voiceData);
+			fclose(voiceDataDumpFile);
 		}
 		printf("> [PLUGIN UNLOADED]\n");
 	}

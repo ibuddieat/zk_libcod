@@ -1893,37 +1893,9 @@ void gsc_player_objective_player_state(scr_entref_t id)
 
 #if COMPILE_CUSTOM_VOICE == 1
 
-extern cvar_t *sv_voiceQuality;
-extern int player_sentVoiceData[MAX_CLIENTS];
-extern int player_unsentVoiceData[MAX_CLIENTS];
-extern VoicePacket_t player_voiceData[MAX_CLIENTS][MAX_CACHEDVOICEPACKETS];
-
-int QueueCustomVoicePacket(char *data, int dataLen, int talkerNum, int clientNum)
-{
-	if ( player_unsentVoiceData[clientNum] >= MAX_CACHEDVOICEPACKETS )
-	{
-		float limit = (MAX_CACHEDVOICEPACKETS / 50);
-		Com_Printf("Warning: Loaded .wav too long, truncated after %.2f seconds\n", limit);
-		return 0;
-	}
-
-	VoicePacket_t *voicePacket = &player_voiceData[clientNum][player_unsentVoiceData[clientNum]++];
-	voicePacket->talkerNum = talkerNum;
-	memcpy(voicePacket->data, data, dataLen);
-	voicePacket->dataLen = dataLen;
-	return 1;
-}
-
-void Encode_SetOptions(void *encoder)
-{
-	int g_encoder_samplerate = 8192;
-	int g_encoder_quality = sv_voiceQuality->integer;
-	int enabled = 0;
-	speex_encoder_ctl(encoder, SPEEX_SET_SAMPLING_RATE /* 24 */, &g_encoder_samplerate);
-	speex_encoder_ctl(encoder, SPEEX_SET_QUALITY /* 4 */, &g_encoder_quality);
-	speex_encoder_ctl(encoder, SPEEX_SET_VAD /* 30 */, &enabled); // Voice Activity Detection (VAD) status
-	speex_encoder_ctl(encoder, SPEEX_SET_DTX /* 34 */, &enabled); // Discontinuous Transmission (DTX)
-}
+extern int player_currentSoundTalker[MAX_CLIENTS];
+extern int player_currentSoundIndex[MAX_CLIENTS];
+extern int player_sentVoiceDataIndex[MAX_CLIENTS];
 
 void gsc_player_isplayingsoundfile(scr_entref_t id)
 {
@@ -1934,14 +1906,7 @@ void gsc_player_isplayingsoundfile(scr_entref_t id)
 		return;
 	}
 
-	if ( player_unsentVoiceData[id] > 0 )
-	{
-		stackPushBool(qtrue);
-	}
-	else
-	{
-		stackPushBool(qfalse);
-	}
+	stackPushInt(player_currentSoundIndex[id]);
 }
 
 void gsc_player_stopsoundfile(scr_entref_t id)
@@ -1953,12 +1918,13 @@ void gsc_player_stopsoundfile(scr_entref_t id)
 		return;
 	}
 
-	if ( player_unsentVoiceData[id] > 0 )
+	if ( player_currentSoundIndex[id] )
 	{
-		player_unsentVoiceData[id] = 0;
-		player_sentVoiceData[id] = 0;
-		memset(&player_voiceData[id], 0, sizeof(player_voiceData[id]));
+		player_currentSoundTalker[id] = 0;
+		player_currentSoundIndex[id] = 0;
+		player_sentVoiceDataIndex[id] = 0;
 		Scr_Notify(&g_entities[id], scr_const.sound_file_stop, 0);
+
 		stackPushBool(qtrue);
 	}
 	else
@@ -1967,14 +1933,12 @@ void gsc_player_stopsoundfile(scr_entref_t id)
 	}
 }
 
-#define FRAME_SIZE 160
 void gsc_player_playsoundfile(scr_entref_t id)
 {
 	int args;
 	qboolean error;
-	char *path;
+	int soundIndex;
 	int source;
-	FILE *file = NULL;
 
 	args = Scr_GetNumParam();
 	error = qfalse;
@@ -1982,11 +1946,11 @@ void gsc_player_playsoundfile(scr_entref_t id)
 	{
 		case 1:
 			source = id;
-			if ( !stackGetParams("s", &path) )
+			if ( !stackGetParams("i", &soundIndex) )
 				error = qtrue;
 			break;
 		case 2:
-			if ( !stackGetParams("si", &path, &source) )
+			if ( !stackGetParams("ii", &soundIndex, &source) )
 				error = qtrue;
 			break;
 		default:
@@ -2001,7 +1965,7 @@ void gsc_player_playsoundfile(scr_entref_t id)
 		stackPushUndefined();
 		return;
 	}
-	
+
 	if ( id >= MAX_CLIENTS || source >= MAX_CLIENTS )
 	{
 		stackError("gsc_player_playsoundfile() entity %i is not a player", id);
@@ -2016,89 +1980,20 @@ void gsc_player_playsoundfile(scr_entref_t id)
 		return;
 	}
 
-	if ( player_unsentVoiceData[id] > 0 )
+	if ( !soundIndex || soundIndex >= MAX_CUSTOMSOUNDS )
 	{
-		player_unsentVoiceData[id] = 0;
-		player_sentVoiceData[id] = 0;
-		memset(&player_voiceData[id], 0, sizeof(player_voiceData[id]));
-	}
-
-	file = fopen(path, "r");   
-	if ( file != NULL )    
-	{
-		/*
-		The following encoding procedure is based on:
-		https://gitlab.xiph.org/xiph/speex/-/blob/Speex-1.1.9/doc/sampleenc.c
-
-		License:
-		Copyright 2002-2004 Xiph.org Foundation, Jean-Marc Valin, David Rowe, EpicGames
-
-		Redistribution and use in source and binary forms, with or without
-		modification, are permitted provided that the following conditions
-		are met:
-
-		- Redistributions of source code must retain the above copyright
-		notice, this list of conditions and the following disclaimer.
-
-		- Redistributions in binary form must reproduce the above copyright
-		notice, this list of conditions and the following disclaimer in the
-		documentation and/or other materials provided with the distribution.
-
-		- Neither the name of the Xiph.org Foundation nor the names of its
-		contributors may be used to endorse or promote products derived from
-		this software without specific prior written permission.
-
-		THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-		``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-		LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-		A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR
-		CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-		EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-		PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-		PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-		LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-		NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-		SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-		*/
-		short in[FRAME_SIZE];
-		float input[FRAME_SIZE];
-		char cbits[200];
-		int nbBytes;
-		void *g_encoder;
-		SpeexBits encodeBits;
-		int i;
-
-		/* Create a new encoder state in narrowband mode */
-		g_encoder = speex_encoder_init(&speex_nb_mode);
-		speex_bits_init(&encodeBits);
-		Encode_SetOptions(g_encoder);
-
-		while ( 1 )
-		{
-			/* Read a 16 bits/sample audio frame */
-			fread(in, sizeof(short), FRAME_SIZE, file);
-			if ( feof(file) )
-				break;
-
-			for ( i = 0; i < FRAME_SIZE; i++ )
-				input[i] = in[i];
-
-			speex_bits_reset(&encodeBits);
-			speex_encode(g_encoder, input, &encodeBits);
-			nbBytes = speex_bits_write(&encodeBits, cbits, 200);
-			if ( !QueueCustomVoicePacket(cbits, nbBytes, source, id) )
-				break;
-		}
-		speex_encoder_destroy(g_encoder);
-		speex_bits_destroy(&encodeBits);
-		fclose(file);
-	}
-	else
-	{
-		stackError("gsc_player_playsoundfile() input file could not be opened");
-		stackPushUndefined();
+		stackError("gsc_player_playsoundfile() invalid sound index, valid range is 0-%d", MAX_CUSTOMSOUNDS-1);
+		stackPushInt(0);
 		return;
 	}
+
+	if ( player_currentSoundIndex[id] )
+		Scr_Notify(&g_entities[id], scr_const.sound_file_stop, 0);
+
+	player_currentSoundTalker[id] = source;
+	player_sentVoiceDataIndex[id] = 0;
+	player_currentSoundIndex[id] = soundIndex;
+
 	stackPushBool(qtrue);
 }
 #endif

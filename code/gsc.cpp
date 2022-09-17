@@ -52,7 +52,7 @@ void NULL_FUNC(void) {}
 scr_function_t scriptFunctions[] =
 {
 	#if COD_VERSION == COD2_1_0
-	{"endparty", NULL_FUNC, 0}, //cod2 1.2
+	{"endparty", NULL_FUNC, 0}, // cod2 1.2
 	#endif
 
 	#if COMPILE_BOTS == 1
@@ -158,8 +158,8 @@ scr_function_t scriptFunctions[] =
 
 	{"printf", gsc_utils_printf, 0},
 	{"sprintf", gsc_utils_sprintf, 0},
-	{"printoutofband", gsc_utils_outofbandprint, 0}, //
-	{"putchar", gsc_utils_putchar, 0}, //
+	{"printoutofband", gsc_utils_outofbandprint, 0},
+	{"putchar", gsc_utils_putchar, 0},
 	{"logprintconsole", gsc_utils_logprintconsole, 0},
 
 	{"getarraykeys", gsc_utils_getarraykeys, 0},
@@ -180,9 +180,9 @@ scr_function_t scriptFunctions[] =
 	{"fremove", gsc_utils_fremove, 0},
 	#endif
 
-	{"getsystemtime", gsc_utils_getsystemtime, 0}, //
-	{"getserverstarttime", gsc_utils_getserverstarttime, 0}, //
-	{"getlocaltime", gsc_utils_getlocaltime, 0}, //
+	{"getsystemtime", gsc_utils_getsystemtime, 0},
+	{"getserverstarttime", gsc_utils_getserverstarttime, 0},
+	{"getlocaltime", gsc_utils_getlocaltime, 0},
 
 	{"g_findconfigstringindexoriginal", gsc_g_findconfigstringindexoriginal, 0},
 	{"g_findconfigstringindex", gsc_g_findconfigstringindex, 0},
@@ -200,6 +200,10 @@ scr_function_t scriptFunctions[] =
 	{"getlasttestclientnumber", gsc_utils_getlasttestclientnumber, 0},
 	{"bullethiteffect", gsc_utils_bullethiteffect, 0},
 	{"gettype", gsc_utils_gettype, 0},
+	#endif
+
+	#if COMPILE_CUSTOM_VOICE == 1
+	{"loadsoundfile", gsc_utils_loadsoundfile, 0},
 	#endif
 
 	#if COMPILE_WEAPONS == 1

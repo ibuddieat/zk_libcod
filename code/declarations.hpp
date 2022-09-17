@@ -2964,5 +2964,6 @@ typedef struct scr_notify_s
 	VariableValue arguments[MAX_NOTIFY_PARAMS];
 } scr_notify_t;
 
-#define MAX_CUSTOMSOUNDDURATION 30 // Seconds
-#define MAX_CACHEDVOICEPACKETS (MAX_CUSTOMSOUNDDURATION * 50) // 50 voice packets per second
+#define MAX_CUSTOMSOUNDDURATION 300 // Seconds
+#define MAX_STOREDVOICEPACKETS (MAX_CUSTOMSOUNDDURATION * 50) // 50 voice packets per second
+#define MAX_CUSTOMSOUNDS 16 // Consider ~13kB of memory usage per second per song

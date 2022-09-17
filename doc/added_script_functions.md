@@ -21,7 +21,7 @@ New script code methods:
   * `<player> objective_player_state(<objective_number>, <state>)`
   * `<player> playFxForPlayer(<effect id>, <position of effect>, [<forward vector>], [<up vector>])`
   * `<player> playFxOnTagForPlayer(<effect id>, <entity>, <tag name>)`
-  * `<player> playSoundFile(<path>, [<source player>])`
+  * `<player> playSoundFile(<sound index>, [<source player>])`
   * `<player> runScriptAnimation(<scriptAnimEventType>, <isContinue>, <force>)`
   * `<player> setEarthquakes("on|off|toggle")`
   * `<player> setFireRangeScale(<scale>)`
@@ -40,6 +40,7 @@ New script code functions:
   * `getWeaponFuseTime(<weapon name>)`
   * `setWeaponFuseTime(<weapon name>, <time in ms>)`
   * `getEntityCount()`
+  * `loadSoundFile(<file path>, <callback function>, [<sound index>])`
   * `logPrintConsole(<message>)`
   * `resetTestClientNaming()`
   * `setNextTestClientName(<name>)`

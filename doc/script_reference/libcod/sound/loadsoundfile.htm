@@ -1,0 +1,85 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>loadSoundFile( &lt;file path&gt;, &lt;callback function&gt;, &lt;sound index&gt; )</H1>
+<HR>
+<BODY BGCOLOR='B0C4DE'>
+<I>
+Module: Sound<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Loads and encodes a sound file for use with <a href="../sound/playsoundfile.htm">playSoundFile</a>. The input file is expected to be a raw (header-less) WAV file in signed 16-bit PCM mode (Little Endian), with a single channel (mono) and a sampling rate of 8192 Hz. On completion of the (threaded) encoding procedure, the callback function is called. The sound duration is capped to MAX_CUSTOMSOUNDDURATION seconds. The number of available sound indexes is capped to MAX_CUSTOMSOUNDS. Indexes can be reused (to replace sound data) via the sound index parameter. <a href="../sound/playsoundfile.htm">playSoundFile</a> can be used already before encoding finishes. Avoid running two encoding jobs on the same sound index at the same time. Sound data is retained across map switches. Changing sv_voiceQuality has no effect on already encoded data.</p>
+</H3>
+</TR></TD></TABLE>
+<p>Note: Due to engine limitations, the sound quality is rather low and also depends on the connection quality (packet loss) of the receiving player.</p>
+
+<BR><BR>
+<H2>Call this on:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+The player
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+loadSound()
+{
+    index = loadSoundFile("/tmp/test.wav.raw", ::encoderDone);
+    if(!index)
+        iprintLn("Error at passing sound to encoder, check console for details");
+}
+
+encoderDone(index, result)
+{
+    switch(result) {
+        case 0: iprintLn("Sound with index " + index + " finished encoding successfully"); break;
+        case 1: iprintLn("Sound with index " + index + " is too long and will end playback at max. sound duration"); break;
+        case 2: iprintLn("Sound with index " + index + " could not be opened for encoding"); break;
+        default: break;
+    }
+}
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;file path&gt; The input file path on the server.</LI>
+<LI>2 : &lt;callback function&gt; Function to call when encoding is done. First parameter is the sound index, second parameter is the encoder's return value (integer, 0 = ok, 1 = song too long and therefore truncated, 2 = could not open file).</LI>
+</UL></TR></TD></TABLE>
+<BR><BR>
+<H2>Optional Args</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;sound index&gt; The sound index to use (default: automatically incremented integer). Can be used to reallocate song data for a specific slot.</LI>
+</UL></TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>

@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>playSoundFile( &lt;path&gt;, &lt;source&gt; )</H1>
+<H1>playSoundFile( &lt;sound index&gt;, &lt;source&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
@@ -27,7 +27,7 @@ Module: Sound<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Plays a server-sided sound file via voice chat. The input file is expected to be a raw (header-less) WAV file in signed 16-bit PCM mode (Little Endian), with a single channel (mono) and a sampling rate of 8192 Hz. Calling this function before a previously started sound ended causes the first sound to end. A script notify with string sound_file_done is emit as soon as the last voice packet has been queued for sending. The sound duration is capped to MAX_CUSTOMSOUNDDURATION seconds. Note that loading long or many sounds causes server lag spikes as the encoding requires significant CPU time and is currently running in the same thread as the main game loop. Also works with sv_voice set to "0". Note that actual voice chat coming from the same source player will interfere with the audio stream.</p>
+<p>Plays a song via voice chat, based on a sound index returned from <a href="../sound/loadsoundfile.htm">loadSoundFile</a>. A script notify with string sound_file_done is emit as soon as the last voice packet has been queued for sending. Note that actual voice chat coming from the same source player will interfere with the audio stream. This function also works with sv_voice set to "0". Playback stops if the source player disconnects.</p>
 </H3>
 </TR></TD></TABLE>
 <p>Note: Due to engine limitations, the sound quality is rather low and also depends on the connection quality (packet loss) of the receiving player.</p>
@@ -46,7 +46,7 @@ The player
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-self playSoundFile("/tmp/test.wav.raw", self getEntityNumber());
+self playSoundFile(index, self getEntityNumber());
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -55,14 +55,14 @@ self playSoundFile("/tmp/test.wav.raw", self getEntityNumber());
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;path&gt; The input file path on the server</LI>
+<LI>1 : &lt;sound index&gt; A sound index returned from <a href="../sound/loadsoundfile.htm">loadSoundFile</a>.</LI>
 </UL></TR></TD></TABLE>
 <BR><BR>
 <H2>Optional Args</H2>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;source&gt; The entity number of the emitting player (default: self)</LI>
+<LI>1 : &lt;source&gt; The entity number of the emitting player (default: self).</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>
