@@ -1893,6 +1893,7 @@ void gsc_player_objective_player_state(scr_entref_t id)
 
 #if COMPILE_CUSTOM_VOICE == 1
 
+extern float player_pendingVoiceDataFrames[MAX_CLIENTS];
 extern int player_currentSoundTalker[MAX_CLIENTS];
 extern int player_currentSoundIndex[MAX_CLIENTS];
 extern int player_sentVoiceDataIndex[MAX_CLIENTS];
@@ -1920,6 +1921,7 @@ void gsc_player_stopsoundfile(scr_entref_t id)
 
 	if ( player_currentSoundIndex[id] )
 	{
+		player_pendingVoiceDataFrames[id] = 0.0;
 		player_currentSoundTalker[id] = 0;
 		player_currentSoundIndex[id] = 0;
 		player_sentVoiceDataIndex[id] = 0;
@@ -1990,6 +1992,7 @@ void gsc_player_playsoundfile(scr_entref_t id)
 	if ( player_currentSoundIndex[id] )
 		Scr_Notify(&g_entities[id], scr_const.sound_file_stop, 0);
 
+	player_pendingVoiceDataFrames[id] = 0.0;
 	player_currentSoundTalker[id] = source;
 	player_sentVoiceDataIndex[id] = 0;
 	player_currentSoundIndex[id] = soundIndex;

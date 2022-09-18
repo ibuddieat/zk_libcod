@@ -37,6 +37,9 @@
 #define MAX_CLIENTS 64
 #define MAX_CHALLENGES 1024
 #define MAX_VOICEPACKETS 40
+#define MAX_VOICEFRAMESIZE 160
+#define MAX_VOICEPACKETSPERFRAME 2.56
+#define MAX_VOICEPACKETDATALEN 256
 #define PACKET_BACKUP 32
 #define PACKET_MASK ( PACKET_BACKUP - 1 )
 #define MAX_QPATH 64
@@ -1303,7 +1306,7 @@ typedef struct
 typedef struct
 {
 	char talkerNum;
-	char data[256];
+	char data[MAX_VOICEPACKETDATALEN];
 	int dataLen;
 } VoicePacket_t;
 #pragma pack(pop)
@@ -2964,6 +2967,6 @@ typedef struct scr_notify_s
 	VariableValue arguments[MAX_NOTIFY_PARAMS];
 } scr_notify_t;
 
-#define MAX_CUSTOMSOUNDDURATION 300 // Seconds
-#define MAX_STOREDVOICEPACKETS (MAX_CUSTOMSOUNDDURATION * 50) // 50 voice packets per second
-#define MAX_CUSTOMSOUNDS 16 // Consider ~13kB of memory usage per second per song
+#define MAX_CUSTOMSOUNDDURATION 5 // Minutes
+#define MAX_STOREDVOICEPACKETS (MAX_CUSTOMSOUNDDURATION * 3072) // MAX_VOICEPACKETSPERFRAME * 20 * 60
+#define MAX_CUSTOMSOUNDS 16 // Consider ~4MB of memory usage per 5-minute song

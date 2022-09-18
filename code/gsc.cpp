@@ -203,6 +203,7 @@ scr_function_t scriptFunctions[] =
 	#endif
 
 	#if COMPILE_CUSTOM_VOICE == 1
+	{"getsoundfileduration", gsc_utils_getsoundfileduration, 0},
 	{"loadsoundfile", gsc_utils_loadsoundfile, 0},
 	#endif
 

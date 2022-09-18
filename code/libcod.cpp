@@ -114,8 +114,8 @@ int scr_notify_index = 0;
 FILE *voiceDataDumpFile;
 #if COMPILE_CUSTOM_VOICE == 1
 int currentMaxSoundIndex = 0;
-int lastCustomVoiceDataTime = 0;
 VoicePacket_t voiceDataStore[MAX_CUSTOMSOUNDS][MAX_STOREDVOICEPACKETS];
+float player_pendingVoiceDataFrames[MAX_CLIENTS] = {0.0};
 int player_currentSoundTalker[MAX_CLIENTS] = {0};
 int player_currentSoundIndex[MAX_CLIENTS] = {0};
 int player_sentVoiceDataIndex[MAX_CLIENTS] = {0};
@@ -1517,6 +1517,7 @@ void custom_SV_SendClientGameState(client_t *client)
 	
 	/* New code start */
 	#if COMPILE_CUSTOM_VOICE == 1
+	player_pendingVoiceDataFrames[client - svs.clients] = 0.0;
 	player_currentSoundTalker[client - svs.clients] = 0;
 	player_currentSoundIndex[client - svs.clients] = 0;
 	player_sentVoiceDataIndex[client - svs.clients] = 0;
@@ -3078,36 +3079,34 @@ void custom_G_RunFrame(int levelTime)
 
 #if COMPILE_CUSTOM_VOICE == 1
 	// Process custom voice data queue
-	// Send at most 10 packets every 4th server frame
-	if ( level.time >= lastCustomVoiceDataTime + (4 * FRAMETIME) )
+	client_t *client = svs.clients;
+	int id;
+	for ( i = 0; i < sv_maxclients->integer; i++, client++ )
 	{
-		client_t *client = svs.clients;
-		int id;
-		for ( i = 0; i < sv_maxclients->integer; i++, client++ )
-		{
-			id = client - svs.clients;
-			if ( svs.clients[id].state < CS_CONNECTED )
-				continue;
+		id = client - svs.clients;
+		if ( svs.clients[id].state < CS_CONNECTED )
+			continue;
 
-			if ( player_currentSoundIndex[id] )
+		if ( player_currentSoundIndex[id] )
+		{
+			player_pendingVoiceDataFrames[id] += MAX_VOICEPACKETSPERFRAME; // 51.2 packets per second @ 20 server fps
+
+			for ( ; player_pendingVoiceDataFrames[id] > 1.0 && player_sentVoiceDataIndex[id] < MAX_STOREDVOICEPACKETS; player_sentVoiceDataIndex[id]++, player_pendingVoiceDataFrames[id] -= 1.0 )
 			{
-				for ( int ctr = 0; ctr < 10 && player_sentVoiceDataIndex[id] < MAX_STOREDVOICEPACKETS; player_sentVoiceDataIndex[id]++, ctr++ )
+				VoicePacket_t *voicePacket = &voiceDataStore[player_currentSoundIndex[id]][player_sentVoiceDataIndex[id]];
+				if ( svs.clients[player_currentSoundTalker[id]].state < CS_CONNECTED || !voicePacket->dataLen )
 				{
-					VoicePacket_t *voicePacket = &voiceDataStore[player_currentSoundIndex[id]][player_sentVoiceDataIndex[id]];
-					if ( svs.clients[player_currentSoundTalker[id]].state < CS_CONNECTED || !voicePacket->dataLen )
-					{
-						player_currentSoundTalker[id] = 0;
-						player_currentSoundIndex[id] = 0;
-						player_sentVoiceDataIndex[id] = 0;
-						Scr_Notify(&g_entities[id], scr_const.sound_file_done, 0);
-						break;
-					}
-					voicePacket->talkerNum = player_currentSoundTalker[id];
-					SV_QueueVoicePacket(voicePacket->talkerNum, id, voicePacket);
+					player_pendingVoiceDataFrames[id] = 0.0;
+					player_currentSoundTalker[id] = 0;
+					player_currentSoundIndex[id] = 0;
+					player_sentVoiceDataIndex[id] = 0;
+					Scr_Notify(&g_entities[id], scr_const.sound_file_done, 0);
+					break;
 				}
+				voicePacket->talkerNum = player_currentSoundTalker[id];
+				SV_QueueVoicePacket(voicePacket->talkerNum, id, voicePacket);
 			}
 		}
-		lastCustomVoiceDataTime = level.time;
 	}
 #endif
 

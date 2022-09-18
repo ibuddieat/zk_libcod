@@ -1011,8 +1011,6 @@ void gsc_utils_gettype()
 
 #if COMPILE_CUSTOM_VOICE == 1
 
-#define FRAME_SIZE 160
-
 extern VoicePacket_t voiceDataStore[MAX_CUSTOMSOUNDS][MAX_STOREDVOICEPACKETS];
 extern cvar_t *sv_voiceQuality;
 encoder_async_task *first_encoder_async_task = NULL;
@@ -1074,16 +1072,16 @@ void *encode_async(void *newtask)
 		NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 		SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		*/
-		short in[FRAME_SIZE];
-		float input[FRAME_SIZE];
-		char data[256];
+		short in[MAX_VOICEFRAMESIZE];
+		float input[MAX_VOICEFRAMESIZE];
+		char data[MAX_VOICEPACKETDATALEN];
 		int dataLen;
 		void *g_encoder;
 		SpeexBits encodeBits;
 		int i, packetIndex;
 		VoicePacket_t *voicePacket;
 
-		/* Create a new encoder state in narrowband mode */
+		// Create a new encoder state in narrowband mode
 		g_encoder = speex_encoder_init(&speex_nb_mode);
 		speex_bits_init(&encodeBits);
 		Encode_SetOptions(g_encoder);
@@ -1092,21 +1090,22 @@ void *encode_async(void *newtask)
 		{
 			if ( packetIndex == MAX_STOREDVOICEPACKETS )
 			{
+				// Song file too long, end encoding here
 				result = 1;
 				break;
 			}
 
-			/* Read a 16 bits/sample audio frame */
-			fread(in, sizeof(short), FRAME_SIZE, file);
+			// Read a 16 bits/sample audio frame
+			fread(in, sizeof(short), MAX_VOICEFRAMESIZE, file);
 			if ( feof(file) )
 				break;
 
-			for ( i = 0; i < FRAME_SIZE; i++ )
+			for ( i = 0; i < MAX_VOICEFRAMESIZE; i++ )
 				input[i] = in[i];
 
 			speex_bits_reset(&encodeBits);
 			speex_encode(g_encoder, input, &encodeBits);
-			dataLen = speex_bits_write(&encodeBits, data, 256);
+			dataLen = speex_bits_write(&encodeBits, data, MAX_VOICEPACKETDATALEN);
 			voicePacket = &voiceDataStore[task->soundIndex][packetIndex];
 			memcpy(voicePacket->data, data, dataLen);
 			voicePacket->dataLen = dataLen;
@@ -1139,6 +1138,50 @@ void *encode_async(void *newtask)
 
 	delete task;
 	return NULL;
+}
+
+void gsc_utils_getsoundfileduration()
+{
+	char *filePath;
+
+	if ( !stackGetParamString(0, &filePath) )
+	{
+		stackError("gsc_utils_getsoundfileduration() requires a file path (string) as argument");
+		stackPushUndefined();
+		return;
+	}
+
+	FILE *file = fopen(filePath, "rb");
+	if ( file != NULL )    
+	{
+		if ( fseek(file, 0, SEEK_END) == 0 )
+		{
+			int size = ftell(file);
+			if ( size != -1 )
+			{
+				size -= size % (sizeof(short) * MAX_VOICEFRAMESIZE);
+				fclose(file);
+				stackPushFloat(size / ((((1.0 / FRAMETIME) * 1000) * MAX_VOICEPACKETSPERFRAME) * (sizeof(short) * MAX_VOICEFRAMESIZE)));
+			}
+			else
+			{
+				fclose(file);
+				stackError("gsc_utils_getsoundfileduration() error at ftell");
+				stackPushUndefined();
+			}
+		}
+		else
+		{
+			fclose(file);
+			stackError("gsc_utils_getsoundfileduration() error at fseek");
+			stackPushUndefined();
+		}
+	}
+	else
+	{
+		stackError("gsc_utils_getsoundfileduration() file could not be opened");
+		stackPushUndefined();
+	}
 }
 
 void gsc_utils_loadsoundfile()

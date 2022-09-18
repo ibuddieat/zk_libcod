@@ -27,19 +27,11 @@ Module: Sound<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Loads and encodes a sound file for use with <a href="../sound/playsoundfile.htm">playSoundFile</a>. The input file is expected to be a raw (header-less) WAV file in signed 16-bit PCM mode (Little Endian), with a single channel (mono) and a sampling rate of 8192 Hz. On completion of the (threaded) encoding procedure, the callback function is called. The sound duration is capped to MAX_CUSTOMSOUNDDURATION seconds. The number of available sound indexes is capped to MAX_CUSTOMSOUNDS. Indexes can be reused (to replace sound data) via the sound index parameter. <a href="../sound/playsoundfile.htm">playSoundFile</a> can be used already before encoding finishes. Avoid running two encoding jobs on the same sound index at the same time. Sound data is retained across map switches. Changing sv_voiceQuality has no effect on already encoded data.</p>
+<p>Loads and encodes a sound file for use with <a href="../sound/playsoundfile.htm">playSoundFile</a>. The input file is expected to be a raw (header-less) WAV file in signed 16-bit PCM mode (Little Endian), with a single channel (mono) and a sampling rate of 8192 Hz. On completion of the (threaded) encoding procedure, the callback function is called. The sound duration is capped to MAX_CUSTOMSOUNDDURATION minutes. The number of available sound indexes is capped to MAX_CUSTOMSOUNDS. Indexes can be reused (to replace sound data) via the sound index parameter. <a href="../sound/playsoundfile.htm">playSoundFile</a> can be used already before encoding finishes. Avoid running two encoding jobs on the same sound index at the same time. Sound data is retained across map switches. Changing sv_voiceQuality has no effect on already encoded data.</p>
 </H3>
 </TR></TD></TABLE>
 <p>Note: Due to engine limitations, the sound quality is rather low and also depends on the connection quality (packet loss) of the receiving player.</p>
 
-<BR><BR>
-<H2>Call this on:</H2>
-<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
-<TR><TD BGCOLOR="C0D4EE">
-<H3>
-The player
-</H3>
-</TR></TD></TABLE>
 <BR><BR>
 <H2>Example:</H2>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">

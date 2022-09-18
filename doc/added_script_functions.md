@@ -40,6 +40,7 @@ New script code functions:
   * `getWeaponFuseTime(<weapon name>)`
   * `setWeaponFuseTime(<weapon name>, <time in ms>)`
   * `getEntityCount()`
+  * `getSoundFileDuration(<file path>)`
   * `loadSoundFile(<file path>, <callback function>, [<sound index>])`
   * `logPrintConsole(<message>)`
   * `resetTestClientNaming()`

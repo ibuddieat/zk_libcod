@@ -55,6 +55,7 @@ void gsc_utils_bullethiteffect();
 void gsc_utils_gettype();
 
 #if COMPILE_CUSTOM_VOICE == 1
+void gsc_utils_getsoundfileduration();
 void gsc_utils_loadsoundfile();
 #endif
 
