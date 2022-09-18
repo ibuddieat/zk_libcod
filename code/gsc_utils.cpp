@@ -1018,14 +1018,6 @@ extern cvar_t *sv_voiceQuality;
 encoder_async_task *first_encoder_async_task = NULL;
 extern int currentMaxSoundIndex;
 
-int QueueCustomVoicePacket(char *data, int dataLen, int soundIndex, int packetIndex)
-{
-	VoicePacket_t *voicePacket = &voiceDataStore[soundIndex][packetIndex];
-	memcpy(voicePacket->data, data, dataLen);
-	voicePacket->dataLen = dataLen;
-	return 1;
-}
-
 void Encode_SetOptions(void *encoder)
 {
 	int g_encoder_samplerate = 8192;
@@ -1084,11 +1076,12 @@ void *encode_async(void *newtask)
 		*/
 		short in[FRAME_SIZE];
 		float input[FRAME_SIZE];
-		char cbits[200];
-		int nbBytes;
+		char data[256];
+		int dataLen;
 		void *g_encoder;
 		SpeexBits encodeBits;
 		int i, packetIndex;
+		VoicePacket_t *voicePacket;
 
 		/* Create a new encoder state in narrowband mode */
 		g_encoder = speex_encoder_init(&speex_nb_mode);
@@ -1113,9 +1106,10 @@ void *encode_async(void *newtask)
 
 			speex_bits_reset(&encodeBits);
 			speex_encode(g_encoder, input, &encodeBits);
-			nbBytes = speex_bits_write(&encodeBits, cbits, 200);
-			if ( !QueueCustomVoicePacket(cbits, nbBytes, task->soundIndex, packetIndex) )
-				break;
+			dataLen = speex_bits_write(&encodeBits, data, 256);
+			voicePacket = &voiceDataStore[task->soundIndex][packetIndex];
+			memcpy(voicePacket->data, data, dataLen);
+			voicePacket->dataLen = dataLen;
 		}
 		speex_encoder_destroy(g_encoder);
 		speex_bits_destroy(&encodeBits);
