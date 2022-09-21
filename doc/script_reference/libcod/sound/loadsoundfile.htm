@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>loadSoundFile( &lt;file path&gt;, &lt;callback function&gt;, &lt;sound index&gt; )</H1>
+<H1>loadSoundFile( &lt;file path&gt;, &lt;callback function&gt;, &lt;volume&gt;, &lt;sound index&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
@@ -70,7 +70,8 @@ encoderDone(index, result)
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;sound index&gt; The sound index to use (default: automatically incremented integer). Can be used to reallocate song data for a specific slot.</LI>
+<LI>1 : &lt;volume&gt; A factor ranging from 0.0 to 1.0 (default) where 1.0 is the original volume.</LI>
+<LI>2 : &lt;sound index&gt; The sound index to use (default: automatically incremented integer). Can be used to reallocate song data for a specific slot.</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>

@@ -10,6 +10,7 @@ struct encoder_async_task
 	encoder_async_task *next;
 	char filePath[COD2_MAX_STRINGLENGTH];
 	int callback;
+	float volume;
 	int soundIndex;
 	unsigned int levelId;
 };
@@ -1101,7 +1102,7 @@ void *encode_async(void *newtask)
 				break;
 
 			for ( i = 0; i < MAX_VOICEFRAMESIZE; i++ )
-				input[i] = in[i];
+				input[i] = in[i] * task->volume;
 
 			speex_bits_reset(&encodeBits);
 			speex_encode(g_encoder, input, &encodeBits);
@@ -1188,6 +1189,7 @@ void gsc_utils_loadsoundfile()
 {
 	char *filePath;
 	int callback;
+	float volume;
 	int soundIndex;
 
 	if ( !stackGetParamString(0, &filePath) )
@@ -1204,7 +1206,17 @@ void gsc_utils_loadsoundfile()
 		return;
 	}
 
-	if ( !stackGetParamInt(2, &soundIndex) )
+	if ( !stackGetParamFloat(2, &volume) )
+	{
+		volume = 1.0;
+	}
+	if ( volume > 1.0)
+		volume = 1.0;
+	
+	if ( volume < 0.0 )
+		volume = 0.0;
+
+	if ( !stackGetParamInt(3, &soundIndex) )
 	{
 		soundIndex = ++currentMaxSoundIndex;
 	}
@@ -1228,6 +1240,7 @@ void gsc_utils_loadsoundfile()
 	newtask->next = NULL;
 	newtask->filePath[COD2_MAX_STRINGLENGTH - 1] = '\0';
 	newtask->callback = callback;
+	newtask->volume = volume;
 	newtask->soundIndex = soundIndex;
 	newtask->levelId = scrVarPub.levelId;
 

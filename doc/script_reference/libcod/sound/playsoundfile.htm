@@ -27,7 +27,7 @@ Module: Sound<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Plays a song via voice chat, based on a sound index returned from <a href="../sound/loadsoundfile.htm">loadSoundFile</a>. A script notify with string sound_file_done is emit as soon as the last voice packet has been queued for sending. Note that actual voice chat coming from the same source player will interfere with the audio stream. This function also works with sv_voice set to "0". Playback stops if the source player disconnects.</p>
+<p>Plays a song via voice chat, based on a sound index returned from <a href="../sound/loadsoundfile.htm">loadSoundFile</a>. Uses the voice channel, therefore only one sound can be played at a time. A script notify with string sound_file_done is emit as soon as the last voice packet has been queued for sending. Note that actual voice chat coming from the same source player will interfere with the audio stream. This function also works with sv_voice set to "0". Playback stops if the source player disconnects. Playback does not stop if mutePlayer is issued in the client console. Playback stops if cl_voice is set to "0" on the client or if the source is muted via uiScript.</p>
 </H3>
 </TR></TD></TABLE>
 <p>Note: Due to engine limitations, the sound quality is rather low and also depends on the connection quality (packet loss) of the receiving player.</p>

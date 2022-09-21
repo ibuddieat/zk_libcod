@@ -41,7 +41,7 @@ New script code functions:
   * `setWeaponFuseTime(<weapon name>, <time in ms>)`
   * `getEntityCount()`
   * `getSoundFileDuration(<file path>)`
-  * `loadSoundFile(<file path>, <callback function>, [<sound index>])`
+  * `loadSoundFile(<file path>, <callback function>, [<volume>], [<sound index>])`
   * `logPrintConsole(<message>)`
   * `resetTestClientNaming()`
   * `setNextTestClientName(<name>)`
