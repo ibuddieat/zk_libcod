@@ -1144,12 +1144,18 @@ void *encode_async(void *newtask)
 void gsc_utils_getsoundfileduration()
 {
 	char *filePath;
+	int overrideLimit;
 
 	if ( !stackGetParamString(0, &filePath) )
 	{
 		stackError("gsc_utils_getsoundfileduration() requires a file path (string) as argument");
 		stackPushUndefined();
 		return;
+	}
+
+	if ( !stackGetParamInt(1, &overrideLimit) )
+	{
+		overrideLimit = 0;
 	}
 
 	FILE *file = fopen(filePath, "rb");
@@ -1160,9 +1166,13 @@ void gsc_utils_getsoundfileduration()
 			int size = ftell(file);
 			if ( size != -1 )
 			{
-				size -= size % (sizeof(short) * MAX_VOICEFRAMESIZE);
 				fclose(file);
-				stackPushFloat(size / ((((1.0 / FRAMETIME) * 1000) * MAX_VOICEPACKETSPERFRAME) * (sizeof(short) * MAX_VOICEFRAMESIZE)));
+				size -= size % (sizeof(short) * MAX_VOICEFRAMESIZE);
+				float duration = size / ((((1.0 / FRAMETIME) * 1000) * MAX_VOICEPACKETSPERFRAME) * (sizeof(short) * MAX_VOICEFRAMESIZE));
+				if ( overrideLimit && duration > (60 * MAX_CUSTOMSOUNDDURATION) )
+					duration = 60 * MAX_CUSTOMSOUNDDURATION;
+
+				stackPushFloat(duration);
 			}
 			else
 			{
