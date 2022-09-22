@@ -21,7 +21,7 @@ New script code methods:
   * `<player> objective_player_state(<objective_number>, <state>)`
   * `<player> playFxForPlayer(<effect id>, <position of effect>, [<forward vector>], [<up vector>])`
   * `<player> playFxOnTagForPlayer(<effect id>, <entity>, <tag name>)`
-  * `<player> playSoundFile(<sound index>, [<source player>])`
+  * `<player> playSoundFile(<sound index>, [<offset>], [<source player>])`
   * `<player> runScriptAnimation(<scriptAnimEventType>, <isContinue>, <force>)`
   * `<player> setEarthquakes("on|off|toggle")`
   * `<player> setFireRangeScale(<scale>)`

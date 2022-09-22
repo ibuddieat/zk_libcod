@@ -1893,6 +1893,7 @@ void gsc_player_objective_player_state(scr_entref_t id)
 
 #if COMPILE_CUSTOM_VOICE == 1
 
+extern VoicePacket_t voiceDataStore[MAX_CUSTOMSOUNDS][MAX_STOREDVOICEPACKETS];
 extern float player_pendingVoiceDataFrames[MAX_CLIENTS];
 extern int player_currentSoundTalker[MAX_CLIENTS];
 extern int player_currentSoundIndex[MAX_CLIENTS];
@@ -1940,6 +1941,7 @@ void gsc_player_playsoundfile(scr_entref_t id)
 	int args;
 	qboolean error;
 	int soundIndex;
+	float offset;
 	int source;
 
 	args = Scr_GetNumParam();
@@ -1947,12 +1949,18 @@ void gsc_player_playsoundfile(scr_entref_t id)
 	switch ( args )
 	{
 		case 1:
+			offset = 0.0;
 			source = id;
 			if ( !stackGetParams("i", &soundIndex) )
 				error = qtrue;
 			break;
 		case 2:
-			if ( !stackGetParams("ii", &soundIndex, &source) )
+			source = id;
+			if ( !stackGetParams("if", &soundIndex, &offset) )
+				error = qtrue;
+			break;
+		case 3:
+			if ( !stackGetParams("ifi", &soundIndex, &offset, &source) )
 				error = qtrue;
 			break;
 		default:
@@ -1989,12 +1997,28 @@ void gsc_player_playsoundfile(scr_entref_t id)
 		return;
 	}
 
+	int packetOffset = (int)(offset * (((1.0 / FRAMETIME) * 1000) * MAX_VOICEPACKETSPERFRAME));
+	if ( packetOffset >= MAX_STOREDVOICEPACKETS )
+	{
+		stackError("gsc_player_playsoundfile() too large offset for sound with index %d", soundIndex);
+		stackPushUndefined();
+		return;
+	}
+
+	VoicePacket_t *voicePacket = &voiceDataStore[soundIndex][packetOffset];
+	if ( !voicePacket->data )
+	{
+		stackError("gsc_player_playsoundfile() too large offset for sound with index %d", soundIndex);
+		stackPushUndefined();
+		return;
+	}
+
 	if ( player_currentSoundIndex[id] )
 		Scr_Notify(&g_entities[id], scr_const.sound_file_stop, 0);
 
 	player_pendingVoiceDataFrames[id] = 0.0;
 	player_currentSoundTalker[id] = source;
-	player_sentVoiceDataIndex[id] = 0;
+	player_sentVoiceDataIndex[id] = packetOffset;
 	player_currentSoundIndex[id] = soundIndex;
 
 	stackPushBool(qtrue);
