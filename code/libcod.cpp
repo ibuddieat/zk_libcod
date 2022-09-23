@@ -3,6 +3,7 @@
 // Stock cvars
 cvar_t *cl_allowDownload;
 cvar_t *developer;
+cvar_t *g_voiceChatTalkingDuration;
 cvar_t *player_meleeHeight;
 cvar_t *player_meleeRange;
 cvar_t *player_meleeWidth;
@@ -14,6 +15,7 @@ cvar_t *sv_maxRate;
 cvar_t *sv_padPackets;
 cvar_t *sv_pure;
 cvar_t *sv_timeout;
+cvar_t *sv_voice;
 cvar_t *sv_voiceQuality;
 cvar_t *sv_zombietime;
 #if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
@@ -182,6 +184,7 @@ void common_init_complete_print(const char *format, ...)
 	sv_padPackets = Cvar_FindVar("sv_padPackets");
 	sv_pure = Cvar_FindVar("sv_pure");
 	sv_timeout = Cvar_FindVar("sv_timeout");
+	sv_voice = Cvar_FindVar("sv_voice");
 	sv_voiceQuality = Cvar_FindVar("sv_voiceQuality");
 	sv_zombietime = Cvar_FindVar("sv_zombietime");
 	#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
@@ -234,6 +237,7 @@ void custom_G_ProcessIPBans()
 {
 	/* This is right after G_RegisterCvars, giving us access to variables that
 	are not yet defined at the common_init_complete_print hook */
+	g_voiceChatTalkingDuration = Cvar_FindVar("g_voiceChatTalkingDuration");
 	player_meleeHeight = Cvar_FindVar("player_meleeHeight");
 	player_meleeRange = Cvar_FindVar("player_meleeRange");
 	player_meleeWidth = Cvar_FindVar("player_meleeWidth");
@@ -3079,32 +3083,53 @@ void custom_G_RunFrame(int levelTime)
 
 #if COMPILE_CUSTOM_VOICE == 1
 	// Process custom voice data queue
-	client_t *client = svs.clients;
-	int id;
-	for ( i = 0; i < sv_maxclients->integer; i++, client++ )
+	qboolean aPlayerIsTalking = qfalse;
+
+	if ( sv_voice->boolean )
 	{
-		id = client - svs.clients;
-		if ( svs.clients[id].state < CS_CONNECTED )
-			continue;
-
-		if ( player_currentSoundIndex[id] )
+		int durationSinceLastTalk;
+		gclient_t *gclient = level.clients;
+		for ( i = 0; i < sv_maxclients->integer; i++, gclient++ )
 		{
-			player_pendingVoiceDataFrames[id] += MAX_VOICEPACKETSPERFRAME; // 51.2 packets per second @ 20 server fps
-
-			for ( ; player_pendingVoiceDataFrames[id] > 1.0 && player_sentVoiceDataIndex[id] < MAX_STOREDVOICEPACKETS; player_sentVoiceDataIndex[id]++, player_pendingVoiceDataFrames[id] -= 1.0 )
+			durationSinceLastTalk = level.time - gclient->playerTalkTime;
+			if ( durationSinceLastTalk >= 0 && g_voiceChatTalkingDuration->integer > durationSinceLastTalk )
 			{
-				VoicePacket_t *voicePacket = &voiceDataStore[player_currentSoundIndex[id]][player_sentVoiceDataIndex[id]];
-				if ( svs.clients[player_currentSoundTalker[id]].state < CS_CONNECTED || !voicePacket->dataLen )
+				aPlayerIsTalking = qtrue;
+				break;
+			}
+		}
+	}
+
+	if ( !aPlayerIsTalking )
+	{
+		int id;
+		client_t *client = svs.clients;
+		for ( i = 0; i < sv_maxclients->integer; i++, client++ )
+		{
+			id = client - svs.clients;
+			if ( client->state < CS_CONNECTED )
+				continue;
+
+			if ( player_currentSoundIndex[id] )
+			{
+				player_pendingVoiceDataFrames[id] += MAX_VOICEPACKETSPERFRAME; // 51.2 packets per second @ 20 server fps
+				VoicePacket_t *voicePacket;
+
+				for ( ; player_pendingVoiceDataFrames[id] > 1.0 && player_sentVoiceDataIndex[id] < MAX_STOREDVOICEPACKETS; player_sentVoiceDataIndex[id]++, player_pendingVoiceDataFrames[id] -= 1.0 )
 				{
-					player_pendingVoiceDataFrames[id] = 0.0;
-					player_currentSoundTalker[id] = 0;
-					player_currentSoundIndex[id] = 0;
-					player_sentVoiceDataIndex[id] = 0;
-					Scr_Notify(&g_entities[id], scr_const.sound_file_done, 0);
-					break;
+					voicePacket = &voiceDataStore[player_currentSoundIndex[id]][player_sentVoiceDataIndex[id]];
+					if ( svs.clients[player_currentSoundTalker[id]].state < CS_CONNECTED || !voicePacket->dataLen )
+					{
+						player_pendingVoiceDataFrames[id] = 0.0;
+						player_currentSoundTalker[id] = 0;
+						player_currentSoundIndex[id] = 0;
+						player_sentVoiceDataIndex[id] = 0;
+						Scr_Notify(&g_entities[id], scr_const.sound_file_done, 0);
+						break;
+					}
+					voicePacket->talkerNum = player_currentSoundTalker[id];
+					SV_QueueVoicePacket(voicePacket->talkerNum, id, voicePacket);
 				}
-				voicePacket->talkerNum = player_currentSoundTalker[id];
-				SV_QueueVoicePacket(voicePacket->talkerNum, id, voicePacket);
 			}
 		}
 	}
@@ -4133,10 +4158,10 @@ void custom_SV_QueueVoicePacket(int talkerNum, int clientNum, VoicePacket_t *voi
 	/* New code end */
 
 	client_t *client = svs.clients;
-	if ( svs.clients[clientNum].unsentVoiceData < MAX_VOICEPACKETS )
+	if ( client[clientNum].unsentVoiceData < MAX_VOICEPACKETS )
 	{
-		svs.clients[clientNum].voicedata[svs.clients[clientNum].unsentVoiceData].dataLen = voicePacket->dataLen;
-		memcpy(client[clientNum].voicedata[client[clientNum].unsentVoiceData].data, voicePacket->data,voicePacket->dataLen);
+		client[clientNum].voicedata[client[clientNum].unsentVoiceData].dataLen = voicePacket->dataLen;
+		memcpy(client[clientNum].voicedata[client[clientNum].unsentVoiceData].data, voicePacket->data, voicePacket->dataLen);
 		client[clientNum].voicedata[client[clientNum].unsentVoiceData].talkerNum = (char)talkerNum;
 		client[clientNum].unsentVoiceData++;
 	}

@@ -1911,6 +1911,35 @@ void gsc_player_isplayingsoundfile(scr_entref_t id)
 	stackPushInt(player_currentSoundIndex[id]);
 }
 
+void gsc_player_getremainingsoundfileduration(scr_entref_t id)
+{
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_getremainingsoundfileduration() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( player_currentSoundIndex[id] )
+	{
+		int remainingPackets;
+		int endIndex = player_sentVoiceDataIndex[id];
+		while ( endIndex < MAX_STOREDVOICEPACKETS && voiceDataStore[player_currentSoundIndex[id]][endIndex].dataLen > 0 )
+		{
+			endIndex++;
+		}
+		remainingPackets = endIndex - player_sentVoiceDataIndex[id];
+		if ( remainingPackets <= 0 )
+			stackPushFloat(0.0);
+		else
+			stackPushFloat(remainingPackets / (((1.0 / FRAMETIME) * 1000) * MAX_VOICEPACKETSPERFRAME));
+	}
+	else
+	{
+		stackPushFloat(0.0);
+	}
+}
+
 void gsc_player_stopsoundfile(scr_entref_t id)
 {
 	if ( id >= MAX_CLIENTS )

@@ -11,6 +11,7 @@ New script code methods:
   * `<player> getGroundEntity()`
   * `<player> getInactivityTime()`
   * `<player> getPlayerstateFlags()`
+  * `<player> getRemainingSoundFileDuration()`
   * `<player> isPlayingSoundFile()`
   * `<player> muteClient(<player>)`
   * `<player> noclip("on|off|toggle")`

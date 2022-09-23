@@ -376,6 +376,7 @@ scr_method_t scriptMethods[] =
 	#if COMPILE_CUSTOM_VOICE == 1
 	{"playsoundfile", gsc_player_playsoundfile, 0},
 	{"stopsoundfile", gsc_player_stopsoundfile, 0},
+	{"getremainingsoundfileduration", gsc_player_getremainingsoundfileduration, 0},
 	{"isplayingsoundfile", gsc_player_isplayingsoundfile, 0},
 	#endif
 	#if COMPILE_JUMP == 1
