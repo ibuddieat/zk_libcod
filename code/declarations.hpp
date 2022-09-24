@@ -2981,7 +2981,7 @@ typedef struct
 typedef struct scr_notify_s
 {
 	unsigned int entId;
-	unsigned int constString;
+	char message[COD2_MAX_STRINGLENGTH];
 	unsigned int argc;
 	SavedVariableValue arguments[MAX_NOTIFY_PARAMS];
 } scr_notify_t;

@@ -2969,7 +2969,7 @@ void custom_RuntimeError(char *pos, int index, char *message, char *param_4)
 	}
 }
 
-void Scr_CodeCallback_Notify(unsigned int entId, unsigned int constString, unsigned int argc, SavedVariableValue *arguments)
+void Scr_CodeCallback_Notify(unsigned int entId, char *message, unsigned int argc, SavedVariableValue *arguments)
 {
 	if ( !level.num_entities )
 	{
@@ -3014,7 +3014,7 @@ void Scr_CodeCallback_Notify(unsigned int entId, unsigned int constString, unsig
 				stackPushArrayLast();
 			}
 		}
-		stackPushString(SL_ConvertToString(constString));
+		stackPushString(message);
 		stackPushObject(entId);
 		short ret = Scr_ExecThread(codecallback_notify, 3);
 		Scr_FreeThread(ret);
@@ -3040,7 +3040,7 @@ void custom_G_RunFrame(int levelTime)
 	// Process CodeCallback_Notify queue
 	for ( i = 0; i < scr_notify_index; i++ )
 	{
-		Scr_CodeCallback_Notify(scr_notify[i].entId, scr_notify[i].constString, scr_notify[i].argc, &scr_notify[i].arguments[0]);
+		Scr_CodeCallback_Notify(scr_notify[i].entId, scr_notify[i].message, scr_notify[i].argc, &scr_notify[i].arguments[0]);
 		memset(&scr_notify[i], 0, sizeof(scr_notify[0]));
 	}
 	scr_notify_index = 0;
@@ -3947,13 +3947,14 @@ void Scr_QueueNotifyForCallback(unsigned int entId, unsigned int constString, Va
 {
 	if ( scr_notify_index < MAX_NOTIFY_BUFFER )
 	{
+		char *message = SL_ConvertToString(constString);
 		VariableValue *arg;
 		SavedVariableValue *savedArg;
 		unsigned int argc = 0;
 		char *stringValueSrc;
 
 		scr_notify[scr_notify_index].entId = entId;
-		scr_notify[scr_notify_index].constString = constString;
+		strncpy(scr_notify[scr_notify_index].message, message, strlen(message));
 		for ( arg = arguments; arg->type != STACK_PRECODEPOS && argc < MAX_NOTIFY_PARAMS; arg-- )
 		{
 			savedArg = &scr_notify[scr_notify_index].arguments[argc];
