@@ -59,7 +59,7 @@ cHook *hook_player_collision;
 cHook *hook_player_eject;
 cHook *hook_fire_grenade;
 cHook *hook_play_movement;
-cHook *hook_play_endframe;
+cHook *hook_clientendframe;
 cHook *hook_set_anim;
 cHook *hook_init_opcode;
 cHook *hook_add_opcode;
@@ -2192,16 +2192,16 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 	return ret;
 }
 
-int play_endframe(gentity_t *ent)
+int custom_ClientEndFrame(gentity_t *ent)
 {
-	hook_play_endframe->unhook();
+	hook_clientendframe->unhook();
 
 	int (*sig)(gentity_t *ent);
-	*(int *)&sig = hook_play_endframe->from;
+	*(int *)&sig = hook_clientendframe->from;
 
 	int ret = sig(ent);
 
-	hook_play_endframe->hook();
+	hook_clientendframe->hook();
 
 	if ( ent->client->sess.state == STATE_PLAYING )
 	{
@@ -2212,7 +2212,6 @@ int play_endframe(gentity_t *ent)
 
 		if ( player_g_gravity[num] > 0 )
 			ent->client->ps.gravity = player_g_gravity[num];
-
 	}
 
 	return ret;
@@ -2970,42 +2969,7 @@ void custom_RuntimeError(char *pos, int index, char *message, char *param_4)
 	}
 }
 
-void tryFindObject(VariableValue *arg, unsigned int constString)
-{
-	// Check if our object reference is still valid
-	unsigned int objectId = arg->u.pointerValue;
-	unsigned int varId = FindVariable(objectId, 0x1fffe);
-	if ( varId )
-	{
-		objectId = FindObject(varId);
-		if ( objectId )
-			stackPushObject(arg->u.pointerValue);
-		else
-			stackPushUndefined();
-	}
-	else
-	{
-		// If not, try to regain the object from the game entities
-		gentity_t *ent;
-		for ( int i = 0; i < MAX_GENTITIES; i++ )
-		{
-			ent = &g_entities[i];
-			if ( ent )
-			{
-				varId = Scr_GetEntityId(i, 0);
-				if ( varId && varId == objectId )
-				{
-					stackPushEntity(&g_entities[i]);
-					return;
-				}
-			}
-		}
-		printf("Warning: notify param for '%s' with unknown object reference %d\n", SL_ConvertToString(constString), objectId);
-		stackPushUndefined();
-	}
-}
-
-void Scr_CodeCallback_Notify(unsigned int entId, unsigned int constString, unsigned int argc, VariableValue *arguments)
+void Scr_CodeCallback_Notify(unsigned int entId, unsigned int constString, unsigned int argc, SavedVariableValue *arguments)
 {
 	if ( !level.num_entities )
 	{
@@ -3036,17 +3000,16 @@ void Scr_CodeCallback_Notify(unsigned int entId, unsigned int constString, unsig
 			stackPushArray();
 			for ( unsigned int i = 0; i < argc; i++ )
 			{
-				VariableValue *arg = arguments + i;
+				SavedVariableValue *arg = arguments + i;
 				switch(arg->type) {
 					case STACK_UNDEFINED: stackPushUndefined(); break;
-					case STACK_OBJECT: tryFindObject(arg, constString); break;
+					case STACK_OBJECT: stackPushObject(arg->u.pointerValue); break;
 					case STACK_STRING:
-					case STACK_LOCALIZED_STRING: stackPushString(SL_ConvertToString(arg->u.stringValue)); break;
-					case STACK_VECTOR: stackPushVector((vec_t*)arg->u.vectorValue); break;
+					case STACK_LOCALIZED_STRING: stackPushString(arg->u.stringValue); break;
+					case STACK_VECTOR: stackPushVector(arg->u.vectorValue); break;
 					case STACK_FLOAT: stackPushFloat(arg->u.floatValue); break;
 					case STACK_INT: stackPushInt(arg->u.intValue); break;
 					case STACK_FUNCTION: stackPushFunc(arg->u.codePosValue); break;
-					default: printf("Warning: notify with param %d of type 0x%x is currently not supported for CodeCallback_Notify\n", i + 1, arg->type); stackPushUndefined();
 				}
 				stackPushArrayLast();
 			}
@@ -3078,6 +3041,7 @@ void custom_G_RunFrame(int levelTime)
 	for ( i = 0; i < scr_notify_index; i++ )
 	{
 		Scr_CodeCallback_Notify(scr_notify[i].entId, scr_notify[i].constString, scr_notify[i].argc, &scr_notify[i].arguments[0]);
+		memset(&scr_notify[i], 0, sizeof(scr_notify[0]));
 	}
 	scr_notify_index = 0;
 
@@ -3984,13 +3948,32 @@ void Scr_QueueNotifyForCallback(unsigned int entId, unsigned int constString, Va
 	if ( scr_notify_index < MAX_NOTIFY_BUFFER )
 	{
 		VariableValue *arg;
+		SavedVariableValue *savedArg;
 		unsigned int argc = 0;
+		char *stringValueSrc;
 
 		scr_notify[scr_notify_index].entId = entId;
 		scr_notify[scr_notify_index].constString = constString;
 		for ( arg = arguments; arg->type != STACK_PRECODEPOS && argc < MAX_NOTIFY_PARAMS; arg-- )
 		{
-			memcpy(&scr_notify[scr_notify_index].arguments[argc], arg, sizeof(scr_notify[0].arguments[0]));
+			savedArg = &scr_notify[scr_notify_index].arguments[argc];
+			savedArg->type = arg->type;
+			switch(savedArg->type) {
+				case STACK_UNDEFINED: break;
+				case STACK_OBJECT: savedArg->u.pointerValue = arg->u.pointerValue; break;
+				case STACK_STRING:
+				case STACK_LOCALIZED_STRING:
+					stringValueSrc = SL_ConvertToString(arg->u.stringValue);
+					strncpy(savedArg->u.stringValue, stringValueSrc, strlen(stringValueSrc));
+					break;
+				case STACK_VECTOR: VectorCopy(arg->u.vectorValue, savedArg->u.vectorValue); break;
+				case STACK_FLOAT: savedArg->u.floatValue = arg->u.floatValue; break;
+				case STACK_INT: savedArg->u.intValue = arg->u.intValue; break;
+				case STACK_FUNCTION: savedArg->u.codePosValue = arg->u.codePosValue; break;
+				default:
+					printf("Warning: Notify with param %d of type 0x%x is currently not supported for CodeCallback_Notify\n", argc + 1, savedArg->type);
+					savedArg->type = STACK_UNDEFINED;
+			}
 			argc++;
 		}
 		scr_notify[scr_notify_index].argc = argc;
@@ -4236,8 +4219,8 @@ public:
 		#if COMPILE_PLAYER == 1
 		hook_play_movement = new cHook(0x0808F488, (int)play_movement);
 		hook_play_movement->hook();
-		hook_play_endframe = new cHook(0x080F4DBE, (int)play_endframe);
-		hook_play_endframe->hook();
+		hook_clientendframe = new cHook(0x080F4DBE, (int)custom_ClientEndFrame);
+		hook_clientendframe->hook();
 		hook_set_anim = new cHook(0x080D69B2, (int)set_anim);
 		hook_set_anim->hook();
 		#endif
@@ -4308,8 +4291,8 @@ public:
 		#if COMPILE_PLAYER == 1
 		hook_play_movement = new cHook(0x08090D18, (int)play_movement);
 		hook_play_movement->hook();
-		hook_play_endframe = new cHook(0x080F73D2, (int)play_endframe);
-		hook_play_endframe->hook();
+		hook_clientendframe = new cHook(0x080F73D2, (int)custom_ClientEndFrame);
+		hook_clientendframe->hook();
 		hook_set_anim = new cHook(0x080D8F92, (int)set_anim);
 		hook_set_anim->hook();
 		#endif
@@ -4392,8 +4375,8 @@ public:
 		#if COMPILE_PLAYER == 1
 		hook_play_movement = new cHook(0x08090DAC, (int)play_movement);
 		hook_play_movement->hook();
-		hook_play_endframe = new cHook(0x080F7516, (int)play_endframe);
-		hook_play_endframe->hook();
+		hook_clientendframe = new cHook(0x080F7516, (int)custom_ClientEndFrame);
+		hook_clientendframe->hook();
 		hook_set_anim = new cHook(0x080D90D6, (int)set_anim);
 		hook_set_anim->hook();
 		#endif

@@ -27,7 +27,7 @@ Module: Callbacks<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Calls CodeCallback_Notify() in maps/mp/gametypes/_callbacksetup.gsc for each notify, including such that are cancelled. As a result, multiple calls to notify for the same entity and message string within a single server frame are passed to this callback - as opposed to waittill, which will only catch the first occurrence of such notify. The callback is executed one server frame before a waittill would catch it (i.e., the callback is 'faster'). The number of arguments passed to the callback is capped to MAX_NOTIFY_PARAMS.</p>
+<p>Calls CodeCallback_Notify() in maps/mp/gametypes/_callbacksetup.gsc for each notify, including such that are cancelled. As a result, multiple calls to notify for the same entity and message string within a single server frame are passed to this callback - as opposed to waittill, which will only catch the first occurrence of such notify. The callback is executed one server frame before a waittill would catch it (i.e., the callback is 'faster'). The number of arguments passed to the callback is capped to MAX_NOTIFY_PARAMS. Some functions (e.g., player spawn) called from this callback require a waittillframeend before execution.</p>
 </H3>
 </TR></TD></TABLE>
 <p>Note: The existance of the callback function is checked only once on server start. Functions added later are not taken into account, even after a map switch.</p>

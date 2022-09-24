@@ -2927,7 +2927,9 @@ static const int entity_event_names_offset = 0x08184DA0;
 #endif
 
 // Custom data types
+
 #define MAX_ERROR_BUFFER 64
+
 typedef struct src_error_s
 {
 	char internal_function[64];
@@ -2959,12 +2961,29 @@ typedef struct map_turret_s
 
 #define MAX_NOTIFY_BUFFER 4096 // Triggers cause a lot of notify (we might want to filter these to avoid lag)
 #define MAX_NOTIFY_PARAMS 16 // The script engine can handle hundreds of parameters, here we set a limit for CodeCallback_Notify
+
+union SavedVariableUnion
+{
+	int intValue;
+	float floatValue;
+	char stringValue[COD2_MAX_STRINGLENGTH];
+	vec3_t vectorValue;
+	const char *codePosValue;
+	unsigned int pointerValue;
+};
+
+typedef struct
+{
+	union SavedVariableUnion u;
+	int type;
+} SavedVariableValue;
+
 typedef struct scr_notify_s
 {
 	unsigned int entId;
 	unsigned int constString;
 	unsigned int argc;
-	VariableValue arguments[MAX_NOTIFY_PARAMS];
+	SavedVariableValue arguments[MAX_NOTIFY_PARAMS];
 } scr_notify_t;
 
 #define MAX_CUSTOMSOUNDDURATION 5 // Minutes
