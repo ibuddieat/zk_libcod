@@ -75,6 +75,7 @@ cHook *hook_scr_loadgametype;
 cHook *hook_vm_notify;
 cHook *hook_sv_init;
 cHook *hook_g_processipbans;
+cHook *hook_scr_notify;
 
 int codecallback_client_spam = 0;
 int codecallback_dprintf = 0;
@@ -83,6 +84,7 @@ int codecallback_fire_grenade = 0;
 int codecallback_map_turrets_load = 0;
 int codecallback_map_weapons_load = 0;
 int codecallback_notify = 0;
+int codecallback_notifydebug = 0;
 int codecallback_pickup = 0;
 int codecallback_playercommand = 0;
 int codecallback_remotecommand = 0;
@@ -110,7 +112,7 @@ qboolean logHeartbeat = qtrue;
 scr_error_t scr_errors[MAX_ERROR_BUFFER];
 int scr_errors_index = 0;
 
-scr_notify_t scr_notify[MAX_NOTIFY_BUFFER];
+scr_notify_t scr_notify[MAX_NOTIFY_DEBUG_BUFFER];
 int scr_notify_index = 0;
 
 FILE *voiceDataDumpFile;
@@ -342,6 +344,7 @@ int hook_codscript_gametype_scripts()
 	codecallback_map_turrets_load = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MapTurretsLoad", 0);
 	codecallback_map_weapons_load = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MapWeaponsLoad", 0);
 	codecallback_notify = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_Notify", 0);
+	codecallback_notifydebug = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_NotifyDebug", 0);
 	codecallback_pickup = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_Pickup", 0);
 	codecallback_playercommand = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_PlayerCommand", 0);
 	codecallback_remotecommand = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_RemoteCommand", 0);
@@ -628,7 +631,7 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 	}
 	else
 	{
-		I_strncpyz(name, (entity->client->sess).manualModeName, 0x40);
+		I_strncpyz(name, (entity->client->sess).manualModeName, sizeof(name));
 		I_CleanStr(name);
 		
 		if ( g_logPickup->boolean )
@@ -2969,7 +2972,7 @@ void custom_RuntimeError(char *pos, int index, char *message, char *param_4)
 	}
 }
 
-void Scr_CodeCallback_Notify(unsigned int entId, char *message, unsigned int argc, SavedVariableValue *arguments)
+void Scr_CodeCallback_NotifyDebug(unsigned int entId, char *message, unsigned int argc, SavedVariableValue *arguments)
 {
 	if ( !level.num_entities )
 	{
@@ -3016,7 +3019,7 @@ void Scr_CodeCallback_Notify(unsigned int entId, char *message, unsigned int arg
 		}
 		stackPushString(message);
 		stackPushObject(entId);
-		short ret = Scr_ExecThread(codecallback_notify, 3);
+		short ret = Scr_ExecThread(codecallback_notifydebug, 3);
 		Scr_FreeThread(ret);
 	}
 }
@@ -3037,10 +3040,10 @@ void custom_G_RunFrame(int levelTime)
 	}
 	scr_errors_index = 0;
 
-	// Process CodeCallback_Notify queue
+	// Process CodeCallback_NotifyDebug queue
 	for ( i = 0; i < scr_notify_index; i++ )
 	{
-		Scr_CodeCallback_Notify(scr_notify[i].entId, scr_notify[i].message, scr_notify[i].argc, &scr_notify[i].arguments[0]);
+		Scr_CodeCallback_NotifyDebug(scr_notify[i].entId, scr_notify[i].message, scr_notify[i].argc, &scr_notify[i].arguments[0]);
 		memset(&scr_notify[i], 0, sizeof(scr_notify[0]));
 	}
 	scr_notify_index = 0;
@@ -3064,7 +3067,7 @@ void custom_G_RunFrame(int levelTime)
 		}
 	}
 
-	if ( !aPlayerIsTalking )
+	if ( !aPlayerIsTalking ) // TODO: Use SV_ClientHasClientMuted() here to only pause if a non-muted player talks
 	{
 		int id;
 		client_t *client = svs.clients;
@@ -3943,9 +3946,9 @@ qboolean custom_SV_MapExists(const char *name)
 	}
 }
 
-void Scr_QueueNotifyForCallback(unsigned int entId, unsigned int constString, VariableValue *arguments)
+void Scr_QueueNotifyDebugForCallback(unsigned int entId, unsigned int constString, VariableValue *arguments)
 {
-	if ( scr_notify_index < MAX_NOTIFY_BUFFER )
+	if ( scr_notify_index < MAX_NOTIFY_DEBUG_BUFFER )
 	{
 		char *message = SL_ConvertToString(constString);
 		VariableValue *arg;
@@ -3954,8 +3957,8 @@ void Scr_QueueNotifyForCallback(unsigned int entId, unsigned int constString, Va
 		char *stringValueSrc;
 
 		scr_notify[scr_notify_index].entId = entId;
-		strncpy(scr_notify[scr_notify_index].message, message, strlen(message));
-		for ( arg = arguments; arg->type != STACK_PRECODEPOS && argc < MAX_NOTIFY_PARAMS; arg-- )
+		I_strncpyz(scr_notify[scr_notify_index].message, message, strlen(message) + 1);
+		for ( arg = arguments; arg->type != STACK_PRECODEPOS && argc < MAX_NOTIFY_DEBUG_PARAMS; arg-- )
 		{
 			savedArg = &scr_notify[scr_notify_index].arguments[argc];
 			savedArg->type = arg->type;
@@ -3965,14 +3968,14 @@ void Scr_QueueNotifyForCallback(unsigned int entId, unsigned int constString, Va
 				case STACK_STRING:
 				case STACK_LOCALIZED_STRING:
 					stringValueSrc = SL_ConvertToString(arg->u.stringValue);
-					strncpy(savedArg->u.stringValue, stringValueSrc, strlen(stringValueSrc));
+					I_strncpyz(savedArg->u.stringValue, stringValueSrc, strlen(stringValueSrc) + 1);
 					break;
 				case STACK_VECTOR: VectorCopy(arg->u.vectorValue, savedArg->u.vectorValue); break;
 				case STACK_FLOAT: savedArg->u.floatValue = arg->u.floatValue; break;
 				case STACK_INT: savedArg->u.intValue = arg->u.intValue; break;
 				case STACK_FUNCTION: savedArg->u.codePosValue = arg->u.codePosValue; break;
 				default:
-					printf("Warning: Notify with param %d of type 0x%x is currently not supported for CodeCallback_Notify\n", argc + 1, savedArg->type);
+					printf("Warning: Notify debug with param %d of type 0x%x is currently not supported for CodeCallback_NotifyDebug\n", argc + 1, savedArg->type);
 					savedArg->type = STACK_UNDEFINED;
 			}
 			argc++;
@@ -3982,14 +3985,14 @@ void Scr_QueueNotifyForCallback(unsigned int entId, unsigned int constString, Va
 	}
 	else
 	{
-		printf("Warning: notify buffer full, not calling CodeCallback_Notify for '%s'\n", SL_ConvertToString(constString));
+		printf("Warning: Notify debug buffer full, not calling CodeCallback_NotifyDebug for '%s'\n", SL_ConvertToString(constString));
 	}
 }
 
 void custom_VM_Notify(unsigned int entId, unsigned int constString, VariableValue *arguments)
 {
-	if ( codecallback_notify )
-		Scr_QueueNotifyForCallback(entId, constString, arguments);
+	if ( codecallback_notifydebug )
+		Scr_QueueNotifyDebugForCallback(entId, constString, arguments);
 
 	hook_vm_notify->unhook();
 
@@ -3999,6 +4002,78 @@ void custom_VM_Notify(unsigned int entId, unsigned int constString, VariableValu
 	sig(entId, constString, arguments);
 	
 	hook_vm_notify->hook();
+}
+
+void custom_Scr_Notify(gentity_t *ent, unsigned short constString, unsigned int numArgs)
+{
+	char *message = SL_ConvertToString(constString);
+	char messageStr[COD2_MAX_STRINGLENGTH] = {0};
+	SavedVariableValue savedArgs[numArgs];
+	char *stringValueSrc;
+
+	if ( codecallback_notify && Scr_IsSystemActive() )
+	{
+		// Save message and stack for CodeCallback_Notify
+		I_strncpyz(messageStr, message, strlen(message) + 1);
+		VariableValue *arg;
+		SavedVariableValue *savedArg;
+		for ( unsigned int i = 0; i < numArgs; i++ )
+		{
+			arg = scrVmPub.top - i;
+			savedArg = &savedArgs[i];
+			savedArg->type = arg->type;
+			switch(savedArg->type) {
+				case STACK_UNDEFINED: break;
+				case STACK_OBJECT: savedArg->u.pointerValue = arg->u.pointerValue; break;
+				case STACK_STRING:
+				case STACK_LOCALIZED_STRING:
+					stringValueSrc = SL_ConvertToString(arg->u.stringValue);
+					I_strncpyz(savedArg->u.stringValue, stringValueSrc, strlen(stringValueSrc) + 1);
+					break;
+				case STACK_VECTOR: VectorCopy(arg->u.vectorValue, savedArg->u.vectorValue); break;
+				case STACK_FLOAT: savedArg->u.floatValue = arg->u.floatValue; break;
+				case STACK_INT: savedArg->u.intValue = arg->u.intValue; break;
+				case STACK_FUNCTION: savedArg->u.codePosValue = arg->u.codePosValue; break;
+				default:
+					printf("Warning: Notify with param %d of type 0x%x is currently not supported for CodeCallback_Notify\n", i + 1, savedArg->type);
+					savedArg->type = STACK_UNDEFINED;
+			}
+		}
+	}
+
+	hook_scr_notify->unhook();
+
+	void (*sig)(gentity_t *ent, unsigned short constString, unsigned int numArgs);
+	*(int *)&sig = hook_scr_notify->from;
+	
+	// Execute Scr_Notify -> Scr_NotifyNum -> VM_Notify
+	sig(ent, constString, numArgs);
+
+	if ( codecallback_notify && Scr_IsSystemActive() )
+	{
+		// Restore stack for CodeCallback_Notify
+		stackPushArray();
+		for ( unsigned int i = 0; i < numArgs; i++ )
+		{
+			SavedVariableValue *arg = &savedArgs[i];
+			switch(arg->type) {
+				case STACK_UNDEFINED: stackPushUndefined(); break;
+				case STACK_OBJECT: stackPushObject(arg->u.pointerValue); break;
+				case STACK_STRING:
+				case STACK_LOCALIZED_STRING: stackPushString(arg->u.stringValue); break;
+				case STACK_VECTOR: stackPushVector(arg->u.vectorValue); break;
+				case STACK_FLOAT: stackPushFloat(arg->u.floatValue); break;
+				case STACK_INT: stackPushInt(arg->u.intValue); break;
+				case STACK_FUNCTION: stackPushFunc(arg->u.codePosValue); break;
+			}
+			stackPushArrayLast();
+		}
+		stackPushString(messageStr);
+		short ret = Scr_ExecEntThread(ent, codecallback_notify, 2);
+		Scr_FreeThread(ret);
+	}
+	
+	hook_scr_notify->hook();
 }
 
 void G_UpdateSingleObjective(objective_t *from, objective_t *to)
@@ -4372,6 +4447,8 @@ public:
 		hook_sv_init->hook();
 		hook_g_processipbans = new cHook(0x0811BB60, (int)custom_G_ProcessIPBans);
 		hook_g_processipbans->hook();
+		hook_scr_notify = new cHook(0x0811B2DE, (int)custom_Scr_Notify);
+		hook_scr_notify->hook();
 
 		#if COMPILE_PLAYER == 1
 		hook_play_movement = new cHook(0x08090DAC, (int)play_movement);

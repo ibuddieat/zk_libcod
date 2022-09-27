@@ -51,7 +51,7 @@ apt install libmysqlclient-dev:i386
 cd code
 ./doit.sh
 
-# Or without speex:
+# Or without Speex:
 ./doit.sh nospeex
 ```
 

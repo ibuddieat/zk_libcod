@@ -246,6 +246,45 @@ typedef struct cvar_s
 #define CVAR_UNSAFE         4096
 #define	CVAR_USER_CREATED	16384
 
+#define HASH_STAT_HEAD 0x8000
+#define HASH_NEXT_MASK 0x3FFF
+#define HASH_STAT_MASK 0xC000
+
+#pragma pack(push, 4)
+struct __attribute__((aligned(4))) RefString
+{
+	union
+	{
+		struct
+		{
+			unsigned int refCount : 16;
+			unsigned int user : 8;
+			unsigned int byteLen : 8;
+		};
+		volatile int data;
+	};
+	char str[1];
+};
+#pragma pack(pop)
+
+struct HashEntry
+{
+	unsigned short status_next;
+	union
+	{
+		unsigned short prev;
+		unsigned short str;
+	};
+};
+
+struct scrStringGlob_t
+{
+	HashEntry hashTable[0x4000];
+	unsigned char inited;
+	byte pad[3];
+	HashEntry *nextFreeEntry;
+};
+
 struct VariableStackBuffer
 {
 	const char *pos;
@@ -2694,6 +2733,14 @@ static const int varglob_offset = 0x08297500;
 #endif
 
 #if COD_VERSION == COD2_1_0
+static const int stringglob_offset = 0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const int stringglob_offset = 0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const int stringglob_offset = 0x08287400;
+#endif
+
+#if COD_VERSION == COD2_1_0
 static const int vmpub_offset = 0x083D7600;
 #elif COD_VERSION == COD2_1_2
 static const int vmpub_offset = 0x083D7A00;
@@ -2881,6 +2928,7 @@ static const int entity_event_names_offset = 0x08184DA0;
 #define scrVmPub (*((scrVmPub_t*)( vmpub_offset )))
 #define scrVarGlob (((VariableValueInternal*)( varglob_offset )))
 #define scrVarGlob_high (((VariableValueInternal*)( varglob_offset + 16 * 32770 )))
+#define scrStringGlob (*((scrStringGlob_t*)( stringglob_offset )))
 #define scrCompilePub (*((scrCompilePub_t*)( compilepub_offset )))
 #define scrVmGlob (*((scrVmGlob_t*)( vmglob_offset )))
 #define g_script_error (*((jmp_buf*)( g_script_error_offset )))
@@ -2921,6 +2969,7 @@ static const int entity_event_names_offset = 0x08184DA0;
  static_assert((sizeof(clientState_t) == 0x5c), "ERROR: clientState_t size is invalid!");
  static_assert((sizeof(gitem_t) == 44), "ERROR: gitem_t size is invalid!");
  static_assert((sizeof(XModel_t) == 144), "ERROR: XModel_t size is invalid!");
+ static_assert((sizeof(scrStringGlob_t) == 65544), "ERROR: scrStringGlob_t size is invalid!");
  
 #endif
 
@@ -2959,8 +3008,8 @@ typedef struct map_turret_s
 	char script_gameobjectname[MAX_QPATH];
 } map_turret_t;
 
-#define MAX_NOTIFY_BUFFER 4096 // Triggers cause a lot of notify (we might want to filter these to avoid lag)
-#define MAX_NOTIFY_PARAMS 16 // The script engine can handle hundreds of parameters, here we set a limit for CodeCallback_Notify
+#define MAX_NOTIFY_DEBUG_BUFFER 4096 // Triggers cause a lot of notify (we might want to filter these to avoid lag)
+#define MAX_NOTIFY_DEBUG_PARAMS 16 // The script engine can handle hundreds of parameters, here we set a limit for CodeCallback_NotifyDebug
 
 union SavedVariableUnion
 {
@@ -2983,7 +3032,7 @@ typedef struct scr_notify_s
 	unsigned int entId;
 	char message[COD2_MAX_STRINGLENGTH];
 	unsigned int argc;
-	SavedVariableValue arguments[MAX_NOTIFY_PARAMS];
+	SavedVariableValue arguments[MAX_NOTIFY_DEBUG_PARAMS];
 } scr_notify_t;
 
 #define MAX_CUSTOMSOUNDDURATION 5 // Minutes
