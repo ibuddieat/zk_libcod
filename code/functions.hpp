@@ -1785,6 +1785,24 @@ static const GetBspExtension_t GetBspExtension = (GetBspExtension_t)0x0; // Not 
 static const GetBspExtension_t GetBspExtension = (GetBspExtension_t)0x080A36FE;
 #endif
 
+typedef void (*AddRefToObject_t)(unsigned int id);
+#if COD_VERSION == COD2_1_0
+static const AddRefToObject_t AddRefToObject = (AddRefToObject_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const AddRefToObject_t AddRefToObject = (AddRefToObject_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const AddRefToObject_t AddRefToObject = (AddRefToObject_t)0x0807BE0A;
+#endif
+
+typedef void (*RemoveRefToObject_t)(unsigned int id);
+#if COD_VERSION == COD2_1_0
+static const RemoveRefToObject_t RemoveRefToObject = (RemoveRefToObject_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const RemoveRefToObject_t RemoveRefToObject = (RemoveRefToObject_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const RemoveRefToObject_t RemoveRefToObject = (RemoveRefToObject_t)0x0807BE2C;
+#endif
+
 typedef unsigned int (*FindVariable_t)(unsigned int parentId, unsigned int unsignedValue);
 #if COD_VERSION == COD2_1_0
 static const FindVariable_t FindVariable = (FindVariable_t)0x0; // Not tested

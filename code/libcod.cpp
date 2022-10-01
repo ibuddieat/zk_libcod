@@ -2982,18 +2982,6 @@ void Scr_CodeCallback_NotifyDebug(unsigned int entId, char *message, unsigned in
 
 	if ( Scr_IsSystemActive() )
 	{
-		unsigned int varId, objectId;
-
-		// Check if our object reference is still valid
-		varId = FindVariable(entId, 0x1fffe);
-  		if ( varId ) {
-			objectId = FindObject(varId);
-			if ( !objectId )
-				return;
-		} else {
-			return;
-		}
-
 		if ( !argc || !arguments || !arguments->type || arguments->type == STACK_PRECODEPOS )
 		{
 			stackPushUndefined();
@@ -3006,7 +2994,7 @@ void Scr_CodeCallback_NotifyDebug(unsigned int entId, char *message, unsigned in
 				SavedVariableValue *arg = arguments + i;
 				switch(arg->type) {
 					case STACK_UNDEFINED: stackPushUndefined(); break;
-					case STACK_OBJECT: stackPushObject(arg->u.pointerValue); break;
+					case STACK_OBJECT: stackPushObject(arg->u.pointerValue); RemoveRefToObject(arg->u.pointerValue); break;
 					case STACK_STRING:
 					case STACK_LOCALIZED_STRING: stackPushString(arg->u.stringValue); break;
 					case STACK_VECTOR: stackPushVector(arg->u.vectorValue); break;
@@ -3044,6 +3032,7 @@ void custom_G_RunFrame(int levelTime)
 	for ( i = 0; i < scr_notify_index; i++ )
 	{
 		Scr_CodeCallback_NotifyDebug(scr_notify[i].entId, scr_notify[i].message, scr_notify[i].argc, &scr_notify[i].arguments[0]);
+		RemoveRefToObject(scr_notify[i].entId);
 		memset(&scr_notify[i], 0, sizeof(scr_notify[0]));
 	}
 	scr_notify_index = 0;
@@ -3956,6 +3945,7 @@ void Scr_QueueNotifyDebugForCallback(unsigned int entId, unsigned int constStrin
 		unsigned int argc = 0;
 		char *stringValueSrc;
 
+		AddRefToObject(entId);
 		scr_notify[scr_notify_index].entId = entId;
 		I_strncpyz(scr_notify[scr_notify_index].message, message, strlen(message) + 1);
 		for ( arg = arguments; arg->type != STACK_PRECODEPOS && argc < MAX_NOTIFY_DEBUG_PARAMS; arg-- )
@@ -3964,7 +3954,7 @@ void Scr_QueueNotifyDebugForCallback(unsigned int entId, unsigned int constStrin
 			savedArg->type = arg->type;
 			switch(savedArg->type) {
 				case STACK_UNDEFINED: break;
-				case STACK_OBJECT: savedArg->u.pointerValue = arg->u.pointerValue; break;
+				case STACK_OBJECT: AddRefToObject(arg->u.pointerValue); savedArg->u.pointerValue = arg->u.pointerValue; break;
 				case STACK_STRING:
 				case STACK_LOCALIZED_STRING:
 					stringValueSrc = SL_ConvertToString(arg->u.stringValue);
@@ -4024,7 +4014,7 @@ void custom_Scr_Notify(gentity_t *ent, unsigned short constString, unsigned int 
 			savedArg->type = arg->type;
 			switch(savedArg->type) {
 				case STACK_UNDEFINED: break;
-				case STACK_OBJECT: savedArg->u.pointerValue = arg->u.pointerValue; break;
+				case STACK_OBJECT: AddRefToObject(arg->u.pointerValue); savedArg->u.pointerValue = arg->u.pointerValue; break;
 				case STACK_STRING:
 				case STACK_LOCALIZED_STRING:
 					stringValueSrc = SL_ConvertToString(arg->u.stringValue);
@@ -4058,7 +4048,7 @@ void custom_Scr_Notify(gentity_t *ent, unsigned short constString, unsigned int 
 			SavedVariableValue *arg = &savedArgs[i];
 			switch(arg->type) {
 				case STACK_UNDEFINED: stackPushUndefined(); break;
-				case STACK_OBJECT: stackPushObject(arg->u.pointerValue); break;
+				case STACK_OBJECT: stackPushObject(arg->u.pointerValue); RemoveRefToObject(arg->u.pointerValue); break;
 				case STACK_STRING:
 				case STACK_LOCALIZED_STRING: stackPushString(arg->u.stringValue); break;
 				case STACK_VECTOR: stackPushVector(arg->u.vectorValue); break;
