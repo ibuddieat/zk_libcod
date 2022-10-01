@@ -63,6 +63,12 @@ else
 	speex_link="-lspeex"
 fi
 
+if [ "$1" == "debug" ] || [ "$2" == "debug" ]; then
+	debug="-g -ggdb -O0"
+else
+	debug=""
+fi
+
 if [ -f extra/functions.hpp ]; then
 	constants+=" -D EXTRA_FUNCTIONS_INC"
 fi
@@ -164,7 +170,7 @@ fi
 
 echo "##### LINKING lib$1.so #####"
 objects="$(ls objects_$1/*.opp)"
-$cc -m32 -shared -L/lib32 -o bin/lib$1.so -ldl $objects -lpthread $mysql_link $speex_link
+$cc -m32 $debug -shared -L/lib32 -o bin/lib$1.so -ldl $objects -lpthread $mysql_link $speex_link
 rm objects_$1 -r
 
 if [ mysql_variant > 0 ]; then
