@@ -76,6 +76,7 @@ cHook *hook_vm_notify;
 cHook *hook_sv_init;
 cHook *hook_g_processipbans;
 cHook *hook_scr_notify;
+cHook *hook_script_cloneplayer;
 
 int codecallback_client_spam = 0;
 int codecallback_dprintf = 0;
@@ -3808,6 +3809,33 @@ bool custom_CM_IsBadStaticModel(cStaticModel_t *model, char *src, float *origin,
 	return xmodel != NULL;
 }
 
+void custom_Script_clonePlayer(scr_entref_t id)
+{
+	hook_script_cloneplayer->unhook();
+
+	void (*sig)(scr_entref_t id);
+	*(int *)&sig = hook_script_cloneplayer->from;
+
+	if (id >= MAX_CLIENTS)
+	{
+		stackError("clonePlayer() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	gentity_t *entity = &g_entities[id];
+	if ( !Com_GetServerDObj((entity->client->ps).clientNum) )
+	{
+		stackPushUndefined();
+	}
+	else
+	{
+		sig(id);
+	}
+
+	hook_script_cloneplayer->hook();
+}
+
 void custom_Script_obituary(void)
 {
 	int args;
@@ -4439,6 +4467,8 @@ public:
 		hook_g_processipbans->hook();
 		hook_scr_notify = new cHook(0x0811B2DE, (int)custom_Scr_Notify);
 		hook_scr_notify->hook();
+		hook_script_cloneplayer = new cHook(0x080FCC76, (int)custom_Script_clonePlayer);
+		hook_script_cloneplayer->hook();
 
 		#if COMPILE_PLAYER == 1
 		hook_play_movement = new cHook(0x08090DAC, (int)play_movement);
