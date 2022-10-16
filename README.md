@@ -85,5 +85,5 @@ We then started to add more and more functions to our fork, and especially since
 - The Speex Project (https://www.speex.org/)
 
 **Further notes**
-- The release notes are aligned with other (private) \*.ZK.\* repositories, therefore these notes do not necessarily reflect what is new in *this* repository. This might change in the future.
+- Release notes before version 10.0 were aligned with other (private) \*.ZK.\* repositories, therefore these notes do not necessarily reflect what was new in *this* repository.
 - Use this extension at your own risk (see [LICENSE](LICENSE.md)). Some features are considered highly experimental and might not be stable enough for productive use.
