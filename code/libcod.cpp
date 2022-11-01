@@ -3820,17 +3820,17 @@ void custom_Player_UpdateCursorHints(gentity_t *player)
 	int cursorHint;
 	useList_t useList;
 	gentity_t *ent;
-	gclient_s *client;
+	gclient_t *client;
 
 	client = player->client;
 	(client->ps).cursorHint = 0;
 	(client->ps).cursorHintString = -1;
 	(client->ps).cursorHintEntIndex = 0x3ff;
-	if ( ( 0 < player->healthPoints ) && ( (player->client->ps).weaponstate < 0x11 || ( 0x16 < (player->client->ps).weaponstate ) ) )
+	if ( 0 < player->healthPoints && ( (player->client->ps).weaponstate < 0x11 || ( 0x16 < (player->client->ps).weaponstate ) ) )
 	{
 		if ( !player->active )
 		{
-			if ( ( ( (player->client->ps).pm_flags & PMF_MANTLE ) == 0 ) && ( useListSize = Player_GetUseList(player, &useList), useListSize != 0 ) )
+			if ( ( (player->client->ps).pm_flags & PMF_MANTLE ) == 0 && ( useListSize = Player_GetUseList(player, &useList), useListSize != 0 ) )
 			{
 				cursorHint = 0;
 				cursorHintString = -1;
@@ -3847,7 +3847,7 @@ void custom_Player_UpdateCursorHints(gentity_t *player)
 					{
 						if ( temp == ET_GENERAL )
 						{
-							if ( ( ent->classname != scr_const.trigger_use ) && ( temp = cursorHint, ent->classname != scr_const.trigger_use_touch ) )
+							if ( ent->classname != scr_const.trigger_use && ( temp = cursorHint, ent->classname != scr_const.trigger_use_touch ) )
 							{
 LAB_08121ee6:
 								cursorHint = temp;
@@ -3870,11 +3870,11 @@ LAB_08121ee6:
 							}
 							/* New code end */
 
-							if ( ( ( ent->team == 0 ) || ( (uint)ent->team == (player->client->sess).team ) ) &&
-							( (ent->params).trigger.damage == 0x3ff || ( (ent->params).trigger.damage == (player->client->ps).clientNum ) ) )
+							if ( ( ent->team == 0 || ent->team == (player->client->sess).team ) &&
+							( (ent->params).trigger.damage == 0x3ff || (ent->params).trigger.damage == (player->client->ps).clientNum ) )
 							{
 								temp = (ent->s).dmgFlags;
-								if ( ( (ent->s).dmgFlags != 0 ) && ( (ent->s).scale != 0xff) )
+								if ( (ent->s).dmgFlags != 0 && (ent->s).scale != 0xff )
 								{
 									cursorHintString = (ent->s).scale;
 								}
@@ -3882,7 +3882,7 @@ LAB_08121ee6:
 							}
 						}
 					}
-					else if ( ( temp == ET_TURRET ) && G_IsTurretUsable(ent, player) )
+					else if ( temp == ET_TURRET && G_IsTurretUsable(ent, player) )
 					{
 						temp = (ent->s).weapon + 4;
 						weaponDef = BG_GetWeaponDef((ent->s).weapon);
@@ -3896,7 +3896,7 @@ LAB_08121ee6:
 				}
 			}
 		}
-		else if ( ((client->ps).eFlags & EF_USETURRET) != 0 )
+		else if ( ( (client->ps).eFlags & EF_USETURRET ) != 0 )
 		{
 			Player_SetTurretDropHintString(player);
 		}
@@ -4643,7 +4643,7 @@ public:
 		cracking_hook_function(0x08120A70, (int)custom_FireWeaponMelee);
 		cracking_hook_function(0x08120484, (int)custom_Bullet_Fire);
 		cracking_hook_function(0x0809C21C, (int)custom_SV_QueueVoicePacket);
-		//cracking_hook_function(0x08121BC6, (int)custom_Player_UpdateCursorHints);
+		cracking_hook_function(0x08121BC6, (int)custom_Player_UpdateCursorHints);
 
 		#if COMPILE_BOTS == 1
 		cracking_hook_function(0x0809676C, (int)custom_SV_BotUserMove);

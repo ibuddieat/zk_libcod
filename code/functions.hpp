@@ -1458,7 +1458,7 @@ static const BG_GetItemHintString_t BG_GetItemHintString = (BG_GetItemHintString
 #elif COD_VERSION == COD2_1_2
 static const BG_GetItemHintString_t BG_GetItemHintString = (BG_GetItemHintString_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
-static const BG_GetItemHintString_t BG_GetItemHintString = (BG_GetItemHintString_t)0x080DF39E;
+static const BG_GetItemHintString_t BG_GetItemHintString = (BG_GetItemHintString_t)0x08121AAA;
 #endif
 
 typedef XModel_t * (*SV_XModelGet_t)(const char *name);
@@ -1929,7 +1929,7 @@ static const SV_QueueVoicePacket_t SV_QueueVoicePacket = (SV_QueueVoicePacket_t)
 static const SV_QueueVoicePacket_t SV_QueueVoicePacket = (SV_QueueVoicePacket_t)0x0809C21C;
 #endif
 
-typedef int (*Player_GetUseList_t)(gentity_t *ent, useList_t *useList);
+typedef int (*Player_GetUseList_t)(gentity_t *player, useList_t *useList);
 #if COD_VERSION == COD2_1_0
 static const Player_GetUseList_t Player_GetUseList = (Player_GetUseList_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
