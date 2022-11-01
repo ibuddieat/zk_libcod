@@ -4643,7 +4643,7 @@ public:
 		cracking_hook_function(0x08120A70, (int)custom_FireWeaponMelee);
 		cracking_hook_function(0x08120484, (int)custom_Bullet_Fire);
 		cracking_hook_function(0x0809C21C, (int)custom_SV_QueueVoicePacket);
-		cracking_hook_function(0x08121BC6, (int)custom_Player_UpdateCursorHints);
+		//cracking_hook_function(0x08121BC6, (int)custom_Player_UpdateCursorHints);
 
 		#if COMPILE_BOTS == 1
 		cracking_hook_function(0x0809676C, (int)custom_SV_BotUserMove);
