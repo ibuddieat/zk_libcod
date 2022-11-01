@@ -266,6 +266,7 @@ void custom_GScr_LoadConsts(void)
 	scr_const.custom = GScr_AllocString("custom_string");
 	Note: This new reference also has to be added to stringIndex_t in declarations.hpp
 	*/
+	scr_const.trigger_radius = GScr_AllocString("trigger_radius");
 	#if COMPILE_CUSTOM_VOICE == 1
 	scr_const.sound_file_done = GScr_AllocString("sound_file_done");
 	scr_const.sound_file_stop = GScr_AllocString("sound_file_stop");
@@ -3809,6 +3810,99 @@ bool custom_CM_IsBadStaticModel(cStaticModel_t *model, char *src, float *origin,
 	return xmodel != NULL;
 }
 
+void custom_Player_UpdateCursorHints(gentity_t *player)
+{
+	int useListSize;
+	int temp;
+	WeaponDef_t *weaponDef;
+	int i;
+	int cursorHintString;
+	int cursorHint;
+	useList_t useList;
+	gentity_t *ent;
+	gclient_s *client;
+
+	client = player->client;
+	(client->ps).cursorHint = 0;
+	(client->ps).cursorHintString = -1;
+	(client->ps).cursorHintEntIndex = 0x3ff;
+	if ( ( 0 < player->healthPoints ) && ( (player->client->ps).weaponstate < 0x11 || ( 0x16 < (player->client->ps).weaponstate ) ) )
+	{
+		if ( !player->active )
+		{
+			if ( ( ( (player->client->ps).pm_flags & PMF_MANTLE ) == 0 ) && ( useListSize = Player_GetUseList(player, &useList), useListSize != 0 ) )
+			{
+				cursorHint = 0;
+				cursorHintString = -1;
+				for ( i = 0; i < useListSize; i++ )
+				{
+					ent = useList[i * 2];
+					temp = (ent->s).eType;
+					if ( temp == ET_ITEM )
+					{
+						temp = BG_GetItemHintString(player->client, ent);
+						if ( temp != 0 ) goto LAB_08121ee6;
+					}
+					else if ( temp < ET_MISSILE )
+					{
+						if ( temp == ET_GENERAL )
+						{
+							if ( ( ent->classname != scr_const.trigger_use ) && ( temp = cursorHint, ent->classname != scr_const.trigger_use_touch ) )
+							{
+LAB_08121ee6:
+								cursorHint = temp;
+								(client->ps).cursorHintEntIndex = (ent->s).number;
+								(client->ps).cursorHint = cursorHint;
+								(client->ps).cursorHintString = cursorHintString;
+								if ( (client->ps).cursorHint != 0 )
+								{
+									return;
+								}
+								(client->ps).cursorHintEntIndex = 0x3ff;
+								return;
+							}
+
+							/* New code start: hintString support for trigger_radius */
+							if ( (ent->s).clientNum == -1 )
+							{
+								Scr_AddEntity(player);
+								Scr_Notify(ent, scr_const.trigger, 1);
+							}
+							/* New code end */
+
+							if ( ( ( ent->team == 0 ) || ( (uint)ent->team == (player->client->sess).team ) ) &&
+							( (ent->params).trigger.damage == 0x3ff || ( (ent->params).trigger.damage == (player->client->ps).clientNum ) ) )
+							{
+								temp = (ent->s).dmgFlags;
+								if ( ( (ent->s).dmgFlags != 0 ) && ( (ent->s).scale != 0xff) )
+								{
+									cursorHintString = (ent->s).scale;
+								}
+								goto LAB_08121ee6;
+							}
+						}
+					}
+					else if ( ( temp == ET_TURRET ) && G_IsTurretUsable(ent, player) )
+					{
+						temp = (ent->s).weapon + 4;
+						weaponDef = BG_GetWeaponDef((ent->s).weapon);
+						if ( *weaponDef->szUseHintString != '\0' )
+						{
+							weaponDef = BG_GetWeaponDef((ent->s).weapon);
+							cursorHintString = weaponDef->iUseHintStringIndex;
+						}
+						goto LAB_08121ee6;
+					}
+				}
+			}
+		}
+		else if ( ((client->ps).eFlags & EF_USETURRET) != 0 )
+		{
+			Player_SetTurretDropHintString(player);
+		}
+	}
+}
+
 void custom_Script_clonePlayer(scr_entref_t id)
 {
 	hook_script_cloneplayer->unhook();
@@ -3913,6 +4007,48 @@ LAB_081131e1:
 		ent->s.eventParm = sMeansOfDeath | 0x80;
 	else
 		ent->s.eventParm = sWeapon;
+}
+
+void custom_Script_setHintString(scr_entref_t id)
+{
+	gentity_t *ent;
+	int type;
+	char hintString[COD2_MAX_STRINGLENGTH];
+	int index;
+
+	ent = G_GetEntity(id);
+	if ( (ent->classname != scr_const.trigger_radius) && (ent->classname != scr_const.trigger_use) && (ent->classname != scr_const.trigger_use_touch) )
+	{
+		Scr_Error("The setHintString command only works on trigger_radius, trigger_use or trigger_use_touch entities.\n");
+	}
+
+	type = Scr_GetType(0);
+	if ( type == 2 )
+	{
+		if ( I_stricmp(Scr_GetString(0), "") == 0 )
+		{
+			(ent->s).scale = 0xff;
+			return;
+		}
+	}
+
+	Scr_ConstructMessageString(0, Scr_GetNumParam() + -1, "Hint String", hintString, COD2_MAX_STRINGLENGTH);
+	if ( G_GetHintStringIndex(&index, hintString) == 0 )
+	{
+		Scr_Error(custom_va("Too many different hintstring values. Max allowed is %i different strings", 0x20));
+	}
+	(ent->s).scale = index;
+
+	// Added trigger_radius support by converting it to a trigger_use_touch
+	if ( ent->classname == scr_const.trigger_radius) {
+		Scr_SetString(&ent->classname, scr_const.trigger_use_touch);
+		(ent->params).trigger.damage= 0x3ff;
+		(ent->r).contents = 0x200000;
+		(ent->r).svFlags = 1;
+		(ent->s).dmgFlags = 2;
+		// Reusing the clientNum field that is otherwise not used at trigger entities to mark it as a 'converted' trigger so that it will still emit 'trigger' notifies
+		(ent->s).clientNum = -1;
+	}
 }
 
 void com_printmessage_caret_patch(void)
@@ -4501,11 +4637,13 @@ public:
 		cracking_hook_function(0x0811B770, (int)custom_G_SpawnEntitiesFromString);
 		cracking_hook_function(0x080584F0, (int)custom_CM_IsBadStaticModel);
 		cracking_hook_function(0x08113128, (int)custom_Script_obituary);
+		cracking_hook_function(0x081124F6, (int)custom_Script_setHintString);
 		cracking_hook_function(0x08092302, (int)custom_SV_MapExists);
 		cracking_hook_function(0x08109CE0, (int)custom_G_UpdateObjectives); // Guessed function name
 		cracking_hook_function(0x08120A70, (int)custom_FireWeaponMelee);
 		cracking_hook_function(0x08120484, (int)custom_Bullet_Fire);
 		cracking_hook_function(0x0809C21C, (int)custom_SV_QueueVoicePacket);
+		cracking_hook_function(0x08121BC6, (int)custom_Player_UpdateCursorHints);
 
 		#if COMPILE_BOTS == 1
 		cracking_hook_function(0x0809676C, (int)custom_SV_BotUserMove);

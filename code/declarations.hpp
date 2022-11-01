@@ -56,6 +56,7 @@ typedef struct gclient_s gclient_t;
 typedef struct gentity_s gentity_t;
 typedef int scr_entref_t;
 typedef int LargeLocal;
+typedef gentity_t (*useList_t)[2050];
 
 typedef enum
 {
@@ -96,7 +97,10 @@ typedef enum
 	ET_ITEM = 3,
 	ET_MISSILE = 4,
 	ET_INVISIBLE = 5,
-	ET_SCRIPTMOVER = 6
+	ET_SCRIPTMOVER = 6,
+	ET_UNK1 = 7, // ET_FX ?
+	ET_UNK2 = 8, // ET_LOOP_FX ?
+	ET_TURRET = 9
 } entityType_t;
 
 typedef enum
@@ -1221,6 +1225,7 @@ struct trigger_ent_t
 	int accumulate;
 	int timestamp;
 	int singleUserEntIndex;
+	int damage;
 	byte requireLookAt;
 };
 
@@ -2273,6 +2278,7 @@ typedef struct
 	short neck;
 	short head;
 	short pelvis;
+	short trigger_radius;
 	#if COMPILE_CUSTOM_VOICE == 1
 	short sound_file_done;
 	short sound_file_stop;

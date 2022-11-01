@@ -993,6 +993,15 @@ static const Scr_GetConstLowercaseString_t Scr_GetConstLowercaseString = (Scr_Ge
 static const Scr_GetConstLowercaseString_t Scr_GetConstLowercaseString = (Scr_GetConstLowercaseString_t)0x08084A7C;
 #endif
 
+typedef void (*Scr_ConstructMessageString_t)(unsigned int firstParmIndex, unsigned int lastParmIndex, const char *errorContext, char *string, unsigned int stringLimit);
+#if COD_VERSION == COD2_1_0
+static const Scr_ConstructMessageString_t Scr_ConstructMessageString = (Scr_ConstructMessageString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Scr_ConstructMessageString_t Scr_ConstructMessageString = (Scr_ConstructMessageString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Scr_ConstructMessageString_t Scr_ConstructMessageString = (Scr_ConstructMessageString_t)0x08110720;
+#endif
+
 typedef void (*IncInParam_t)(void);
 #if COD_VERSION == COD2_1_0
 static const IncInParam_t IncInParam = (IncInParam_t)0x0; // Not tested
@@ -1245,6 +1254,15 @@ static const G_ClientStopUsingTurret_t G_ClientStopUsingTurret = (G_ClientStopUs
 static const G_ClientStopUsingTurret_t G_ClientStopUsingTurret = (G_ClientStopUsingTurret_t)0x0810B9A4;
 #endif
 
+typedef qboolean (*G_IsTurretUsable_t)(gentity_t *turret, gentity_t *player);
+#if COD_VERSION == COD2_1_0
+static const G_IsTurretUsable_t G_IsTurretUsable = (G_IsTurretUsable_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_IsTurretUsable_t G_IsTurretUsable = (G_IsTurretUsable_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_IsTurretUsable_t G_IsTurretUsable = (G_IsTurretUsable_t)0x0810C358;
+#endif
+
 typedef void (*G_GetPlayerViewOrigin_t)(gentity_t *ent, float *origin);
 #if COD_VERSION == COD2_1_0
 static const G_GetPlayerViewOrigin_t G_GetPlayerViewOrigin = (G_GetPlayerViewOrigin_t)0x0; // Not tested
@@ -1427,11 +1445,20 @@ static const BG_FindItemForWeapon_t BG_FindItemForWeapon = (BG_FindItemForWeapon
 
 typedef int (*BG_CanItemBeGrabbed_t)(entityState_t *ent, playerState_t *ps, int touch);
 #if COD_VERSION == COD2_1_0
-static const BG_CanItemBeGrabbed_t BG_CanItemBeGrabbed = (BG_CanItemBeGrabbed_t)0x0;
+static const BG_CanItemBeGrabbed_t BG_CanItemBeGrabbed = (BG_CanItemBeGrabbed_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
-static const BG_CanItemBeGrabbed_t BG_CanItemBeGrabbed = (BG_CanItemBeGrabbed_t)0x0;
+static const BG_CanItemBeGrabbed_t BG_CanItemBeGrabbed = (BG_CanItemBeGrabbed_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const BG_CanItemBeGrabbed_t BG_CanItemBeGrabbed = (BG_CanItemBeGrabbed_t)0x080DF39E;
+#endif
+
+typedef int (*BG_GetItemHintString_t)(gclient_t *client, gentity_t *ent); // Guessed function name
+#if COD_VERSION == COD2_1_0
+static const BG_GetItemHintString_t BG_GetItemHintString = (BG_GetItemHintString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const BG_GetItemHintString_t BG_GetItemHintString = (BG_GetItemHintString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const BG_GetItemHintString_t BG_GetItemHintString = (BG_GetItemHintString_t)0x080DF39E;
 #endif
 
 typedef XModel_t * (*SV_XModelGet_t)(const char *name);
@@ -1603,6 +1630,15 @@ static const G_IndexForMeansOfDeath_t G_IndexForMeansOfDeath = (G_IndexForMeansO
 static const G_IndexForMeansOfDeath_t G_IndexForMeansOfDeath = (G_IndexForMeansOfDeath_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const G_IndexForMeansOfDeath_t G_IndexForMeansOfDeath = (G_IndexForMeansOfDeath_t)0x081016FA;
+#endif
+
+typedef int (*G_GetHintStringIndex_t)(int *index, const char *str);
+#if COD_VERSION == COD2_1_0
+static const G_GetHintStringIndex_t G_GetHintStringIndex = (G_GetHintStringIndex_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_GetHintStringIndex_t G_GetHintStringIndex = (G_GetHintStringIndex_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_GetHintStringIndex_t G_GetHintStringIndex = (G_GetHintStringIndex_t)0x08112432;
 #endif
 
 typedef clientState_t * (*G_GetClientState_t)(int num);
@@ -1891,6 +1927,24 @@ static const SV_QueueVoicePacket_t SV_QueueVoicePacket = (SV_QueueVoicePacket_t)
 static const SV_QueueVoicePacket_t SV_QueueVoicePacket = (SV_QueueVoicePacket_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const SV_QueueVoicePacket_t SV_QueueVoicePacket = (SV_QueueVoicePacket_t)0x0809C21C;
+#endif
+
+typedef int (*Player_GetUseList_t)(gentity_t *ent, useList_t *useList);
+#if COD_VERSION == COD2_1_0
+static const Player_GetUseList_t Player_GetUseList = (Player_GetUseList_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Player_GetUseList_t Player_GetUseList = (Player_GetUseList_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Player_GetUseList_t Player_GetUseList = (Player_GetUseList_t)0x08121494;
+#endif
+
+typedef void (*Player_SetTurretDropHintString_t)(gentity_t *player); // Guessed function name
+#if COD_VERSION == COD2_1_0
+static const Player_SetTurretDropHintString_t Player_SetTurretDropHintString = (Player_SetTurretDropHintString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Player_SetTurretDropHintString_t Player_SetTurretDropHintString = (Player_SetTurretDropHintString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Player_SetTurretDropHintString_t Player_SetTurretDropHintString = (Player_SetTurretDropHintString_t)0x08121B36;
 #endif
 
 #endif
