@@ -1047,6 +1047,15 @@ static const Scr_AddString_t Scr_AddString = (Scr_AddString_t)0x08085196;
 static const Scr_AddString_t Scr_AddString = (Scr_AddString_t)0x08085262;
 #endif
 
+typedef void (*Scr_AddConstString_t)(unsigned int stringValue);
+#if COD_VERSION == COD2_1_0
+static const Scr_AddConstString_t Scr_AddConstString = (Scr_AddConstString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Scr_AddConstString_t Scr_AddConstString = (Scr_AddConstString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Scr_AddConstString_t Scr_AddConstString = (Scr_AddConstString_t)0x080852D6;
+#endif
+
 typedef void (*Scr_AddUndefined_t)(void);
 #if COD_VERSION == COD2_1_0
 static const Scr_AddUndefined_t Scr_AddUndefined = (Scr_AddUndefined_t)0x08084B88;
@@ -1092,6 +1101,15 @@ static const Scr_AddArray_t Scr_AddArray = (Scr_AddArray_t)0x08085298;
 static const Scr_AddArray_t Scr_AddArray = (Scr_AddArray_t)0x08085364;
 #endif
 
+typedef void (*Scr_AddArrayStringIndexed_t)(unsigned int stringValue);
+#if COD_VERSION == COD2_1_0
+static const Scr_AddArrayStringIndexed_t Scr_AddArrayStringIndexed = (Scr_AddArrayStringIndexed_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Scr_AddArrayStringIndexed_t Scr_AddArrayStringIndexed = (Scr_AddArrayStringIndexed_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Scr_AddArrayStringIndexed_t Scr_AddArrayStringIndexed = (Scr_AddArrayStringIndexed_t)0x080853B6;
+#endif
+
 typedef void (*Scr_AddObject_t)(unsigned int object);
 #if COD_VERSION == COD2_1_0
 static const Scr_AddObject_t Scr_AddObject = (Scr_AddObject_t)0x08084BA2;
@@ -1119,7 +1137,7 @@ static const DirToByte_t DirToByte = (DirToByte_t)0x080A3E4A;
 static const DirToByte_t DirToByte = (DirToByte_t)0x080A3F8E;
 #endif
 
-typedef void (*G_LocationalTrace_t)(trace_t *results, const vec3_t start, const vec3_t end, int passEntityNum, int contentmask);
+typedef void (*G_LocationalTrace_t)(trace_t *results, const vec3_t start, const vec3_t end, int passEntityNum, int contentmask, char *priorityMap);
 #if COD_VERSION == COD2_1_0
 static const G_LocationalTrace_t G_LocationalTrace = (G_LocationalTrace_t)0x08108134;
 #elif COD_VERSION == COD2_1_2
@@ -1497,6 +1515,15 @@ static const Com_GetServerDObj_t Com_GetServerDObj = (Com_GetServerDObj_t)0x0806
 static const Com_GetServerDObj_t Com_GetServerDObj = (Com_GetServerDObj_t)0x08062BC4;
 #endif
 
+typedef char * (*Com_SurfaceTypeToName_t)(int surfaceType);
+#if COD_VERSION == COD2_1_0
+static const Com_SurfaceTypeToName_t Com_SurfaceTypeToName = (Com_SurfaceTypeToName_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Com_SurfaceTypeToName_t Com_SurfaceTypeToName = (Com_SurfaceTypeToName_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Com_SurfaceTypeToName_t Com_SurfaceTypeToName = (Com_SurfaceTypeToName_t)0x080B948A;
+#endif
+
 typedef void (*SV_DObjDumpInfo_t)(gentity_t *ent);
 #if COD_VERSION == COD2_1_0
 static const SV_DObjDumpInfo_t SV_DObjDumpInfo = (SV_DObjDumpInfo_t)0x08090584;
@@ -1792,6 +1819,15 @@ static const Vec3Normalize_t Vec3Normalize = (Vec3Normalize_t)0x080A20C0;
 static const Vec3Normalize_t Vec3Normalize = (Vec3Normalize_t)0x080A42E0;
 #elif COD_VERSION == COD2_1_3
 static const Vec3Normalize_t Vec3Normalize = (Vec3Normalize_t)0x080A4424;
+#endif
+
+typedef void (*Vec3Lerp_t)(const float *from, const float *to, float frac, const float *result);
+#if COD_VERSION == COD2_1_0
+static const Vec3Lerp_t Vec3Lerp = (Vec3Lerp_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Vec3Lerp_t Vec3Lerp = (Vec3Lerp_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Vec3Lerp_t Vec3Lerp = (Vec3Lerp_t)0x080E129E;
 #endif
 
 typedef void (*SP_worldspawn_t)(void);

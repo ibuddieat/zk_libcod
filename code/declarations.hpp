@@ -711,7 +711,7 @@ typedef struct trace_s
 	int surfaceFlags;
 	int contents;
 	const char *material;
-	int entityNum;
+	scr_entref_t entityNum;
 	u_int16_t hitId;
 	byte allsolid;
 	byte startsolid;

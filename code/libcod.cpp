@@ -3930,6 +3930,83 @@ void custom_Script_clonePlayer(scr_entref_t id)
 	hook_script_cloneplayer->hook();
 }
 
+void custom_Script_bulletTrace(void)
+{
+	int args;
+	int hitCharacters;
+	int type;
+	gentity_t *passEnt;
+	vec3_t normal;
+	vec3_t position;
+	trace_t trace;
+	int contentmask;
+	int passEntityNum;
+	vec3_t end;
+	vec3_t start;
+
+	passEntityNum = 0x3ff;
+	Scr_GetVector(0, &start);
+	Scr_GetVector(1, &end);
+	hitCharacters = Scr_GetInt(2);
+	if ( hitCharacters == 0 )
+	{
+		contentmask = 0x802831;
+	}
+	else
+	{
+		contentmask = 0x2802831;
+	}
+
+	/* New code: bulletTrace contentmask override */
+	args = Scr_GetNumParam();
+	if ( args > 4 )
+		contentmask = Scr_GetInt(4);
+	/* New code end */
+
+	type = Scr_GetType(3);
+	if ( type == STACK_OBJECT )
+	{
+		type = Scr_GetPointerType(3);
+		if ( type == STACK_ENTITY )
+		{
+			passEnt = Scr_GetEntity(3);
+			passEntityNum = (passEnt->s).number;
+		}
+	}
+	G_LocationalTrace(&trace, start, end, passEntityNum, contentmask, NULL);
+	Scr_MakeArray();
+	Scr_AddFloat(trace.fraction);
+	Scr_AddArrayStringIndexed(scr_const.fraction);
+	Vec3Lerp(start, end, trace.fraction, position);
+	Scr_AddVector(position);
+	Scr_AddArrayStringIndexed(scr_const.position);
+	if ( trace.entityNum == 0x3ff || trace.entityNum == 0x3fe )
+	{
+		Scr_AddUndefined();
+	}
+	else
+	{
+		Scr_AddEntity(&g_entities[trace.entityNum]);
+	}
+	Scr_AddArrayStringIndexed(scr_const.entity);
+	if ( trace.fraction < 1.0 )
+	{
+		Scr_AddVector(trace.normal);
+		Scr_AddArrayStringIndexed(scr_const.normal);
+		Scr_AddString(Com_SurfaceTypeToName((int)(trace.surfaceFlags & 0x1f00000U) >> 0x14));
+		Scr_AddArrayStringIndexed(scr_const.surfacetype);
+	}
+	else
+	{
+		VectorSubtract(end, start, normal);
+		Vec3Normalize(normal);
+		Scr_AddVector(normal);
+		Scr_AddArrayStringIndexed(scr_const.normal);
+		Scr_AddConstString(scr_const.none);
+		Scr_AddArrayStringIndexed(scr_const.surfacetype);
+	}
+}
+
 void custom_Script_obituary(void)
 {
 	int args;
@@ -4636,6 +4713,7 @@ public:
 		cracking_hook_function(0x0809A408, (int)custom_SV_BuildClientSnapshot);
 		cracking_hook_function(0x0811B770, (int)custom_G_SpawnEntitiesFromString);
 		cracking_hook_function(0x080584F0, (int)custom_CM_IsBadStaticModel);
+		cracking_hook_function(0x08113818, (int)custom_Script_bulletTrace);
 		cracking_hook_function(0x08113128, (int)custom_Script_obituary);
 		cracking_hook_function(0x081124F6, (int)custom_Script_setHintString);
 		cracking_hook_function(0x08092302, (int)custom_SV_MapExists);
