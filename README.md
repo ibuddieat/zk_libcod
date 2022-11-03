@@ -12,7 +12,6 @@
 - [Added script callback functions](doc/added_script_callback_functions.md)
 - [Added script code functions](doc/added_script_functions.md)
 - [Changed script code functions](doc/changed_script_functions.md)
-- [Reconstructed some game functions](doc/reconstructed_functions.md) to be able to implement the extensions mentioned above
 - Patched `Com_PrintMessage` so that strings that begin with a caret are printed properly
 - Patched the `clonePlayer` script function to not crash the server if called on a player without model
 - Added compile flag `ENABLE_UNSAFE` to toggle the availability of potentially unsafe script functions that would make it easy to harm the server with malicious map scripts
