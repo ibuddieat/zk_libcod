@@ -12,6 +12,7 @@ New script code methods:
   * `<player> getInactivityTime()`
   * `<player> getPlayerstateFlags()`
   * `<player> getRemainingSoundFileDuration()`
+  * `<player> getViewOrigin()`
   * `<player> isPlayingSoundFile()`
   * `<player> muteClient(<player>)`
   * `<player> noclip("on|off|toggle")`

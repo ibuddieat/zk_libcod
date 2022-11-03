@@ -373,6 +373,7 @@ scr_method_t scriptMethods[] =
 	{"objective_player_icon", gsc_player_objective_player_icon, 0},
 	{"objective_player_position", gsc_player_objective_player_position, 0},
 	{"objective_player_state", gsc_player_objective_player_state, 0},
+	{"getvieworigin", gsc_player_getvieworigin, 0},
 	#if COMPILE_CUSTOM_VOICE == 1
 	{"playsoundfile", gsc_player_playsoundfile, 0},
 	{"stopsoundfile", gsc_player_stopsoundfile, 0},

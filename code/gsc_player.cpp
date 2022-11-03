@@ -1891,6 +1891,23 @@ void gsc_player_objective_player_state(scr_entref_t id)
 	}
 }
 
+void gsc_player_getvieworigin(scr_entref_t id)
+{
+	if (id >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_getvieworigin() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	vec3_t viewOrigin;
+	gentity_t *ent = &g_entities[id];
+
+	G_GetPlayerViewOrigin(ent, viewOrigin);
+
+	stackPushVector(viewOrigin);
+}
+
 #if COMPILE_CUSTOM_VOICE == 1
 
 extern VoicePacket_t voiceDataStore[MAX_CUSTOMSOUNDS][MAX_STOREDVOICEPACKETS];

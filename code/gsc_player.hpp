@@ -82,6 +82,7 @@ void gsc_player_objective_player_delete(scr_entref_t id);
 void gsc_player_objective_player_icon(scr_entref_t id);
 void gsc_player_objective_player_position(scr_entref_t id);
 void gsc_player_objective_player_state(scr_entref_t id);
+void gsc_player_getvieworigin(scr_entref_t id);
 #if COMPILE_CUSTOM_VOICE == 1
 void gsc_player_playsoundfile(scr_entref_t id);
 void gsc_player_stopsoundfile(scr_entref_t id);
