@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>Errors</H1>
+<H1>Hitch Warning</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
@@ -27,7 +27,7 @@ Module: Callbacks<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Calls CodeCallback_Error() in maps/mp/gametypes/_callbacksetup.gsc. Called immideately on critical/terminal script runtime errors, else on the next invocation of G_RunFrame. Not called on script compile errors. Avoid using wait statements in this callback.</p>
+<p>Calls CodeCallback_HitchWarning() in maps/mp/gametypes/_callbacksetup.gsc if the server lags for more than 500 milliseconds and less than 500 seconds.</p>
 </H3>
 </TR></TD></TABLE>
 <p>Note: The existance of the callback function is checked only once on server start. Functions added later are not taken into account, even after a map switch.</p>
@@ -37,9 +37,7 @@ Module: Callbacks<BR>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;critical&gt; Boolean flag indicating whether the error is critical/terminal, thus potentially resulting in a server shutdown.</LI>
-<LI>2 : &lt;internal function&gt; Name of the internal function from where the error was raised (e.g., Com_Error).</LI>
-<LI>3 : &lt;message&gt; Error message (this does not include details like the exact position within the script code).</LI>
+<LI>1 : &lt;time&gt; Duration of the server lag in milliseconds.</LI>
 </UL></TR></TD></TABLE>
 <BR><BR>
 <H2>Example:</H2>
@@ -47,14 +45,9 @@ Module: Callbacks<BR>
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-CodeCallback_Error(critical, internal_function, message)
+CodeCallback_HitchWarning(time)
 {
-    if(critical || internal_function == "Com_Error") {
-        logPrintConsole("Aight imma head out!\n");
-    } else {
-        // If developer mode is on, check console_mp_server.log for details
-        iprintLn("error: " + message);
-    }
+    iprintLn("server lag: " + (time / 1000) + "s");
 }
 </PRE>
 </H3>

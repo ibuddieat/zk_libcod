@@ -82,6 +82,7 @@ int codecallback_client_spam = 0;
 int codecallback_dprintf = 0;
 int codecallback_error = 0;
 int codecallback_fire_grenade = 0;
+int codecallback_hitchwarning = 0;
 int codecallback_map_turrets_load = 0;
 int codecallback_map_weapons_load = 0;
 int codecallback_notify = 0;
@@ -109,6 +110,8 @@ int codecallback_usebutton = 0;
 
 qboolean logRcon = qtrue;
 qboolean logHeartbeat = qtrue;
+
+int hitchFrameTime = 0;
 
 scr_error_t scr_errors[MAX_ERROR_BUFFER];
 int scr_errors_index = 0;
@@ -277,6 +280,14 @@ void custom_GScr_LoadConsts(void)
 	hook_gscr_loadconsts->hook();
 }
 
+void hitch_warning_print(const char *message, int frameTime)
+{
+	/* Called if 500 < frameTime && frameTime < 500000 */
+	Com_Printf(message, frameTime);
+
+	hitchFrameTime = frameTime;
+}
+
 void hook_bad_printf(const char *format, ...) {}
 
 void hook_sv_spawnserver(const char *format, ...)
@@ -343,6 +354,7 @@ int hook_codscript_gametype_scripts()
 	codecallback_dprintf = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_DPrintf", 0);
 	codecallback_error = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_Error", 0);
 	codecallback_fire_grenade = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_FireGrenade", 0);
+	codecallback_hitchwarning = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_HitchWarning", 0);
 	codecallback_map_turrets_load = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MapTurretsLoad", 0);
 	codecallback_map_weapons_load = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MapWeaponsLoad", 0);
 	codecallback_notify = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_Notify", 0);
@@ -3023,6 +3035,15 @@ void custom_G_RunFrame(int levelTime)
 	void (*sig)(int levelTime);
 	*(int *)&sig = hook_g_runframe->from;
 
+	// Warn about server lag
+	if ( hitchFrameTime )
+	{
+		stackPushInt(hitchFrameTime);
+		short ret = Scr_ExecThread(codecallback_hitchwarning, 1);
+		Scr_FreeThread(ret);
+		hitchFrameTime = 0;
+	}
+
 	// Process CodeCallback_Error queue
 	for ( i = 0; i < scr_errors_index; i++ )
 	{
@@ -4637,6 +4658,7 @@ public:
 		cracking_hook_call(0x08082346, (int)hook_scriptError);
 		cracking_hook_call(0x0808FD52, (int)hook_bad_printf);
 		cracking_hook_call(0x080EBC58, (int)hook_findWeaponIndex);
+		cracking_hook_call(0x08062644, (int)hitch_warning_print);
 
 		hook_gametype_scripts = new cHook(0x08110286, (int)hook_codscript_gametype_scripts);
 		hook_gametype_scripts->hook();

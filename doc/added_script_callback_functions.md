@@ -1,5 +1,6 @@
 Added script callback functions:
   * `CodeCallback_Error`
+  * `CodeCallback_HitchWarning`
   * `CodeCallback_MapTurretsLoad`
   * `CodeCallback_MapWeaponsLoad`
   * `CodeCallback_Notify`
