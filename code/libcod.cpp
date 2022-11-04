@@ -2,6 +2,7 @@
 
 // Stock cvars
 cvar_t *cl_allowDownload;
+cvar_t *com_logfile;
 cvar_t *developer;
 cvar_t *g_voiceChatTalkingDuration;
 cvar_t *player_meleeHeight;
@@ -39,6 +40,8 @@ cvar_t *g_playerCollision;
 cvar_t *g_playerEject;
 cvar_t *g_spawnMapTurrets;
 cvar_t *g_spawnMapWeapons;
+cvar_t *logfileName;
+cvar_t *logfileRotate;
 cvar_t *sv_allowRcon;
 cvar_t *sv_botKickMessages;
 cvar_t *sv_cracked;
@@ -54,29 +57,30 @@ cvar_t *sv_timeoutMessages;
 cvar_t *sv_wwwDlDisconnectedMessages;
 #endif
 
+cHook *hook_add_opcode;
+cHook *hook_clientendframe;
+cHook *hook_com_initcvars;
+cHook *hook_console_print;
+cHook *hook_developer_prints;
+cHook *hook_fire_grenade;
+cHook *hook_g_processipbans;
+cHook *hook_g_runframe;
+cHook *hook_g_tempentity;
 cHook *hook_gametype_scripts;
+cHook *hook_gscr_loadconsts;
+cHook *hook_init_opcode;
+cHook *hook_play_movement;
 cHook *hook_player_collision;
 cHook *hook_player_eject;
-cHook *hook_fire_grenade;
-cHook *hook_play_movement;
-cHook *hook_clientendframe;
-cHook *hook_set_anim;
-cHook *hook_init_opcode;
-cHook *hook_add_opcode;
 cHook *hook_print_codepos;
-cHook *hook_touch_item_auto;
-cHook *hook_developer_prints;
-cHook *hook_console_print;
-cHook *hook_g_tempentity;
-cHook *hook_gscr_loadconsts;
-cHook *hook_sv_masterheartbeat;
-cHook *hook_g_runframe;
 cHook *hook_scr_loadgametype;
-cHook *hook_vm_notify;
-cHook *hook_sv_init;
-cHook *hook_g_processipbans;
 cHook *hook_scr_notify;
 cHook *hook_script_cloneplayer;
+cHook *hook_set_anim;
+cHook *hook_sv_init;
+cHook *hook_sv_masterheartbeat;
+cHook *hook_touch_item_auto;
+cHook *hook_vm_notify;
 
 int codecallback_client_spam = 0;
 int codecallback_dprintf = 0;
@@ -112,6 +116,8 @@ qboolean logRcon = qtrue;
 qboolean logHeartbeat = qtrue;
 
 int hitchFrameTime = 0;
+
+char openLogfileName[MAX_OSPATH];
 
 scr_error_t scr_errors[MAX_ERROR_BUFFER];
 int scr_errors_index = 0;
@@ -151,20 +157,24 @@ char bot_forwardmove[MAX_CLIENTS] = {0};
 char bot_rightmove[MAX_CLIENTS] = {0};
 #endif
 
-void custom_SV_Init(void)
+void custom_Com_InitCvars(void)
 {
 	/* Register stock cvars here with different settings, scheme:
-	cvar_t *cvar = Cvar_Register<Type>(var_name, default value, min. value, max. value, flags); */
+	cvar_t *cvar = Cvar_Register<Type>(var_name, default value, [min. value, max. value,] flags); */
 	sv_maxRate = Cvar_RegisterInt("sv_maxRate", 0, 0, 25000, CVAR_ARCHIVE | CVAR_SERVERINFO | CVAR_UNSAFE);
 
-	hook_sv_init->unhook();
+	// Register custom cvars required early on server start
+	logfileName = Cvar_RegisterString("logfileName", "console_mp_server.log", CVAR_ARCHIVE);
+	logfileRotate = Cvar_RegisterInt("logfileRotate", 0, 0, 1000, CVAR_ARCHIVE);
 
-	void (*sig)(void);
-	*(int *)&sig = hook_sv_init->from;
-	
-	sig();
-	
-	hook_sv_init->hook();
+	hook_com_initcvars->unhook();
+	void (*Com_InitCvars)(void);
+	*(int *)&Com_InitCvars = hook_com_initcvars->from;
+	Com_InitCvars();
+	hook_com_initcvars->hook();
+
+	// Get references to early loaded stock cvars
+	com_logfile = Cvar_FindVar("logfile");
 }
 
 void common_init_complete_print(const char *format, ...)
@@ -249,22 +259,14 @@ void custom_G_ProcessIPBans()
 	player_meleeWidth = Cvar_FindVar("player_meleeWidth");
 
 	hook_g_processipbans->unhook();
-
-	void (*sig)(void);
-	*(int *)&sig = hook_g_processipbans->from;
-	
-	sig();
-	
+	void (*G_ProcessIPBans)(void);
+	*(int *)&G_ProcessIPBans = hook_g_processipbans->from;
+	G_ProcessIPBans();
 	hook_g_processipbans->hook();
 }
 
 void custom_GScr_LoadConsts(void)
 {
-	hook_gscr_loadconsts->unhook();
-
-	void (*sig)(void);
-	*(int *)&sig = hook_gscr_loadconsts->from;
-
 	/* Allocate custom strings for Scr_Notify() here, scheme:
 	scr_const.custom = GScr_AllocString("custom_string");
 	Note: This new reference also has to be added to stringIndex_t in declarations.hpp
@@ -275,8 +277,10 @@ void custom_GScr_LoadConsts(void)
 	scr_const.sound_file_stop = GScr_AllocString("sound_file_stop");
 	#endif
 
-	sig();
-
+	hook_gscr_loadconsts->unhook();
+	void (*GScr_LoadConsts)(void);
+	*(int *)&GScr_LoadConsts = hook_gscr_loadconsts->from;
+	GScr_LoadConsts();
 	hook_gscr_loadconsts->hook();
 }
 
@@ -4149,25 +4153,6 @@ void custom_Script_setHintString(scr_entref_t id)
 	}
 }
 
-void com_printmessage_caret_patch(void)
-{
-	#if COD_VERSION == COD2_1_0
-	int caret_check_offset = 0x0; // Not tested
-	#elif COD_VERSION == COD2_1_2
-	int caret_check_offset = 0x0; // Not tested
-	#elif COD_VERSION == COD2_1_3
-	int caret_check_offset = 0x08060CCA;
-	#endif
-
-	/* Removes the following piece of code from Com_PrintMessage:
-	if ( *message == '^' && message[1] != '\0' )
-	{
-		message += 2;
-	}
-	*/
-	memset((int *)caret_check_offset, 0x90, 23);
-}
-
 qboolean custom_SV_MapExists(const char *name)
 {
 	// First try stock mechanism
@@ -4478,6 +4463,139 @@ void custom_SV_QueueVoicePacket(int talkerNum, int clientNum, VoicePacket_t *voi
 	}
 }
 
+void openLogfile(qboolean reopen)
+{
+	time_t timer;
+	struct tm *timeInfo;
+	const char *timeString;
+	char strippedTime[128];
+
+	opening_qconsole = 1;
+
+	time(&timer);
+	timeInfo = localtime(&timer);
+	timeString = asctime(timeInfo);
+	strncpy(strippedTime, timeString, sizeof(strippedTime));
+	strippedTime[strlen(timeString) - 1] = '\0';
+
+	if ( logfile && reopen )
+	{
+		FS_FCloseFile(logfile);
+	}
+
+	if( logfileRotate->integer > 0 )
+	{
+		char logfilePath[512];
+		char newLogfilePath[512];
+		cvar_t *fs_homepath = Cvar_FindVar("fs_homepath");
+		cvar_t *fs_game = Cvar_FindVar("fs_game");
+		int maxFileIndex = logfileRotate->integer;
+		int fileIndex = maxFileIndex;
+
+		// Check existance of older log files
+		while( fileIndex > 0 )
+		{
+			snprintf(logfilePath, sizeof(logfilePath), "%s/%s/%s.%d", fs_homepath->string, fs_game->string, logfileName->string, fileIndex);
+			if ( access(logfilePath, F_OK) != -1 )
+			{
+				// Older log file exists, increment file extension unless it already has the max. index
+				if ( fileIndex == maxFileIndex )
+				{
+					// Remove
+					if ( unlink(logfilePath) != 0 )
+					{
+						printf("Warning: Failed to delete old log file '%s', aborting rotation\n", logfilePath);
+						break;
+					}
+				}
+				else
+				{
+					// Rename the file
+					snprintf(newLogfilePath, sizeof(newLogfilePath), "%s/%s/%s.%d", fs_homepath->string, fs_game->string, logfileName->string, fileIndex + 1);
+					if ( rename(logfilePath, newLogfilePath) != 0 )
+					{
+						printf("Warning: Failed to rotate existing log file '%s', aborting rotation\n", logfilePath);
+						break;
+					}
+				}
+			}
+			fileIndex--;
+		}
+
+		// Target file already exists? Append .1 to extension
+		snprintf(logfilePath, sizeof(logfilePath), "%s/%s/%s", fs_homepath->string, fs_game->string, logfileName->string);
+		if ( access(logfilePath, F_OK) != -1 )
+		{
+			snprintf(newLogfilePath, sizeof(newLogfilePath), "%s/%s/%s.%d", fs_homepath->string, fs_game->string, logfileName->string, fileIndex + 1);
+			if( rename(logfilePath, newLogfilePath) != 0 )
+				printf("Warning: Failed to rotate existing log file '%s'\n", logfileName->string);
+		}
+	}
+
+	logfile = FS_FOpenFileWrite(logfileName->string);
+	I_strncpyz(openLogfileName, logfileName->string, MAX_OSPATH);
+
+	opening_qconsole = 0;
+
+	Com_Printf("logfile '%s' opened on %s\n", openLogfileName, strippedTime);
+}
+
+void custom_Com_PrintMessage(int /* print_msg_type_t */ channel, char *message)
+{
+	PbCaptureConsoleOutput(message, 0x1000);
+	if ( rd_buffer == NULL )
+	{
+		/* Caret patch
+		if ( *message == '^' && message[1] != '\0' )
+		{
+			message += 2;
+		}
+		*/
+		if ( channel != 4 )
+		{
+			Sys_Print(message);
+		}
+
+		if ( com_logfile != NULL && com_logfile->integer != 0 )
+		{
+			Sys_EnterCriticalSectionInternal(0);
+			if ( FS_Initialized() )
+			{
+				if ( logfile == 0 && opening_qconsole == 0 && logfileName->string )
+				{
+					openLogfile(qfalse);
+				}
+				else if ( logfile && !opening_qconsole && logfileName->string && strncmp(logfileName->string, openLogfileName, strlen(openLogfileName)) )
+				{
+					// logfileName cvar value changed since log file initialization
+					openLogfile(qtrue);
+				}
+				if ( logfile != 0 )
+				{
+					FS_Write(message, strlen(message), logfile);
+					if (1 < com_logfile->integer ) // "logfile" cvar
+					{
+						FS_Flush(logfile);
+					}
+				}
+			}
+			Sys_LeaveCriticalSectionInternal(0);
+		}
+	}
+	else if ( channel != 4 )
+	{
+		// RCON output buffer
+		Sys_EnterCriticalSectionInternal(5);
+		if ( rd_buffersize - 1U < ( strlen(rd_buffer) + strlen(message) ) )
+		{
+			rd_flush(rd_buffer);
+			*rd_buffer = '\0';
+		}
+		I_strncat(rd_buffer, rd_buffersize, message);
+		Sys_LeaveCriticalSectionInternal(5);
+	}
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -4696,14 +4814,14 @@ public:
 		hook_scr_loadgametype->hook();
 		hook_vm_notify = new cHook(0x0808359E, (int)custom_VM_Notify);
 		hook_vm_notify->hook();
-		hook_sv_init = new cHook(0x08093ADC, (int)custom_SV_Init);
-		hook_sv_init->hook();
 		hook_g_processipbans = new cHook(0x0811BB60, (int)custom_G_ProcessIPBans);
 		hook_g_processipbans->hook();
 		hook_scr_notify = new cHook(0x0811B2DE, (int)custom_Scr_Notify);
 		hook_scr_notify->hook();
 		hook_script_cloneplayer = new cHook(0x080FCC76, (int)custom_Script_clonePlayer);
 		hook_script_cloneplayer->hook();
+		hook_com_initcvars = new cHook(0x08061D90, (int)custom_Com_InitCvars);
+		hook_com_initcvars->hook();
 
 		#if COMPILE_PLAYER == 1
 		hook_play_movement = new cHook(0x08090DAC, (int)play_movement);
@@ -4744,6 +4862,7 @@ public:
 		cracking_hook_function(0x08120484, (int)custom_Bullet_Fire);
 		cracking_hook_function(0x0809C21C, (int)custom_SV_QueueVoicePacket);
 		cracking_hook_function(0x08121BC6, (int)custom_Player_UpdateCursorHints);
+		cracking_hook_function(0x08060C20, (int)custom_Com_PrintMessage);
 
 		#if COMPILE_BOTS == 1
 		cracking_hook_function(0x0809676C, (int)custom_SV_BotUserMove);
@@ -4758,7 +4877,6 @@ public:
 		#endif
 		#endif
 
-		com_printmessage_caret_patch();
 		gsc_weapons_init();
 		printf("> [PLUGIN LOADED]\n");
 	}

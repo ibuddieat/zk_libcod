@@ -23,6 +23,16 @@ Added cvars:
     * Type: Boolean
     * Default: True
     * Effect: If false, weapons loaded from map files are neither precached nor spawned. Instead, the list of loaded weapons is sent to the `CodeCallback_MapWeaponsLoad` script callback function.
+  * `logfileName`
+    * Type: String
+    * Default: "console_mp_server.log"
+    * Effect: Controls the console log file name. Should be set before the stock "logfile" cvar is set to a value greater than zero.
+  * `logfileRotate`
+    * Type: Integer
+    * Default: 0
+    * Min. Value: 0
+    * Max. Value: 1000
+    * Effect: Defines how many console log files are preserved on a server restart. Naming scheme: &lt;logfileName cvar value&gt;.&lt;incrementing integer&gt;
   * `sv_disconnectMessages`
     * Type: Boolean
     * Default: True

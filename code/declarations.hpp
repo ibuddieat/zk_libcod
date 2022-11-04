@@ -2930,6 +2930,26 @@ static const int entity_event_names_offset = 0x0;
 static const int entity_event_names_offset = 0x08184DA0;
 #endif
 
+#if COD_VERSION == COD2_1_0 // Not tested
+static const int logfile_offset = 0x0;
+static const int rd_buffer_offset = 0x0;
+static const int rd_buffersize_offset = 0x0;
+static const int rd_flush_offset = 0x0;
+static const int opening_qconsole_offset = 0x0;
+#elif COD_VERSION == COD2_1_2 // Not tested
+static const int logfile_offset = 0x0;
+static const int rd_buffer_offset = 0x0;
+static const int rd_buffersize_offset = 0x0;
+static const int rd_flush_offset = 0x0;
+static const int opening_qconsole_offset = 0x0;
+#elif COD_VERSION == COD2_1_3
+static const int logfile_offset = 0x081A2268;
+static const int rd_buffer_offset = 0x081A4F90;
+static const int rd_buffersize_offset = 0x081A4F94;
+static const int rd_flush_offset = 0x081A4F98;
+static const int opening_qconsole_offset = 0x081A4F9C;
+#endif
+
 #define scrVarPub (*((scrVarPub_t*)( varpub_offset )))
 #define scrVmPub (*((scrVmPub_t*)( vmpub_offset )))
 #define scrVarGlob (((VariableValueInternal*)( varglob_offset )))
@@ -2956,6 +2976,11 @@ static const int entity_event_names_offset = 0x08184DA0;
 #define g_hudelems (*((game_hudelem_t*)( g_hudelems_offset )))
 #define spawns (*((int**)( spawns_offset )))
 #define entity_event_names (*((const char**)( entity_event_names_offset )))
+#define logfile (*((fileHandle_t*)( logfile_offset )))
+#define rd_buffer (*((char**)( rd_buffer_offset )))
+#define rd_buffersize (*((int*)( rd_buffersize_offset )))
+#define rd_flush (*((void(**)(char*))( rd_flush_offset )))
+#define opening_qconsole (*((int*)( opening_qconsole_offset )))
 
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6

@@ -237,6 +237,15 @@ static const ClientCommand_t ClientCommand = (ClientCommand_t)0x08100D1E;
 static const ClientCommand_t ClientCommand = (ClientCommand_t)0x08100E62;
 #endif
 
+typedef char (*FS_Initialized_t)(void);
+#if COD_VERSION == COD2_1_0
+static const FS_Initialized_t FS_Initialized = (FS_Initialized_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const FS_Initialized_t FS_Initialized = (FS_Initialized_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const FS_Initialized_t FS_Initialized = (FS_Initialized_t)0x0809E620;
+#endif
+
 typedef int (*FS_ReadFile_t)(const char *qpath, void **buffer);
 #if COD_VERSION == COD2_1_0
 static const FS_ReadFile_t FS_ReadFile = (FS_ReadFile_t)0x0809E892;
@@ -264,7 +273,25 @@ static const FS_Printf_t FS_Printf = (FS_Printf_t)0x080A05E8;
 static const FS_Printf_t FS_Printf = (FS_Printf_t)0x080A072C;
 #endif
 
-typedef fileHandle_t (*FS_FOpenFileWrite_t)(const char* filename);
+typedef int (*FS_Write_t)(const void *buffer, int len, fileHandle_t h);
+#if COD_VERSION == COD2_1_0
+static const FS_Write_t FS_Write = (FS_Write_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const FS_Write_t FS_Write = (FS_Write_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const FS_Write_t FS_Write = (FS_Write_t)0x080A0656;
+#endif
+
+typedef void (*FS_Flush_t)(fileHandle_t h);
+#if COD_VERSION == COD2_1_0
+static const FS_Flush_t FS_Flush = (FS_Flush_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const FS_Flush_t FS_Flush = (FS_Flush_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const FS_Flush_t FS_Flush = (FS_Flush_t)0x080A36E2;
+#endif
+
+typedef fileHandle_t (*FS_FOpenFileWrite_t)(const char *filename);
 #if COD_VERSION == COD2_1_0
 static const FS_FOpenFileWrite_t FS_FOpenFileWrite = (FS_FOpenFileWrite_t)0x0809CDDE;
 #elif COD_VERSION == COD2_1_2
@@ -282,7 +309,7 @@ static const FS_SV_FOpenFileRead_t FS_SV_FOpenFileRead = (FS_SV_FOpenFileRead_t)
 static const FS_SV_FOpenFileRead_t FS_SV_FOpenFileRead = (FS_SV_FOpenFileRead_t)0x08064558;
 #endif
 
-typedef void (*FS_FCloseFile_t)(fileHandle_t fp);
+typedef void (*FS_FCloseFile_t)(fileHandle_t h);
 #if COD_VERSION == COD2_1_0
 static const FS_FCloseFile_t FS_FCloseFile = (FS_FCloseFile_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
@@ -327,13 +354,13 @@ static const Cvar_FindVar_t Cvar_FindVar = (Cvar_FindVar_t)0x080B2D94;
 static const Cvar_FindVar_t Cvar_FindVar = (Cvar_FindVar_t)0x080B2ED8;
 #endif
 
-typedef cvar_t * (*Cvar_SetString_t)(const char *var_name, const char *var_value, unsigned short flags);
+typedef void (*Cvar_SetString_t)(cvar_t *cvar, char *value);
 #if COD_VERSION == COD2_1_0
 static const Cvar_SetString_t Cvar_SetString = (Cvar_SetString_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
 static const Cvar_SetString_t Cvar_SetString = (Cvar_SetString_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
-static const Cvar_SetString_t Cvar_SetString = (Cvar_SetString_t)0x080B4FA2;
+static const Cvar_SetString_t Cvar_SetString = (Cvar_SetString_t)0x080B4A80;
 #endif
 
 typedef cvar_t * (*Cvar_RegisterBool_t)(const char *var_name, qboolean var_value, unsigned short flags);
@@ -1389,6 +1416,15 @@ static const I_strupr_t I_strupr = (I_strupr_t)0x080B7C12;
 static const I_strupr_t I_strupr = (I_strupr_t)0x080B7D56;
 #endif
 
+typedef void (*I_strncat_t)(char *dest, int size, char *src);
+#if COD_VERSION == COD2_1_0
+static const I_strncat_t I_strncat = (I_strncat_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const I_strncat_t I_strncat = (I_strncat_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const I_strncat_t I_strncat = (I_strncat_t)0x080B7D98;
+#endif
+
 typedef void (*G_FreeEntity_t)(gentity_t *entity);
 #if COD_VERSION == COD2_1_0
 static const G_FreeEntity_t G_FreeEntity = (G_FreeEntity_t)0x0; // Not tested
@@ -1981,6 +2017,15 @@ static const Player_SetTurretDropHintString_t Player_SetTurretDropHintString = (
 static const Player_SetTurretDropHintString_t Player_SetTurretDropHintString = (Player_SetTurretDropHintString_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const Player_SetTurretDropHintString_t Player_SetTurretDropHintString = (Player_SetTurretDropHintString_t)0x08121B36;
+#endif
+
+typedef void (*PbCaptureConsoleOutput_t)(const char *msg, int size);
+#if COD_VERSION == COD2_1_0
+static const PbCaptureConsoleOutput_t PbCaptureConsoleOutput = (PbCaptureConsoleOutput_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const PbCaptureConsoleOutput_t PbCaptureConsoleOutput = (PbCaptureConsoleOutput_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const PbCaptureConsoleOutput_t PbCaptureConsoleOutput = (PbCaptureConsoleOutput_t)0x0813C214;
 #endif
 
 #endif
