@@ -3,6 +3,38 @@
 #include <stdint.h>
 #include <sys/time.h>
 
+const char *getParamTypeAsString(int type)
+{
+	switch ( type )
+	{
+		case 0: return "UNDEFINED";
+		case 1: return "OBJECT";
+		case 2: return "STRING";
+		case 3: return "LOCALIZED_STRING";
+		case 4: return "VECTOR";
+		case 5: return "FLOAT";
+		case 6: return "INT";
+		case 7: return "CODEPOS";
+		case 8: return "PRECODEPOS";
+		case 9: return "FUNCTION";
+		case 10: return "STACK";
+		case 11: return "ANIMATION";
+		case 12: return "DEVELOPER_CODEPOS";
+		case 13: return "INCLUDE_CODEPOS";
+		case 14: return "THREAD_LIST";
+		case 15: return "THREAD_1";
+		case 16: return "THREAD_2";
+		case 17: return "THREAD_3";
+		case 18: return "THREAD_4";
+		case 19: return "STRUCT";
+		case 20: return "REMOVED_ENTITY";
+		case 21: return "ENTITY";
+		case 22: return "ARRAY";
+		case 23: return "REMOVED_THREAD";
+		default: return "UNKNOWN TYPE";
+	}
+}
+
 const char *stackGetParamTypeAsString(int param)
 {
 	if ( param >= Scr_GetNumParam() )
@@ -11,34 +43,11 @@ const char *stackGetParamTypeAsString(int param)
 	VariableValue *var;
 	var = &scrVmPub.top[-param];
 
-	switch ( var->type )
-	{
-	case 0: return "UNDEFINED";
-	case 1: return "OBJECT";
-	case 2: return "STRING";
-	case 3: return "LOCALIZED_STRING";
-	case 4: return "VECTOR";
-	case 5: return "FLOAT";
-	case 6: return "INT";
-	case 7: return "CODEPOS";
-	case 8: return "PRECODEPOS";
-	case 9: return "FUNCTION";
-	case 10: return "STACK";
-	case 11: return "ANIMATION";
-	case 12: return "DEVELOPER_CODEPOS";
-	case 13: return "INCLUDE_CODEPOS";
-	case 14: return "THREAD_LIST";
-	case 15: return "THREAD_1";
-	case 16: return "THREAD_2";
-	case 17: return "THREAD_3";
-	case 18: return "THREAD_4";
-	case 19: return "STRUCT";
-	case 20: return "REMOVED_ENTITY";
-	case 21: return "ENTITY";
-	case 22: return "ARRAY";
-	case 23: return "REMOVED_THREAD";
-	default: return "UNKNOWN TYPE";
-	}
+	if ( var->type == 1 ) // pointer to object
+		return getParamTypeAsString(Scr_GetPointerType(param));
+	else
+		return getParamTypeAsString(var->type);
+
 }
 void Scr_AddFunc(const char *value)
 {

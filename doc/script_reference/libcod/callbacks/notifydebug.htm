@@ -55,13 +55,15 @@ CodeCallback_NotifyDebug(entity, message, args)
     if(isDefined(args)) {
         for(i = 0; i < args.size; i++) {
             type = getType(args[i]);
-            if(type == "OBJECT") {
-                logPrintConsole("Script notify arg[" + i + "] is an object (entity, struct)\n");
+            if(type == "STRUCT") {
+                logPrintConsole("Script notify arg[" + i + "] is a struct\n");
+            } else if(type == "ARRAY") {
+                logPrintConsole("Script notify arg[" + i + "] is an array with size " + args[i].size + "\n");
             } else if(type == "FUNCTION") {
                 logPrintConsole("Script notify arg[" + i + "] is a function, calling ...\n");
                 [[args[i]]]();
             } else if(isDefined(args[i])) {
-                logPrintConsole("Script notify arg[" + i + "] = '" + args[i] + "' (type " + type + ")\n");
+                logPrintConsole("Script notify arg[" + i + "] is of type " + type + "\n");
             } else {
                 logPrintConsole("Script notify arg[" + i + "] is undefined\n");
             }
