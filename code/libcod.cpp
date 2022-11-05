@@ -3829,12 +3829,10 @@ void custom_Player_UpdateCursorHints(gentity_t *player)
 	int cursorHint;
 	useList_t useList;
 	gentity_t *ent;
-	gclient_t *client;
 
-	client = player->client;
-	(client->ps).cursorHint = 0;
-	(client->ps).cursorHintString = -1;
-	(client->ps).cursorHintEntIndex = 0x3ff;
+	(player->client->ps).cursorHint = 0;
+	(player->client->ps).cursorHintString = -1;
+	(player->client->ps).cursorHintEntIndex = 0x3ff;
 	if ( 0 < player->healthPoints && ( (player->client->ps).weaponstate < 0x11 || ( 0x16 < (player->client->ps).weaponstate ) ) )
 	{
 		if ( !player->active )
@@ -3860,14 +3858,14 @@ void custom_Player_UpdateCursorHints(gentity_t *player)
 							{
 LAB_08121ee6:
 								cursorHint = temp;
-								(client->ps).cursorHintEntIndex = (ent->s).number;
-								(client->ps).cursorHint = cursorHint;
-								(client->ps).cursorHintString = cursorHintString;
-								if ( (client->ps).cursorHint != 0 )
+								(player->client->ps).cursorHintEntIndex = (ent->s).number;
+								(player->client->ps).cursorHint = cursorHint;
+								(player->client->ps).cursorHintString = cursorHintString;
+								if ( (player->client->ps).cursorHint != 0 )
 								{
 									return;
 								}
-								(client->ps).cursorHintEntIndex = 0x3ff;
+								(player->client->ps).cursorHintEntIndex = 0x3ff;
 								return;
 							}
 
@@ -3905,7 +3903,7 @@ LAB_08121ee6:
 				}
 			}
 		}
-		else if ( ( (client->ps).eFlags & EF_USETURRET ) != 0 )
+		else if ( ( (player->client->ps).eFlags & EF_USETURRET ) != 0 )
 		{
 			Player_SetTurretDropHintString(player);
 		}
