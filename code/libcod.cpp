@@ -3981,7 +3981,7 @@ void custom_Script_bulletTrace(void)
 			passEntityNum = (passEnt->s).number;
 		}
 	}
-	G_LocationalTrace(&trace, &start, &end, passEntityNum, contentmask, NULL);
+	G_LocationalTrace(&trace, start, end, passEntityNum, contentmask, NULL);
 	Scr_MakeArray();
 	Scr_AddFloat(trace.fraction);
 	Scr_AddArrayStringIndexed(scr_const.fraction);
@@ -4379,7 +4379,7 @@ void bullet_fire_extended_trace(trace_t *results, const vec3_t *start, const vec
 		gentity_t *hitEffect;
 		vec3_t origin;
 
-		G_LocationalTrace(&trace, start, end, passEntityNum, contentmask, priorityMap);
+		G_LocationalTrace(&trace, (float *)start, (float *)end, passEntityNum, contentmask, priorityMap);
 		Vec3Lerp((float *)start, (float *)end, trace.fraction, origin);
 		hitEffect = G_TempEntity(&origin, EV_SHOTGUN_HIT);
 		hitEffect->s.eventParm = DirToByte(trace.normal) & 0xFF;
@@ -4388,7 +4388,7 @@ void bullet_fire_extended_trace(trace_t *results, const vec3_t *start, const vec
 		// Set contentmask to only hit player bodies (default: MASK_SHOT)
 		contentmask = CONTENTS_BODY;
 	}
-	G_LocationalTrace(results, start, end, passEntityNum, contentmask, priorityMap);
+	G_LocationalTrace(results, (float *)start, (float *)end, passEntityNum, contentmask, priorityMap);
 }
 
 void custom_Bullet_Fire_Spread(gentity_t *source, gentity_t *inflictor, weaponParms *wp, int offset, float spread) // Guessed function name

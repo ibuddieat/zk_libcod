@@ -1164,7 +1164,7 @@ static const DirToByte_t DirToByte = (DirToByte_t)0x080A3E4A;
 static const DirToByte_t DirToByte = (DirToByte_t)0x080A3F8E;
 #endif
 
-typedef void (*G_LocationalTrace_t)(trace_t *results, const vec3_t *start, const vec3_t *end, int passEntityNum, int contentmask, uint8_t *priorityMap);
+typedef void (*G_LocationalTrace_t)(trace_t *results, const vec3_t start, const vec3_t end, int passEntityNum, int contentmask, uint8_t *priorityMap);
 #if COD_VERSION == COD2_1_0
 static const G_LocationalTrace_t G_LocationalTrace = (G_LocationalTrace_t)0x08108134;
 #elif COD_VERSION == COD2_1_2
