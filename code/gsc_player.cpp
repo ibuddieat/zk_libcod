@@ -825,6 +825,31 @@ void gsc_player_getg_gravity(scr_entref_t id)
 	stackPushInt(entity->client->ps.gravity);
 }
 
+void gsc_player_setfirethroughwalls(scr_entref_t id)
+{
+	int old_setting, new_setting;
+
+	if ( ! stackGetParams("i", &new_setting))
+	{
+		stackError("gsc_player_setfirethroughwalls() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if (id >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_setfirethroughwalls() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	extern float player_fireThroughWalls[MAX_CLIENTS];
+
+	old_setting = player_fireThroughWalls[id];
+	player_fireThroughWalls[id] = new_setting;
+	stackPushFloat(old_setting);
+}
+
 void gsc_player_setfirerangescale(scr_entref_t id)
 {
 	float old_scale, new_scale;

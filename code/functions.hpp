@@ -1164,7 +1164,7 @@ static const DirToByte_t DirToByte = (DirToByte_t)0x080A3E4A;
 static const DirToByte_t DirToByte = (DirToByte_t)0x080A3F8E;
 #endif
 
-typedef void (*G_LocationalTrace_t)(trace_t *results, const vec3_t start, const vec3_t end, int passEntityNum, int contentmask, char *priorityMap);
+typedef void (*G_LocationalTrace_t)(trace_t *results, const vec3_t *start, const vec3_t *end, int passEntityNum, int contentmask, uint8_t *priorityMap);
 #if COD_VERSION == COD2_1_0
 static const G_LocationalTrace_t G_LocationalTrace = (G_LocationalTrace_t)0x08108134;
 #elif COD_VERSION == COD2_1_2
@@ -1866,7 +1866,7 @@ static const Vec3Normalize_t Vec3Normalize = (Vec3Normalize_t)0x080A42E0;
 static const Vec3Normalize_t Vec3Normalize = (Vec3Normalize_t)0x080A4424;
 #endif
 
-typedef void (*Vec3Lerp_t)(const float *from, const float *to, float frac, const float *result);
+typedef void (*Vec3Lerp_t)(const float *from, const float *to, float frac, float *result);
 #if COD_VERSION == COD2_1_0
 static const Vec3Lerp_t Vec3Lerp = (Vec3Lerp_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2

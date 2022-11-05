@@ -144,6 +144,7 @@ objective_t player_objectives[MAX_CLIENTS][16];
 float player_meleeHeightScale[MAX_CLIENTS] = {0.0}; // Defaults to 1.0 on connect
 float player_meleeRangeScale[MAX_CLIENTS] = {0.0}; // Defaults to 1.0 on connect
 float player_meleeWidthScale[MAX_CLIENTS] = {0.0}; // Defaults to 1.0 on connect
+int player_fireThroughWalls[MAX_CLIENTS] = {0};
 float player_fireRangeScale[MAX_CLIENTS] = {0.0}; // Defaults to 1.0 on connect
 int player_no_pickup[MAX_CLIENTS] = {0};
 int player_no_earthquakes[MAX_CLIENTS] = {0};
@@ -1548,6 +1549,7 @@ void custom_SV_SendClientGameState(client_t *client)
 	player_meleeHeightScale[client - svs.clients] = 1.0;
 	player_meleeRangeScale[client - svs.clients] = 1.0;
 	player_meleeWidthScale[client - svs.clients] = 1.0;
+	player_fireThroughWalls[client - svs.clients] = 0;
 	player_fireRangeScale[client - svs.clients] = 1.0;
 	player_no_pickup[client - svs.clients] = 0;
 	player_no_earthquakes[client - svs.clients] = 0;
@@ -3956,11 +3958,11 @@ void custom_Script_bulletTrace(void)
 	hitCharacters = Scr_GetInt(2);
 	if ( hitCharacters == 0 )
 	{
-		contentmask = 0x802831;
+		contentmask = MASK_SHOT ^ CONTENTS_BODY;
 	}
 	else
 	{
-		contentmask = 0x2802831;
+		contentmask = MASK_SHOT;
 	}
 
 	/* New code: bulletTrace contentmask override */
@@ -3979,7 +3981,7 @@ void custom_Script_bulletTrace(void)
 			passEntityNum = (passEnt->s).number;
 		}
 	}
-	G_LocationalTrace(&trace, start, end, passEntityNum, contentmask, NULL);
+	G_LocationalTrace(&trace, &start, &end, passEntityNum, contentmask, NULL);
 	Scr_MakeArray();
 	Scr_AddFloat(trace.fraction);
 	Scr_AddArrayStringIndexed(scr_const.fraction);
@@ -4368,6 +4370,27 @@ void custom_FireWeaponMelee(gentity_t *player)
 	}
 }
 
+void bullet_fire_extended_trace(trace_t *results, const vec3_t *start, const vec3_t *end, int passEntityNum, int contentmask, uint8_t *priorityMap)
+{
+	if ( passEntityNum < 64 && player_fireThroughWalls[passEntityNum] )
+	{
+		// Recreate bullet hit effect that would otherwise be missing with that mask
+		trace_t trace;
+		gentity_t *hitEffect;
+		vec3_t origin;
+
+		G_LocationalTrace(&trace, start, end, passEntityNum, contentmask, priorityMap);
+		Vec3Lerp((float *)start, (float *)end, trace.fraction, origin);
+		hitEffect = G_TempEntity(&origin, EV_SHOTGUN_HIT);
+		hitEffect->s.eventParm = DirToByte(trace.normal) & 0xFF;
+		hitEffect->s.surfType = (trace.surfaceFlags >> 20) & 0x1F;
+
+		// Set contentmask to only hit player bodies (default: MASK_SHOT)
+		contentmask = CONTENTS_BODY;
+	}
+	G_LocationalTrace(results, start, end, passEntityNum, contentmask, priorityMap);
+}
+
 void custom_Bullet_Fire_Spread(gentity_t *source, gentity_t *inflictor, weaponParms *wp, int offset, float spread) // Guessed function name
 {
 	int i;
@@ -4753,6 +4776,7 @@ public:
 		cracking_hook_call(0x0808FD52, (int)hook_bad_printf);
 		cracking_hook_call(0x080EBC58, (int)hook_findWeaponIndex);
 		cracking_hook_call(0x08062644, (int)hitch_warning_print);
+		cracking_hook_call(0x0811FF47, (int)bullet_fire_extended_trace);
 
 		hook_gametype_scripts = new cHook(0x08110286, (int)custom_GScr_LoadGameTypeScript);
 		hook_gametype_scripts->hook();
