@@ -2950,6 +2950,17 @@ static const int rd_flush_offset = 0x081A4F98;
 static const int opening_qconsole_offset = 0x081A4F9C;
 #endif
 
+#if COD_VERSION == COD2_1_0 // Not tested
+static const int com_errorEntered_offset = 0x0;
+static const int com_fixedConsolePosition_offset = 0x0;
+#elif COD_VERSION == COD2_1_2 // Not tested
+static const int com_errorEntered_offset = 0x0;
+static const int com_fixedConsolePosition_offset = 0x0;
+#elif COD_VERSION == COD2_1_3
+static const int com_errorEntered_offset = 0x081A21C0;
+static const int com_fixedConsolePosition_offset = 0x081A21C4;
+#endif
+
 #define scrVarPub (*((scrVarPub_t*)( varpub_offset )))
 #define scrVmPub (*((scrVmPub_t*)( vmpub_offset )))
 #define scrVarGlob (((VariableValueInternal*)( varglob_offset )))
@@ -2981,6 +2992,8 @@ static const int opening_qconsole_offset = 0x081A4F9C;
 #define rd_buffersize (*((int*)( rd_buffersize_offset )))
 #define rd_flush (*((void(**)(char*))( rd_flush_offset )))
 #define opening_qconsole (*((int*)( opening_qconsole_offset )))
+#define com_errorEntered (*((int*)( com_errorEntered_offset )))
+#define com_fixedConsolePosition (*((int*)( com_fixedConsolePosition_offset )))
 
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6

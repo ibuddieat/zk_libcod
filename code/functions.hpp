@@ -1542,6 +1542,15 @@ static const SV_DObjExists_t SV_DObjExists = (SV_DObjExists_t)0x0809226A;
 static const SV_DObjExists_t SV_DObjExists = (SV_DObjExists_t)0x0809236E;
 #endif
 
+typedef void (*Com_Error_t)(int errorLevel, const char *error, ...);
+#if COD_VERSION == COD2_1_0
+static const Com_Error_t Com_Error = (Com_Error_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Com_Error_t Com_Error = (Com_Error_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Com_Error_t Com_Error = (Com_Error_t)0x08061124;
+#endif
+
 typedef DObj_t * (*Com_GetServerDObj_t)(int entNum);
 #if COD_VERSION == COD2_1_0
 static const Com_GetServerDObj_t Com_GetServerDObj = (Com_GetServerDObj_t)0x0806289C;

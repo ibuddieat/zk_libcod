@@ -70,8 +70,8 @@ cHook *hook_gametype_scripts;
 cHook *hook_gscr_loadconsts;
 cHook *hook_init_opcode;
 cHook *hook_play_movement;
-cHook *hook_player_collision;
-cHook *hook_player_eject;
+cHook *hook_g_setclientcontents;
+cHook *hook_stuckinclient;
 cHook *hook_print_codepos;
 cHook *hook_scr_loadgametype;
 cHook *hook_scr_notify;
@@ -124,6 +124,12 @@ int scr_errors_index = 0;
 
 scr_notify_t scr_notify[MAX_NOTIFY_DEBUG_BUFFER];
 int scr_notify_index = 0;
+
+int num_map_weapons;
+map_weapon_t map_weapons[MAX_GENTITIES];
+
+int num_map_turrets;
+map_turret_t map_turrets[MAX_GENTITIES];
 
 FILE *voiceDataDumpFile;
 #if COMPILE_CUSTOM_VOICE == 1
@@ -312,11 +318,6 @@ void hook_sv_spawnserver(const char *format, ...)
 
 void custom_sv_masterheartbeat(const char *hbname)
 {
-	hook_sv_masterheartbeat->unhook();
-
-	void (*sig)(const char *hbname);
-	*(int *)&sig = hook_sv_masterheartbeat->from;
-
 	#if COD_VERSION == COD2_1_0
 	int sending_heartbeat_string_offset = 0x0; // Not tested
 	#elif COD_VERSION == COD2_1_2
@@ -340,20 +341,20 @@ void custom_sv_masterheartbeat(const char *hbname)
 		Com_DPrintf("Enabled heartbeat logging\n");
 	}
 
-	sig(hbname);
-	
+	hook_sv_masterheartbeat->unhook();
+	void (*SV_MasterHeartbeat)(const char *hbname);
+	*(int *)&SV_MasterHeartbeat = hook_sv_masterheartbeat->from;
+	SV_MasterHeartbeat(hbname);
 	hook_sv_masterheartbeat->hook();
 }
 
-int hook_codscript_gametype_scripts()
+int custom_GScr_LoadGameTypeScript()
 {
 	char path_for_cb[512] = "maps/mp/gametypes/_callbacksetup";
-	
+
 	if ( strlen(fs_callbacks->string) )
 		strncpy(path_for_cb, fs_callbacks->string, sizeof(path_for_cb));
-	
-	hook_gametype_scripts->unhook();
-	
+
 	codecallback_client_spam = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_CLSpam", 0);
 	codecallback_dprintf = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_DPrintf", 0);
 	codecallback_error = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_Error", 0);
@@ -384,48 +385,47 @@ int hook_codscript_gametype_scripts()
 	codecallback_standbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_StandButton", 0);
  	codecallback_usebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_UseButton", 0);
 
-	int (*sig)();
-	*(int *)&sig = hook_gametype_scripts->from;
-	int ret = sig();
+	hook_gametype_scripts->unhook();
+	int (*GScr_LoadGameTypeScript)();
+	*(int *)&GScr_LoadGameTypeScript = hook_gametype_scripts->from;
+	int ret = GScr_LoadGameTypeScript();
 	hook_gametype_scripts->hook();
 
 	return ret;
 }
 
-int player_collision(int a1)
+int custom_G_SetClientContents(gentity_t *ent)
 {
-	hook_player_collision->unhook();
-
-	int (*sig)(int a1);
-	*(int *)&sig = hook_player_collision->from;
-
 	int ret;
 
+	hook_g_setclientcontents->unhook();
+	int (*G_SetClientContents)(gentity_t *ent);
+	*(int *)&G_SetClientContents = hook_g_setclientcontents->from;
+
 	if ( g_playerCollision->boolean )
-		ret = sig(a1);
+		ret = G_SetClientContents(ent);
 	else
 		ret = 0;
 
-	hook_player_collision->hook();
+	hook_g_setclientcontents->hook();
 
 	return ret;
 }
 
-int player_eject(int a1)
+int custom_StuckInClient(gentity_t *ent)
 {
-	hook_player_eject->unhook();
-
-	int (*sig)(int a1);
-	*(int *)&sig = hook_player_eject->from;
-
 	int ret;
 
+	hook_stuckinclient->unhook();
+	int (*StuckInClient)(gentity_t *ent);
+	*(int *)&StuckInClient = hook_stuckinclient->from;
+
 	if ( g_playerEject->boolean )
-		ret = sig(a1);
+		ret = StuckInClient(ent);
 	else
 		ret = 0;
 
-	hook_player_eject->hook();
+	hook_stuckinclient->hook();
 
 	return ret;
 }
@@ -433,12 +433,9 @@ int player_eject(int a1)
 gentity_t* custom_fire_grenade(gentity_t *attacker, vec3_t start, vec3_t dir, int weaponIndex, int fuseTime)
 {
 	hook_fire_grenade->unhook();
-
-	gentity_t* (*sig)(gentity_t *attacker, vec3_t start, vec3_t dir, int weaponIndex, int fuseTime);
-	*(int *)&sig = hook_fire_grenade->from;
-
-	gentity_t* grenade = sig(attacker, start, dir, weaponIndex, fuseTime);
-
+	gentity_t* (*fire_grenade)(gentity_t *attacker, vec3_t start, vec3_t dir, int weaponIndex, int fuseTime);
+	*(int *)&fire_grenade = hook_fire_grenade->from;
+	gentity_t* grenade = fire_grenade(attacker, start, dir, weaponIndex, fuseTime);
 	hook_fire_grenade->hook();
 
 	if ( codecallback_fire_grenade && Scr_IsSystemActive() )
@@ -2839,56 +2836,50 @@ void Scr_CodeCallback_Error(qboolean terminal, qboolean emit, const char * inter
 	}
 }
 
-void custom_Com_Error(int type, const char *format, ...)
+void custom_Com_Error(int errorLevel, const char *error, ...)
 {
 	Sys_EnterCriticalSectionInternal(2);
 	
 	#if COD_VERSION == COD2_1_0 // Not tested
-	int com_errorEntered = 0x0;
 	int va_string_156 = 0x0;
 	int unk1 = 0x0;
 	int unk2 = 0x0;
-	int com_fixedConsolePosition = 0x0;
 	#elif COD_VERSION == COD2_1_2 // Not tested
-	int com_errorEntered = 0x0;
 	int va_string_156 = 0x0;
 	int unk1 = 0x0;
 	int unk2 = 0x0;
-	int com_fixedConsolePosition = 0x0;
 	#elif COD_VERSION == COD2_1_3
-	int com_errorEntered = 0x081A21C0;
 	int va_string_156 = 0x081A2280;
 	int unk1 = 0x081A327F;
 	int unk2 = 0x081A2264;
-	int com_fixedConsolePosition = 0x081A21C4;
 	#endif
 	
-	if ( *(int *)com_errorEntered )
+	if ( com_errorEntered )
 	{
 		Sys_Error("recursive error after: %s", *(char *)va_string_156);
 	}
-	*(int *)com_errorEntered = 1;
+	com_errorEntered = 1;
 	
 	va_list va;
-	va_start(va, format);
-	vsnprintf((char *)va_string_156, 0x1000, format, va);
+	va_start(va, error);
+	vsnprintf((char *)va_string_156, 0x1000, error, va);
 	va_end(va);
 	
 	Scr_CodeCallback_Error(scrVmPub.terminal_error, qtrue, "Com_Error", (char *)va_string_156);
 	
 	*(byte *)unk1 = 0;
 	
-	if ( type != 1 )
+	if ( errorLevel != 1 )
 	{
-		if ( type == 4 || type == 6 )
-			type = 1;
-		else if ( type == 5 )
-			type = 1;
+		if ( errorLevel == 4 || errorLevel == 6 )
+			errorLevel = 1;
+		else if ( errorLevel == 5 )
+			errorLevel = 1;
 		else
-			*(int *)com_fixedConsolePosition = 0;
+			com_fixedConsolePosition = 0;
 	}
 	
-	*(int *)unk2 = type;
+	*(int *)unk2 = errorLevel;
 	
 	Sys_LeaveCriticalSectionInternal(2);
 
@@ -2913,7 +2904,7 @@ void custom_Scr_ErrorInternal(void)
 	{
 		return;
 	}
-	custom_Com_Error(1, "\x15%s", scrVarPub.error_message);
+	Com_Error(1, "\x15%s", scrVarPub.error_message);
 }
 
 void custom_RuntimeError_Debug(int channel, char *pos, int index, char *message)
@@ -2986,7 +2977,7 @@ void custom_RuntimeError(char *pos, int index, char *message, char *param_4)
 		else
 			channel_1 = 5;
 		
-		custom_Com_Error(channel_1, "\x15script runtime error\n(see console for details)\n%s%s%s", message, local_14, param_4);
+		Com_Error(channel_1, "\x15script runtime error\n(see console for details)\n%s%s%s", message, local_14, param_4);
 	}
 }
 
@@ -3035,9 +3026,8 @@ void custom_G_RunFrame(int levelTime)
 	int i;
 	
 	hook_g_runframe->unhook();
-
-	void (*sig)(int levelTime);
-	*(int *)&sig = hook_g_runframe->from;
+	void (*G_RunFrame)(int levelTime);
+	*(int *)&G_RunFrame = hook_g_runframe->from;
 
 	// Warn about server lag
 	if ( hitchFrameTime )
@@ -3118,8 +3108,7 @@ void custom_G_RunFrame(int levelTime)
 	}
 #endif
 
-	sig(levelTime);
-	
+	G_RunFrame(levelTime);
 	hook_g_runframe->hook();
 }
 
@@ -3222,7 +3211,7 @@ LAB_0809b5f4:
 						i = svs.nextCachedSnapshotClients;
 						svs.nextCachedSnapshotClients++;
 						if ( i != 0x7ffffffc && 0x7ffffffc < svs.nextCachedSnapshotClients )
-							custom_Com_Error(0, "\x15svs.nextCachedSnapshotClients wrapped");
+							Com_Error(0, "\x15svs.nextCachedSnapshotClients wrapped");
 						cachedFrame->num_clients++;
 					}
 				}
@@ -3266,13 +3255,13 @@ LAB_0809b5f4:
 						i = svs.nextCachedSnapshotEntities;
 						svs.nextCachedSnapshotEntities++;
 						if ( i != 0x7ffffffc && 0x7ffffffc < svs.nextCachedSnapshotEntities )
-							custom_Com_Error(0, "\x15svs.nextCachedSnapshotEntities wrapped");
+							Com_Error(0, "\x15svs.nextCachedSnapshotEntities wrapped");
 						cachedFrame->num_entities++;
 					}
 				}
 				svs.nextCachedSnapshotFrames++;
 				if ( i != 0x7ffffffc && 0x7ffffffc < svs.nextCachedSnapshotFrames )
-					custom_Com_Error(0, "\x15svs.nextCachedSnapshotFrames wrapped");
+					Com_Error(0, "\x15svs.nextCachedSnapshotFrames wrapped");
 			}
 			else
 			{
@@ -3388,7 +3377,7 @@ LAB_0809b5f4:
 				index = svs.nextArchivedSnapshotBuffer + (nextArchSnapBuffer >> 0x19) * -0x2000000;
 				svs.nextArchivedSnapshotBuffer += msg.cursize;
 				if ( 0x7ffffffd < svs.nextArchivedSnapshotBuffer )
-					custom_Com_Error(0, "\x15svs.nextArchivedSnapshotBuffer wrapped");
+					Com_Error(0, "\x15svs.nextArchivedSnapshotBuffer wrapped");
 				freeBytes = ARCHIVEDSSBUF_SIZE - index;
 				
 				if ( freeBytes < msg.cursize )
@@ -3403,7 +3392,7 @@ LAB_0809b5f4:
 				i = svs.nextArchivedSnapshotFrames;
 				svs.nextArchivedSnapshotFrames++;
 				if ( i != 0x7ffffffc && 0x7ffffffc < svs.nextArchivedSnapshotFrames )
-					custom_Com_Error(0, "\x15svs.nextArchivedSnapshotFrames wrapped");
+					Com_Error(0, "\x15svs.nextArchivedSnapshotFrames wrapped");
 				LargeLocalDestructor(&buf);
 			}
 			else
@@ -3465,7 +3454,7 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 			frame->ps = *ps;
 			clientNum = frame->ps.clientNum;
 			if ( clientNum < 0 || clientNum >= MAX_GENTITIES )
-				custom_Com_Error(1, "\x15SV_BuildClientSnapshot: bad gEnt");
+				Com_Error(1, "\x15SV_BuildClientSnapshot: bad gEnt");
 			VectorCopy(ps->origin, org);
 			org[2] += ps->viewHeightCurrent;
 			AddLeanToPosition(org, ps->viewangles[1], ps->leanf, 16.0, 20.0);
@@ -3479,7 +3468,7 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 					*entState = ent->s;
 					svs.nextSnapshotEntities++;
 					if ( svs.nextSnapshotEntities >= 0x7ffffffe )
-						custom_Com_Error(0, "\x15svs.nextSnapshotEntities wrapped");
+						Com_Error(0, "\x15svs.nextSnapshotEntities wrapped");
 					frame->num_entities++;
 				}
 				snapClient = svs.clients;
@@ -3493,7 +3482,7 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 						
 						svs.nextSnapshotClients++;
 						if ( svs.nextSnapshotClients >= 0x7ffffffe )
-							custom_Com_Error(0, "\x15svs.nextSnapshotClients wrapped");
+							Com_Error(0, "\x15svs.nextSnapshotClients wrapped");
 						frame->num_clients++;
 					}
 				}
@@ -3537,7 +3526,7 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 					
 					svs.nextSnapshotEntities++;
 					if ( svs.nextSnapshotEntities >= 0x7ffffffe )
-						custom_Com_Error(0, "\x15svs.nextSnapshotEntities wrapped");
+						Com_Error(0, "\x15svs.nextSnapshotEntities wrapped");
 					frame->num_entities++;
 				}
 				for (i = 0; i < cachedSnap->num_clients; i++)
@@ -3551,7 +3540,7 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 					*clientState = cachedClient->cs;
 					svs.nextSnapshotClients++;
 					if ( svs.nextSnapshotClients >= 0x7ffffffe )
-						custom_Com_Error(0, "\x15svs.nextSnapshotClients wrapped");
+						Com_Error(0, "\x15svs.nextSnapshotClients wrapped");
 					frame->num_clients++;
 				}
 			}
@@ -3559,8 +3548,6 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 	}
 }
 
-int num_map_turrets;
-map_turret_t map_turrets[MAX_GENTITIES];
 void custom_G_SetEntityPlacement(gentity_t *ent)
 {
 	/* New code start: map weapons callback */
@@ -3619,8 +3606,6 @@ void custom_G_SetEntityPlacement(gentity_t *ent)
 	G_SetAngle(ent, &ent->r.currentAngles);
 }
 
-int num_map_weapons;
-map_weapon_t map_weapons[MAX_GENTITIES];
 void custom_G_CallSpawn(void)
 {
 	const char *classname;
@@ -3700,7 +3685,8 @@ void custom_G_CallSpawn(void)
 void custom_G_SpawnEntitiesFromString(void)
 {
 	if ( !G_ParseSpawnVars(&level.spawnVars) ) 
-		custom_Com_Error(1, "\x15SpawnEntities: no entities"); 
+		Com_Error(1, "\x15SpawnEntities: no entities");
+
 	SP_worldspawn();
 	
 	/* New code start: map weapons callback */
@@ -3726,9 +3712,8 @@ void custom_G_SpawnEntitiesFromString(void)
 void custom_Scr_LoadGameType(void)
 {
 	hook_scr_loadgametype->unhook();
-
-	void (*sig)(void);
-	*(int *)&sig = hook_scr_loadgametype->from;
+	void (*Scr_LoadGameType)(void);
+	*(int *)&Scr_LoadGameType = hook_scr_loadgametype->from;
 
 	/* New code start: map weapons callback */
 	if ( codecallback_map_weapons_load )
@@ -3800,8 +3785,7 @@ void custom_Scr_LoadGameType(void)
 	}
 	/* New code end */
 
-	sig();
-
+	Scr_LoadGameType();
 	hook_scr_loadgametype->hook();
 }
 
@@ -3810,16 +3794,16 @@ bool custom_CM_IsBadStaticModel(cStaticModel_t *model, char *src, float *origin,
 	XModel_t *xmodel;
 
 	if ( src == NULL || *src == '\0' )
-		custom_Com_Error(1, "\x15Invalid static model name\n");
+		Com_Error(1, "\x15Invalid static model name\n");
 	
 	if ( (*scale)[0] == 0.0 )
-		custom_Com_Error(1, "\x15Static model [%s] has x scale of 0.0\n", src);
+		Com_Error(1, "\x15Static model [%s] has x scale of 0.0\n", src);
 	
 	if ( (*scale)[1] == 0.0 )
-		custom_Com_Error(1, "\x15Static model [%s] has y scale of 0.0\n", src);
+		Com_Error(1, "\x15Static model [%s] has y scale of 0.0\n", src);
 	
 	if ( (*scale)[2] == 0.0 )
-		custom_Com_Error(1, "\x15Static model [%s] has z scale of 0.0\n", src);
+		Com_Error(1, "\x15Static model [%s] has z scale of 0.0\n", src);
 	
 	xmodel = CM_XModelPrecache(src);
 	if ( xmodel != NULL )
@@ -3931,9 +3915,8 @@ LAB_08121ee6:
 void custom_Script_clonePlayer(scr_entref_t id)
 {
 	hook_script_cloneplayer->unhook();
-
-	void (*sig)(scr_entref_t id);
-	*(int *)&sig = hook_script_cloneplayer->from;
+	void (*Script_clonePlayer)(scr_entref_t id);
+	*(int *)&Script_clonePlayer = hook_script_cloneplayer->from;
 
 	if (id >= MAX_CLIENTS)
 	{
@@ -3949,7 +3932,7 @@ void custom_Script_clonePlayer(scr_entref_t id)
 	}
 	else
 	{
-		sig(id);
+		Script_clonePlayer(id);
 	}
 
 	hook_script_cloneplayer->hook();
@@ -4232,12 +4215,9 @@ void custom_VM_Notify(unsigned int entId, unsigned int constString, VariableValu
 		Scr_QueueNotifyDebugForCallback(entId, constString, arguments);
 
 	hook_vm_notify->unhook();
-
-	void (*sig)(unsigned int entId, unsigned int constString, VariableValue *arguments);
-	*(int *)&sig = hook_vm_notify->from;
-	
-	sig(entId, constString, arguments);
-	
+	void (*VM_Notify)(unsigned int entId, unsigned int constString, VariableValue *arguments);
+	*(int *)&VM_Notify = hook_vm_notify->from;
+	VM_Notify(entId, constString, arguments);
 	hook_vm_notify->hook();
 }
 
@@ -4279,12 +4259,10 @@ void custom_Scr_Notify(gentity_t *ent, unsigned short constString, unsigned int 
 	}
 
 	hook_scr_notify->unhook();
-
-	void (*sig)(gentity_t *ent, unsigned short constString, unsigned int numArgs);
-	*(int *)&sig = hook_scr_notify->from;
-	
+	void (*Scr_Notify)(gentity_t *ent, unsigned short constString, unsigned int numArgs);
+	*(int *)&Scr_Notify = hook_scr_notify->from;
 	// Execute Scr_Notify -> Scr_NotifyNum -> VM_Notify
-	sig(ent, constString, numArgs);
+	Scr_Notify(ent, constString, numArgs);
 
 	if ( codecallback_notify && Scr_IsSystemActive() )
 	{
@@ -4638,7 +4616,7 @@ public:
 
 		cracking_hook_call(0x08081CFE, (int)hook_scriptError);
 
-		hook_gametype_scripts = new cHook(0x0810DDEE, (int)hook_codscript_gametype_scripts);
+		hook_gametype_scripts = new cHook(0x0810DDEE, (int)custom_GScr_LoadGameTypeScript);
 		hook_gametype_scripts->hook();
 		hook_developer_prints = new cHook(0x08060B7C, (int)hook_Com_DPrintf);
 		#if COMPILE_UTILS == 1
@@ -4653,10 +4631,10 @@ public:
 		hook_print_codepos = new cHook(0x08077DBA, (int)custom_Scr_PrintPrevCodePos);
 		hook_print_codepos->hook();
 
-		hook_player_collision = new cHook(0x080F2F2E, (int)player_collision);
-		hook_player_collision->hook();
-		hook_player_eject = new cHook(0x080F474A, (int)player_eject);
-		hook_player_eject->hook();
+		hook_g_setclientcontents = new cHook(0x080F2F2E, (int)custom_G_SetClientContents);
+		hook_g_setclientcontents->hook();
+		hook_stuckinclient = new cHook(0x080F474A, (int)custom_StuckInClient);
+		hook_stuckinclient->hook();
 		hook_fire_grenade = new cHook(0x0810C1F6, (int)custom_fire_grenade);
 		hook_fire_grenade->hook();
 		hook_touch_item_auto = new cHook(0x081037F0, int(touch_item_auto));
@@ -4709,7 +4687,7 @@ public:
 		cracking_hook_call(0x0808F533, (int)hook_gamestate_info);
 		#endif
 
-		hook_gametype_scripts = new cHook(0x0811012A, (int)hook_codscript_gametype_scripts);
+		hook_gametype_scripts = new cHook(0x0811012A, (int)custom_GScr_LoadGameTypeScript);
 		hook_gametype_scripts->hook();
 
 		hook_developer_prints = new cHook(0x08060E42, (int)hook_Com_DPrintf);
@@ -4725,10 +4703,10 @@ public:
 		hook_print_codepos = new cHook(0x0807832E, (int)custom_Scr_PrintPrevCodePos);
 		hook_print_codepos->hook();
 
-		hook_player_collision = new cHook(0x080F553E, (int)player_collision);
-		hook_player_collision->hook();
-		hook_player_eject = new cHook(0x080F6D5A, (int)player_eject);
-		hook_player_eject->hook();
+		hook_g_setclientcontents = new cHook(0x080F553E, (int)custom_G_SetClientContents);
+		hook_g_setclientcontents->hook();
+		hook_stuckinclient = new cHook(0x080F6D5A, (int)custom_StuckInClient);
+		hook_stuckinclient->hook();
 		hook_fire_grenade = new cHook(0x0810E532, (int)custom_fire_grenade);
 		hook_fire_grenade->hook();
 		hook_touch_item_auto = new cHook(0x08105B24, int(touch_item_auto));
@@ -4778,7 +4756,7 @@ public:
 		cracking_hook_call(0x080EBC58, (int)hook_findWeaponIndex);
 		cracking_hook_call(0x08062644, (int)hitch_warning_print);
 
-		hook_gametype_scripts = new cHook(0x08110286, (int)hook_codscript_gametype_scripts);
+		hook_gametype_scripts = new cHook(0x08110286, (int)custom_GScr_LoadGameTypeScript);
 		hook_gametype_scripts->hook();
 
 		hook_developer_prints = new cHook(0x08060E3A, (int)hook_Com_DPrintf);
@@ -4794,10 +4772,10 @@ public:
 		hook_print_codepos = new cHook(0x080783FA, (int)custom_Scr_PrintPrevCodePos);
 		hook_print_codepos->hook();
 		
-		hook_player_collision = new cHook(0x080F5682, (int)player_collision);
-		hook_player_collision->hook();
-		hook_player_eject = new cHook(0x080F6E9E, (int)player_eject);
-		hook_player_eject->hook();
+		hook_g_setclientcontents = new cHook(0x080F5682, (int)custom_G_SetClientContents);
+		hook_g_setclientcontents->hook();
+		hook_stuckinclient = new cHook(0x080F6E9E, (int)custom_StuckInClient);
+		hook_stuckinclient->hook();
 		hook_fire_grenade = new cHook(0x0810E68E, (int)custom_fire_grenade);
 		hook_fire_grenade->hook();
 		hook_touch_item_auto = new cHook(0x08105C80, int(touch_item_auto));
