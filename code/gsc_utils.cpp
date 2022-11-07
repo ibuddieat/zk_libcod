@@ -8,7 +8,7 @@ struct encoder_async_task
 {
 	encoder_async_task *prev;
 	encoder_async_task *next;
-	char filePath[COD2_MAX_STRINGLENGTH];
+	char filePath[MAX_STRINGLENGTH];
 	int callback;
 	float volume;
 	int soundIndex;
@@ -240,7 +240,7 @@ void gsc_utils_printf()
 
 void gsc_utils_sprintf()
 {
-	char result[COD2_MAX_STRINGLENGTH];
+	char result[MAX_STRINGLENGTH];
 	char *str;
 
 	if (!stackGetParams("s", &str))
@@ -362,7 +362,7 @@ void gsc_utils_logprintconsole()
 		return;
 	}
 
-	if (!strlen(str) || strlen(str) > COD2_MAX_STRINGLENGTH)
+	if (!strlen(str) || strlen(str) > MAX_STRINGLENGTH)
 	{
 		stackError("gsc_utils_logprintconsole() invalid string length");
 		stackPushUndefined();
@@ -1245,10 +1245,10 @@ void gsc_utils_loadsoundfile()
 
 	encoder_async_task *newtask = new encoder_async_task;
 
-	strncpy(newtask->filePath, filePath, COD2_MAX_STRINGLENGTH - 1);
+	strncpy(newtask->filePath, filePath, MAX_STRINGLENGTH - 1);
 	newtask->prev = current;
 	newtask->next = NULL;
-	newtask->filePath[COD2_MAX_STRINGLENGTH - 1] = '\0';
+	newtask->filePath[MAX_STRINGLENGTH - 1] = '\0';
 	newtask->callback = callback;
 	newtask->volume = volume;
 	newtask->soundIndex = soundIndex;

@@ -32,7 +32,7 @@
 
 #define SnapVector( v ) {v[0] = (int)v[0]; v[1] = (int)v[1]; v[2] = (int)v[2];}
 
-#define COD2_MAX_STRINGLENGTH 1024
+#define MAX_STRINGLENGTH 1024
 
 #define MAX_CLIENTS 64
 #define MAX_CHALLENGES 1024
@@ -3036,7 +3036,7 @@ typedef struct src_error_s
 
 typedef struct map_weapon_s
 {
-	char classname[COD2_MAX_STRINGLENGTH]; // Not sure if a classname can actually be that long
+	char classname[MAX_STRINGLENGTH]; // Not sure if a classname can actually be that long
 	vec3_t origin;
 	vec3_t angles;
 	int count;
@@ -3044,7 +3044,7 @@ typedef struct map_weapon_s
 
 typedef struct map_turret_s
 {
-	char classname[COD2_MAX_STRINGLENGTH]; // Not sure if a classname can actually be that long
+	char classname[MAX_STRINGLENGTH]; // Not sure if a classname can actually be that long
 	vec3_t origin;
 	vec3_t angles;
 	int toparc;
@@ -3064,7 +3064,7 @@ union SavedVariableUnion
 {
 	int intValue;
 	float floatValue;
-	char stringValue[COD2_MAX_STRINGLENGTH];
+	char stringValue[MAX_STRINGLENGTH];
 	vec3_t vectorValue;
 	const char *codePosValue;
 	unsigned int pointerValue;
@@ -3079,7 +3079,7 @@ typedef struct
 typedef struct scr_notify_s
 {
 	unsigned int entId;
-	char message[COD2_MAX_STRINGLENGTH];
+	char message[MAX_STRINGLENGTH];
 	unsigned int argc;
 	SavedVariableValue arguments[MAX_NOTIFY_DEBUG_PARAMS];
 } scr_notify_t;

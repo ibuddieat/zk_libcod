@@ -186,7 +186,7 @@ void custom_Com_InitCvars(void)
 
 void common_init_complete_print(const char *format, ...)
 {
-	char s[COD2_MAX_STRINGLENGTH];
+	char s[MAX_STRINGLENGTH];
 	va_list va;
 
 	va_start(va, format);
@@ -303,7 +303,7 @@ void hook_bad_printf(const char *format, ...) {}
 
 void hook_sv_spawnserver(const char *format, ...)
 {
-	char s[COD2_MAX_STRINGLENGTH];
+	char s[MAX_STRINGLENGTH];
 	va_list va;
 
 	va_start(va, format);
@@ -467,7 +467,7 @@ void hook_ClientCommand(int clientNum)
 	int args = Cmd_Argc();
 	for ( int i = 0; i < args; i++ )
 	{
-		char tmp[COD2_MAX_STRINGLENGTH];
+		char tmp[MAX_STRINGLENGTH];
 		SV_Cmd_ArgvBuffer(i, tmp, sizeof(tmp));
 		if( i == 1 && tmp[0] >= 20 && tmp[0] <= 22 )
 		{
@@ -1643,7 +1643,7 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 {
 	int curindex;
 	int iwdFile;
-	char errorMessage[COD2_MAX_STRINGLENGTH];
+	char errorMessage[MAX_STRINGLENGTH];
 
 	if ( cl->state == CS_ACTIVE )
 		return;
@@ -2031,7 +2031,7 @@ int touch_item_auto(gentity_t * item, gentity_t * entity, int touch)
 
 void hook_gamestate_info(const char *format, ...)
 {
-	char s[COD2_MAX_STRINGLENGTH];
+	char s[MAX_STRINGLENGTH];
 	va_list va;
 
 	va_start(va, format);
@@ -2487,7 +2487,7 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 		int args = Cmd_Argc();
 		for (int i = 2; i < args; i++)
 		{
-			char tmp[COD2_MAX_STRINGLENGTH];
+			char tmp[MAX_STRINGLENGTH];
 			SV_Cmd_ArgvBuffer(i, tmp, sizeof(tmp));
 			stackPushString(tmp);
 			stackPushArrayLast();
@@ -2783,7 +2783,7 @@ void hook_Sys_Print(const char *msg)
 
 void hook_Com_DPrintf(const char *format, ...)
 {
-	char s[COD2_MAX_STRINGLENGTH];
+	char s[MAX_STRINGLENGTH];
 	va_list va;
 
 	va_start(va, format);
@@ -4098,7 +4098,7 @@ void custom_Script_setHintString(scr_entref_t id)
 {
 	gentity_t *ent;
 	int type;
-	char hintString[COD2_MAX_STRINGLENGTH];
+	char hintString[MAX_STRINGLENGTH];
 	int index;
 
 	ent = G_GetEntity(id);
@@ -4117,7 +4117,7 @@ void custom_Script_setHintString(scr_entref_t id)
 		}
 	}
 
-	Scr_ConstructMessageString(0, Scr_GetNumParam() + -1, "Hint String", hintString, COD2_MAX_STRINGLENGTH);
+	Scr_ConstructMessageString(0, Scr_GetNumParam() + -1, "Hint String", hintString, MAX_STRINGLENGTH);
 	if ( G_GetHintStringIndex(&index, hintString) == 0 )
 	{
 		Scr_Error(custom_va("Too many different hintstring values. Max allowed is %i different strings", 0x20));
@@ -4224,7 +4224,7 @@ void custom_VM_Notify(unsigned int entId, unsigned int constString, VariableValu
 void custom_Scr_Notify(gentity_t *ent, unsigned short constString, unsigned int numArgs)
 {
 	char *message = SL_ConvertToString(constString);
-	char messageStr[COD2_MAX_STRINGLENGTH] = {0};
+	char messageStr[MAX_STRINGLENGTH] = {0};
 	SavedVariableValue savedArgs[numArgs];
 	char *stringValueSrc;
 

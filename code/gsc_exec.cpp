@@ -15,7 +15,7 @@ enum
 
 struct exec_outputline
 {
-	char content[COD2_MAX_STRINGLENGTH];
+	char content[MAX_STRINGLENGTH];
 	exec_outputline *next;
 };
 
@@ -23,7 +23,7 @@ struct exec_async_task
 {
 	exec_async_task *prev;
 	exec_async_task *next;
-	char command[COD2_MAX_STRINGLENGTH];
+	char command[MAX_STRINGLENGTH];
 	int callback;
 	bool done;
 	bool save;
@@ -34,7 +34,7 @@ struct exec_async_task
 	int valueType;
 	int intValue;
 	float floatValue;
-	char stringValue[COD2_MAX_STRINGLENGTH];
+	char stringValue[MAX_STRINGLENGTH];
 	vec3_t vectorValue;
 	unsigned int objectValue;
 };
@@ -66,13 +66,13 @@ void gsc_exec()
 
 	char c;
 	int curpos = 0;
-	char content[COD2_MAX_STRINGLENGTH];
+	char content[MAX_STRINGLENGTH];
 
 	stackPushArray();
 
 	while ((c = getc(fp)) != EOF)
 	{
-		if (c == '\n' || curpos == COD2_MAX_STRINGLENGTH - 1)
+		if (c == '\n' || curpos == MAX_STRINGLENGTH - 1)
 		{
 			content[curpos] = '\0';
 			stackPushString(content);
@@ -162,7 +162,7 @@ void *exec_async(void *input_c)
 
 		while ((c = getc(fp)) != EOF)
 		{
-			if (c == '\n' || curpos == COD2_MAX_STRINGLENGTH - 1)
+			if (c == '\n' || curpos == MAX_STRINGLENGTH - 1)
 			{
 				output->content[curpos] = '\0';
 				output->next = new exec_outputline;
@@ -206,8 +206,8 @@ void gsc_exec_async_create()
 
 	exec_async_task *newtask = new exec_async_task;
 
-	strncpy(newtask->command, command, COD2_MAX_STRINGLENGTH - 1);
-	newtask->command[COD2_MAX_STRINGLENGTH - 1] = '\0';
+	strncpy(newtask->command, command, MAX_STRINGLENGTH - 1);
+	newtask->command[MAX_STRINGLENGTH - 1] = '\0';
 	newtask->output = NULL;
 	newtask->prev = current;
 	newtask->next = NULL;
@@ -304,8 +304,8 @@ void gsc_exec_async_create_nosave()
 
 	exec_async_task *newtask = new exec_async_task;
 
-	strncpy(newtask->command, command, COD2_MAX_STRINGLENGTH - 1);
-	newtask->command[COD2_MAX_STRINGLENGTH - 1] = '\0';
+	strncpy(newtask->command, command, MAX_STRINGLENGTH - 1);
+	newtask->command[MAX_STRINGLENGTH - 1] = '\0';
 	newtask->output = NULL;
 	newtask->prev = current;
 	newtask->next = NULL;

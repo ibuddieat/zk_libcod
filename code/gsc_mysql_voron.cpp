@@ -19,7 +19,7 @@ struct async_mysql_task
 	async_mysql_task *prev;
 	async_mysql_task *next;
 	int id;
-	char query[COD2_MAX_STRINGLENGTH];
+	char query[MAX_STRINGLENGTH];
 	int callback;
 	bool done;
 	bool complete;
@@ -31,7 +31,7 @@ struct async_mysql_task
 	int valueType;
 	int intValue;
 	float floatValue;
-	char stringValue[COD2_MAX_STRINGLENGTH];
+	char stringValue[MAX_STRINGLENGTH];
 	vec3_t vectorValue;
 	unsigned int objectValue;
 	bool hasentity;
@@ -206,8 +206,8 @@ void gsc_async_mysql_create_query()
 	else
 		async_task_id++;
 
-	strncpy(newtask->query, query, COD2_MAX_STRINGLENGTH - 1);
-	newtask->query[COD2_MAX_STRINGLENGTH - 1] = '\0';
+	strncpy(newtask->query, query, MAX_STRINGLENGTH - 1);
+	newtask->query[MAX_STRINGLENGTH - 1] = '\0';
 
 	newtask->prev = current;
 	newtask->next = NULL;
@@ -302,8 +302,8 @@ void gsc_async_mysql_create_query_nosave()
 	else
 		async_task_id++;
 
-	strncpy(newtask->query, query, COD2_MAX_STRINGLENGTH - 1);
-	newtask->query[COD2_MAX_STRINGLENGTH - 1] = '\0';
+	strncpy(newtask->query, query, MAX_STRINGLENGTH - 1);
+	newtask->query[MAX_STRINGLENGTH - 1] = '\0';
 
 	newtask->prev = current;
 	newtask->next = NULL;
@@ -398,8 +398,8 @@ void gsc_async_mysql_create_entity_query(scr_entref_t entid)
 	else
 		async_task_id++;
 
-	strncpy(newtask->query, query, COD2_MAX_STRINGLENGTH - 1);
-	newtask->query[COD2_MAX_STRINGLENGTH - 1] = '\0';
+	strncpy(newtask->query, query, MAX_STRINGLENGTH - 1);
+	newtask->query[MAX_STRINGLENGTH - 1] = '\0';
 
 	newtask->prev = current;
 	newtask->next = NULL;
@@ -494,8 +494,8 @@ void gsc_async_mysql_create_entity_query_nosave(scr_entref_t entid)
 	else
 		async_task_id++;
 
-	strncpy(newtask->query, query, COD2_MAX_STRINGLENGTH - 1);
-	newtask->query[COD2_MAX_STRINGLENGTH - 1] = '\0';
+	strncpy(newtask->query, query, MAX_STRINGLENGTH - 1);
+	newtask->query[MAX_STRINGLENGTH - 1] = '\0';
 
 	newtask->prev = current;
 	newtask->next = NULL;
