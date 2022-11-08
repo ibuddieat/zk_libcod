@@ -2602,7 +2602,8 @@ void hook_SVC_Status(netadr_t from)
 
 void manymaps_prepare(const char *mapname, int read)
 {
-	char library_path[512], map_check[512];
+	char map_check[MAX_OSPATH];
+	char library_path[MAX_OSPATH];
 	
 	cvar_t *fs_homepath = Cvar_FindVar("fs_homepath");
 	cvar_t *fs_game = Cvar_FindVar("fs_game");
@@ -2613,10 +2614,7 @@ void manymaps_prepare(const char *mapname, int read)
 	else
 		snprintf(library_path, sizeof(library_path), "%s/%s/Library", fs_homepath->string, fs_game->string);
 
-	if ( snprintf(map_check, sizeof(map_check), "%s/%s.iwd", library_path, mapname) > (int)sizeof(map_check) )
-	{
-		Com_Printf("Warning: Manymaps map check path is too long, truncated");
-	}
+	Com_sprintf(map_check, MAX_OSPATH, "%s/%s.iwd", library_path, mapname);
 
 	#if COD_VERSION == COD2_1_0
 	const char *stock_maps[] = { "mp_breakout", "mp_brecourt", "mp_burgundy", "mp_carentan", "mp_dawnville", "mp_decoy", "mp_downtown", "mp_farmhouse", "mp_leningrad", "mp_matmata", "mp_railyard", "mp_toujane", "mp_trainstation" };
@@ -2666,8 +2664,8 @@ void manymaps_prepare(const char *mapname, int read)
 		if ( strcmp(dir_ent->d_name, ".") == 0 || strcmp(dir_ent->d_name, "..") == 0 )
 			continue;
 
-		char fileDelete[512];
-		snprintf(fileDelete, sizeof(fileDelete), "%s/%s/%s", fs_homepath->string, fs_game->string, dir_ent->d_name);
+		char fileDelete[MAX_OSPATH];
+		Com_sprintf(fileDelete, MAX_OSPATH, "%s/%s/%s", fs_homepath->string, fs_game->string, dir_ent->d_name);
 
 		if ( access(fileDelete, F_OK) != -1 )
 		{
@@ -2680,16 +2678,11 @@ void manymaps_prepare(const char *mapname, int read)
 
 	if ( map_exists )
 	{
-		char src[512], dst[512];
+		char src[MAX_OSPATH];
+		char dst[MAX_OSPATH];
 
-		if ( snprintf(src, sizeof(src), "%s/%s.iwd", library_path, mapname) > (int)sizeof(src) )
-		{
-			Com_Printf("Warning: Manymaps source path is too long, truncated");
-		}
-		if ( snprintf(dst, sizeof(dst), "%s/%s/%s.iwd", fs_homepath->string, fs_game->string, mapname) > (int)sizeof(dst) )
-		{
-			Com_Printf("Warning: Manymaps destination path is too long, truncated");
-		}
+		Com_sprintf(src, MAX_OSPATH, "%s/%s.iwd", library_path, mapname);
+		Com_sprintf(dst, MAX_OSPATH, "%s/%s/%s.iwd", fs_homepath->string, fs_game->string, mapname);
 
 		if ( access(src, F_OK) != -1 )
 		{
@@ -4142,7 +4135,8 @@ qboolean custom_SV_MapExists(const char *name)
 	qboolean found = FS_ReadFile(custom_va("maps/mp/%s.%s", SV_GetMapBaseName(name), GetBspExtension()), 0) >= 0;
 	if ( !found )
 	{
-		char library_path[512], map_check[512];
+		char map_check[MAX_OSPATH];
+		char library_path[MAX_OSPATH];
 		
 		cvar_t *fs_homepath = Cvar_FindVar("fs_homepath");
 		cvar_t *fs_game = Cvar_FindVar("fs_game");
@@ -4152,10 +4146,7 @@ qboolean custom_SV_MapExists(const char *name)
 		else
 			snprintf(library_path, sizeof(library_path), "%s/%s/Library", fs_homepath->string, fs_game->string);
 
-		if ( snprintf(map_check, sizeof(map_check), "%s/%s.iwd", library_path, name) > (int)sizeof(map_check) )
-		{
-			Com_Printf("Warning: Manymaps map check path is too long, truncated");
-		}
+		Com_sprintf(map_check, MAX_OSPATH, "%s/%s.iwd", library_path, name);
 
 		return access(map_check, F_OK) != -1;
 	}
