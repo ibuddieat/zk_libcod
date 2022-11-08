@@ -53,20 +53,19 @@ if [ "$1" == "clean" ]; then
 	rm bin -rf
 	exit 1
 else
+	if [ "$1" == "nospeex" ]; then
+		speex_link=""
+	else
+		speex_link="-lspeex"
+	fi
+
+	if [ "$1" == "debug" ] || [ "$2" == "debug" ]; then
+		debug="-g -ggdb -O0"
+	else
+		debug=""
+	fi
 	set -- "cod2_1_3"
 	constants="-D COD_VERSION=COD2_1_3"
-fi
-
-if [ "$1" == "nospeex" ]; then
-	speex_link=""
-else
-	speex_link="-lspeex"
-fi
-
-if [ "$1" == "debug" ] || [ "$2" == "debug" ]; then
-	debug="-g -ggdb -O0"
-else
-	debug=""
 fi
 
 if [ -f extra/functions.hpp ]; then
