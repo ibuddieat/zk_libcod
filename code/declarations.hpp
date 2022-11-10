@@ -33,7 +33,7 @@
 #define SnapVector( v ) {v[0] = (int)v[0]; v[1] = (int)v[1]; v[2] = (int)v[2];}
 
 #define MAX_STRINGLENGTH 1024
-
+#define MAX_ITEM_MODELS 2
 #define MAX_CLIENTS 64
 #define MAX_CHALLENGES 1024
 #define MAX_VOICEPACKETS 40
@@ -1070,10 +1070,10 @@ typedef struct playerState_s
 	int	stats[6];
 	int	ammo[128];
 	int	ammoclip[128]; // 836
-	uint weapons[2];
-	uint weaponold[2];
+	unsigned int weapons[2];
+	unsigned int weaponold[2];
 	byte weaponslots[5];
-	uint weaponrechamber[2];
+	unsigned int weaponrechamber[2];
 	int unknown[2];
 	vec3_t mins;
 	vec3_t maxs;
@@ -2058,17 +2058,16 @@ typedef enum
 
 typedef struct gitem_s
 {
-	char *classname; // ??? They don't set classname or what? Other fields work fine.
+	char *classname;
 	char *pickup_sound;
-	char *world_model;
-	int giTag; // ?
+	char *world_model[MAX_ITEM_MODELS];
 	char *icon;
-	char *display_name; // Weapon string e.g WEAPON_STEN
-	int quantity; // ammo for weapons
+	char *display_name;
+	int quantity;
 	itemType_t giType;
+	int giTag;
 	int giAmmoIndex;
 	int giClipIndex;
-	int giSharedAmmoCapIndex; // guessed
 } gitem_t;
 
 typedef struct XBoneInfo_s

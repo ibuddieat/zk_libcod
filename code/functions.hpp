@@ -840,22 +840,22 @@ static const Weapon_Melee_t Weapon_Melee = (Weapon_Melee_t)0x0; // Not tested
 static const Weapon_Melee_t Weapon_Melee = (Weapon_Melee_t)0x0811F844;
 #endif
 
-typedef int (*sub_80E9758_t)(int a1);
+typedef qboolean (*BG_IsWeaponIndexValid_t)(int index); // Guessed function name
 #if COD_VERSION == COD2_1_0
-static const sub_80E9758_t sub_80E9758 = (sub_80E9758_t)0x080E9758;
+static const BG_IsWeaponIndexValid_t BG_IsWeaponIndexValid = (BG_IsWeaponIndexValid_t)0x080E9758;
 #elif COD_VERSION == COD2_1_2
-static const sub_80E9758_t sub_80E9758 = (sub_80E9758_t)0x080EBD48;
+static const BG_IsWeaponIndexValid_t BG_IsWeaponIndexValid = (BG_IsWeaponIndexValid_t)0x080EBD48;
 #elif COD_VERSION == COD2_1_3
-static const sub_80E9758_t sub_80E9758 = (sub_80E9758_t)0x080EBE8C;
+static const BG_IsWeaponIndexValid_t BG_IsWeaponIndexValid = (BG_IsWeaponIndexValid_t)0x080EBE8C;
 #endif
 
-typedef int (*sub_80D9E84_t)(int a1, int a2);
+typedef qboolean (*COM_BitCheck_t)(unsigned int array[], int bitNum);
 #if COD_VERSION == COD2_1_0
-static const sub_80D9E84_t sub_80D9E84 = (sub_80D9E84_t)0x080D9E84;
+static const COM_BitCheck_t COM_BitCheck = (COM_BitCheck_t)0x080D9E84;
 #elif COD_VERSION == COD2_1_2
-static const sub_80D9E84_t sub_80D9E84 = (sub_80D9E84_t)0x080DC464;
+static const COM_BitCheck_t COM_BitCheck = (COM_BitCheck_t)0x080DC464;
 #elif COD_VERSION == COD2_1_3
-static const sub_80D9E84_t sub_80D9E84 = (sub_80D9E84_t)0x080DC5A8;
+static const COM_BitCheck_t COM_BitCheck = (COM_BitCheck_t)0x080DC5A8;
 #endif
 
 typedef void (*scriptError_t)(int a1, int a2, int a3, void *a4);

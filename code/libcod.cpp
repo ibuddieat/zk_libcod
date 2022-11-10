@@ -1810,24 +1810,26 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 	cl->downloadSendTime = svs.time;
 }
 
-// Segfault fix
-int hook_BG_IsWeaponValid(int a1, int a2)
+qboolean custom_BG_IsWeaponValid(playerState_t *ps, unsigned int index)
 {
-	if ( !(unsigned char)sub_80E9758(a2) )
+	WeaponDef_t *weaponDef;
+
+	if ( !BG_IsWeaponIndexValid(index) )
+		return qfalse;
+
+	if ( !COM_BitCheck(ps->weapons, index) ) // Player has weapon?
+		return qfalse;
+
+	weaponDef = BG_GetWeaponDef(index);
+	/* New code: Fixed potential NULL-pointer crash */
+	if ( !weaponDef )
 		return 0;
+	/* New code end */
 
-	if ( !(unsigned char)sub_80D9E84(a1 + 1348, a2) )
-		return 0;
+	if ( ( ( weaponDef->inventoryType == WEAPINVENTORY_PRIMARY && ps->weaponslots[1] != index ) && ps->weaponslots[2] != index ) && weaponDef->altWeaponIndex != index )
+		return qfalse;
 
-	int weapon = (int)BG_WeaponDefs(a2);
-
-	if ( !weapon )
-		return 0;
-
-	if ( !*(long *)(weapon + 132) && *(char *)(a1 + 1365) != a2 && *(char *)(a1 + 1366) != a2 && *(long *)(weapon + 876) != a2 )
-		return 0;
-
-	return 1;
+	return qtrue;
 }
 
 char *custom_va(const char *format, ...)
@@ -3822,17 +3824,20 @@ void custom_Player_UpdateCursorHints(gentity_t *player)
 	int i;
 	int cursorHintString;
 	int cursorHint;
-	useList_t useList;
+	gentity_t *useList[2050];
 	gentity_t *ent;
+	gclient_t *client;
 
-	(player->client->ps).cursorHint = 0;
-	(player->client->ps).cursorHintString = -1;
-	(player->client->ps).cursorHintEntIndex = 0x3ff;
+	client = player->client;
+	(client->ps).cursorHint = 0;
+	(client->ps).cursorHintString = -1;
+	(client->ps).cursorHintEntIndex = 0x3ff;
 	if ( 0 < player->healthPoints && ( (player->client->ps).weaponstate < 0x11 || ( 0x16 < (player->client->ps).weaponstate ) ) )
 	{
 		if ( !player->active )
 		{
-			if ( ( (player->client->ps).pm_flags & PMF_MANTLE ) == 0 && ( useListSize = Player_GetUseList(player, &useList), useListSize != 0 ) )
+			useListSize = Player_GetUseList(player, (useList_t *)useList);
+			if ( ( (player->client->ps).pm_flags & PMF_MANTLE ) == 0 && useListSize )
 			{
 				cursorHint = 0;
 				cursorHintString = -1;
@@ -3853,14 +3858,14 @@ void custom_Player_UpdateCursorHints(gentity_t *player)
 							{
 LAB_08121ee6:
 								cursorHint = temp;
-								(player->client->ps).cursorHintEntIndex = (ent->s).number;
-								(player->client->ps).cursorHint = cursorHint;
-								(player->client->ps).cursorHintString = cursorHintString;
-								if ( (player->client->ps).cursorHint != 0 )
+								(client->ps).cursorHintEntIndex = (ent->s).number;
+								(client->ps).cursorHint = cursorHint;
+								(client->ps).cursorHintString = cursorHintString;
+								if ( (client->ps).cursorHint != 0 )
 								{
 									return;
 								}
-								(player->client->ps).cursorHintEntIndex = 0x3ff;
+								(client->ps).cursorHintEntIndex = 0x3ff;
 								return;
 							}
 
@@ -3898,7 +3903,7 @@ LAB_08121ee6:
 				}
 			}
 		}
-		else if ( ( (player->client->ps).eFlags & EF_USETURRET ) != 0 )
+		else if ( ( (client->ps).eFlags & EF_USETURRET ) != 0 )
 		{
 			Player_SetTurretDropHintString(player);
 		}
@@ -4661,7 +4666,7 @@ public:
 		hook_set_anim->hook();
 		#endif
 
-		cracking_hook_function(0x080E97F0, (int)hook_BG_IsWeaponValid);
+		cracking_hook_function(0x080E97F0, (int)custom_BG_IsWeaponValid);
 		cracking_hook_function(0x0808E544, (int)custom_SV_WriteDownloadToClient);
 		cracking_hook_function(0x080B59CE, (int)custom_va);
 		cracking_hook_function(0x0808EC66, (int)hook_SV_VerifyIwds_f);
@@ -4733,7 +4738,7 @@ public:
 		hook_set_anim->hook();
 		#endif
 
-		cracking_hook_function(0x080EBDE0, (int)hook_BG_IsWeaponValid);
+		cracking_hook_function(0x080EBDE0, (int)custom_BG_IsWeaponValid);
 		cracking_hook_function(0x0808FD2E, (int)custom_SV_WriteDownloadToClient);
 		cracking_hook_function(0x080B7E62, (int)custom_va);
 		cracking_hook_function(0x080904A0, (int)hook_SV_VerifyIwds_f);
@@ -4825,7 +4830,7 @@ public:
 
 		cracking_hook_function(0x08105CAC, (int)custom_Touch_Item);
 		cracking_hook_function(0x0811F232, (int)custom_G_AddEvent);
-		cracking_hook_function(0x080EBF24, (int)hook_BG_IsWeaponValid);
+		cracking_hook_function(0x080EBF24, (int)custom_BG_IsWeaponValid);
 		cracking_hook_function(0x080DFC78, (int)custom_BG_AddPredictableEventToPlayerstate);
 		cracking_hook_function(0x080985C8, (int)custom_SV_WriteSnapshotToClient);
 		cracking_hook_function(0x0808F302, (int)custom_SV_SendClientGameState);

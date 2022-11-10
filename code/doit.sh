@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # ./doit.sh clean
-# ./doit.sh cod2_1_0
-# ./doit.sh cod2_1_2
-# ./doit.sh cod2_1_3
+# ./doit.sh debug
+# ./doit.sh nospeex
+# ./doit.sh nospeex debug
 
 cc="g++"
 options="-I. -m32 -fPIC -Wall"
@@ -88,73 +88,73 @@ mkdir -p bin
 mkdir -p objects_$1
 
 echo "##### COMPILE $1 CRACKING.CPP #####"
-$cc $options $constants -c cracking.cpp -o objects_$1/cracking.opp
+$cc $debug $options $constants -c cracking.cpp -o objects_$1/cracking.opp
 
 echo "##### COMPILE $1 GSC.CPP #####"
-$cc $options $constants -c gsc.cpp -o objects_$1/gsc.opp
+$cc $debug $options $constants -c gsc.cpp -o objects_$1/gsc.opp
 
 if  grep -q "COMPILE_BOTS 1" config.hpp; then
 	echo "##### COMPILE $1 GSC_BOTS.CPP #####"
-	$cc $options $constants -c gsc_bots.cpp -o objects_$1/gsc_bots.opp
+	$cc $debug $options $constants -c gsc_bots.cpp -o objects_$1/gsc_bots.opp
 fi
 
 if  grep -q "COMPILE_ENTITY 1" config.hpp; then
 	echo "##### COMPILE $1 GSC_ENTITY.CPP #####"
-	$cc $options $constants -c gsc_entity.cpp -o objects_$1/gsc_entity.opp
+	$cc $debug $options $constants -c gsc_entity.cpp -o objects_$1/gsc_entity.opp
 fi
 
 if grep -q "COMPILE_EXEC 1" config.hpp; then
 	echo "##### COMPILE $1 GSC_EXEC.CPP #####"
-	$cc $options $constants -c gsc_exec.cpp -o objects_$1/gsc_exec.opp
+	$cc $debug $options $constants -c gsc_exec.cpp -o objects_$1/gsc_exec.opp
 fi
 
 if grep -q "COMPILE_LEVEL 1" config.hpp; then
 	echo "##### COMPILE $1 GSC_LEVEL.CPP #####"
-	$cc $options $constants -c gsc_level.cpp -o objects_$1/gsc_level.opp
+	$cc $debug $options $constants -c gsc_level.cpp -o objects_$1/gsc_level.opp
 fi
 
 if grep -q "COMPILE_MEMORY 1" config.hpp; then
 	echo "##### COMPILE $1 GSC_MEMORY.CPP #####"
-	$cc $options $constants -c gsc_memory.cpp -o objects_$1/gsc_memory.opp
+	$cc $debug $options $constants -c gsc_memory.cpp -o objects_$1/gsc_memory.opp
 fi
 
 if [ $mysql_variant == 1 ]; then
 	echo "##### COMPILE $1 GSC_MYSQL.CPP #####"
-	$cc $options $constants -c gsc_mysql.cpp -o objects_$1/gsc_mysql.opp
+	$cc $debug $options $constants -c gsc_mysql.cpp -o objects_$1/gsc_mysql.opp
 fi
 
 if [ $mysql_variant == 2 ]; then
 	echo "##### COMPILE $1 GSC_MYSQL_VORON.CPP #####"
-	$cc $options $constants -c gsc_mysql_voron.cpp -o objects_$1/gsc_mysql_voron.opp
+	$cc $debug $options $constants -c gsc_mysql_voron.cpp -o objects_$1/gsc_mysql_voron.opp
 fi
 
 if grep -q "COMPILE_PLAYER 1" config.hpp; then
 	echo "##### COMPILE $1 GSC_PLAYER.CPP #####"
-	$cc $options $constants -c gsc_player.cpp -o objects_$1/gsc_player.opp
+	$cc $debug $options $constants -c gsc_player.cpp -o objects_$1/gsc_player.opp
 fi
 
 if grep -q "COMPILE_UTILS 1" config.hpp; then
 	echo "##### COMPILE $1 GSC_UTILS.CPP #####"
-	$cc $options $constants -c gsc_utils.cpp -o objects_$1/gsc_utils.opp
+	$cc $debug $options $constants -c gsc_utils.cpp -o objects_$1/gsc_utils.opp
 fi
 
 if grep -q "COMPILE_WEAPONS 1" config.hpp; then
 	echo "##### COMPILE $1 GSC_WEAPONS.CPP #####"
-	$cc $options $constants -c gsc_weapons.cpp -o objects_$1/gsc_weapons.opp
+	$cc $debug $options $constants -c gsc_weapons.cpp -o objects_$1/gsc_weapons.opp
 fi
 
 if [ "$(< config.hpp grep '#define COMPILE_BSP' | grep -o '[0-9]')" == "1" ]; then
 	echo "##### COMPILE $1 BSP.CPP #####"
-	$cc $options $constants -c bsp.cpp -o objects_"$1"/bsp.opp
+	$cc $debug $options $constants -c bsp.cpp -o objects_"$1"/bsp.opp
 fi
 
 if [ "$(< config.hpp grep '#define COMPILE_JUMP' | grep -o '[0-9]')" == "1" ]; then
 	echo "##### COMPILE $1 JUMP.CPP #####"
-	$cc $options $constants -c jump.cpp -o objects_"$1"/jump.opp
+	$cc $debug $options $constants -c jump.cpp -o objects_"$1"/jump.opp
 fi
 
 echo "##### COMPILE $1 LIBCOD.CPP #####"
-$cc $options $constants -c libcod.cpp -o objects_$1/libcod.opp
+$cc $debug $options $constants -c libcod.cpp -o objects_$1/libcod.opp
 
 if [ -d extra ]; then
 	echo "##### COMPILE $1 EXTRAS #####"
@@ -162,14 +162,14 @@ if [ -d extra ]; then
 	for F in *.cpp;
 	do
 		echo "###### COMPILE $1 EXTRA: $F #####"
-		$cc $options $constants -c $F -o ../objects_$1/${F%.cpp}.opp;
+		$cc $debug $options $constants -c $F -o ../objects_$1/${F%.cpp}.opp;
 	done
 	cd ..
 fi
 
 echo "##### LINKING lib$1.so #####"
 objects="$(ls objects_$1/*.opp)"
-$cc -m32 $debug -shared -L/lib32 -o bin/lib$1.so -ldl $objects -lpthread $mysql_link $speex_link
+$cc -m32 -shared -L/lib32 -o bin/lib$1.so -ldl $objects -lpthread $mysql_link $speex_link
 rm objects_$1 -r
 
 if [ mysql_variant > 0 ]; then
