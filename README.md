@@ -40,7 +40,7 @@ sudo apt install gcc-multilib g++-multilib libstdc++5:i386
 
 **MySQL requirements installation (for 64-bit Ubuntu 18.04.5 LTS)**
 ```
-apt install libmysqlclient-dev:i386
+sudo apt install libmysqlclient-dev:i386
 ```
 
 **Speex installation (for 64-bit Ubuntu 18.04.5 LTS)**
