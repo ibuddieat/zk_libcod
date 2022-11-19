@@ -2802,8 +2802,16 @@ void hook_Com_DPrintf(const char *format, ...)
 
 void Scr_CodeCallback_Error(qboolean terminal, qboolean emit, const char * internal_function, char *message)
 {
-	if ( codecallback_error && Scr_IsSystemActive() )
+	if ( codecallback_error && Scr_IsSystemActive() && !com_errorEntered )
 	{
+		if ( !strncmp(message, "exceeded maximum number of script variables", 43) )
+		{
+			/* Since we cannot allocate more script variables, further
+			   execution of scripts or script callbacks could lead to an
+			   undefined state (in script) or endless error loops, so we stop */
+			Com_Error(1, "\x15%s", "exceeded maximum number of script variables");
+		}
+
 		if ( terminal || emit )
 		{
 			stackPushString(message);
@@ -2853,7 +2861,7 @@ void custom_Com_Error(int errorLevel, const char *error, ...)
 	
 	if ( com_errorEntered )
 	{
-		Sys_Error("recursive error after: %s", *(char *)va_string_156);
+		Sys_Error("recursive error after: %s", (char *)va_string_156);
 	}
 	com_errorEntered = 1;
 	
@@ -2893,7 +2901,7 @@ void custom_Scr_ErrorInternal(void)
 		}
 		if ( scrVmPub.function_count || scrVmPub.debugCode )
 		{
-			Scr_CodeCallback_Error(qfalse, qfalse, "Scr_ErrorInternal", (char *)scrVarPub.error_message);
+			Scr_CodeCallback_Error(qfalse, qfalse, "Scr_ErrorInternal", (char *)scrVarPub.error_message); // New
 			longjmp(&g_script_error[g_script_error_level], -1);
 		}
 	}
