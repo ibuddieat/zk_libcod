@@ -1276,6 +1276,28 @@ typedef struct tagInfo_s
 #define FL_MISSILE_UNKNOWN      0x10000
 #define FL_STABLE_MISSILE       0x20000
 
+// gentity_s->handler
+#define EHANDLER_CLIENT_CONNECTING	0x0		// in ClientConnect
+#define EHANDLER_TRIGGER			0x1		// multiple, radius, disc, once
+#define EHANDLER_TRIGGER_HURT_TOUCH	0x2
+
+#define EHANDLER_TRIGGER_DAMAGE		0x4
+#define EHANDLER_ENTITY				0x5		// e.g., on a default script_model
+
+#define EHANDLER_GRENADE			0x7
+#define EHANDLER_ROCKET				0x8
+#define EHANDLER_CLIENT_ACTIVE		0x9		// client is connected and not in intermission and not spectator
+#define EHANDLER_CLIENT_SPAWNED		0xA		// in ClientSpawn and at the beginning of ClientEndFrame
+#define EHANDLER_CLIENT_DEAD 		0xB
+#define EHANDLER_CLIENT_CLONE		0xC
+#define EHANDLER_TURRET				0xD
+
+#define EHANDLER_ITEM_DROPPED		0xF
+#define EHANDLER_ITEM_SPAWNED		0x10	// in G_SpawnItem
+#define EHANDLER_ITEM_SPAWNING		0x11	// in FinishSpawningItem and G_SpawnItem
+#define EHANDLER_TRIGGER_USE		0x12	// use, use-touch
+#define EHANDLER_CLIENT_MANTLING	0x13	// in ClientThink_real
+
 struct gentity_s
 {
 	entityState_t s;

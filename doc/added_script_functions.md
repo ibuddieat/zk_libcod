@@ -1,5 +1,6 @@
 New script code methods:
   * `<bot> setWalkValues(<forward_count>, <right_count>)`
+  * `<entity> addGrenadeFuseTime(<time>)`
   * `<entity> getTagAngles(<tag name>)`
   * `<entity> getTagOrigin(<tag name>)`
   * `<entity> hasTag(<tag name>)`

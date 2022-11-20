@@ -249,4 +249,29 @@ void gsc_entity_getturretowner(scr_entref_t id)
 	}
 }
 
+void gsc_entity_addgrenadefusetime(scr_entref_t id)
+{
+    gentity_t *ent = &g_entities[id];
+    if ( ent->handler != EHANDLER_GRENADE )
+    {
+        stackError("gsc_entity_addgrenadefusetime() entity is not a grenade");
+    }
+    else
+    {
+        float time;
+
+        if ( !stackGetParams("f", &time) )
+        {
+            stackError("gsc_entity_addgrenadefusetime() one or more arguments is undefined or has a wrong type");
+        }
+        else
+        {
+            ent->nextthink += (int)((time * 1000) - ((int)(time * 1000) % 50));
+            if ( ent->nextthink < level.time )
+                ent->nextthink = level.time;
+        }
+    }
+    stackPushUndefined();
+}
+
 #endif
