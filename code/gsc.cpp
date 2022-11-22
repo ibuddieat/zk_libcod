@@ -298,7 +298,6 @@ scr_method_t scriptMethods[] =
 	{"hastag", gsc_entity_hastag, 0},
 	{"islinkedto", gsc_entity_islinkedto, 0},
 	{"getturretowner", gsc_entity_getturretowner, 0},
-	{"addgrenadefusetime", gsc_entity_addgrenadefusetime, 0},
 	#endif
 
 	#if COMPILE_MYSQL_VORON == 1
@@ -398,6 +397,7 @@ scr_method_t scriptMethods[] =
 	#endif
 
 	#if COMPILE_WEAPONS == 1
+	{"addgrenadefusetime", gsc_weapons_addgrenadefusetime, 0},
 	{"getweaponitemammo", gsc_weapons_getweaponitemammo, 0},
 	{"setweaponitemammo", gsc_weapons_setweaponitemammo, 0},
 	{"spawngrenade", gsc_weapons_spawngrenade, 0},

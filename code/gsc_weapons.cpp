@@ -12,6 +12,31 @@ qboolean isValidWeaponId(int id)
 	return qtrue;
 }
 
+void gsc_weapons_addgrenadefusetime(scr_entref_t id)
+{
+    gentity_t *ent = &g_entities[id];
+    if ( ent->handler != EHANDLER_GRENADE )
+    {
+        stackError("gsc_weapons_addgrenadefusetime() entity is not a grenade");
+    }
+    else
+    {
+        float time;
+
+        if ( !stackGetParams("f", &time) )
+        {
+            stackError("gsc_weapons_addgrenadefusetime() one or more arguments is undefined or has a wrong type");
+        }
+        else
+        {
+            ent->nextthink += (int)((time * 1000) - ((int)(time * 1000) % FRAMETIME));
+            if ( ent->nextthink < level.time )
+                ent->nextthink = level.time;
+        }
+    }
+    stackPushUndefined();
+}
+
 void gsc_weapons_getweaponmaxammo()
 {
 	int id;
