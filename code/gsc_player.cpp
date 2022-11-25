@@ -843,7 +843,7 @@ void gsc_player_setfirethroughwalls(scr_entref_t id)
 		return;
 	}
 
-	extern float player_fireThroughWalls[MAX_CLIENTS];
+	extern int player_fireThroughWalls[MAX_CLIENTS];
 
 	old_setting = player_fireThroughWalls[id];
 	player_fireThroughWalls[id] = new_setting;
