@@ -43,8 +43,9 @@ sudo apt install gcc-multilib g++-multilib libstdc++5:i386
 sudo apt install libmysqlclient-dev:i386
 ```
 
-**Speex installation (for 64-bit Ubuntu 18.04.5 LTS)**
-- [Here](doc/install_speex.md)
+**Custom sound file docs (for 64-bit Ubuntu 18.04.5 LTS)**
+- [Speex installation](doc/install_speex.md)
+- [Audio file conversion](doc/convert_audio_files.md)
 
 **Creating the binary (written to `./code/bin`)**
 ```
