@@ -46,6 +46,7 @@ sudo apt install libmysqlclient-dev:i386
 **Custom sound file docs (for 64-bit Ubuntu 18.04.5 LTS)**
 - [Speex installation](doc/install_speex.md)
 - [Audio file conversion](doc/convert_audio_files.md)
+- Note: This feature increases RAM usage by about 500 MB. Disable `COMPILE_CUSTOM_VOICE` in [config.hpp](code/config.hpp) to avoid this
 
 **Creating the binary (written to `./code/bin`)**
 ```

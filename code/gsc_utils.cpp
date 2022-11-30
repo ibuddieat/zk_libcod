@@ -1228,7 +1228,7 @@ void gsc_utils_loadsoundfile()
 
 	if ( !stackGetParamInt(3, &soundIndex) )
 	{
-		soundIndex = ++currentMaxSoundIndex;
+		soundIndex = currentMaxSoundIndex++;
 	}
 
 	if ( !soundIndex || soundIndex >= MAX_CUSTOMSOUNDS )

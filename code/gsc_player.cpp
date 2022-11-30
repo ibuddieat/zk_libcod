@@ -2061,7 +2061,7 @@ void gsc_player_playsoundfile(scr_entref_t id)
 		return;
 	}
 
-	if ( !soundIndex || soundIndex >= MAX_CUSTOMSOUNDS )
+	if ( soundIndex < 0 || soundIndex >= MAX_CUSTOMSOUNDS )
 	{
 		stackError("gsc_player_playsoundfile() invalid sound index, valid range is 0-%d", MAX_CUSTOMSOUNDS-1);
 		stackPushInt(0);
