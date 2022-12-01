@@ -1966,7 +1966,7 @@ void gsc_player_getremainingsoundfileduration(scr_entref_t id)
 	{
 		int remainingPackets;
 		int endIndex = player_sentVoiceDataIndex[id];
-		while ( endIndex < MAX_STOREDVOICEPACKETS && voiceDataStore[player_currentSoundIndex[id]][endIndex].dataLen > 0 )
+		while ( endIndex < MAX_STOREDVOICEPACKETS && voiceDataStore[player_currentSoundIndex[id] - 1][endIndex].dataLen > 0 )
 		{
 			endIndex++;
 		}
@@ -2061,9 +2061,9 @@ void gsc_player_playsoundfile(scr_entref_t id)
 		return;
 	}
 
-	if ( soundIndex < 0 || soundIndex >= MAX_CUSTOMSOUNDS )
+	if ( soundIndex < 1 || soundIndex > MAX_CUSTOMSOUNDS )
 	{
-		stackError("gsc_player_playsoundfile() invalid sound index, valid range is 0-%d", MAX_CUSTOMSOUNDS-1);
+		stackError("gsc_player_playsoundfile() invalid sound index, valid range is 1-%d", MAX_CUSTOMSOUNDS);
 		stackPushInt(0);
 		return;
 	}
@@ -2076,7 +2076,7 @@ void gsc_player_playsoundfile(scr_entref_t id)
 		return;
 	}
 
-	VoicePacket_t *voicePacket = &voiceDataStore[soundIndex][packetOffset];
+	VoicePacket_t *voicePacket = &voiceDataStore[soundIndex - 1][packetOffset];
 	if ( !voicePacket->data )
 	{
 		stackError("gsc_player_playsoundfile() too large offset for sound with index %d", soundIndex);

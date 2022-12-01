@@ -57,6 +57,8 @@ void gsc_utils_gettype();
 #if COMPILE_CUSTOM_VOICE == 1
 void gsc_utils_getsoundfileduration();
 void gsc_utils_loadsoundfile();
+void gsc_utils_loadspeexfile();
+void gsc_utils_savespeexfile();
 #endif
 
 #endif

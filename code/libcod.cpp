@@ -3095,7 +3095,7 @@ void custom_G_RunFrame(int levelTime)
 
 				for ( ; player_pendingVoiceDataFrames[id] > 1.0 && player_sentVoiceDataIndex[id] < MAX_STOREDVOICEPACKETS; player_sentVoiceDataIndex[id]++, player_pendingVoiceDataFrames[id] -= 1.0 )
 				{
-					voicePacket = &voiceDataStore[player_currentSoundIndex[id]][player_sentVoiceDataIndex[id]];
+					voicePacket = &voiceDataStore[player_currentSoundIndex[id] - 1][player_sentVoiceDataIndex[id]];
 					if ( svs.clients[player_currentSoundTalker[id]].state < CS_CONNECTED || !voicePacket->dataLen )
 					{
 						player_pendingVoiceDataFrames[id] = 0.0;

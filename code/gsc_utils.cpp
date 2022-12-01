@@ -1037,7 +1037,7 @@ void *encode_async(void *newtask)
 	if ( file != NULL )    
 	{
 		// Reset song data for this slot
-		memset(&voiceDataStore[task->soundIndex], 0, sizeof(voiceDataStore[0]));
+		memset(&voiceDataStore[task->soundIndex - 1], 0, sizeof(voiceDataStore[0]));
 
 		/*
 		The following encoding procedure is based on:
@@ -1107,7 +1107,7 @@ void *encode_async(void *newtask)
 			speex_bits_reset(&encodeBits);
 			speex_encode(g_encoder, input, &encodeBits);
 			dataLen = speex_bits_write(&encodeBits, data, MAX_VOICEPACKETDATALEN);
-			voicePacket = &voiceDataStore[task->soundIndex][packetIndex];
+			voicePacket = &voiceDataStore[task->soundIndex - 1][packetIndex];
 			memcpy(voicePacket->data, data, dataLen);
 			voicePacket->dataLen = dataLen;
 		}
@@ -1205,14 +1205,14 @@ void gsc_utils_loadsoundfile()
 	if ( !stackGetParamString(0, &filePath) )
 	{
 		stackError("gsc_utils_loadsoundfile() requires a file path (string) as first argument");
-		stackPushInt(0);
+		stackPushUndefined();
 		return;
 	}
 
 	if ( !stackGetParamFunction(1, &callback) )
 	{
 		stackError("gsc_utils_loadsoundfile() requires a callback function as second argument");
-		stackPushInt(0);
+		stackPushUndefined();
 		return;
 	}
 
@@ -1228,13 +1228,13 @@ void gsc_utils_loadsoundfile()
 
 	if ( !stackGetParamInt(3, &soundIndex) )
 	{
-		soundIndex = currentMaxSoundIndex++;
+		soundIndex = ++currentMaxSoundIndex;
 	}
 
-	if ( !soundIndex || soundIndex >= MAX_CUSTOMSOUNDS )
+	if ( soundIndex < 1 || soundIndex > MAX_CUSTOMSOUNDS )
 	{
-		stackError("gsc_utils_loadsoundfile() invalid sound index, valid range is 0-%d", MAX_CUSTOMSOUNDS-1);
-		stackPushInt(0);
+		stackError("gsc_utils_loadsoundfile() invalid sound index, valid range is 1-%d", MAX_CUSTOMSOUNDS);
+		stackPushUndefined();
 		return;
 	}
 
@@ -1264,17 +1264,119 @@ void gsc_utils_loadsoundfile()
 	if ( pthread_create(&encoder_doer, NULL, encode_async, newtask) != 0 )
 	{
 		stackError("gsc_utils_loadsoundfile() error creating encoder async handler thread");
-		stackPushInt(0);
+		stackPushUndefined();
 		return;
 	}
 
 	if ( pthread_detach(encoder_doer) != 0 )
 	{
 		stackError("gsc_utils_loadsoundfile() error detaching encoder async handler thread");
-		stackPushInt(0);
+		stackPushUndefined();
 		return;
 	}
 
-	stackPushInt(currentMaxSoundIndex);
+	stackPushInt(soundIndex);
 }
+
+void gsc_utils_loadspeexfile()
+{
+	char *filePath;
+	int soundIndex;
+
+	if ( !stackGetParamString(0, &filePath) )
+	{
+		stackError("gsc_utils_loadspeexfile() requires a file path (string) as first argument");
+		stackPushBool(qfalse);
+		return;
+	}
+
+	if ( !stackGetParamInt(1, &soundIndex) )
+	{
+		soundIndex = ++currentMaxSoundIndex;
+	}
+
+	if ( soundIndex < 1 || soundIndex > MAX_CUSTOMSOUNDS )
+	{
+		stackError("gsc_utils_loadspeexfile() invalid sound index, valid range is 1-%d", MAX_CUSTOMSOUNDS);
+		stackPushBool(qfalse);
+		return;
+	}
+
+	FILE *file = fopen(filePath, "rb");
+	if ( !file )
+	{
+		stackError("gsc_utils_loadspeexfile() could not open the specified file");
+		stackPushBool(qfalse);
+		return;
+	}
+
+	VoicePacket_t packet;
+	for ( int packetIndex = 0; packetIndex <= MAX_STOREDVOICEPACKETS; packetIndex++ )
+	{
+		if ( packetIndex == MAX_STOREDVOICEPACKETS )
+		{
+			// Speex file overly long, end reading here
+			break;
+		}
+
+		// Read a single voice packet at a time
+		fread(&packet, sizeof(packet), 1, file);
+		if ( feof(file) )
+			break;
+		
+		memcpy(&voiceDataStore[soundIndex - 1][packetIndex], &packet, sizeof(packet));
+	}
+	fclose(file);
+
+	stackPushBool(qtrue);
+}
+
+void gsc_utils_savespeexfile()
+{
+	int soundIndex;
+	char *filePath;
+
+	if ( !stackGetParamInt(0, &soundIndex) )
+	{
+		stackError("gsc_utils_savespeexfile() requires a sound index (integer) as first argument");
+		stackPushBool(qfalse);
+		return;
+	}
+
+	if ( soundIndex < 1 || soundIndex > MAX_CUSTOMSOUNDS )
+	{
+		stackError("gsc_utils_savespeexfile() invalid sound index, valid range is 1-%d", MAX_CUSTOMSOUNDS);
+		stackPushBool(qfalse);
+		return;
+	}
+
+	if ( !stackGetParamString(1, &filePath) )
+	{
+		stackError("gsc_utils_savespeexfile() requires a file path (string) as second argument");
+		stackPushBool(qfalse);
+		return;
+	}
+
+	FILE *file = fopen(filePath, "wb");
+	if ( !file )
+	{
+		stackError("gsc_utils_savespeexfile() could not open the specified file");
+		stackPushBool(qfalse);
+		return;
+	}
+
+	VoicePacket_t *packet;
+	for ( int packetIndex = 0; packetIndex < MAX_STOREDVOICEPACKETS; packetIndex++ )
+	{
+		packet = &voiceDataStore[soundIndex - 1][packetIndex];
+		if ( !packet->dataLen )
+			break;
+
+		fwrite(packet, sizeof(VoicePacket_t), 1, file);
+	}
+	fclose(file);
+
+	stackPushBool(qtrue);
+}
+
 #endif
