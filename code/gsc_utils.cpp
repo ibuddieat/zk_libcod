@@ -1036,7 +1036,7 @@ void *encode_async(void *newtask)
 
 	if ( file != NULL )    
 	{
-		// Reset song data for this slot
+		// Reset sound data for this slot
 		memset(&voiceDataStore[task->soundIndex - 1], 0, sizeof(voiceDataStore[0]));
 
 		/*
@@ -1091,7 +1091,7 @@ void *encode_async(void *newtask)
 		{
 			if ( packetIndex == MAX_STOREDVOICEPACKETS )
 			{
-				// Song file too long, end encoding here
+				// Sound file too long, end encoding here
 				result = 1;
 				break;
 			}
@@ -1111,6 +1111,10 @@ void *encode_async(void *newtask)
 			memcpy(voicePacket->data, data, dataLen);
 			voicePacket->dataLen = dataLen;
 		}
+		// Reset subsequent voice packet (in case a long sound is replaced by a shorter one)
+		if ( packetIndex != MAX_STOREDVOICEPACKETS )
+			memset(&voiceDataStore[task->soundIndex - 1][packetIndex], 0, sizeof(voiceDataStore[0][0]));
+
 		speex_encoder_destroy(g_encoder);
 		speex_bits_destroy(&encodeBits);
 		fclose(file);
@@ -1310,8 +1314,9 @@ void gsc_utils_loadspeexfile()
 		return;
 	}
 
+	int packetIndex;
 	VoicePacket_t packet;
-	for ( int packetIndex = 0; packetIndex <= MAX_STOREDVOICEPACKETS; packetIndex++ )
+	for ( packetIndex = 0; packetIndex <= MAX_STOREDVOICEPACKETS; packetIndex++ )
 	{
 		if ( packetIndex == MAX_STOREDVOICEPACKETS )
 		{
@@ -1326,6 +1331,10 @@ void gsc_utils_loadspeexfile()
 		
 		memcpy(&voiceDataStore[soundIndex - 1][packetIndex], &packet, sizeof(packet));
 	}
+	// Reset subsequent voice packet (in case a long sound is replaced by a shorter one)
+	if ( packetIndex != MAX_STOREDVOICEPACKETS )
+		memset(&voiceDataStore[soundIndex - 1][packetIndex], 0, sizeof(packet));
+
 	fclose(file);
 
 	stackPushBool(qtrue);
