@@ -46,6 +46,8 @@ New script code functions:
   * `getEntityCount()`
   * `getSoundFileDuration(<file path>)`
   * `loadSoundFile(<file path>, <callback function>, [<volume>], [<sound index>])`
+  * `loadSpeexFile(<file path>, [<sound index>])`
   * `logPrintConsole(<message>)`
   * `resetTestClientNaming()`
+  * `saveSpeexFile(<sound index>, <file path>)`
   * `setNextTestClientName(<name>)`

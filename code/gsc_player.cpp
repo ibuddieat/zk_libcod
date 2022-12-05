@@ -2036,35 +2036,35 @@ void gsc_player_playsoundfile(scr_entref_t id)
 			break;
 		default:
 			stackError("gsc_player_playsoundfile() incorrect number of parameters");
-			stackPushUndefined();
+			stackPushBool(qfalse);
 			return;
 	}
 
 	if ( error )
 	{
 		stackError("gsc_player_playsoundfile() one or more arguments is undefined or has a wrong type");
-		stackPushUndefined();
+		stackPushBool(qfalse);
 		return;
 	}
 
 	if ( id >= MAX_CLIENTS || source >= MAX_CLIENTS )
 	{
 		stackError("gsc_player_playsoundfile() entity %i is not a player", id);
-		stackPushUndefined();
+		stackPushBool(qfalse);
 		return;
 	}
 
 	if ( svs.clients[source].state < CS_CONNECTED )
 	{
 		stackError("gsc_player_playsoundfile() entity %i is not connected", source);
-		stackPushUndefined();
+		stackPushBool(qfalse);
 		return;
 	}
 
 	if ( soundIndex < 1 || soundIndex > MAX_CUSTOMSOUNDS )
 	{
 		stackError("gsc_player_playsoundfile() invalid sound index, valid range is 1-%d", MAX_CUSTOMSOUNDS);
-		stackPushInt(0);
+		stackPushBool(qfalse);
 		return;
 	}
 
@@ -2072,7 +2072,7 @@ void gsc_player_playsoundfile(scr_entref_t id)
 	if ( packetOffset >= MAX_STOREDVOICEPACKETS )
 	{
 		stackError("gsc_player_playsoundfile() too large offset for sound with index %d", soundIndex);
-		stackPushUndefined();
+		stackPushBool(qfalse);
 		return;
 	}
 
@@ -2080,7 +2080,7 @@ void gsc_player_playsoundfile(scr_entref_t id)
 	if ( !voicePacket->data )
 	{
 		stackError("gsc_player_playsoundfile() too large offset for sound with index %d", soundIndex);
-		stackPushUndefined();
+		stackPushBool(qfalse);
 		return;
 	}
 

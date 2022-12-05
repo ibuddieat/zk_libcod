@@ -1296,7 +1296,9 @@ void gsc_utils_loadspeexfile()
 
 	if ( !stackGetParamInt(1, &soundIndex) )
 	{
-		soundIndex = ++currentMaxSoundIndex;
+		stackError("gsc_utils_loadspeexfile() requires a sound index (integer) as second argument");
+		stackPushBool(qfalse);
+		return;
 	}
 
 	if ( soundIndex < 1 || soundIndex > MAX_CUSTOMSOUNDS )
@@ -1366,6 +1368,15 @@ void gsc_utils_savespeexfile()
 		return;
 	}
 
+	VoicePacket_t *packet;
+	packet = &voiceDataStore[soundIndex - 1][0];
+	if ( !packet->dataLen )
+	{
+		stackError("gsc_utils_savespeexfile() no sound data in the specified slot");
+		stackPushBool(qfalse);
+		return;
+	}
+
 	FILE *file = fopen(filePath, "wb");
 	if ( !file )
 	{
@@ -1374,7 +1385,6 @@ void gsc_utils_savespeexfile()
 		return;
 	}
 
-	VoicePacket_t *packet;
 	for ( int packetIndex = 0; packetIndex < MAX_STOREDVOICEPACKETS; packetIndex++ )
 	{
 		packet = &voiceDataStore[soundIndex - 1][packetIndex];
