@@ -608,6 +608,21 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 		SV_Heartbeat();
 }
 
+void custom_Touch_Item_Auto(gentity_t * item, gentity_t * entity, int touch)
+{
+	if ( player_no_pickup[entity->client->ps.clientNum] )
+		return;
+	
+	hook_touch_item_auto->unhook();
+	
+	void (*Touch_Item_Auto)(gentity_t *, gentity_t *, int);
+	*(int *)&Touch_Item_Auto = hook_touch_item_auto->from;
+
+	Touch_Item_Auto(item, entity, touch);
+	
+	hook_touch_item_auto->hook();
+}
+
 void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 {
 	gclient_t * client;
@@ -634,14 +649,14 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 	{
 		if ( (!touch && (item->s).clientNum != (entity->s).number) && bg_item->giType == IT_WEAPON )
 		{
-			if ( !(((entity->client->ps).weapons[bg_item->giAmmoIndex >> 5] >> (bg_item->giAmmoIndex & 0x1F)) & 1) )
+			if ( !COM_BitCheck(entity->client->ps.weapons, bg_item->giTag) )
 			{
-				if ( (BG_WeaponDefs(bg_item->giAmmoIndex)->impactType - 1) < 2)
+				if ( (BG_WeaponDefs(bg_item->giTag)->impactType + ~IMPACT_TYPE_NONE) < 2)
 					SV_GameSendServerCommand(entity - g_entities, 0, custom_va("%c \"GAME_CANT_GET_PRIMARY_WEAP_MESSAGE\"", 0x66));
 			}
 			else
 			{
-				SV_GameSendServerCommand(entity - g_entities, 0, custom_va("%c \"GAME_PICKUP_CANTCARRYMOREAMMO\x14%s\"", 0x66, BG_WeaponDefs(bg_item->giAmmoIndex)->szDisplayName));
+				SV_GameSendServerCommand(entity - g_entities, 0, custom_va("%c \"GAME_PICKUP_CANTCARRYMOREAMMO\x14%s\"", 0x66, BG_WeaponDefs(bg_item->giTag)->szDisplayName));
 			}
 		}
 	}
@@ -653,7 +668,7 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 		if ( g_logPickup->boolean )
 		{
 			if ( bg_item->giType == IT_WEAPON )
-				G_LogPrintf("Weapon;%d;%d;%s;%s\n", SV_GetGuid((entity->s).number), (entity->s).number, name, BG_WeaponDefs(bg_item->giAmmoIndex)->szInternalName);
+				G_LogPrintf("Weapon;%d;%d;%s;%s\n", SV_GetGuid((entity->s).number), (entity->s).number, name, BG_WeaponDefs(bg_item->giTag)->szInternalName);
 			else
 				G_LogPrintf("Item;%d;%d;%s;%s\n", SV_GetGuid((entity->s).number), (entity->s).number, name, bg_item->classname);
 		}
@@ -684,7 +699,7 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 				stackPushVector(item->r.currentOrigin);
 				stackPushInt(bg_item->quantity);
 				stackPushString(bg_item->display_name);
-				stackPushString(BG_WeaponDefs(bg_item->giAmmoIndex)->szInternalName);
+				stackPushString(BG_WeaponDefs(bg_item->giTag)->szInternalName);
 				stackPushString("weapon");
 				short ret = Scr_ExecEntThread(entity, codecallback_pickup, 6);
 				Scr_FreeThread(ret);
@@ -2010,23 +2025,6 @@ void hook_scriptError(int a1, int a2, int a3, void *a4)
 		runtimeError(0, a1, a2, a3);
 	else
 		scriptError(a1, a2, a3, a4);
-}
-
-int touch_item_auto(gentity_t * item, gentity_t * entity, int touch)
-{
-	if ( player_no_pickup[entity->client->ps.clientNum] )
-		return 0;
-	
-	hook_touch_item_auto->unhook();
-	
-	int (*sig)(gentity_t *, gentity_t *, int);
-	*(int *)&sig = hook_touch_item_auto->from;
-
-	int ret = sig(item, entity, touch);
-	
-	hook_touch_item_auto->hook();
-	
-	return ret;
 }
 
 #if COMPILE_PLAYER == 1
@@ -4662,7 +4660,7 @@ public:
 		hook_stuckinclient->hook();
 		hook_fire_grenade = new cHook(0x0810C1F6, (int)custom_fire_grenade);
 		hook_fire_grenade->hook();
-		hook_touch_item_auto = new cHook(0x081037F0, int(touch_item_auto));
+		hook_touch_item_auto = new cHook(0x081037F0, int(custom_Touch_Item_Auto));
 		hook_touch_item_auto->hook();
 
 		#if COMPILE_PLAYER == 1
@@ -4734,7 +4732,7 @@ public:
 		hook_stuckinclient->hook();
 		hook_fire_grenade = new cHook(0x0810E532, (int)custom_fire_grenade);
 		hook_fire_grenade->hook();
-		hook_touch_item_auto = new cHook(0x08105B24, int(touch_item_auto));
+		hook_touch_item_auto = new cHook(0x08105B24, int(custom_Touch_Item_Auto));
 		hook_touch_item_auto->hook();
 
 		#if COMPILE_PLAYER == 1
@@ -4804,7 +4802,7 @@ public:
 		hook_stuckinclient->hook();
 		hook_fire_grenade = new cHook(0x0810E68E, (int)custom_fire_grenade);
 		hook_fire_grenade->hook();
-		hook_touch_item_auto = new cHook(0x08105C80, int(touch_item_auto));
+		hook_touch_item_auto = new cHook(0x08105C80, int(custom_Touch_Item_Auto));
 		hook_touch_item_auto->hook();
 		hook_g_tempentity = new cHook(0x0811EFC4, (int)custom_G_TempEntity);
 		hook_g_tempentity->hook();
