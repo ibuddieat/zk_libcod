@@ -9,46 +9,240 @@
 #define qtrue 1
 #define qfalse 0
 
-#define DotProduct(a,b)         ((a)[0]*(b)[0]+(a)[1]*(b)[1]+(a)[2]*(b)[2])
-#define VectorSubtract(a,b,c)   ((c)[0]=(a)[0]-(b)[0],(c)[1]=(a)[1]-(b)[1],(c)[2]=(a)[2]-(b)[2])
-#define VectorAdd(a,b,c)        ((c)[0]=(a)[0]+(b)[0],(c)[1]=(a)[1]+(b)[1],(c)[2]=(a)[2]+(b)[2])
-#define VectorCopy(a,b)         ((b)[0]=(a)[0],(b)[1]=(a)[1],(b)[2]=(a)[2])
+#define DotProduct( a, b )			( ( a )[0] * ( b )[0] + ( a )[1] * ( b )[1] + ( a )[2] * ( b )[2] )
+#define VectorSubtract( a, b, c )   ( ( c )[0] = ( a )[0] - ( b )[0],( c )[1] = ( a )[1] - ( b )[1],( c )[2] = ( a )[2] - ( b )[2] )
+#define VectorAdd( a, b, c )        ( ( c )[0] = ( a )[0] + ( b )[0],( c )[1] = ( a )[1] + ( b )[1],( c )[2] = ( a )[2] + ( b )[2] )
+#define VectorCopy( a, b )         	( ( b )[0] = ( a )[0],( b )[1] = ( a )[1],( b )[2] = ( a )[2] )
+#define	VectorScale( v, s, o )    	( ( o )[0] = ( v )[0] * ( s ),( o )[1] = ( v )[1] * ( s ),( o )[2] = ( v )[2] * ( s ))
+#define VectorMA( v, s, b, o )    	( ( o )[0] = ( v )[0] + ( b )[0] * ( s ),( o )[1] = ( v )[1] + ( b )[1] * ( s ),( o )[2]=( v )[2] + ( b )[2] * ( s ) )
+#define Vec3Cross( a, b, c )     	( ( c )[0] = ( a )[1] * ( b )[2] - ( a )[2] * ( b )[1],( c )[1] = ( a )[2] * ( b )[0] - ( a )[0] * ( b )[2],( c )[2] = ( a )[0] * ( b )[1] - ( a )[1] * ( b )[0] )
+#define DotProduct4( x, y )        	( ( x )[0] * ( y )[0] + ( x )[1] * ( y )[1] + ( x )[2] * ( y )[2] + ( x )[3] * ( y )[3] )
+#define VectorSubtract4( a, b, c )  ( ( c )[0] = ( a )[0] - ( b )[0],( c )[1] = ( a )[1] - ( b )[1],( c )[2] = ( a )[2] - ( b )[2],( c )[3] = ( a )[3] - ( b )[3] )
+#define VectorAdd4( a, b, c )       ( ( c )[0] = ( a )[0] + ( b )[0],( c )[1] = ( a )[1] + ( b )[1],( c )[2] = ( a )[2] + ( b )[2],( c )[3] = ( a )[3] + ( b )[3] )
+#define VectorCopy4( a, b )        	( ( b )[0] = ( a )[0],( b )[1] = ( a )[1],( b )[2] = ( a )[2],( b )[3] = ( a )[3] )
+#define VectorScale4( v, s, o )   	( ( o )[0] = ( v )[0] * ( s ),( o )[1] = ( v )[1] * ( s ),( o )[2] = ( v )[2] * ( s ),( o )[3] = ( v )[3] * ( s ) )
+#define VectorMA4( v, s, b, o )   	( ( o )[0] = ( v )[0] + ( b )[0] * ( s ),( o )[1] = ( v )[1] + ( b )[1] * ( s ),( o )[2] = ( v )[2] + ( b )[2] * ( s ),( o )[3] = ( v )[3] + ( b )[3] * ( s ) )
+#define VectorClear( a )			( ( a )[0] = ( a )[1] = ( a )[2] = 0 )
+#define VectorNegate( a, b )     	( ( b )[0] = -( a )[0],( b )[1] = -( a )[1],( b )[2] = -( a )[2] )
+#define VectorSet( v, x, y, z )		( ( v )[0] = ( x ),( v )[1] = ( y ),( v )[2] = ( z ) )
+#define Vector4Copy( a, b )     	( ( b )[0] = ( a )[0],( b )[1] = ( a )[1],( b )[2] = ( a )[2],( b )[3] = ( a )[3] )
+#define SnapVector( v ) 			{ v[0] = (int)v[0]; v[1] = (int)v[1]; v[2] = (int)v[2]; }
 
-#define	VectorScale(v, s, o)    ((o)[0]=(v)[0]*(s),(o)[1]=(v)[1]*(s),(o)[2]=(v)[2]*(s))
-#define VectorMA(v, s, b, o)    ((o)[0]=(v)[0]+(b)[0]*(s),(o)[1]=(v)[1]+(b)[1]*(s),(o)[2]=(v)[2]+(b)[2]*(s))
-#define Vec3Cross(a,b,c)     	((c)[0]=(a)[1]*(b)[2]-(a)[2]*(b)[1],(c)[1]=(a)[2]*(b)[0]-(a)[0]*(b)[2],(c)[2]=(a)[0]*(b)[1]-(a)[1]*(b)[0])
+#define ARCHIVEDSSBUF_SIZE  		0x2000000
+#define ENTFIELD_MASK 				0xC000
+#define FLOAT_INT_BITS  			13
+#define FLOAT_INT_BIAS  			( 1 << ( FLOAT_INT_BITS - 1 ) ) // 0x1000
+#define FRAMETIME 					50
+#define GENTITYNUM_BITS     		10
+#define PACKET_BACKUP 				32
+#define PACKET_MASK 				( PACKET_BACKUP - 1 )
 
-#define DotProduct4( x,y )        ( ( x )[0] * ( y )[0] + ( x )[1] * ( y )[1] + ( x )[2] * ( y )[2] + ( x )[3] * ( y )[3] )
-#define VectorSubtract4( a,b,c )  ( ( c )[0] = ( a )[0] - ( b )[0],( c )[1] = ( a )[1] - ( b )[1],( c )[2] = ( a )[2] - ( b )[2],( c )[3] = ( a )[3] - ( b )[3] )
-#define VectorAdd4( a,b,c )       ( ( c )[0] = ( a )[0] + ( b )[0],( c )[1] = ( a )[1] + ( b )[1],( c )[2] = ( a )[2] + ( b )[2],( c )[3] = ( a )[3] + ( b )[3] )
-#define VectorCopy4( a,b )        ( ( b )[0] = ( a )[0],( b )[1] = ( a )[1],( b )[2] = ( a )[2],( b )[3] = ( a )[3] )
-#define VectorScale4( v, s, o )   ( ( o )[0] = ( v )[0] * ( s ),( o )[1] = ( v )[1] * ( s ),( o )[2] = ( v )[2] * ( s ),( o )[3] = ( v )[3] * ( s ) )
-#define VectorMA4( v, s, b, o )   ( ( o )[0] = ( v )[0] + ( b )[0] * ( s ),( o )[1] = ( v )[1] + ( b )[1] * ( s ),( o )[2] = ( v )[2] + ( b )[2] * ( s ),( o )[3] = ( v )[3] + ( b )[3] * ( s ) )
+#define MAX_BPS_WINDOW 				20
+#define MAX_CHALLENGES 				1024
+#define MAX_CLIENTS 				64
+#define MAX_CONFIGSTRINGS   		2048
+#define MAX_DOWNLOAD_BLKSIZE		1024
+#define MAX_DOWNLOAD_WINDOW			8
+#define MAX_ENT_CLUSTERS    		16
+#define MAX_EVENTS 					4
+#define MAX_GENTITIES       		( 1 << GENTITYNUM_BITS )
+#define MAX_ITEM_MODELS 			2
+#define MAX_MODELS          		256
+#if COD_VERSION == COD2_1_0 || COD_VERSION == COD2_1_2
+#define MAX_MSGLEN 0x4000
+#elif COD_VERSION == COD2_1_3
+#define MAX_MSGLEN 0x20000
+#endif
+#define MAX_NETNAME					16
+#define MAX_OSPATH 					256
+#define MAX_QPATH 					64
+#define MAX_SNAPSHOT_ENTITIES		1024
+#define MAX_STRINGLENGTH 			1024
+#define MAX_VASTRINGS				2
+#define MAX_VOICEFRAMESIZE 			160
+#define MAX_VOICEPACKETDATALEN 		256
+#define MAX_VOICEPACKETS 			40
+#define MAX_VOICEPACKETSPERFRAME	2.56
 
-#define VectorClear(a)			((a)[0]=(a)[1]=(a)[2]=0)
-#define VectorNegate( a,b )     ( ( b )[0] = -( a )[0],( b )[1] = -( a )[1],( b )[2] = -( a )[2] )
-#define VectorSet(v, x, y, z)	((v)[0]=(x), (v)[1]=(y), (v)[2]=(z))
-#define Vector4Copy( a,b )     	( ( b )[0] = ( a )[0],( b )[1] = ( a )[1],( b )[2] = ( a )[2],( b )[3] = ( a )[3] )
+#define	CVAR_ARCHIVE		1
+#define	CVAR_USERINFO		2
+#define	CVAR_SERVERINFO		4
+#define	CVAR_SYSTEMINFO		8
+#define	CVAR_INIT			16
+#define	CVAR_LATCH			32
+#define	CVAR_ROM			64
+#define CVAR_CHEAT			128
+#define	CVAR_TEMP			256
+#define CVAR_NORESTART		1024
+#define CVAR_UNSAFE         4096
+#define	CVAR_USER_CREATED	16384
 
-#define SnapVector( v ) {v[0] = (int)v[0]; v[1] = (int)v[1]; v[2] = (int)v[2];}
+#define HASH_STAT_HEAD 0x8000
+#define HASH_NEXT_MASK 0x3FFF
+#define HASH_STAT_MASK 0xC000
 
-#define MAX_STRINGLENGTH 1024
-#define MAX_ITEM_MODELS 2
-#define MAX_CLIENTS 64
-#define MAX_CHALLENGES 1024
-#define MAX_VOICEPACKETS 40
-#define MAX_VOICEFRAMESIZE 160
-#define MAX_VOICEPACKETSPERFRAME 2.56
-#define MAX_VOICEPACKETDATALEN 256
-#define PACKET_BACKUP 32
-#define PACKET_MASK ( PACKET_BACKUP - 1 )
-#define MAX_QPATH 64
-#define MAX_OSPATH 256
-#define FRAMETIME 50
-#define MAX_EVENTS 4
+// gentity_s->flags
+#define FL_GODMODE              0x1
+#define FL_DEMI_GODMODE         0x2
+#define FL_NOTARGET             0x4
+#define FL_NO_KNOCKBACK         0x8
+#define FL_DROPPED_ITEM         0x10
+#define FL_TURRET_UNKNOWN1      0x100
+#define FL_TURRET_UNKNOWN2      0x200
+#define FL_TURRET_UNKNOWN3      0x400
+#define FL_INVISIBLE            0x800
+#define FL_LINKTO_ENABLED       0x1000
+#define FL_GRENADE_TOUCH_DAMAGE 0x4000
+#define FL_MISSILE_UNKNOWN      0x10000
+#define FL_STABLE_MISSILE       0x20000
 
-#define FLOAT_INT_BITS  13
-#define FLOAT_INT_BIAS  ( 1 << ( FLOAT_INT_BITS - 1 ) ) // 0x1000
+// gentity_s->handler
+#define EHANDLER_CLIENT_CONNECTING	0x0		// in ClientConnect
+#define EHANDLER_TRIGGER			0x1		// multiple, radius, disc, once
+#define EHANDLER_TRIGGER_HURT_TOUCH	0x2
+
+#define EHANDLER_TRIGGER_DAMAGE		0x4
+#define EHANDLER_ENTITY				0x5		// e.g., on a default script_model
+
+#define EHANDLER_GRENADE			0x7
+#define EHANDLER_ROCKET				0x8
+#define EHANDLER_CLIENT_ACTIVE		0x9		// client is connected and not in intermission and not spectator
+#define EHANDLER_CLIENT_SPAWNED		0xA		// in ClientSpawn and at the beginning of ClientEndFrame
+#define EHANDLER_CLIENT_DEAD 		0xB
+#define EHANDLER_CLIENT_CLONE		0xC
+#define EHANDLER_TURRET				0xD
+
+#define EHANDLER_ITEM_DROPPED		0xF
+#define EHANDLER_ITEM_SPAWNED		0x10	// in G_SpawnItem
+#define EHANDLER_ITEM_SPAWNING		0x11	// in FinishSpawningItem and G_SpawnItem
+#define EHANDLER_TRIGGER_USE		0x12	// use, use-touch
+#define EHANDLER_CLIENT_MANTLING	0x13	// in ClientThink_real
+
+#define	SVF_NOCLIENT  0x00000001
+#define	SVF_BROADCAST 0x00000008
+
+#define KEY_MASK_NONE        	0
+#define KEY_MASK_FORWARD        127
+#define KEY_MASK_BACK           -127
+#define KEY_MASK_MOVERIGHT      127
+#define KEY_MASK_MOVELEFT       -127
+
+#define KEY_MASK_FIRE           1
+#define KEY_MASK_MELEE          4
+#define KEY_MASK_USE            8
+#define KEY_MASK_RELOAD         16
+#define KEY_MASK_LEANLEFT       64
+#define KEY_MASK_LEANRIGHT      128
+#define KEY_MASK_PRONE          256
+#define KEY_MASK_CROUCH         512
+#define KEY_MASK_JUMP           1024
+#define KEY_MASK_ADS_MODE       4096
+#define KEY_MASK_MELEE_BREATH   32772
+#define KEY_MASK_HOLDBREATH     32768
+#define KEY_MASK_FRAG           65536
+#define KEY_MASK_SMOKE          131072
+
+#define EF_CROUCHING			0x00000004
+#define EF_PRONE				0x00000008
+#define EF_FIRING				0x00000020
+#define EF_USETURRET			0x00000300
+#define EF_MANTLE				0x00004000
+#define EF_DEAD					0x00020000
+#define EF_AIMDOWNSIGHT			0x00040000
+#define EF_VOTED				0x00100000
+#define EF_TALK					0x00200000
+#define EF_TAUNT				0x00400000
+
+#define PMF_PRONE 				1
+#define PMF_CROUCH 				2
+#define PMF_MANTLE 				4
+#define PMF_FRAG				16
+#define PMF_LADDER 				32
+#define PMF_BACKWARDS_RUN 		128
+#define PMF_SLIDING 			512
+#define PMF_MELEE 				8192
+#define PMF_JUMPING 			524288
+#define PMF_VIEWLOCKED			8388608 // name guessed
+#define PMF_SPECTATING 			16777216
+#define PMF_DISABLEWEAPON 		67108864
+
+#define CONTENTS_SOLID          	1
+#define CONTENTS_FOLIAGE			2
+#define CONTENTS_NONCOLLIDING   	4
+#define CONTENTS_LAVA           	8
+#define CONTENTS_GLASS				0x10
+#define CONTENTS_WATER          	0x20
+#define CONTENTS_CANSHOTCLIP    	0x40
+#define CONTENTS_MISSILECLIP    	0x80
+#define CONTENTS_VEHICLECLIP		0x200
+#define CONTENTS_ITEMCLIP       	0x400
+#define CONTENTS_SKY            	0x800
+#define CONTENTS_AI_NOSIGHT     	0x1000
+#define CONTENTS_CLIPSHOT       	0x2000
+#define CONTENTS_MOVER          	0x4000
+#define CONTENTS_PLAYERCLIP     	0x10000
+#define CONTENTS_MONSTERCLIP    	0x20000
+#define CONTENTS_TELEPORTER     	0x40000
+#define CONTENTS_JUMPPAD        	0x80000
+#define CONTENTS_CLUSTERPORTAL  	0x100000
+#define CONTENTS_DONOTENTER     	0x200000
+#define CONTENTS_DONOTENTER_LARGE 	0x400000
+#define CONTENTS_CURRENT_DOWN   	0x800000 // might be named differently
+#define CONTENTS_MANTLE         	0x1000000
+#define CONTENTS_BODY           	0x2000000
+#define CONTENTS_DETAIL         	0x8000000
+#define CONTENTS_STRUCTURAL     	0x10000000
+#define CONTENTS_TRANSPARENT    	0x20000000
+#define CONTENTS_TRIGGER        	0x40000000
+#define CONTENTS_NODROP         	0x80000000
+
+#define MASK_ALL ( -1 )
+#define MASK_SHOT ( CONTENTS_SOLID | CONTENTS_GLASS | CONTENTS_WATER | CONTENTS_SKY | CONTENTS_CLIPSHOT | CONTENTS_CURRENT_DOWN | CONTENTS_BODY )
+#define MASK_OPAQUE_AI ( CONTENTS_SOLID | CONTENTS_FOLIAGE | CONTENTS_SKY | CONTENTS_AI_NOSIGHT | CONTENTS_CURRENT_DOWN | CONTENTS_BODY )
+
+#define SURF_NOLIGHTMAP         0x0
+#define SURF_NODAMAGE           0x1
+#define SURF_SLICK              0x2
+#define SURF_SKY                0x4
+#define SURF_LADDER             0x8
+#define SURF_NOIMPACT           0x10
+#define SURF_NOMARKS            0x20
+#define SURF_NODRAW             0x80
+#define SURF_NOSTEPS            0x2000
+#define SURF_NONSOLID           0x4000
+#define SURF_NODLIGHT           0x20000
+#define SURF_NOCASTSHADOW       0x40000
+#define SURF_MANTLEON           0x2000000
+#define SURF_MANTLEOVER         0x4000000
+#define SURF_PORTAL             0x80000000
+
+#define SURF_BARK               0x100000
+#define SURF_BRICK              0x200000
+#define SURF_CARPET             0x300000
+#define SURF_CLOTH              0x400000
+#define SURF_CONCRETE           0x500000
+#define SURF_DIRT               0x600000
+#define SURF_FLESH              0x700000
+#define SURF_FOLIAGE            0x800000
+#define SURF_GLASS              0x900000
+#define SURF_GRASS              0xa00000
+#define SURF_GRAVEL             0xb00000
+#define SURF_ICE                0xc00000
+#define SURF_METAL              0xd00000
+#define SURF_MUD                0xe00000
+#define SURF_PAPER              0xf00000
+#define SURF_PLASTER            0x1000000
+#define SURF_ROCK               0x1100000
+#define SURF_SAND               0x1200000
+#define SURF_SNOW               0x1300000
+#define SURF_WATER              0x1400000
+#define SURF_WOOD               0x1500000
+#define SURF_ASPHALT            0x1600000
+
+#define TOOL_OCCLUDER           0x1
+#define TOOL_DRAWTOGGLE         0x2
+#define TOOL_ORIGIN             0x4
+#define TOOL_RADIALNORMALS      0x8
 
 typedef unsigned char byte;
 typedef signed char sbyte;
@@ -236,23 +430,6 @@ typedef struct cvar_s
 	struct cvar_s *next;
 	struct cvar_s *hashNext;
 } cvar_t;
-
-#define	CVAR_ARCHIVE		1
-#define	CVAR_USERINFO		2
-#define	CVAR_SERVERINFO		4
-#define	CVAR_SYSTEMINFO		8
-#define	CVAR_INIT			16
-#define	CVAR_LATCH			32
-#define	CVAR_ROM			64
-#define CVAR_CHEAT			128
-#define	CVAR_TEMP			256
-#define CVAR_NORESTART		1024
-#define CVAR_UNSAFE         4096
-#define	CVAR_USER_CREATED	16384
-
-#define HASH_STAT_HEAD 0x8000
-#define HASH_NEXT_MASK 0x3FFF
-#define HASH_STAT_MASK 0xC000
 
 #pragma pack(push, 4)
 struct __attribute__((aligned(4))) RefString
@@ -739,12 +916,6 @@ typedef struct usercmd_s
 	char rightmove;
 } usercmd_t;
 
-#if COD_VERSION == COD2_1_0 || COD_VERSION == COD2_1_2
-#define MAX_MSGLEN 0x4000
-#elif COD_VERSION == COD2_1_3
-#define MAX_MSGLEN 0x20000
-#endif
-
 typedef void netProfileInfo_t;
 
 typedef struct
@@ -809,8 +980,6 @@ typedef struct
 	vec3_t		trBase;
 	vec3_t		trDelta;
 } trajectory_t;
-
-#define MAX_NETNAME 16
 
 typedef struct clientState_s
 {
@@ -1261,43 +1430,6 @@ typedef struct tagInfo_s
 	float parentInvAxis[4][3];
 } tagInfo_t;
 
-// gentity_s->flags
-#define FL_GODMODE              0x1
-#define FL_DEMI_GODMODE         0x2
-#define FL_NOTARGET             0x4
-#define FL_NO_KNOCKBACK         0x8
-#define FL_DROPPED_ITEM         0x10
-#define FL_TURRET_UNKNOWN1      0x100
-#define FL_TURRET_UNKNOWN2      0x200
-#define FL_TURRET_UNKNOWN3      0x400
-#define FL_INVISIBLE            0x800
-#define FL_LINKTO_ENABLED       0x1000
-#define FL_GRENADE_TOUCH_DAMAGE 0x4000
-#define FL_MISSILE_UNKNOWN      0x10000
-#define FL_STABLE_MISSILE       0x20000
-
-// gentity_s->handler
-#define EHANDLER_CLIENT_CONNECTING	0x0		// in ClientConnect
-#define EHANDLER_TRIGGER			0x1		// multiple, radius, disc, once
-#define EHANDLER_TRIGGER_HURT_TOUCH	0x2
-
-#define EHANDLER_TRIGGER_DAMAGE		0x4
-#define EHANDLER_ENTITY				0x5		// e.g., on a default script_model
-
-#define EHANDLER_GRENADE			0x7
-#define EHANDLER_ROCKET				0x8
-#define EHANDLER_CLIENT_ACTIVE		0x9		// client is connected and not in intermission and not spectator
-#define EHANDLER_CLIENT_SPAWNED		0xA		// in ClientSpawn and at the beginning of ClientEndFrame
-#define EHANDLER_CLIENT_DEAD 		0xB
-#define EHANDLER_CLIENT_CLONE		0xC
-#define EHANDLER_TURRET				0xD
-
-#define EHANDLER_ITEM_DROPPED		0xF
-#define EHANDLER_ITEM_SPAWNED		0x10	// in G_SpawnItem
-#define EHANDLER_ITEM_SPAWNING		0x11	// in FinishSpawningItem and G_SpawnItem
-#define EHANDLER_TRIGGER_USE		0x12	// use, use-touch
-#define EHANDLER_CLIENT_MANTLING	0x13	// in ClientThink_real
-
 struct gentity_s
 {
 	entityState_t s;
@@ -1343,11 +1475,6 @@ struct gentity_s
 	int useCount; // 552
 	gentity_t *nextFree; // 556
 }; // verified
-
-#define MAX_DOWNLOAD_BLKSIZE 1024
-#define MAX_DOWNLOAD_WINDOW 8
-
-#define MAX_SNAPSHOT_ENTITIES 1024
 
 typedef struct
 {
@@ -1531,6 +1658,15 @@ typedef struct
 	int otherUseCount;
 } trigger_info_t;
 
+struct com_parse_mark_t
+{
+	int lines;
+	const char *text;
+	int ungetToken;
+	int backup_lines;
+	const char *backup_text;
+};
+
 typedef struct
 {
 	struct gclient_s *clients;
@@ -1582,7 +1718,8 @@ typedef struct
 	int currentEntityThink;
 	void *openScriptIOFileHandles[1];
 	char *openScriptIOFileBuffers[1];
-} level_locals_t; // possibly more stuff here
+	com_parse_mark_t currentScriptIOLineMark[1];
+} level_locals_t;
 
 typedef enum
 {
@@ -1590,14 +1727,6 @@ typedef enum
 	SS_LOADING,
 	SS_GAME
 } serverState_t;
-
-#define MAX_CONFIGSTRINGS   2048
-#define MAX_MODELS          256
-#define GENTITYNUM_BITS     10
-#define MAX_GENTITIES       ( 1 << GENTITYNUM_BITS )
-#define MAX_ENT_CLUSTERS    16
-#define MAX_BPS_WINDOW 		20
-#define ARCHIVEDSSBUF_SIZE  0x2000000
 
 typedef struct svEntity_s
 {
@@ -2594,140 +2723,11 @@ typedef struct comBspGlob_t
 	const void *loadedLumpData;
 } comBspGlob_t;
 
-#define MAX_VASTRINGS 2
-
 struct va_info_t
 {
 	char va_string[MAX_VASTRINGS][1024];
 	int index;
 };
-
-#define	SVF_NOCLIENT  0x00000001
-#define	SVF_BROADCAST 0x00000008
-
-#define KEY_MASK_NONE        	0
-
-#define KEY_MASK_FORWARD        127
-#define KEY_MASK_BACK           -127
-#define KEY_MASK_MOVERIGHT      127
-#define KEY_MASK_MOVELEFT       -127
-
-#define KEY_MASK_FIRE           1
-#define KEY_MASK_MELEE          4
-#define KEY_MASK_USE            8
-#define KEY_MASK_RELOAD         16
-#define KEY_MASK_LEANLEFT       64
-#define KEY_MASK_LEANRIGHT      128
-#define KEY_MASK_PRONE          256
-#define KEY_MASK_CROUCH         512
-#define KEY_MASK_JUMP           1024
-#define KEY_MASK_ADS_MODE       4096
-#define KEY_MASK_MELEE_BREATH   32772
-#define KEY_MASK_HOLDBREATH     32768
-#define KEY_MASK_FRAG           65536
-#define KEY_MASK_SMOKE          131072
-
-#define EF_VOTED 0x00100000
-#define EF_TALK 0x00200000
-#define EF_TAUNT 0x00400000
-#define EF_FIRING 0x00000020
-#define EF_MANTLE 0x00004000
-#define EF_CROUCHING 0x00000004
-#define EF_PRONE 0x00000008
-#define EF_DEAD 0x00020000
-#define EF_USETURRET 0x00000300
-#define EF_AIMDOWNSIGHT 0x00040000
-
-#define PMF_PRONE 				1
-#define PMF_CROUCH 				2
-#define PMF_MANTLE 				4
-#define PMF_FRAG				16
-#define PMF_LADDER 				32
-#define PMF_BACKWARDS_RUN 		128
-#define PMF_SLIDING 			512
-#define PMF_MELEE 				8192
-#define PMF_JUMPING 			524288
-#define PMF_VIEWLOCKED			8388608 // name guessed
-#define PMF_SPECTATING 			16777216
-#define PMF_DISABLEWEAPON 		67108864
-
-#define CONTENTS_SOLID          	1
-#define CONTENTS_FOLIAGE			2
-#define CONTENTS_NONCOLLIDING   	4
-#define CONTENTS_LAVA           	8
-#define CONTENTS_GLASS				0x10
-#define CONTENTS_WATER          	0x20
-#define CONTENTS_CANSHOTCLIP    	0x40
-#define CONTENTS_MISSILECLIP    	0x80
-#define CONTENTS_VEHICLECLIP		0x200
-#define CONTENTS_ITEMCLIP       	0x400
-#define CONTENTS_SKY            	0x800
-#define CONTENTS_AI_NOSIGHT     	0x1000
-#define CONTENTS_CLIPSHOT       	0x2000
-#define CONTENTS_MOVER          	0x4000
-#define CONTENTS_PLAYERCLIP     	0x10000
-#define CONTENTS_MONSTERCLIP    	0x20000
-#define CONTENTS_TELEPORTER     	0x40000
-#define CONTENTS_JUMPPAD        	0x80000
-#define CONTENTS_CLUSTERPORTAL  	0x100000
-#define CONTENTS_DONOTENTER     	0x200000
-#define CONTENTS_DONOTENTER_LARGE 	0x400000
-#define CONTENTS_CURRENT_DOWN   	0x800000 // might be named differently
-#define CONTENTS_MANTLE         	0x1000000
-#define CONTENTS_BODY           	0x2000000
-#define CONTENTS_DETAIL         	0x8000000
-#define CONTENTS_STRUCTURAL     	0x10000000
-#define CONTENTS_TRANSPARENT    	0x20000000
-#define CONTENTS_TRIGGER        	0x40000000
-#define CONTENTS_NODROP         	0x80000000
-
-#define MASK_ALL ( -1 )
-#define MASK_SHOT ( CONTENTS_SOLID | CONTENTS_GLASS | CONTENTS_WATER | CONTENTS_SKY | CONTENTS_CLIPSHOT | CONTENTS_CURRENT_DOWN | CONTENTS_BODY )
-#define MASK_OPAQUE_AI ( CONTENTS_SOLID | CONTENTS_FOLIAGE | CONTENTS_SKY | CONTENTS_AI_NOSIGHT | CONTENTS_CURRENT_DOWN | CONTENTS_BODY )
-
-#define SURF_NOLIGHTMAP         0x0
-#define SURF_NODAMAGE           0x1
-#define SURF_SLICK              0x2
-#define SURF_SKY                0x4
-#define SURF_LADDER             0x8
-#define SURF_NOIMPACT           0x10
-#define SURF_NOMARKS            0x20
-#define SURF_NODRAW             0x80
-#define SURF_NOSTEPS            0x2000
-#define SURF_NONSOLID           0x4000
-#define SURF_NODLIGHT           0x20000
-#define SURF_NOCASTSHADOW       0x40000
-#define SURF_MANTLEON           0x2000000
-#define SURF_MANTLEOVER         0x4000000
-#define SURF_PORTAL             0x80000000
-
-#define SURF_BARK               0x100000
-#define SURF_BRICK              0x200000
-#define SURF_CARPET             0x300000
-#define SURF_CLOTH              0x400000
-#define SURF_CONCRETE           0x500000
-#define SURF_DIRT               0x600000
-#define SURF_FLESH              0x700000
-#define SURF_FOLIAGE            0x800000
-#define SURF_GLASS              0x900000
-#define SURF_GRASS              0xa00000
-#define SURF_GRAVEL             0xb00000
-#define SURF_ICE                0xc00000
-#define SURF_METAL              0xd00000
-#define SURF_MUD                0xe00000
-#define SURF_PAPER              0xf00000
-#define SURF_PLASTER            0x1000000
-#define SURF_ROCK               0x1100000
-#define SURF_SAND               0x1200000
-#define SURF_SNOW               0x1300000
-#define SURF_WATER              0x1400000
-#define SURF_WOOD               0x1500000
-#define SURF_ASPHALT            0x1600000
-
-#define TOOL_OCCLUDER           0x1
-#define TOOL_DRAWTOGGLE         0x2
-#define TOOL_ORIGIN             0x4
-#define TOOL_RADIALNORMALS      0x8
 
 #if COD_VERSION == COD2_1_0
 static const int gentities_offset = 0x08665480;

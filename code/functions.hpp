@@ -1630,7 +1630,7 @@ static const GScr_AllocString_t GScr_AllocString = (GScr_AllocString_t)0x0; // N
 static const GScr_AllocString_t GScr_AllocString = (GScr_AllocString_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const GScr_AllocString_t GScr_AllocString = (GScr_AllocString_t)0x081101B4;
-#endif   
+#endif
    
 typedef int (*Pickup_Ammo_t)(gentity_t *item, gentity_t *entity);
 #if COD_VERSION == COD2_1_0

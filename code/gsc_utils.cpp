@@ -1031,9 +1031,9 @@ void Encode_SetOptions(void *encoder)
 void *encode_async(void *newtask)
 {
 	encoder_async_task *task = (encoder_async_task*)newtask;
-	FILE *file = fopen(task->filePath, "r");
 	int result = 0;
 
+	FILE *file = fopen(task->filePath, "r");
 	if ( file != NULL )    
 	{
 		// Reset sound data for this slot
