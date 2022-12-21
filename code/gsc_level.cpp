@@ -51,7 +51,32 @@ void gsc_level_getstaticmodelorigin()
 
 void gsc_level_getentitycount()
 {
-	stackPushInt(level.num_entities);
+	int inUseOnly;
+	gentity_t *ent;
+	int i;
+	int entities = 0;
+
+	if ( ! stackGetParams("i", &inUseOnly))
+	{
+		inUseOnly = 0;
+	}
+
+	if ( inUseOnly )
+	{
+		ent = g_entities;
+		for ( i = 0; i < level.num_entities; i++, ent++ )
+		{
+			if ( (ent->r).inuse != 0 )
+			{
+				entities++;
+			}
+		}
+		stackPushInt(entities);
+	}
+	else
+	{
+		stackPushInt(level.num_entities);
+	}
 }
 
 #endif

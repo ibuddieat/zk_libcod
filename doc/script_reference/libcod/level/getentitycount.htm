@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>getEntityCount()</H1>
+<H1>getEntityCount( &ltin usei&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
@@ -27,7 +27,7 @@ Module: Level<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Get the number of currently present entities, including temporary entities. This does not include entities that are rendered/handled on the client side only (e.g., entities spawned for effects). The returned number may not change on each call of spawn(), as the server may use pre-allocated entities before creating new ones.</p>
+<p>Get the number of currently present entities, including temporary entities. This does not include entities that are rendered/handled on the client side only (e.g., entities spawned for effects). The returned number may not change on each call of spawn(), as the server may use pre-allocated entities before creating new ones. To return the number of entities in use, set the first parameter to true.</p>
 
 </H3>
 </TR></TD></TABLE>
@@ -37,12 +37,19 @@ Module: Level<BR>
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-if(getEntityCount() >= 1000)
+if(getEntityCount(true) >= 1000)
     iprintLnBold("Warning: Server close to entity limit!");
 ent = spawn("script_model", origin);
 </PRE>
 </H3>
 </TR></TD></TABLE>
+<BR><BR>
+<H2>Optional Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;in use&gt; Only count entities that are actually in use</LI>
+</UL></TR></TD></TABLE>
 <BR>
 </BODY>
 </HTML>
