@@ -408,6 +408,15 @@ static const SV_ConnectionlessPacket_t SV_ConnectionlessPacket = (SV_Connectionl
 static const SV_ConnectionlessPacket_t SV_ConnectionlessPacket = (SV_ConnectionlessPacket_t)0x0809594E;
 #endif
 
+typedef void (*SV_VerifyIwds_f_t)(client_t *cl);
+#if COD_VERSION == COD2_1_0
+static const SV_VerifyIwds_f_t SV_VerifyIwds_f = (SV_VerifyIwds_f_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_VerifyIwds_f_t SV_VerifyIwds_f = (SV_VerifyIwds_f_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_VerifyIwds_f_t SV_VerifyIwds_f = (SV_VerifyIwds_f_t)0x08090534;
+#endif
+
 typedef void (*NET_OutOfBandPrint_t)(netsrc_t net_socket, netadr_t adr, const char *format, ...);
 #if COD_VERSION == COD2_1_0
 static const NET_OutOfBandPrint_t NET_OutOfBandPrint = (NET_OutOfBandPrint_t)0x0806C40C;

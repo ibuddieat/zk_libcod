@@ -61,6 +61,10 @@ Added cvars:
     * Type: Boolean
     * Default: True
     * Effect: Toggle output of player timeout game messages.
+  * `sv_verifyIwds`
+    * Type: Boolean
+    * Default: True
+    * Effect: Toggle IWD file verification triggered by cp client commands.
   * `sv_wwwDlDisconnectedMessages`
     * Type: Integer
     * Default: 1

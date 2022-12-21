@@ -53,6 +53,7 @@ cvar_t *sv_logHeartbeats;
 cvar_t *sv_logRcon;
 cvar_t *sv_noauthorize;
 cvar_t *sv_timeoutMessages;
+cvar_t *sv_verifyIwds;
 #if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
 cvar_t *sv_wwwDlDisconnectedMessages;
 #endif
@@ -242,6 +243,7 @@ void common_init_complete_print(const char *format, ...)
 	sv_logRcon = Cvar_RegisterBool("sv_logRcon", qtrue, CVAR_ARCHIVE);
 	sv_noauthorize = Cvar_RegisterBool("sv_noauthorize", qfalse, CVAR_ARCHIVE);
 	sv_timeoutMessages = Cvar_RegisterBool("sv_timeoutMessages", qtrue, CVAR_ARCHIVE);
+	sv_verifyIwds = Cvar_RegisterBool("sv_verifyIwds", qtrue, CVAR_ARCHIVE);
 	#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
 	sv_wwwDlDisconnectedMessages = Cvar_RegisterInt("sv_wwwDlDisconnectedMessages", 1, 0, 2, CVAR_ARCHIVE);
 	#endif
@@ -1866,13 +1868,18 @@ char *custom_va(const char *format, ...)
 	return info->va_string[index];
 }
 
-void hook_SV_VerifyIwds_f(client_t *cl)
+void custom_SV_VerifyIwds_f(client_t *cl)
 {
 	if ( sv_pure->boolean )
-		cl->pureAuthentic = 1;
+	{
+		if ( sv_verifyIwds->boolean )
+			SV_VerifyIwds_f(cl);
+		else
+			cl->pureAuthentic = 1;
+	}
 }
 
-void hook_SV_ResetPureClient_f(client_t *cl)
+void custom_SV_ResetPureClient_f(client_t *cl)
 {
 	cl->pureAuthentic = 0;
 
@@ -4675,8 +4682,8 @@ public:
 		cracking_hook_function(0x080E97F0, (int)custom_BG_IsWeaponValid);
 		cracking_hook_function(0x0808E544, (int)custom_SV_WriteDownloadToClient);
 		cracking_hook_function(0x080B59CE, (int)custom_va);
-		cracking_hook_function(0x0808EC66, (int)hook_SV_VerifyIwds_f);
-		cracking_hook_function(0x0808EEEC, (int)hook_SV_ResetPureClient_f);
+		cracking_hook_function(0x0808EC66, (int)custom_SV_VerifyIwds_f);
+		cracking_hook_function(0x0808EEEC, (int)custom_SV_ResetPureClient_f);
 		cracking_hook_function(0x0809443E, (int)custom_SV_CalcPings);
 		cracking_hook_function(0x080945AC, (int)custom_SV_CheckTimeouts);
 
@@ -4747,8 +4754,8 @@ public:
 		cracking_hook_function(0x080EBDE0, (int)custom_BG_IsWeaponValid);
 		cracking_hook_function(0x0808FD2E, (int)custom_SV_WriteDownloadToClient);
 		cracking_hook_function(0x080B7E62, (int)custom_va);
-		cracking_hook_function(0x080904A0, (int)hook_SV_VerifyIwds_f);
-		cracking_hook_function(0x08090726, (int)hook_SV_ResetPureClient_f);
+		cracking_hook_function(0x080904A0, (int)custom_SV_VerifyIwds_f);
+		cracking_hook_function(0x08090726, (int)custom_SV_ResetPureClient_f);
 		cracking_hook_function(0x0809630E, (int)custom_SV_CalcPings);
 		cracking_hook_function(0x080964C4, (int)custom_SV_CheckTimeouts);
 
@@ -4843,8 +4850,8 @@ public:
 		cracking_hook_function(0x0808F02E, (int)custom_SV_DropClient);
 		cracking_hook_function(0x0808FDC2, (int)custom_SV_WriteDownloadToClient);
 		cracking_hook_function(0x080B7FA6, (int)custom_va);
-		cracking_hook_function(0x08090534, (int)hook_SV_VerifyIwds_f);
-		cracking_hook_function(0x080907BA, (int)hook_SV_ResetPureClient_f);
+		cracking_hook_function(0x08090534, (int)custom_SV_VerifyIwds_f);
+		cracking_hook_function(0x080907BA, (int)custom_SV_ResetPureClient_f);
 		cracking_hook_function(0x080963C8, (int)custom_SV_CalcPings);
 		cracking_hook_function(0x0809657E, (int)custom_SV_CheckTimeouts);
 		cracking_hook_function(0x08080050, (int)custom_Scr_ErrorInternal);
