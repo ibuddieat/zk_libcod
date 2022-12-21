@@ -4687,6 +4687,18 @@ public:
 		cracking_hook_function(0x0809443E, (int)custom_SV_CalcPings);
 		cracking_hook_function(0x080945AC, (int)custom_SV_CheckTimeouts);
 
+		#if COMPILE_JUMP == 1
+		cracking_hook_function(0x080D9FF4, (int)Jump_ClearState);
+		cracking_hook_function(0x080DA1A6, (int)Jump_ReduceFriction);
+		cracking_hook_function(0x080DA238, (int)Jump_ClampVelocity);
+		cracking_hook_function(0x080DA0A4, (int)Jump_IsPlayerAboveMax);
+		cracking_hook_function(0x080DA016, (int)Jump_GetStepHeight);
+		cracking_hook_function(0x080DA584, (int)Jump_Check);
+		cracking_hook_function(0x080DA0F4, (int)Jump_ApplySlowdown);
+		cracking_hook_function(0x080DA0CA, (int)Jump_ActivateSlowdown);
+		cracking_hook_function(0x080D9EE8, (int)Jump_RegisterDvars);
+		#endif
+
 		#if COMPILE_BOTS == 1
 		cracking_hook_function(0x0809479A, (int)custom_SV_BotUserMove);
 		#endif
@@ -4758,6 +4770,18 @@ public:
 		cracking_hook_function(0x08090726, (int)custom_SV_ResetPureClient_f);
 		cracking_hook_function(0x0809630E, (int)custom_SV_CalcPings);
 		cracking_hook_function(0x080964C4, (int)custom_SV_CheckTimeouts);
+
+		#if COMPILE_JUMP == 1
+		cracking_hook_function(0x080DC5D4, (int)Jump_ClearState);
+		cracking_hook_function(0x080DC786, (int)Jump_ReduceFriction);
+		cracking_hook_function(0x080DC818, (int)Jump_ClampVelocity);
+		cracking_hook_function(0x080DC684, (int)Jump_IsPlayerAboveMax);
+		cracking_hook_function(0x080DC5F6, (int)Jump_GetStepHeight);
+		cracking_hook_function(0x080DCB64, (int)Jump_Check);
+		cracking_hook_function(0x080DC6D4, (int)Jump_ApplySlowdown);
+		cracking_hook_function(0x080DC6AA, (int)Jump_ActivateSlowdown);
+		cracking_hook_function(0x080DC4C8, (int)Jump_RegisterDvars);
+		#endif
 
 		#if COMPILE_BOTS == 1
 		cracking_hook_function(0x080966B2, (int)custom_SV_BotUserMove);
@@ -4872,6 +4896,18 @@ public:
 		cracking_hook_function(0x0809C21C, (int)custom_SV_QueueVoicePacket);
 		cracking_hook_function(0x08121BC6, (int)custom_Player_UpdateCursorHints);
 		cracking_hook_function(0x08060C20, (int)custom_Com_PrintMessage);
+
+		#if COMPILE_JUMP == 1
+		cracking_hook_function(0x080DC718, (int)Jump_ClearState);
+		cracking_hook_function(0x080DC8CA, (int)Jump_ReduceFriction);
+		cracking_hook_function(0x080DC95C, (int)Jump_ClampVelocity);
+		cracking_hook_function(0x080DC7C8, (int)Jump_IsPlayerAboveMax);
+		cracking_hook_function(0x080DC73A, (int)Jump_GetStepHeight);
+		cracking_hook_function(0x080DCCA8, (int)Jump_Check);
+		cracking_hook_function(0x080DC818, (int)Jump_ApplySlowdown);
+		cracking_hook_function(0x080DC7EE, (int)Jump_ActivateSlowdown);
+		cracking_hook_function(0x080DC60C, (int)Jump_RegisterDvars);
+		#endif
 
 		#if COMPILE_BOTS == 1
 		cracking_hook_function(0x0809676C, (int)custom_SV_BotUserMove);
