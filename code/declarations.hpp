@@ -2047,7 +2047,7 @@ typedef struct WeaponDef_t
 	int iReloadAmmoAdd;
 	int iReloadStartAdd;
 	const char *szAltWeaponName;
-	uint altWeaponIndex;
+	unsigned int altWeaponIndex;
 	int iDropAmmoMin;
 	int iDropAmmoMax;
 	int iExplosionRadius;

@@ -1668,7 +1668,7 @@ static const Pickup_Health_t Pickup_Health = (Pickup_Health_t)0x0; // Not tested
 static const Pickup_Health_t Pickup_Health = (Pickup_Health_t)0x081059C0;
 #endif
 
-typedef int (*LargeLocalConstructor_t)(LargeLocal *buf, int size);
+typedef void (*LargeLocalConstructor_t)(LargeLocal *buf, int size);
 #if COD_VERSION == COD2_1_0
 static const LargeLocalConstructor_t LargeLocalConstructor = (LargeLocalConstructor_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
@@ -1677,7 +1677,7 @@ static const LargeLocalConstructor_t LargeLocalConstructor = (LargeLocalConstruc
 static const LargeLocalConstructor_t LargeLocalConstructor = (LargeLocalConstructor_t)0x080AC58E;
 #endif
 
-typedef int (*LargeLocalGetBuf_t)(LargeLocal *buf);
+typedef byte * (*LargeLocalGetBuf_t)(LargeLocal *buf);
 #if COD_VERSION == COD2_1_0
 static const LargeLocalGetBuf_t LargeLocalGetBuf = (LargeLocalGetBuf_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
@@ -1686,7 +1686,7 @@ static const LargeLocalGetBuf_t LargeLocalGetBuf = (LargeLocalGetBuf_t)0x0; // N
 static const LargeLocalGetBuf_t LargeLocalGetBuf = (LargeLocalGetBuf_t)0x080AC5D8;
 #endif
 
-typedef int (*LargeLocalDestructor_t)(LargeLocal *buf);
+typedef void (*LargeLocalDestructor_t)(LargeLocal *buf);
 #if COD_VERSION == COD2_1_0
 static const LargeLocalDestructor_t LargeLocalDestructor = (LargeLocalDestructor_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
