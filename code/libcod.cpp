@@ -2853,15 +2853,12 @@ void custom_Com_Error(int errorLevel, const char *error, ...)
 	#if COD_VERSION == COD2_1_0 // Not tested
 	int va_string_156 = 0x0;
 	int unk1 = 0x0;
-	int unk2 = 0x0;
 	#elif COD_VERSION == COD2_1_2 // Not tested
 	int va_string_156 = 0x0;
 	int unk1 = 0x0;
-	int unk2 = 0x0;
 	#elif COD_VERSION == COD2_1_3
 	int va_string_156 = 0x081A2280;
 	int unk1 = 0x081A327F;
-	int unk2 = 0x081A2264;
 	#endif
 	
 	if ( com_errorEntered )
@@ -2889,7 +2886,7 @@ void custom_Com_Error(int errorLevel, const char *error, ...)
 			com_fixedConsolePosition = 0;
 	}
 	
-	*(int *)unk2 = errorLevel;
+	errorcode = errorLevel;
 	
 	Sys_LeaveCriticalSectionInternal(2);
 
