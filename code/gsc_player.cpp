@@ -612,7 +612,7 @@ void gsc_player_connectionlesspacket(scr_entref_t id)
 
 	client_t *client = &svs.clients[id];
 
-	byte bufData[131072];
+	byte bufData[MAX_MSGLEN];
 	msg_t msg;
 
 	MSG_Init(&msg, bufData, sizeof(bufData));
@@ -1931,6 +1931,20 @@ void gsc_player_getvieworigin(scr_entref_t id)
 	G_GetPlayerViewOrigin(ent, viewOrigin);
 
 	stackPushVector(viewOrigin);
+}
+
+void gsc_player_getservercommandqueuesize(scr_entref_t id)
+{
+	if (id >= MAX_CLIENTS)
+	{
+		stackError("gsc_player_getservercommandqueuesize() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	client_t *client = &svs.clients[id];
+
+	stackPushInt(client->reliableSequence - client->reliableAcknowledge);
 }
 
 #if COMPILE_CUSTOM_VOICE == 1

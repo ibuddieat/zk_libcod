@@ -13,6 +13,7 @@ New script code methods:
   * `<player> getInactivityTime()`
   * `<player> getPlayerstateFlags()`
   * `<player> getRemainingSoundFileDuration()`
+  * `<player> getServerCommandQueueSize()`
   * `<player> getViewOrigin()`
   * `<player> isPlayingSoundFile()`
   * `<player> muteClient(<player>)`
