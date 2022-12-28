@@ -53,7 +53,7 @@ sudo apt install libmysqlclient-dev:i386
 cd code
 ./doit.sh
 
-# Or without Speex:
+# Or without Speex (you have to disable COMPILE_CUSTOM_VOICE in code/config.hpp if you do not have Speex installed)
 ./doit.sh nospeex
 ```
 
