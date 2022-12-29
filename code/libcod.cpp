@@ -77,7 +77,7 @@ cHook *hook_print_codepos;
 cHook *hook_scr_loadgametype;
 cHook *hook_scr_notify;
 cHook *hook_script_cloneplayer;
-cHook *hook_set_anim;
+cHook *hook_bg_playanim;
 cHook *hook_sv_init;
 cHook *hook_sv_masterheartbeat;
 cHook *hook_touch_item_auto;
@@ -1544,7 +1544,7 @@ void custom_SV_SendClientGameState(client_t *client)
 	LargeLocal		buf;
 	
 	LargeLocalConstructor(&buf, MAX_MSGLEN);
-	data = (byte *)LargeLocalGetBuf(&buf);
+	data = LargeLocalGetBuf(&buf);
 	while ( client->state != CS_FREE && client->netchan.unsentFragments )
 		SV_Netchan_TransmitNextFragment(&client->netchan);
 	
@@ -2244,23 +2244,23 @@ int custom_ClientEndFrame(gentity_t *ent)
 	return ret;
 }
 
-int set_anim(playerState_t *ps, int animNum, animBodyPart_t bodyPart, int forceDuration, qboolean setTimer, qboolean isContinue, qboolean force)
+int custom_BG_PlayAnim(playerState_t *ps, int animNum, animBodyPart_t bodyPart, int forceDuration, qboolean setTimer, qboolean isContinue, qboolean force)
 {
-	hook_set_anim->unhook();
+	hook_bg_playanim->unhook();
 
-	int (*sig)(playerState_t *ps, int animNum, animBodyPart_t bodyPart, int forceDuration, qboolean setTimer, qboolean isContinue, qboolean force);
-	*(int *)&sig = hook_set_anim->from;
+	int (*BG_PlayAnim)(playerState_t *ps, int animNum, animBodyPart_t bodyPart, int forceDuration, qboolean setTimer, qboolean isContinue, qboolean force);
+	*(int *)&BG_PlayAnim = hook_bg_playanim->from;
 
-	int ret;
+	int duration;
 
 	if ( !custom_animation[ps->clientNum] )
-		ret = sig(ps, animNum, bodyPart, forceDuration, setTimer, isContinue, force);
+		duration = BG_PlayAnim(ps, animNum, bodyPart, forceDuration, setTimer, isContinue, force);
 	else
-		ret = sig(ps, custom_animation[ps->clientNum], bodyPart, forceDuration, qtrue, isContinue, qtrue);
+		duration = BG_PlayAnim(ps, custom_animation[ps->clientNum], bodyPart, forceDuration, qtrue, isContinue, qtrue);
 
-	hook_set_anim->hook();
+	hook_bg_playanim->hook();
 
-	return ret;
+	return duration;
 }
 #endif
 
@@ -2920,18 +2920,18 @@ void custom_RuntimeError_Debug(int channel, char *pos, int index, char *message)
 
 	Scr_CodeCallback_Error(qfalse, qfalse, "RuntimeError_Debug", message);
 	Com_PrintMessage(channel, custom_va("\n******* script runtime error *******\n%s: ", message));
-	custom_Scr_PrintPrevCodePos(channel, pos, index);
+	Scr_PrintPrevCodePos(channel, pos, index);
 	i = scrVmPub.function_count;
 	if ( scrVmPub.function_count )
 	{
 		while ( j = i - 1, 0 < j )
 		{
 			Com_PrintMessage(channel, "called from:\n");
-			custom_Scr_PrintPrevCodePos(channel, (char *)scrVmPub.function_frame_start[i - 1].fs.pos, scrVmPub.function_frame_start[i - 1].fs.localId == 0);
+			Scr_PrintPrevCodePos(channel, (char *)scrVmPub.function_frame_start[i - 1].fs.pos, scrVmPub.function_frame_start[i - 1].fs.localId == 0);
 			i = j;
 		}
 		Com_PrintMessage(channel, "started from:\n");
-		custom_Scr_PrintPrevCodePos(channel, (char *)scrVmPub.function_frame_start[0].fs.pos, 1);
+		Scr_PrintPrevCodePos(channel, (char *)scrVmPub.function_frame_start[0].fs.pos, 1);
 	}
 	Com_PrintMessage(channel, "************************************\n");
 }
@@ -3146,7 +3146,7 @@ void custom_SV_ArchiveSnapshot(void)
 	gentity_t *gent;
 
 	LargeLocalConstructor(&buf, MAX_MSGLEN);
-	data = (byte *)LargeLocalGetBuf(&buf);
+	data = LargeLocalGetBuf(&buf);
 	if ( sv.state == SS_GAME )
 	{
 		if ( !svs.archivedSnapshotEnabled )
@@ -4672,8 +4672,8 @@ public:
 		hook_play_movement->hook();
 		hook_clientendframe = new cHook(0x080F4DBE, (int)custom_ClientEndFrame);
 		hook_clientendframe->hook();
-		hook_set_anim = new cHook(0x080D69B2, (int)set_anim);
-		hook_set_anim->hook();
+		hook_bg_playanim = new cHook(0x080D69B2, (int)custom_BG_PlayAnim);
+		hook_bg_playanim->hook();
 		#endif
 
 		cracking_hook_function(0x080E97F0, (int)custom_BG_IsWeaponValid);
@@ -4756,8 +4756,8 @@ public:
 		hook_play_movement->hook();
 		hook_clientendframe = new cHook(0x080F73D2, (int)custom_ClientEndFrame);
 		hook_clientendframe->hook();
-		hook_set_anim = new cHook(0x080D8F92, (int)set_anim);
-		hook_set_anim->hook();
+		hook_bg_playanim = new cHook(0x080D8F92, (int)custom_BG_PlayAnim);
+		hook_bg_playanim->hook();
 		#endif
 
 		cracking_hook_function(0x080EBDE0, (int)custom_BG_IsWeaponValid);
@@ -4858,8 +4858,8 @@ public:
 		hook_play_movement->hook();
 		hook_clientendframe = new cHook(0x080F7516, (int)custom_ClientEndFrame);
 		hook_clientendframe->hook();
-		hook_set_anim = new cHook(0x080D90D6, (int)set_anim);
-		hook_set_anim->hook();
+		hook_bg_playanim = new cHook(0x080D90D6, (int)custom_BG_PlayAnim);
+		hook_bg_playanim->hook();
 		#endif
 
 		cracking_hook_function(0x08105CAC, (int)custom_Touch_Item);

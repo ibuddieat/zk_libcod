@@ -1164,6 +1164,15 @@ static const Scr_ParamError_t Scr_ParamError = (Scr_ParamError_t)0x0; // Not tes
 static const Scr_ParamError_t Scr_ParamError = (Scr_ParamError_t)0x0808545C;
 #endif
 
+typedef void (*Scr_PrintPrevCodePos_t)(int channel, char *codePos, int index);
+#if COD_VERSION == COD2_1_0
+static const Scr_PrintPrevCodePos_t Scr_PrintPrevCodePos = (Scr_PrintPrevCodePos_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Scr_PrintPrevCodePos_t Scr_PrintPrevCodePos = (Scr_PrintPrevCodePos_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Scr_PrintPrevCodePos_t Scr_PrintPrevCodePos = (Scr_PrintPrevCodePos_t)0x080783FA;
+#endif
+
 typedef int (*DirToByte_t)(vec3_t dir);
 #if COD_VERSION == COD2_1_0
 static const DirToByte_t DirToByte = (DirToByte_t)0x080A1C2A;
