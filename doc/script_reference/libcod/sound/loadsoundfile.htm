@@ -27,7 +27,7 @@ Module: Sound<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Loads and encodes a sound file for use with <a href="../sound/playsoundfile.htm">playSoundFile</a>. The input file is expected to be a raw (header-less) WAV file in signed 16-bit PCM mode (Little Endian), with a single channel (mono) and a sampling rate of 8192 Hz. On completion of the (threaded) encoding procedure, the callback function is called. The sound duration is capped to MAX_CUSTOMSOUNDDURATION minutes. The number of available sound slots is capped to MAX_CUSTOMSOUNDS. Slots can be reused (to replace sound data) via the sound slot index parameter. <a href="../sound/playsoundfile.htm">playSoundFile</a> can be used already before encoding finishes. Avoid running two encoding jobs on the same sound slot at the same time. Sound data is retained across map switches. Changing sv_voiceQuality has no effect on already encoded data. The function itself returns the destination sound slot index on success, else zero.</p>
+<p>Loads and encodes a sound file for use with <a href="../sound/playsoundfile.htm">playSoundFile</a>. The input file is expected to be a raw (header-less) WAV file in signed 16-bit PCM mode (Little Endian), with a single channel (mono) and a sampling rate of 8192 Hz. On completion of the (threaded) encoding procedure, the callback function is called. The sound duration is capped to MAX_CUSTOMSOUNDDURATION minutes. The number of available sound slots is capped to MAX_CUSTOMSOUNDS. Slots can be reused (to replace sound data) via the sound slot index parameter. <a href="../sound/playsoundfile.htm">playSoundFile</a> can be used already before encoding finishes. Avoid running two encoding jobs on the same sound slot at the same time. Sound data is retained across map switches. Changing sv_voiceQuality has no effect on already encoded data. The function itself returns the destination sound slot index on success, else undefined.</p>
 </H3>
 </TR></TD></TABLE>
 <p>Note: Due to engine limitations, the sound quality is rather low and also depends on the connection quality (packet loss) of the receiving player.</p>
@@ -41,7 +41,7 @@ Module: Sound<BR>
 loadSound()
 {
     index = loadSoundFile("/tmp/test.wav.raw", ::encoderDone);
-    if(!index)
+    if(!isDefined(index))
         iprintLn("Error at passing sound to encoder, check console for details");
 }
 
@@ -50,7 +50,6 @@ encoderDone(index, result)
     switch(result) {
         case 0: iprintLn("Sound with index " + index + " finished encoding successfully"); break;
         case 1: iprintLn("Sound with index " + index + " is too long and will end playback at max. sound duration"); break;
-        case 2: iprintLn("Sound with index " + index + " could not be opened for encoding"); break;
         default: break;
     }
 }
@@ -63,7 +62,7 @@ encoderDone(index, result)
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
 <LI>1 : &lt;file path&gt; The input file path on the server.</LI>
-<LI>2 : &lt;callback function&gt; Function to call when encoding is done. First parameter is the sound index, second parameter is the encoder's return value (integer, 0 = ok, 1 = song too long and therefore truncated, 2 = could not open file).</LI>
+<LI>2 : &lt;callback function&gt; Function to call when encoding is done. First parameter is the sound index, second parameter is the encoder's return value (integer, 0 = ok, 1 = song too long and therefore truncated).</LI>
 </UL></TR></TD></TABLE>
 <BR><BR>
 <H2>Optional Args</H2>
