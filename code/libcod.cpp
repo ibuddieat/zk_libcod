@@ -82,6 +82,7 @@ cHook *hook_sv_init;
 cHook *hook_sv_masterheartbeat;
 cHook *hook_touch_item_auto;
 cHook *hook_vm_notify;
+cHook *hook_sv_verifyiwds_f;
 
 int codecallback_client_spam = 0;
 int codecallback_dprintf = 0;
@@ -1873,9 +1874,15 @@ void custom_SV_VerifyIwds_f(client_t *cl)
 	if ( sv_pure->boolean )
 	{
 		if ( sv_verifyIwds->boolean )
+		{
+			hook_sv_verifyiwds_f->unhook();
 			SV_VerifyIwds_f(cl);
+			hook_sv_verifyiwds_f->hook();
+		}
 		else
+		{
 			cl->pureAuthentic = 1;
+		}
 	}
 }
 
@@ -2918,7 +2925,7 @@ void custom_RuntimeError_Debug(int channel, char *pos, int index, char *message)
 {
 	int i, j;
 
-	Scr_CodeCallback_Error(qfalse, qfalse, "RuntimeError_Debug", message);
+	Scr_CodeCallback_Error(qfalse, qfalse, "RuntimeError_Debug", message); // New
 	Com_PrintMessage(channel, custom_va("\n******* script runtime error *******\n%s: ", message));
 	Scr_PrintPrevCodePos(channel, pos, index);
 	i = scrVmPub.function_count;
@@ -4666,6 +4673,8 @@ public:
 		hook_fire_grenade->hook();
 		hook_touch_item_auto = new cHook(0x081037F0, int(custom_Touch_Item_Auto));
 		hook_touch_item_auto->hook();
+		hook_sv_verifyiwds_f = new cHook(0x0808EC66, int(custom_SV_VerifyIwds_f));
+		hook_sv_verifyiwds_f->hook();
 
 		#if COMPILE_PLAYER == 1
 		hook_play_movement = new cHook(0x0808F488, (int)play_movement);
@@ -4679,7 +4688,6 @@ public:
 		cracking_hook_function(0x080E97F0, (int)custom_BG_IsWeaponValid);
 		cracking_hook_function(0x0808E544, (int)custom_SV_WriteDownloadToClient);
 		cracking_hook_function(0x080B59CE, (int)custom_va);
-		cracking_hook_function(0x0808EC66, (int)custom_SV_VerifyIwds_f);
 		cracking_hook_function(0x0808EEEC, (int)custom_SV_ResetPureClient_f);
 		cracking_hook_function(0x0809443E, (int)custom_SV_CalcPings);
 		cracking_hook_function(0x080945AC, (int)custom_SV_CheckTimeouts);
@@ -4750,6 +4758,8 @@ public:
 		hook_fire_grenade->hook();
 		hook_touch_item_auto = new cHook(0x08105B24, int(custom_Touch_Item_Auto));
 		hook_touch_item_auto->hook();
+		hook_sv_verifyiwds_f = new cHook(0x080904A0, int(custom_SV_VerifyIwds_f));
+		hook_sv_verifyiwds_f->hook();
 
 		#if COMPILE_PLAYER == 1
 		hook_play_movement = new cHook(0x08090D18, (int)play_movement);
@@ -4763,7 +4773,6 @@ public:
 		cracking_hook_function(0x080EBDE0, (int)custom_BG_IsWeaponValid);
 		cracking_hook_function(0x0808FD2E, (int)custom_SV_WriteDownloadToClient);
 		cracking_hook_function(0x080B7E62, (int)custom_va);
-		cracking_hook_function(0x080904A0, (int)custom_SV_VerifyIwds_f);
 		cracking_hook_function(0x08090726, (int)custom_SV_ResetPureClient_f);
 		cracking_hook_function(0x0809630E, (int)custom_SV_CalcPings);
 		cracking_hook_function(0x080964C4, (int)custom_SV_CheckTimeouts);
@@ -4852,6 +4861,8 @@ public:
 		hook_script_cloneplayer->hook();
 		hook_com_initcvars = new cHook(0x08061D90, (int)custom_Com_InitCvars);
 		hook_com_initcvars->hook();
+		hook_sv_verifyiwds_f = new cHook(0x08090534, int(custom_SV_VerifyIwds_f));
+		hook_sv_verifyiwds_f->hook();
 
 		#if COMPILE_PLAYER == 1
 		hook_play_movement = new cHook(0x08090DAC, (int)play_movement);
@@ -4871,7 +4882,6 @@ public:
 		cracking_hook_function(0x0808F02E, (int)custom_SV_DropClient);
 		cracking_hook_function(0x0808FDC2, (int)custom_SV_WriteDownloadToClient);
 		cracking_hook_function(0x080B7FA6, (int)custom_va);
-		cracking_hook_function(0x08090534, (int)custom_SV_VerifyIwds_f);
 		cracking_hook_function(0x080907BA, (int)custom_SV_ResetPureClient_f);
 		cracking_hook_function(0x080963C8, (int)custom_SV_CalcPings);
 		cracking_hook_function(0x0809657E, (int)custom_SV_CheckTimeouts);
