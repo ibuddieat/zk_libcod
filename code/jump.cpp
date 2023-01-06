@@ -33,7 +33,7 @@ bool getJumpSlowdownEnable(playerState_t* ps)
 	int clientid = playerstateToClientNum(ps);
 	if(player_jump_slowdownenable_enabled[clientid])
 		return player_jump_slowdownenable[clientid];
-	return jump_slowdownEnable->floatval;
+	return jump_slowdownEnable->boolean;
 }
 
 float Jump_CalcHeight(playerState_t* ps )
