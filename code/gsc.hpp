@@ -13,7 +13,7 @@
 #include <math.h>
 #include <dlfcn.h> // dlcall
 #include <stdarg.h> // va_args
-#include <unistd.h> //link, unlink, usleep
+#include <unistd.h> // link, unlink, usleep
 #include <dirent.h> // dir stuff
 #include <sys/mman.h> // mprotect
 #include <execinfo.h> // stacktrace

@@ -1,4 +1,5 @@
 #include "gsc.hpp"
+#include "libcod.hpp"
 
 #include <stdint.h>
 #include <sys/time.h>
@@ -449,15 +450,19 @@ int stackGetParamType(int param)
 
 void stackError(const char *format, ...)
 {
+	char s[MAX_STRINGLENGTH];
+	int len = 0;
 	va_list va;
-	
+
 	va_start(va, format);
-	
-	printf("\n");
-	vprintf(format,va);
-	printf("\n");
-	
+	vsnprintf(s, sizeof(s) - 1, format, va);
 	va_end(va);
+
+	len = strlen(s);
+	s[len] = '\n';
+	s[len + 1] = '\0';
+	Com_PrintMessage(0, s);
+	Scr_CodeCallback_Error(qfalse, qfalse, "stackError", s);
 }
 
 int stackGetParams(const char *params, ...)

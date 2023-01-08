@@ -2788,7 +2788,7 @@ void hook_Sys_Print(const char *msg)
 	}
 }
 
-void hook_Com_DPrintf(const char *format, ...)
+void custom_Com_DPrintf(const char *format, ...)
 {
 	char s[MAX_STRINGLENGTH];
 	va_list va;
@@ -2796,7 +2796,7 @@ void hook_Com_DPrintf(const char *format, ...)
 	va_start(va, format);
 	vsnprintf(s, sizeof(s), format, va);
 	va_end(va);
-	
+
 	if ( codecallback_dprintf && Scr_IsSystemActive() )
 	{
 		stackPushString(s);
@@ -2812,7 +2812,7 @@ void hook_Com_DPrintf(const char *format, ...)
 	Com_Printf("%s", s);
 }
 
-void Scr_CodeCallback_Error(qboolean terminal, qboolean emit, const char * internal_function, char *message)
+void Scr_CodeCallback_Error(qboolean terminal, qboolean emit, const char *internal_function, char *message)
 {
 	if ( codecallback_error && Scr_IsSystemActive() && !com_errorEntered )
 	{
@@ -4652,7 +4652,7 @@ public:
 
 		hook_gametype_scripts = new cHook(0x0810DDEE, (int)custom_GScr_LoadGameTypeScript);
 		hook_gametype_scripts->hook();
-		hook_developer_prints = new cHook(0x08060B7C, (int)hook_Com_DPrintf);
+		hook_developer_prints = new cHook(0x08060B7C, (int)custom_Com_DPrintf);
 		#if COMPILE_UTILS == 1
 		hook_console_print = new cHook(0x0, int(hook_Sys_Print)); // Not tested
 		hook_console_print->hook();
@@ -4737,7 +4737,7 @@ public:
 		hook_gametype_scripts = new cHook(0x0811012A, (int)custom_GScr_LoadGameTypeScript);
 		hook_gametype_scripts->hook();
 
-		hook_developer_prints = new cHook(0x08060E42, (int)hook_Com_DPrintf);
+		hook_developer_prints = new cHook(0x08060E42, (int)custom_Com_DPrintf);
 		#if COMPILE_UTILS == 1
 		hook_console_print = new cHook(0x0, int(hook_Sys_Print)); // Not tested
 		hook_console_print->hook();
@@ -4820,7 +4820,7 @@ public:
 		hook_gametype_scripts = new cHook(0x08110286, (int)custom_GScr_LoadGameTypeScript);
 		hook_gametype_scripts->hook();
 
-		hook_developer_prints = new cHook(0x08060E3A, (int)hook_Com_DPrintf);
+		hook_developer_prints = new cHook(0x08060E3A, (int)custom_Com_DPrintf);
 		#if COMPILE_UTILS == 1
 		hook_console_print = new cHook(0x080d4AE0, int(hook_Sys_Print));
 		hook_console_print->hook();
