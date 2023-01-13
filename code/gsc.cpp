@@ -294,13 +294,14 @@ scr_method_t scriptMethods[] =
 	#endif
 
 	#if COMPILE_ENTITY == 1
-	{"setAlive", gsc_entity_setalive, 0},
-	{"setBounds", gsc_entity_setbounds, 0},
-	{"gettagorigin", gsc_entity_gettagorigin, 0},
 	{"gettagangles", gsc_entity_gettagangles, 0},
+	{"gettagorigin", gsc_entity_gettagorigin, 0},
+	{"getturretowner", gsc_entity_getturretowner, 0},
 	{"hastag", gsc_entity_hastag, 0},
 	{"islinkedto", gsc_entity_islinkedto, 0},
-	{"getturretowner", gsc_entity_getturretowner, 0},
+	{"setAlive", gsc_entity_setalive, 0},
+	{"setBounds", gsc_entity_setbounds, 0},
+	{"setlight", gsc_entity_setlight, 0},
 	#endif
 
 	#if COMPILE_MYSQL_VORON == 1

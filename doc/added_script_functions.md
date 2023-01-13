@@ -5,6 +5,7 @@ New script code methods:
   * `<entity> getTagOrigin(<tag name>)`
   * `<entity> hasTag(<tag name>)`
   * `<entity> isLinkedTo()`
+  * `<entity> setLight(<red>, <green>, <blue>, <intensity>)`
   * `<entity> spawnGrenade(<weapon>, <origin>, [<direction>], [<velocity>], [<fuseTime>])`
   * `<player> earthquakeForPlayer(<scale>, <duration>, <source>, <radius>)`
   * `<player> getClientHudElemCount()`
