@@ -9,77 +9,77 @@
 #define qtrue 1
 #define qfalse 0
 
-#define DotProduct( a, b )			( ( a )[0] * ( b )[0] + ( a )[1] * ( b )[1] + ( a )[2] * ( b )[2] )
+#define DotProduct( a, b )          ( ( a )[0] * ( b )[0] + ( a )[1] * ( b )[1] + ( a )[2] * ( b )[2] )
 #define VectorSubtract( a, b, c )   ( ( c )[0] = ( a )[0] - ( b )[0],( c )[1] = ( a )[1] - ( b )[1],( c )[2] = ( a )[2] - ( b )[2] )
 #define VectorAdd( a, b, c )        ( ( c )[0] = ( a )[0] + ( b )[0],( c )[1] = ( a )[1] + ( b )[1],( c )[2] = ( a )[2] + ( b )[2] )
-#define VectorCopy( a, b )         	( ( b )[0] = ( a )[0],( b )[1] = ( a )[1],( b )[2] = ( a )[2] )
-#define	VectorScale( v, s, o )    	( ( o )[0] = ( v )[0] * ( s ),( o )[1] = ( v )[1] * ( s ),( o )[2] = ( v )[2] * ( s ))
-#define VectorMA( v, s, b, o )    	( ( o )[0] = ( v )[0] + ( b )[0] * ( s ),( o )[1] = ( v )[1] + ( b )[1] * ( s ),( o )[2]=( v )[2] + ( b )[2] * ( s ) )
-#define Vec3Cross( a, b, c )     	( ( c )[0] = ( a )[1] * ( b )[2] - ( a )[2] * ( b )[1],( c )[1] = ( a )[2] * ( b )[0] - ( a )[0] * ( b )[2],( c )[2] = ( a )[0] * ( b )[1] - ( a )[1] * ( b )[0] )
-#define DotProduct4( x, y )        	( ( x )[0] * ( y )[0] + ( x )[1] * ( y )[1] + ( x )[2] * ( y )[2] + ( x )[3] * ( y )[3] )
+#define VectorCopy( a, b )          ( ( b )[0] = ( a )[0],( b )[1] = ( a )[1],( b )[2] = ( a )[2] )
+#define VectorScale( v, s, o )      ( ( o )[0] = ( v )[0] * ( s ),( o )[1] = ( v )[1] * ( s ),( o )[2] = ( v )[2] * ( s ))
+#define VectorMA( v, s, b, o )      ( ( o )[0] = ( v )[0] + ( b )[0] * ( s ),( o )[1] = ( v )[1] + ( b )[1] * ( s ),( o )[2]=( v )[2] + ( b )[2] * ( s ) )
+#define Vec3Cross( a, b, c )        ( ( c )[0] = ( a )[1] * ( b )[2] - ( a )[2] * ( b )[1],( c )[1] = ( a )[2] * ( b )[0] - ( a )[0] * ( b )[2],( c )[2] = ( a )[0] * ( b )[1] - ( a )[1] * ( b )[0] )
+#define DotProduct4( x, y )         ( ( x )[0] * ( y )[0] + ( x )[1] * ( y )[1] + ( x )[2] * ( y )[2] + ( x )[3] * ( y )[3] )
 #define VectorSubtract4( a, b, c )  ( ( c )[0] = ( a )[0] - ( b )[0],( c )[1] = ( a )[1] - ( b )[1],( c )[2] = ( a )[2] - ( b )[2],( c )[3] = ( a )[3] - ( b )[3] )
 #define VectorAdd4( a, b, c )       ( ( c )[0] = ( a )[0] + ( b )[0],( c )[1] = ( a )[1] + ( b )[1],( c )[2] = ( a )[2] + ( b )[2],( c )[3] = ( a )[3] + ( b )[3] )
-#define VectorCopy4( a, b )        	( ( b )[0] = ( a )[0],( b )[1] = ( a )[1],( b )[2] = ( a )[2],( b )[3] = ( a )[3] )
-#define VectorScale4( v, s, o )   	( ( o )[0] = ( v )[0] * ( s ),( o )[1] = ( v )[1] * ( s ),( o )[2] = ( v )[2] * ( s ),( o )[3] = ( v )[3] * ( s ) )
-#define VectorMA4( v, s, b, o )   	( ( o )[0] = ( v )[0] + ( b )[0] * ( s ),( o )[1] = ( v )[1] + ( b )[1] * ( s ),( o )[2] = ( v )[2] + ( b )[2] * ( s ),( o )[3] = ( v )[3] + ( b )[3] * ( s ) )
-#define VectorClear( a )			( ( a )[0] = ( a )[1] = ( a )[2] = 0 )
-#define VectorNegate( a, b )     	( ( b )[0] = -( a )[0],( b )[1] = -( a )[1],( b )[2] = -( a )[2] )
-#define VectorSet( v, x, y, z )		( ( v )[0] = ( x ),( v )[1] = ( y ),( v )[2] = ( z ) )
-#define Vector4Copy( a, b )     	( ( b )[0] = ( a )[0],( b )[1] = ( a )[1],( b )[2] = ( a )[2],( b )[3] = ( a )[3] )
-#define SnapVector( v ) 			{ v[0] = (int)v[0]; v[1] = (int)v[1]; v[2] = (int)v[2]; }
+#define VectorCopy4( a, b )         ( ( b )[0] = ( a )[0],( b )[1] = ( a )[1],( b )[2] = ( a )[2],( b )[3] = ( a )[3] )
+#define VectorScale4( v, s, o )     ( ( o )[0] = ( v )[0] * ( s ),( o )[1] = ( v )[1] * ( s ),( o )[2] = ( v )[2] * ( s ),( o )[3] = ( v )[3] * ( s ) )
+#define VectorMA4( v, s, b, o )     ( ( o )[0] = ( v )[0] + ( b )[0] * ( s ),( o )[1] = ( v )[1] + ( b )[1] * ( s ),( o )[2] = ( v )[2] + ( b )[2] * ( s ),( o )[3] = ( v )[3] + ( b )[3] * ( s ) )
+#define VectorClear( a )            ( ( a )[0] = ( a )[1] = ( a )[2] = 0 )
+#define VectorNegate( a, b )        ( ( b )[0] = -( a )[0],( b )[1] = -( a )[1],( b )[2] = -( a )[2] )
+#define VectorSet( v, x, y, z )     ( ( v )[0] = ( x ),( v )[1] = ( y ),( v )[2] = ( z ) )
+#define Vector4Copy( a, b )         ( ( b )[0] = ( a )[0],( b )[1] = ( a )[1],( b )[2] = ( a )[2],( b )[3] = ( a )[3] )
+#define SnapVector( v )             { v[0] = (int)v[0]; v[1] = (int)v[1]; v[2] = (int)v[2]; }
 
-#define ARCHIVEDSSBUF_SIZE  		0x2000000
-#define ENTFIELD_MASK 				0xC000
-#define FLOAT_INT_BITS  			13
-#define FLOAT_INT_BIAS  			( 1 << ( FLOAT_INT_BITS - 1 ) ) // 0x1000
-#define FRAMETIME 					50
-#define GENTITYNUM_BITS     		10
-#define PACKET_BACKUP 				32
-#define PACKET_MASK 				( PACKET_BACKUP - 1 )
+#define ARCHIVEDSSBUF_SIZE          0x2000000
+#define ENTFIELD_MASK               0xC000
+#define FLOAT_INT_BITS              13
+#define FLOAT_INT_BIAS              ( 1 << ( FLOAT_INT_BITS - 1 ) ) // 0x1000
+#define FRAMETIME                   50
+#define GENTITYNUM_BITS             10
+#define PACKET_BACKUP               32
+#define PACKET_MASK                 ( PACKET_BACKUP - 1 )
 
-#define MAX_BPS_WINDOW 				20
-#define MAX_CHALLENGES 				1024
-#define MAX_CLIENTS 				64
-#define MAX_CONFIGSTRINGS   		2048
-#define MAX_DOWNLOAD_BLKSIZE		1024
-#define MAX_DOWNLOAD_WINDOW			8
-#define MAX_ENT_CLUSTERS    		16
-#define MAX_EVENTS 					4
-#define MAX_GENTITIES       		( 1 << GENTITYNUM_BITS )
-#define MAX_ITEM_MODELS 			2
-#define MAX_MODELS          		256
+#define MAX_BPS_WINDOW              20
+#define MAX_CHALLENGES              1024
+#define MAX_CLIENTS                 64
+#define MAX_CONFIGSTRINGS           2048
+#define MAX_DOWNLOAD_BLKSIZE        1024
+#define MAX_DOWNLOAD_WINDOW         8
+#define MAX_ENT_CLUSTERS            16
+#define MAX_EVENTS                  4
+#define MAX_GENTITIES               ( 1 << GENTITYNUM_BITS )
+#define MAX_ITEM_MODELS             2
+#define MAX_MODELS                  256
 #if COD_VERSION == COD2_1_0 || COD_VERSION == COD2_1_2
-#define MAX_MSGLEN 0x4000
+#define MAX_MSGLEN                  0x4000
 #elif COD_VERSION == COD2_1_3
-#define MAX_MSGLEN 0x20000
+#define MAX_MSGLEN                  0x20000
 #endif
-#define MAX_NETNAME					16
-#define MAX_OSPATH 					256
-#define MAX_QPATH 					64
-#define MAX_SNAPSHOT_ENTITIES		1024
-#define MAX_STRINGLENGTH 			1024
-#define MAX_VASTRINGS				2
-#define MAX_VOICEFRAMESIZE 			160
-#define MAX_VOICEPACKETDATALEN 		256
-#define MAX_VOICEPACKETS 			40
-#define MAX_VOICEPACKETSPERFRAME	2.56
+#define MAX_NETNAME                 16
+#define MAX_OSPATH                  256
+#define MAX_QPATH                   64
+#define MAX_SNAPSHOT_ENTITIES       1024
+#define MAX_STRINGLENGTH            1024
+#define MAX_VASTRINGS               2
+#define MAX_VOICEFRAMESIZE          160
+#define MAX_VOICEPACKETDATALEN      256
+#define MAX_VOICEPACKETS            40
+#define MAX_VOICEPACKETSPERFRAME    2.56
 
-#define	CVAR_ARCHIVE		1
-#define	CVAR_USERINFO		2
-#define	CVAR_SERVERINFO		4
-#define	CVAR_SYSTEMINFO		8
-#define	CVAR_INIT			16
-#define	CVAR_LATCH			32
-#define	CVAR_ROM			64
-#define CVAR_CHEAT			128
-#define	CVAR_TEMP			256
-#define CVAR_NORESTART		1024
-#define CVAR_UNSAFE         4096
-#define	CVAR_USER_CREATED	16384
+#define CVAR_ARCHIVE        0x1
+#define CVAR_USERINFO       0x2
+#define CVAR_SERVERINFO     0x4
+#define CVAR_SYSTEMINFO     0x8
+#define CVAR_INIT           0x10
+#define CVAR_LATCH          0x20
+#define CVAR_ROM            0x40
+#define CVAR_CHEAT          0x80
+#define CVAR_TEMP           0x100
+#define CVAR_NORESTART      0x400
+#define CVAR_UNSAFE         0x1000
+#define CVAR_USER_CREATED   0x4000
 
-#define HASH_STAT_HEAD 0x8000
-#define HASH_NEXT_MASK 0x3FFF
-#define HASH_STAT_MASK 0xC000
+#define HASH_STAT_HEAD    0x8000
+#define HASH_NEXT_MASK    0x3FFF
+#define HASH_STAT_MASK    0xC000
 
 // gentity_s->flags
 #define FL_GODMODE              0x1
@@ -97,104 +97,101 @@
 #define FL_STABLE_MISSILE       0x20000
 
 // gentity_s->handler
-#define EHANDLER_CLIENT_CONNECTING	0x0		// in ClientConnect
-#define EHANDLER_TRIGGER			0x1		// multiple, radius, disc, once
-#define EHANDLER_TRIGGER_HURT_TOUCH	0x2
+#define EHANDLER_CLIENT_CONNECTING	0x0     // in ClientConnect
+#define EHANDLER_TRIGGER            0x1     // multiple, radius, disc, once
+#define EHANDLER_TRIGGER_HURT_TOUCH 0x2
+#define EHANDLER_TRIGGER_DAMAGE     0x4
+#define EHANDLER_ENTITY             0x5     // e.g., on a default script_model
+#define EHANDLER_GRENADE            0x7
+#define EHANDLER_ROCKET             0x8
+#define EHANDLER_CLIENT_ACTIVE      0x9     // client is connected and not in intermission and not spectator
+#define EHANDLER_CLIENT_SPAWNED     0xA     // in ClientSpawn and at the beginning of ClientEndFrame
+#define EHANDLER_CLIENT_DEAD        0xB
+#define EHANDLER_CLIENT_CLONE       0xC
+#define EHANDLER_TURRET             0xD
+#define EHANDLER_ITEM_DROPPED       0xF
+#define EHANDLER_ITEM_SPAWNED       0x10    // in G_SpawnItem
+#define EHANDLER_ITEM_SPAWNING      0x11    // in FinishSpawningItem and G_SpawnItem
+#define EHANDLER_TRIGGER_USE        0x12    // use, use-touch
+#define EHANDLER_CLIENT_MANTLING    0x13    // in ClientThink_real
 
-#define EHANDLER_TRIGGER_DAMAGE		0x4
-#define EHANDLER_ENTITY				0x5		// e.g., on a default script_model
+#define SVF_NOCLIENT    0x1
+#define SVF_BROADCAST   0x8
 
-#define EHANDLER_GRENADE			0x7
-#define EHANDLER_ROCKET				0x8
-#define EHANDLER_CLIENT_ACTIVE		0x9		// client is connected and not in intermission and not spectator
-#define EHANDLER_CLIENT_SPAWNED		0xA		// in ClientSpawn and at the beginning of ClientEndFrame
-#define EHANDLER_CLIENT_DEAD 		0xB
-#define EHANDLER_CLIENT_CLONE		0xC
-#define EHANDLER_TURRET				0xD
+#define KEY_MASK_NONE       0
+#define KEY_MASK_FORWARD    127
+#define KEY_MASK_BACK       -127
+#define KEY_MASK_MOVERIGHT  127
+#define KEY_MASK_MOVELEFT   -127
 
-#define EHANDLER_ITEM_DROPPED		0xF
-#define EHANDLER_ITEM_SPAWNED		0x10	// in G_SpawnItem
-#define EHANDLER_ITEM_SPAWNING		0x11	// in FinishSpawningItem and G_SpawnItem
-#define EHANDLER_TRIGGER_USE		0x12	// use, use-touch
-#define EHANDLER_CLIENT_MANTLING	0x13	// in ClientThink_real
+#define KEY_MASK_FIRE           0x1
+#define KEY_MASK_MELEE          0x4
+#define KEY_MASK_USE            0x8
+#define KEY_MASK_RELOAD         0x10
+#define KEY_MASK_LEANLEFT       0x40
+#define KEY_MASK_LEANRIGHT      0x80
+#define KEY_MASK_PRONE          0x100
+#define KEY_MASK_CROUCH         0x200
+#define KEY_MASK_JUMP           0x400
+#define KEY_MASK_ADS_MODE       0x1000
+#define KEY_MASK_HOLDBREATH     0x8000
+#define KEY_MASK_MELEE_BREATH   0x8004
+#define KEY_MASK_FRAG           0x10000
+#define KEY_MASK_SMOKE          0x20000
 
-#define	SVF_NOCLIENT  0x00000001
-#define	SVF_BROADCAST 0x00000008
+#define EF_CROUCHING    0x4
+#define EF_PRONE        0x8
+#define EF_FIRING       0x20
+#define EF_USETURRET    0x300
+#define EF_MANTLE       0x4000
+#define EF_DEAD         0x20000
+#define EF_AIMDOWNSIGHT 0x40000
+#define EF_VOTED        0x100000
+#define EF_TALK         0x200000
+#define EF_TAUNT        0x400000
 
-#define KEY_MASK_NONE        	0
-#define KEY_MASK_FORWARD        127
-#define KEY_MASK_BACK           -127
-#define KEY_MASK_MOVERIGHT      127
-#define KEY_MASK_MOVELEFT       -127
+#define PMF_PRONE           0x1
+#define PMF_CROUCH          0x2
+#define PMF_MANTLE          0x4
+#define PMF_FRAG            0x10
+#define PMF_LADDER          0x20
+#define PMF_BACKWARDS_RUN   0x80
+#define PMF_SLIDING         0x200
+#define PMF_MELEE           0x2000
+#define PMF_JUMPING         0x80000
+#define PMF_VIEWLOCKED      0x800000 // name guessed
+#define PMF_SPECTATING      0x1000000
+#define PMF_DISABLEWEAPON   0x4000000
 
-#define KEY_MASK_FIRE           1
-#define KEY_MASK_MELEE          4
-#define KEY_MASK_USE            8
-#define KEY_MASK_RELOAD         16
-#define KEY_MASK_LEANLEFT       64
-#define KEY_MASK_LEANRIGHT      128
-#define KEY_MASK_PRONE          256
-#define KEY_MASK_CROUCH         512
-#define KEY_MASK_JUMP           1024
-#define KEY_MASK_ADS_MODE       4096
-#define KEY_MASK_MELEE_BREATH   32772
-#define KEY_MASK_HOLDBREATH     32768
-#define KEY_MASK_FRAG           65536
-#define KEY_MASK_SMOKE          131072
-
-#define EF_CROUCHING			0x00000004
-#define EF_PRONE				0x00000008
-#define EF_FIRING				0x00000020
-#define EF_USETURRET			0x00000300
-#define EF_MANTLE				0x00004000
-#define EF_DEAD					0x00020000
-#define EF_AIMDOWNSIGHT			0x00040000
-#define EF_VOTED				0x00100000
-#define EF_TALK					0x00200000
-#define EF_TAUNT				0x00400000
-
-#define PMF_PRONE 				1
-#define PMF_CROUCH 				2
-#define PMF_MANTLE 				4
-#define PMF_FRAG				16
-#define PMF_LADDER 				32
-#define PMF_BACKWARDS_RUN 		128
-#define PMF_SLIDING 			512
-#define PMF_MELEE 				8192
-#define PMF_JUMPING 			524288
-#define PMF_VIEWLOCKED			8388608 // name guessed
-#define PMF_SPECTATING 			16777216
-#define PMF_DISABLEWEAPON 		67108864
-
-#define CONTENTS_SOLID          	1
-#define CONTENTS_FOLIAGE			2
-#define CONTENTS_NONCOLLIDING   	4
-#define CONTENTS_LAVA           	8
-#define CONTENTS_GLASS				0x10
-#define CONTENTS_WATER          	0x20
-#define CONTENTS_CANSHOTCLIP    	0x40
-#define CONTENTS_MISSILECLIP    	0x80
-#define CONTENTS_VEHICLECLIP		0x200
-#define CONTENTS_ITEMCLIP       	0x400
-#define CONTENTS_SKY            	0x800
-#define CONTENTS_AI_NOSIGHT     	0x1000
-#define CONTENTS_CLIPSHOT       	0x2000
-#define CONTENTS_MOVER          	0x4000
-#define CONTENTS_PLAYERCLIP     	0x10000
-#define CONTENTS_MONSTERCLIP    	0x20000
-#define CONTENTS_TELEPORTER     	0x40000
-#define CONTENTS_JUMPPAD        	0x80000
-#define CONTENTS_CLUSTERPORTAL  	0x100000
-#define CONTENTS_DONOTENTER     	0x200000
-#define CONTENTS_DONOTENTER_LARGE 	0x400000
-#define CONTENTS_CURRENT_DOWN   	0x800000 // might be named differently
-#define CONTENTS_MANTLE         	0x1000000
-#define CONTENTS_BODY           	0x2000000
-#define CONTENTS_DETAIL         	0x8000000
-#define CONTENTS_STRUCTURAL     	0x10000000
-#define CONTENTS_TRANSPARENT    	0x20000000
-#define CONTENTS_TRIGGER        	0x40000000
-#define CONTENTS_NODROP         	0x80000000
+#define CONTENTS_SOLID              0x1
+#define CONTENTS_FOLIAGE            0x2
+#define CONTENTS_NONCOLLIDING       0x4
+#define CONTENTS_LAVA               0x8
+#define CONTENTS_GLASS              0x10
+#define CONTENTS_WATER              0x20
+#define CONTENTS_CANSHOTCLIP        0x40
+#define CONTENTS_MISSILECLIP        0x80
+#define CONTENTS_VEHICLECLIP        0x200
+#define CONTENTS_ITEMCLIP           0x400
+#define CONTENTS_SKY                0x800
+#define CONTENTS_AI_NOSIGHT         0x1000
+#define CONTENTS_CLIPSHOT           0x2000
+#define CONTENTS_MOVER              0x4000
+#define CONTENTS_PLAYERCLIP         0x10000
+#define CONTENTS_MONSTERCLIP        0x20000
+#define CONTENTS_TELEPORTER         0x40000
+#define CONTENTS_JUMPPAD            0x80000
+#define CONTENTS_CLUSTERPORTAL      0x100000
+#define CONTENTS_DONOTENTER         0x200000
+#define CONTENTS_DONOTENTER_LARGE   0x400000
+#define CONTENTS_CURRENT_DOWN       0x800000 // might be named differently
+#define CONTENTS_MANTLE             0x1000000
+#define CONTENTS_BODY               0x2000000
+#define CONTENTS_DETAIL             0x8000000
+#define CONTENTS_STRUCTURAL         0x10000000
+#define CONTENTS_TRANSPARENT        0x20000000
+#define CONTENTS_TRIGGER            0x40000000
+#define CONTENTS_NODROP             0x80000000
 
 #define MASK_ALL ( -1 )
 #define MASK_SHOT ( CONTENTS_SOLID | CONTENTS_GLASS | CONTENTS_WATER | CONTENTS_SKY | CONTENTS_CLIPSHOT | CONTENTS_CURRENT_DOWN | CONTENTS_BODY )
@@ -238,11 +235,6 @@
 #define SURF_WATER              0x1400000
 #define SURF_WOOD               0x1500000
 #define SURF_ASPHALT            0x1600000
-
-#define TOOL_OCCLUDER           0x1
-#define TOOL_DRAWTOGGLE         0x2
-#define TOOL_ORIGIN             0x4
-#define TOOL_RADIALNORMALS      0x8
 
 typedef unsigned char byte;
 typedef signed char sbyte;
