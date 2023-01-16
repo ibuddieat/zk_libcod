@@ -5,6 +5,6 @@ Changed script code methods:
   * `<player> getClientState()` was renamed to `<player> getClientConnectState()`
 
 Changed script code functions:
-  * `bulletTrace(<start>, <end>, <hit characters>, <ignore entity>, [<content mask>])` got one more parameter
+  * `bulletTrace(<start>, <end>, <hit characters>, <ignore entity>, [<content mask>])` got one more parameter for custom content masks and now also returns surface flags
   * `getType(<parameter>)` now correctly resolves object types (e.g., struct, array, entity)
   * `obituary(<victim>, <attacker>, <weapon>, <meansOfDeath>, [<team>], [<origin>], [<max. distance>])` got three more parameters

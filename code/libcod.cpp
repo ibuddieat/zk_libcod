@@ -259,7 +259,7 @@ void common_init_complete_print(const char *format, ...)
 	}
 }
 
-void custom_G_ProcessIPBans()
+void custom_G_ProcessIPBans(void)
 {
 	/* This is right after G_RegisterCvars, giving us access to variables that
 	are not yet defined at the common_init_complete_print hook */
@@ -281,11 +281,12 @@ void custom_GScr_LoadConsts(void)
 	scr_const.custom = GScr_AllocString("custom_string");
 	Note: This new reference also has to be added to stringIndex_t in declarations.hpp
 	*/
-	scr_const.trigger_radius = GScr_AllocString("trigger_radius");
+	scr_const.flags = GScr_AllocString("flags");
 	#if COMPILE_CUSTOM_VOICE == 1
 	scr_const.sound_file_done = GScr_AllocString("sound_file_done");
 	scr_const.sound_file_stop = GScr_AllocString("sound_file_stop");
 	#endif
+	scr_const.trigger_radius = GScr_AllocString("trigger_radius");
 
 	hook_gscr_loadconsts->unhook();
 	void (*GScr_LoadConsts)(void);
@@ -4018,6 +4019,8 @@ void custom_Script_bulletTrace(void)
 		Scr_AddArrayStringIndexed(scr_const.normal);
 		Scr_AddString(Com_SurfaceTypeToName((int)(trace.surfaceFlags & 0x1f00000U) >> 0x14));
 		Scr_AddArrayStringIndexed(scr_const.surfacetype);
+		Scr_AddInt(trace.surfaceFlags);
+		Scr_AddArrayStringIndexed(scr_const.flags);
 	}
 	else
 	{
@@ -4027,6 +4030,8 @@ void custom_Script_bulletTrace(void)
 		Scr_AddArrayStringIndexed(scr_const.normal);
 		Scr_AddConstString(scr_const.none);
 		Scr_AddArrayStringIndexed(scr_const.surfacetype);
+		Scr_AddInt(0);
+		Scr_AddArrayStringIndexed(scr_const.flags);
 	}
 }
 

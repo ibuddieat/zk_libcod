@@ -97,7 +97,7 @@
 #define FL_STABLE_MISSILE       0x20000
 
 // gentity_s->handler
-#define EHANDLER_CLIENT_CONNECTING	0x0     // in ClientConnect
+#define EHANDLER_CLIENT_CONNECTING  0x0     // in ClientConnect
 #define EHANDLER_TRIGGER            0x1     // multiple, radius, disc, once
 #define EHANDLER_TRIGGER_HURT_TOUCH 0x2
 #define EHANDLER_TRIGGER_DAMAGE     0x4
@@ -193,9 +193,9 @@
 #define CONTENTS_TRIGGER            0x40000000
 #define CONTENTS_NODROP             0x80000000
 
-#define MASK_ALL ( -1 )
-#define MASK_SHOT ( CONTENTS_SOLID | CONTENTS_GLASS | CONTENTS_WATER | CONTENTS_SKY | CONTENTS_CLIPSHOT | CONTENTS_CURRENT_DOWN | CONTENTS_BODY )
-#define MASK_OPAQUE_AI ( CONTENTS_SOLID | CONTENTS_FOLIAGE | CONTENTS_SKY | CONTENTS_AI_NOSIGHT | CONTENTS_CURRENT_DOWN | CONTENTS_BODY )
+#define MASK_ALL        ( -1 )
+#define MASK_SHOT       ( CONTENTS_SOLID | CONTENTS_GLASS | CONTENTS_WATER | CONTENTS_SKY | CONTENTS_CLIPSHOT | CONTENTS_CURRENT_DOWN | CONTENTS_BODY )
+#define MASK_OPAQUE_AI  ( CONTENTS_SOLID | CONTENTS_FOLIAGE | CONTENTS_SKY | CONTENTS_AI_NOSIGHT | CONTENTS_CURRENT_DOWN | CONTENTS_BODY )
 
 #define SURF_NOLIGHTMAP         0x0
 #define SURF_NODAMAGE           0x1
@@ -2421,10 +2421,12 @@ typedef struct
 	short head;
 	short pelvis;
 	short trigger_radius;
+	// Custom indexes from here
 	#if COMPILE_CUSTOM_VOICE == 1
 	short sound_file_done;
 	short sound_file_stop;
 	#endif
+	short flags;
 } stringIndex_t;
 
 typedef struct bgs_s
