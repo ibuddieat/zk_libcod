@@ -1182,15 +1182,6 @@ static const DirToByte_t DirToByte = (DirToByte_t)0x080A3E4A;
 static const DirToByte_t DirToByte = (DirToByte_t)0x080A3F8E;
 #endif
 
-typedef void (*G_LocationalTrace_t)(trace_t *results, const vec3_t *start, const vec3_t *end, int passEntityNum, int contentmask, uint8_t *priorityMap);
-#if COD_VERSION == COD2_1_0
-static const G_LocationalTrace_t G_LocationalTrace = (G_LocationalTrace_t)0x08108134;
-#elif COD_VERSION == COD2_1_2
-static const G_LocationalTrace_t G_LocationalTrace = (G_LocationalTrace_t)0x0810A470;
-#elif COD_VERSION == COD2_1_3
-static const G_LocationalTrace_t G_LocationalTrace = (G_LocationalTrace_t)0x0810A5CC;
-#endif
-
 typedef const char * (*G_ModelName_t)(int index);
 #if COD_VERSION == COD2_1_0
 static const G_ModelName_t G_ModelName = (G_ModelName_t)0x0; // Not tested
@@ -2053,6 +2044,105 @@ static const PbCaptureConsoleOutput_t PbCaptureConsoleOutput = (PbCaptureConsole
 static const PbCaptureConsoleOutput_t PbCaptureConsoleOutput = (PbCaptureConsoleOutput_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const PbCaptureConsoleOutput_t PbCaptureConsoleOutput = (PbCaptureConsoleOutput_t)0x0813C214;
+#endif
+
+typedef void (*G_RunThink_t)(gentity_t *ent);
+#if COD_VERSION == COD2_1_0
+static const G_RunThink_t G_RunThink = (G_RunThink_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_RunThink_t G_RunThink = (G_RunThink_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_RunThink_t G_RunThink = (G_RunThink_t)0x08109E60;
+#endif
+
+typedef void (*G_LocationalTrace_t)(trace_t *results, const vec3_t *start, const vec3_t *end, int passEntityNum, int contentmask, uint8_t *priorityMap);
+#if COD_VERSION == COD2_1_0
+static const G_LocationalTrace_t G_LocationalTrace = (G_LocationalTrace_t)0x08108134;
+#elif COD_VERSION == COD2_1_2
+static const G_LocationalTrace_t G_LocationalTrace = (G_LocationalTrace_t)0x0810A470;
+#elif COD_VERSION == COD2_1_3
+static const G_LocationalTrace_t G_LocationalTrace = (G_LocationalTrace_t)0x0810A5CC;
+#endif
+
+typedef void (*G_TraceCapsule_t)(trace_t *results, vec3_t *start, vec3_t *mins, vec3_t *maxs, vec3_t *end, int passEntityNum, int contentMask);
+#if COD_VERSION == COD2_1_0
+static const G_TraceCapsule_t G_TraceCapsule = (G_TraceCapsule_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_TraceCapsule_t G_TraceCapsule = (G_TraceCapsule_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_TraceCapsule_t G_TraceCapsule = (G_TraceCapsule_t)0x0810A528;
+#endif
+
+typedef void (*SV_Trace_t)(trace_t *results, vec3_t *start, vec3_t *mins, vec3_t *maxs, vec3_t *end, int passEntityNum, int contentMask, int locational, uint8_t *priorityMap, int staticmodels);
+#if COD_VERSION == COD2_1_0
+static const SV_Trace_t SV_Trace = (SV_Trace_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_Trace_t SV_Trace = (SV_Trace_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_Trace_t SV_Trace = (SV_Trace_t)0x0809d884;
+#endif
+
+typedef int (*SV_PointContents_t)(const vec3_t *p, int passEntityNum, int contentmask);
+#if COD_VERSION == COD2_1_0
+static const SV_PointContents_t SV_PointContents = (SV_PointContents_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_PointContents_t SV_PointContents = (SV_PointContents_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_PointContents_t SV_PointContents = (SV_PointContents_t)0x0809E368;
+#endif
+
+typedef void (*AngleVectors_t)(const vec3_t *angles, vec3_t *forward, vec3_t *right, vec3_t *up);
+#if COD_VERSION == COD2_1_0
+static const AngleVectors_t AngleVectors = (AngleVectors_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const AngleVectors_t AngleVectors = (AngleVectors_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const AngleVectors_t AngleVectors = (AngleVectors_t)0x080A5226;
+#endif
+
+typedef void (*G_RunMissile_t)(gentity_t *ent);
+#if COD_VERSION == COD2_1_0
+static const G_RunMissile_t G_RunMissile = (G_RunMissile_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_RunMissile_t G_RunMissile = (G_RunMissile_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_RunMissile_t G_RunMissile = (G_RunMissile_t)0x0810E0CE;
+#endif
+
+typedef void (*G_RunItem_t)(gentity_t *ent);
+#if COD_VERSION == COD2_1_0
+static const G_RunItem_t G_RunItem = (G_RunItem_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_RunItem_t G_RunItem = (G_RunItem_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_RunItem_t G_RunItem = (G_RunItem_t)0x08107DE6;
+#endif
+
+typedef void (*G_RunCorpse_t)(gentity_t *ent);
+#if COD_VERSION == COD2_1_0
+static const G_RunCorpse_t G_RunCorpse = (G_RunCorpse_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_RunCorpse_t G_RunCorpse = (G_RunCorpse_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_RunCorpse_t G_RunCorpse = (G_RunCorpse_t)0x08107DBC;
+#endif
+
+typedef void (*G_RunMover_t)(gentity_t *ent);
+#if COD_VERSION == COD2_1_0
+static const G_RunMover_t G_RunMover = (G_RunMover_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_RunMover_t G_RunMover = (G_RunMover_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_RunMover_t G_RunMover = (G_RunMover_t)0x0810FDFE;
+#endif
+
+typedef void (*G_RunClient_t)(gentity_t *ent);
+#if COD_VERSION == COD2_1_0
+static const G_RunClient_t G_RunClient = (G_RunClient_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_RunClient_t G_RunClient = (G_RunClient_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_RunClient_t G_RunClient = (G_RunClient_t)0x080F66C8;
 #endif
 
 #endif

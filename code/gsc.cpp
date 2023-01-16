@@ -294,6 +294,11 @@ scr_method_t scriptMethods[] =
 	#endif
 
 	#if COMPILE_ENTITY == 1
+	{"addentityvelocity", gsc_entity_addentityvelocity, 0},
+	{"disablegravity", gsc_entity_disablegravity, 0},
+	{"enablegravity", gsc_entity_enablegravity, 0},
+	{"getclipmask", gsc_entity_getclipmask, 0},
+	{"getentityvelocity", gsc_entity_getentityvelocity, 0},
 	{"gettagangles", gsc_entity_gettagangles, 0},
 	{"gettagorigin", gsc_entity_gettagorigin, 0},
 	{"getturretowner", gsc_entity_getturretowner, 0},
@@ -301,6 +306,8 @@ scr_method_t scriptMethods[] =
 	{"islinkedto", gsc_entity_islinkedto, 0},
 	{"setAlive", gsc_entity_setalive, 0},
 	{"setBounds", gsc_entity_setbounds, 0},
+	{"setclipmask", gsc_entity_setclipmask, 0},
+	{"setentityvelocity", gsc_entity_setentityvelocity, 0},
 	{"setlight", gsc_entity_setlight, 0},
 	#endif
 

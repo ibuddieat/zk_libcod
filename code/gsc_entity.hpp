@@ -4,6 +4,11 @@
 /* gsc functions */
 #include "gsc.hpp"
 
+void gsc_entity_addentityvelocity(scr_entref_t id);
+void gsc_entity_disablegravity(scr_entref_t id);
+void gsc_entity_enablegravity(scr_entref_t id);
+void gsc_entity_getclipmask(scr_entref_t id);
+void gsc_entity_getentityvelocity(scr_entref_t id);
 void gsc_entity_gettagangles(scr_entref_t id);
 void gsc_entity_gettagorigin(scr_entref_t id);
 void gsc_entity_getturretowner(scr_entref_t id);
@@ -11,6 +16,8 @@ void gsc_entity_hastag(scr_entref_t id);
 void gsc_entity_islinkedto(scr_entref_t id);
 void gsc_entity_setalive(scr_entref_t id);
 void gsc_entity_setbounds(scr_entref_t id);
+void gsc_entity_setclipmask(scr_entref_t id);
+void gsc_entity_setentityvelocity(scr_entref_t id);
 void gsc_entity_setlight(scr_entref_t id);
 
 #endif

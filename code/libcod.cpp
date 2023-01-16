@@ -71,6 +71,8 @@ cHook *hook_gametype_scripts;
 cHook *hook_gscr_loadconsts;
 cHook *hook_init_opcode;
 cHook *hook_play_movement;
+cHook *hook_g_freeentity;
+cHook *hook_g_initgentity;
 cHook *hook_g_setclientcontents;
 cHook *hook_stuckinclient;
 cHook *hook_print_codepos;
@@ -132,6 +134,8 @@ map_weapon_t map_weapons[MAX_GENTITIES];
 
 int num_map_turrets;
 map_turret_t map_turrets[MAX_GENTITIES];
+
+customEntityState_t customEntityState[MAX_GENTITIES];
 
 FILE *voiceDataDumpFile;
 #if COMPILE_CUSTOM_VOICE == 1
@@ -3039,10 +3043,23 @@ void Scr_CodeCallback_NotifyDebug(unsigned int entId, char *message, unsigned in
 void custom_G_RunFrame(int levelTime)
 {
 	int i;
+	gentity_t *ent;
 	
 	hook_g_runframe->unhook();
 	void (*G_RunFrame)(int levelTime);
 	*(int *)&G_RunFrame = hook_g_runframe->from;
+
+	/* New code start: enableGravity */
+	for ( i = 64; i < level.num_entities; i++ )
+	{
+		ent = &g_entities[i];
+		if ( customEntityState[(ent->s).number].gravityEnabled && ent->s.pos.trType != TR_GRAVITY )
+		{
+			ent->s.pos.trType = TR_GRAVITY;
+			ent->s.pos.trTime = level.time;
+		}
+	}
+	/* New code end */
 
 	// Warn about server lag
 	if ( hitchFrameTime )
@@ -4613,6 +4630,257 @@ void custom_Com_PrintMessage(int /* print_msg_type_t */ channel, char *message)
 	}
 }
 
+void custom_G_InitGentity(gentity_t *ent)
+{
+	memset(&customEntityState[(ent->s).number], 0, sizeof(customEntityState_t));
+
+	hook_g_initgentity->unhook();
+	void (*G_InitGentity)(gentity_t *ent);
+	*(int *)&G_InitGentity = hook_g_initgentity->from;
+	G_InitGentity(ent);
+	hook_g_initgentity->hook();
+}
+
+void custom_G_FreeEntity(gentity_t *ent)
+{
+	// Find out from where ent is freed:
+	//Com_Printf(">>> G_FreeEntity for entity %d from %p\n", (ent->s).number, __builtin_return_address(0));
+
+	hook_g_freeentity->unhook();
+	void (*G_FreeEntity)(gentity_t *ent);
+	*(int *)&G_FreeEntity = hook_g_freeentity->from;
+	G_FreeEntity(ent);
+	hook_g_freeentity->hook();
+}
+
+void custom_G_RunItem(gentity_t *ent)
+{
+	/* New code for enableGravity in this function: Branches where 
+	   customEntityState[(ent->s).number].gravityEnabled returns true or lines
+	   marked with "New" */
+	int mask;
+	vec3_t subOrigin;
+	vec3_t lerpOrigin;
+	trace_t trace;
+	vec3_t origin;
+
+	if ( ( ( ( (ent->s).groundEntityNum == 0x3ff ) || ( level.gentities[(ent->s).groundEntityNum].s.pos.trType != TR_STATIONARY ) ) && ( (ent->s).pos.trType != TR_GRAVITY) ) &&
+	( ( ( ent->spawnflags ^ 1) & 1) != 0 ) )
+	{
+		(ent->s).pos.trType = TR_GRAVITY;
+		(ent->s).pos.trTime = level.time;
+		VectorCopy((ent->r).currentOrigin, (ent->s).pos.trBase);
+		VectorClear((ent->s).pos.trDelta);
+	}
+	if ( ( ( (ent->s).pos.trType == TR_STATIONARY ) || ( (ent->s).pos.trType == TR_GRAVITY_PAUSED ) ) || ( ent->tagInfo != NULL ) )
+	{
+		G_RunThink(ent);
+	}
+	else
+	{
+		BG_EvaluateTrajectory(&(ent->s).pos, level.time + 50, origin);
+		if ( ent->clipmask )
+		{
+			mask = ent->clipmask;
+		}
+		else
+		{
+			mask = MASK_SOLID;
+		}
+		if ( Vec3DistanceSq(&(ent->r).currentOrigin, &origin) < 0.1 )
+		{
+			origin[2] = origin[2] - 1.0;
+		}
+
+		if ( customEntityState[(ent->s).number].gravityEnabled )
+		{
+			if ( customEntityState[(ent->s).number].collideModels )
+				SV_Trace(&trace, &(ent->r).currentOrigin, &(ent->r).mins, &(ent->r).maxs, &origin, (ent->s).number, mask, 1, NULL, 1);
+			else
+				SV_Trace(&trace, &(ent->r).currentOrigin, &(ent->r).mins, &(ent->r).maxs, &origin, (ent->s).number, mask, 0, NULL, 1);
+		}
+		else
+		{
+			G_TraceCapsule(&trace, &(ent->r).currentOrigin, &(ent->r).mins, &(ent->r).maxs, &origin, (ent->r).ownerNum, mask);
+		}
+		if ( trace.fraction < 1.0 )
+		{
+			Vec3Lerp((ent->r).currentOrigin, origin, trace.fraction, lerpOrigin);
+			if (( ( trace.startsolid == 0 ) && ( trace.fraction < 0.01 ) ) && ( trace.normal[2] < 0.5 ) )
+			{
+				VectorSubtract(origin, (ent->r).currentOrigin, subOrigin);
+				VectorMA(origin, 1 - DotProduct(subOrigin, trace.normal), trace.normal, origin);
+				if ( customEntityState[(ent->s).number].gravityEnabled )
+				{
+					if ( customEntityState[(ent->s).number].collideModels )
+						SV_Trace(&trace, &(ent->r).currentOrigin, &(ent->r).mins, &(ent->r).maxs, &origin, (ent->s).number, mask, 1, NULL, 1);
+					else
+						SV_Trace(&trace, &(ent->r).currentOrigin, &(ent->r).mins, &(ent->r).maxs, &origin, (ent->s).number, mask, 0, NULL, 1);
+				}
+				else
+				{
+					G_TraceCapsule(&trace, &lerpOrigin, &(ent->r).mins, &(ent->r).maxs, &origin, (ent->r).ownerNum, mask);
+				}
+				Vec3Lerp(lerpOrigin, origin, trace.fraction, lerpOrigin);
+			}
+			(ent->s).pos.trType = TR_LINEAR_STOP;
+			(ent->s).pos.trTime = level.time;
+			(ent->s).pos.trDuration = 50;
+			VectorCopy((ent->r).currentOrigin, (ent->s).pos.trBase);
+			VectorSubtract(lerpOrigin, (ent->r).currentOrigin, (ent->s).pos.trDelta);
+			VectorScale((ent->s).pos.trDelta, 20.0, (ent->s).pos.trDelta);
+			if ( customEntityState[(ent->s).number].gravityEnabled )
+				VectorSubtract(lerpOrigin, (ent->r).currentOrigin, customEntityState[(ent->s).number].velocity);
+			VectorCopy(lerpOrigin, (ent->r).currentOrigin);
+		}
+		else
+		{
+			if ( customEntityState[(ent->s).number].gravityEnabled )
+				VectorSubtract(origin, (ent->r).currentOrigin, customEntityState[(ent->s).number].velocity);
+			VectorCopy(origin, (ent->r).currentOrigin);
+		}
+		SV_LinkEntity(ent);
+		G_RunThink(ent);
+		if ( ( (ent->r).inuse != 0 ) && ( trace.fraction < 0.01 ) )
+		{
+			if ( trace.normal[2] <= 0.0 )
+			{
+				if ( customEntityState[(ent->s).number].gravityEnabled )
+				{
+					// Keep entity even if we move into it while gravity is applied
+				}
+				else
+				{
+					G_FreeEntity(ent);
+				}
+			}
+			else
+			{
+				mask = SV_PointContents(&(ent->r).currentOrigin, -1, 0x80000000);
+				if ( mask == 0 )
+				{
+					vec3_t angles;
+					vec3_t v1;
+					vec3_t v2;
+					vec3_t v3;
+					
+					VectorCopy(trace.normal, v3);
+					AngleVectors(&(ent->r).currentAngles, &v1, 0, 0);
+					Vec3Cross(v3, v1, v2);
+					Vec3Cross(v2, v3, v1);
+					AxisToAngles(v1, angles);
+					if ( customEntityState[(ent->s).number].gravityEnabled )
+					{
+						// Only items should be placed sideways (e.g., weapons laying on ground)
+					}
+					else
+					{
+						gitem_t *item = &bg_itemlist;
+						item += (ent->s).index;
+						if ( item->giType == IT_WEAPON )
+						{
+							angles[2] += 90.0;
+						}
+					}
+					G_SetAngle(ent, &angles);
+					G_SetOrigin(ent, &lerpOrigin);
+					(ent->s).groundEntityNum = (u_int16_t)trace.entityNum;
+					SV_LinkEntity(ent);
+				}
+				else
+				{
+					G_FreeEntity(ent);
+				}
+			}
+		}
+	}
+}
+
+void custom_G_RunFrameForEntity(gentity_t *ent)
+{
+	if ( ent->framenum != level.framenum )
+	{
+		ent->framenum = level.framenum;
+		if ( ent->client == NULL )
+		{
+			if ( (ent->flags & 0x800) == 0 )
+			{
+				(ent->s).eFlags = (ent->s).eFlags & 0xffffffdf;
+			}
+			else
+			{
+				(ent->s).eFlags = (ent->s).eFlags | 0x20;
+			}
+		}
+		if ( ( (ent->s).eFlags == 0x10000 ) && ( (ent->s).time2 < level.time ) )
+		{
+			G_FreeEntity(ent);
+		}
+		else
+		{
+			if ( 300 < level.time - ent->eventTime )
+			{
+				if ( ent->freeAfterEvent != 0 )
+				{
+					G_FreeEntity(ent);
+					return;
+				}
+				if ( ent->unlinkAfterEvent != 0 )
+				{
+					ent->unlinkAfterEvent = 0;
+					SV_UnlinkEntity(ent);
+				}
+			}
+			if ( ent->freeAfterEvent == 0 )
+			{
+				if ( (ent->s).eType == ET_MISSILE )
+				{
+					G_RunMissile(ent);
+				}
+				else if ( (ent->s).eType == ET_ITEM )
+				{
+					if ( ent->tagInfo == NULL )
+					{
+						G_RunItem(ent);
+					}
+					else
+					{
+						G_GeneralLink(ent);
+						G_RunThink(ent);
+					}
+				}
+				else if ( (ent->s).eType == ET_CORPSE )
+				{
+					G_RunCorpse(ent);
+				}
+				else if ( ent->physicsObject == 0 && !customEntityState[(ent->s).number].gravityEnabled ) // New
+				{
+					if ( (ent->s).eType == ET_SCRIPTMOVER )
+					{
+						G_RunMover(ent);
+					}
+					else if ( ent->client == NULL )
+					{
+						if ( ( (ent->s).eType == ET_GENERAL ) && ( ent->tagInfo != NULL ) )
+						{
+							G_GeneralLink(ent);
+						}
+						G_RunThink(ent);
+					}
+					else
+					{
+						G_RunClient(ent);
+					}
+				}
+				else
+				{
+					G_RunItem(ent);
+				}
+			}
+		}
+	}
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -4868,6 +5136,10 @@ public:
 		hook_com_initcvars->hook();
 		hook_sv_verifyiwds_f = new cHook(0x08090534, int(custom_SV_VerifyIwds_f));
 		hook_sv_verifyiwds_f->hook();
+		hook_g_freeentity = new cHook(0x0811EE50, int(custom_G_FreeEntity));
+		hook_g_freeentity->hook();
+		hook_g_initgentity = new cHook(0x0811E85C, int(custom_G_InitGentity));
+		hook_g_initgentity->hook();
 
 		#if COMPILE_PLAYER == 1
 		hook_play_movement = new cHook(0x08090DAC, (int)play_movement);
@@ -4908,6 +5180,8 @@ public:
 		cracking_hook_function(0x0809C21C, (int)custom_SV_QueueVoicePacket);
 		cracking_hook_function(0x08121BC6, (int)custom_Player_UpdateCursorHints);
 		cracking_hook_function(0x08060C20, (int)custom_Com_PrintMessage);
+		cracking_hook_function(0x08107DE6, (int)custom_G_RunItem);
+		cracking_hook_function(0x08109F5C, (int)custom_G_RunFrameForEntity);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC718, (int)Jump_ClearState);

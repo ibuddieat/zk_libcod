@@ -1,10 +1,17 @@
 New script code methods:
   * `<bot> setWalkValues(<forward_count>, <right_count>)`
+  * `<entity> addEntityVelocity(<velocity>)`
   * `<entity> addGrenadeFuseTime(<time>)`
+  * `<entity> disableGravity()`
+  * `<entity> enableGravity([<model collide>], [<clip mask>])`
+  * `<entity> getClipmask()`
+  * `<entity> getEntityVelocity()`
   * `<entity> getTagAngles(<tag name>)`
   * `<entity> getTagOrigin(<tag name>)`
   * `<entity> hasTag(<tag name>)`
   * `<entity> isLinkedTo()`
+  * `<entity> setClipmask(<clip mask>)`
+  * `<entity> setEntityVelocity(<velocity>)`
   * `<entity> setLight(<red>, <green>, <blue>, <intensity>)`
   * `<entity> spawnGrenade(<weapon>, <origin>, [<direction>], [<velocity>], [<fuseTime>])`
   * `<player> earthquakeForPlayer(<scale>, <duration>, <source>, <radius>)`

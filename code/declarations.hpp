@@ -196,6 +196,7 @@
 #define MASK_ALL        ( -1 )
 #define MASK_SHOT       ( CONTENTS_SOLID | CONTENTS_GLASS | CONTENTS_WATER | CONTENTS_SKY | CONTENTS_CLIPSHOT | CONTENTS_CURRENT_DOWN | CONTENTS_BODY )
 #define MASK_OPAQUE_AI  ( CONTENTS_SOLID | CONTENTS_FOLIAGE | CONTENTS_SKY | CONTENTS_AI_NOSIGHT | CONTENTS_CURRENT_DOWN | CONTENTS_BODY )
+#define MASK_SOLID      ( CONTENTS_SOLID | CONTENTS_GLASS | CONTENTS_MISSILECLIP | CONTENTS_ITEMCLIP )
 
 #define SURF_NOLIGHTMAP         0x0
 #define SURF_NODAMAGE           0x1
@@ -3108,3 +3109,11 @@ typedef struct scr_notify_s
 #define MAX_STOREDVOICEPACKETS (MAX_CUSTOMSOUNDDURATION * 3072) // MAX_VOICEPACKETSPERFRAME * 20 * 60
 #define MAX_CUSTOMSOUNDS 64 // Consider ~8MB of memory usage per 10-minute song
 #endif
+
+typedef struct customEntityState_s
+{
+	qboolean gravityEnabled;
+	qboolean collideModels;
+	vec3_t velocity;
+	// TODO: Add new custom fields here for functionality that atm reuses stock fields
+} customEntityState_t;

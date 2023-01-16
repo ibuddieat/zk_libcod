@@ -249,6 +249,150 @@ void gsc_entity_getturretowner(scr_entref_t id)
 	}
 }
 
+extern customEntityState_t customEntityState[MAX_GENTITIES];
+void gsc_entity_enablegravity(scr_entref_t id)
+{
+	gentity_t *ent = &g_entities[id];
+	if ( ent->classname == scr_const.script_model )
+	{
+        int collideModels = qtrue;
+        int clipmask = 0x2812891;
+
+        if ( Scr_GetNumParam() > 0 && Scr_GetInt(0) == 0 )
+        {
+            collideModels = qfalse;
+        }
+        if ( Scr_GetNumParam() > 1 )
+        {
+            clipmask = Scr_GetInt(1);
+        }
+
+        customEntityState[(ent->s).number].gravityEnabled = qtrue;
+        customEntityState[(ent->s).number].collideModels = collideModels;
+        ent->clipmask = clipmask;
+        stackPushBool(qtrue);
+	}
+	else
+	{
+        stackError("gsc_entity_enablegravity() entity is not a script_model");
+		stackPushUndefined();
+	}
+}
+
+void gsc_entity_disablegravity(scr_entref_t id)
+{
+	gentity_t *ent = &g_entities[id];
+	if ( ent->classname == scr_const.script_model )
+	{
+        if ( customEntityState[(ent->s).number].gravityEnabled )
+        {
+            customEntityState[(ent->s).number].gravityEnabled = qfalse;
+            customEntityState[(ent->s).number].collideModels = qfalse;
+            ent->clipmask = 0;
+            G_SetOrigin(ent, &ent->r.currentOrigin);
+            stackPushBool(qtrue);
+        }
+        else
+        {
+            stackPushBool(qfalse);
+        }
+	}
+	else
+	{
+        stackError("gsc_entity_disablegravity() entity is not a script_model");
+		stackPushUndefined();
+	}
+}
+
+void gsc_entity_addentityvelocity(scr_entref_t id)
+{
+	gentity_t *ent = &g_entities[id];
+	if ( ent->classname == scr_const.script_model )
+	{
+        if ( customEntityState[(ent->s).number].gravityEnabled )
+        {
+            vec3_t velocity;
+            Scr_GetVector(0, &velocity);
+            (ent->s).pos.trType = TR_GRAVITY;
+            (ent->s).pos.trTime = level.time;
+            VectorCopy((ent->r).currentOrigin, (ent->s).pos.trBase);
+            VectorAdd((ent->s).pos.trDelta, velocity, (ent->s).pos.trDelta);
+            stackPushBool(qtrue);
+        }
+        else
+        {
+            stackPushBool(qfalse);
+        }
+    }
+	else
+	{
+        stackError("gsc_entity_addentityvelocity() entity is not a script_model");
+		stackPushUndefined();
+	}
+}
+
+void gsc_entity_setentityvelocity(scr_entref_t id)
+{
+	gentity_t *ent = &g_entities[id];
+	if ( ent->classname == scr_const.script_model )
+	{
+        if ( customEntityState[(ent->s).number].gravityEnabled )
+        {
+            vec3_t velocity;
+            Scr_GetVector(0, &velocity);
+            (ent->s).pos.trType = TR_GRAVITY;
+            (ent->s).pos.trTime = level.time;
+            VectorCopy((ent->r).currentOrigin, (ent->s).pos.trBase);
+            VectorCopy(velocity, (ent->s).pos.trDelta);
+            stackPushBool(qtrue);
+        }
+        else
+        {
+            stackPushBool(qfalse);
+        }
+    }
+	else
+	{
+        stackError("gsc_entity_setentityvelocity() entity is not a script_model");
+		stackPushUndefined();
+	}
+}
+
+void gsc_entity_getentityvelocity(scr_entref_t id)
+{
+    gentity_t *ent = &g_entities[id];
+	if ( ent->classname == scr_const.script_model )
+	{
+        vec3_t velocity = {0, 0, 0};
+        if ( customEntityState[(ent->s).number].gravityEnabled )
+        {
+            stackPushVector(customEntityState[(ent->s).number].velocity); // (ent->s).pos.trDelta returns only the added velocity
+        }
+        else
+        {
+            stackPushVector(velocity);
+        }
+    }
+	else
+	{
+        stackError("gsc_entity_getentityvelocity() entity is not a script_model");
+		stackPushUndefined();
+	}
+}
+
+void gsc_entity_setclipmask(scr_entref_t id)
+{
+	gentity_t *ent = &g_entities[id];
+    ent->clipmask = Scr_GetInt(0);
+	stackPushBool(qtrue);
+}
+
+void gsc_entity_getclipmask(scr_entref_t id)
+{
+	gentity_t *ent = &g_entities[id];
+	stackPushInt(ent->clipmask);
+}
+
 void gsc_entity_setlight(scr_entref_t id)
 {
 	gentity_t *ent = &g_entities[id];
