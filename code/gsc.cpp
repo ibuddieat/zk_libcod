@@ -463,7 +463,7 @@ void stackError(const char *format, ...)
 	va_list va;
 
 	va_start(va, format);
-	vsnprintf(s, sizeof(s) - 1, format, va);
+	Q_vsnprintf(s, sizeof(s) - 1, format, va);
 	va_end(va);
 
 	len = strlen(s);

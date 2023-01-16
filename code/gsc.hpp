@@ -119,6 +119,10 @@ void Scr_AddFunc(const char *value);
 #define stackPushObject Scr_AddObject
 #define stackPushFunc Scr_AddFunc
 
+#ifndef Q_vsnprintf
+int Q_vsnprintf(char *s0, size_t size, const char *fmt, va_list args);
+#endif
+
 int stackGetParamType(int param);
 const char *stackGetParamTypeAsString(int param);
 

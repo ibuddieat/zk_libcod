@@ -156,6 +156,9 @@ fi
 echo "##### COMPILE $1 LIBCOD.CPP #####"
 $cc $debug $options $constants -c libcod.cpp -o objects_$1/libcod.opp
 
+echo "##### COMPILE $1 QVSNPRINTF.C #####"
+$cc $debug $options $constants -c lib/qvsnprintf.c -o objects_"$1"/qvsnprintf.opp
+
 if [ -d extra ]; then
 	echo "##### COMPILE $1 EXTRAS #####"
 	cd extra
