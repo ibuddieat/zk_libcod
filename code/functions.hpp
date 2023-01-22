@@ -1605,15 +1605,6 @@ static const SV_DObjGetBoneIndex_t SV_DObjGetBoneIndex = (SV_DObjGetBoneIndex_t)
 static const SV_DObjGetBoneIndex_t SV_DObjGetBoneIndex = (SV_DObjGetBoneIndex_t)0x080921AC;
 #endif
 
-typedef void (*BG_EvaluateTrajectory_t)(const trajectory_t *tr, int atTime, vec3_t result);
-#if COD_VERSION == COD2_1_0
-static const BG_EvaluateTrajectory_t BG_EvaluateTrajectory = (BG_EvaluateTrajectory_t)0x080DCEB0;
-#elif COD_VERSION == COD2_1_2
-static const BG_EvaluateTrajectory_t BG_EvaluateTrajectory = (BG_EvaluateTrajectory_t)0x080DF490;
-#elif COD_VERSION == COD2_1_3
-static const BG_EvaluateTrajectory_t BG_EvaluateTrajectory = (BG_EvaluateTrajectory_t)0x080DF5D4;
-#endif
-
 typedef void (*BG_AddPredictableEventToPlayerstate_t)(int newEvent, unsigned int eventParm, playerState_s *ps);
 #if COD_VERSION == COD2_1_0
 static const BG_AddPredictableEventToPlayerstate_t BG_AddPredictableEventToPlayerstate = (BG_AddPredictableEventToPlayerstate_t)0x080DD554;
@@ -1767,7 +1758,7 @@ static const SV_AddEntitiesVisibleFromPoint_t SV_AddEntitiesVisibleFromPoint = (
 static const SV_AddEntitiesVisibleFromPoint_t SV_AddEntitiesVisibleFromPoint = (SV_AddEntitiesVisibleFromPoint_t)0x08098B98;
 #endif
 
-typedef void (*SV_AddCachedEntitiesVisibleFromPoint_t)(int from_num_entities, int from_first_entity, vec3_t origin, int clientNum, snapshotEntityNumbers_t *eNums);
+typedef void (*SV_AddCachedEntitiesVisibleFromPoint_t)(int from_num_entities, int from_first_entity, float *origin, int clientNum, snapshotEntityNumbers_t *eNums);
 #if COD_VERSION == COD2_1_0
 static const SV_AddCachedEntitiesVisibleFromPoint_t SV_AddCachedEntitiesVisibleFromPoint = (SV_AddCachedEntitiesVisibleFromPoint_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
@@ -2143,6 +2134,60 @@ static const G_RunClient_t G_RunClient = (G_RunClient_t)0x0; // Not tested
 static const G_RunClient_t G_RunClient = (G_RunClient_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const G_RunClient_t G_RunClient = (G_RunClient_t)0x080F66C8;
+#endif
+
+typedef void (*G_MissileLandAngles_t)(gentity_t *ent, trace_t *trace, float *angle, qboolean endPos);
+#if COD_VERSION == COD2_1_0
+static const G_MissileLandAngles_t G_MissileLandAngles = (G_MissileLandAngles_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_MissileLandAngles_t G_MissileLandAngles = (G_MissileLandAngles_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_MissileLandAngles_t G_MissileLandAngles = (G_MissileLandAngles_t)0x0810CF4C;
+#endif
+
+typedef void (*G_StartSolidTrace_t)(trace_t *results, float *start, float *end, int passentitynum, int contentmask); // Guessed function name
+#if COD_VERSION == COD2_1_0
+static const G_StartSolidTrace_t G_StartSolidTrace = (G_StartSolidTrace_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_StartSolidTrace_t G_StartSolidTrace = (G_StartSolidTrace_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_StartSolidTrace_t G_StartSolidTrace = (G_StartSolidTrace_t)0x0810DD2C;
+#endif
+
+typedef void (*G_StartSolidTraceNoContents_t)(trace_t *results, int passentitynum, gentity_t *ent, float *origin); // Guessed function name
+#if COD_VERSION == COD2_1_0
+static const G_StartSolidTraceNoContents_t G_StartSolidTraceNoContents = (G_StartSolidTraceNoContents_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_StartSolidTraceNoContents_t G_StartSolidTraceNoContents = (G_StartSolidTraceNoContents_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_StartSolidTraceNoContents_t G_StartSolidTraceNoContents = (G_StartSolidTraceNoContents_t)0x0810DDA6;
+#endif
+
+typedef void (*BG_EvaluateTrajectory_t)(const trajectory_t *tr, int atTime, float *result);
+#if COD_VERSION == COD2_1_0
+static const BG_EvaluateTrajectory_t BG_EvaluateTrajectory = (BG_EvaluateTrajectory_t)0x080DCEB0;
+#elif COD_VERSION == COD2_1_2
+static const BG_EvaluateTrajectory_t BG_EvaluateTrajectory = (BG_EvaluateTrajectory_t)0x080DF490;
+#elif COD_VERSION == COD2_1_3
+static const BG_EvaluateTrajectory_t BG_EvaluateTrajectory = (BG_EvaluateTrajectory_t)0x080DF5D4;
+#endif
+
+typedef void (*BG_EvaluateTrajectoryDelta_t)(const trajectory_t *tr, int atTime, float *result);
+#if COD_VERSION == COD2_1_0
+static const BG_EvaluateTrajectoryDelta_t BG_EvaluateTrajectoryDelta = (BG_EvaluateTrajectoryDelta_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const BG_EvaluateTrajectoryDelta_t BG_EvaluateTrajectoryDelta = (BG_EvaluateTrajectoryDelta_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const BG_EvaluateTrajectoryDelta_t BG_EvaluateTrajectoryDelta = (BG_EvaluateTrajectoryDelta_t)0x080DF948;
+#endif
+
+typedef double (*VectorLength_t)(float *vec);
+#if COD_VERSION == COD2_1_0
+static const VectorLength_t VectorLength = (VectorLength_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const VectorLength_t VectorLength = (VectorLength_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const VectorLength_t VectorLength = (VectorLength_t)0x081187F0;
 #endif
 
 #endif

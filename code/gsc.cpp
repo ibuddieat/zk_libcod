@@ -295,7 +295,9 @@ scr_method_t scriptMethods[] =
 
 	#if COMPILE_ENTITY == 1
 	{"addentityvelocity", gsc_entity_addentityvelocity, 0},
+	{"disablebounce", gsc_entity_disablebounce, 0},
 	{"disablegravity", gsc_entity_disablegravity, 0},
+	{"enablebounce", gsc_entity_enablebounce, 0},
 	{"enablegravity", gsc_entity_enablegravity, 0},
 	{"getclipmask", gsc_entity_getclipmask, 0},
 	{"getentityvelocity", gsc_entity_getentityvelocity, 0},
@@ -675,6 +677,11 @@ int stackGetParamObject(int param, unsigned int *value)
 	*value = var->u.pointerValue;
 
 	return 1;
+}
+
+qboolean IsNullVector(float *vec)
+{
+	return vec[0] == 0.0 && vec[1] == 0.0 && vec[2] == 0.0;
 }
 
 /**

@@ -5,7 +5,9 @@
 #include "gsc.hpp"
 
 void gsc_entity_addentityvelocity(scr_entref_t id);
+void gsc_entity_disablebounce(scr_entref_t ref);
 void gsc_entity_disablegravity(scr_entref_t id);
+void gsc_entity_enablebounce(scr_entref_t ref);
 void gsc_entity_enablegravity(scr_entref_t id);
 void gsc_entity_getclipmask(scr_entref_t id);
 void gsc_entity_getentityvelocity(scr_entref_t id);

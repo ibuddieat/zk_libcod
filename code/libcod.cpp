@@ -116,6 +116,32 @@ int codecallback_smokebutton = 0;
 int codecallback_standbutton = 0;
 int codecallback_usebutton = 0;
 
+/*
+const entityHandler_t entityHandlers[] =
+{
+	{ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0 },
+	{ NULL, NULL, NULL, &Touch_Multi, NULL, NULL, NULL, NULL, 0, 0 },
+	{ NULL, NULL, NULL, NULL, &hurt_use, NULL, NULL, NULL, 0, 0 },
+	{ NULL, NULL, NULL, &hurt_touch, &hurt_use, NULL, NULL, NULL, 0, 0 },
+	{ NULL, NULL, NULL, NULL, &Use_trigger_damage, &Pain_trigger_damage, &Die_trigger_damage, NULL, 0, 0},
+	{ NULL, &Reached_ScriptMover, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0 },
+	{ NULL, &Reached_ScriptMover, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0 },
+	{ &G_ExplodeMissile, NULL, NULL, &Touch_Item_Auto, NULL, NULL, NULL, NULL, 3, 4},
+	{ &G_ExplodeMissile, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 5, 6 },
+	{ NULL, NULL, NULL, NULL, NULL, NULL, &player_die, &G_PlayerController, 0, 0 },
+	{ NULL, NULL, NULL, NULL, NULL, NULL, &player_die, NULL, 0, 0 },
+	{ NULL, NULL, NULL, NULL, NULL, NULL, NULL, &G_PlayerController, 0, 0 },
+	{ &BodyEnd, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0 },
+	{ &turret_think_init, NULL, NULL, NULL, &turret_use, NULL, NULL, &turret_controller, 0, 0},
+	{ &turret_think, NULL, NULL, NULL, &turret_use, NULL, NULL, &turret_controller, 0, 0},
+	{ &DroppedItemClearOwner, NULL, NULL, &Touch_Item_Auto, NULL, NULL, NULL, NULL, 0, 0},
+	{ &FinishSpawningItem, NULL, NULL, &Touch_Item_Auto, NULL, NULL, NULL, NULL, 0, 0},
+	{ NULL, NULL, NULL, &Touch_Item_Auto, NULL, NULL, NULL, NULL, 0, 0 },
+	{ NULL, NULL, NULL, NULL, &use_trigger_use, NULL, NULL, NULL, 0, 0 },
+	{ &G_FreeEntity, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0 },
+};
+*/
+
 qboolean logRcon = qtrue;
 qboolean logHeartbeat = qtrue;
 
@@ -285,6 +311,7 @@ void custom_GScr_LoadConsts(void)
 	scr_const.custom = GScr_AllocString("custom_string");
 	Note: This new reference also has to be added to stringIndex_t in declarations.hpp
 	*/
+	scr_const.bounce = GScr_AllocString("bounce");
 	scr_const.flags = GScr_AllocString("flags");
 	#if COMPILE_CUSTOM_VOICE == 1
 	scr_const.sound_file_done = GScr_AllocString("sound_file_done");
@@ -1347,7 +1374,7 @@ void custom_MSG_WriteDeltaEntity(msg_t *msg, entityState_t *from, entityState_t 
 	}
 
 	if ( disable )
-		to->eType = EV_NONE;
+		to->eType = (entityType_t)EV_NONE;
 
 	custom_MSG_WriteDeltaStruct(msg, from, to, force, 0x3b, 10, &entityStateFields, 0, clientNum, spectatorClientNum);
 }
@@ -3043,23 +3070,10 @@ void Scr_CodeCallback_NotifyDebug(unsigned int entId, char *message, unsigned in
 void custom_G_RunFrame(int levelTime)
 {
 	int i;
-	gentity_t *ent;
 	
 	hook_g_runframe->unhook();
 	void (*G_RunFrame)(int levelTime);
 	*(int *)&G_RunFrame = hook_g_runframe->from;
-
-	/* New code start: enableGravity */
-	for ( i = 64; i < level.num_entities; i++ )
-	{
-		ent = &g_entities[i];
-		if ( customEntityState[(ent->s).number].gravityEnabled && ent->s.pos.trType != TR_GRAVITY )
-		{
-			ent->s.pos.trType = TR_GRAVITY;
-			ent->s.pos.trTime = level.time;
-		}
-	}
-	/* New code end */
 
 	// Warn about server lag
 	if ( hitchFrameTime )
@@ -3546,12 +3560,12 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 						if ( clientNum > 31 )
 						{
 							if ( aent->r.clientMask[1] & (1 << (clientNum - 32)) )
-								aent->s.eType = EV_NONE;
+								aent->s.eType = (entityType_t)EV_NONE;
 						}
 						else
 						{
 							if ( aent->r.clientMask[0] & (1 << clientNum ) )
-								aent->s.eType = EV_NONE;
+								aent->s.eType = (entityType_t)EV_NONE;
 						}
 					}
 					/* New code end */
@@ -3866,7 +3880,7 @@ void custom_Player_UpdateCursorHints(gentity_t *player)
 	client = player->client;
 	(client->ps).cursorHint = 0;
 	(client->ps).cursorHintString = -1;
-	(client->ps).cursorHintEntIndex = 0x3ff;
+	(client->ps).cursorHintEntIndex = ENTITY_NONE;
 	if ( 0 < player->healthPoints && ( (player->client->ps).weaponstate < 0x11 || ( 0x16 < (player->client->ps).weaponstate ) ) )
 	{
 		if ( !player->active )
@@ -3900,7 +3914,7 @@ LAB_08121ee6:
 								{
 									return;
 								}
-								(client->ps).cursorHintEntIndex = 0x3ff;
+								(client->ps).cursorHintEntIndex = ENTITY_NONE;
 								return;
 							}
 
@@ -3913,7 +3927,7 @@ LAB_08121ee6:
 							/* New code end */
 
 							if ( ( ent->team == 0 || ent->team == (player->client->sess).team ) &&
-							( (ent->params).trigger.damage == 0x3ff || (ent->params).trigger.damage == (player->client->ps).clientNum ) )
+							( (ent->params).trigger.damage == ENTITY_NONE || (ent->params).trigger.damage == (player->client->ps).clientNum ) )
 							{
 								temp = (ent->s).dmgFlags;
 								if ( (ent->s).dmgFlags != 0 && (ent->s).scale != 0xff )
@@ -3945,13 +3959,15 @@ LAB_08121ee6:
 	}
 }
 
-void custom_Script_clonePlayer(scr_entref_t id)
+void custom_Script_clonePlayer(scr_entref_t ref)
 {
+	int id = ref.entnum;
+
 	hook_script_cloneplayer->unhook();
-	void (*Script_clonePlayer)(scr_entref_t id);
+	void (*Script_clonePlayer)(scr_entref_t ref);
 	*(int *)&Script_clonePlayer = hook_script_cloneplayer->from;
 
-	if (id >= MAX_CLIENTS)
+	if ( id >= MAX_CLIENTS )
 	{
 		stackError("clonePlayer() entity %i is not a player", id);
 		stackPushUndefined();
@@ -3959,13 +3975,13 @@ void custom_Script_clonePlayer(scr_entref_t id)
 	}
 
 	gentity_t *entity = &g_entities[id];
-	if ( !Com_GetServerDObj((entity->client->ps).clientNum) )
+	if ( ! Com_GetServerDObj((entity->client->ps).clientNum) )
 	{
 		stackPushUndefined();
 	}
 	else
 	{
-		Script_clonePlayer(id);
+		Script_clonePlayer(ref);
 	}
 
 	hook_script_cloneplayer->hook();
@@ -3985,7 +4001,7 @@ void custom_Script_bulletTrace(void)
 	vec3_t end;
 	vec3_t start;
 
-	passEntityNum = 0x3ff;
+	passEntityNum = ENTITY_NONE;
 	Scr_GetVector(0, &start);
 	Scr_GetVector(1, &end);
 	hitCharacters = Scr_GetInt(2);
@@ -4021,13 +4037,13 @@ void custom_Script_bulletTrace(void)
 	Vec3Lerp(start, end, trace.fraction, position);
 	Scr_AddVector(position);
 	Scr_AddArrayStringIndexed(scr_const.position);
-	if ( (u_int16_t)trace.entityNum == 0x3ff || (u_int16_t)trace.entityNum == 0x3fe )
+	if ( trace.entityNum.entnum == ENTITY_NONE || trace.entityNum.entnum == ENTITY_WORLD )
 	{
 		Scr_AddUndefined();
 	}
 	else
 	{
-		Scr_AddEntity(&g_entities[(u_int16_t)trace.entityNum]);
+		Scr_AddEntity(&g_entities[trace.entityNum.entnum]);
 	}
 	Scr_AddArrayStringIndexed(scr_const.entity);
 	if ( trace.fraction < 1.0 )
@@ -4058,7 +4074,6 @@ void custom_Script_obituary(void)
 	int sWeapon;
 	uint sMeansOfDeath;
 	gentity_t *ent;
-	int type;
 	gentity_t *victim;
 	gentity_t *attacker;
 	vec3_t vec3_origin = {0, 0, 0};
@@ -4111,30 +4126,28 @@ void custom_Script_obituary(void)
 	ent->s.dmgFlags = distance; // Reusing the dmgFlags field that is otherwise not used at obituary TempEntities
 	
 	ent->s.otherEntityNum = victim->s.number;
-	type = Scr_GetType(1);
-	if ( type == 1 )
+	if ( Scr_GetType(1) == STACK_OBJECT )
 	{
-		type = Scr_GetPointerType(1);
-		if ( type == 0x15 )
+		if ( Scr_GetPointerType(1) == STACK_ENTITY )
 		{
 			attacker = Scr_GetEntity(1);
 			ent->s.attackerEntityNum = attacker->s.number;
 			goto LAB_081131e1;
 		}
 	}
-	ent->s.attackerEntityNum = 0x3fe;
+	ent->s.attackerEntityNum = ENTITY_WORLD;
 LAB_081131e1:
 	ent->r.svFlags = 8;
-	if ( sMeansOfDeath == 7 || sMeansOfDeath == 8 || sMeansOfDeath == 0xc || sMeansOfDeath == 0xb || sMeansOfDeath == 9 )
+	if ( sMeansOfDeath == MOD_MELEE || sMeansOfDeath == MOD_HEAD_SHOT || sMeansOfDeath == MOD_SUICIDE || sMeansOfDeath == MOD_FALLING || sMeansOfDeath == MOD_CRUSH )
 		ent->s.eventParm = sMeansOfDeath | 0x80;
 	else
 		ent->s.eventParm = sWeapon;
 }
 
-void custom_Script_setHintString(scr_entref_t id)
+void custom_Script_setHintString(scr_entref_t ref)
 {
+	int id = ref.entnum;
 	gentity_t *ent;
-	int type;
 	char hintString[MAX_STRINGLENGTH];
 	int index;
 
@@ -4144,8 +4157,7 @@ void custom_Script_setHintString(scr_entref_t id)
 		Scr_Error("The setHintString command only works on trigger_radius, trigger_use or trigger_use_touch entities.\n");
 	}
 
-	type = Scr_GetType(0);
-	if ( type == 2 )
+	if ( Scr_GetType(0) == STACK_STRING )
 	{
 		if ( I_stricmp(Scr_GetString(0), "") == 0 )
 		{
@@ -4162,10 +4174,11 @@ void custom_Script_setHintString(scr_entref_t id)
 	(ent->s).scale = index;
 
 	// Added trigger_radius support by converting it to a trigger_use_touch
-	if ( ent->classname == scr_const.trigger_radius) {
+	if ( ent->classname == scr_const.trigger_radius )
+	{
 		Scr_SetString(&ent->classname, scr_const.trigger_use_touch);
-		(ent->params).trigger.damage= 0x3ff;
-		(ent->r).contents = 0x200000;
+		(ent->params).trigger.damage= ENTITY_NONE;
+		(ent->r).contents = CONTENTS_DONOTENTER;
 		(ent->r).svFlags = 1;
 		(ent->s).dmgFlags = 2;
 		// Reusing the clientNum field that is otherwise not used at trigger entities to mark it as a 'converted' trigger so that it will still emit 'trigger' notifies
@@ -4653,18 +4666,159 @@ void custom_G_FreeEntity(gentity_t *ent)
 	hook_g_freeentity->hook();
 }
 
-void custom_G_RunItem(gentity_t *ent)
+qboolean G_BounceGrenade(gentity_t *ent,trace_t *trace) // G_BounceMissile as base
 {
-	/* New code for enableGravity in this function: Branches where 
-	   customEntityState[(ent->s).number].gravityEnabled returns true or lines
-	   marked with "New" */
-	int mask;
+	int contents;
+	double length;
+	qboolean bounce;
+	vec3_t angle;
+	vec3_t planeNormal;
+	vec3_t velocity;
+	float dot;
+
+	contents = SV_PointContents(&(ent->r).currentOrigin, -1, CONTENTS_WATER);
+	BG_EvaluateTrajectoryDelta(&(ent->s).pos, 50 + (int)((float)(level.time - level.previousTime) * trace->fraction) + level.previousTime, velocity);
+	dot = DotProduct(velocity, trace->normal);
+	VectorMA(velocity, dot * -2.0, trace->normal, (ent->s).pos.trDelta);
+	if ( 0.7 < trace->normal[2] )
+	{
+		(ent->s).groundEntityNum = (trace->entityNum).entnum;
+	}
+	if ( ( (ent->s).eFlags & EF_BOUNCE ) != 0 )
+	{
+		length = VectorLength(velocity);
+		if ( 0.0 < length && ( dot <= 0.0 ) )
+		{
+			VectorScale((ent->s).pos.trDelta, ( customEntityState[(ent->s).number].perpendicularBounce - customEntityState[(ent->s).number].parallelBounce ) * ( dot / -length ) + customEntityState[(ent->s).number].parallelBounce, (ent->s).pos.trDelta);
+		}
+
+		if ( 0.7 < trace->normal[2] && VectorLength((ent->s).pos.trDelta) < 20.0 )
+		{
+			G_SetOrigin(ent, &(ent->r).currentOrigin);
+			G_MissileLandAngles(ent, trace, angle, 1);
+			G_SetAngle(ent, &angle);
+			return qfalse;
+		}
+	}
+	VectorScale(trace->normal, 0.1, planeNormal);
+	if ( 0.0 < planeNormal[2] )
+	{
+		planeNormal[2] = 0.0;
+	}
+	VectorAdd((ent->r).currentOrigin, planeNormal, (ent->r).currentOrigin);
+	VectorCopy((ent->r).currentOrigin, (ent->s).pos.trBase);
+	(ent->s).pos.trTime = level.time;
+	G_MissileLandAngles(ent, trace, angle, 0);
+	VectorCopy(angle, (ent->s).apos.trBase);
+	(ent->s).apos.trTime = level.time;
+	if ( contents == 0 )
+	{
+		VectorSubtract((ent->s).pos.trDelta, velocity, velocity);
+		if ( 100.0 < VectorLength(velocity) )
+		{
+			bounce = 1;
+		}
+		else
+		{
+			bounce = 0;
+		}
+	}
+	else
+	{
+		bounce = 0;
+	}
+	return bounce;
+}
+
+void G_RunGravityModelAsGrenade(gentity_t *ent) // G_RunMissile as base
+{
+    double absDeltaZ;
+    vec3_t lerpOrigin;
+    trace_t trace2;
+    trace_t trace;
+    vec3_t origin;
+	qboolean bounce;
+
+    if ( ( (ent->s).pos.trType == TR_STATIONARY ) && ( (ent->s).groundEntityNum != ENTITY_WORLD ) )
+    {
+        VectorCopy((ent->r).currentOrigin, origin);
+        origin[2] = origin[2] - 1.5;
+        G_StartSolidTrace(&trace, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask);
+        if ( trace.fraction == 1.0 )
+        {
+            (ent->s).pos.trType = TR_GRAVITY;
+            (ent->s).pos.trTime = level.time;
+            (ent->s).pos.trDuration = 0;
+            VectorCopy((ent->r).currentOrigin, (ent->s).pos.trBase);
+            VectorClear((ent->s).pos.trDelta);
+        }
+    }
+    BG_EvaluateTrajectory(&(ent->s).pos, level.time + 50, origin);
+    absDeltaZ = (ent->s).pos.trDelta[2];
+    if ( absDeltaZ < 0 )
+        absDeltaZ *= -1;
+    if ( ( absDeltaZ <= 30.0 ) || SV_PointContents(&(ent->r).currentOrigin, -1, CONTENTS_WATER) )
+    {
+        G_StartSolidTrace(&trace, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask);
+    }
+    else
+    {
+        G_StartSolidTrace(&trace, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask | CONTENTS_WATER);
+    }
+    if ( ( trace.surfaceFlags & 0x1F00000 ) == SURF_WATER )
+    {
+        G_StartSolidTrace(&trace, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask);
+    }
+	if ( ( g_entities[trace.entityNum.entnum].flags & EF_TAGCONNECT ) != 0 )
+	{
+		G_StartSolidTraceNoContents(&trace, trace.entityNum.entnum, ent, origin);
+	}
+    Vec3Lerp((ent->r).currentOrigin, origin, trace.fraction, lerpOrigin);
+    VectorCopy(lerpOrigin, (ent->r).currentOrigin);
+    if ( ( ( (ent->s).eFlags & EF_BOUNCE ) != 0 ) && ( ( trace.fraction == 1.0 || ( ( trace.fraction < 1.0 && ( 0.7 < trace.normal[2] ) ) ) ) ) )
+    {
+        VectorCopy((ent->r).currentOrigin, origin);
+        origin[2] = origin[2] - 1.5;
+        G_StartSolidTrace(&trace2, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask);
+        if ( ( trace2.fraction != 1.0 ) && ( trace2.entityNum.entnum == ENTITY_WORLD ) )
+        {
+            trace.fraction = trace2.fraction;
+            trace.normal[0] = trace2.normal[0];
+            trace.normal[1] = trace2.normal[1];
+            trace.normal[2] = trace2.normal[2];
+            trace.surfaceFlags = trace2.surfaceFlags;
+            trace.contents = trace2.contents;
+            trace.material = trace2.material;
+            trace.entityNum = trace2.entityNum;
+            trace.hitId = trace2.hitId;
+            trace.allsolid = trace2.allsolid;
+            trace.startsolid = trace2.startsolid;
+            Vec3Lerp((ent->r).currentOrigin, origin, trace2.fraction, lerpOrigin);
+            (ent->s).pos.trBase[2] = (ent->s).pos.trBase[2] + ( ( lerpOrigin[2] + 1.5 ) - (ent->r).currentOrigin[2]);
+            VectorCopy(lerpOrigin, (ent->r).currentOrigin);
+            (ent->r).currentOrigin[2] = (ent->r).currentOrigin[2] + 1.5;
+        }
+    }
+    SV_LinkEntity(ent);
+    if ( trace.fraction != 1.0 )
+    {
+		bounce = G_BounceGrenade(ent, &trace);
+		if ( bounce && ( trace.startsolid == 0 ) )
+		{
+			Scr_AddString(Com_SurfaceTypeToName((int)( trace.surfaceFlags & 0x1F00000U ) >> 0x14));
+			Scr_Notify(ent, scr_const.bounce, 1);
+		}
+    }
+}
+
+void G_RunGravityModelAsItem(gentity_t *ent) // G_RunItem as base
+{
 	vec3_t subOrigin;
 	vec3_t lerpOrigin;
 	trace_t trace;
 	vec3_t origin;
 
-	if ( ( ( ( (ent->s).groundEntityNum == 0x3ff ) || ( level.gentities[(ent->s).groundEntityNum].s.pos.trType != TR_STATIONARY ) ) && ( (ent->s).pos.trType != TR_GRAVITY) ) &&
+	if ( ( ( ( (ent->s).groundEntityNum == ENTITY_NONE ) || ( level.gentities[(ent->s).groundEntityNum].s.pos.trType != TR_STATIONARY ) ) && ( (ent->s).pos.trType != TR_GRAVITY) ) &&
 	( ( ( ent->spawnflags ^ 1) & 1) != 0 ) )
 	{
 		(ent->s).pos.trType = TR_GRAVITY;
@@ -4674,35 +4828,20 @@ void custom_G_RunItem(gentity_t *ent)
 	}
 	if ( ( ( (ent->s).pos.trType == TR_STATIONARY ) || ( (ent->s).pos.trType == TR_GRAVITY_PAUSED ) ) || ( ent->tagInfo != NULL ) )
 	{
-		G_RunThink(ent);
+		// Removed G_RunThink(ent);
 	}
-	else
+	else 
 	{
 		BG_EvaluateTrajectory(&(ent->s).pos, level.time + 50, origin);
-		if ( ent->clipmask )
-		{
-			mask = ent->clipmask;
-		}
-		else
-		{
-			mask = MASK_SOLID;
-		}
 		if ( Vec3DistanceSq(&(ent->r).currentOrigin, &origin) < 0.1 )
 		{
 			origin[2] = origin[2] - 1.0;
 		}
 
-		if ( customEntityState[(ent->s).number].gravityEnabled )
-		{
-			if ( customEntityState[(ent->s).number].collideModels )
-				SV_Trace(&trace, &(ent->r).currentOrigin, &(ent->r).mins, &(ent->r).maxs, &origin, (ent->s).number, mask, 1, NULL, 1);
-			else
-				SV_Trace(&trace, &(ent->r).currentOrigin, &(ent->r).mins, &(ent->r).maxs, &origin, (ent->s).number, mask, 0, NULL, 1);
-		}
+		if ( customEntityState[(ent->s).number].collideModels )
+			SV_Trace(&trace, &(ent->r).currentOrigin, &(ent->r).mins, &(ent->r).maxs, &origin, (ent->s).number, ent->clipmask, 1, NULL, 1);
 		else
-		{
-			G_TraceCapsule(&trace, &(ent->r).currentOrigin, &(ent->r).mins, &(ent->r).maxs, &origin, (ent->r).ownerNum, mask);
-		}
+			SV_Trace(&trace, &(ent->r).currentOrigin, &(ent->r).mins, &(ent->r).maxs, &origin, (ent->s).number, ent->clipmask, 0, NULL, 1);
 		if ( trace.fraction < 1.0 )
 		{
 			Vec3Lerp((ent->r).currentOrigin, origin, trace.fraction, lerpOrigin);
@@ -4710,17 +4849,10 @@ void custom_G_RunItem(gentity_t *ent)
 			{
 				VectorSubtract(origin, (ent->r).currentOrigin, subOrigin);
 				VectorMA(origin, 1 - DotProduct(subOrigin, trace.normal), trace.normal, origin);
-				if ( customEntityState[(ent->s).number].gravityEnabled )
-				{
-					if ( customEntityState[(ent->s).number].collideModels )
-						SV_Trace(&trace, &(ent->r).currentOrigin, &(ent->r).mins, &(ent->r).maxs, &origin, (ent->s).number, mask, 1, NULL, 1);
-					else
-						SV_Trace(&trace, &(ent->r).currentOrigin, &(ent->r).mins, &(ent->r).maxs, &origin, (ent->s).number, mask, 0, NULL, 1);
-				}
+				if ( customEntityState[(ent->s).number].collideModels )
+					SV_Trace(&trace, &(ent->r).currentOrigin, &(ent->r).mins, &(ent->r).maxs, &origin, (ent->s).number, ent->clipmask, 1, NULL, 1);
 				else
-				{
-					G_TraceCapsule(&trace, &lerpOrigin, &(ent->r).mins, &(ent->r).maxs, &origin, (ent->r).ownerNum, mask);
-				}
+					SV_Trace(&trace, &(ent->r).currentOrigin, &(ent->r).mins, &(ent->r).maxs, &origin, (ent->s).number, ent->clipmask, 0, NULL, 1);
 				Vec3Lerp(lerpOrigin, origin, trace.fraction, lerpOrigin);
 			}
 			(ent->s).pos.trType = TR_LINEAR_STOP;
@@ -4729,68 +4861,40 @@ void custom_G_RunItem(gentity_t *ent)
 			VectorCopy((ent->r).currentOrigin, (ent->s).pos.trBase);
 			VectorSubtract(lerpOrigin, (ent->r).currentOrigin, (ent->s).pos.trDelta);
 			VectorScale((ent->s).pos.trDelta, 20.0, (ent->s).pos.trDelta);
-			if ( customEntityState[(ent->s).number].gravityEnabled )
-				VectorSubtract(lerpOrigin, (ent->r).currentOrigin, customEntityState[(ent->s).number].velocity);
 			VectorCopy(lerpOrigin, (ent->r).currentOrigin);
 		}
 		else
 		{
-			if ( customEntityState[(ent->s).number].gravityEnabled )
-				VectorSubtract(origin, (ent->r).currentOrigin, customEntityState[(ent->s).number].velocity);
 			VectorCopy(origin, (ent->r).currentOrigin);
 		}
 		SV_LinkEntity(ent);
-		G_RunThink(ent);
 		if ( ( (ent->r).inuse != 0 ) && ( trace.fraction < 0.01 ) )
 		{
-			if ( trace.normal[2] <= 0.0 )
+			if ( trace.normal[2] > 0.0 && ! SV_PointContents(&(ent->r).currentOrigin, -1, CONTENTS_NODROP) )
 			{
-				if ( customEntityState[(ent->s).number].gravityEnabled )
+				vec3_t angles;
+				vec3_t v1;
+				vec3_t v2;
+				vec3_t v3;
+				
+				VectorCopy(trace.normal, v3);
+				AngleVectors(&(ent->r).currentAngles, &v1, 0, 0);
+				Vec3Cross(v3, v1, v2);
+				Vec3Cross(v2, v3, v1);
+				AxisToAngles(v1, angles);
+				G_SetAngle(ent, &angles);
+				G_SetOrigin(ent, &lerpOrigin);
+				if ( (ent->s).groundEntityNum != trace.entityNum.entnum )
 				{
-					// Keep entity even if we move into it while gravity is applied
+					Scr_AddString(Com_SurfaceTypeToName((int)( trace.surfaceFlags & 0x1F00000U ) >> 0x14));
+					Scr_Notify(ent, scr_const.bounce, 1);
 				}
-				else
-				{
-					G_FreeEntity(ent);
-				}
+				(ent->s).groundEntityNum = trace.entityNum.entnum;
+				SV_LinkEntity(ent);
 			}
 			else
 			{
-				mask = SV_PointContents(&(ent->r).currentOrigin, -1, 0x80000000);
-				if ( mask == 0 )
-				{
-					vec3_t angles;
-					vec3_t v1;
-					vec3_t v2;
-					vec3_t v3;
-					
-					VectorCopy(trace.normal, v3);
-					AngleVectors(&(ent->r).currentAngles, &v1, 0, 0);
-					Vec3Cross(v3, v1, v2);
-					Vec3Cross(v2, v3, v1);
-					AxisToAngles(v1, angles);
-					if ( customEntityState[(ent->s).number].gravityEnabled )
-					{
-						// Only items should be placed sideways (e.g., weapons laying on ground)
-					}
-					else
-					{
-						gitem_t *item = &bg_itemlist;
-						item += (ent->s).index;
-						if ( item->giType == IT_WEAPON )
-						{
-							angles[2] += 90.0;
-						}
-					}
-					G_SetAngle(ent, &angles);
-					G_SetOrigin(ent, &lerpOrigin);
-					(ent->s).groundEntityNum = (u_int16_t)trace.entityNum;
-					SV_LinkEntity(ent);
-				}
-				else
-				{
-					G_FreeEntity(ent);
-				}
+				G_FreeEntity(ent);
 			}
 		}
 	}
@@ -4803,7 +4907,7 @@ void custom_G_RunFrameForEntity(gentity_t *ent)
 		ent->framenum = level.framenum;
 		if ( ent->client == NULL )
 		{
-			if ( (ent->flags & 0x800) == 0 )
+			if ( ( ent->flags & 0x800 ) == 0 )
 			{
 				(ent->s).eFlags = (ent->s).eFlags & 0xffffffdf;
 			}
@@ -4853,7 +4957,17 @@ void custom_G_RunFrameForEntity(gentity_t *ent)
 				{
 					G_RunCorpse(ent);
 				}
-				else if ( ent->physicsObject == 0 && !customEntityState[(ent->s).number].gravityEnabled ) // New
+				else if ( customEntityState[(ent->s).number].gravityType )
+				{
+					vec3_t oldOrigin;
+					VectorCopy((ent->r).currentOrigin, oldOrigin);
+					if ( customEntityState[(ent->s).number].gravityType == GRAVITY_ITEM )
+						G_RunGravityModelAsItem(ent);
+					else if ( customEntityState[(ent->s).number].gravityType == GRAVITY_GRENADE )
+						G_RunGravityModelAsGrenade(ent);
+					VectorSubtract((ent->r).currentOrigin, oldOrigin, customEntityState[(ent->s).number].velocity);
+				}
+				else if ( ent->physicsObject == 0 )
 				{
 					if ( (ent->s).eType == ET_SCRIPTMOVER )
 					{
@@ -5180,7 +5294,6 @@ public:
 		cracking_hook_function(0x0809C21C, (int)custom_SV_QueueVoicePacket);
 		cracking_hook_function(0x08121BC6, (int)custom_Player_UpdateCursorHints);
 		cracking_hook_function(0x08060C20, (int)custom_Com_PrintMessage);
-		cracking_hook_function(0x08107DE6, (int)custom_G_RunItem);
 		cracking_hook_function(0x08109F5C, (int)custom_G_RunFrameForEntity);
 
 		#if COMPILE_JUMP == 1

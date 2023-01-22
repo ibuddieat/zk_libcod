@@ -12,10 +12,12 @@ qboolean isValidWeaponId(int id)
 	return qtrue;
 }
 
-void gsc_weapons_addgrenadefusetime(scr_entref_t id)
+void gsc_weapons_addgrenadefusetime(scr_entref_t ref)
 {
+	int id = ref.entnum;
     gentity_t *ent = &g_entities[id];
-    if ( ent->handler != EHANDLER_GRENADE )
+
+    if ( ent->handler != ENT_HANDLER_GRENADE )
     {
         stackError("gsc_weapons_addgrenadefusetime() entity is not a grenade");
     }
@@ -895,8 +897,9 @@ void gsc_weapons_setdefaultweapon() {
 	stackPushInt(1);
 }
 
-void gsc_weapons_getweaponitemammo(scr_entref_t id)
+void gsc_weapons_getweaponitemammo(scr_entref_t ref)
 {
+	int id = ref.entnum;
     gentity_t *entity = &g_entities[id];
     gitem_t *bg_item = &bg_itemlist;
     
@@ -920,13 +923,14 @@ void gsc_weapons_getweaponitemammo(scr_entref_t id)
     }
 }
 
-void gsc_weapons_setweaponitemammo(scr_entref_t id)
+void gsc_weapons_setweaponitemammo(scr_entref_t ref)
 {
+	int id = ref.entnum;
     int quantity;
     gentity_t *entity = &g_entities[id];
     gitem_t *bg_item = &bg_itemlist;
 
-    if ( ! stackGetParams("i", &quantity))
+    if ( ! stackGetParams("i", &quantity) )
     {
         stackError("gsc_weapons_setweaponitemammo() argument is undefined or has a wrong type");
         stackPushUndefined();
@@ -954,8 +958,9 @@ void gsc_weapons_setweaponitemammo(scr_entref_t id)
     }
 }
 
-void gsc_weapons_spawngrenade(scr_entref_t id)
+void gsc_weapons_spawngrenade(scr_entref_t ref)
 {
+	int id = ref.entnum;
 	int args;
 	gentity_t *owner;
 	int weaponIndex;
@@ -978,7 +983,7 @@ void gsc_weapons_spawngrenade(scr_entref_t id)
 
 	weaponIndex = BG_FindWeaponIndexForName(Scr_GetString(0));
 
-	if (!isValidWeaponId(weaponIndex))
+	if ( ! isValidWeaponId(weaponIndex) )
 	{
 		stackError("gsc_weapons_spawngrenade() weapon index is out of bounds");
 		stackPushUndefined();

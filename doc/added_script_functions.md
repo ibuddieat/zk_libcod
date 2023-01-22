@@ -2,8 +2,10 @@ New script code methods:
   * `<bot> setWalkValues(<forward_count>, <right_count>)`
   * `<entity> addEntityVelocity(<velocity>)`
   * `<entity> addGrenadeFuseTime(<time>)`
+  * `<entity> disableBounce()`
   * `<entity> disableGravity()`
-  * `<entity> enableGravity([<model collide>], [<clip mask>])`
+  * `<entity> enableBounce([<parallelBounce>], [<perpendicularBounce>])`
+  * `<entity> enableGravity([<model collide>])`
   * `<entity> getClipmask()`
   * `<entity> getEntityVelocity()`
   * `<entity> getTagAngles(<tag name>)`

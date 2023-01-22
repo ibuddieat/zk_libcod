@@ -140,6 +140,8 @@ int stackGetParamObject(int param, unsigned int *value);
 xfunction_t Scr_GetCustomFunction(const char **fname, qboolean *fdev);
 xmethod_t Scr_GetCustomMethod(const char **fname, qboolean *fdev);
 
+qboolean IsNullVector(float *vec);
+
 uint64_t Sys_MilliSeconds64(void);
 char *custom_va(const char *format, ...);
 

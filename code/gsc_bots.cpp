@@ -2,14 +2,15 @@
 
 #if COMPILE_BOTS == 1
 
-void gsc_bots_set_walkvalues(scr_entref_t id)
+void gsc_bots_set_walkvalues(scr_entref_t ref)
 {
+	int id = ref.entnum;
     extern char bot_forwardmove[MAX_CLIENTS];
     extern char bot_rightmove[MAX_CLIENTS];
     int fwcount;
     int rgcount;
 
-    if ( ! stackGetParams("ii", &fwcount, &rgcount))
+    if ( ! stackGetParams("ii", &fwcount, &rgcount) )
     {
         stackError("gsc_bots_set_walkvalues() arguments are undefined or have a wrong type");
         stackPushUndefined();
@@ -19,18 +20,19 @@ void gsc_bots_set_walkvalues(scr_entref_t id)
     bot_rightmove[id] = rgcount;
 }
 
-void gsc_bots_set_walkdir(scr_entref_t id)
+void gsc_bots_set_walkdir(scr_entref_t ref)
 {
+	int id = ref.entnum;
 	char *dir;
 
-	if ( ! stackGetParams("s", &dir))
+	if ( ! stackGetParams("s", &dir) )
 	{
 		stackError("gsc_bots_set_walkdir() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	if (id >= MAX_CLIENTS)
+	if ( id >= MAX_CLIENTS )
 	{
 		stackError("gsc_bots_set_walkdir() entity %i is not a player", id);
 		stackPushUndefined();
@@ -39,7 +41,7 @@ void gsc_bots_set_walkdir(scr_entref_t id)
 
 	client_t *client = &svs.clients[id];
 
-	if (client->netchan.remoteAddress.type != NA_BOT)
+	if ( client->netchan.remoteAddress.type != NA_BOT )
 	{
 		stackError("gsc_bots_set_walkdir() player %i is not a bot", id);
 		stackPushUndefined();
@@ -49,18 +51,18 @@ void gsc_bots_set_walkdir(scr_entref_t id)
 	extern char bot_forwardmove[MAX_CLIENTS];
 	extern char bot_rightmove[MAX_CLIENTS];
 
-	if (strcmp(dir, "none") == 0)
+	if ( strcmp(dir, "none") == 0 )
 	{
 		bot_forwardmove[id] = KEY_MASK_NONE;
 		bot_rightmove[id] = KEY_MASK_NONE;
 	}
-	else if (strcmp(dir, "forward") == 0)
+	else if ( strcmp(dir, "forward") == 0 )
 		bot_forwardmove[id] = KEY_MASK_FORWARD;
-	else if (strcmp(dir, "back") == 0)
+	else if ( strcmp(dir, "back") == 0 )
 		bot_forwardmove[id] = KEY_MASK_BACK;
-	else if (strcmp(dir, "right") == 0)
+	else if ( strcmp(dir, "right") == 0 )
 		bot_rightmove[id] = KEY_MASK_MOVERIGHT;
-	else if (strcmp(dir, "left") == 0)
+	else if ( strcmp(dir, "left") == 0 )
 		bot_rightmove[id] = KEY_MASK_MOVELEFT;
 	else
 	{
@@ -72,18 +74,19 @@ void gsc_bots_set_walkdir(scr_entref_t id)
 	stackPushBool(qtrue);
 }
 
-void gsc_bots_set_lean(scr_entref_t id)
+void gsc_bots_set_lean(scr_entref_t ref)
 {
+	int id = ref.entnum;
 	char *lean;
 
-	if ( ! stackGetParams("s", &lean))
+	if ( ! stackGetParams("s", &lean) )
 	{
 		stackError("gsc_bots_set_lean() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	if (id >= MAX_CLIENTS)
+	if ( id >= MAX_CLIENTS )
 	{
 		stackError("gsc_bots_set_lean() entity %i is not a player", id);
 		stackPushUndefined();
@@ -92,7 +95,7 @@ void gsc_bots_set_lean(scr_entref_t id)
 
 	client_t *client = &svs.clients[id];
 
-	if (client->netchan.remoteAddress.type != NA_BOT)
+	if ( client->netchan.remoteAddress.type != NA_BOT )
 	{
 		stackError("gsc_bots_set_lean() player %i is not a bot", id);
 		stackPushUndefined();
@@ -101,11 +104,11 @@ void gsc_bots_set_lean(scr_entref_t id)
 
 	extern int bot_buttons[MAX_CLIENTS];
 
-	if (strcmp(lean, "none") == 0)
+	if ( strcmp(lean, "none") == 0 )
 		bot_buttons[id] &= ~(KEY_MASK_LEANLEFT | KEY_MASK_LEANRIGHT);
-	else if (strcmp(lean, "left") == 0)
+	else if ( strcmp(lean, "left") == 0 )
 		bot_buttons[id] |= KEY_MASK_LEANLEFT;
-	else if (strcmp(lean, "right") == 0)
+	else if ( strcmp(lean, "right") == 0 )
 		bot_buttons[id] |= KEY_MASK_LEANRIGHT;
 	else
 	{
@@ -117,11 +120,12 @@ void gsc_bots_set_lean(scr_entref_t id)
 	stackPushBool(qtrue);
 }
 
-void gsc_bots_set_stance(scr_entref_t id)
+void gsc_bots_set_stance(scr_entref_t ref)
 {
+	int id = ref.entnum;
 	char *stance;
 
-	if ( ! stackGetParams("s", &stance))
+	if ( ! stackGetParams("s", &stance) )
 	{
 		stackError("gsc_bots_set_stance() argument is undefined or has a wrong type");
 		stackPushUndefined();
@@ -146,13 +150,13 @@ void gsc_bots_set_stance(scr_entref_t id)
 
 	extern int bot_buttons[MAX_CLIENTS];
 
-	if (strcmp(stance, "stand") == 0)
+	if ( strcmp(stance, "stand") == 0 )
 		bot_buttons[id] &= ~(KEY_MASK_CROUCH | KEY_MASK_PRONE | KEY_MASK_JUMP);
-	else if (strcmp(stance, "crouch") == 0)
+	else if ( strcmp(stance, "crouch") == 0 )
 		bot_buttons[id] |= KEY_MASK_CROUCH;
-	else if (strcmp(stance, "prone") == 0)
+	else if ( strcmp(stance, "prone") == 0 )
 		bot_buttons[id] |= KEY_MASK_PRONE;
-	else if (strcmp(stance, "jump") == 0)
+	else if ( strcmp(stance, "jump") == 0 )
 		bot_buttons[id] |= KEY_MASK_JUMP;
 	else
 	{
@@ -164,18 +168,19 @@ void gsc_bots_set_stance(scr_entref_t id)
 	stackPushBool(qtrue);
 }
 
-void gsc_bots_thrownade(scr_entref_t id)
+void gsc_bots_thrownade(scr_entref_t ref)
 {
+	int id = ref.entnum;
 	int grenade;
 
-	if ( ! stackGetParams("i", &grenade))
+	if ( ! stackGetParams("i", &grenade) )
 	{
 		stackError("gsc_bots_thrownade() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	if (id >= MAX_CLIENTS)
+	if ( id >= MAX_CLIENTS )
 	{
 		stackError("gsc_bots_thrownade() entity %i is not a player", id);
 		stackPushUndefined();
@@ -184,7 +189,7 @@ void gsc_bots_thrownade(scr_entref_t id)
 
 	client_t *client = &svs.clients[id];
 
-	if (client->netchan.remoteAddress.type != NA_BOT)
+	if ( client->netchan.remoteAddress.type != NA_BOT )
 	{
 		stackError("gsc_bots_thrownade() player %i is not a bot", id);
 		stackPushUndefined();
@@ -193,7 +198,7 @@ void gsc_bots_thrownade(scr_entref_t id)
 
 	extern int bot_buttons[MAX_CLIENTS];
 
-	if (!grenade)
+	if ( !grenade )
 		bot_buttons[id] &= ~KEY_MASK_FRAG;
 	else
 		bot_buttons[id] |= KEY_MASK_FRAG;
@@ -201,18 +206,19 @@ void gsc_bots_thrownade(scr_entref_t id)
 	stackPushBool(qtrue);
 }
 
-void gsc_bots_fireweapon(scr_entref_t id)
+void gsc_bots_fireweapon(scr_entref_t ref)
 {
+	int id = ref.entnum;
 	int shoot;
 
-	if ( ! stackGetParams("i", &shoot))
+	if ( ! stackGetParams("i", &shoot) )
 	{
 		stackError("gsc_bots_fireweapon() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	if (id >= MAX_CLIENTS)
+	if ( id >= MAX_CLIENTS )
 	{
 		stackError("gsc_bots_fireweapon() entity %i is not a player", id);
 		stackPushUndefined();
@@ -221,7 +227,7 @@ void gsc_bots_fireweapon(scr_entref_t id)
 
 	client_t *client = &svs.clients[id];
 
-	if (client->netchan.remoteAddress.type != NA_BOT)
+	if ( client->netchan.remoteAddress.type != NA_BOT )
 	{
 		stackError("gsc_bots_fireweapon() player %i is not a bot", id);
 		stackPushUndefined();
@@ -230,7 +236,7 @@ void gsc_bots_fireweapon(scr_entref_t id)
 
 	extern int bot_buttons[MAX_CLIENTS];
 
-	if (!shoot)
+	if ( !shoot )
 		bot_buttons[id] &= ~KEY_MASK_FIRE;
 	else
 		bot_buttons[id] |= KEY_MASK_FIRE;
@@ -238,18 +244,19 @@ void gsc_bots_fireweapon(scr_entref_t id)
 	stackPushBool(qtrue);
 }
 
-void gsc_bots_meleeweapon(scr_entref_t id)
+void gsc_bots_meleeweapon(scr_entref_t ref)
 {
+	int id = ref.entnum;
 	int melee;
 
-	if ( ! stackGetParams("i", &melee))
+	if ( ! stackGetParams("i", &melee) )
 	{
 		stackError("gsc_bots_meleeweapon() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	if (id >= MAX_CLIENTS)
+	if ( id >= MAX_CLIENTS )
 	{
 		stackError("gsc_bots_meleeweapon() entity %i is not a player", id);
 		stackPushUndefined();
@@ -258,7 +265,7 @@ void gsc_bots_meleeweapon(scr_entref_t id)
 
 	client_t *client = &svs.clients[id];
 
-	if (client->netchan.remoteAddress.type != NA_BOT)
+	if ( client->netchan.remoteAddress.type != NA_BOT )
 	{
 		stackError("gsc_bots_meleeweapon() player %i is not a bot", id);
 		stackPushUndefined();
@@ -267,7 +274,7 @@ void gsc_bots_meleeweapon(scr_entref_t id)
 
 	extern int bot_buttons[MAX_CLIENTS];
 
-	if (!melee)
+	if ( !melee )
 		bot_buttons[id] &= ~KEY_MASK_MELEE;
 	else
 		bot_buttons[id] |= KEY_MASK_MELEE;
@@ -275,18 +282,19 @@ void gsc_bots_meleeweapon(scr_entref_t id)
 	stackPushBool(qtrue);
 }
 
-void gsc_bots_reloadweapon(scr_entref_t id)
+void gsc_bots_reloadweapon(scr_entref_t ref)
 {
+	int id = ref.entnum;
 	int reload;
 
-	if ( ! stackGetParams("i", &reload))
+	if ( ! stackGetParams("i", &reload) )
 	{
 		stackError("gsc_bots_reloadweapon() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	if (id >= MAX_CLIENTS)
+	if ( id >= MAX_CLIENTS )
 	{
 		stackError("gsc_bots_reloadweapon() entity %i is not a player", id);
 		stackPushUndefined();
@@ -295,7 +303,7 @@ void gsc_bots_reloadweapon(scr_entref_t id)
 
 	client_t *client = &svs.clients[id];
 
-	if (client->netchan.remoteAddress.type != NA_BOT)
+	if ( client->netchan.remoteAddress.type != NA_BOT )
 	{
 		stackError("gsc_bots_reloadweapon() player %i is not a bot", id);
 		stackPushUndefined();
@@ -304,7 +312,7 @@ void gsc_bots_reloadweapon(scr_entref_t id)
 
 	extern int bot_buttons[MAX_CLIENTS];
 
-	if (!reload)
+	if ( !reload )
 		bot_buttons[id] &= ~KEY_MASK_RELOAD;
 	else
 		bot_buttons[id] |= KEY_MASK_RELOAD;
@@ -312,18 +320,19 @@ void gsc_bots_reloadweapon(scr_entref_t id)
 	stackPushBool(qtrue);
 }
 
-void gsc_bots_adsaim(scr_entref_t id)
+void gsc_bots_adsaim(scr_entref_t ref)
 {
+	int id = ref.entnum;
 	int ads;
 
-	if ( ! stackGetParams("i", &ads))
+	if ( ! stackGetParams("i", &ads) )
 	{
 		stackError("gsc_bots_adsaim() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	if (id >= MAX_CLIENTS)
+	if ( id >= MAX_CLIENTS )
 	{
 		stackError("gsc_bots_adsaim() entity %i is not a player", id);
 		stackPushUndefined();
@@ -332,7 +341,7 @@ void gsc_bots_adsaim(scr_entref_t id)
 
 	client_t *client = &svs.clients[id];
 
-	if (client->netchan.remoteAddress.type != NA_BOT)
+	if ( client->netchan.remoteAddress.type != NA_BOT )
 	{
 		stackError("gsc_bots_adsaim() player %i is not a bot", id);
 		stackPushUndefined();
@@ -341,7 +350,7 @@ void gsc_bots_adsaim(scr_entref_t id)
 
 	extern int bot_buttons[MAX_CLIENTS];
 
-	if (!ads)
+	if ( !ads )
 		bot_buttons[id] &= ~KEY_MASK_ADS_MODE;
 	else
 		bot_buttons[id] |= KEY_MASK_ADS_MODE;
@@ -349,18 +358,19 @@ void gsc_bots_adsaim(scr_entref_t id)
 	stackPushBool(qtrue);
 }
 
-void gsc_bots_switchtoweaponid(scr_entref_t id)
+void gsc_bots_switchtoweaponid(scr_entref_t ref)
 {
+	int id = ref.entnum;
 	int weaponid;
 
-	if ( ! stackGetParams("i", &weaponid))
+	if ( ! stackGetParams("i", &weaponid) )
 	{
 		stackError("gsc_bots_switchtoweaponid() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	if (id >= MAX_CLIENTS)
+	if ( id >= MAX_CLIENTS )
 	{
 		stackError("gsc_bots_switchtoweaponid() entity %i is not a player", id);
 		stackPushUndefined();
@@ -369,7 +379,7 @@ void gsc_bots_switchtoweaponid(scr_entref_t id)
 
 	client_t *client = &svs.clients[id];
 
-	if (client->netchan.remoteAddress.type != NA_BOT)
+	if ( client->netchan.remoteAddress.type != NA_BOT )
 	{
 		stackError("gsc_bots_switchtoweaponid() player %i is not a bot", id);
 		stackPushUndefined();
@@ -387,7 +397,7 @@ void gsc_bots_setnexttestclientname()
 {
 	char *str;
 
-	if ( ! stackGetParams("s", &str))
+	if ( ! stackGetParams("s", &str) )
 	{
 		stackError("gsc_bots_setnexttestclientname() argument is undefined or has a wrong type");
 		stackPushUndefined();
@@ -404,13 +414,13 @@ void gsc_bots_setnexttestclientname()
     // original str size = 158 chars + null + 25 more free nulls after in data segment
     // removed the "head" and "color" values so we have enough space for a full 31 character long bot name and do not risk running into an overflow when the bot id gets long
     // the bot id that is incremented in SV_AddTestClient is dumped into the "model" value
-    snprintf((char *)testclient_connect_string_offset, 184, "connect \"\\cg_predictItems\\1\\cl_punkbuster\\0\\cl_anonymous\\0\\model\\%%d\\snaps\\20\\rate\\5000\\name\\%s\\protocol\\%%d\"", str);
+    snprintf(&testclient_connect_string, 184, "connect \"\\cg_predictItems\\1\\cl_punkbuster\\0\\cl_anonymous\\0\\model\\%%d\\snaps\\20\\rate\\5000\\name\\%s\\protocol\\%%d\"", str);
 	stackPushBool(qtrue);
 }
 
 void gsc_bots_resettestclientnaming()
 {
-    snprintf((char *)testclient_connect_string_offset, 184, "connect \"\\cg_predictItems\\1\\cl_punkbuster\\0\\cl_anonymous\\0\\color\\4\\head\\default\\model\\multi\\snaps\\20\\rate\\5000\\name\\bot%%d\\protocol\\%%d\"");
+    snprintf(&testclient_connect_string, 184, "connect \"\\cg_predictItems\\1\\cl_punkbuster\\0\\cl_anonymous\\0\\color\\4\\head\\default\\model\\multi\\snaps\\20\\rate\\5000\\name\\bot%%d\\protocol\\%%d\"");
 	stackPushBool(qtrue);
 }
 

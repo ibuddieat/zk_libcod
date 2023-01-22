@@ -81,6 +81,9 @@
 #define HASH_NEXT_MASK    0x3FFF
 #define HASH_STAT_MASK    0xC000
 
+#define ENTITY_WORLD	0x3FE
+#define ENTITY_NONE		0x3FF
+
 // gentity_s->flags
 #define FL_GODMODE              0x1
 #define FL_DEMI_GODMODE         0x2
@@ -95,25 +98,6 @@
 #define FL_GRENADE_TOUCH_DAMAGE 0x4000
 #define FL_MISSILE_UNKNOWN      0x10000
 #define FL_STABLE_MISSILE       0x20000
-
-// gentity_s->handler
-#define EHANDLER_CLIENT_CONNECTING  0x0     // in ClientConnect
-#define EHANDLER_TRIGGER            0x1     // multiple, radius, disc, once
-#define EHANDLER_TRIGGER_HURT_TOUCH 0x2
-#define EHANDLER_TRIGGER_DAMAGE     0x4
-#define EHANDLER_ENTITY             0x5     // e.g., on a default script_model
-#define EHANDLER_GRENADE            0x7
-#define EHANDLER_ROCKET             0x8
-#define EHANDLER_CLIENT_ACTIVE      0x9     // client is connected and not in intermission and not spectator
-#define EHANDLER_CLIENT_SPAWNED     0xA     // in ClientSpawn and at the beginning of ClientEndFrame
-#define EHANDLER_CLIENT_DEAD        0xB
-#define EHANDLER_CLIENT_CLONE       0xC
-#define EHANDLER_TURRET             0xD
-#define EHANDLER_ITEM_DROPPED       0xF
-#define EHANDLER_ITEM_SPAWNED       0x10    // in G_SpawnItem
-#define EHANDLER_ITEM_SPAWNING      0x11    // in FinishSpawningItem and G_SpawnItem
-#define EHANDLER_TRIGGER_USE        0x12    // use, use-touch
-#define EHANDLER_CLIENT_MANTLING    0x13    // in ClientThink_real
 
 #define SVF_NOCLIENT    0x1
 #define SVF_BROADCAST   0x8
@@ -139,16 +123,20 @@
 #define KEY_MASK_FRAG           0x10000
 #define KEY_MASK_SMOKE          0x20000
 
+// playerState_t->eFlags
+// entityState_t->eFlags
 #define EF_CROUCHING    0x4
 #define EF_PRONE        0x8
 #define EF_FIRING       0x20
 #define EF_USETURRET    0x300
 #define EF_MANTLE       0x4000
+#define EF_TAGCONNECT	0x8000
 #define EF_DEAD         0x20000
 #define EF_AIMDOWNSIGHT 0x40000
 #define EF_VOTED        0x100000
 #define EF_TALK         0x200000
 #define EF_TAUNT        0x400000
+#define EF_BOUNCE		0x1000000
 
 #define PMF_PRONE           0x1
 #define PMF_CROUCH          0x2
@@ -241,9 +229,77 @@ typedef unsigned char byte;
 typedef signed char sbyte;
 typedef struct gclient_s gclient_t;
 typedef struct gentity_s gentity_t;
-typedef int scr_entref_t;
 typedef int LargeLocal;
 typedef gentity_t (*useList_t)[2050];
+
+typedef struct scr_entref_s
+{
+	uint16_t entnum;
+	uint16_t classnum;
+} scr_entref_t;
+
+typedef enum
+{
+	ENT_HANDLER_NULL = 0x0,
+	ENT_HANDLER_TRIGGER_MULTIPLE = 0x1,
+	ENT_HANDLER_TRIGGER_HURT = 0x2,
+	ENT_HANDLER_TRIGGER_HURT_TOUCH = 0x3,
+	ENT_HANDLER_TRIGGER_DAMAGE = 0x4,
+	ENT_HANDLER_SCRIPT_MOVER = 0x5,
+	ENT_HANDLER_SCRIPT_MODEL = 0x6,
+	ENT_HANDLER_GRENADE = 0x7,
+	ENT_HANDLER_ROCKET = 0x8,
+	ENT_HANDLER_CLIENT = 0x9,
+	ENT_HANDLER_CLIENT_SPECTATOR = 0xA,
+	ENT_HANDLER_CLIENT_DEAD = 0xB,
+	ENT_HANDLER_PLAYER_CLONE = 0xC,
+	ENT_HANDLER_TURRET_INIT = 0xD,
+	ENT_HANDLER_TURRET = 0xE,
+	ENT_HANDLER_DROPPED_ITEM = 0xF,
+	ENT_HANDLER_ITEM_INIT = 0x10,
+	ENT_HANDLER_ITEM = 0x11,
+	ENT_HANDLER_TRIGGER_USE = 0x12,
+	ENT_HANDLER_PLAYER_BLOCK = 0x13,
+	ENT_HANDLER_COUNT = 0x14
+} entHandlers_t;
+
+typedef enum
+{
+	HITLOC_NONE,
+	HITLOC_HELMET,
+	HITLOC_HEAD,
+	HITLOC_NECK,
+	HITLOC_TORSO_UPR,
+	HITLOC_TORSO_LWR,
+	HITLOC_R_ARM_UPR,
+	HITLOC_L_ARM_UPR,
+	HITLOC_R_ARM_LWR,
+	HITLOC_L_ARM_LWR,
+	HITLOC_R_HAND,
+	HITLOC_L_HAND,
+	HITLOC_R_LEG_UPR,
+	HITLOC_L_LEG_UPR,
+	HITLOC_R_LEG_LWR,
+	HITLOC_L_LEG_LWR,
+	HITLOC_R_FOOT,
+	HITLOC_L_FOOT,
+	HITLOC_GUN,
+	HITLOC_NUM
+} hitLocation_t;
+
+typedef struct entityHandler_s
+{
+	void (*think)(struct gentity_s *);
+	void (*reached)(struct gentity_s *);
+	void (*blocked)(struct gentity_s *, struct gentity_s *);
+	void (*touch)(struct gentity_s *, struct gentity_s *, int);
+	void (*use)(struct gentity_s *, struct gentity_s *, struct gentity_s *);
+	void (*pain)(struct gentity_s *, struct gentity_s *, int, const float *, const int, const float *, hitLocation_t, const int);
+	void (*die)(struct gentity_s *, struct gentity_s *, struct gentity_s *, int, int, const int, const float *, hitLocation_t, int);
+	void (*controller)(struct gentity_s *, int *);
+	int methodOfDeath;
+	int splashMethodOfDeath;
+} entityHandler_t;
 
 typedef enum
 {
@@ -286,7 +342,7 @@ typedef enum
 	ET_INVISIBLE = 5,
 	ET_SCRIPTMOVER = 6,
 	ET_UNK1 = 7, // ET_FX ?
-	ET_UNK2 = 8, // ET_LOOP_FX ?
+	ET_LOOP_FX = 8,
 	ET_TURRET = 9
 } entityType_t;
 
@@ -987,7 +1043,7 @@ typedef struct clientState_s
 typedef struct entityState_s
 {
 	int number;
-	int eType;
+	entityType_t eType;
 	int eFlags;
 	trajectory_t pos;
 	trajectory_t apos;
@@ -2428,6 +2484,7 @@ typedef struct
 	short sound_file_stop;
 	#endif
 	short flags;
+	short bounce;
 } stringIndex_t;
 
 typedef struct bgs_s
@@ -3019,6 +3076,7 @@ static const int errorcode_offset = 0x081A2264;
 #define com_errorEntered (*((int*)( com_errorEntered_offset )))
 #define com_fixedConsolePosition (*((int*)( com_fixedConsolePosition_offset )))
 #define errorcode (*((int*)( errorcode_offset )))
+#define testclient_connect_string (*((char*)( testclient_connect_string_offset )))
 
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6
@@ -3110,10 +3168,20 @@ typedef struct scr_notify_s
 #define MAX_CUSTOMSOUNDS 64 // Consider ~8MB of memory usage per 10-minute song
 #endif
 
+typedef enum
+{
+	GRAVITY_NONE,
+	GRAVITY_ITEM,
+	GRAVITY_GRENADE,
+	GRAVITY_NUM
+} customGravityType_t;
+
 typedef struct customEntityState_s
 {
-	qboolean gravityEnabled;
+	customGravityType_t gravityType;
 	qboolean collideModels;
 	vec3_t velocity;
+	float parallelBounce;
+	float perpendicularBounce;
 	// TODO: Add new custom fields here for functionality that atm reuses stock fields
 } customEntityState_t;
