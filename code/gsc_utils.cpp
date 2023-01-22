@@ -840,6 +840,23 @@ void gsc_make_localized_string()
 	var->type = STACK_LOCALIZED_STRING;
 }
 
+void gsc_make_client_localized_string()
+{
+	char *input;
+
+	if ( ! stackGetParams("s", &input))
+	{
+		stackError("gsc_make_client_localized_string() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+	
+	char output[MAX_STRINGLENGTH];
+	Com_sprintf(output, MAX_STRINGLENGTH,"\x14%s\x15", input);
+
+	stackPushString(output);
+}
+
 void gsc_utils_float()
 {
 	if (Scr_GetNumParam() == 0)

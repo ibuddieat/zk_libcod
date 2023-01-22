@@ -42,6 +42,7 @@ void gsc_g_findconfigstringindex();
 void gsc_get_configstring();
 void gsc_set_configstring();
 void gsc_make_localized_string();
+void gsc_make_client_localized_string();
 
 void gsc_utils_float();
 void gsc_utils_exponent();

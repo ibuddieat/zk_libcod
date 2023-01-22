@@ -199,6 +199,7 @@ scr_function_t scriptFunctions[] =
 	{"getconfigstring", gsc_get_configstring, 0},
 	{"setconfigstring", gsc_set_configstring, 0},
 	{"makelocalizedstring", gsc_make_localized_string, 0},
+	{"makeclientlocalizedstring", gsc_make_client_localized_string, 0},
 
 	{"float", gsc_utils_float, 0},
 	{"exponent", gsc_utils_exponent, 0},
