@@ -3178,10 +3178,11 @@ typedef enum
 
 typedef struct customEntityState_s
 {
+	// Note: Some stock fields are still reused for new stuff where archiving is required
 	customGravityType_t gravityType;
 	qboolean collideModels;
 	vec3_t velocity;
 	float parallelBounce;
 	float perpendicularBounce;
-	// TODO: Add new custom fields here for functionality that atm reuses stock fields
+	qboolean convertedTrigger;
 } customEntityState_t;

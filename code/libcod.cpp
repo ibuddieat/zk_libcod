@@ -3897,7 +3897,8 @@ void custom_Player_UpdateCursorHints(gentity_t *player)
 					if ( temp == ET_ITEM )
 					{
 						temp = BG_GetItemHintString(player->client, ent);
-						if ( temp != 0 ) goto LAB_08121ee6;
+						if ( temp != 0 )
+							goto LAB_08121ee6;
 					}
 					else if ( temp < ET_MISSILE )
 					{
@@ -3919,7 +3920,7 @@ LAB_08121ee6:
 							}
 
 							/* New code start: hintString support for trigger_radius */
-							if ( (ent->s).clientNum == -1 )
+							if ( customEntityState[(ent->s).number].convertedTrigger )
 							{
 								Scr_AddEntity(player);
 								Scr_Notify(ent, scr_const.trigger, 1);
@@ -4177,12 +4178,12 @@ void custom_Script_setHintString(scr_entref_t ref)
 	if ( ent->classname == scr_const.trigger_radius )
 	{
 		Scr_SetString(&ent->classname, scr_const.trigger_use_touch);
-		(ent->params).trigger.damage= ENTITY_NONE;
+		(ent->params).trigger.damage = ENTITY_NONE;
 		(ent->r).contents = CONTENTS_DONOTENTER;
 		(ent->r).svFlags = 1;
 		(ent->s).dmgFlags = 2;
-		// Reusing the clientNum field that is otherwise not used at trigger entities to mark it as a 'converted' trigger so that it will still emit 'trigger' notifies
-		(ent->s).clientNum = -1;
+		// Set it to a 'converted' trigger to still emit 'trigger' notifies
+		customEntityState[(ent->s).number].convertedTrigger = qtrue;
 	}
 }
 
