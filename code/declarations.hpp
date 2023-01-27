@@ -81,8 +81,8 @@
 #define HASH_NEXT_MASK    0x3FFF
 #define HASH_STAT_MASK    0xC000
 
-#define ENTITY_WORLD	0x3FE
-#define ENTITY_NONE		0x3FF
+#define ENTITY_WORLD    0x3FE
+#define ENTITY_NONE     0x3FF
 
 // gentity_s->flags
 #define FL_GODMODE              0x1
@@ -130,16 +130,16 @@
 #define EF_FIRING       0x20
 #define EF_USETURRET    0x300
 #define EF_MANTLE       0x4000
-#define EF_TAGCONNECT	0x8000
+#define EF_TAGCONNECT   0x8000
 #define EF_DEAD         0x20000
 #define EF_AIMDOWNSIGHT 0x40000
 #define EF_VOTED        0x100000
 #define EF_TALK         0x200000
 #define EF_TAUNT        0x400000
-#define EF_BOUNCE		0x1000000
+#define EF_BOUNCE       0x1000000
 
 #define PMF_PRONE           0x1
-#define PMF_CROUCH          0x2
+#define PMF_CROUCH          0x2 // PMF_DUCKED
 #define PMF_MANTLE          0x4
 #define PMF_FRAG            0x10
 #define PMF_LADDER          0x20
@@ -969,19 +969,19 @@ typedef void netProfileInfo_t;
 
 typedef struct
 {
-	int			outgoingSequence;
-	netsrc_t	sock;
-	int			dropped;
-	int			incomingSequence;
-	netadr_t	remoteAddress;
-	int 		qport;
-	int			fragmentSequence;
-	int			fragmentLength;
-	byte		fragmentBuffer[MAX_MSGLEN];
-	qboolean	unsentFragments;
-	int			unsentFragmentStart;
-	int			unsentLength;
-	byte		unsentBuffer[MAX_MSGLEN];
+	int outgoingSequence;
+	netsrc_t sock;
+	int dropped;
+	int incomingSequence;
+	netadr_t remoteAddress;
+	int qport;
+	int fragmentSequence;
+	int fragmentLength;
+	byte fragmentBuffer[MAX_MSGLEN];
+	qboolean unsentFragments;
+	int unsentFragmentStart;
+	int unsentLength;
+	byte unsentBuffer[MAX_MSGLEN];
 	netProfileInfo_t *netProfile;
 } netchan_t;
 
@@ -1023,11 +1023,11 @@ typedef enum
 
 typedef struct
 {
-	trType_t	trType;
-	int			trTime;
-	int			trDuration;
-	vec3_t		trBase;
-	vec3_t		trDelta;
+	trType_t trType;
+	int trTime;
+	int trDuration;
+	vec3_t trBase;
+	vec3_t trDelta;
 } trajectory_t;
 
 typedef struct clientState_s
@@ -1059,11 +1059,11 @@ typedef struct entityState_s
 	int surfType;
 	int index; // modelIndex
 	int clientNum;
-	int	iHeadIcon;
-	int	iHeadIconTeam;
-	int	solid;
-	int	eventParm;
-	int	eventSequence;
+	int iHeadIcon;
+	int iHeadIconTeam;
+	int solid;
+	int eventParm;
+	int eventSequence;
 	int events[4];
 	unsigned int eventParms[4];
 	int weapon;
@@ -1080,22 +1080,24 @@ typedef struct entityState_s
 
 typedef struct
 {
-	byte		linked;
-	byte		bmodel;
-	byte		svFlags;
-	byte		pad1;
-	int			clientMask[2];
-	byte		inuse;
-	byte		pad2[3];
-	int			broadcastTime;
-	vec3_t		mins, maxs;
-	int			contents;
-	vec3_t		absmin, absmax;
-	vec3_t		currentOrigin;
-	vec3_t		currentAngles;
-	u_int16_t	ownerNum;
-	u_int16_t	pad3;
-	int			eventTime;
+	byte linked;
+	byte bmodel;
+	byte svFlags;
+	byte pad1;
+	int clientMask[2];
+	byte inuse;
+	byte pad2[3];
+	int broadcastTime;
+	vec3_t mins;
+	vec3_t maxs;
+	int contents;
+	vec3_t absmin;
+	vec3_t absmax;
+	vec3_t currentOrigin;
+	vec3_t currentAngles;
+	u_int16_t ownerNum;
+	u_int16_t pad3;
+	int eventTime;
 } entityShared_t; // verified
 
 typedef enum
@@ -1221,15 +1223,15 @@ typedef struct hudElemState_s
 
 typedef struct
 {
-	float	yaw;
-	int	timer;
-	int	transIndex;
-	int	flags;
+	float yaw;
+	int timer;
+	int transIndex;
+	int flags;
 } mantleState_t;
 
 typedef struct playerState_s
 {
-	int	commandTime;
+	int commandTime;
 	int pm_type;
 	int bobCycle;
 	int pm_flags;
@@ -1237,12 +1239,12 @@ typedef struct playerState_s
 	vec3_t origin;
 	vec3_t velocity;
 	vec2_t oldVelocity; // 48
-	int	weaponTime;
+	int weaponTime;
 	int weaponDelay;
-	int	grenadeTimeLeft;
-	int	weaponRestrictKickTime;
-	int	foliageSoundTime;
-	int	gravity;
+	int grenadeTimeLeft;
+	int weaponRestrictKickTime;
+	int foliageSoundTime;
+	int gravity;
 	float leanf;
 	int speed;
 	vec3_t delta_angles;
@@ -1254,24 +1256,24 @@ typedef struct playerState_s
 	int legsAnim;
 	int torsoTimer;
 	int torsoAnim;
-	int	legsAnimDuration;
-	int	torsoAnimDuration;
-	int	damageTimer;
-	int	damageDuration;
-	int	flinchYaw;
-	int	movementDir;
-	int	eFlags;
-	int	eventSequence;
+	int legsAnimDuration;
+	int torsoAnimDuration;
+	int damageTimer;
+	int damageDuration;
+	int flinchYaw;
+	int movementDir;
+	int eFlags;
+	int eventSequence;
 	int events[4];
 	unsigned int eventParms[4];
-	int	oldEventSequence;
-	int	clientNum;
-	int	offHandIndex;
+	int oldEventSequence;
+	int clientNum;
+	int offHandIndex;
 	unsigned int weapon;
-	int	weaponstate;
+	int weaponstate;
 	float fWeaponPosFrac;
 	int adsDelayTime;
-	int	viewmodelIndex;
+	int viewmodelIndex;
 	vec3_t viewangles;
 	int viewHeightTarget;
 	float viewHeightCurrent;
@@ -1281,13 +1283,13 @@ typedef struct playerState_s
 	float viewHeightLerpPosAdj;
 	vec2_t viewAngleClampBase;
 	vec2_t viewAngleClampRange;
-	int	damageEvent;
-	int	damageYaw;
-	int	damagePitch;
-	int	damageCount;
-	int	stats[6];
-	int	ammo[128];
-	int	ammoclip[128]; // 836
+	int damageEvent;
+	int damageYaw;
+	int damagePitch;
+	int damageCount;
+	int stats[6];
+	int ammo[128];
+	int ammoclip[128]; // 836
 	unsigned int weapons[2];
 	unsigned int weaponold[2];
 	byte weaponslots[5];
@@ -1300,9 +1302,9 @@ typedef struct playerState_s
 	float proneTorsoPitch;
 	ViewLockTypes_t viewlocked;
 	int viewlocked_entNum;
-	int	cursorHint;
-	int	cursorHintString;
-	int	cursorHintEntIndex;
+	int cursorHint;
+	int cursorHintString;
+	int cursorHintEntIndex;
 	int iCompassFriendInfo;
 	float fTorsoHeight;
 	float fTorsoPitch;
@@ -1311,11 +1313,11 @@ typedef struct playerState_s
 	int holdBreathTimer;
 	mantleState_t mantleState;
 	int entityEventSequence;
-	int	weapAnim;
+	int weapAnim;
 	float aimSpreadScale;
-	int	shellshockIndex;
-	int	shellshockTime;
-	int	shellshockDuration;
+	int shellshockIndex;
+	int shellshockTime;
+	int shellshockDuration;
 	objective_t objective[16];
 	int deltaTime;
 	hudElemState_t hud;
@@ -1335,7 +1337,7 @@ typedef struct
 	int forceSpectatorClient;
 	int statusIcon;
 	int archiveTime;
-	int	score;
+	int score;
 	int deaths;
 	u_int16_t scriptPersId;
 	byte pad2;
@@ -1403,9 +1405,11 @@ struct gclient_s
 	vec3_t swayViewAngles; // 10316
 	vec3_t swayOffset;
 	vec3_t swayAngles;
-	int unknown_space3[7];
-	float weaponRecoil; // 10380
-	int unknown_space4[3];
+	vec3_t vLastMoveAng;
+	float fLastIdleFactor; // cod4, unconfirmed here
+	vec3_t vGunOffset;
+	vec3_t vGunAngle;
+	int weapIdleTime; // cod4, unconfirmed here
 	int lastServerTime;
 	int lastActivateTime;
 }; // verified
@@ -1534,13 +1538,13 @@ typedef struct
 typedef struct
 {
 	playerState_t ps;
-	int	num_entities;
-	int	num_clients;
-	int	first_entity;
-	int	first_client;
+	int num_entities;
+	int num_clients;
+	int first_entity;
+	int first_client;
 	unsigned int messageSent;
 	unsigned int messageAcked;
-	int	messageSize;
+	int messageSize;
 } clientSnapshot_t;
 
 #pragma pack(push)
@@ -1555,63 +1559,63 @@ typedef struct
 
 typedef struct client_s
 {
-	clientConnectState_t	state;
-	qboolean		delayed;
-	const char		*delayDropMsg;
-	char			userinfo[1024];
-	reliableCommands_t	reliableCommands[128];
-	int				reliableSequence;
-	int				reliableAcknowledge;
-	int				reliableSent;
-	int				messageAcknowledge;
-	int				gamestateMessageNum;
-	int				challenge;
-	usercmd_t  	 	lastUsercmd;
-	int				lastClientCommand;
-	char			lastClientCommandString[1024];
-	gentity_t 		*gentity;
-	char 			name[32];
-	char			downloadName[MAX_QPATH];
-	fileHandle_t	download;
-	int				downloadSize;
-	int				downloadCount;
-	int				downloadClientBlock;
-	int				downloadCurrentBlock;
-	int				downloadXmitBlock;
-	unsigned char	*downloadBlocks[MAX_DOWNLOAD_WINDOW];
-	int				downloadBlockSize[MAX_DOWNLOAD_WINDOW];
-	qboolean		downloadEOF;
-	int				downloadSendTime;
+	clientConnectState_t state;
+	qboolean delayed;
+	const char *delayDropMsg;
+	char userinfo[1024];
+	reliableCommands_t reliableCommands[128];
+	int reliableSequence;
+	int reliableAcknowledge;
+	int reliableSent;
+	int messageAcknowledge;
+	int gamestateMessageNum;
+	int challenge;
+	usercmd_t lastUsercmd;
+	int lastClientCommand;
+	char lastClientCommandString[1024];
+	gentity_t *gentity;
+	char name[32];
+	char downloadName[MAX_QPATH];
+	fileHandle_t download;
+	int downloadSize;
+	int downloadCount;
+	int downloadClientBlock;
+	int downloadCurrentBlock;
+	int downloadXmitBlock;
+	unsigned char *downloadBlocks[MAX_DOWNLOAD_WINDOW];
+	int downloadBlockSize[MAX_DOWNLOAD_WINDOW];
+	qboolean downloadEOF;
+	int downloadSendTime;
 #if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
-	char			wwwDownloadURL[MAX_OSPATH];
-	qboolean		wwwDownload;
-	qboolean		wwwDownloadStarted;
-	qboolean		wwwDlAck;
-	qboolean		wwwDl_failed;
+	char wwwDownloadURL[MAX_OSPATH];
+	qboolean wwwDownload;
+	qboolean wwwDownloadStarted;
+	qboolean wwwDlAck;
+	qboolean wwwDl_failed;
 #endif
-	int				deltaMessage;
-	int				floodprotect;
-	int				lastPacketTime;
-	int				lastConnectTime;
-	int				nextSnapshotTime;
-	qboolean		rateDelayed;
-	int				timeoutCount;
+	int deltaMessage;
+	int floodprotect;
+	int lastPacketTime;
+	int lastConnectTime;
+	int nextSnapshotTime;
+	qboolean rateDelayed;
+	int timeoutCount;
 	clientSnapshot_t frames[PACKET_BACKUP];
-	int				ping;
-	int				rate;
-	int				snapshotMsec;
-	int				pureAuthentic;
-	netchan_t		netchan;
-	int 			guid;
-	short			clscriptid;
-	int				bot;
-	int				serverId;
-	VoicePacket_t	voicedata[MAX_VOICEPACKETS];
-	int				unsentVoiceData;
-	byte			mutedClients[MAX_CLIENTS];
-	byte			hasVoip;
+	int ping;
+	int rate;
+	int snapshotMsec;
+	int pureAuthentic;
+	netchan_t netchan;
+	int guid;
+	short clscriptid;
+	int bot;
+	int serverId;
+	VoicePacket_t voicedata[MAX_VOICEPACKETS];
+	int unsentVoiceData;
+	byte mutedClients[MAX_CLIENTS];
+	byte hasVoip;
 #if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
-	char 			pbguid[64];
+	char pbguid[64];
 #endif
 } client_t;
 
@@ -1655,33 +1659,33 @@ typedef struct cachedClient_s
 
 typedef struct
 {
-	qboolean	initialized;
-	int			time;
-	int			snapFlagServerBit;
-	client_t	*clients;
-	int			numSnapshotEntities;
-	int			numSnapshotClients;
-	int			nextSnapshotEntities;
-	int			nextSnapshotClients;
+	qboolean initialized;
+	int time;
+	int snapFlagServerBit;
+	client_t *clients;
+	int numSnapshotEntities;
+	int numSnapshotClients;
+	int nextSnapshotEntities;
+	int nextSnapshotClients;
 	entityState_t *snapshotEntities;
 	clientState_t *snapshotClients;
-	int 		archivedSnapshotEnabled;
-	int 		nextArchivedSnapshotFrames;
+	int archivedSnapshotEnabled;
+	int nextArchivedSnapshotFrames;
 	archivedSnapshot_t *archivedSnapshotFrames;
-	byte 		*archivedSnapshotBuffer;
-	int 		nextArchivedSnapshotBuffer;
-	int			nextCachedSnapshotEntities;
-	int 		nextCachedSnapshotClients;
-	int 		nextCachedSnapshotFrames;
+	byte *archivedSnapshotBuffer;
+	int nextArchivedSnapshotBuffer;
+	int nextCachedSnapshotEntities;
+	int nextCachedSnapshotClients;
+	int nextCachedSnapshotFrames;
 	archivedEntity_t *cachedSnapshotEntities;
 	cachedClient_t *cachedSnapshotClients;
 	cachedSnapshot_t *cachedSnapshotFrames;
-	int			nextHeartbeatTime;
-	int 		nextStatusResponseTime;
-	challenge_t	challenges[1024];
-	netadr_t	redirectAddress;
-	netadr_t	authorizeAddress;
-	char 		netProfilingBuf[1504]; // shouldn't that be at most [252]? else we run into sv_offset
+	int nextHeartbeatTime;
+	int nextStatusResponseTime;
+	challenge_t challenges[1024];
+	netadr_t redirectAddress;
+	netadr_t authorizeAddress;
+	char netProfilingBuf[1504]; // shouldn't that be at most [252]? else we run into sv_offset
 } serverStatic_t; // verified
 
 typedef struct
