@@ -2483,12 +2483,13 @@ typedef struct
 	short pelvis;
 	short trigger_radius;
 	// Custom indexes from here
+	short bounce;
+	short flags;
+	short land;
 	#if COMPILE_CUSTOM_VOICE == 1
 	short sound_file_done;
 	short sound_file_stop;
 	#endif
-	short flags;
-	short bounce;
 } stringIndex_t;
 
 typedef struct bgs_s

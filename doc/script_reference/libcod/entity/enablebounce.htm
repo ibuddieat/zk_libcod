@@ -27,7 +27,7 @@ Module: Entity<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Enables gravity bouncing like grenades. Requires the use of <a href="../entity/enablegravity.htm">enableGravity</a> prior to the use of this method. Returns true on success, else false (gravity not enabled) or undefined if the entity is not a script_model.</p>
+<p>Enables gravity bouncing like grenades. Requires the use of <a href="../entity/enablegravity.htm">enableGravity</a> prior to the use of this method. A script notify with string "bounce" is emit for the entity when bouncing, with the surface type as first parameter. Returns true on success, else false (gravity not enabled) or undefined if the entity is not a script_model.</p>
 
 </H3>
 </TR></TD></TABLE>

@@ -313,6 +313,7 @@ void custom_GScr_LoadConsts(void)
 	*/
 	scr_const.bounce = GScr_AllocString("bounce");
 	scr_const.flags = GScr_AllocString("flags");
+	scr_const.land = GScr_AllocString("land");
 	#if COMPILE_CUSTOM_VOICE == 1
 	scr_const.sound_file_done = GScr_AllocString("sound_file_done");
 	scr_const.sound_file_stop = GScr_AllocString("sound_file_stop");
@@ -4804,10 +4805,18 @@ void G_RunGravityModelAsGrenade(gentity_t *ent) // G_RunMissile as base
     if ( trace.fraction != 1.0 )
     {
 		bounce = G_BounceGrenade(ent, &trace);
-		if ( bounce && ( trace.startsolid == 0 ) )
+		if ( bounce )
+		{
+			if ( trace.startsolid == 0 )
+			{
+				Scr_AddString(Com_SurfaceTypeToName((int)( trace.surfaceFlags & 0x1F00000U ) >> 0x14));
+				Scr_Notify(ent, scr_const.bounce, 1);
+			}
+		}
+		else
 		{
 			Scr_AddString(Com_SurfaceTypeToName((int)( trace.surfaceFlags & 0x1F00000U ) >> 0x14));
-			Scr_Notify(ent, scr_const.bounce, 1);
+			Scr_Notify(ent, scr_const.land, 1);
 		}
     }
 }
@@ -4888,7 +4897,7 @@ void G_RunGravityModelAsItem(gentity_t *ent) // G_RunItem as base
 				if ( (ent->s).groundEntityNum != trace.entityNum.entnum )
 				{
 					Scr_AddString(Com_SurfaceTypeToName((int)( trace.surfaceFlags & 0x1F00000U ) >> 0x14));
-					Scr_Notify(ent, scr_const.bounce, 1);
+					Scr_Notify(ent, scr_const.land, 1);
 				}
 				(ent->s).groundEntityNum = trace.entityNum.entnum;
 				SV_LinkEntity(ent);
