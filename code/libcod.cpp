@@ -2429,7 +2429,7 @@ bool SVC_RateLimitAddress( netadr_t from, int burst, int period )
 	return SVC_RateLimit( bucket, burst, period );
 }
 
-bool SVC_callback(const char * str, const char * ip)
+bool SVC_callback(const char *str, const char *ip)
 {	
 	if ( codecallback_client_spam && Scr_IsSystemActive() )
 	{
@@ -4819,7 +4819,7 @@ void G_RunGravityModelAsItem(gentity_t *ent) // G_RunItem as base
 	trace_t trace;
 	vec3_t origin;
 
-	if ( ( ( ( (ent->s).groundEntityNum == ENTITY_NONE ) || ( level.gentities[(ent->s).groundEntityNum].s.pos.trType != TR_STATIONARY ) ) && ( (ent->s).pos.trType != TR_GRAVITY) ) &&
+	if ( ( ( ( (ent->s).groundEntityNum == ENTITY_NONE ) || ( level.gentities[(ent->s).groundEntityNum].s.pos.trType != TR_STATIONARY ) ) && ( (ent->s).pos.trType != TR_GRAVITY ) ) &&
 	( ( ( ent->spawnflags ^ 1) & 1) != 0 ) )
 	{
 		(ent->s).pos.trType = TR_GRAVITY;
@@ -4961,12 +4961,14 @@ void custom_G_RunFrameForEntity(gentity_t *ent)
 				else if ( customEntityState[(ent->s).number].gravityType )
 				{
 					vec3_t oldOrigin;
+
 					VectorCopy((ent->r).currentOrigin, oldOrigin);
 					if ( customEntityState[(ent->s).number].gravityType == GRAVITY_ITEM )
 						G_RunGravityModelAsItem(ent);
 					else if ( customEntityState[(ent->s).number].gravityType == GRAVITY_GRENADE )
 						G_RunGravityModelAsGrenade(ent);
 					VectorSubtract((ent->r).currentOrigin, oldOrigin, customEntityState[(ent->s).number].velocity);
+					VectorScale(customEntityState[(ent->s).number].velocity, 20.0, customEntityState[(ent->s).number].velocity);
 				}
 				else if ( ent->physicsObject == 0 )
 				{

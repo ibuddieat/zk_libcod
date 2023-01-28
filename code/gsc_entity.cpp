@@ -392,11 +392,12 @@ void gsc_entity_addentityvelocity(scr_entref_t ref)
 		if ( customEntityState[(ent->s).number].gravityType )
 		{
 			vec3_t velocity;
+
 			Scr_GetVector(0, &velocity);
 			(ent->s).pos.trType = TR_GRAVITY;
 			(ent->s).pos.trTime = level.time;
 			VectorCopy((ent->r).currentOrigin, (ent->s).pos.trBase);
-			VectorAdd((ent->s).pos.trDelta, velocity, (ent->s).pos.trDelta);
+			VectorAdd(customEntityState[(ent->s).number].velocity, velocity, (ent->s).pos.trDelta);
 			if( ! IsNullVector(velocity) )
 				(ent->s).groundEntityNum = ENTITY_NONE;
 
@@ -424,6 +425,7 @@ void gsc_entity_setentityvelocity(scr_entref_t ref)
 		if ( customEntityState[(ent->s).number].gravityType )
 		{
 			vec3_t velocity;
+
 			Scr_GetVector(0, &velocity);
 			(ent->s).pos.trType = TR_GRAVITY;
 			(ent->s).pos.trTime = level.time;
