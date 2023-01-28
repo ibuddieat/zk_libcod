@@ -208,6 +208,9 @@ scr_function_t scriptFunctions[] =
 	{"sqrtinv", gsc_utils_sqrtinv, 0},
 	{"vectorscale", gsc_utils_vectorscale, 0},
 
+	{"fromhex", gsc_utils_fromhex, 0},
+	{"tohex", gsc_utils_tohex, 0},
+
 	{"getlasttestclientnumber", gsc_utils_getlasttestclientnumber, 0},
 	{"bullethiteffect", gsc_utils_bullethiteffect, 0},
 	{"gettype", gsc_utils_gettype, 0},

@@ -51,6 +51,9 @@ void gsc_utils_sqrt();
 void gsc_utils_sqrtinv();
 void gsc_utils_vectorscale();
 
+void gsc_utils_fromhex();
+void gsc_utils_tohex();
+
 void gsc_utils_getlasttestclientnumber();
 void gsc_utils_bullethiteffect();
 void gsc_utils_gettype();

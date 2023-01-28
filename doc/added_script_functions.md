@@ -54,6 +54,7 @@ New script code methods:
 New script code functions:
   * `getWeaponFuseTime(<weapon name>)`
   * `setWeaponFuseTime(<weapon name>, <time in ms>)`
+  * `fromHex(<hex string>)`
   * `getEntityCount()`
   * `getSoundFileDuration(<file path>)`
   * `loadSoundFile(<file path>, <callback function>, [<volume>], [<sound index>])`
@@ -62,3 +63,4 @@ New script code functions:
   * `resetTestClientNaming()`
   * `saveSpeexFile(<sound index>, <file path>)`
   * `setNextTestClientName(<name>)`
+  * `toHex(<number>)`
