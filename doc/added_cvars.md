@@ -15,6 +15,10 @@ Added cvars:
     * Type: Boolean
     * Default: True
     * Effect: Toggle game logging of item pickup actions.
+  * `g_resetSlide`
+    * Type: Boolean
+    * Default: False
+    * Effect: Potential fix for slide-like player movement after receiving damage from falling not being reset.
   * `g_spawnMapTurrets`
     * Type: Boolean
     * Default: True

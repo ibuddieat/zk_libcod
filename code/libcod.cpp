@@ -38,6 +38,7 @@ cvar_t *g_dumpVoiceData;
 cvar_t *g_logPickup;
 cvar_t *g_playerCollision;
 cvar_t *g_playerEject;
+cvar_t *g_resetSlide;
 cvar_t *g_spawnMapTurrets;
 cvar_t *g_spawnMapWeapons;
 cvar_t *logfileName;
@@ -261,6 +262,7 @@ void common_init_complete_print(const char *format, ...)
 	g_logPickup = Cvar_RegisterBool("g_logPickup", qtrue, CVAR_ARCHIVE);
 	g_playerCollision = Cvar_RegisterBool("g_playerCollision", qtrue, CVAR_ARCHIVE);
 	g_playerEject = Cvar_RegisterBool("g_playerEject", qtrue, CVAR_ARCHIVE);
+	g_resetSlide = Cvar_RegisterBool("g_resetSlide", qfalse, CVAR_ARCHIVE);
 	g_spawnMapTurrets = Cvar_RegisterBool("g_spawnMapTurrets", qtrue, CVAR_ARCHIVE);
 	g_spawnMapWeapons = Cvar_RegisterBool("g_spawnMapWeapons", qtrue, CVAR_ARCHIVE);
 	sv_allowRcon = Cvar_RegisterBool("sv_allowRcon", qtrue, CVAR_ARCHIVE);
@@ -2262,12 +2264,9 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 int custom_ClientEndFrame(gentity_t *ent)
 {
 	hook_clientendframe->unhook();
-
-	int (*sig)(gentity_t *ent);
-	*(int *)&sig = hook_clientendframe->from;
-
-	int ret = sig(ent);
-
+	int (*ClientEndFrame)(gentity_t *ent);
+	*(int *)&ClientEndFrame = hook_clientendframe->from;
+	int ret = ClientEndFrame(ent);
 	hook_clientendframe->hook();
 
 	if ( ent->client->sess.state == STATE_PLAYING )
@@ -2279,6 +2278,15 @@ int custom_ClientEndFrame(gentity_t *ent)
 
 		if ( player_g_gravity[num] > 0 )
 			ent->client->ps.gravity = player_g_gravity[num];
+
+		// Experimental slide bug fix
+		if ( g_resetSlide->boolean )
+		{
+			if ( ( (ent->client->ps).pm_flags & PMF_SLIDING ) != 0 && (ent->client->ps).pm_time == 0 )
+			{
+				(ent->client->ps).pm_flags = (ent->client->ps).pm_flags & ~PMF_SLIDING;
+			}
+		}
 	}
 
 	return ret;
