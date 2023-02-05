@@ -240,6 +240,17 @@ typedef struct scr_entref_s
 
 typedef enum
 {
+	CRITSECT_CONSOLE = 0,
+	CRITSECT_UNKNOWN1 = 1,
+	CRITSECT_COM_ERROR = 2,
+	CRITSECT_UNKNOWN3 = 3,
+	CRITSECT_CVAR = 4,
+	CRITSECT_RD_BUFFER = 5,
+	CRITSECT_COUNT = 6
+} criticalSection_t;
+
+typedef enum
+{
 	ENT_HANDLER_NULL = 0x0,
 	ENT_HANDLER_TRIGGER_MULTIPLE = 0x1,
 	ENT_HANDLER_TRIGGER_HURT = 0x2,

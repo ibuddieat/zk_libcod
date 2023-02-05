@@ -2890,7 +2890,7 @@ void Scr_CodeCallback_Error(qboolean terminal, qboolean emit, const char *intern
 
 void custom_Com_Error(int errorLevel, const char *error, ...)
 {
-	Sys_EnterCriticalSectionInternal(2);
+	Sys_EnterCriticalSectionInternal(CRITSECT_COM_ERROR);
 	
 	#if COD_VERSION == COD2_1_0 // Not tested
 	int va_string_156 = 0x0;
@@ -2930,7 +2930,7 @@ void custom_Com_Error(int errorLevel, const char *error, ...)
 	
 	errorcode = errorLevel;
 	
-	Sys_LeaveCriticalSectionInternal(2);
+	Sys_LeaveCriticalSectionInternal(CRITSECT_COM_ERROR);
 
 	longjmp((__jmp_buf_tag*)Sys_GetValue(2), -1);
 }
@@ -4609,7 +4609,7 @@ void custom_Com_PrintMessage(int /* print_msg_type_t */ channel, char *message)
 
 		if ( com_logfile != NULL && com_logfile->integer != 0 )
 		{
-			Sys_EnterCriticalSectionInternal(0);
+			Sys_EnterCriticalSectionInternal(CRITSECT_CONSOLE);
 			if ( FS_Initialized() )
 			{
 				if ( logfile == 0 && opening_qconsole == 0 && logfileName->string )
@@ -4630,20 +4630,20 @@ void custom_Com_PrintMessage(int /* print_msg_type_t */ channel, char *message)
 					}
 				}
 			}
-			Sys_LeaveCriticalSectionInternal(0);
+			Sys_LeaveCriticalSectionInternal(CRITSECT_CONSOLE);
 		}
 	}
 	else if ( channel != 4 )
 	{
 		// RCON output buffer
-		Sys_EnterCriticalSectionInternal(5);
+		Sys_EnterCriticalSectionInternal(CRITSECT_RD_BUFFER);
 		if ( rd_buffersize - 1U < ( strlen(rd_buffer) + strlen(message) ) )
 		{
 			rd_flush(rd_buffer);
 			*rd_buffer = '\0';
 		}
 		I_strncat(rd_buffer, rd_buffersize, message);
-		Sys_LeaveCriticalSectionInternal(5);
+		Sys_LeaveCriticalSectionInternal(CRITSECT_RD_BUFFER);
 	}
 }
 
