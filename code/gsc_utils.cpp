@@ -712,7 +712,7 @@ void gsc_utils_getlocaltime()
 }
 
 // http://code.metager.de/source/xref/RavenSoftware/jediacademy/code/game/g_utils.cpp#36
-void gsc_g_findconfigstringindexoriginal()
+void gsc_utils_g_findconfigstringindexoriginal()
 {
 	char *name;
 	int min, max, create;
@@ -735,7 +735,7 @@ void gsc_g_findconfigstringindexoriginal()
 }
 
 // simple version, without crash
-void gsc_g_findconfigstringindex()
+void gsc_utils_g_findconfigstringindex()
 {
 	char *name;
 	int min, max;
@@ -746,7 +746,7 @@ void gsc_g_findconfigstringindex()
 		return;
 	}
     
-    if (min < 0 || max >= MAX_CONFIGSTRINGS)
+    if ( min < 0 || max >= MAX_CONFIGSTRINGS )
 	{
 		stackError("gsc_g_findconfigstringindex() configstring index is out of range");
 		stackPushUndefined();
@@ -770,7 +770,7 @@ void gsc_g_findconfigstringindex()
 	stackPushBool(qtrue);
 }
 
-void gsc_get_configstring()
+void gsc_utils_get_configstring()
 {
 	int index;
 
@@ -796,7 +796,7 @@ void gsc_get_configstring()
 		stackPushString(string);
 }
 
-void gsc_set_configstring()
+void gsc_utils_set_configstring()
 {
 	int index;
 	char *string;
@@ -819,7 +819,7 @@ void gsc_set_configstring()
 	stackPushBool(qtrue);
 }
 
-void gsc_make_localized_string()
+void gsc_utils_make_localized_string()
 {
 	char *str;
 
@@ -839,7 +839,7 @@ void gsc_make_localized_string()
 	var->type = STACK_LOCALIZED_STRING;
 }
 
-void gsc_make_client_localized_string()
+void gsc_utils_make_client_localized_string()
 {
 	char *input;
 

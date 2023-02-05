@@ -435,7 +435,7 @@ static const SV_GameSendServerCommand_t SV_GameSendServerCommand = (SV_GameSendS
 static const SV_GameSendServerCommand_t SV_GameSendServerCommand = (SV_GameSendServerCommand_t)0x080917AA;
 #endif
 
-typedef void (QDECL *SV_SendServerCommand_t)(client_t *cl, int, const char *fmt, ...);
+typedef void (QDECL *SV_SendServerCommand_t)(client_t *cl, int type, const char *fmt, ...);
 #if COD_VERSION == COD2_1_0
 static const SV_SendServerCommand_t SV_SendServerCommand = (SV_SendServerCommand_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2

@@ -437,22 +437,16 @@ int custom_GScr_LoadGameTypeScript()
 	return ret;
 }
 
-int custom_G_SetClientContents(gentity_t *ent)
+void custom_G_SetClientContents(gentity_t *ent)
 {
-	int ret;
-
 	hook_g_setclientcontents->unhook();
-	int (*G_SetClientContents)(gentity_t *ent);
+	void (*G_SetClientContents)(gentity_t *ent);
 	*(int *)&G_SetClientContents = hook_g_setclientcontents->from;
 
 	if ( g_playerCollision->boolean )
-		ret = G_SetClientContents(ent);
-	else
-		ret = 0;
+		G_SetClientContents(ent);
 
 	hook_g_setclientcontents->hook();
-
-	return ret;
 }
 
 int custom_StuckInClient(gentity_t *ent)
@@ -656,12 +650,9 @@ void custom_Touch_Item_Auto(gentity_t * item, gentity_t * entity, int touch)
 		return;
 	
 	hook_touch_item_auto->unhook();
-	
 	void (*Touch_Item_Auto)(gentity_t *, gentity_t *, int);
 	*(int *)&Touch_Item_Auto = hook_touch_item_auto->from;
-
 	Touch_Item_Auto(item, entity, touch);
-	
 	hook_touch_item_auto->hook();
 }
 
@@ -1244,7 +1235,7 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 				i = 0;
 				while ( i < 0x10 )
 				{
-					if ( (ammobits[j] >> ((byte)i & 0x1f) & 1U) != 0 )
+					if ( ( ammobits[j] >> ( (byte)i & 0x1F ) & 1 ) != 0 )
 						MSG_WriteShort(msg, to->ammo[j * 0x10 + i]);
 					i++;
 				}
@@ -1261,7 +1252,7 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 		while ( i < 0x10 )
 		{
 			if ( to->ammoclip[j * 0x10 + i] != from->ammoclip[j * 0x10 + i] )
-				clipbits = clipbits | 1 << ((byte)i & 0x1f);
+				clipbits = clipbits | 1 << ( (byte)i & 0x1F );
 			i++;
 		}
 		if ( !clipbits )
@@ -1275,7 +1266,7 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 			i = 0;
 			while ( i < 0x10 )
 			{
-				if ( clipbits >> ((byte)i & 0x1f) & 1U )
+				if ( clipbits >> ( (byte)i & 0x1F ) & 1 )
 					MSG_WriteShort(msg, to->ammoclip[j * 0x10 + i]);
 				i++;
 			}
@@ -1306,8 +1297,8 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 	else
 	{
 		MSG_WriteBit1(msg);
-		MSG_WriteDeltaHudElems(msg, from->hud.archival, to->hud.archival, 0x1f);
-		MSG_WriteDeltaHudElems(msg, from->hud.current, to->hud.current, 0x1f);
+		MSG_WriteDeltaHudElems(msg, from->hud.archival, to->hud.archival, 0x1F);
+		MSG_WriteDeltaHudElems(msg, from->hud.current, to->hud.current, 0x1F);
 	}
 }
 
@@ -1367,13 +1358,13 @@ void custom_MSG_WriteDeltaEntity(msg_t *msg, entityState_t *from, entityState_t 
 				if ( spectatorClientNum != -1 )
 				{
 					// Client spectates someone (includes killcam)
-					if ( ! (to->otherEntityNum == (spectatorClientNum + 1)) )
+					if ( !( to->otherEntityNum == ( spectatorClientNum + 1 ) ) )
 						disable = qtrue;
 				}
 				else
 				{
 					// Client plays normally
-					if ( ! (to->otherEntityNum == (clientNum + 1)) )
+					if ( !( to->otherEntityNum == ( clientNum + 1 ) ) )
 						disable = qtrue;
 				}
 			}
@@ -2460,7 +2451,7 @@ bool SVC_callback(const char *str, const char *ip)
 bool SVC_ApplyRconLimit( netadr_t from, bool badRconPassword )
 {
 	// Prevent using rcon as an amplifier and make dictionary attacks impractical
-	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
+	if ( SVC_RateLimitAddress(from, 10, 1000) )
 	{
 		if ( !SVC_callback("RCON:ADDRESS", NET_AdrToString(from)) )
 			Com_DPrintf("SVC_RemoteCommand: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
@@ -2472,7 +2463,7 @@ bool SVC_ApplyRconLimit( netadr_t from, bool badRconPassword )
 		static leakyBucket_t bucket;
 
 		// Make DoS via rcon impractical
-		if ( SVC_RateLimit( &bucket, 10, 1000 ) )
+		if ( SVC_RateLimit(&bucket, 10, 1000) )
 		{
 			if ( !SVC_callback("RCON:GLOBAL", NET_AdrToString(from)) )
 				Com_DPrintf("SVC_RemoteCommand: rate limit exceeded, dropping request\n");
@@ -2488,23 +2479,23 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 	if ( !sv_allowRcon->boolean )
 		return;
 	
-	bool badRconPassword = !strlen( rcon_password->string ) || strcmp(Cmd_Argv(1), rcon_password->string) != 0;
+	bool badRconPassword = !strlen(rcon_password->string) || strcmp(Cmd_Argv(1), rcon_password->string) != 0;
 	
 	if ( !sv_limitLocalRcon->boolean )
 	{
 		unsigned char *ip = from.ip;
 	
-		if ( !(ip[0] == 10 ||									// 10.0.0.0 – 10.255.255.255
-			  (ip[0] == 172 && (ip[1] >= 16 && ip[1] <= 31)) || // 172.16.0.0 – 172.31.255.255
-			  (ip[0] == 192 && ip[1] == 168)) )					// 192.168.0.0 – 192.168.255.255
+		if ( !( ip[0] == 10 ||									// 10.0.0.0 – 10.255.255.255
+			  ( ip[0] == 172 && ( ip[1] >= 16 && ip[1] <= 31 ) ) || // 172.16.0.0 – 172.31.255.255
+			  ( ip[0] == 192 && ip[1] == 168 ) ) )					// 192.168.0.0 – 192.168.255.255
 		{
-			if ( SVC_ApplyRconLimit( from, badRconPassword ) )
+			if ( SVC_ApplyRconLimit(from, badRconPassword) )
 				return;
 		}
 	}
 	else
 	{
-		if ( SVC_ApplyRconLimit( from, badRconPassword ) )
+		if ( SVC_ApplyRconLimit(from, badRconPassword) )
 			return;
 	}
 	
@@ -2544,7 +2535,7 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 		stackPushInt((int)msg);
 		stackPushArray();
 		int args = Cmd_Argc();
-		for (int i = 2; i < args; i++)
+		for ( int i = 2; i < args; i++ )
 		{
 			char tmp[MAX_STRINGLENGTH];
 			SV_Cmd_ArgvBuffer(i, tmp, sizeof(tmp));
@@ -2555,7 +2546,6 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 	
 		short ret = Scr_ExecThread(codecallback_remotecommand, 3);
 		Scr_FreeThread(ret);
-		
 		return;
 	}
 	
@@ -2575,7 +2565,7 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 void hook_SV_GetChallenge(netadr_t from)
 {
 	// Prevent using getchallenge as an amplifier
-	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
+	if ( SVC_RateLimitAddress(from, 10, 1000) )
 	{
 		if ( !SVC_callback("CHALLENGE:ADDRESS", NET_AdrToString(from)) )
 			Com_DPrintf("SV_GetChallenge: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
@@ -2584,7 +2574,7 @@ void hook_SV_GetChallenge(netadr_t from)
 
 	// Allow getchallenge to be DoSed relatively easily, but prevent
 	// excess outbound bandwidth usage when being flooded inbound
-	if ( SVC_RateLimit( &outboundLeakyBucket, 10, 100 ) )
+	if ( SVC_RateLimit(&outboundLeakyBucket, 10, 100) )
 	{
 		if ( !SVC_callback("CHALLENGE:GLOBAL", NET_AdrToString(from)) )
 			Com_DPrintf("SV_GetChallenge: rate limit exceeded, dropping request\n");
@@ -2597,17 +2587,17 @@ void hook_SV_GetChallenge(netadr_t from)
 void hook_SV_DirectConnect(netadr_t from)
 {
 	// Prevent using connect as an amplifier
-	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
+	if ( SVC_RateLimitAddress(from, 10, 1000) )
 	{
-		Com_DPrintf( "SV_DirectConnect: rate limit from %s exceeded, dropping request\n", NET_AdrToString( from ) );
+		Com_DPrintf("SV_DirectConnect: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
 		return;
 	}
 
 	// Allow connect to be DoSed relatively easily, but prevent
 	// excess outbound bandwidth usage when being flooded inbound
-	if ( SVC_RateLimit( &outboundLeakyBucket, 10, 100 ) )
+	if ( SVC_RateLimit(&outboundLeakyBucket, 10, 100) )
 	{
-		Com_DPrintf( "SV_DirectConnect: rate limit exceeded, dropping request\n" );
+		Com_DPrintf("SV_DirectConnect: rate limit exceeded, dropping request\n");
 		return;
 	}
 
@@ -2617,7 +2607,7 @@ void hook_SV_DirectConnect(netadr_t from)
 void hook_SVC_Info(netadr_t from)
 {
 	// Prevent using getinfo as an amplifier
-	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
+	if ( SVC_RateLimitAddress(from, 10, 1000) )
 	{
 		if ( !SVC_callback("INFO:ADDRESS", NET_AdrToString(from)) )
 			Com_DPrintf("SVC_Info: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
@@ -2626,7 +2616,7 @@ void hook_SVC_Info(netadr_t from)
 
 	// Allow getinfo to be DoSed relatively easily, but prevent
 	// excess outbound bandwidth usage when being flooded inbound
-	if ( SVC_RateLimit( &outboundLeakyBucket, 10, 100 ) )
+	if ( SVC_RateLimit(&outboundLeakyBucket, 10, 100) )
 	{
 		if ( !SVC_callback("INFO:GLOBAL", NET_AdrToString(from)) )
 			Com_DPrintf("SVC_Info: rate limit exceeded, dropping request\n");
@@ -2639,7 +2629,7 @@ void hook_SVC_Info(netadr_t from)
 void hook_SVC_Status(netadr_t from)
 {
 	// Prevent using getstatus as an amplifier
-	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
+	if ( SVC_RateLimitAddress(from, 10, 1000) )
 	{
 		if ( !SVC_callback("STATUS:ADDRESS", NET_AdrToString(from)) )
 			Com_DPrintf("SVC_Status: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
@@ -2648,7 +2638,7 @@ void hook_SVC_Status(netadr_t from)
 
 	// Allow getstatus to be DoSed relatively easily, but prevent
 	// excess outbound bandwidth usage when being flooded inbound
-	if ( SVC_RateLimit( &outboundLeakyBucket, 10, 100 ) )
+	if ( SVC_RateLimit(&outboundLeakyBucket, 10, 100) )
 	{
 		if ( !SVC_callback("STATUS:GLOBAL", NET_AdrToString(from)) )
 			Com_DPrintf("SVC_Status: rate limit exceeded, dropping request\n");
@@ -2718,7 +2708,7 @@ void manymaps_prepare(const char *mapname, int read)
 	if ( !dir )
 		return;
 
-	while ( (dir_ent = readdir(dir)) != NULL )
+	while ( ( dir_ent = readdir(dir) ) != NULL )
 	{
 		if ( strcmp(dir_ent->d_name, ".") == 0 || strcmp(dir_ent->d_name, "..") == 0 )
 			continue;
@@ -2880,7 +2870,7 @@ void Scr_CodeCallback_Error(qboolean terminal, qboolean emit, const char *intern
 		else
 		{
 			/* If the error is non-critical (not stopping the server), save it
-			   so we can emit it later at G_RunFrame which is a rather save
+			   so we can emit it later at G_RunFrame which is a rather safe
 			   spot compared to if we emit it directly here within the
 			   internals of the scripting engine where we risk crashing it
 			   with a segmentation fault */
@@ -3393,7 +3383,7 @@ LAB_0809b5f4:
 				{
 					gent = SV_GentityNum(k);
 					if ( gent->r.linked &&
-					(( gent->r.broadcastTime != 0 || (((gent->r.svFlags & 1) == 0 && ((svEnt = SV_SvEntityForGentity(gent), (gent->r.svFlags & 0x18) != 0 || svEnt->numClusters != 0 )))))))
+					( gent->r.broadcastTime != 0 || ( ( gent->r.svFlags & 1 ) == 0 && ( svEnt = SV_SvEntityForGentity(gent), ( gent->r.svFlags & 0x18 ) != 0 || svEnt->numClusters != 0 ) ) ) )
 					{
 						memcpy(&to.s, &gent->s, sizeof(entityState_t));
 						to.r.svFlags = gent->r.svFlags;
@@ -3405,7 +3395,7 @@ LAB_0809b5f4:
 						VectorCopy(gent->r.absmax, to.r.absmax);
 						
 						/* New code start: setEarthquakes */
-						if ( (to.s.eType - 10) == EV_EARTHQUAKE )
+						if ( ( to.s.eType - 10 ) == EV_EARTHQUAKE )
 						{
 							for ( l = 0; l < sv_maxclients->integer; l++ )
 							{
@@ -3944,7 +3934,7 @@ LAB_08121ee6:
 							( (ent->params).trigger.damage == ENTITY_NONE || (ent->params).trigger.damage == (player->client->ps).clientNum ) )
 							{
 								temp = (ent->s).dmgFlags;
-								if ( (ent->s).dmgFlags != 0 && (ent->s).scale != 0xff )
+								if ( (ent->s).dmgFlags != 0 && (ent->s).scale != 0xFF )
 								{
 									cursorHintString = (ent->s).scale;
 								}
@@ -3989,7 +3979,7 @@ void custom_Script_clonePlayer(scr_entref_t ref)
 	}
 
 	gentity_t *entity = &g_entities[id];
-	if ( ! Com_GetServerDObj((entity->client->ps).clientNum) )
+	if ( !Com_GetServerDObj((entity->client->ps).clientNum) )
 	{
 		stackPushUndefined();
 	}
@@ -4166,7 +4156,7 @@ void custom_Script_setHintString(scr_entref_t ref)
 	int index;
 
 	ent = G_GetEntity(id);
-	if ( (ent->classname != scr_const.trigger_radius) && (ent->classname != scr_const.trigger_use) && (ent->classname != scr_const.trigger_use_touch) )
+	if ( ( ent->classname != scr_const.trigger_radius ) && ( ent->classname != scr_const.trigger_use ) && ( ent->classname != scr_const.trigger_use_touch ) )
 	{
 		Scr_Error("The setHintString command only works on trigger_radius, trigger_use or trigger_use_touch entities.\n");
 	}
@@ -4389,7 +4379,7 @@ void custom_G_UpdateObjectives(void)
 				{
 				/* New code end */
 					obj = &level.objectives[j];
-					if ((obj->state == OBJST_EMPTY) || ((obj->teamNum != 0 && (obj->teamNum != team))))
+					if ( obj->state == OBJST_EMPTY || ( obj->teamNum != 0 &&  obj->teamNum != team ) )
 					{
 						(client->ps).objective[j].state = OBJST_EMPTY;
 					}
@@ -4634,7 +4624,7 @@ void custom_Com_PrintMessage(int /* print_msg_type_t */ channel, char *message)
 				if ( logfile != 0 )
 				{
 					FS_Write(message, strlen(message), logfile);
-					if (1 < com_logfile->integer ) // "logfile" cvar
+					if ( 1 < com_logfile->integer ) // "logfile" cvar
 					{
 						FS_Flush(logfile);
 					}
@@ -4792,7 +4782,7 @@ void G_RunGravityModelAsGrenade(gentity_t *ent) // G_RunMissile as base
 	}
     Vec3Lerp((ent->r).currentOrigin, origin, trace.fraction, lerpOrigin);
     VectorCopy(lerpOrigin, (ent->r).currentOrigin);
-    if ( ( ( (ent->s).eFlags & EF_BOUNCE ) != 0 ) && ( ( trace.fraction == 1.0 || ( ( trace.fraction < 1.0 && ( 0.7 < trace.normal[2] ) ) ) ) ) )
+    if ( ( ( (ent->s).eFlags & EF_BOUNCE ) != 0 ) && ( trace.fraction == 1.0 || ( trace.fraction < 1.0 && ( 0.7 < trace.normal[2] ) ) ) )
     {
         VectorCopy((ent->r).currentOrigin, origin);
         origin[2] = origin[2] - 1.5;
@@ -4888,7 +4878,7 @@ void G_RunGravityModelAsItem(gentity_t *ent) // G_RunItem as base
 		SV_LinkEntity(ent);
 		if ( ( (ent->r).inuse != 0 ) && ( trace.fraction < 0.01 ) )
 		{
-			if ( trace.normal[2] > 0.0 && ! SV_PointContents(&(ent->r).currentOrigin, -1, CONTENTS_NODROP) )
+			if ( trace.normal[2] > 0.0 && !SV_PointContents(&(ent->r).currentOrigin, -1, CONTENTS_NODROP) )
 			{
 				vec3_t angles;
 				vec3_t v1;

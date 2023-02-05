@@ -194,12 +194,12 @@ scr_function_t scriptFunctions[] =
 	{"getserverstarttime", gsc_utils_getserverstarttime, 0},
 	{"getlocaltime", gsc_utils_getlocaltime, 0},
 
-	{"g_findconfigstringindexoriginal", gsc_g_findconfigstringindexoriginal, 0},
-	{"g_findconfigstringindex", gsc_g_findconfigstringindex, 0},
-	{"getconfigstring", gsc_get_configstring, 0},
-	{"setconfigstring", gsc_set_configstring, 0},
-	{"makelocalizedstring", gsc_make_localized_string, 0},
-	{"makeclientlocalizedstring", gsc_make_client_localized_string, 0},
+	{"g_findconfigstringindexoriginal", gsc_utils_g_findconfigstringindexoriginal, 0},
+	{"g_findconfigstringindex", gsc_utils_g_findconfigstringindex, 0},
+	{"getconfigstring", gsc_utils_get_configstring, 0},
+	{"setconfigstring", gsc_utils_set_configstring, 0},
+	{"makelocalizedstring", gsc_utils_make_localized_string, 0},
+	{"makeclientlocalizedstring", gsc_utils_make_client_localized_string, 0},
 
 	{"float", gsc_utils_float, 0},
 	{"exponent", gsc_utils_exponent, 0},
