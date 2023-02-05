@@ -1,5 +1,9 @@
 #include "gsc.hpp"
 
+#if COMPILE_CUSTOM_VOICE == 1
+#include <pthread.h>
+#endif
+
 // Stock cvars
 cvar_t *cl_allowDownload;
 cvar_t *com_logfile;
@@ -168,6 +172,9 @@ customEntityState_t customEntityState[MAX_GENTITIES];
 
 FILE *voiceDataDumpFile;
 #if COMPILE_CUSTOM_VOICE == 1
+pthread_mutex_t loadSoundFileResultLock;
+loadSoundFileResult_t loadSoundFileResults[MAX_THREAD_RESULTS_BUFFER];
+int loadSoundFileResultsIndex = 0;
 int currentMaxSoundIndex = 0;
 VoicePacket_t voiceDataStore[MAX_CUSTOMSOUNDS][MAX_STOREDVOICEPACKETS];
 float player_pendingVoiceDataFrames[MAX_CLIENTS] = {0.0};
@@ -3079,7 +3086,7 @@ void custom_G_RunFrame(int levelTime)
 	*(int *)&G_RunFrame = hook_g_runframe->from;
 
 	// Warn about server lag
-	if ( hitchFrameTime )
+	if ( hitchFrameTime && Scr_IsSystemActive() )
 	{
 		stackPushInt(hitchFrameTime);
 		short ret = Scr_ExecThread(codecallback_hitchwarning, 1);
@@ -3104,6 +3111,20 @@ void custom_G_RunFrame(int levelTime)
 	scr_notify_index = 0;
 
 #if COMPILE_CUSTOM_VOICE == 1
+	// Try process results from Speex encoder tasks
+	if ( pthread_mutex_trylock(&loadSoundFileResultLock) == 0 && Scr_IsSystemActive() )
+    {
+		for ( i = 0; i < loadSoundFileResultsIndex; i++ )
+		{
+			stackPushInt(loadSoundFileResults[i].result);
+			stackPushInt(loadSoundFileResults[i].soundIndex);
+			short ret = Scr_ExecThread(loadSoundFileResults[i].callback, 2);
+			Scr_FreeThread(ret);
+		}
+		loadSoundFileResultsIndex = 0;
+		pthread_mutex_unlock(&loadSoundFileResultLock);
+	}
+
 	// Process custom voice data queue
 	qboolean aPlayerIsTalking = qfalse;
 

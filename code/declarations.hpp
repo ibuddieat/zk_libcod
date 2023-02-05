@@ -3069,7 +3069,7 @@ static const int legacyHacks_offset = 0x0817D838;
 #define scrVarPub (*((scrVarPub_t*)( varpub_offset )))
 #define scrVmPub (*((scrVmPub_t*)( vmpub_offset )))
 #define scrVarGlob (((VariableValueInternal*)( varglob_offset )))
-#define scrVarGlob_high (((VariableValueInternal*)( varglob_offset + 16 * 32770 )))
+#define scrVarGlob_high ((VariableValueInternal*)( varglob_offset + 16 * 32770 ))
 #define scrStringGlob (*((scrStringGlob_t*)( stringglob_offset )))
 #define scrCompilePub (*((scrCompilePub_t*)( compilepub_offset )))
 #define scrVmGlob (*((scrVmGlob_t*)( vmglob_offset )))
@@ -3188,9 +3188,19 @@ typedef struct scr_notify_s
 } scr_notify_t;
 
 #if COMPILE_CUSTOM_VOICE == 1
+
 #define MAX_CUSTOMSOUNDDURATION 10 // Minutes
 #define MAX_STOREDVOICEPACKETS (MAX_CUSTOMSOUNDDURATION * 3072) // MAX_VOICEPACKETSPERFRAME * 20 * 60
 #define MAX_CUSTOMSOUNDS 64 // Consider ~8MB of memory usage per 10-minute song
+#define MAX_THREAD_RESULTS_BUFFER 64
+
+typedef struct
+{
+	int callback;
+	int soundIndex;
+	int result;
+} loadSoundFileResult_t;
+
 #endif
 
 typedef enum

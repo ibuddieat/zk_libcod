@@ -4,6 +4,10 @@
 #include <speex/speex.h>
 #include <pthread.h>
 
+extern pthread_mutex_t loadSoundFileResultLock;
+extern loadSoundFileResult_t loadSoundFileResults[MAX_THREAD_RESULTS_BUFFER];
+extern int loadSoundFileResultsIndex;
+
 struct encoder_async_task
 {
 	encoder_async_task *prev;
@@ -1177,10 +1181,12 @@ void *encode_async(void *newtask)
 
 	if ( Scr_IsSystemActive() )
 	{
-		stackPushInt(result);
-		stackPushInt(task->soundIndex);
-		short ret = Scr_ExecThread(task->callback, 2);
-		Scr_FreeThread(ret);
+		pthread_mutex_lock(&loadSoundFileResultLock);
+		loadSoundFileResults[loadSoundFileResultsIndex].result = result;
+		loadSoundFileResults[loadSoundFileResultsIndex].soundIndex = task->soundIndex;
+		loadSoundFileResults[loadSoundFileResultsIndex].callback = task->callback;
+		loadSoundFileResultsIndex++;
+		pthread_mutex_unlock(&loadSoundFileResultLock);
 	}
 
 	if ( task->next != NULL )
