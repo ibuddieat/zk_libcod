@@ -10,11 +10,13 @@ cvar_t *player_meleeRange;
 cvar_t *player_meleeWidth;
 cvar_t *rcon_password;
 cvar_t *sv_allowDownload;
+cvar_t *sv_floodProtect;
 cvar_t *sv_fps;
 cvar_t *sv_maxclients;
 cvar_t *sv_maxRate;
 cvar_t *sv_padPackets;
 cvar_t *sv_pure;
+cvar_t *sv_showCommands;
 cvar_t *sv_timeout;
 cvar_t *sv_voice;
 cvar_t *sv_voiceQuality;
@@ -235,10 +237,12 @@ void common_init_complete_print(const char *format, ...)
 	developer = Cvar_FindVar("developer");
 	rcon_password = Cvar_FindVar("rcon_password");
 	sv_allowDownload = Cvar_FindVar("sv_allowDownload");
+	sv_floodProtect = Cvar_FindVar("sv_floodProtect");
 	sv_fps = Cvar_FindVar("sv_fps");
 	sv_maxclients = Cvar_FindVar("sv_maxclients");
 	sv_padPackets = Cvar_FindVar("sv_padPackets");
 	sv_pure = Cvar_FindVar("sv_pure");
+	sv_showCommands = Cvar_FindVar("sv_showCommands");
 	sv_timeout = Cvar_FindVar("sv_timeout");
 	sv_voice = Cvar_FindVar("sv_voice");
 	sv_voiceQuality = Cvar_FindVar("sv_voiceQuality");
@@ -5012,6 +5016,50 @@ void custom_G_RunFrameForEntity(gentity_t *ent)
 	}
 }
 
+qboolean custom_SV_ClientCommand(client_t *cl, msg_t *msg)
+{
+	int seq;
+	char *s;
+	qboolean clientOk;
+	qboolean floodprotect;
+
+	clientOk = 1;
+	floodprotect = true;
+	seq = MSG_ReadLong(msg);
+	s = MSG_ReadString(msg);
+	if ( seq <= cl->lastClientCommand )
+	{
+		return qtrue;
+	}
+	if ( sv_showCommands->boolean )
+	{
+		Com_Printf("clientCommand: %i : %s\n", seq, s);
+	}
+	if ( seq <= cl->lastClientCommand + 1 )
+	{
+		if ( !I_strncmp("team ", s, 5) || !I_strncmp("score ", s, 6) || !I_strncmp("mr ", s, 3) || !I_strncmp("userinfo ", s, 9) ) // New: Added userinfo
+		{
+			floodprotect = false;
+		}
+		if ( ( ( *(legacyHacks + 4) == 0 ) && ( CS_PRIMED < cl->state ) ) && ( sv_floodProtect->boolean && ( svs.time < cl->floodprotect && floodprotect ) ) )
+		{
+			clientOk = 0;
+			Com_DPrintf("client text ignored for %s: %s\n", cl->name, Cmd_Argv(0));
+		}
+		if ( floodprotect )
+		{
+			cl->floodprotect = svs.time + 800;
+		}
+		SV_ExecuteClientCommand(cl, s, clientOk);
+		cl->lastClientCommand = seq;
+		Com_sprintf(cl->lastClientCommandString, MAX_STRINGLENGTH, "%s", s);
+		return qtrue;
+	}
+	Com_Printf("Client %s lost %i clientCommands\n", cl->name, ( seq - cl->lastClientCommand ) + 1);
+	SV_DropClient(cl, "EXE_LOSTRELIABLECOMMANDS");
+	return qfalse;
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -5312,6 +5360,7 @@ public:
 		cracking_hook_function(0x08121BC6, (int)custom_Player_UpdateCursorHints);
 		cracking_hook_function(0x08060C20, (int)custom_Com_PrintMessage);
 		cracking_hook_function(0x08109F5C, (int)custom_G_RunFrameForEntity);
+		cracking_hook_function(0x08090BAC, (int)custom_SV_ClientCommand);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC718, (int)Jump_ClearState);

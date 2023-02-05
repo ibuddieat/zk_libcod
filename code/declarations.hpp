@@ -3047,6 +3047,14 @@ static const int com_fixedConsolePosition_offset = 0x081A21C4;
 static const int errorcode_offset = 0x081A2264;
 #endif
 
+#if COD_VERSION == COD2_1_0 // Not tested
+static const int legacyHacks_offset = 0x0;
+#elif COD_VERSION == COD2_1_2 // Not tested
+static const int legacyHacks_offset = 0x0;
+#elif COD_VERSION == COD2_1_3
+static const int legacyHacks_offset = 0x0817D838;
+#endif
+
 #define scrVarPub (*((scrVarPub_t*)( varpub_offset )))
 #define scrVmPub (*((scrVmPub_t*)( vmpub_offset )))
 #define scrVarGlob (((VariableValueInternal*)( varglob_offset )))
@@ -3082,6 +3090,7 @@ static const int errorcode_offset = 0x081A2264;
 #define com_fixedConsolePosition (*((int*)( com_fixedConsolePosition_offset )))
 #define errorcode (*((int*)( errorcode_offset )))
 #define testclient_connect_string (*((char*)( testclient_connect_string_offset )))
+#define legacyHacks ((int*)( legacyHacks_offset ))
 
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6

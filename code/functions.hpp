@@ -786,6 +786,33 @@ static const MSG_WriteDeltaHudElems_t MSG_WriteDeltaHudElems = (MSG_WriteDeltaHu
 static const MSG_WriteDeltaHudElems_t MSG_WriteDeltaHudElems = (MSG_WriteDeltaHudElems_t)0x08069f84;
 #endif
 
+typedef int (*MSG_ReadLong_t)(msg_t *msg);
+#if COD_VERSION == COD2_1_0
+static const MSG_ReadLong_t MSG_ReadLong = (MSG_ReadLong_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const MSG_ReadLong_t MSG_ReadLong = (MSG_ReadLong_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const MSG_ReadLong_t MSG_ReadLong = (MSG_ReadLong_t)0x08068450;
+#endif
+
+typedef char * (*MSG_ReadString_t)(msg_t *msg);
+#if COD_VERSION == COD2_1_0
+static const MSG_ReadString_t MSG_ReadString = (MSG_ReadString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const MSG_ReadString_t MSG_ReadString = (MSG_ReadString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const MSG_ReadString_t MSG_ReadString = (MSG_ReadString_t)0x08068522;
+#endif
+
+typedef void (*SV_ExecuteClientCommand_t)(client_t *cl, char *s, qboolean clientOK);
+#if COD_VERSION == COD2_1_0
+static const SV_ExecuteClientCommand_t SV_ExecuteClientCommand = (SV_ExecuteClientCommand_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_ExecuteClientCommand_t SV_ExecuteClientCommand = (SV_ExecuteClientCommand_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_ExecuteClientCommand_t SV_ExecuteClientCommand = (SV_ExecuteClientCommand_t)0x08090B14;
+#endif
+
 typedef void (*SV_SendMessageToClient_t)(msg_t *msg, client_t *cl);
 #if COD_VERSION == COD2_1_0
 static const SV_SendMessageToClient_t SV_SendMessageToClient = (SV_SendMessageToClient_t)0x0; // Not tested
@@ -1405,6 +1432,15 @@ static const I_stricmp_t I_stricmp = (I_stricmp_t)0x0; // Not tested
 static const I_stricmp_t I_stricmp = (I_stricmp_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const I_stricmp_t I_stricmp = (I_stricmp_t)0x080B7BF8;
+#endif
+
+typedef int (*I_strncmp_t)(const char *s1, const char *s2, int n);
+#if COD_VERSION == COD2_1_0
+static const I_strncmp_t I_strncmp = (I_strncmp_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const I_strncmp_t I_strncmp = (I_strncmp_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const I_strncmp_t I_strncmp = (I_strncmp_t)0x080B7B88;
 #endif
 
 typedef char * (*I_strlwr_t)(char *s1);
