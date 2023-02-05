@@ -4704,6 +4704,9 @@ qboolean G_BounceGrenade(gentity_t *ent,trace_t *trace) // G_BounceMissile as ba
 
 		if ( 0.7 < trace->normal[2] && VectorLength((ent->s).pos.trDelta) < 20.0 )
 		{
+			Scr_AddEntity(&g_entities[(trace->entityNum).entnum]);
+			Scr_AddString(Com_SurfaceTypeToName((int)( trace->surfaceFlags & 0x1F00000U ) >> 0x14));
+			Scr_Notify(ent, scr_const.land, 2);
 			G_SetOrigin(ent, &(ent->r).currentOrigin);
 			G_MissileLandAngles(ent, trace, angle, 1);
 			G_SetAngle(ent, &angle);
@@ -4813,18 +4816,11 @@ void G_RunGravityModelAsGrenade(gentity_t *ent) // G_RunMissile as base
     if ( trace.fraction != 1.0 )
     {
 		bounce = G_BounceGrenade(ent, &trace);
-		if ( bounce )
+		if ( bounce && trace.startsolid == 0)
 		{
-			if ( trace.startsolid == 0 )
-			{
-				Scr_AddString(Com_SurfaceTypeToName((int)( trace.surfaceFlags & 0x1F00000U ) >> 0x14));
-				Scr_Notify(ent, scr_const.bounce, 1);
-			}
-		}
-		else
-		{
+			Scr_AddEntity(&g_entities[trace.entityNum.entnum]);
 			Scr_AddString(Com_SurfaceTypeToName((int)( trace.surfaceFlags & 0x1F00000U ) >> 0x14));
-			Scr_Notify(ent, scr_const.land, 1);
+			Scr_Notify(ent, scr_const.bounce, 2);
 		}
     }
 }
@@ -4904,8 +4900,9 @@ void G_RunGravityModelAsItem(gentity_t *ent) // G_RunItem as base
 				G_SetOrigin(ent, &lerpOrigin);
 				if ( (ent->s).groundEntityNum != trace.entityNum.entnum )
 				{
+					Scr_AddEntity(&g_entities[trace.entityNum.entnum]);
 					Scr_AddString(Com_SurfaceTypeToName((int)( trace.surfaceFlags & 0x1F00000U ) >> 0x14));
-					Scr_Notify(ent, scr_const.land, 1);
+					Scr_Notify(ent, scr_const.land, 2);
 				}
 				(ent->s).groundEntityNum = trace.entityNum.entnum;
 				SV_LinkEntity(ent);
