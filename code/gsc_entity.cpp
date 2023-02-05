@@ -331,16 +331,29 @@ void gsc_entity_enablegravity(scr_entref_t ref)
 	if ( ent->classname == scr_const.script_model )
 	{
 		int collideModels = qtrue;
+		qboolean angledGravity = qtrue;
 
 		if ( Scr_GetNumParam() > 0 && Scr_GetInt(0) == 0 )
 		{
 			collideModels = qfalse;
 		}
 
+		if ( Scr_GetNumParam() > 1 && Scr_GetInt(1) == 0 )
+		{
+			angledGravity = qfalse;
+		}
+
 		customEntityState[(ent->s).number].gravityType = GRAVITY_ITEM;
 		customEntityState[(ent->s).number].collideModels = collideModels;
+		customEntityState[(ent->s).number].angledGravity = angledGravity;
 		ent->clipmask = 0x2812891;
 		ent->physicsObject = 1;
+		if ( customEntityState[(ent->s).number].angledGravity )
+		{
+			(ent->s).apos.trType = TR_LINEAR;
+			(ent->s).apos.trTime = level.time;
+			VecToAngles((ent->r).currentAngles, (ent->s).apos.trBase);
+		}
 
 		stackPushBool(qtrue);
 	}
@@ -367,6 +380,7 @@ void gsc_entity_disablegravity(scr_entref_t ref)
 			ent->physicsObject = 0;
 			(ent->s).groundEntityNum = ENTITY_NONE;
 			G_SetOrigin(ent, &ent->r.currentOrigin);
+			G_SetAngle(ent, &ent->r.currentAngles);
 
 			stackPushBool(qtrue);
 		}
@@ -398,6 +412,12 @@ void gsc_entity_addentityvelocity(scr_entref_t ref)
 			(ent->s).pos.trTime = level.time;
 			VectorCopy((ent->r).currentOrigin, (ent->s).pos.trBase);
 			VectorAdd(customEntityState[(ent->s).number].velocity, velocity, (ent->s).pos.trDelta);
+			if ( customEntityState[(ent->s).number].angledGravity )
+			{
+				(ent->s).apos.trType = TR_LINEAR;
+				(ent->s).apos.trTime = level.time;
+				VecToAngles((ent->r).currentAngles, (ent->s).apos.trBase);
+			}
 			if( ! IsNullVector(velocity) )
 				(ent->s).groundEntityNum = ENTITY_NONE;
 
@@ -431,6 +451,12 @@ void gsc_entity_setentityvelocity(scr_entref_t ref)
 			(ent->s).pos.trTime = level.time;
 			VectorCopy((ent->r).currentOrigin, (ent->s).pos.trBase);
 			VectorCopy(velocity, (ent->s).pos.trDelta);
+			if ( customEntityState[(ent->s).number].angledGravity )
+			{
+				(ent->s).apos.trType = TR_LINEAR;
+				(ent->s).apos.trTime = level.time;
+				VecToAngles((ent->r).currentAngles, (ent->s).apos.trBase);
+			}
 			if( ! IsNullVector(velocity) )
 				(ent->s).groundEntityNum = ENTITY_NONE;
 

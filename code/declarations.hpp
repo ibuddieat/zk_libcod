@@ -3187,6 +3187,7 @@ typedef struct customEntityState_s
 	customGravityType_t gravityType;
 	qboolean collideModels;
 	vec3_t velocity;
+	qboolean angledGravity;
 	float parallelBounce;
 	float perpendicularBounce;
 	qboolean convertedTrigger;
