@@ -402,6 +402,7 @@ scr_method_t scriptMethods[] =
 	{"objective_player_state", gsc_player_objective_player_state, 0},
 	{"getvieworigin", gsc_player_getvieworigin, 0},
 	{"getservercommandqueuesize", gsc_player_getservercommandqueuesize, 0},
+	{"setconfigstring", gsc_player_setconfigstring, 0},
 	#if COMPILE_CUSTOM_VOICE == 1
 	{"playsoundfile", gsc_player_playsoundfile, 0},
 	{"stopsoundfile", gsc_player_stopsoundfile, 0},

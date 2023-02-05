@@ -2069,6 +2069,36 @@ void gsc_player_getservercommandqueuesize(scr_entref_t ref)
 	stackPushInt(client->reliableSequence - client->reliableAcknowledge);
 }
 
+void gsc_player_setconfigstring(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_setconfigstring() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	char *value;
+	int index;
+
+	if ( ! stackGetParams("si", &value, &index) )
+	{
+		stackError("gsc_player_setconfigstring() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	client_t *client = &svs.clients[id];
+	char cmd[MAX_STRINGLENGTH];
+
+	Com_sprintf(cmd, MAX_STRINGLENGTH, "d %i %s", index, value);
+	SV_SendServerCommand(client, 1, cmd);
+
+	stackPushBool(qtrue);
+}
+
 #if COMPILE_CUSTOM_VOICE == 1
 
 extern VoicePacket_t voiceDataStore[MAX_CUSTOMSOUNDS][MAX_STOREDVOICEPACKETS];
