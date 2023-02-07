@@ -894,22 +894,22 @@ static const COM_BitCheck_t COM_BitCheck = (COM_BitCheck_t)0x080DC464;
 static const COM_BitCheck_t COM_BitCheck = (COM_BitCheck_t)0x080DC5A8;
 #endif
 
-typedef void (*scriptError_t)(int a1, int a2, int a3, void *a4);
+typedef void (*RuntimeError_Debug_t)(int channel, const char *pos, int error_index, const char *error_message);
 #if COD_VERSION == COD2_1_0
-static const scriptError_t scriptError = (scriptError_t)0x08078282;
+static const RuntimeError_Debug_t RuntimeError_Debug = (RuntimeError_Debug_t)0x0807818C;
 #elif COD_VERSION == COD2_1_2
-static const scriptError_t scriptError = (scriptError_t)0x08078806;
+static const RuntimeError_Debug_t RuntimeError_Debug = (RuntimeError_Debug_t)0x08078710;
 #elif COD_VERSION == COD2_1_3
-static const scriptError_t scriptError = (scriptError_t)0x080788D2;
+static const RuntimeError_Debug_t RuntimeError_Debug = (RuntimeError_Debug_t)0x080787DC;
 #endif
 
-typedef void (*runtimeError_t)(int a1, int a2, int a3, int a4);
+typedef void (*RuntimeError_t)(const char *pos, int error_index, const char *error_message, const char *dialog_error_message);
 #if COD_VERSION == COD2_1_0
-static const runtimeError_t runtimeError = (runtimeError_t)0x0807818C;
+static const RuntimeError_t RuntimeError = (RuntimeError_t)0x08078282;
 #elif COD_VERSION == COD2_1_2
-static const runtimeError_t runtimeError = (runtimeError_t)0x08078710;
+static const RuntimeError_t RuntimeError = (RuntimeError_t)0x08078806;
 #elif COD_VERSION == COD2_1_3
-static const runtimeError_t runtimeError = (runtimeError_t)0x080787DC;
+static const RuntimeError_t RuntimeError = (RuntimeError_t)0x080788D2;
 #endif
 
 typedef StanceState (*PM_GetEffectiveStance_t)(struct playerState_s *ps);
@@ -1191,7 +1191,7 @@ static const Scr_ParamError_t Scr_ParamError = (Scr_ParamError_t)0x0; // Not tes
 static const Scr_ParamError_t Scr_ParamError = (Scr_ParamError_t)0x0808545C;
 #endif
 
-typedef void (*Scr_PrintPrevCodePos_t)(int channel, char *codePos, int index);
+typedef void (*Scr_PrintPrevCodePos_t)(int channel, const char *codePos, int index);
 #if COD_VERSION == COD2_1_0
 static const Scr_PrintPrevCodePos_t Scr_PrintPrevCodePos = (Scr_PrintPrevCodePos_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2

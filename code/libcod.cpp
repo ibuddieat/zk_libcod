@@ -2070,12 +2070,12 @@ void custom_SV_BotUserMove(client_t *client)
 }
 #endif
 
-void hook_scriptError(int a1, int a2, int a3, void *a4)
+void hook_RuntimeError_in_VM_Execute(const char *pos, int error_index, const char *error_message, const char *dialog_error_message)
 {
 	if ( developer->integer == 2 )
-		runtimeError(0, a1, a2, a3);
+		RuntimeError_Debug(0, pos, error_index, error_message); // TODO: This (new) branch causes infinite error loops
 	else
-		scriptError(a1, a2, a3, a4);
+		RuntimeError(pos, error_index, error_message, dialog_error_message);
 }
 
 #if COMPILE_PLAYER == 1
@@ -2963,11 +2963,11 @@ void custom_Scr_ErrorInternal(void)
 	Com_Error(1, "\x15%s", scrVarPub.error_message);
 }
 
-void custom_RuntimeError_Debug(int channel, char *pos, int index, char *message)
+void custom_RuntimeError_Debug(int channel, const char *pos, int index, const char *message)
 {
 	int i, j;
 
-	Scr_CodeCallback_Error(qfalse, qfalse, "RuntimeError_Debug", message); // New
+	Scr_CodeCallback_Error(qfalse, qfalse, "RuntimeError_Debug", (char *)message); // New
 	Com_PrintMessage(channel, custom_va("\n******* script runtime error *******\n%s: ", message));
 	Scr_PrintPrevCodePos(channel, pos, index);
 	i = scrVmPub.function_count;
@@ -2985,11 +2985,10 @@ void custom_RuntimeError_Debug(int channel, char *pos, int index, char *message)
 	Com_PrintMessage(channel, "************************************\n");
 }
 
-void custom_RuntimeError(char *pos, int index, char *message, char *param_4)
+void custom_RuntimeError(const char *pos, int index, const char *message, const char *dialog_error)
 {
 	int channel_1, channel_2;
-	char *local_14;
-	char *local_10;
+	char newline[2];
 	qboolean terminate;
 
 	if ( scrVarPub.developer || scrVmPub.terminal_error )
@@ -3014,26 +3013,26 @@ void custom_RuntimeError(char *pos, int index, char *message, char *param_4)
 			Com_Printf("%s\n", message);
 			if ( !scrVmPub.terminal_error )
 			{
-				Scr_CodeCallback_Error(qfalse, qfalse, "RuntimeError", message);
+				Scr_CodeCallback_Error(qfalse, qfalse, "RuntimeError", (char *)message);
 				return;
 			}
 		}
-		if ( !param_4 )
+		if ( !dialog_error )
 		{
-			local_10 = (char *)"";
-			local_14 = (char *)"";
-			param_4 = local_10;
+			newline[0] = '\0';
+			dialog_error = "";
 		}
 		else
 		{
-			local_14 = (char *)"\n";
+			newline[0] = '\n';
+			newline[1] = '\0';
 		}
 		if ( !scrVmPub.terminal_error )
 			channel_1 = 4;
 		else
 			channel_1 = 5;
 		
-		Com_Error(channel_1, "\x15script runtime error\n(see console for details)\n%s%s%s", message, local_14, param_4);
+		Com_Error(channel_1, "\x15script runtime error\n(see console for details)\n%s%s%s", message, newline, dialog_error);
 	}
 }
 
@@ -5111,7 +5110,7 @@ public:
 		cracking_hook_call(0x0808E18F, (int)hook_gamestate_info);
 		#endif
 
-		cracking_hook_call(0x08081CFE, (int)hook_scriptError);
+		cracking_hook_call(0x08081CFE, (int)hook_RuntimeError_in_VM_Execute);
 
 		hook_gametype_scripts = new cHook(0x0810DDEE, (int)custom_GScr_LoadGameTypeScript);
 		hook_gametype_scripts->hook();
@@ -5189,7 +5188,7 @@ public:
 		cracking_hook_call(0x080909BE, (int)hook_ClientUserinfoChanged);
 		cracking_hook_call(0x08070B1B, (int)Scr_GetCustomFunction);
 		cracking_hook_call(0x08070D3F, (int)Scr_GetCustomMethod);
-		cracking_hook_call(0x0808227A, (int)hook_scriptError);
+		cracking_hook_call(0x0808227A, (int)hook_RuntimeError_in_VM_Execute);
 		cracking_hook_call(0x0808FCBE, (int)hook_bad_printf);
 		cracking_hook_call(0x080EBB14, (int)hook_findWeaponIndex);
 
@@ -5274,7 +5273,7 @@ public:
 		cracking_hook_call(0x08090A52, (int)hook_ClientUserinfoChanged);
 		cracking_hook_call(0x08070BE7, (int)Scr_GetCustomFunction);
 		cracking_hook_call(0x08070E0B, (int)Scr_GetCustomMethod);
-		cracking_hook_call(0x08082346, (int)hook_scriptError);
+		//cracking_hook_call(0x08082346, (int)hook_RuntimeError_in_VM_Execute);
 		cracking_hook_call(0x0808FD52, (int)hook_bad_printf);
 		cracking_hook_call(0x080EBC58, (int)hook_findWeaponIndex);
 		cracking_hook_call(0x08062644, (int)hitch_warning_print);
