@@ -3113,6 +3113,10 @@ void custom_G_RunFrame(int levelTime)
 	// Try process results from Speex encoder tasks
 	if ( pthread_mutex_trylock(&loadSoundFileResultLock) == 0 && Scr_IsSystemActive() )
     {
+		if ( loadSoundFileResultsIndex == MAX_THREAD_RESULTS_BUFFER )
+		{
+			Com_Printf("Warning: loadSoundFile results buffer full\n");
+		}
 		for ( i = 0; i < loadSoundFileResultsIndex; i++ )
 		{
 			stackPushInt(loadSoundFileResults[i].result);

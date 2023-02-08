@@ -1182,10 +1182,16 @@ void *encode_async(void *newtask)
 	if ( Scr_IsSystemActive() )
 	{
 		pthread_mutex_lock(&loadSoundFileResultLock);
-		loadSoundFileResults[loadSoundFileResultsIndex].result = result;
-		loadSoundFileResults[loadSoundFileResultsIndex].soundIndex = task->soundIndex;
-		loadSoundFileResults[loadSoundFileResultsIndex].callback = task->callback;
-		loadSoundFileResultsIndex++;
+		if ( loadSoundFileResultsIndex < MAX_THREAD_RESULTS_BUFFER )
+		{
+			loadSoundFileResults[loadSoundFileResultsIndex].result = result;
+			loadSoundFileResults[loadSoundFileResultsIndex].soundIndex = task->soundIndex;
+			loadSoundFileResults[loadSoundFileResultsIndex].callback = task->callback;
+			loadSoundFileResultsIndex++;
+		}
+		/* No message on error excess here since that might introduce another
+		   concurrency issue. Instead, we warn in the main thread if the buffer
+		   is full */
 		pthread_mutex_unlock(&loadSoundFileResultLock);
 	}
 
