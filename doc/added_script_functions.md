@@ -18,6 +18,7 @@ New script code methods:
   * `<entity> spawnGrenade(<weapon>, <origin>, [<direction>], [<velocity>], [<fuseTime>])`
   * `<player> earthquakeForPlayer(<scale>, <duration>, <source>, <radius>)`
   * `<player> getClientHudElemCount()`
+  * `<player> getCollisionTeam()`
   * `<player> getEnterTime()`
   * `<player> getGroundEntity()`
   * `<player> getInactivityTime()`
@@ -37,6 +38,7 @@ New script code methods:
   * `<player> playFxOnTagForPlayer(<effect id>, <entity>, <tag name>)`
   * `<player> playSoundFile(<sound index>, [<offset>], [<source player>])`
   * `<player> runScriptAnimation(<scriptAnimEventType>, <isContinue>, <force>)`
+  * `<player> setCollisionTeam(<team>)`
   * `<player> setEarthquakes("on|off|toggle")`
   * `<player> setFireRangeScale(<scale>)`
   * `<player> setFireThroughWalls(<enabled>)`

@@ -403,6 +403,8 @@ scr_method_t scriptMethods[] =
 	{"getvieworigin", gsc_player_getvieworigin, 0},
 	{"getservercommandqueuesize", gsc_player_getservercommandqueuesize, 0},
 	{"setconfigstring", gsc_player_setconfigstring, 0},
+	{"getcollisionteam", gsc_player_getcollisionteam, 0},
+	{"setcollisionteam", gsc_player_setcollisionteam, 0},
 	#if COMPILE_CUSTOM_VOICE == 1
 	{"playsoundfile", gsc_player_playsoundfile, 0},
 	{"stopsoundfile", gsc_player_stopsoundfile, 0},

@@ -1580,7 +1580,7 @@ void gsc_player_playfxforplayer(scr_entref_t ref)
 				Scr_PlayFxError("playFx called with (0 0 0) up direction", index);
 			}
 			VectorScale(up_vec, 1.0 / length, up_vec);
-			Vec3Cross(up_vec, forward_vec, cross);
+			VectorCross(up_vec, forward_vec, cross);
 
 			length = VectorLength(cross);
 			if ( length < 0.001 )
@@ -1590,7 +1590,7 @@ void gsc_player_playfxforplayer(scr_entref_t ref)
 			else if ( length < 0.999 )
 			{
 				VectorScale(cross, 1.0 / length, cross);
-				Vec3Cross(forward_vec, cross, up_vec);
+				VectorCross(forward_vec, cross, up_vec);
 			}
 			AxisToAngles(forward_vec, ent->s.apos.trBase);
 		}
@@ -2097,6 +2097,71 @@ void gsc_player_setconfigstring(scr_entref_t ref)
 	SV_SendServerCommand(client, 1, cmd);
 
 	stackPushBool(qtrue);
+}
+
+extern collisionTeam_t player_collision[MAX_CLIENTS];
+void gsc_player_getcollisionteam(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_getcollisionteam() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+    if ( player_collision[id] == COLLISION_TEAM_BOTH )
+    {
+		Scr_AddConstString(scr_const.both);
+    }
+	else if ( player_collision[id] == COLLISION_TEAM_NONE )
+    {
+		Scr_AddConstString(scr_const.none);
+    }
+    else if ( player_collision[id] == COLLISION_TEAM_AXIS )
+    {
+		Scr_AddConstString(scr_const.axis);
+    }
+    else if ( player_collision[id] == COLLISION_TEAM_ALLIES )
+    {
+		Scr_AddConstString(scr_const.allies);
+    }
+}
+
+void gsc_player_setcollisionteam(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_setcollisionteam() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+    short team = Scr_GetConstString(0);
+    if ( team == scr_const.none )
+    {
+        player_collision[id] = COLLISION_TEAM_NONE;
+    }
+    else if ( team == scr_const.axis )
+    {
+        player_collision[id] = COLLISION_TEAM_AXIS;
+    }
+    else if ( team == scr_const.allies )
+    {
+        player_collision[id] = COLLISION_TEAM_ALLIES;
+    }
+    else if ( team == scr_const.both )
+    {
+        player_collision[id] = COLLISION_TEAM_BOTH;
+    }
+    else
+    {
+		Scr_ParamError(0, "collision team must be \"axis\", \"allies\", \"none\", or \"both\"");
+    }
+    stackPushBool(qtrue);
 }
 
 #if COMPILE_CUSTOM_VOICE == 1

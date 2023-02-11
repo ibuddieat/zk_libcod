@@ -8,6 +8,7 @@
 cvar_t *cl_allowDownload;
 cvar_t *com_logfile;
 cvar_t *developer;
+cvar_t *g_playerCollisionEjectSpeed;
 cvar_t *g_voiceChatTalkingDuration;
 cvar_t *player_meleeHeight;
 cvar_t *player_meleeRange;
@@ -80,8 +81,6 @@ cHook *hook_init_opcode;
 cHook *hook_play_movement;
 cHook *hook_g_freeentity;
 cHook *hook_g_initgentity;
-cHook *hook_g_setclientcontents;
-cHook *hook_stuckinclient;
 cHook *hook_print_codepos;
 cHook *hook_scr_loadgametype;
 cHook *hook_scr_notify;
@@ -190,6 +189,7 @@ int player_fireThroughWalls[MAX_CLIENTS] = {0};
 float player_fireRangeScale[MAX_CLIENTS] = {0.0}; // Defaults to 1.0 on connect
 int player_no_pickup[MAX_CLIENTS] = {0};
 int player_no_earthquakes[MAX_CLIENTS] = {0};
+collisionTeam_t player_collision[MAX_CLIENTS] = {COLLISION_TEAM_BOTH}; // Defaults to COLLISION_TEAM_BOTH on connect
 int player_silent[MAX_CLIENTS] = {0};
 int player_g_speed[MAX_CLIENTS] = {0};
 int player_g_gravity[MAX_CLIENTS] = {0};
@@ -306,6 +306,7 @@ void custom_G_ProcessIPBans(void)
 {
 	/* This is right after G_RegisterCvars, giving us access to variables that
 	are not yet defined at the common_init_complete_print hook */
+	g_playerCollisionEjectSpeed = Cvar_FindVar("g_playerCollisionEjectSpeed");
 	g_voiceChatTalkingDuration = Cvar_FindVar("g_voiceChatTalkingDuration");
 	player_meleeHeight = Cvar_FindVar("player_meleeHeight");
 	player_meleeRange = Cvar_FindVar("player_meleeRange");
@@ -324,6 +325,7 @@ void custom_GScr_LoadConsts(void)
 	scr_const.custom = GScr_AllocString("custom_string");
 	Note: This new reference also has to be added to stringIndex_t in declarations.hpp
 	*/
+	scr_const.both = GScr_AllocString("both");
 	scr_const.bounce = GScr_AllocString("bounce");
 	scr_const.flags = GScr_AllocString("flags");
 	scr_const.land = GScr_AllocString("land");
@@ -444,34 +446,159 @@ int custom_GScr_LoadGameTypeScript()
 	return ret;
 }
 
-void custom_G_SetClientContents(gentity_t *ent)
+qboolean SkipCollision(gentity_t *client1, gentity_t *client2)
 {
-	hook_g_setclientcontents->unhook();
-	void (*G_SetClientContents)(gentity_t *ent);
-	*(int *)&G_SetClientContents = hook_g_setclientcontents->from;
+	int id1 = client1 - g_entities;
+	int id2 = client2 - g_entities;
 
-	if ( g_playerCollision->boolean )
-		G_SetClientContents(ent);
+	if ( player_collision[id1] == COLLISION_TEAM_NONE || player_collision[id2] == COLLISION_TEAM_NONE )
+		return qtrue;
 
-	hook_g_setclientcontents->hook();
+	if ( player_collision[id1] == COLLISION_TEAM_AXIS && (client2->client->sess).team != TEAM_AXIS )
+		return qtrue;
+
+	if ( player_collision[id1] == COLLISION_TEAM_ALLIES && (client2->client->sess).team != TEAM_ALLIES )
+		return qtrue;
+
+	if ( player_collision[id2] == COLLISION_TEAM_AXIS && (client1->client->sess).team != TEAM_AXIS )
+		return qtrue;
+
+	if ( player_collision[id2] == COLLISION_TEAM_ALLIES && (client1->client->sess).team != TEAM_ALLIES )
+		return qtrue;
+
+	if ( player_collision[id1] == COLLISION_TEAM_BOTH )
+	{
+		if ( player_collision[id2] == COLLISION_TEAM_BOTH )
+			return qfalse;
+
+		if ( player_collision[id2] == COLLISION_TEAM_AXIS && (client1->client->sess).team == TEAM_AXIS )
+			return qfalse;
+
+		if ( player_collision[id2] == COLLISION_TEAM_ALLIES && (client1->client->sess).team == TEAM_ALLIES )
+			return qfalse;
+	}
+
+	if ( player_collision[id2] == COLLISION_TEAM_BOTH )
+	{
+		if ( player_collision[id1] == COLLISION_TEAM_AXIS && (client2->client->sess).team == TEAM_AXIS )
+			return qfalse;
+
+		if ( player_collision[id1] == COLLISION_TEAM_ALLIES && (client2->client->sess).team == TEAM_ALLIES )
+			return qfalse;
+	}
+
+	return qfalse;
 }
 
-int custom_StuckInClient(gentity_t *ent)
+void custom_G_SetClientContents(gentity_t *ent)
 {
-	int ret;
+	if ( !g_playerCollision->boolean )
+		return;
 
-	hook_stuckinclient->unhook();
-	int (*StuckInClient)(gentity_t *ent);
-	*(int *)&StuckInClient = hook_stuckinclient->from;
-
-	if ( g_playerEject->boolean )
-		ret = StuckInClient(ent);
+	if ( ent->client->noclip == 0 )
+	{
+		if ( ent->client->ufo == 0 )
+		{
+			if ( (ent->client->sess).state == STATE_DEAD )
+			{
+				(ent->r).contents = 0;
+			}
+			else
+			{
+				if( player_collision[ent - g_entities] != COLLISION_TEAM_BOTH )
+					(ent->r).contents = ( CONTENTS_CANSHOTCLIP | CONTENTS_CLIPSHOT );
+				else
+					(ent->r).contents = CONTENTS_BODY;
+			}
+		}
+		else
+		{
+			(ent->r).contents = 0;
+		}
+	}
 	else
-		ret = 0;
+	{
+		(ent->r).contents = 0;
+	}
+}
 
-	hook_stuckinclient->hook();
+qboolean custom_StuckInClient(gentity_t *self)
+{
+	float fTemp;
+	double dTemp;
+	float selfEjectSpeed;
+	float hitEjectSpeed;
+	vec2_t dir;
+	gentity_t *hit;
+	float hitSpeed;
+	float selfSpeed;
+	int i;
+	int id = self - g_entities;
 
-	return ret;
+	/* New code: g_playerEject cvar */
+	if ( !g_playerEject->boolean )
+		return qfalse;
+	/* New code end */
+
+	if ( ( ( ((self->client->ps).pm_flags & PMF_VIEWLOCKED) != 0 ) && ( (self->client->sess).state == STATE_PLAYING ) ) && ( player_collision[id] != COLLISION_TEAM_BOTH /* New condition */ || ( (self->r).contents == CONTENTS_BODY || ( (self->r).contents == CONTENTS_CORPSE ) ) ) )
+	{
+		hit = g_entities;
+		for ( i = 0; i < level.maxclients; i++, hit++)
+		{
+			if ( ( ( ( ( ( (hit->r).inuse != 0 ) && ( ((hit->client->ps).pm_flags & PMF_VIEWLOCKED) != 0 ) ) && ( (hit->client->sess).state == STATE_PLAYING )  ) && ( (hit != self && hit->client != NULL ) ) ) && ( 0 < hit->healthPoints && ( player_collision[i] != COLLISION_TEAM_BOTH /* New condition */ || ( (hit->r).contents == CONTENTS_BODY || ( (hit->r).contents == CONTENTS_CORPSE ) ) ) ) ) &&
+			( (hit->r).absmin[0] <= (self->r).absmax[0] && ( ( ( (self->r).absmin[0] <= (hit->r).absmax[0] && ( (hit->r).absmin[1] <= (self->r).absmax[1] ) ) && ( (self->r).absmin[1] <= (hit->r).absmax[1] ) ) && ( (hit->r).absmin[2] <= (self->r).absmax[2] && ( (self->r).absmin[2] <= (hit->r).absmax[2] ) ) ) ) )
+			{
+				/* New code: per-player/team collison */
+				if ( SkipCollision(self, hit) )
+					continue;
+				/* New code end */
+
+				VectorSubtract2((hit->r).currentOrigin, (self->r).currentOrigin, dir);
+				fTemp = (self->r).maxs[0] + (hit->r).maxs[0];
+				dTemp = DotProduct2(dir, dir);
+				if ( dTemp <= ( (double)fTemp * (double)fTemp ) )
+				{
+					VectorSubtract2((hit->r).currentOrigin, (self->r).currentOrigin, dir);
+					dTemp = crandom();
+					dir[0] = dir[0] + (float)((dTemp + dTemp) - 1.0);
+					dTemp = crandom();
+					dir[1] = dir[1] + (float)((dTemp + dTemp) - 1.0);
+					Vec2Normalize(dir);
+					if ( 0.0 < VectorLength2((hit->client->ps).velocity) )
+					{
+						hitEjectSpeed = (float)g_playerCollisionEjectSpeed->integer;
+					}
+					else
+					{
+						hitEjectSpeed = 0.0;
+					}
+					hitSpeed = hitEjectSpeed;
+					if ( 0.0 < VectorLength2((self->client->ps).velocity) )
+					{
+						selfEjectSpeed = (float)g_playerCollisionEjectSpeed->integer;
+					}
+					else
+					{
+						selfEjectSpeed = 0.0;
+					}
+					selfSpeed = selfEjectSpeed;
+					if ( hitEjectSpeed < 0.0001 && selfEjectSpeed < 0.0001 )
+					{
+						hitSpeed = (float)(hit->client->ps).speed;
+						selfSpeed = (float)(self->client->ps).speed;
+					}
+					VectorScale2(dir, hitSpeed, (hit->client->ps).velocity);
+					(hit->client->ps).pm_time = 300;
+					(hit->client->ps).pm_flags = (hit->client->ps).pm_flags | PMF_SLIDING;
+					VectorScale2(dir, selfSpeed * -1, (self->client->ps).velocity);
+					(self->client->ps).pm_time = 300;
+					(self->client->ps).pm_flags = (self->client->ps).pm_flags | PMF_SLIDING;
+					return qtrue;
+				}
+			}
+		}
+	}
+	return qfalse;
 }
 
 gentity_t* custom_fire_grenade(gentity_t *attacker, vec3_t start, vec3_t dir, int weaponIndex, int fuseTime)
@@ -952,7 +1079,7 @@ void custom_MSG_WriteDeltaField(msg_t *buf, byte *from, byte *to, netField_t *fi
 	}
 }
 
-void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t *to, int force, int numFields, int indexBits, netField_t *stateFieldsPointer, int bChangeBit, int clientNum, int spectatorClientNum)
+void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t *to, int force, int numFields, int indexBits, netField_t *stateFieldsPointer, int bChangeBit, int clientNum, int spectatorClientNum, int entNum)
 {
 	int *toF;
 	int *fromF;
@@ -980,24 +1107,41 @@ void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t 
 		{
 			fromF = ( int * )( (byte *)from + field->offset );
 			toF = ( int * )( (byte *)to + field->offset );
-			
-			/* New code start: playFxOnTagForPlayer */
-			if ( i == 49 )
-				attackerEntityNum = *toF;
-			/* New code end */
-			
-			/* New code start: obituary */
-			if ( i == 17 ) // scale
-				team = *toF;
-			else if ( i == 58 ) // dmgFlags
-				max_distance = *toF;
-			else if ( i == 2 ) // pos.trBase[0]
-				origin[0] = *(vec_t *)toF;
-			else if ( i == 1 ) // pos.trBase[1]
-				origin[1] = *(vec_t *)toF;
-			else if ( i == 8 ) // pos.trBase[2]
-				origin[2] = *(vec_t *)toF;
-			/* New code end */
+
+			if ( numFields == 0x3b )
+			{
+				/* New code: per-player/team collison */
+				if ( clientNum != -1 && i == 31 /* solid */ && entNum >= 0 && entNum < MAX_CLIENTS )
+				{
+					gentity_t *client1 = &g_entities[clientNum];
+					gentity_t *client2 = &g_entities[entNum];
+
+					if ( client1->client && client2->client && client1->client->sess.connected == CON_CONNECTED && client2->client->sess.connected == CON_CONNECTED )
+					{
+						if ( SkipCollision(client1, client2) )
+							*toF = 0;
+					}
+				}
+				/* New code end */
+				
+				/* New code start: playFxOnTagForPlayer */
+				if ( i == 49 )
+					attackerEntityNum = *toF;
+				/* New code end */
+				
+				/* New code start: obituary */
+				if ( i == 17 ) // scale
+					team = *toF;
+				else if ( i == 58 ) // dmgFlags
+					max_distance = *toF;
+				else if ( i == 2 ) // pos.trBase[0]
+					origin[0] = *(vec_t *)toF;
+				else if ( i == 1 ) // pos.trBase[1]
+					origin[1] = *(vec_t *)toF;
+				else if ( i == 8 ) // pos.trBase[2]
+					origin[2] = *(vec_t *)toF;
+				/* New code end */
+			}
 			
 			if ( *fromF != *toF )
 				lc = i + 1;
@@ -1102,7 +1246,7 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 	{
 		fromF = ( int * )( (byte *)from + field->offset );
 		toF = ( int * )( (byte *)to + field->offset );
-		
+
 		if ( *fromF != *toF )
 			lc = i + 1;
 	}
@@ -1319,15 +1463,15 @@ void custom_MSG_WriteDeltaClient(msg_t *msg, clientState_t *from, clientState_t 
 		memset(&nullstate, 0, sizeof(nullstate));
 	}
 
-	custom_MSG_WriteDeltaStruct(msg, (entityState_t *)from, (entityState_t *)to, force, 0x16, 6, &clientStateFields, 1, -1, -1);
+	custom_MSG_WriteDeltaStruct(msg, (entityState_t *)from, (entityState_t *)to, force, 0x16, 6, &clientStateFields, 1, -1, -1, -1);
 }
 
 void custom_MSG_WriteDeltaArchivedEntity(msg_t *msg, archivedEntity_s *from, archivedEntity_s *to, int force)
 {
-	custom_MSG_WriteDeltaStruct(msg, (entityState_t *)from, (entityState_t *)to, force, 0x44, 10, &archivedEntityFields, 0, -1, -1);
+	custom_MSG_WriteDeltaStruct(msg, (entityState_t *)from, (entityState_t *)to, force, 0x44, 10, &archivedEntityFields, 0, -1, -1, -1);
 }
 
-void custom_MSG_WriteDeltaEntity(msg_t *msg, entityState_t *from, entityState_t *to, qboolean force, int clientNum)
+void custom_MSG_WriteDeltaEntity(msg_t *msg, entityState_t *from, entityState_t *to, qboolean force, int clientNum, int entNum)
 {
 	qboolean disable = qfalse;
 	client_t *client = &svs.clients[clientNum];
@@ -1381,7 +1525,7 @@ void custom_MSG_WriteDeltaEntity(msg_t *msg, entityState_t *from, entityState_t 
 	if ( disable )
 		to->eType = (entityType_t)EV_NONE;
 
-	custom_MSG_WriteDeltaStruct(msg, from, to, force, 0x3b, 10, &entityStateFields, 0, clientNum, spectatorClientNum);
+	custom_MSG_WriteDeltaStruct(msg, from, to, force, 0x3b, 10, &entityStateFields, 0, clientNum, spectatorClientNum, entNum);
 }
 
 void custom_SV_EmitPacketEntities(int client, int from_num_entities, int from_first_entity, int num_entities, int first_entity, msg_t *msg)
@@ -1421,18 +1565,18 @@ void custom_SV_EmitPacketEntities(int client, int from_num_entities, int from_fi
 		
 		if ( newnum == oldnum )
 		{
-			custom_MSG_WriteDeltaEntity(msg, oldent, newent, 0, client);
+			custom_MSG_WriteDeltaEntity(msg, oldent, newent, 0, client, newnum);
 			oldindex++;
 			newindex++;
 		}
 		else if ( newnum < oldnum )
 		{
-			custom_MSG_WriteDeltaEntity(msg, &sv.svEntities[newnum].baseline.s, newent, 1, client);
+			custom_MSG_WriteDeltaEntity(msg, &sv.svEntities[newnum].baseline.s, newent, 1, client, newnum);
 			newindex++;
 		}
 		else if ( oldnum < newnum )
 		{
-			custom_MSG_WriteDeltaEntity(msg, oldent, NULL, 1, client);
+			custom_MSG_WriteDeltaEntity(msg, oldent, NULL, 1, client, newnum);
 			oldindex++;
 		}
 	}
@@ -1608,6 +1752,7 @@ void custom_SV_SendClientGameState(client_t *client)
 	player_fireRangeScale[client - svs.clients] = 1.0;
 	player_no_pickup[client - svs.clients] = 0;
 	player_no_earthquakes[client - svs.clients] = 0;
+	player_collision[client - svs.clients] = COLLISION_TEAM_BOTH;
 	player_silent[client - svs.clients] = 0;
 	player_g_speed[client - svs.clients] = 0;
 	player_g_gravity[client - svs.clients] = 0;
@@ -1647,7 +1792,7 @@ void custom_SV_SendClientGameState(client_t *client)
 		if ( !base->number )
 			continue;
 		MSG_WriteByte(&msg, svc_baseline);
-		custom_MSG_WriteDeltaEntity(&msg, &nullstate, base, qtrue, client - svs.clients);
+		custom_MSG_WriteDeltaEntity(&msg, &nullstate, base, qtrue, client - svs.clients, start);
 	}
 	MSG_WriteByte(&msg, svc_EOF);
 	MSG_WriteLong(&msg, client - svs.clients);
@@ -4911,8 +5056,8 @@ void G_RunGravityModelAsItem(gentity_t *ent) // G_RunItem as base
 				
 				VectorCopy(trace.normal, v3);
 				AngleVectors(&(ent->r).currentAngles, &v1, 0, 0);
-				Vec3Cross(v3, v1, v2);
-				Vec3Cross(v2, v3, v1);
+				VectorCross(v3, v1, v2);
+				VectorCross(v2, v3, v1);
 				AxisToAngles(v1, angles);
 				G_SetAngle(ent, &angles);
 				G_SetOrigin(ent, &lerpOrigin);
@@ -5131,10 +5276,6 @@ public:
 		hook_print_codepos = new cHook(0x08077DBA, (int)custom_Scr_PrintPrevCodePos);
 		hook_print_codepos->hook();
 
-		hook_g_setclientcontents = new cHook(0x080F2F2E, (int)custom_G_SetClientContents);
-		hook_g_setclientcontents->hook();
-		hook_stuckinclient = new cHook(0x080F474A, (int)custom_StuckInClient);
-		hook_stuckinclient->hook();
 		hook_fire_grenade = new cHook(0x0810C1F6, (int)custom_fire_grenade);
 		hook_fire_grenade->hook();
 		hook_touch_item_auto = new cHook(0x081037F0, int(custom_Touch_Item_Auto));
@@ -5157,6 +5298,8 @@ public:
 		cracking_hook_function(0x0808EEEC, (int)custom_SV_ResetPureClient_f);
 		cracking_hook_function(0x0809443E, (int)custom_SV_CalcPings);
 		cracking_hook_function(0x080945AC, (int)custom_SV_CheckTimeouts);
+		cracking_hook_function(0x080F474A, (int)custom_StuckInClient);
+		cracking_hook_function(0x080F2F2E, (int)custom_G_SetClientContents);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080D9FF4, (int)Jump_ClearState);
@@ -5216,10 +5359,6 @@ public:
 		hook_print_codepos = new cHook(0x0807832E, (int)custom_Scr_PrintPrevCodePos);
 		hook_print_codepos->hook();
 
-		hook_g_setclientcontents = new cHook(0x080F553E, (int)custom_G_SetClientContents);
-		hook_g_setclientcontents->hook();
-		hook_stuckinclient = new cHook(0x080F6D5A, (int)custom_StuckInClient);
-		hook_stuckinclient->hook();
 		hook_fire_grenade = new cHook(0x0810E532, (int)custom_fire_grenade);
 		hook_fire_grenade->hook();
 		hook_touch_item_auto = new cHook(0x08105B24, int(custom_Touch_Item_Auto));
@@ -5242,6 +5381,8 @@ public:
 		cracking_hook_function(0x08090726, (int)custom_SV_ResetPureClient_f);
 		cracking_hook_function(0x0809630E, (int)custom_SV_CalcPings);
 		cracking_hook_function(0x080964C4, (int)custom_SV_CheckTimeouts);
+		cracking_hook_function(0x080F6D5A, (int)custom_StuckInClient);
+		cracking_hook_function(0x080F553E, (int)custom_G_SetClientContents);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC5D4, (int)Jump_ClearState);
@@ -5298,11 +5439,7 @@ public:
 		hook_add_opcode->hook();
 		hook_print_codepos = new cHook(0x080783FA, (int)custom_Scr_PrintPrevCodePos);
 		hook_print_codepos->hook();
-		
-		hook_g_setclientcontents = new cHook(0x080F5682, (int)custom_G_SetClientContents);
-		hook_g_setclientcontents->hook();
-		hook_stuckinclient = new cHook(0x080F6E9E, (int)custom_StuckInClient);
-		hook_stuckinclient->hook();
+
 		hook_fire_grenade = new cHook(0x0810E68E, (int)custom_fire_grenade);
 		hook_fire_grenade->hook();
 		hook_touch_item_auto = new cHook(0x08105C80, int(custom_Touch_Item_Auto));
@@ -5375,6 +5512,8 @@ public:
 		cracking_hook_function(0x08060C20, (int)custom_Com_PrintMessage);
 		cracking_hook_function(0x08109F5C, (int)custom_G_RunFrameForEntity);
 		cracking_hook_function(0x08090BAC, (int)custom_SV_ClientCommand);
+		cracking_hook_function(0x080F6E9E, (int)custom_StuckInClient);
+		cracking_hook_function(0x080F5682, (int)custom_G_SetClientContents);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC718, (int)Jump_ClearState);

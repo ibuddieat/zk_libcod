@@ -1911,6 +1911,15 @@ static const Vec3Lerp_t Vec3Lerp = (Vec3Lerp_t)0x0; // Not tested
 static const Vec3Lerp_t Vec3Lerp = (Vec3Lerp_t)0x080E129E;
 #endif
 
+typedef vec_t (*Vec2Normalize_t)(vec2_t v);
+#if COD_VERSION == COD2_1_0
+static const Vec2Normalize_t Vec2Normalize = (Vec2Normalize_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Vec2Normalize_t Vec2Normalize = (Vec2Normalize_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Vec2Normalize_t Vec2Normalize = (Vec2Normalize_t)0x080A44C2;
+#endif
+
 typedef void (*SP_worldspawn_t)(void);
 #if COD_VERSION == COD2_1_0
 static const SP_worldspawn_t SP_worldspawn = (SP_worldspawn_t)0x0; // Not tested
@@ -2224,6 +2233,24 @@ static const VectorLength_t VectorLength = (VectorLength_t)0x0; // Not tested
 static const VectorLength_t VectorLength = (VectorLength_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const VectorLength_t VectorLength = (VectorLength_t)0x081187F0;
+#endif
+
+typedef double (*VectorLength2_t)(float *vec);
+#if COD_VERSION == COD2_1_0
+static const VectorLength2_t VectorLength2 = (VectorLength2_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const VectorLength2_t VectorLength2 = (VectorLength2_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const VectorLength2_t VectorLength2 = (VectorLength2_t)0x080F7C08;
+#endif
+
+typedef double (*crandom_t)(void);
+#if COD_VERSION == COD2_1_0
+static const crandom_t crandom = (crandom_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const crandom_t crandom = (crandom_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const crandom_t crandom = (crandom_t)0x080A3774;
 #endif
 
 #endif

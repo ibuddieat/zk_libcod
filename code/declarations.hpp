@@ -9,24 +9,31 @@
 #define qtrue 1
 #define qfalse 0
 
+// 2D vectors
+#define DotProduct2( a, b )         ( ( a )[0] * ( b )[0] + ( a )[1] * ( b )[1] )
+#define VectorScale2( v, s, o )     ( ( o )[0] = ( v )[0] * ( s ),( o )[1] = ( v )[1] * ( s ) )
+#define VectorSubtract2( a, b, c )  ( ( c )[0] = ( a )[0] - ( b )[0],( c )[1] = ( a )[1] - ( b )[1] )
+
+// 3D vectors
 #define DotProduct( a, b )          ( ( a )[0] * ( b )[0] + ( a )[1] * ( b )[1] + ( a )[2] * ( b )[2] )
-#define VectorSubtract( a, b, c )   ( ( c )[0] = ( a )[0] - ( b )[0],( c )[1] = ( a )[1] - ( b )[1],( c )[2] = ( a )[2] - ( b )[2] )
 #define VectorAdd( a, b, c )        ( ( c )[0] = ( a )[0] + ( b )[0],( c )[1] = ( a )[1] + ( b )[1],( c )[2] = ( a )[2] + ( b )[2] )
+#define VectorClear( a )            ( ( a )[0] = ( a )[1] = ( a )[2] = 0 )
 #define VectorCopy( a, b )          ( ( b )[0] = ( a )[0],( b )[1] = ( a )[1],( b )[2] = ( a )[2] )
-#define VectorScale( v, s, o )      ( ( o )[0] = ( v )[0] * ( s ),( o )[1] = ( v )[1] * ( s ),( o )[2] = ( v )[2] * ( s ))
+#define VectorCross( a, b, c )      ( ( c )[0] = ( a )[1] * ( b )[2] - ( a )[2] * ( b )[1],( c )[1] = ( a )[2] * ( b )[0] - ( a )[0] * ( b )[2],( c )[2] = ( a )[0] * ( b )[1] - ( a )[1] * ( b )[0] )
 #define VectorMA( v, s, b, o )      ( ( o )[0] = ( v )[0] + ( b )[0] * ( s ),( o )[1] = ( v )[1] + ( b )[1] * ( s ),( o )[2]=( v )[2] + ( b )[2] * ( s ) )
-#define Vec3Cross( a, b, c )        ( ( c )[0] = ( a )[1] * ( b )[2] - ( a )[2] * ( b )[1],( c )[1] = ( a )[2] * ( b )[0] - ( a )[0] * ( b )[2],( c )[2] = ( a )[0] * ( b )[1] - ( a )[1] * ( b )[0] )
+#define VectorNegate( a, b )        ( ( b )[0] = -( a )[0],( b )[1] = -( a )[1],( b )[2] = -( a )[2] )
+#define VectorScale( v, s, o )      ( ( o )[0] = ( v )[0] * ( s ),( o )[1] = ( v )[1] * ( s ),( o )[2] = ( v )[2] * ( s ) )
+#define VectorSet( v, x, y, z )     ( ( v )[0] = ( x ),( v )[1] = ( y ),( v )[2] = ( z ) )
+#define VectorSnap( v )             { v[0] = (int)v[0]; v[1] = (int)v[1]; v[2] = (int)v[2]; }
+#define VectorSubtract( a, b, c )   ( ( c )[0] = ( a )[0] - ( b )[0],( c )[1] = ( a )[1] - ( b )[1],( c )[2] = ( a )[2] - ( b )[2] )
+
+// 4D vectors
 #define DotProduct4( x, y )         ( ( x )[0] * ( y )[0] + ( x )[1] * ( y )[1] + ( x )[2] * ( y )[2] + ( x )[3] * ( y )[3] )
-#define VectorSubtract4( a, b, c )  ( ( c )[0] = ( a )[0] - ( b )[0],( c )[1] = ( a )[1] - ( b )[1],( c )[2] = ( a )[2] - ( b )[2],( c )[3] = ( a )[3] - ( b )[3] )
 #define VectorAdd4( a, b, c )       ( ( c )[0] = ( a )[0] + ( b )[0],( c )[1] = ( a )[1] + ( b )[1],( c )[2] = ( a )[2] + ( b )[2],( c )[3] = ( a )[3] + ( b )[3] )
 #define VectorCopy4( a, b )         ( ( b )[0] = ( a )[0],( b )[1] = ( a )[1],( b )[2] = ( a )[2],( b )[3] = ( a )[3] )
-#define VectorScale4( v, s, o )     ( ( o )[0] = ( v )[0] * ( s ),( o )[1] = ( v )[1] * ( s ),( o )[2] = ( v )[2] * ( s ),( o )[3] = ( v )[3] * ( s ) )
 #define VectorMA4( v, s, b, o )     ( ( o )[0] = ( v )[0] + ( b )[0] * ( s ),( o )[1] = ( v )[1] + ( b )[1] * ( s ),( o )[2] = ( v )[2] + ( b )[2] * ( s ),( o )[3] = ( v )[3] + ( b )[3] * ( s ) )
-#define VectorClear( a )            ( ( a )[0] = ( a )[1] = ( a )[2] = 0 )
-#define VectorNegate( a, b )        ( ( b )[0] = -( a )[0],( b )[1] = -( a )[1],( b )[2] = -( a )[2] )
-#define VectorSet( v, x, y, z )     ( ( v )[0] = ( x ),( v )[1] = ( y ),( v )[2] = ( z ) )
-#define Vector4Copy( a, b )         ( ( b )[0] = ( a )[0],( b )[1] = ( a )[1],( b )[2] = ( a )[2],( b )[3] = ( a )[3] )
-#define SnapVector( v )             { v[0] = (int)v[0]; v[1] = (int)v[1]; v[2] = (int)v[2]; }
+#define VectorScale4( v, s, o )     ( ( o )[0] = ( v )[0] * ( s ),( o )[1] = ( v )[1] * ( s ),( o )[2] = ( v )[2] * ( s ),( o )[3] = ( v )[3] * ( s ) )
+#define VectorSubtract4( a, b, c )  ( ( c )[0] = ( a )[0] - ( b )[0],( c )[1] = ( a )[1] - ( b )[1],( c )[2] = ( a )[2] - ( b )[2],( c )[3] = ( a )[3] - ( b )[3] )
 
 #define ARCHIVEDSSBUF_SIZE          0x2000000
 #define ENTFIELD_MASK               0xC000
@@ -175,6 +182,7 @@
 #define CONTENTS_CURRENT_DOWN       0x800000 // might be named differently
 #define CONTENTS_MANTLE             0x1000000
 #define CONTENTS_BODY               0x2000000
+#define CONTENTS_CORPSE             0x4000000
 #define CONTENTS_DETAIL             0x8000000
 #define CONTENTS_STRUCTURAL         0x10000000
 #define CONTENTS_TRANSPARENT        0x20000000
@@ -2494,6 +2502,7 @@ typedef struct
 	short pelvis;
 	short trigger_radius;
 	// Custom indexes from here
+	short both;
 	short bounce;
 	short flags;
 	short land;
@@ -3222,3 +3231,11 @@ typedef struct customEntityState_s
 	float perpendicularBounce;
 	qboolean convertedTrigger;
 } customEntityState_t;
+
+typedef enum
+{
+	COLLISION_TEAM_BOTH,
+	COLLISION_TEAM_AXIS,
+	COLLISION_TEAM_ALLIES,
+	COLLISION_TEAM_NONE
+} collisionTeam_t;
