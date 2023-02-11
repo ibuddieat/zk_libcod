@@ -490,6 +490,47 @@ qboolean SkipCollision(gentity_t *client1, gentity_t *client2)
 	return qfalse;
 }
 
+void custom_SV_ClipMoveToEntity(moveclip_t *clip, svEntity_s *entity, trace_t *trace)
+{
+	int touchNum;
+	gentity_t *touch;
+	clipHandle_t clipHandle;
+	vec3_t maxs;
+	vec3_t mins;
+	float *angles;
+	float fraction;
+
+	touchNum = entity - sv.svEntities;
+	touch = SV_GentityNum(touchNum);
+	if ( ( ( (touch->r).contents & clip->contentmask) != 0 ) &&
+	( clip->passEntityNum == ENTITY_NONE || ( ( touchNum != clip->passEntityNum && (touch->r).ownerNum != clip->passEntityNum ) && ( (touch->r).ownerNum != clip->passOwnerNum ) ) ) )
+	{
+		/* New code: per-player/team collison */
+		if ( SkipCollision(touch, &g_entities[clip->passEntityNum]) )
+			return;
+		/* New code end */
+
+		VectorAdd((touch->r).absmin, clip->mins, mins);
+		VectorAdd((touch->r).absmax, clip->maxs, maxs);
+
+		if ( !CM_TraceBox(&clip->extents, mins, maxs, trace->fraction) )
+		{
+			clipHandle = SV_ClipHandleForEntity(touch);
+			angles = (touch->r).currentAngles;
+			if ( (touch->r).bmodel == 0 )
+			{
+				angles = vec3_origin;
+			}
+			fraction = trace->fraction;
+			CM_TransformedBoxTrace(trace, (clip->extents).start, (clip->extents).end, clip->mins, clip->maxs, clipHandle, clip->contentmask, (touch->r).currentOrigin, angles);
+			if ( trace->fraction < fraction )
+			{
+				(trace->entityNum).entnum = (touch->s).number;
+			}
+		}
+	}
+}
+
 void custom_G_SetClientContents(gentity_t *ent)
 {
 	if ( !g_playerCollision->boolean )
@@ -1119,7 +1160,10 @@ void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t 
 					if ( client1->client && client2->client && client1->client->sess.connected == CON_CONNECTED && client2->client->sess.connected == CON_CONNECTED )
 					{
 						if ( SkipCollision(client1, client2) )
+						{
 							*toF = 0;
+							lc = i + 1;
+						}
 					}
 				}
 				/* New code end */
@@ -4249,7 +4293,6 @@ void custom_Script_obituary(void)
 	gentity_t *ent;
 	gentity_t *victim;
 	gentity_t *attacker;
-	vec3_t vec3_origin = {0, 0, 0};
 	vec3_t origin;
 	const char *team_str;
 	int team = 0;
@@ -4266,7 +4309,7 @@ void custom_Script_obituary(void)
 	// Custom origin
 	if ( args < 6 )
 	{
-		ent = G_TempEntity(&vec3_origin, EV_OBITUARY);
+		ent = G_TempEntity((vec3_t *)vec3_origin, EV_OBITUARY);
 	}
 	else
 	{
@@ -5514,6 +5557,7 @@ public:
 		cracking_hook_function(0x08090BAC, (int)custom_SV_ClientCommand);
 		cracking_hook_function(0x080F6E9E, (int)custom_StuckInClient);
 		cracking_hook_function(0x080F5682, (int)custom_G_SetClientContents);
+		cracking_hook_function(0x0809CD64, (int)custom_SV_ClipMoveToEntity);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC718, (int)Jump_ClearState);

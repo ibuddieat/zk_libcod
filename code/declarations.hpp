@@ -239,6 +239,7 @@ typedef struct gclient_s gclient_t;
 typedef struct gentity_s gentity_t;
 typedef int LargeLocal;
 typedef gentity_t (*useList_t)[2050];
+typedef int clipHandle_t;
 
 typedef struct scr_entref_s
 {
@@ -961,6 +962,24 @@ typedef struct trace_s
 	byte allsolid;
 	byte startsolid;
 } trace_t;
+
+typedef struct traceExtents_s
+{
+	vec3_t start;
+	vec3_t end;
+	vec3_t invDelta;
+} traceExtents_t;
+
+typedef struct moveclip_s
+{
+	vec3_t mins;
+	vec3_t maxs;
+	vec3_t outerSize;
+	traceExtents_t extents;
+	int passEntityNum;
+	int passOwnerNum;
+	int contentmask;
+} moveclip_t;
 
 typedef struct leakyBucket_s leakyBucket_t;
 struct leakyBucket_s
@@ -3075,6 +3094,14 @@ static const int legacyHacks_offset = 0x0;
 static const int legacyHacks_offset = 0x0817D838;
 #endif
 
+#if COD_VERSION == COD2_1_0 // Not tested
+static const int vec3_origin_offset = 0x0;
+#elif COD_VERSION == COD2_1_2 // Not tested
+static const int vec3_origin_offset = 0x0;
+#elif COD_VERSION == COD2_1_3
+static const int vec3_origin_offset = 0x0814CFC8;
+#endif
+
 #define scrVarPub (*((scrVarPub_t*)( varpub_offset )))
 #define scrVmPub (*((scrVmPub_t*)( vmpub_offset )))
 #define scrVarGlob (((VariableValueInternal*)( varglob_offset )))
@@ -3111,6 +3138,7 @@ static const int legacyHacks_offset = 0x0817D838;
 #define errorcode (*((int*)( errorcode_offset )))
 #define testclient_connect_string (*((char*)( testclient_connect_string_offset )))
 #define legacyHacks ((int*)( legacyHacks_offset ))
+#define vec3_origin ((float*)( vec3_origin_offset ))
 
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6

@@ -1848,6 +1848,33 @@ static const CM_InitStaticModel_t CM_InitStaticModel = (CM_InitStaticModel_t)0x0
 static const CM_InitStaticModel_t CM_InitStaticModel = (CM_InitStaticModel_t)0x080583DC;
 #endif
 
+typedef qboolean (*CM_TraceBox_t)(traceExtents_t *extents, float *mins, float *maxs, float fraction);
+#if COD_VERSION == COD2_1_0
+static const CM_TraceBox_t CM_TraceBox = (CM_TraceBox_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const CM_TraceBox_t CM_TraceBox = (CM_TraceBox_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const CM_TraceBox_t CM_TraceBox = (CM_TraceBox_t)0x0805D8E0;
+#endif
+
+typedef qboolean (*CM_TransformedBoxTrace_t)(trace_t *results, const float *start, const float *end, const float *mins, const float *maxs, unsigned int model, int brushmask, const float *origin, const float *angles);
+#if COD_VERSION == COD2_1_0
+static const CM_TransformedBoxTrace_t CM_TransformedBoxTrace = (CM_TransformedBoxTrace_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const CM_TransformedBoxTrace_t CM_TransformedBoxTrace = (CM_TransformedBoxTrace_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const CM_TransformedBoxTrace_t CM_TransformedBoxTrace = (CM_TransformedBoxTrace_t)0x0805B8F6;
+#endif
+
+typedef clipHandle_t (*SV_ClipHandleForEntity_t)(gentity_t *ent);
+#if COD_VERSION == COD2_1_0
+static const SV_ClipHandleForEntity_t SV_ClipHandleForEntity = (SV_ClipHandleForEntity_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_ClipHandleForEntity_t SV_ClipHandleForEntity = (SV_ClipHandleForEntity_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_ClipHandleForEntity_t SV_ClipHandleForEntity = (SV_ClipHandleForEntity_t)0x0809C544;
+#endif
+
 typedef void (*Scr_PlayFxError_t)(const char *error, int index); // Guessed function name
 #if COD_VERSION == COD2_1_0
 static const Scr_PlayFxError_t Scr_PlayFxError = (Scr_PlayFxError_t)0x0; // Not tested
