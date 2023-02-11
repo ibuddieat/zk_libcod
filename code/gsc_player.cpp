@@ -2111,22 +2111,22 @@ void gsc_player_getcollisionteam(scr_entref_t ref)
 		return;
 	}
 
-    if ( player_collision[id] == COLLISION_TEAM_BOTH )
-    {
+	if ( player_collision[id] == COLLISION_TEAM_BOTH )
+	{
 		Scr_AddConstString(scr_const.both);
-    }
+	}
 	else if ( player_collision[id] == COLLISION_TEAM_NONE )
-    {
+	{
 		Scr_AddConstString(scr_const.none);
-    }
-    else if ( player_collision[id] == COLLISION_TEAM_AXIS )
-    {
+	}
+	else if ( player_collision[id] == COLLISION_TEAM_AXIS )
+	{
 		Scr_AddConstString(scr_const.axis);
-    }
-    else if ( player_collision[id] == COLLISION_TEAM_ALLIES )
-    {
+	}
+	else if ( player_collision[id] == COLLISION_TEAM_ALLIES )
+	{
 		Scr_AddConstString(scr_const.allies);
-    }
+	}
 }
 
 void gsc_player_setcollisionteam(scr_entref_t ref)
@@ -2140,28 +2140,28 @@ void gsc_player_setcollisionteam(scr_entref_t ref)
 		return;
 	}
 
-    short team = Scr_GetConstString(0);
-    if ( team == scr_const.none )
-    {
-        player_collision[id] = COLLISION_TEAM_NONE;
-    }
-    else if ( team == scr_const.axis )
-    {
-        player_collision[id] = COLLISION_TEAM_AXIS;
-    }
-    else if ( team == scr_const.allies )
-    {
-        player_collision[id] = COLLISION_TEAM_ALLIES;
-    }
-    else if ( team == scr_const.both )
-    {
-        player_collision[id] = COLLISION_TEAM_BOTH;
-    }
-    else
-    {
+	short team = Scr_GetConstString(0);
+	if ( team == scr_const.none )
+	{
+		player_collision[id] = COLLISION_TEAM_NONE;
+	}
+	else if ( team == scr_const.axis )
+	{
+		player_collision[id] = COLLISION_TEAM_AXIS;
+	}
+	else if ( team == scr_const.allies )
+	{
+		player_collision[id] = COLLISION_TEAM_ALLIES;
+	}
+	else if ( team == scr_const.both )
+	{
+		player_collision[id] = COLLISION_TEAM_BOTH;
+	}
+	else
+	{
 		Scr_ParamError(0, "collision team must be \"axis\", \"allies\", \"none\", or \"both\"");
-    }
-    stackPushBool(qtrue);
+	}
+	stackPushBool(qtrue);
 }
 
 #if COMPILE_CUSTOM_VOICE == 1
