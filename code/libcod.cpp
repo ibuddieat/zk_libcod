@@ -2717,17 +2717,30 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 		logRcon = qtrue;
 		Com_DPrintf("Enabled rcon messages logging\n");
 	}
-	
+
 	if (
 		codecallback_remotecommand && 
 		!badRconPassword && 
 		Scr_IsSystemActive() && 
-		strcmp(Cmd_Argv(2), "map") != 0 && 
 		strcmp(Cmd_Argv(2), "devmap") != 0 && 
+		strcmp(Cmd_Argv(2), "fast_restart") != 0 &&
+		strcmp(Cmd_Argv(2), "map") != 0 && 
 		strcmp(Cmd_Argv(2), "map_restart") != 0 && 
-		strcmp(Cmd_Argv(2), "fast_restart") != 0
+		strcmp(Cmd_Argv(2), "map_rotate") != 0
 		)
 	{
+		/*
+		The map commands would crash because the server would continue running
+		scripts after executing gsc_utils_remotecommand() (via VM_Resume).
+		A potential solution for getting these commands into the callback too
+		could be to use something as follows in gsc_utils_remotecommand(), just
+		like Script_map() does:
+
+		level.finished = 2;
+		level.savePersist = 0;
+		Cbuf_ExecuteText(2, custom_va("map %s\n", <mapname>));
+		*/
+
 		stackPushInt((int)msg);
 		stackPushArray();
 		int args = Cmd_Argc();
