@@ -2280,4 +2280,13 @@ static const crandom_t crandom = (crandom_t)0x0; // Not tested
 static const crandom_t crandom = (crandom_t)0x080A3774;
 #endif
 
+typedef void (*Cbuf_ExecuteText_t)(int exec_when, const char* text);
+#if COD_VERSION == COD2_1_0
+static const Cbuf_ExecuteText_t Cbuf_ExecuteText = (Cbuf_ExecuteText_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Cbuf_ExecuteText_t Cbuf_ExecuteText = (Cbuf_ExecuteText_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Cbuf_ExecuteText_t Cbuf_ExecuteText = (Cbuf_ExecuteText_t)0x0805FE3C;
+#endif
+
 #endif
