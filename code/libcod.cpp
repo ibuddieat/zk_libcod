@@ -451,40 +451,43 @@ qboolean SkipCollision(gentity_t *client1, gentity_t *client2)
 	int id1 = client1 - g_entities;
 	int id2 = client2 - g_entities;
 
-	if ( player_collision[id1] == COLLISION_TEAM_NONE || player_collision[id2] == COLLISION_TEAM_NONE )
-		return qtrue;
-
-	if ( player_collision[id1] == COLLISION_TEAM_AXIS && (client2->client->sess).team != TEAM_AXIS )
-		return qtrue;
-
-	if ( player_collision[id1] == COLLISION_TEAM_ALLIES && (client2->client->sess).team != TEAM_ALLIES )
-		return qtrue;
-
-	if ( player_collision[id2] == COLLISION_TEAM_AXIS && (client1->client->sess).team != TEAM_AXIS )
-		return qtrue;
-
-	if ( player_collision[id2] == COLLISION_TEAM_ALLIES && (client1->client->sess).team != TEAM_ALLIES )
-		return qtrue;
-
-	if ( player_collision[id1] == COLLISION_TEAM_BOTH )
+	if ( id1 < MAX_CLIENTS && id2 < MAX_CLIENTS && client1->client && client2->client && client1->client->sess.connected == CON_CONNECTED && client2->client->sess.connected == CON_CONNECTED )
 	{
+		if ( player_collision[id1] == COLLISION_TEAM_NONE || player_collision[id2] == COLLISION_TEAM_NONE )
+			return qtrue;
+
+		if ( player_collision[id1] == COLLISION_TEAM_AXIS && (client2->client->sess).team != TEAM_AXIS )
+			return qtrue;
+
+		if ( player_collision[id1] == COLLISION_TEAM_ALLIES && (client2->client->sess).team != TEAM_ALLIES )
+			return qtrue;
+
+		if ( player_collision[id2] == COLLISION_TEAM_AXIS && (client1->client->sess).team != TEAM_AXIS )
+			return qtrue;
+
+		if ( player_collision[id2] == COLLISION_TEAM_ALLIES && (client1->client->sess).team != TEAM_ALLIES )
+			return qtrue;
+
+		if ( player_collision[id1] == COLLISION_TEAM_BOTH )
+		{
+			if ( player_collision[id2] == COLLISION_TEAM_BOTH )
+				return qfalse;
+
+			if ( player_collision[id2] == COLLISION_TEAM_AXIS && (client1->client->sess).team == TEAM_AXIS )
+				return qfalse;
+
+			if ( player_collision[id2] == COLLISION_TEAM_ALLIES && (client1->client->sess).team == TEAM_ALLIES )
+				return qfalse;
+		}
+
 		if ( player_collision[id2] == COLLISION_TEAM_BOTH )
-			return qfalse;
+		{
+			if ( player_collision[id1] == COLLISION_TEAM_AXIS && (client2->client->sess).team == TEAM_AXIS )
+				return qfalse;
 
-		if ( player_collision[id2] == COLLISION_TEAM_AXIS && (client1->client->sess).team == TEAM_AXIS )
-			return qfalse;
-
-		if ( player_collision[id2] == COLLISION_TEAM_ALLIES && (client1->client->sess).team == TEAM_ALLIES )
-			return qfalse;
-	}
-
-	if ( player_collision[id2] == COLLISION_TEAM_BOTH )
-	{
-		if ( player_collision[id1] == COLLISION_TEAM_AXIS && (client2->client->sess).team == TEAM_AXIS )
-			return qfalse;
-
-		if ( player_collision[id1] == COLLISION_TEAM_ALLIES && (client2->client->sess).team == TEAM_ALLIES )
-			return qfalse;
+			if ( player_collision[id1] == COLLISION_TEAM_ALLIES && (client2->client->sess).team == TEAM_ALLIES )
+				return qfalse;
+		}
 	}
 
 	return qfalse;
@@ -1157,14 +1160,8 @@ void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t 
 					gentity_t *client1 = &g_entities[clientNum];
 					gentity_t *client2 = &g_entities[entNum];
 
-					if ( client1->client && client2->client && client1->client->sess.connected == CON_CONNECTED && client2->client->sess.connected == CON_CONNECTED )
-					{
-						if ( SkipCollision(client1, client2) )
-						{
-							*toF = 0;
-							lc = i + 1;
-						}
-					}
+					if ( SkipCollision(client1, client2) )
+						*toF = 0;
 				}
 				/* New code end */
 				
