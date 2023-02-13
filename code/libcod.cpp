@@ -3311,7 +3311,7 @@ void custom_G_RunFrame(int levelTime)
 #if COMPILE_CUSTOM_VOICE == 1
 	// Try process results from Speex encoder tasks
 	if ( pthread_mutex_trylock(&loadSoundFileResultLock) == 0 && Scr_IsSystemActive() )
-    {
+	{
 		if ( loadSoundFileResultsIndex == MAX_THREAD_RESULTS_BUFFER )
 		{
 			Com_Printf("Warning: loadSoundFile results buffer full\n");
@@ -4961,76 +4961,76 @@ qboolean G_BounceGrenade(gentity_t *ent,trace_t *trace) // G_BounceMissile as ba
 
 void G_RunGravityModelAsGrenade(gentity_t *ent) // G_RunMissile as base
 {
-    double absDeltaZ;
-    vec3_t lerpOrigin;
-    trace_t trace2;
-    trace_t trace;
-    vec3_t origin;
+	double absDeltaZ;
+	vec3_t lerpOrigin;
+	trace_t trace2;
+	trace_t trace;
+	vec3_t origin;
 	qboolean bounce;
 
-    if ( ( (ent->s).pos.trType == TR_STATIONARY ) && ( (ent->s).groundEntityNum != ENTITY_WORLD ) )
-    {
-        VectorCopy((ent->r).currentOrigin, origin);
-        origin[2] = origin[2] - 1.5;
-        G_StartSolidTrace(&trace, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask);
-        if ( trace.fraction == 1.0 )
-        {
-            (ent->s).pos.trType = TR_GRAVITY;
-            (ent->s).pos.trTime = level.time;
-            (ent->s).pos.trDuration = 0;
-            VectorCopy((ent->r).currentOrigin, (ent->s).pos.trBase);
-            VectorClear((ent->s).pos.trDelta);
-        }
-    }
-    BG_EvaluateTrajectory(&(ent->s).pos, level.time + 50, origin);
-    absDeltaZ = (ent->s).pos.trDelta[2];
-    if ( absDeltaZ < 0 )
-        absDeltaZ *= -1;
-    if ( ( absDeltaZ <= 30.0 ) || SV_PointContents(&(ent->r).currentOrigin, -1, CONTENTS_WATER) )
-    {
-        G_StartSolidTrace(&trace, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask);
-    }
-    else
-    {
-        G_StartSolidTrace(&trace, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask | CONTENTS_WATER);
-    }
-    if ( ( trace.surfaceFlags & 0x1F00000 ) == SURF_WATER )
-    {
-        G_StartSolidTrace(&trace, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask);
-    }
+	if ( ( (ent->s).pos.trType == TR_STATIONARY ) && ( (ent->s).groundEntityNum != ENTITY_WORLD ) )
+	{
+		VectorCopy((ent->r).currentOrigin, origin);
+		origin[2] = origin[2] - 1.5;
+		G_StartSolidTrace(&trace, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask);
+		if ( trace.fraction == 1.0 )
+		{
+			(ent->s).pos.trType = TR_GRAVITY;
+			(ent->s).pos.trTime = level.time;
+			(ent->s).pos.trDuration = 0;
+			VectorCopy((ent->r).currentOrigin, (ent->s).pos.trBase);
+			VectorClear((ent->s).pos.trDelta);
+		}
+	}
+	BG_EvaluateTrajectory(&(ent->s).pos, level.time + 50, origin);
+	absDeltaZ = (ent->s).pos.trDelta[2];
+	if ( absDeltaZ < 0 )
+		absDeltaZ *= -1;
+	if ( ( absDeltaZ <= 30.0 ) || SV_PointContents(&(ent->r).currentOrigin, -1, CONTENTS_WATER) )
+	{
+		G_StartSolidTrace(&trace, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask);
+	}
+	else
+	{
+		G_StartSolidTrace(&trace, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask | CONTENTS_WATER);
+	}
+	if ( ( trace.surfaceFlags & 0x1F00000 ) == SURF_WATER )
+	{
+		G_StartSolidTrace(&trace, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask);
+	}
 	if ( ( g_entities[trace.entityNum.entnum].flags & EF_TAGCONNECT ) != 0 )
 	{
 		G_StartSolidTraceNoContents(&trace, trace.entityNum.entnum, ent, origin);
 	}
-    Vec3Lerp((ent->r).currentOrigin, origin, trace.fraction, lerpOrigin);
-    VectorCopy(lerpOrigin, (ent->r).currentOrigin);
-    if ( ( ( (ent->s).eFlags & EF_BOUNCE ) != 0 ) && ( trace.fraction == 1.0 || ( trace.fraction < 1.0 && ( 0.7 < trace.normal[2] ) ) ) )
-    {
-        VectorCopy((ent->r).currentOrigin, origin);
-        origin[2] = origin[2] - 1.5;
-        G_StartSolidTrace(&trace2, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask);
-        if ( ( trace2.fraction != 1.0 ) && ( trace2.entityNum.entnum == ENTITY_WORLD ) )
-        {
-            trace.fraction = trace2.fraction;
-            trace.normal[0] = trace2.normal[0];
-            trace.normal[1] = trace2.normal[1];
-            trace.normal[2] = trace2.normal[2];
-            trace.surfaceFlags = trace2.surfaceFlags;
-            trace.contents = trace2.contents;
-            trace.material = trace2.material;
-            trace.entityNum = trace2.entityNum;
-            trace.hitId = trace2.hitId;
-            trace.allsolid = trace2.allsolid;
-            trace.startsolid = trace2.startsolid;
-            Vec3Lerp((ent->r).currentOrigin, origin, trace2.fraction, lerpOrigin);
-            (ent->s).pos.trBase[2] = (ent->s).pos.trBase[2] + ( ( lerpOrigin[2] + 1.5 ) - (ent->r).currentOrigin[2]);
-            VectorCopy(lerpOrigin, (ent->r).currentOrigin);
-            (ent->r).currentOrigin[2] = (ent->r).currentOrigin[2] + 1.5;
-        }
-    }
-    SV_LinkEntity(ent);
-    if ( trace.fraction != 1.0 )
-    {
+	Vec3Lerp((ent->r).currentOrigin, origin, trace.fraction, lerpOrigin);
+	VectorCopy(lerpOrigin, (ent->r).currentOrigin);
+	if ( ( ( (ent->s).eFlags & EF_BOUNCE ) != 0 ) && ( trace.fraction == 1.0 || ( trace.fraction < 1.0 && ( 0.7 < trace.normal[2] ) ) ) )
+	{
+		VectorCopy((ent->r).currentOrigin, origin);
+		origin[2] = origin[2] - 1.5;
+		G_StartSolidTrace(&trace2, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask);
+		if ( ( trace2.fraction != 1.0 ) && ( trace2.entityNum.entnum == ENTITY_WORLD ) )
+		{
+			trace.fraction = trace2.fraction;
+			trace.normal[0] = trace2.normal[0];
+			trace.normal[1] = trace2.normal[1];
+			trace.normal[2] = trace2.normal[2];
+			trace.surfaceFlags = trace2.surfaceFlags;
+			trace.contents = trace2.contents;
+			trace.material = trace2.material;
+			trace.entityNum = trace2.entityNum;
+			trace.hitId = trace2.hitId;
+			trace.allsolid = trace2.allsolid;
+			trace.startsolid = trace2.startsolid;
+			Vec3Lerp((ent->r).currentOrigin, origin, trace2.fraction, lerpOrigin);
+			(ent->s).pos.trBase[2] = (ent->s).pos.trBase[2] + ( ( lerpOrigin[2] + 1.5 ) - (ent->r).currentOrigin[2]);
+			VectorCopy(lerpOrigin, (ent->r).currentOrigin);
+			(ent->r).currentOrigin[2] = (ent->r).currentOrigin[2] + 1.5;
+		}
+	}
+	SV_LinkEntity(ent);
+	if ( trace.fraction != 1.0 )
+	{
 		bounce = G_BounceGrenade(ent, &trace);
 		if ( bounce && trace.startsolid == 0)
 		{
@@ -5038,7 +5038,7 @@ void G_RunGravityModelAsGrenade(gentity_t *ent) // G_RunMissile as base
 			Scr_AddString(Com_SurfaceTypeToName((int)( trace.surfaceFlags & 0x1F00000U ) >> 0x14));
 			Scr_Notify(ent, scr_const.bounce, 2);
 		}
-    }
+	}
 }
 
 void G_RunGravityModelAsItem(gentity_t *ent) // G_RunItem as base
