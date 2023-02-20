@@ -7,6 +7,7 @@ New script code methods:
   * `<entity> enableBounce([<parallelBounce>], [<perpendicularBounce>])`
   * `<entity> enableGravity([<model collide>])`
   * `<entity> getClipmask()`
+  * `<entity> getContents()`
   * `<entity> getEntityVelocity()`
   * `<entity> getTagAngles(<tag name>)`
   * `<entity> getTagOrigin(<tag name>)`

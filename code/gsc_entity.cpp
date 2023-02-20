@@ -514,6 +514,14 @@ void gsc_entity_getclipmask(scr_entref_t ref)
 	stackPushInt(ent->clipmask);
 }
 
+void gsc_entity_getcontents(scr_entref_t ref)
+{
+	int id = ref.entnum;
+	gentity_t *ent = &g_entities[id];
+
+	stackPushInt((ent->r).contents);
+}
+
 void gsc_entity_setlight(scr_entref_t ref)
 {
 	int id = ref.entnum;

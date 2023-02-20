@@ -10,6 +10,7 @@ void gsc_entity_disablegravity(scr_entref_t id);
 void gsc_entity_enablebounce(scr_entref_t ref);
 void gsc_entity_enablegravity(scr_entref_t id);
 void gsc_entity_getclipmask(scr_entref_t id);
+void gsc_entity_getcontents(scr_entref_t id);
 void gsc_entity_getentityvelocity(scr_entref_t id);
 void gsc_entity_gettagangles(scr_entref_t id);
 void gsc_entity_gettagorigin(scr_entref_t id);

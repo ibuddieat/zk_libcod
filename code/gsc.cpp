@@ -304,6 +304,7 @@ scr_method_t scriptMethods[] =
 	{"enablebounce", gsc_entity_enablebounce, 0},
 	{"enablegravity", gsc_entity_enablegravity, 0},
 	{"getclipmask", gsc_entity_getclipmask, 0},
+	{"getcontents", gsc_entity_getcontents, 0},
 	{"getentityvelocity", gsc_entity_getentityvelocity, 0},
 	{"gettagangles", gsc_entity_gettagangles, 0},
 	{"gettagorigin", gsc_entity_gettagorigin, 0},
