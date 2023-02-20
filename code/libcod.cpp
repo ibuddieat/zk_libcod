@@ -3284,7 +3284,7 @@ void custom_G_RunFrame(int levelTime)
 	*(int *)&G_RunFrame = hook_g_runframe->from;
 
 	// Warn about server lag
-	if ( hitchFrameTime && Scr_IsSystemActive() )
+	if ( codecallback_hitchwarning && hitchFrameTime && Scr_IsSystemActive() )
 	{
 		stackPushInt(hitchFrameTime);
 		short ret = Scr_ExecThread(codecallback_hitchwarning, 1);
