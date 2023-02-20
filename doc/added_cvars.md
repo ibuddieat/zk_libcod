@@ -1,4 +1,8 @@
 Added cvars:
+  * `g_debugCallbacks`
+    * Type: Boolean
+    * Default: False
+    * Effect: Toggle debug logging of callback function assignments on server start and callback function calls at runtime.
   * `g_debugEvents`
     * Type: Boolean
     * Default: False

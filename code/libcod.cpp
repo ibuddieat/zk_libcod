@@ -39,6 +39,7 @@ cvar_t *con_coloredPrints;
 #endif
 cvar_t *fs_callbacks;
 cvar_t *fs_library;
+cvar_t *g_debugCallbacks;
 cvar_t *g_debugEvents;
 cvar_t *g_debugStaticModels;
 cvar_t *g_dumpVoiceData;
@@ -91,7 +92,17 @@ cHook *hook_sv_masterheartbeat;
 cHook *hook_touch_item_auto;
 cHook *hook_vm_notify;
 cHook *hook_sv_verifyiwds_f;
+cHook *hook_scr_execentthread;
+cHook *hook_scr_execthread;
 
+// Stock callbacks
+int codecallback_startgametype = 0;
+int codecallback_playerconnect = 0;
+int codecallback_playerdisconnect = 0;
+int codecallback_playerdamage = 0;
+int codecallback_playerkilled = 0;
+
+// Custom callbacks
 int codecallback_client_spam = 0;
 int codecallback_dprintf = 0;
 int codecallback_error = 0;
@@ -121,6 +132,44 @@ int codecallback_reloadbutton = 0;
 int codecallback_smokebutton = 0;
 int codecallback_standbutton = 0;
 int codecallback_usebutton = 0;
+
+callback_t callbacks[] = {
+	{ &codecallback_startgametype, "CodeCallback_StartGameType" }, // g_scr_data.gametype.startupgametype
+	{ &codecallback_playerconnect, "CodeCallback_PlayerConnect" }, // g_scr_data.gametype.playerconnect
+	{ &codecallback_playerdisconnect, "CodeCallback_PlayerDisconnect" }, // g_scr_data.gametype.playerdisconnect
+	{ &codecallback_playerdamage, "CodeCallback_PlayerDamage" }, // g_scr_data.gametype.playerdamage
+	{ &codecallback_playerkilled, "CodeCallback_PlayerKilled" }, // g_scr_data.gametype.playerkilled
+
+	{ &codecallback_client_spam, "CodeCallback_CLSpam"},
+	{ &codecallback_dprintf, "CodeCallback_DPrintf"},
+	{ &codecallback_error, "CodeCallback_Error"},
+	{ &codecallback_fire_grenade, "CodeCallback_FireGrenade"},
+	{ &codecallback_hitchwarning, "CodeCallback_HitchWarning"},
+	{ &codecallback_map_turrets_load, "CodeCallback_MapTurretsLoad"},
+	{ &codecallback_map_weapons_load, "CodeCallback_MapWeaponsLoad"},
+	{ &codecallback_notify, "CodeCallback_Notify"},
+	{ &codecallback_notifydebug, "CodeCallback_NotifyDebug"},
+	{ &codecallback_pickup, "CodeCallback_Pickup"},
+	{ &codecallback_playercommand, "CodeCallback_PlayerCommand"},
+	{ &codecallback_remotecommand, "CodeCallback_RemoteCommand"},
+	{ &codecallback_userinfochanged, "CodeCallback_UserInfoChanged"},
+	{ &codecallback_vid_restart, "CodeCallback_VidRestart"},
+
+	{ &codecallback_adsbutton, "CodeCallback_AdsButton"},
+	{ &codecallback_attackbutton, "CodeCallback_AttackButton"},
+	{ &codecallback_crouchbutton, "CodeCallback_CrouchButton"},
+	{ &codecallback_fragbutton, "CodeCallback_FragButton"},
+	{ &codecallback_holdbreathbutton, "CodeCallback_HoldBreathButton"},
+	{ &codecallback_leanleftbutton, "CodeCallback_LeanLeftButton"},
+	{ &codecallback_leanrightbutton, "CodeCallback_LeanRightButton"},
+	{ &codecallback_meleebreathbutton, "CodeCallback_MeleeBreathButton"},
+	{ &codecallback_meleebutton, "CodeCallback_MeleeButton"},
+	{ &codecallback_pronebutton, "CodeCallback_ProneButton"},
+	{ &codecallback_reloadbutton, "CodeCallback_ReloadButton"},
+	{ &codecallback_smokebutton, "CodeCallback_SmokeButton"},
+	{ &codecallback_standbutton, "CodeCallback_StandButton"},
+	{ &codecallback_usebutton, "CodeCallback_UseButton"},
+};
 
 /*
 const entityHandler_t entityHandlers[] =
@@ -267,6 +316,7 @@ void common_init_complete_print(const char *format, ...)
 	#endif
 	fs_callbacks = Cvar_RegisterString("fs_callbacks", "", CVAR_ARCHIVE);
 	fs_library = Cvar_RegisterString("fs_library", "", CVAR_ARCHIVE);
+	g_debugCallbacks = Cvar_RegisterBool("g_debugCallbacks", qfalse, CVAR_ARCHIVE);
 	g_debugEvents = Cvar_RegisterBool("g_debugEvents", qfalse, CVAR_ARCHIVE);
 	g_debugStaticModels = Cvar_RegisterBool("g_debugStaticModels", qfalse, CVAR_ARCHIVE);
 	g_dumpVoiceData = Cvar_RegisterBool("g_dumpVoiceData", qfalse, CVAR_ARCHIVE);
@@ -402,46 +452,24 @@ void custom_sv_masterheartbeat(const char *hbname)
 
 int custom_GScr_LoadGameTypeScript()
 {
+	unsigned int i;
 	char path_for_cb[512] = "maps/mp/gametypes/_callbacksetup";
-
-	if ( strlen(fs_callbacks->string) )
-		strncpy(path_for_cb, fs_callbacks->string, sizeof(path_for_cb));
-
-	codecallback_client_spam = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_CLSpam", 0);
-	codecallback_dprintf = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_DPrintf", 0);
-	codecallback_error = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_Error", 0);
-	codecallback_fire_grenade = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_FireGrenade", 0);
-	codecallback_hitchwarning = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_HitchWarning", 0);
-	codecallback_map_turrets_load = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MapTurretsLoad", 0);
-	codecallback_map_weapons_load = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MapWeaponsLoad", 0);
-	codecallback_notify = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_Notify", 0);
-	codecallback_notifydebug = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_NotifyDebug", 0);
-	codecallback_pickup = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_Pickup", 0);
-	codecallback_playercommand = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_PlayerCommand", 0);
-	codecallback_remotecommand = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_RemoteCommand", 0);
-	codecallback_userinfochanged = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_UserInfoChanged", 0);
-	codecallback_vid_restart = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_VidRestart", 0);
-	
-	codecallback_adsbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_AdsButton", 0);
-	codecallback_attackbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_AttackButton", 0);
-	codecallback_crouchbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_CrouchButton", 0);
-	codecallback_fragbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_FragButton", 0);
-	codecallback_holdbreathbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_HoldBreathButton", 0);
- 	codecallback_leanleftbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_LeanLeftButton", 0);
- 	codecallback_leanrightbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_LeanRightButton", 0);
-	codecallback_meleebreathbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MeleeBreathButton", 0);
-	codecallback_meleebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_MeleeButton", 0);
-	codecallback_pronebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_ProneButton", 0);
-	codecallback_reloadbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_ReloadButton", 0);
-	codecallback_smokebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_SmokeButton", 0);
-	codecallback_standbutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_StandButton", 0);
- 	codecallback_usebutton = Scr_GetFunctionHandle(path_for_cb, "CodeCallback_UseButton", 0);
 
 	hook_gametype_scripts->unhook();
 	int (*GScr_LoadGameTypeScript)();
 	*(int *)&GScr_LoadGameTypeScript = hook_gametype_scripts->from;
 	int ret = GScr_LoadGameTypeScript();
 	hook_gametype_scripts->hook();
+
+	if ( strlen(fs_callbacks->string) )
+		strncpy(path_for_cb, fs_callbacks->string, sizeof(path_for_cb));
+
+	for ( i = 0; i < sizeof(callbacks)/sizeof(callbacks[0]); i++ )
+	{
+		*callbacks[i].pos = Scr_GetFunctionHandle(path_for_cb, callbacks[i].name, 0);
+		if ( *callbacks[i].pos && g_debugCallbacks->boolean )
+			Com_Printf("%s found @ %p\n", callbacks[i].name, scrVarPub.programBuffer + *callbacks[i].pos);
+	}
 
 	return ret;
 }
@@ -2968,7 +2996,7 @@ void custom_Scr_InitOpcodeLookup()
 	void (*GE_Scr_InitOpcodeLookup)();
 	*(int *)&GE_Scr_InitOpcodeLookup = hook_init_opcode->from;
 	
-	scrVarPub_t * vars = &scrVarPub;
+	scrVarPub_t *vars = &scrVarPub;
 	
 	vars->developer = 1;
 	GE_Scr_InitOpcodeLookup();
@@ -2986,7 +3014,7 @@ void custom_AddOpcodePos(int a1, int a2)
 	void (*GE_AddOpcodePos)(int, int);
 	*(int *)&GE_AddOpcodePos = hook_add_opcode->from;
 	
-	scrVarPub_t * vars = &scrVarPub;
+	scrVarPub_t *vars = &scrVarPub;
 	
 	vars->developer = 1;
 	GE_AddOpcodePos(a1, a2);
@@ -3004,7 +3032,7 @@ void custom_Scr_PrintPrevCodePos(int a1, char *a2, int a3)
 	void (*GE_Scr_PrintPrevCodePos)(int, char *, int);
 	*(int *)&GE_Scr_PrintPrevCodePos = hook_print_codepos->from;
 	
-	scrVarPub_t * vars = &scrVarPub;
+	scrVarPub_t *vars = &scrVarPub;
 	
 	vars->developer = 1;
 	GE_Scr_PrintPrevCodePos(a1, a2, a3);
@@ -5272,6 +5300,62 @@ qboolean custom_SV_ClientCommand(client_t *cl, msg_t *msg)
 	return qfalse;
 }
 
+void PrintCallbackInfo(gentity_t *ent, int callbackHook, unsigned int numArgs)
+{
+	unsigned int i;
+
+	for ( i = 0; i < sizeof(callbacks)/sizeof(callbacks[0]); i++ )
+	{
+		if ( *callbacks[i].pos == callbackHook )
+		{
+			if ( !ent )
+				Com_Printf("Calling %s with %d argument(s)\n", callbacks[i].name, numArgs);
+			else
+				Com_Printf("Calling %s with %d argument(s) on entity %d\n", callbacks[i].name, numArgs, ent - g_entities);
+			return;
+		}
+	}
+	if ( callbackHook == g_scr_data.gametype.main )
+		Com_Printf("Calling gametype::main\n");
+	else if ( callbackHook == g_scr_data.levelscript )
+		Com_Printf("Calling map::main\n");
+	else if ( callbackHook == g_scr_data.deleting )
+		Com_Printf("Calling codescripts/delete::main\n");
+	else if ( callbackHook == g_scr_data.initstructs )
+		Com_Printf("Calling codescripts/struct::initstructs\n");
+	else if ( callbackHook == g_scr_data.createstruct )
+		Com_Printf("Calling codescripts/struct::createstruct\n");
+	else
+		Com_Printf("Calling unknown callback @ 0x%x with %d argument(s)\n", callbackHook, numArgs);
+}
+
+short custom_Scr_ExecEntThread(gentity_t *ent, int callbackHook, unsigned int numArgs)
+{
+	if ( g_debugCallbacks->boolean )
+		PrintCallbackInfo(ent, callbackHook, numArgs);
+
+	hook_scr_execentthread->unhook();
+	short (*Scr_ExecEntThread)(gentity_t *ent, int callbackHook, unsigned int numArgs);
+	*(int *)&Scr_ExecEntThread = hook_scr_execentthread->from;
+	short ret = Scr_ExecEntThread(ent, callbackHook, numArgs);
+	hook_scr_execentthread->hook();
+
+	return ret;
+}
+
+short custom_Scr_ExecThread(int callbackHook, unsigned int numArgs)
+{
+	if ( g_debugCallbacks->boolean )
+		PrintCallbackInfo(NULL, callbackHook, numArgs);
+
+	hook_scr_execthread->unhook();
+	short (*Scr_ExecThread)(int callbackHook, unsigned int numArgs);
+	*(int *)&Scr_ExecThread = hook_scr_execthread->from;
+	short ret = Scr_ExecThread(callbackHook, numArgs);
+	hook_scr_execthread->hook();
+
+	return ret;
+}
 class cCallOfDuty2Pro
 {
 public:
@@ -5523,6 +5607,10 @@ public:
 		hook_g_freeentity->hook();
 		hook_g_initgentity = new cHook(0x0811E85C, int(custom_G_InitGentity));
 		hook_g_initgentity->hook();
+		hook_scr_execentthread = new cHook(0x0811B284, int(custom_Scr_ExecEntThread));
+		hook_scr_execentthread->hook();
+		hook_scr_execthread = new cHook(0x08083FD6, int(custom_Scr_ExecThread));
+		hook_scr_execthread->hook();
 
 		#if COMPILE_PLAYER == 1
 		hook_play_movement = new cHook(0x08090DAC, (int)play_movement);

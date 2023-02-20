@@ -2531,6 +2531,11 @@ typedef struct
 	#endif
 } stringIndex_t;
 
+typedef struct __attribute__((packed, aligned(2))) clientInfo_s
+{
+	byte unknown[290];
+} clientInfo_t;
+
 typedef struct bgs_s
 {
 	byte animScriptData[0xB3BC8u];
@@ -2543,8 +2548,8 @@ typedef struct bgs_s
 	int frametime;
 	float angle;
 	struct XModel *(*GetXModel)(const char *);
-	void (*CreateDObj)(struct DObjModel_s *, u_int16_t, struct XAnimTree_s *, int, int, struct clientInfo_t *);
-	u_int16_t (*AttachWeapon)(struct DObjModel_s *, u_int16_t, struct clientInfo_t *);
+	void (*CreateDObj)(struct DObjModel_s *, u_int16_t, struct XAnimTree_s *, int, int, struct clientInfo_s *);
+	u_int16_t (*AttachWeapon)(struct DObjModel_s *, u_int16_t, struct clientInfo_s *);
 	struct DObj_s *(*GetDObj)(int, int);
 	void *(*AllocXAnim)(int);
 } bgs_t;
@@ -2668,7 +2673,7 @@ typedef struct cmodel_s
 	cLeaf_t leaf;
 } cmodel_t;
 
-typedef struct __attribute__((aligned(16))) cbrush_t
+typedef struct __attribute__((aligned(16))) cbrush_s
 {
 	float mins[3];
 	int contents;
@@ -2824,6 +2829,48 @@ struct va_info_t
 	char va_string[MAX_VASTRINGS][1024];
 	int index;
 };
+
+typedef struct gameTypeScript_s
+{
+	char pscScript[64];
+	char pszName[64];
+	int bTeamBased;
+} gameTypeScript_t;
+
+typedef struct scr_gametype_data_s
+{
+	int main;
+	int startupgametype;
+	int playerconnect;
+	int playerdisconnect;
+	int playerdamage;
+	int playerkilled;
+	int votecalled;
+	int unknown;
+	int iNumGameTypes;
+	gameTypeScript_t list[32];
+} scr_gametype_data_t;
+
+typedef struct corpseInfo_s
+{
+	int *tree;
+	int entNum;
+	int time;
+	clientInfo_t ci;
+	byte falling;
+	byte pad[3];
+} corpseInfo_t;
+
+typedef struct scr_data_s
+{
+	int levelscript;
+	int gametypescript;
+	scr_gametype_data_t gametype;
+	int deleting; // delete
+	int initstructs;
+	int createstruct;
+	corpseInfo_t playerCorpseInfo[8];
+} scr_data_t;
 
 #if COD_VERSION == COD2_1_0
 static const int gentities_offset = 0x08665480;
@@ -3102,6 +3149,14 @@ static const int vec3_origin_offset = 0x0;
 static const int vec3_origin_offset = 0x0814CFC8;
 #endif
 
+#if COD_VERSION == COD2_1_0 // Not tested
+static const int g_scr_data_offset = 0x0;
+#elif COD_VERSION == COD2_1_2 // Not tested
+static const int g_scr_data_offset = 0x0;
+#elif COD_VERSION == COD2_1_3
+static const int g_scr_data_offset = 0x0884D700;
+#endif
+
 #define scrVarPub (*((scrVarPub_t*)( varpub_offset )))
 #define scrVmPub (*((scrVmPub_t*)( vmpub_offset )))
 #define scrVarGlob (((VariableValueInternal*)( varglob_offset )))
@@ -3139,6 +3194,7 @@ static const int vec3_origin_offset = 0x0814CFC8;
 #define testclient_connect_string (*((char*)( testclient_connect_string_offset )))
 #define legacyHacks ((int*)( legacyHacks_offset ))
 #define vec3_origin ((float*)( vec3_origin_offset ))
+#define g_scr_data (*((scr_data_t*)( g_scr_data_offset )))
 
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6
@@ -3267,3 +3323,9 @@ typedef enum
 	COLLISION_TEAM_ALLIES,
 	COLLISION_TEAM_NONE
 } collisionTeam_t;
+
+typedef struct callback_s
+{
+	int *pos;
+	const char *name;
+} callback_t;
