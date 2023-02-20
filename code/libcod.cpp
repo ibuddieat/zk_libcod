@@ -1,5 +1,7 @@
 #include "gsc.hpp"
 
+#include <signal.h>
+
 #if COMPILE_CUSTOM_VOICE == 1
 #include <pthread.h>
 #endif
@@ -5356,6 +5358,30 @@ short custom_Scr_ExecThread(int callbackHook, unsigned int numArgs)
 
 	return ret;
 }
+
+void ServerCrash(int sig)
+{
+	int fd;
+	FILE *fp;
+	void *array[20];
+	size_t size = backtrace(array, 20);
+
+	// Write to crash log ...
+	fp = fopen("./crash.log", "a");
+	if ( fp )
+	{
+		fd = fileno(fp);
+		fseek(fp, 0, SEEK_END);
+		fprintf(fp, "Error: Server crashed with signal 0x%x {%d}\n", sig, sig);
+		fflush(fp);
+		backtrace_symbols_fd(array, size, fd);
+	}
+	// ... and stderr
+	fprintf(stderr, "Error: Server crashed with signal 0x%x {%d}\n", sig, sig);
+	backtrace_symbols_fd(array, size, STDERR_FILENO);
+	exit(1);
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -5363,6 +5389,10 @@ public:
 	{
 		// Don't inherit lib of parent
 		unsetenv("LD_PRELOAD");
+
+		// Crash handlers for debugging
+		signal(SIGSEGV, ServerCrash);
+		signal(SIGABRT, ServerCrash);
 		
 		// Otherwise the printf()'s are printed at crash/end on older os/compiler versions
 		setbuf(stdout, NULL);

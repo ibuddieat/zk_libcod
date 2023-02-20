@@ -80,6 +80,7 @@ https://github.com/ibuddieat/zk_libcod (this repository)
 - Killtube~ (https://killtube.org/)
 - Enemy-Territory (https://github.com/id-Software/Enemy-Territory)
 - CoD4x Server (https://github.com/callofduty4x/CoD4x_Server)
+- Call of Duty Extended (https://github.com/xtnded/codextended)
 - Ghidra (https://github.com/NationalSecurityAgency/ghidra)
 - The Speex Project (https://www.speex.org/)
 
