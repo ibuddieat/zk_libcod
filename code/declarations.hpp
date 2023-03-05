@@ -166,6 +166,7 @@
 #define CONTENTS_WATER              0x20
 #define CONTENTS_CANSHOTCLIP        0x40
 #define CONTENTS_MISSILECLIP        0x80
+#define CONTENTS_ITEM				0x100
 #define CONTENTS_VEHICLECLIP        0x200
 #define CONTENTS_ITEMCLIP           0x400
 #define CONTENTS_SKY                0x800

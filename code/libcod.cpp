@@ -580,9 +580,15 @@ void custom_G_SetClientContents(gentity_t *ent)
 			else
 			{
 				if( player_collision[ent - g_entities] != COLLISION_TEAM_BOTH )
-					(ent->r).contents = ( CONTENTS_CANSHOTCLIP | CONTENTS_CLIPSHOT );
+				{
+					// CONTENTS_CLIPSHOT: For bullet collision
+					// CONTENTS_ITEM: For mover/elevator
+					(ent->r).contents = ( CONTENTS_CLIPSHOT | CONTENTS_ITEM );
+				}
 				else
+				{
 					(ent->r).contents = CONTENTS_BODY;
+				}
 			}
 		}
 		else
@@ -4264,7 +4270,7 @@ void custom_Script_bulletTrace(void)
 	hitCharacters = Scr_GetInt(2);
 	if ( hitCharacters == 0 )
 	{
-		contentmask = MASK_SHOT ^ CONTENTS_BODY;
+		contentmask = MASK_SHOT ^ ( CONTENTS_BODY | CONTENTS_CLIPSHOT );
 	}
 	else
 	{
@@ -4689,8 +4695,11 @@ void bullet_fire_extended_trace(trace_t *results, const vec3_t *start, const vec
 		hitEffect->s.eventParm = DirToByte(trace.normal) & 0xFF;
 		hitEffect->s.surfType = (trace.surfaceFlags >> 20) & 0x1F;
 
-		// Set contentmask to only hit player bodies (default: MASK_SHOT)
-		contentmask = CONTENTS_BODY;
+		/* Set contentmask to only hit player bodies (default: MASK_SHOT), with
+		 and without collision. We cannot use CONTENTS_CLIPSHOT here as this
+		 would include solid script_model entities. Probably negligible side-
+		 effect: Dropped weapons can still block bullets here */
+		contentmask = CONTENTS_BODY | CONTENTS_ITEM;
 	}
 	G_LocationalTrace(results, start, end, passEntityNum, contentmask, priorityMap);
 }
