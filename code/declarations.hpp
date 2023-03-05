@@ -65,6 +65,7 @@
 #define MAX_QPATH                   64
 #define MAX_SNAPSHOT_ENTITIES       1024
 #define MAX_STRINGLENGTH            1024
+#define MAX_TOTAL_ENT_LEAFS			128
 #define MAX_VASTRINGS               2
 #define MAX_VOICEFRAMESIZE          160
 #define MAX_VOICEPACKETDATALEN      256
@@ -244,8 +245,8 @@ typedef int clipHandle_t;
 
 typedef struct scr_entref_s
 {
-	uint16_t entnum;
-	uint16_t classnum;
+	u_int16_t entnum;
+	u_int16_t classnum;
 } scr_entref_t;
 
 typedef enum
@@ -308,20 +309,6 @@ typedef enum
 	HITLOC_NUM
 } hitLocation_t;
 
-typedef struct entityHandler_s
-{
-	void (*think)(struct gentity_s *);
-	void (*reached)(struct gentity_s *);
-	void (*blocked)(struct gentity_s *, struct gentity_s *);
-	void (*touch)(struct gentity_s *, struct gentity_s *, int);
-	void (*use)(struct gentity_s *, struct gentity_s *, struct gentity_s *);
-	void (*pain)(struct gentity_s *, struct gentity_s *, int, const float *, const int, const float *, hitLocation_t, const int);
-	void (*die)(struct gentity_s *, struct gentity_s *, struct gentity_s *, int, int, const int, const float *, hitLocation_t, int);
-	void (*controller)(struct gentity_s *, int *);
-	int methodOfDeath;
-	int splashMethodOfDeath;
-} entityHandler_t;
-
 typedef enum
 {
 	MOD_UNKNOWN,
@@ -340,6 +327,20 @@ typedef enum
 	MOD_TRIGGER_HURT,
 	MOD_EXPLOSIVE
 } meansOfDeath_t;
+
+typedef struct entityHandler_s
+{
+	void (*think)(gentity_t *);
+	void (*reached)(gentity_t *);
+	void (*blocked)(gentity_t *, gentity_t *);
+	void (*touch)(gentity_t *, gentity_t *, int);
+	void (*use)(gentity_t *, gentity_t *);
+	void (*pain)(gentity_t *, gentity_t *, int, int, meansOfDeath_t);
+	void (*die)(gentity_t *, gentity_t *, gentity_t *, int, meansOfDeath_t, int, float *, hitLocation_t, int);
+	void (*controller)(gentity_t *, gentity_t *);
+	int methodOfDeath;
+	int splashMethodOfDeath;
+} entityHandler_t;
 
 enum svc_ops_e
 {
@@ -692,7 +693,7 @@ typedef struct
 	unsigned int scriptsPos;
 	unsigned int builtinFunc;
 	unsigned int builtinMeth;
-	uint16_t *canonicalStrings;
+	u_int16_t *canonicalStrings;
 	const char *in_ptr;
 	const char *parseBuf;
 	byte script_loading;
@@ -958,8 +959,9 @@ typedef struct trace_s
 	int surfaceFlags;
 	int contents;
 	const char *material;
-	scr_entref_t entityNum;
-	u_int16_t hitId;
+	u_int16_t entityNum;
+	u_int16_t partName;
+	u_int16_t partGroup;
 	byte allsolid;
 	byte startsolid;
 } trace_t;
@@ -1328,12 +1330,10 @@ typedef struct playerState_s
 	int damageCount;
 	int stats[6];
 	int ammo[128];
-	int ammoclip[128]; // 836
-	unsigned int weapons[2];
-	unsigned int weaponold[2];
-	byte weaponslots[5];
-	unsigned int weaponrechamber[2];
-	int unknown[2];
+	int ammoclip[128];
+	unsigned int weapons[4];
+	byte weaponslots[8];
+	unsigned int weaponrechamber[4];
 	vec3_t mins;
 	vec3_t maxs;
 	float proneDirection;
@@ -1423,34 +1423,38 @@ struct gclient_s
 	int damage_blood;
 	vec3_t damage_from;
 	qboolean damage_fromWorld;
-	int accurateCount; // N/A
-	int accuracy_shots; // N/A
-	int accuracy_hits; // N/A
+	int accurateCount;
+	int accuracy_shots;
+	int accuracy_hits;
 	int inactivityTime;
 	qboolean inactivityWarning;
-	int playerTalkTime;
-	int rewardTime; // N/A
-	float antilagShootTime; // 10256
-	int unknown_space[2];
-	int unknownClientEndFrameVar;
-	int unknown_space2[3];
-	gentity_t *lookAtEntity; // needs a NULL check, otherwise crash.
-	int activateEntNumber;
-	int activateTime;
-	int nonPVSFriendlyEntNum;
-	int pingPlayerTime;
-	int damageFeedBackTime;
-	vec2_t damageFeedBackDir;
+	int lastVoiceTime;
+	int switchTeamTime;
+	float currentAimSpreadScale; // 10256
+	gentity_t *persistantPowerup;
+	int portalID;
+	int dropWeaponTime;
+	int sniperRifleFiredTime;
+	float sniperRifleMuzzleYaw;
+	int PCSpecialPickedUpCount;
+	gentity_t *pLookatEnt; // needs a NULL check, otherwise crash.
+	int useHoldEntity;
+	int useHoldTime;
+	int iLastCompassFriendlyInfoEnt;
+	int compassPingTime;
+	int damageTime;
+	float v_dmg_roll;
+	float v_dmg_pitch;
 	vec3_t swayViewAngles; // 10316
 	vec3_t swayOffset;
 	vec3_t swayAngles;
 	vec3_t vLastMoveAng;
-	float fLastIdleFactor; // cod4, unconfirmed here
+	float fLastIdleFactor;
 	vec3_t vGunOffset;
-	vec3_t vGunAngle;
-	int weapIdleTime; // cod4, unconfirmed here
+	vec3_t vGunSpeed;
+	int weapIdleTime;
 	int lastServerTime;
-	int lastActivateTime;
+	int lastSpawnTime;
 }; // verified
 
 struct turretInfo_s
@@ -1475,9 +1479,9 @@ struct turretInfo_s
 
 struct item_ent_t
 {
-	int ammoCount;
-	int clipAmmoCount;
-	int index;
+	int count;
+	u_int16_t index;
+	u_int16_t pad;
 };
 
 struct trigger_ent_t
@@ -1515,8 +1519,8 @@ typedef struct tagInfo_s
 {
 	struct gentity_s *parent;
 	struct gentity_s *next;
-	uint16_t name;
-	uint16_t pad;
+	u_int16_t name;
+	u_int16_t pad;
 	int index;
 	float axis[4][3];
 	float parentInvAxis[4][3];
@@ -1531,9 +1535,9 @@ struct gentity_s
 	byte physicsObject; // 352
 	byte takedamage; // 353
 	byte active; // 354
-	byte nopickup; // 355 ?
+	byte nopickup; // 355
 	byte model; // 356
-	byte dobjbits; // 357 ?
+	byte attachIgnoreCollision; // 357
 	byte handler; // 358
 	byte team; // 359
 	u_int16_t classname; // 360
@@ -1546,24 +1550,24 @@ struct gentity_s
 	qboolean freeAfterEvent; // 380
 	qboolean unlinkAfterEvent; // 384
 	int clipmask; // 388
-	int framenum; // 392
+	int processedFrame; // 392
 	gentity_t *parent; // 396
 	int nextthink; // 400
-	int healthPoints; // 404
-	int reservedHealth; // 408 ?
+	int health; // 404
+	int maxHealth; // 408
 	int damage; // 412
 	int count; // 416
-	union { // 420
+	gentity_t *chain; // 420
+	union { // 424
 		struct item_ent_t item[2];
 		struct trigger_ent_t trigger;
 		struct mover_ent_t mover;
 		struct corpse_ent_t corpse;
-	} params;
-	int unknown1; // 516 ?
+	};
 	tagInfo_t *tagInfo; // 520
 	gentity_t *tagChildren; // 524
-	uint16_t attachModelNames[6];
-	uint16_t attachTagNames[6];
+	u_int16_t attachModelNames[6];
+	u_int16_t attachTagNames[6];
 	int useCount; // 552
 	gentity_t *nextFree; // 556
 }; // verified
@@ -1833,6 +1837,12 @@ typedef struct svEntity_s
 	float linkmax[2];
 } svEntity_t;
 
+typedef struct sharedEntity_s
+{
+	entityState_t s;
+	entityShared_t r;
+} sharedEntity_t;
+
 typedef struct
 {
 	serverState_t state;
@@ -1840,8 +1850,8 @@ typedef struct
 	int start_frameTime;
 	int	checksumFeed;
 	int timeResidual;
-	int unk; // ?
-	struct cmodel_s *models[MAX_MODELS]; // ?
+	int nextFrameTime;
+	struct cmodel_s *models[MAX_MODELS];
 	char *configstrings[MAX_CONFIGSTRINGS];
 	svEntity_t svEntities[MAX_GENTITIES];
 	char *entityParsePoint;
@@ -1888,28 +1898,13 @@ typedef enum weapClass_t
 	WEAPCLASS_NUM = 0xA
 } weapClass_t;
 
-typedef enum ImpactType_t
+typedef enum weapSlot_t
 {
-	IMPACT_TYPE_NONE = 0x0,
-	IMPACT_TYPE_BULLET_SMALL = 0x1,
-	IMPACT_TYPE_BULLET_LARGE = 0x2,
-	IMPACT_TYPE_BULLET_AP = 0x3,
-	IMPACT_TYPE_SHOTGUN = 0x4,
-	IMPACT_TYPE_GRENADE_BOUNCE = 0x5,
-	IMPACT_TYPE_GRENADE_EXPLODE = 0x6,
-	IMPACT_TYPE_ROCKET_EXPLODE = 0x7,
-	IMPACT_TYPE_PROJECTILE_DUD = 0x8,
-	IMPACT_TYPE_COUNT = 0x9
-} ImpactType_t;
-
-typedef enum weapInventoryType_t
-{
-	WEAPINVENTORY_PRIMARY = 0x0,
-	WEAPINVENTORY_OFFHAND = 0x1,
-	WEAPINVENTORY_ITEM = 0x2,
-	WEAPINVENTORY_ALTMODE = 0x3,
-	WEAPINVENTORYCOUNT = 0x4
-} weapInventoryType_t;
+	WEAPSLOT_NONE = 0x0,
+	WEAPSLOT_PRIMARY = 0x1,
+	WEAPSLOT_PRIMARYB = 0x2,
+	WEAPSLOT_NUM = 0x3
+} weapSlot_t;
 
 typedef enum OffhandClass_t
 {
@@ -1934,14 +1929,6 @@ typedef enum weapOverlayReticle_t
 	WEAPOVERLAYRETICLE_NUM = 0x2
 } weapOverlayReticle_t;
 
-typedef enum weaponIconRatioType_t
-{
-	WEAPON_ICON_RATIO_1TO1 = 0x0,
-	WEAPON_ICON_RATIO_2TO1 = 0x1,
-	WEAPON_ICON_RATIO_4TO1 = 0x2,
-	WEAPON_ICON_RATIO_COUNT = 0x3
-} weaponIconRatioType_t;
-
 typedef enum weapProjExposion_t
 {
 	WEAPPROJEXP_GRENADE = 0x0,
@@ -1960,54 +1947,53 @@ typedef struct WeaponDef_t
 	const char *szInternalName;
 	const char *szDisplayName;
 	const char *szOverlayName;
-	const char *szViewModelName;
-	const char *szHandModelName;
-	int unknown;
-	const char *szXAnims[22];
+	const char *szGunXModel;
+	const char *szHandXModel;
+	const char *szXAnims[23];
 	const char *szModeName;
 	int playerAnimType;
 	weapType_t weapType;
 	weapClass_t weapClass;
-	ImpactType_t impactType;
-	weapInventoryType_t inventoryType;
-	OffhandClass_t offhandClass; // ? not confirmed
-	weapStance_t stance; // ? not confirmed
-	FxEffectDef_t *viewFlashEffect;
-	FxEffectDef_t *worldFlashEffect;
-	snd_alias_list_t *pickupSound;
-	snd_alias_list_t *ammoPickupSound;
-	snd_alias_list_t *projectileSound;
-	snd_alias_list_t *pullbackSound;
-	snd_alias_list_t *fireSound;
-	snd_alias_list_t *fireSoundPlayer;
-	snd_alias_list_t *fireLoopSound;
-	snd_alias_list_t *fireLoopSoundPlayer;
-	snd_alias_list_t *fireStopSound;
-	snd_alias_list_t *fireStopSoundPlayer;
-	snd_alias_list_t *fireLastSound;
-	snd_alias_list_t *fireLastSoundPlayer;
+	weapSlot_t weapSlot;
+	OffhandClass_t offhandClass;
+	int bSlotStackable;
+	weapStance_t stance;
+	FxEffectDef_t *szViewFlashEffect;
+	FxEffectDef_t *szWorldFlashEffect;
+	snd_alias_list_t *szPickupSound;
+	snd_alias_list_t *szAmmoPickupSound;
+	snd_alias_list_t *szProjectileSound;
+	snd_alias_list_t *szPullbackSound;
+	snd_alias_list_t *szFireSound;
+	snd_alias_list_t *szFireSoundPlayer;
+	snd_alias_list_t *szFireLoopSound;
+	snd_alias_list_t *szFireLoopSoundPlayer;
+	snd_alias_list_t *szFireStopSound;
+	snd_alias_list_t *szFireStopSoundPlayer;
+	snd_alias_list_t *szFireLastSound;
+	snd_alias_list_t *szFireLastSoundPlayer;
 	snd_alias_list_t *meleeSwipeSound;
-	snd_alias_list_t *rechamberSound;
-	snd_alias_list_t *rechamberSoundPlayer;
-	snd_alias_list_t *reloadSound;
-	snd_alias_list_t *reloadSoundPlayer;
-	snd_alias_list_t *reloadEmptySound;
-	snd_alias_list_t *reloadEmptySoundPlayer;
-	snd_alias_list_t *reloadStartSound;
-	snd_alias_list_t *reloadStartSoundPlayer;
-	snd_alias_list_t *reloadEndSound;
-	snd_alias_list_t *reloadEndSoundPlayer;
-	snd_alias_list_t *altSwitchSound;
-	snd_alias_list_t *raiseSound;
-	snd_alias_list_t *putawaySound;
-	snd_alias_list_t *noteTrackSoundA;
-	snd_alias_list_t *noteTrackSoundB;
-	snd_alias_list_t *noteTrackSoundC;
-	snd_alias_list_t *noteTrackSoundD;
-	FxEffectDef_t *shellEjectEffect;
-	FxEffectDef_t *lastShotEjectEffect;
-	Material_t *reticleCenter;
-	Material_t *reticleSide;
+	snd_alias_list_t *szRechamberSound;
+	snd_alias_list_t *szRechamberSoundPlayer;
+	snd_alias_list_t *szReloadSound;
+	snd_alias_list_t *szReloadSoundPlayer;
+	snd_alias_list_t *szReloadEmptySound;
+	snd_alias_list_t *szReloadEmptySoundPlayer;
+	snd_alias_list_t *szReloadStartSound;
+	snd_alias_list_t *szReloadStartSoundPlayer;
+	snd_alias_list_t *szReloadEndSound;
+	snd_alias_list_t *szReloadEndSoundPlayer;
+	snd_alias_list_t *szRaiseSound;
+	snd_alias_list_t *szAltSwitchSound;
+	snd_alias_list_t *szPutawaySound;
+	snd_alias_list_t *szNoteTrackSoundA;
+	snd_alias_list_t *szNoteTrackSoundB;
+	snd_alias_list_t *szNoteTrackSoundC;
+	snd_alias_list_t *szNoteTrackSoundD;
+	FxEffectDef_t *szShellEjectEffect;
+	FxEffectDef_t *szLastShotEjectEffect;
+	Material_t *szReticleCenter;
+	Material_t *szReticleSide;
 	int iReticleCenterSize;
 	int iReticleSideSize;
 	int iReticleMinOfs;
@@ -2029,9 +2015,9 @@ typedef struct WeaponDef_t
 	float fStandRotMinSpeed;
 	float fDuckedRotMinSpeed;
 	float fProneRotMinSpeed;
-	const char *worldModel;
-	Material_t *hudIcon;
-	Material_t *modeIcon;
+	const char *szWorldModel;
+	Material_t *szHudIcon;
+	Material_t *szModeIcon;
 	int iStartAmmo;
 	const char *szAmmoName;
 	int iAmmoIndex;
@@ -2066,18 +2052,18 @@ typedef struct WeaponDef_t
 	int iAltRaiseTime;
 	int quickDropTime;
 	int quickRaiseTime;
-	int fuseTime;
+	int iFuseTime;
 	float autoAimRange;
-	float aimAssistRange;
-	float aimAssistRangeAds;
-	float aimPadding;
+	float slowdownAimRange;
+	float slowdownAimRangeAds;
+	float lockonAimRange;
+	float lockonAimRangeAds;
 	float enemyCrosshairRange;
-	int crosshairColorChange;
-	float moveSpeedScale;
+	float fMoveSpeedScale;
 	float fAdsZoomFov;
 	float fAdsZoomInFrac;
 	float fAdsZoomOutFrac;
-	Material_t *overlayMaterial;
+	Material_t *szOverlayMaterial;
 	weapOverlayReticle_t overlayReticle;
 	float overlayWidth;
 	float overlayHeight;
@@ -2121,25 +2107,25 @@ typedef struct WeaponDef_t
 	float adsSwayVertScale;
 	int bRifleBullet;
 	int armorPiercing;
-	int semiAuto;
+	int bSemiAuto;
 	int bBoltAction;
-	int aimDownSight;
+	int bADSPositionInfo;
 	int bRechamberWhileAds;
 	float adsViewErrorMin;
 	float adsViewErrorMax;
 	int bCookOffHold;
 	int bClipOnly;
-	int cancelAutoHolsterWhenEmpty; // ?
-	int suppressAmmoReserveDisplay; // ?
+	int bWideListIcon;
+	int bADSFire;
 	Material_t *killIcon;
-	weaponIconRatioType_t killIconRatio; // ?
+	int wideKillIcon;
 	int flipKillIcon;
 	int bNoPartialReload;
 	int bSegmentedReload;
 	int iReloadAmmoAdd;
 	int iReloadStartAdd;
 	const char *szAltWeaponName;
-	unsigned int altWeaponIndex;
+	unsigned int iAltWeaponIndex;
 	int iDropAmmoMin;
 	int iDropAmmoMax;
 	int iExplosionRadius;
@@ -2147,15 +2133,15 @@ typedef struct WeaponDef_t
 	int iExplosionOuterDamage;
 	int iProjectileSpeed;
 	int iProjectileSpeedUp;
-	const char *projectileModel;
+	const char *szProjectileModel;
 	weapProjExposion_t projExplosion;
-	FxEffectDef_t *projExplosionEffect;
-	snd_alias_list_t *projExplosionSound;
+	FxEffectDef_t *szProjExplosionEffect;
+	snd_alias_list_t *szProjExplosionSound;
 	int bProjImpactExplode;
 	float parallelBounce[23];
 	float perpendicularBounce[23];
-	FxEffectDef_t *projTrailEffect;
-	int projectileDLight; // here or after vProjectileColor
+	FxEffectDef_t *szProjTrailEffect;
+	int iProjectileDLight;
 	float vProjectileColor[3];
 	float fAdsAimPitch;
 	float fAdsCrosshairInFrac;
@@ -2197,10 +2183,9 @@ typedef struct WeaponDef_t
 	float fHipViewScatterMax;
 	float fightDist;
 	float maxDist;
-	const char *aiVsAiAccuracyGraph;
-	const char *aiVsPlayerAccuracyGraph;
+	const char *accuracyGraphName[2];
+	int accuracyGraphKnots[2];
 	int accuracyGraphKnotCount[2];
-	int originalAccuracyGraphKnotCount[2];
 	int iPositionReloadTransTime;
 	float leftArc;
 	float rightArc;
@@ -2209,10 +2194,8 @@ typedef struct WeaponDef_t
 	float accuracy;
 	float aiSpread;
 	float playerSpread;
-	int minVertTurnSpeed;
-	int minHorTurnSpeed;
-	int maxVertTurnSpeed;
-	int maxHorTurnSpeed;
+	float minTurnSpeed[2];
+	float maxTurnSpeed[2];
 	float pitchConvergenceTime;
 	float yawConvergenceTime;
 	float suppressTime;
@@ -2235,7 +2218,6 @@ typedef struct WeaponDef_t
 	float destabilizationTimeReductionRatio;
 	float destabilizationAngleMax;
 	int destabilizeDistance;
-	int unknown5; // here or before destabilize vars
 	float locationDamageMultipliers[19];
 	const char *fireRumble;
 	const char *meleeImpactRumble;
@@ -2342,10 +2324,10 @@ typedef struct XModelStreamInfo_s
 
 typedef struct XModel_s
 {
-	char numBones;
+	char numBones; // parts
 	char numRootBones;
 	u_int16_t *boneNames;
-	char *parentList;
+	char *parentList; // lodInfo
 	byte unk[72];
 	XModelCollSurf_t *collSurfs; // 84
 	int numCollSurfs; // 88
@@ -2355,7 +2337,7 @@ typedef struct XModel_s
 	vec3_t maxs;
 	short numLods; // 124
 	short collLod;
-	XModelStreamInfo_t streamInfo; // 128
+	XModelStreamInfo_t xskins; // 128
 	int memUsage; // 132
 	const char *name; // 136
 	char flags; // 140
@@ -2375,24 +2357,30 @@ typedef struct DSkelPartBits_s
 	int skel[4];
 } DSkelPartBits_t;
 
-typedef struct DSkel_s
+typedef struct DObjAnimMat_s
 {
-	DSkelPartBits_t *partBits;
-	int timeStamp;
-	DObjSkeletonPartMatrix_t *mat;
-} DSkel_t;
+	vec4_t quat;
+	vec3_t trans;
+	float transWeight;
+} DObjAnimMat_t;
 
 typedef struct DObj_s
 {
 	int *tree;
-	DSkel_t skel;
+	DSkelPartBits_t *skel;
+	int timeStamp;
+	DObjAnimMat_t *animToModel;
 	unsigned short duplicateParts; // 16
-	int unk2;
+	int locked; // probably not int
 	byte numModels; // 24
 	byte numBones; // 25
-	byte duplicatePartsSize; // 26
+	byte ignoreCollision; // 26
 	byte pad;
-	XModel_t *models; // 28
+	byte models[32]; // 28 ?
+	int modelParents[2]; // ?
+	int matOffset[2]; // ?
+	vec3_t mins;
+	vec3_t maxs;
 } DObj_t;
 
 struct pmove_t
@@ -2531,11 +2519,6 @@ typedef struct
 	short sound_file_stop;
 	#endif
 } stringIndex_t;
-
-typedef struct __attribute__((packed, aligned(2))) clientInfo_s
-{
-	byte unknown[290];
-} clientInfo_t;
 
 typedef struct bgs_s
 {
@@ -2693,13 +2676,12 @@ CollisionEdge_t;
 
 typedef struct
 {
-	float normal[3];
-	float distance;
-	float unknown[8];
-	unsigned int vertex_id[3];
-	int edge_id[3];
-}
-CollisionTriangle_t;
+	vec4_t plane;
+	vec4_t svec;
+	vec4_t tvec;
+	unsigned int verts[3];
+	unsigned int edges[3];
+} CollisionTriangle_t;
 
 typedef void DynEntityDef;
 typedef void DynEntityPose;
@@ -2847,10 +2829,157 @@ typedef struct scr_gametype_data_s
 	int playerdamage;
 	int playerkilled;
 	int votecalled;
-	int unknown;
+	int playervote;
 	int iNumGameTypes;
 	gameTypeScript_t list[32];
 } scr_gametype_data_t;
+
+typedef enum
+{
+	ANIM_MT_UNUSED = 0,
+	ANIM_MT_IDLE = 1,
+	ANIM_MT_IDLECR = 2,
+	ANIM_MT_IDLEPRONE = 3,
+	ANIM_MT_WALK = 4,
+	ANIM_MT_WALKBK = 5,
+	ANIM_MT_WALKCR = 6,
+	ANIM_MT_WALKCRBK = 7,
+	ANIM_MT_WALKPRONE = 8,
+	ANIM_MT_WALKPRONEBK = 9,
+	ANIM_MT_RUN = 10,
+	ANIM_MT_RUNBK = 11,
+	ANIM_MT_RUNCR = 12,
+	ANIM_MT_RUNCRBK = 13,
+	ANIM_MT_TURNRIGHT = 14,
+	ANIM_MT_TURNLEFT = 15,
+	ANIM_MT_TURNRIGHTCR = 16,
+	ANIM_MT_TURNLEFTCR = 17,
+	ANIM_MT_CLIMBUP = 18,
+	ANIM_MT_CLIMBDOWN = 19,
+	ANIM_MT_MANTLE_ROOT = 20,
+	ANIM_MT_MANTLE_UP_57 = 21,
+	ANIM_MT_MANTLE_UP_51 = 22,
+	ANIM_MT_MANTLE_UP_45 = 23,
+	ANIM_MT_MANTLE_UP_39 = 24,
+	ANIM_MT_MANTLE_UP_33 = 25,
+	ANIM_MT_MANTLE_UP_27 = 26,
+	ANIM_MT_MANTLE_UP_21 = 27,
+	ANIM_MT_MANTLE_OVER_HIGH = 28,
+	ANIM_MT_MANTLE_OVER_MID = 29,
+	ANIM_MT_MANTLE_OVER_LOW = 30,
+	ANIM_MT_FLINCH_FORWARD = 31,
+	ANIM_MT_FLINCH_BACKWARD = 32,
+	ANIM_MT_FLINCH_LEFT = 33,
+	ANIM_MT_FLINCH_RIGHT = 34,
+	ANIM_MT_STUMBLE_FORWARD = 35,
+	ANIM_MT_STUMBLE_BACKWARD = 36,
+	ANIM_MT_STUMBLE_WALK_FORWARD = 37,
+	ANIM_MT_STUMBLE_WALK_BACKWARD = 38,
+	ANIM_MT_STUMBLE_CROUCH_FORWARD = 39,
+	ANIM_MT_STUMBLE_CROUCH_BACKWARD = 40,
+	NUM_ANIM_MOVETYPES = 41
+} scriptAnimMoveTypes_t;
+
+typedef struct animation_s
+{
+	char name[64];
+	int initialLerp;
+	float moveSpeed;
+	int duration;
+	int nameHash;
+	int flags;
+	scriptAnimMoveTypes_t movetype; // 64 bit enum?
+	int pad;
+	int noteType;
+} animation_t;
+
+typedef struct lerpFrame_s
+{
+	float yawAngle;
+	int yawing;
+	float pitchAngle;
+	int pitching;
+	int animationNumber;
+	animation_t *animation;
+	int animationTime;
+	vec3_t oldFramePos;
+	float animSpeedScale;
+	int oldFrameSnapshotTime;
+} lerpFrame_t;
+
+typedef struct
+{
+	u_int16_t flags;
+	u_int16_t children;
+} XAnimParent;
+
+typedef struct
+{
+	u_int16_t numAnims;
+	u_int16_t parent;
+	union
+	{
+		int parts;
+		XAnimParent *s;
+	};
+} XAnimEntry;
+
+typedef struct XAnim_s
+{
+	const char *debugName;
+	unsigned int size;
+	const char **debugAnimNames;
+	XAnimEntry entries;
+} XAnim_t;
+
+typedef struct XAnimTree_s
+{
+	XAnim_t *anims;
+	u_int16_t entnum;
+	byte bAbs;
+	byte bUseGoalWeight;
+	u_int16_t infoArray; // XBoneInfo * ? XModelCollTri_t * ?
+} XAnimTree_t;
+
+typedef struct XModelCollTri_s
+{
+	vec4_t plane;
+	vec4_t svec;
+	vec4_t tvec;
+} XModelCollTri_t;
+
+typedef struct clientInfo_s
+{
+	int infoValid;
+	int nextValid;
+	int clientNum;
+	char name[32];
+	team_t team;
+	team_t oldteam;
+	int score;
+	int location;
+	int health;
+	char model[64];
+	char attachModelNames[6][64];
+	char attachTagNames[6][64];
+	lerpFrame_t legs;
+	lerpFrame_t torso;
+	float lerpMoveDir;
+	float lerpLean;
+	vec3_t playerAngles;
+	int leftHandGun;
+	int dobjDirty;
+	vec3_t angles[6];
+	vec3_t tag_origin_angles;
+	vec3_t tag_origin_offset;
+	unsigned int clientConditions[9][2];
+	XAnimTree_t *pXAnimTree;
+	int iDObjWeapon;
+	int stanceTransitionTime;
+	int turnAnimEndTime;
+	byte turnAnimType;
+	byte pad[3];
+} clientInfo_t;
 
 typedef struct corpseInfo_s
 {
@@ -2867,11 +2996,58 @@ typedef struct scr_data_s
 	int levelscript;
 	int gametypescript;
 	scr_gametype_data_t gametype;
-	int deleting; // delete
+	int delete_;
 	int initstructs;
 	int createstruct;
 	corpseInfo_t playerCorpseInfo[8];
 } scr_data_t;
+
+typedef struct areaParms_s
+{
+	const float *start;
+	const float *mins;
+	const float *maxs;
+	int *list;
+	int count;
+	int maxcount;
+	int contentmask;
+	int results; // probably not int
+} areaParms_t;
+
+typedef struct worldContents_s
+{
+	int contentsStaticModels;
+	int contentsEntities;
+	u_int16_t entities;
+	u_int16_t staticModels;
+} worldContents_t;
+
+typedef struct __attribute__((packed, aligned(4))) worldTree_s
+{
+	float dist;
+	u_int16_t axis;
+	union
+	{
+		u_int16_t parent;
+		u_int16_t nextFree;
+	};
+	u_int16_t child[2];
+} worldTree_t;
+
+typedef struct worldSector_s
+{
+	worldContents_t contents;
+	worldTree_t tree;
+} worldSector_t;
+
+typedef struct cm_world_s
+{
+	float mins[3];
+	float maxs[3];
+	u_int16_t freeHead;
+	u_int16_t gap;
+	worldSector_t sectors[1024];
+} cm_world_t;
 
 #if COD_VERSION == COD2_1_0
 static const int gentities_offset = 0x08665480;
@@ -2888,9 +3064,6 @@ static const int gclients_offset = 0x08705480;
 #elif COD_VERSION == COD2_1_3
 static const int gclients_offset = 0x087A2500;
 #endif
-
-#define g_entities ((gentity_t*)(gentities_offset))
-#define g_clients ((gclient_t*)(gclients_offset))
 
 #if COD_VERSION == COD2_1_0
 static const int varpub_offset = 0x08394000;
@@ -3158,6 +3331,27 @@ static const int g_scr_data_offset = 0x0;
 static const int g_scr_data_offset = 0x0884D700;
 #endif
 
+#if COD_VERSION == COD2_1_0 // Not tested
+static const int actorLocationalMins_offset = 0x0;
+static const int actorLocationalMaxs_offset = 0x0;
+#elif COD_VERSION == COD2_1_2 // Not tested
+static const int actorLocationalMins_offset = 0x0;
+static const int actorLocationalMaxs_offset = 0x0;
+#elif COD_VERSION == COD2_1_3
+static const int actorLocationalMins_offset = 0x0817DB88;
+static const int actorLocationalMaxs_offset = 0x0817DB94;
+#endif
+
+#if COD_VERSION == COD2_1_0 // Not tested
+static const int cm_world_offset = 0x0;
+#elif COD_VERSION == COD2_1_2 // Not tested
+static const int cm_world_offset = 0x0;
+#elif COD_VERSION == COD2_1_3
+static const int cm_world_offset = 0x08189000;
+#endif
+
+#define g_entities ((gentity_t*)(gentities_offset))
+#define g_clients ((gclient_t*)(gclients_offset))
 #define scrVarPub (*((scrVarPub_t*)( varpub_offset )))
 #define scrVmPub (*((scrVmPub_t*)( vmpub_offset )))
 #define scrVarGlob (((VariableValueInternal*)( varglob_offset )))
@@ -3196,6 +3390,9 @@ static const int g_scr_data_offset = 0x0884D700;
 #define legacyHacks ((int*)( legacyHacks_offset ))
 #define vec3_origin ((float*)( vec3_origin_offset ))
 #define g_scr_data (*((scr_data_t*)( g_scr_data_offset )))
+#define actorLocationalMins ((float*)( actorLocationalMins_offset ))
+#define actorLocationalMaxs ((float*)( actorLocationalMaxs_offset ))
+#define cm_world (*((cm_world_t*)(cm_world_offset)))
 
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6
@@ -3216,7 +3413,13 @@ static const int g_scr_data_offset = 0x0884D700;
  static_assert((sizeof(gitem_t) == 44), "ERROR: gitem_t size is invalid!");
  static_assert((sizeof(XModel_t) == 144), "ERROR: XModel_t size is invalid!");
  static_assert((sizeof(scrStringGlob_t) == 65544), "ERROR: scrStringGlob_t size is invalid!");
- 
+ static_assert((sizeof(worldContents_s) == 12), "ERROR: worldContents_s size is invalid!");
+ static_assert((sizeof(worldTree_t) == 12), "ERROR: worldTree_t size is invalid!");
+ static_assert((sizeof(worldSector_t) == 24), "ERROR: worldSector_t size is invalid!");
+ static_assert((sizeof(clientInfo_t) == 1208), "ERROR: clientInfo_t size is invalid!");
+ static_assert((sizeof(animation_t) == 96), "ERROR: animation_t size is invalid!");
+ static_assert((sizeof(scr_data_t) == 14072), "ERROR: scr_data_t size is invalid!");
+
 #endif
 
 #endif

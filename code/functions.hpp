@@ -2289,4 +2289,301 @@ static const Cbuf_ExecuteText_t Cbuf_ExecuteText = (Cbuf_ExecuteText_t)0x0; // N
 static const Cbuf_ExecuteText_t Cbuf_ExecuteText = (Cbuf_ExecuteText_t)0x0805FE3C;
 #endif
 
+typedef void (*AddPointToBounds_t)(float *origin, float *mins, float *maxs);
+#if COD_VERSION == COD2_1_0
+static const AddPointToBounds_t AddPointToBounds = (AddPointToBounds_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const AddPointToBounds_t AddPointToBounds = (AddPointToBounds_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const AddPointToBounds_t AddPointToBounds = (AddPointToBounds_t)0x080A896E;
+#endif
+
+typedef int (*CM_AreaEntities_t)(float *mins, float *maxs, int *entityList, int maxcount, int contentmask);
+#if COD_VERSION == COD2_1_0
+static const CM_AreaEntities_t CM_AreaEntities = (CM_AreaEntities_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const CM_AreaEntities_t CM_AreaEntities = (CM_AreaEntities_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const CM_AreaEntities_t CM_AreaEntities = (CM_AreaEntities_t)0x0805E986;
+#endif
+
+typedef int (*SV_SightTraceToEntity_t)(float *start, float *mins, float *maxs, float *end, int entityNum, int contentmask);
+#if COD_VERSION == COD2_1_0
+static const SV_SightTraceToEntity_t SV_SightTraceToEntity = (SV_SightTraceToEntity_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_SightTraceToEntity_t SV_SightTraceToEntity = (SV_SightTraceToEntity_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_SightTraceToEntity_t SV_SightTraceToEntity = (SV_SightTraceToEntity_t)0x0809E05E;
+#endif
+
+typedef void (*Activate_trigger_damage_t)(gentity_t *trigger, gentity_t *inflictor, int damage, meansOfDeath_t meansOfDeath);
+#if COD_VERSION == COD2_1_0
+static const Activate_trigger_damage_t Activate_trigger_damage = (Activate_trigger_damage_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Activate_trigger_damage_t Activate_trigger_damage = (Activate_trigger_damage_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Activate_trigger_damage_t Activate_trigger_damage = (Activate_trigger_damage_t)0x0811CCB6;
+#endif
+
+typedef void (*SnapAngles_t)(float *angles);
+#if COD_VERSION == COD2_1_0
+static const SnapAngles_t SnapAngles = (SnapAngles_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SnapAngles_t SnapAngles = (SnapAngles_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SnapAngles_t SnapAngles = (SnapAngles_t)0x0809C5C2;
+#endif
+
+typedef double (*RadiusFromBounds2_t)(float *mins, float *maxs);
+#if COD_VERSION == COD2_1_0
+static const RadiusFromBounds2_t RadiusFromBounds2 = (RadiusFromBounds2_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const RadiusFromBounds2_t RadiusFromBounds2 = (RadiusFromBounds2_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const RadiusFromBounds2_t RadiusFromBounds2 = (RadiusFromBounds2_t)0x080A8660;
+#endif
+
+typedef double (*RadiusFromBounds_t)(float *mins, float *maxs);
+#if COD_VERSION == COD2_1_0
+static const RadiusFromBounds_t RadiusFromBounds = (RadiusFromBounds_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const RadiusFromBounds_t RadiusFromBounds = (RadiusFromBounds_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const RadiusFromBounds_t RadiusFromBounds = (RadiusFromBounds_t)0x080A85D2;
+#endif
+
+typedef int (*CM_BoxLeafnums_t)(float *mins, float *maxs, int *list, int listsize, int *lastLeaf);
+#if COD_VERSION == COD2_1_0
+static const CM_BoxLeafnums_t CM_BoxLeafnums = (CM_BoxLeafnums_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const CM_BoxLeafnums_t CM_BoxLeafnums = (CM_BoxLeafnums_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const CM_BoxLeafnums_t CM_BoxLeafnums = (CM_BoxLeafnums_t)0x08058D6A;
+#endif
+
+typedef int (*CM_LeafCluster_t)(int leafNum);
+#if COD_VERSION == COD2_1_0
+static const CM_LeafCluster_t CM_LeafCluster = (CM_LeafCluster_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const CM_LeafCluster_t CM_LeafCluster = (CM_LeafCluster_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const CM_LeafCluster_t CM_LeafCluster = (CM_LeafCluster_t)0x080526F8;
+#endif
+
+typedef void (*CM_UnlinkEntity_t)(svEntity_t *ent);
+#if COD_VERSION == COD2_1_0
+static const CM_UnlinkEntity_t CM_UnlinkEntity = (CM_UnlinkEntity_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const CM_UnlinkEntity_t CM_UnlinkEntity = (CM_UnlinkEntity_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const CM_UnlinkEntity_t CM_UnlinkEntity = (CM_UnlinkEntity_t)0x0805DCA4;
+#endif
+
+typedef void (*CM_LinkEntity_t)(svEntity_t *ent, float *absmin, float *absmax, clipHandle_t clip);
+#if COD_VERSION == COD2_1_0
+static const CM_LinkEntity_t CM_LinkEntity = (CM_LinkEntity_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const CM_LinkEntity_t CM_LinkEntity = (CM_LinkEntity_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const CM_LinkEntity_t CM_LinkEntity = (CM_LinkEntity_t)0x0805E390;
+#endif
+
+typedef void (*DObjGetBounds_t)(DObj_t *dobj, float *min, float *max);
+#if COD_VERSION == COD2_1_0
+static const DObjGetBounds_t DObjGetBounds = (DObjGetBounds_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const DObjGetBounds_t DObjGetBounds = (DObjGetBounds_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const DObjGetBounds_t DObjGetBounds = (DObjGetBounds_t)0x080BAA78;
+#endif
+
+typedef int (*SV_GEntityForSvEntity_t)(svEntity_t *svEnt);
+#if COD_VERSION == COD2_1_0
+static const SV_GEntityForSvEntity_t SV_GEntityForSvEntity = (SV_GEntityForSvEntity_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_GEntityForSvEntity_t SV_GEntityForSvEntity = (SV_GEntityForSvEntity_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_GEntityForSvEntity_t SV_GEntityForSvEntity = (SV_GEntityForSvEntity_t)0x0809177C;
+#endif
+
+typedef int (*SV_EntityContact_t)(const float *mins, const float *maxs, gentity_t *gEnt);
+#if COD_VERSION == COD2_1_0
+static const SV_EntityContact_t SV_EntityContact = (SV_EntityContact_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_EntityContact_t SV_EntityContact = (SV_EntityContact_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_EntityContact_t SV_EntityContact = (SV_EntityContact_t)0x08091AD6;
+#endif
+
+typedef void (*Touch_Multi_t)(gentity_t *trigger, gentity_t *player, int touch);
+#if COD_VERSION == COD2_1_0
+static const Touch_Multi_t Touch_Multi = (Touch_Multi_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Touch_Multi_t Touch_Multi = (Touch_Multi_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Touch_Multi_t Touch_Multi = (Touch_Multi_t)0x0811C66E;
+#endif
+
+typedef void (*hurt_use_t)(gentity_t *trigger, gentity_t *player);
+#if COD_VERSION == COD2_1_0
+static const hurt_use_t hurt_use = (hurt_use_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const hurt_use_t hurt_use = (hurt_use_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const hurt_use_t hurt_use = (hurt_use_t)0x0811CA92;
+#endif
+
+typedef void (*hurt_touch_t)(gentity_t *trigger, gentity_t *player, int touch);
+#if COD_VERSION == COD2_1_0
+static const hurt_touch_t hurt_touch = (hurt_touch_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const hurt_touch_t hurt_touch = (hurt_touch_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const hurt_touch_t hurt_touch = (hurt_touch_t)0x0811C98C;
+#endif
+
+typedef void (*Use_trigger_damage_t)(gentity_t *trigger, gentity_t *player);
+#if COD_VERSION == COD2_1_0
+static const Use_trigger_damage_t Use_trigger_damage = (Use_trigger_damage_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Use_trigger_damage_t Use_trigger_damage = (Use_trigger_damage_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Use_trigger_damage_t Use_trigger_damage = (Use_trigger_damage_t)0x0811CD62;
+#endif
+
+typedef void (*Pain_trigger_damage_t)(gentity_t *trigger, gentity_t *player, int damage, int param_4, meansOfDeath_t meansOfDeath);
+#if COD_VERSION == COD2_1_0
+static const Pain_trigger_damage_t Pain_trigger_damage = (Pain_trigger_damage_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Pain_trigger_damage_t Pain_trigger_damage = (Pain_trigger_damage_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Pain_trigger_damage_t Pain_trigger_damage = (Pain_trigger_damage_t)0x0811CD92;
+#endif
+
+typedef void (*Die_trigger_damage_t)(gentity_t *trigger, gentity_t *inflictor, gentity_t *player, int damage, meansOfDeath_t meansOfDeath, int iWeapon, float *vDir, hitLocation_t hitLoc, int psTimeOffset);
+#if COD_VERSION == COD2_1_0
+static const Die_trigger_damage_t Die_trigger_damage = (Die_trigger_damage_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Die_trigger_damage_t Die_trigger_damage = (Die_trigger_damage_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Die_trigger_damage_t Die_trigger_damage = (Die_trigger_damage_t)0x0811CDD4;
+#endif
+
+typedef void (*Reached_ScriptMover_t)(gentity_t *trigger);
+#if COD_VERSION == COD2_1_0
+static const Reached_ScriptMover_t Reached_ScriptMover = (Reached_ScriptMover_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Reached_ScriptMover_t Reached_ScriptMover = (Reached_ScriptMover_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Reached_ScriptMover_t Reached_ScriptMover = (Reached_ScriptMover_t)0x08118A30;
+#endif
+
+typedef void (*G_ExplodeMissile_t)(gentity_t *missile);
+#if COD_VERSION == COD2_1_0
+static const G_ExplodeMissile_t G_ExplodeMissile = (G_ExplodeMissile_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_ExplodeMissile_t G_ExplodeMissile = (G_ExplodeMissile_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_ExplodeMissile_t G_ExplodeMissile = (G_ExplodeMissile_t)0x0810D970;
+#endif
+
+typedef void (*Touch_Item_Auto_t)(gentity_t *item, gentity_t *entity, int touch);
+#if COD_VERSION == COD2_1_0
+static const Touch_Item_Auto_t Touch_Item_Auto = (Touch_Item_Auto_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Touch_Item_Auto_t Touch_Item_Auto = (Touch_Item_Auto_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Touch_Item_Auto_t Touch_Item_Auto = (Touch_Item_Auto_t)0x08105C80;
+#endif
+
+typedef void (*player_die_t)(gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, meansOfDeath_t meansOfDeath, int iWeapon, float *vDir, hitLocation_t hitLoc, int psTimeOffset);
+#if COD_VERSION == COD2_1_0
+static const player_die_t player_die = (player_die_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const player_die_t player_die = (player_die_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const player_die_t player_die = (player_die_t)0x0810175A;
+#endif
+
+typedef void (*G_PlayerController_t)(gentity_t *trigger, gentity_t *player);
+#if COD_VERSION == COD2_1_0
+static const G_PlayerController_t G_PlayerController = (G_PlayerController_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_PlayerController_t G_PlayerController = (G_PlayerController_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_PlayerController_t G_PlayerController = (G_PlayerController_t)0x080F729A;
+#endif
+
+typedef void (*BodyEnd_t)(gentity_t *player);
+#if COD_VERSION == COD2_1_0
+static const BodyEnd_t BodyEnd = (BodyEnd_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const BodyEnd_t BodyEnd = (BodyEnd_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const BodyEnd_t BodyEnd = (BodyEnd_t)0x080FCC48;
+#endif
+
+typedef void (*turret_think_init_t)(gentity_t *turret);
+#if COD_VERSION == COD2_1_0
+static const turret_think_init_t turret_think_init = (turret_think_init_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const turret_think_init_t turret_think_init = (turret_think_init_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const turret_think_init_t turret_think_init = (turret_think_init_t)0x0810BF00;
+#endif
+
+typedef void (*turret_use_t)(gentity_t *turret, gentity_t *player);
+#if COD_VERSION == COD2_1_0
+static const turret_use_t turret_use = (turret_use_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const turret_use_t turret_use = (turret_use_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const turret_use_t turret_use = (turret_use_t)0x0810C3DE;
+#endif
+
+typedef void (*turret_think_t)(gentity_t *turret);
+#if COD_VERSION == COD2_1_0
+static const turret_think_t turret_think = (turret_think_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const turret_think_t turret_think = (turret_think_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const turret_think_t turret_think = (turret_think_t)0x0810BE6E;
+#endif
+
+typedef void (*turret_controller_t)(gentity_t *player, gentity_t *turret);
+#if COD_VERSION == COD2_1_0
+static const turret_controller_t turret_controller = (turret_controller_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const turret_controller_t turret_controller = (turret_controller_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const turret_controller_t turret_controller = (turret_controller_t)0x0810C10E;
+#endif
+
+typedef void (*DroppedItemClearOwner_t)(gentity_t *item);
+#if COD_VERSION == COD2_1_0
+static const DroppedItemClearOwner_t DroppedItemClearOwner = (DroppedItemClearOwner_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const DroppedItemClearOwner_t DroppedItemClearOwner = (DroppedItemClearOwner_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const DroppedItemClearOwner_t DroppedItemClearOwner = (DroppedItemClearOwner_t)0x08106130;
+#endif
+
+typedef void (*FinishSpawningItem_t)(gentity_t *item);
+#if COD_VERSION == COD2_1_0
+static const FinishSpawningItem_t FinishSpawningItem = (FinishSpawningItem_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const FinishSpawningItem_t FinishSpawningItem = (FinishSpawningItem_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const FinishSpawningItem_t FinishSpawningItem = (FinishSpawningItem_t)0x08106A90;
+#endif
+
+typedef void (*use_trigger_use_t)(gentity_t *trigger, gentity_t *player);
+#if COD_VERSION == COD2_1_0
+static const use_trigger_use_t use_trigger_use = (use_trigger_use_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const use_trigger_use_t use_trigger_use = (use_trigger_use_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const use_trigger_use_t use_trigger_use = (use_trigger_use_t)0x0810FE4A;
+#endif
+
 #endif

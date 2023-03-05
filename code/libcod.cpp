@@ -51,6 +51,7 @@ cvar_t *g_playerEject;
 cvar_t *g_resetSlide;
 cvar_t *g_spawnMapTurrets;
 cvar_t *g_spawnMapWeapons;
+cvar_t *g_triggerMode;
 cvar_t *logfileName;
 cvar_t *logfileRotate;
 cvar_t *sv_allowRcon;
@@ -173,31 +174,29 @@ callback_t callbacks[] = {
 	{ &codecallback_usebutton, "CodeCallback_UseButton"},
 };
 
-/*
 const entityHandler_t entityHandlers[] =
 {
 	{ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0 },
-	{ NULL, NULL, NULL, &Touch_Multi, NULL, NULL, NULL, NULL, 0, 0 },
-	{ NULL, NULL, NULL, NULL, &hurt_use, NULL, NULL, NULL, 0, 0 },
-	{ NULL, NULL, NULL, &hurt_touch, &hurt_use, NULL, NULL, NULL, 0, 0 },
-	{ NULL, NULL, NULL, NULL, &Use_trigger_damage, &Pain_trigger_damage, &Die_trigger_damage, NULL, 0, 0},
-	{ NULL, &Reached_ScriptMover, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0 },
-	{ NULL, &Reached_ScriptMover, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0 },
-	{ &G_ExplodeMissile, NULL, NULL, &Touch_Item_Auto, NULL, NULL, NULL, NULL, 3, 4},
-	{ &G_ExplodeMissile, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 5, 6 },
-	{ NULL, NULL, NULL, NULL, NULL, NULL, &player_die, &G_PlayerController, 0, 0 },
-	{ NULL, NULL, NULL, NULL, NULL, NULL, &player_die, NULL, 0, 0 },
-	{ NULL, NULL, NULL, NULL, NULL, NULL, NULL, &G_PlayerController, 0, 0 },
-	{ &BodyEnd, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0 },
-	{ &turret_think_init, NULL, NULL, NULL, &turret_use, NULL, NULL, &turret_controller, 0, 0},
-	{ &turret_think, NULL, NULL, NULL, &turret_use, NULL, NULL, &turret_controller, 0, 0},
-	{ &DroppedItemClearOwner, NULL, NULL, &Touch_Item_Auto, NULL, NULL, NULL, NULL, 0, 0},
-	{ &FinishSpawningItem, NULL, NULL, &Touch_Item_Auto, NULL, NULL, NULL, NULL, 0, 0},
-	{ NULL, NULL, NULL, &Touch_Item_Auto, NULL, NULL, NULL, NULL, 0, 0 },
-	{ NULL, NULL, NULL, NULL, &use_trigger_use, NULL, NULL, NULL, 0, 0 },
-	{ &G_FreeEntity, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0 },
+	{ NULL, NULL, NULL, Touch_Multi, NULL, NULL, NULL, NULL, 0, 0 },
+	{ NULL, NULL, NULL, NULL, hurt_use, NULL, NULL, NULL, 0, 0 },
+	{ NULL, NULL, NULL, hurt_touch, hurt_use, NULL, NULL, NULL, 0, 0 },
+	{ NULL, NULL, NULL, NULL, Use_trigger_damage, Pain_trigger_damage, Die_trigger_damage, NULL, 0, 0},
+	{ NULL, Reached_ScriptMover, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0 },
+	{ NULL, Reached_ScriptMover, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0 },
+	{ G_ExplodeMissile, NULL, NULL, Touch_Item_Auto, NULL, NULL, NULL, NULL, 3, 4},
+	{ G_ExplodeMissile, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 5, 6 },
+	{ NULL, NULL, NULL, NULL, NULL, NULL, player_die, G_PlayerController, 0, 0 },
+	{ NULL, NULL, NULL, NULL, NULL, NULL, player_die, NULL, 0, 0 },
+	{ NULL, NULL, NULL, NULL, NULL, NULL, NULL, G_PlayerController, 0, 0 },
+	{ BodyEnd, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0 },
+	{ turret_think_init, NULL, NULL, NULL, turret_use, NULL, NULL, turret_controller, 0, 0},
+	{ turret_think, NULL, NULL, NULL, turret_use, NULL, NULL, turret_controller, 0, 0},
+	{ DroppedItemClearOwner, NULL, NULL, Touch_Item_Auto, NULL, NULL, NULL, NULL, 0, 0},
+	{ FinishSpawningItem, NULL, NULL, Touch_Item_Auto, NULL, NULL, NULL, NULL, 0, 0},
+	{ NULL, NULL, NULL, Touch_Item_Auto, NULL, NULL, NULL, NULL, 0, 0 },
+	{ NULL, NULL, NULL, NULL, use_trigger_use, NULL, NULL, NULL, 0, 0 },
+	{ G_FreeEntity, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0 },
 };
-*/
 
 qboolean logRcon = qtrue;
 qboolean logHeartbeat = qtrue;
@@ -288,7 +287,7 @@ void common_init_complete_print(const char *format, ...)
 
 	Com_Printf("%s", s);
 
-	/* Do stuff after sv has been initialized here */
+	// Do stuff after sv has been initialized here
 	
 	// Get references to stock cvars
 	cl_allowDownload = Cvar_RegisterBool("cl_allowDownload", qtrue, CVAR_ARCHIVE | CVAR_SYSTEMINFO); // Force-enable download for clients
@@ -328,6 +327,7 @@ void common_init_complete_print(const char *format, ...)
 	g_resetSlide = Cvar_RegisterBool("g_resetSlide", qfalse, CVAR_ARCHIVE);
 	g_spawnMapTurrets = Cvar_RegisterBool("g_spawnMapTurrets", qtrue, CVAR_ARCHIVE);
 	g_spawnMapWeapons = Cvar_RegisterBool("g_spawnMapWeapons", qtrue, CVAR_ARCHIVE);
+	g_triggerMode = Cvar_RegisterInt("g_triggerMode", 1, 0, 2, CVAR_ARCHIVE);
 	sv_allowRcon = Cvar_RegisterBool("sv_allowRcon", qtrue, CVAR_ARCHIVE);
 	sv_botKickMessages = Cvar_RegisterBool("sv_botKickMessages", qtrue, CVAR_ARCHIVE);
 	sv_cracked = Cvar_RegisterBool("sv_cracked", qfalse, CVAR_ARCHIVE);
@@ -357,7 +357,7 @@ void common_init_complete_print(const char *format, ...)
 void custom_G_ProcessIPBans(void)
 {
 	/* This is right after G_RegisterCvars, giving us access to variables that
-	are not yet defined at the common_init_complete_print hook */
+	 are not yet defined at the common_init_complete_print hook */
 	g_playerCollisionEjectSpeed = Cvar_FindVar("g_playerCollisionEjectSpeed");
 	g_voiceChatTalkingDuration = Cvar_FindVar("g_voiceChatTalkingDuration");
 	player_meleeHeight = Cvar_FindVar("player_meleeHeight");
@@ -375,8 +375,8 @@ void custom_GScr_LoadConsts(void)
 {
 	/* Allocate custom strings for Scr_Notify() here, scheme:
 	scr_const.custom = GScr_AllocString("custom_string");
-	Note: This new reference also has to be added to stringIndex_t in declarations.hpp
-	*/
+	 Note: This new reference also has to be added to stringIndex_t in
+	 declarations.hpp */
 	scr_const.both = GScr_AllocString("both");
 	scr_const.bounce = GScr_AllocString("bounce");
 	scr_const.flags = GScr_AllocString("flags");
@@ -396,7 +396,7 @@ void custom_GScr_LoadConsts(void)
 
 void hitch_warning_print(const char *message, int frameTime)
 {
-	/* Called if 500 < frameTime && frameTime < 500000 */
+	// Called if 500 < frameTime && frameTime < 500000
 	Com_Printf(message, frameTime);
 
 	hitchFrameTime = frameTime;
@@ -415,7 +415,7 @@ void hook_sv_spawnserver(const char *format, ...)
 
 	Com_Printf("%s", s);
 	
-	/* Do stuff after sv has been spawned here */
+	// Do stuff after sv has been spawned here
 
 	hook_developer_prints->hook();
 }
@@ -558,7 +558,7 @@ void custom_SV_ClipMoveToEntity(moveclip_t *clip, svEntity_s *entity, trace_t *t
 			CM_TransformedBoxTrace(trace, (clip->extents).start, (clip->extents).end, clip->mins, clip->maxs, clipHandle, clip->contentmask, (touch->r).currentOrigin, angles);
 			if ( trace->fraction < fraction )
 			{
-				(trace->entityNum).entnum = (touch->s).number;
+				trace->entityNum = (touch->s).number;
 			}
 		}
 	}
@@ -625,7 +625,7 @@ qboolean custom_StuckInClient(gentity_t *self)
 		hit = g_entities;
 		for ( i = 0; i < level.maxclients; i++, hit++)
 		{
-			if ( ( ( ( ( ( (hit->r).inuse != 0 ) && ( ((hit->client->ps).pm_flags & PMF_VIEWLOCKED) != 0 ) ) && ( (hit->client->sess).state == STATE_PLAYING )  ) && ( (hit != self && hit->client != NULL ) ) ) && ( 0 < hit->healthPoints && ( player_collision[i] != COLLISION_TEAM_BOTH /* New condition */ || ( (hit->r).contents == CONTENTS_BODY || ( (hit->r).contents == CONTENTS_CORPSE ) ) ) ) ) &&
+			if ( ( ( ( ( ( (hit->r).inuse != 0 ) && ( ((hit->client->ps).pm_flags & PMF_VIEWLOCKED) != 0 ) ) && ( (hit->client->sess).state == STATE_PLAYING )  ) && ( (hit != self && hit->client != NULL ) ) ) && ( 0 < hit->health && ( player_collision[i] != COLLISION_TEAM_BOTH /* New condition */ || ( (hit->r).contents == CONTENTS_BODY || ( (hit->r).contents == CONTENTS_CORPSE ) ) ) ) ) &&
 			( (hit->r).absmin[0] <= (self->r).absmax[0] && ( ( ( (self->r).absmin[0] <= (hit->r).absmax[0] && ( (hit->r).absmin[1] <= (self->r).absmax[1] ) ) && ( (self->r).absmin[1] <= (hit->r).absmax[1] ) ) && ( (hit->r).absmin[2] <= (self->r).absmax[2] && ( (self->r).absmin[2] <= (hit->r).absmax[2] ) ) ) ) )
 			{
 				/* New code: per-player/team collison */
@@ -845,10 +845,10 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 	else
 		SV_SendServerCommand(drop, 1, "w \"%s\"", reason);
 
-	/* If this was the last client on the server, send a heartbeat
-	   to the master so it is known the server is empty
-	   send a heartbeat now so the master will get up to date info
-	   if there is already a slot for this ip, reuse it */
+	/* If this was the last client on the server, send a heartbeat to the
+	 master so it is known the server is empty send a heartbeat now so the
+	 master will get up to date info if there is already a slot for this ip,
+	 reuse it */
 	for ( i = 0 ; i < sv_maxclients->integer ; i++ )
 	{
 		if ( svs.clients[i].state >= CS_CONNECTED )
@@ -864,15 +864,13 @@ void custom_Touch_Item_Auto(gentity_t * item, gentity_t * entity, int touch)
 		return;
 	
 	hook_touch_item_auto->unhook();
-	void (*Touch_Item_Auto)(gentity_t *, gentity_t *, int);
-	*(int *)&Touch_Item_Auto = hook_touch_item_auto->from;
 	Touch_Item_Auto(item, entity, touch);
 	hook_touch_item_auto->hook();
 }
 
 void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 {
-	gclient_t * client;
+	gclient_t *client;
 	entity_event_t event;
 	gitem_t *bg_item;
 	char name[0x40];
@@ -885,20 +883,20 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 	item->active = 0;
 	client = entity->client;
 	
-	if ( !client || entity->healthPoints <= 0 || level.clientIsSpawning )
+	if ( !client || entity->health <= 0 || level.clientIsSpawning )
 		return;
 
 	event = EV_ITEM_PICKUP;
 	bg_item = &bg_itemlist;
-	bg_item += item->params.item[0].index;
+	bg_item += item->item[0].index;
 	
 	if ( !BG_CanItemBeGrabbed(&item->s, &entity->client->ps, touch) )
 	{
-		if ( (!touch && (item->s).clientNum != (entity->s).number) && bg_item->giType == IT_WEAPON )
+		if ( ( !touch && (item->s).clientNum != (entity->s).number ) && bg_item->giType == IT_WEAPON )
 		{
 			if ( !COM_BitCheck(entity->client->ps.weapons, bg_item->giTag) )
 			{
-				if ( (BG_WeaponDefs(bg_item->giTag)->impactType + ~IMPACT_TYPE_NONE) < 2)
+				if ( ( BG_WeaponDefs(bg_item->giTag)->weapSlot + ~WEAPSLOT_NONE ) < 2 )
 					SV_GameSendServerCommand(entity - g_entities, 0, custom_va("%c \"GAME_CANT_GET_PRIMARY_WEAP_MESSAGE\"", 0x66));
 			}
 			else
@@ -1035,13 +1033,11 @@ gentity_t* custom_G_TempEntity(vec3_t * origin, int event)
 		Com_DPrintf("G_TempEntity() event %26s at (%f,%f,%f)\n", *(&entity_event_names + event), &origin[0], &origin[1], &origin[2]);
 
 	/* Filter example:
-	   use with caution: this can cause script runtime errors (or worse) on
-	   some events, e.g., when using the obituary function, due to (then)
-	   undefined parameters
-
 	if (event == EV_PLAY_FX)
 		event = EV_NONE;
-	*/
+	 Note: This can cause script runtime errors (or worse) on some events,
+	 e.g., when using the obituary function, due to (then) undefined
+	 parameters */
 	gentity_t* tempEntity = sig(origin, event);
 
 	hook_g_tempentity->hook();
@@ -2103,7 +2099,7 @@ qboolean custom_BG_IsWeaponValid(playerState_t *ps, unsigned int index)
 		return 0;
 	/* New code end */
 
-	if ( ( ( weaponDef->inventoryType == WEAPINVENTORY_PRIMARY && ps->weaponslots[1] != index ) && ps->weaponslots[2] != index ) && weaponDef->altWeaponIndex != index )
+	if ( ( ( weaponDef->offhandClass == OFFHAND_CLASS_NONE && ps->weaponslots[1] != index ) && ps->weaponslots[2] != index ) && weaponDef->iAltWeaponIndex != index )
 		return qfalse;
 
 	return qtrue;
@@ -3096,8 +3092,8 @@ void Scr_CodeCallback_Error(qboolean terminal, qboolean emit, const char *intern
 		if ( !strncmp(message, "exceeded maximum number of script variables", 43) )
 		{
 			/* Since we cannot allocate more script variables, further
-			   execution of scripts or script callbacks could lead to an
-			   undefined state (in script) or endless error loops, so we stop */
+			 execution of scripts or script callbacks could lead to an
+			 undefined state (in script) or endless error loops, so we stop */
 			Com_Error(1, "\x15%s", "exceeded maximum number of script variables");
 		}
 
@@ -3112,10 +3108,10 @@ void Scr_CodeCallback_Error(qboolean terminal, qboolean emit, const char *intern
 		else
 		{
 			/* If the error is non-critical (not stopping the server), save it
-			   so we can emit it later at G_RunFrame which is a rather safe
-			   spot compared to if we emit it directly here within the
-			   internals of the scripting engine where we risk crashing it
-			   with a segmentation fault */
+			 so we can emit it later at G_RunFrame which is a rather safe
+			 spot compared to if we emit it directly here within the
+			 internals of the scripting engine where we risk crashing it
+			 with a segmentation fault */
 			if ( scr_errors_index < MAX_ERROR_BUFFER )
 			{
 				strncpy(scr_errors[scr_errors_index].internal_function, internal_function, sizeof(scr_errors[scr_errors_index].internal_function));
@@ -3372,7 +3368,7 @@ void custom_G_RunFrame(int levelTime)
 		gclient_t *gclient = level.clients;
 		for ( i = 0; i < sv_maxclients->integer; i++, gclient++ )
 		{
-			durationSinceLastTalk = level.time - gclient->playerTalkTime;
+			durationSinceLastTalk = level.time - gclient->lastVoiceTime;
 			if ( durationSinceLastTalk >= 0 && g_voiceChatTalkingDuration->integer > durationSinceLastTalk )
 			{
 				aPlayerIsTalking = qtrue;
@@ -4143,7 +4139,7 @@ void custom_Player_UpdateCursorHints(gentity_t *player)
 	(client->ps).cursorHint = 0;
 	(client->ps).cursorHintString = -1;
 	(client->ps).cursorHintEntIndex = ENTITY_NONE;
-	if ( 0 < player->healthPoints && ( (player->client->ps).weaponstate < 0x11 || ( 0x16 < (player->client->ps).weaponstate ) ) )
+	if ( 0 < player->health && ( (player->client->ps).weaponstate < 0x11 || ( 0x16 < (player->client->ps).weaponstate ) ) )
 	{
 		if ( !player->active )
 		{
@@ -4190,7 +4186,7 @@ LAB_08121ee6:
 							/* New code end */
 
 							if ( ( ent->team == 0 || ent->team == (player->client->sess).team ) &&
-							( (ent->params).trigger.damage == ENTITY_NONE || (ent->params).trigger.damage == (player->client->ps).clientNum ) )
+							( ent->trigger.singleUserEntIndex == ENTITY_NONE || ent->trigger.singleUserEntIndex == (player->client->ps).clientNum ) )
 							{
 								temp = (ent->s).dmgFlags;
 								if ( (ent->s).dmgFlags != 0 && (ent->s).scale != 0xFF )
@@ -4300,13 +4296,13 @@ void custom_Script_bulletTrace(void)
 	Vec3Lerp(start, end, trace.fraction, position);
 	Scr_AddVector(position);
 	Scr_AddArrayStringIndexed(scr_const.position);
-	if ( trace.entityNum.entnum == ENTITY_NONE || trace.entityNum.entnum == ENTITY_WORLD )
+	if ( trace.entityNum == ENTITY_NONE || trace.entityNum == ENTITY_WORLD )
 	{
 		Scr_AddUndefined();
 	}
 	else
 	{
-		Scr_AddEntity(&g_entities[trace.entityNum.entnum]);
+		Scr_AddEntity(&g_entities[trace.entityNum]);
 	}
 	Scr_AddArrayStringIndexed(scr_const.entity);
 	if ( trace.fraction < 1.0 )
@@ -4439,7 +4435,7 @@ void custom_Script_setHintString(scr_entref_t ref)
 	if ( ent->classname == scr_const.trigger_radius )
 	{
 		Scr_SetString(&ent->classname, scr_const.trigger_use_touch);
-		(ent->params).trigger.damage = ENTITY_NONE;
+		ent->trigger.singleUserEntIndex = ENTITY_NONE;
 		(ent->r).contents = CONTENTS_DONOTENTER;
 		(ent->r).svFlags = 1;
 		(ent->s).dmgFlags = 2;
@@ -4857,7 +4853,7 @@ void custom_Com_PrintMessage(int /* print_msg_type_t */ channel, char *message)
 	PbCaptureConsoleOutput(message, 0x1000);
 	if ( rd_buffer == NULL )
 	{
-		/* Caret patch
+		/* Caret patch: Removed the following code:
 		if ( *message == '^' && message[1] != '\0' )
 		{
 			message += 2;
@@ -4947,7 +4943,7 @@ qboolean G_BounceGrenade(gentity_t *ent,trace_t *trace) // G_BounceMissile as ba
 	VectorMA(velocity, dot * -2.0, trace->normal, (ent->s).pos.trDelta);
 	if ( 0.7 < trace->normal[2] )
 	{
-		(ent->s).groundEntityNum = (trace->entityNum).entnum;
+		(ent->s).groundEntityNum = trace->entityNum;
 	}
 	if ( ( (ent->s).eFlags & EF_BOUNCE ) != 0 )
 	{
@@ -4959,7 +4955,7 @@ qboolean G_BounceGrenade(gentity_t *ent,trace_t *trace) // G_BounceMissile as ba
 
 		if ( 0.7 < trace->normal[2] && VectorLength((ent->s).pos.trDelta) < 20.0 )
 		{
-			Scr_AddEntity(&g_entities[(trace->entityNum).entnum]);
+			Scr_AddEntity(&g_entities[trace->entityNum]);
 			Scr_AddString(Com_SurfaceTypeToName((int)( trace->surfaceFlags & 0x1F00000U ) >> 0x14));
 			Scr_Notify(ent, scr_const.land, 2);
 			G_SetOrigin(ent, &(ent->r).currentOrigin);
@@ -5037,9 +5033,9 @@ void G_RunGravityModelAsGrenade(gentity_t *ent) // G_RunMissile as base
 	{
 		G_StartSolidTrace(&trace, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask);
 	}
-	if ( ( g_entities[trace.entityNum.entnum].flags & EF_TAGCONNECT ) != 0 )
+	if ( ( g_entities[trace.entityNum].flags & EF_TAGCONNECT ) != 0 )
 	{
-		G_StartSolidTraceNoContents(&trace, trace.entityNum.entnum, ent, origin);
+		G_StartSolidTraceNoContents(&trace, trace.entityNum, ent, origin);
 	}
 	Vec3Lerp((ent->r).currentOrigin, origin, trace.fraction, lerpOrigin);
 	VectorCopy(lerpOrigin, (ent->r).currentOrigin);
@@ -5048,7 +5044,7 @@ void G_RunGravityModelAsGrenade(gentity_t *ent) // G_RunMissile as base
 		VectorCopy((ent->r).currentOrigin, origin);
 		origin[2] = origin[2] - 1.5;
 		G_StartSolidTrace(&trace2, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask);
-		if ( ( trace2.fraction != 1.0 ) && ( trace2.entityNum.entnum == ENTITY_WORLD ) )
+		if ( ( trace2.fraction != 1.0 ) && ( trace2.entityNum == ENTITY_WORLD ) )
 		{
 			trace.fraction = trace2.fraction;
 			trace.normal[0] = trace2.normal[0];
@@ -5058,7 +5054,8 @@ void G_RunGravityModelAsGrenade(gentity_t *ent) // G_RunMissile as base
 			trace.contents = trace2.contents;
 			trace.material = trace2.material;
 			trace.entityNum = trace2.entityNum;
-			trace.hitId = trace2.hitId;
+			trace.partName = trace2.partName;
+			trace.partGroup = trace2.partGroup;
 			trace.allsolid = trace2.allsolid;
 			trace.startsolid = trace2.startsolid;
 			Vec3Lerp((ent->r).currentOrigin, origin, trace2.fraction, lerpOrigin);
@@ -5073,7 +5070,7 @@ void G_RunGravityModelAsGrenade(gentity_t *ent) // G_RunMissile as base
 		bounce = G_BounceGrenade(ent, &trace);
 		if ( bounce && trace.startsolid == 0)
 		{
-			Scr_AddEntity(&g_entities[trace.entityNum.entnum]);
+			Scr_AddEntity(&g_entities[trace.entityNum]);
 			Scr_AddString(Com_SurfaceTypeToName((int)( trace.surfaceFlags & 0x1F00000U ) >> 0x14));
 			Scr_Notify(ent, scr_const.bounce, 2);
 		}
@@ -5153,13 +5150,13 @@ void G_RunGravityModelAsItem(gentity_t *ent) // G_RunItem as base
 				AxisToAngles(v1, angles);
 				G_SetAngle(ent, &angles);
 				G_SetOrigin(ent, &lerpOrigin);
-				if ( (ent->s).groundEntityNum != trace.entityNum.entnum )
+				if ( (ent->s).groundEntityNum != trace.entityNum )
 				{
-					Scr_AddEntity(&g_entities[trace.entityNum.entnum]);
+					Scr_AddEntity(&g_entities[trace.entityNum]);
 					Scr_AddString(Com_SurfaceTypeToName((int)( trace.surfaceFlags & 0x1F00000U ) >> 0x14));
 					Scr_Notify(ent, scr_const.land, 2);
 				}
-				(ent->s).groundEntityNum = trace.entityNum.entnum;
+				(ent->s).groundEntityNum = trace.entityNum;
 				SV_LinkEntity(ent);
 			}
 			else
@@ -5172,9 +5169,9 @@ void G_RunGravityModelAsItem(gentity_t *ent) // G_RunItem as base
 
 void custom_G_RunFrameForEntity(gentity_t *ent)
 {
-	if ( ent->framenum != level.framenum )
+	if ( ent->processedFrame != level.framenum )
 	{
-		ent->framenum = level.framenum;
+		ent->processedFrame = level.framenum;
 		if ( ent->client == NULL )
 		{
 			if ( ( ent->flags & 0x800 ) == 0 )
@@ -5311,6 +5308,365 @@ qboolean custom_SV_ClientCommand(client_t *cl, msg_t *msg)
 	return qfalse;
 }
 
+void custom_G_CheckHitTriggerDamage(gentity_t *inflictor, float *muzzleTrace, float *origin, int damage, meansOfDeath_t meansOfDeath)
+{
+	// Function has stock logic
+	gentity_t *ent;
+	vec3_t maxs;
+	vec3_t mins;
+	int entityList[1026];
+	int count;
+	int i;
+	int entNum;
+
+	VectorCopy(muzzleTrace, mins);
+	VectorCopy(muzzleTrace, maxs);
+	AddPointToBounds(origin, mins, maxs);
+	count = CM_AreaEntities(mins, maxs, entityList, MAX_GENTITIES, CONTENTS_DONOTENTER_LARGE);
+	for ( i = 0; i < count; i++)
+	{
+		entNum = entityList[i];
+		ent = g_entities + entNum;
+		if ( g_entities[entNum].classname == scr_const.trigger_damage )
+		{
+			if ( SV_SightTraceToEntity(muzzleTrace, vec3_origin, vec3_origin, origin, (ent->s).number, -1) )
+			{
+				Scr_AddEntity(inflictor);
+				Scr_AddInt(damage);
+				Scr_Notify(ent, scr_const.damage, 2);
+				Activate_trigger_damage(ent, inflictor, damage, meansOfDeath);
+				if ( g_entities[entNum].trigger.accumulate == 0 )
+				{
+					g_entities[entNum].health = 32000;
+				}
+			}
+		}
+	}
+}
+
+void custom_G_GrenadeTouchTriggerDamage(gentity_t *inflictor, float *muzzleTrace, float *origin, int damage, meansOfDeath_t meansOfDeath)
+{
+	// Function has stock logic
+	gentity_t *ent;
+	vec3_t maxs;
+	vec3_t mins;
+	int entityList[1026];
+	int count;
+	int i;
+	int entNum;
+
+	VectorCopy(muzzleTrace,mins);
+	VectorCopy(muzzleTrace,maxs);
+	AddPointToBounds(origin,mins,maxs);
+	count = CM_AreaEntities(mins, maxs, entityList, MAX_GENTITIES, CONTENTS_DONOTENTER_LARGE);
+	for ( i = 0; i < count; i++ )
+	{
+		entNum = entityList[i];
+		ent = g_entities + entNum;
+		if ( g_entities[entNum].classname == scr_const.trigger_damage && (g_entities[entNum].flags & FL_GRENADE_TOUCH_DAMAGE) != 0 )
+		{
+			if ( SV_SightTraceToEntity(muzzleTrace, vec3_origin, vec3_origin, origin, (ent->s).number, -1) )
+			{
+				Scr_AddEntity(inflictor);
+				Scr_AddInt(damage);
+				Scr_Notify(ent, scr_const.damage, 2);
+				Activate_trigger_damage(ent, inflictor,damage, meansOfDeath);
+				if ( g_entities[entNum].trigger.accumulate == 0 )
+				{
+					g_entities[entNum].health = 32000;
+				}
+			}
+		}
+	}
+}
+
+void custom_SV_LinkEntity(gentity_t *gEnt)
+{
+	// Function has stock logic
+	svEntity_t *ent;
+	vec_t *angles;
+	vec_t *origin;
+	clipHandle_t clip;
+	DObj_t *dobj;
+	double radius;
+	int i;
+	vec3_t max;
+	vec3_t min;
+	int lastLeaf;
+	int c;
+	int b;
+	int a;
+	int num_leafs;
+	int cluster;
+	int leafs[128];
+
+	ent = SV_SvEntityForGentity(gEnt);
+	if ( !(gEnt->r).bmodel )
+	{
+		if ( ((gEnt->r).contents & ( CONTENTS_SOLID | CONTENTS_BODY )) == 0 )
+		{
+			(gEnt->s).solid = 0;
+		}
+		else
+		{
+			a = (int)((gEnt->r).maxs[0]);
+			if ( a < 1 )
+			{
+				a = 1;
+			}
+			if ( 0xFF < a )
+			{
+				a = 0xFF;
+			}
+			b = (int)(1.0 - (gEnt->r).mins[2]);
+			if ( b < 1 )
+			{
+				b = 1;
+			}
+			if ( 0xFF < b )
+			{
+				b = 0xFF;
+			}
+			c = (int)((gEnt->r).maxs[2] + 32.0);
+			if ( c < 1 )
+			{
+				c = 1;
+			}
+			if ( 0xFF < c )
+			{
+				c = 0xFF;
+			}
+			(gEnt->s).solid = b << 8 | c << 0x10 | a;
+		}
+	}
+	else
+	{
+		(gEnt->s).solid = 0xffffff;
+	}
+	angles = (gEnt->r).currentAngles;
+	origin = (gEnt->r).currentOrigin;
+	SnapAngles(angles);
+	if ( !(gEnt->r).bmodel || ( *angles == 0.0 && (gEnt->r).currentAngles[1] == 0.0 && (gEnt->r).currentAngles[2] == 0.0 ) )
+	{
+		VectorAdd(origin, (gEnt->r).mins, (gEnt->r).absmin);
+		VectorAdd(origin, (gEnt->r).maxs, (gEnt->r).absmax);
+	}
+	else if ( *angles == 0.0 && (gEnt->r).currentAngles[2] == 0.0 )
+	{
+		radius = RadiusFromBounds2((gEnt->r).mins, (gEnt->r).maxs);
+		for ( i = 0; i < 2; i++ )
+		{
+			(gEnt->r).absmin[i] = origin[i] - (float)radius;
+			(gEnt->r).absmax[i] = origin[i] + (float)radius;
+		}
+		(gEnt->r).absmin[2] = (gEnt->r).currentOrigin[2] + (gEnt->r).mins[2];
+		(gEnt->r).absmax[2] = (gEnt->r).currentOrigin[2] + (gEnt->r).maxs[2];
+	}
+	else
+	{
+		radius = RadiusFromBounds((gEnt->r).mins, (gEnt->r).maxs);
+		for ( i = 0; i < 3; i++ )
+		{
+			(gEnt->r).absmin[i] = origin[i] - (float)radius;
+			(gEnt->r).absmax[i] = origin[i] + (float)radius;
+		}
+	}
+
+	(gEnt->r).absmin[0] = (gEnt->r).absmin[0] - 1.0;
+	(gEnt->r).absmin[1] = (gEnt->r).absmin[1] - 1.0;
+	(gEnt->r).absmin[2] = (gEnt->r).absmin[2] - 1.0;
+	(gEnt->r).absmax[0] = (gEnt->r).absmax[0] + 1.0;
+	(gEnt->r).absmax[1] = (gEnt->r).absmax[1] + 1.0;
+	(gEnt->r).absmax[2] = (gEnt->r).absmax[2] + 1.0;
+	ent->numClusters = 0;
+	ent->lastCluster = 0;
+	if ( ((gEnt->r).svFlags & 0x19) == 0 )
+	{
+		num_leafs = CM_BoxLeafnums((gEnt->r).absmin, (gEnt->r).absmax, leafs, MAX_TOTAL_ENT_LEAFS, &lastLeaf);
+		if ( num_leafs == 0 )
+		{
+			CM_UnlinkEntity(ent);
+			return;
+		}
+		for ( i = 0; i < num_leafs; i++ )
+		{
+			cluster = CM_LeafCluster(leafs[i]);
+			if ( cluster != -1 )
+			{
+				ent->clusternums[ent->numClusters++] = cluster;
+				if ( ent->numClusters == MAX_ENT_CLUSTERS )
+					break;
+			}
+		}
+		if ( i != num_leafs )
+			ent->lastCluster = CM_LeafCluster(lastLeaf);
+	}
+	(gEnt->r).linked = 1;
+	if ( (gEnt->r).contents == 0 )
+	{
+		CM_UnlinkEntity(ent);
+	}
+	else
+	{
+		clip = SV_ClipHandleForEntity(gEnt);
+		dobj = Com_GetServerDObj((gEnt->s).number);
+		if ( dobj == NULL || ( ((gEnt->r).svFlags & 6) == 0 ) )
+		{
+			CM_LinkEntity(ent, (gEnt->r).absmin, (gEnt->r).absmax, clip);
+		}
+		else
+		{
+			if ( ((gEnt->r).svFlags & 2) == 0 )
+			{
+				DObjGetBounds(dobj, min, max);
+				VectorAdd(origin, min, min);
+				VectorAdd(origin, max, max);
+			}
+			else
+			{
+				VectorAdd(origin, actorLocationalMins, min);
+				VectorAdd(origin, actorLocationalMaxs, max);
+			}
+			CM_LinkEntity(ent, min, max, clip);
+		}
+	}
+}
+
+void custom_CM_AreaEntities_r(unsigned int nodeIndex, areaParms_t *ap)
+{
+	// Function has stock logic, but different loop structure
+	struct worldSector_s *node;
+	gentity_t *gcheck;
+	int en;
+	unsigned int nextNodeIndex;
+	int gnum;
+
+	for ( node = &cm_world.sectors[nodeIndex]; node->contents.contentsEntities & ap->contentmask; node = &cm_world.sectors[nodeIndex] )
+	{
+		for ( en = node->contents.entities; en > 0; en = sv.svEntities[gnum].nextEntityInWorldSector )
+		{
+			gnum = en - 1;
+			gcheck = SV_GentityNum(gnum);
+
+			if ( gcheck->r.contents & ap->contentmask )
+			{
+				if ( gcheck->r.absmin[0] > ap->maxs[0]
+				|| gcheck->r.absmin[1] > ap->maxs[1]
+				|| gcheck->r.absmin[2] > ap->maxs[2]
+				|| gcheck->r.absmax[0] < ap->mins[0]
+				|| gcheck->r.absmax[1] < ap->mins[1]
+				|| gcheck->r.absmax[2] < ap->mins[2] )
+				{
+					continue;
+				}
+				if ( ap->count == ap->maxcount )
+				{
+					Com_DPrintf("CM_AreaEntities: MAXCOUNT\n");
+					return;
+				}
+				ap->list[ap->count] = gnum;
+				++ap->count;
+			}
+		}
+
+		if ( node->tree.dist >= ap->maxs[node->tree.axis] )
+		{
+			nodeIndex = node->tree.child[1];
+			if ( node->tree.dist <= ap->mins[node->tree.axis] )
+			{
+				return;
+			}
+		}
+		else if ( node->tree.dist <= ap->mins[node->tree.axis] )
+		{
+			nodeIndex = node->tree.child[0];
+		}
+		else
+		{
+			nextNodeIndex = node->tree.child[1];
+			custom_CM_AreaEntities_r(node->tree.child[0], ap);
+			nodeIndex = nextNodeIndex;
+		}
+	}
+}
+
+int TriggerDamageEntities(int *entityList)
+{
+	int i;
+	int count = 0;
+
+	for ( i = 0; i < MAX_GENTITIES; i++ )
+	{
+		if ( g_entities[i].classname == scr_const.trigger_damage )
+		{
+			entityList[count++] = i;
+		}
+	}
+
+	return count;
+}
+
+int TriggerTouchEntities(const float *mins, const float *maxs, int *entityList)
+{
+	int i;
+	int count = 0;
+
+	for ( i = 0; i < MAX_GENTITIES; i++ )
+	{
+		if ( entityHandlers[g_entities[i].handler].touch || SV_EntityContact(mins, maxs, &g_entities[i]) )
+		{
+			entityList[count++] = i;
+		}
+	}
+
+	return count;
+}
+
+int custom_CM_AreaEntities(const float *mins, const float *maxs, int *entityList, int maxcount, int contentmask)
+{
+	areaParms_t ae;
+
+	/* Known content masks on call:
+	 0x00000020	G_BounceMissile
+	 0x00000020	G_ExplodeMissile
+	 0x00000020	G_RunMissile
+	 0x00200000	Player_GetUseList
+	 0x00400000	G_GrenadeTouchTriggerDamage
+	 0x00400000	G_CheckHitTriggerDamage
+	 0x02000000	Script_positionwouldtelefrag
+	 0x02000000	? indirection
+	 0x02000180	G_MoverPush
+	 0x405c0008	G_TouchTriggers
+	 0x80000000	G_RunCorpseMove
+	 0x80000000	G_RunItem
+	 0xFFFFFFFF	G_RadiusDamage
+	*/
+
+	/* New code: g_triggerMode cvar */
+	if ( g_triggerMode->integer == 0 && ( contentmask == 0x400000 || contentmask == 0x405c0008 ) )
+	{
+		return 0;
+	}
+	else if ( g_triggerMode->integer == 2 && contentmask == 0x400000 )
+	{
+		return TriggerDamageEntities(entityList);
+	}
+	else if ( g_triggerMode->integer == 2 && contentmask == 0x405c0008 )
+	{
+		return TriggerTouchEntities(mins, maxs, entityList);
+	}
+	/* New code end */
+
+	ae.mins = mins;
+	ae.maxs = maxs;
+	ae.list = entityList;
+	ae.count = 0;
+	ae.maxcount = maxcount;
+	ae.contentmask = contentmask;
+	custom_CM_AreaEntities_r(1, &ae);
+	return ae.count;
+}
+
 void PrintCallbackInfo(gentity_t *ent, int callbackHook, unsigned int numArgs)
 {
 	unsigned int i;
@@ -5330,7 +5686,7 @@ void PrintCallbackInfo(gentity_t *ent, int callbackHook, unsigned int numArgs)
 		Com_Printf("Calling gametype::main\n");
 	else if ( callbackHook == g_scr_data.levelscript )
 		Com_Printf("Calling map::main\n");
-	else if ( callbackHook == g_scr_data.deleting )
+	else if ( callbackHook == g_scr_data.delete_ )
 		Com_Printf("Calling codescripts/delete::main\n");
 	else if ( callbackHook == g_scr_data.initstructs )
 		Com_Printf("Calling codescripts/struct::initstructs\n");
@@ -5695,6 +6051,10 @@ public:
 		cracking_hook_function(0x080F6E9E, (int)custom_StuckInClient);
 		cracking_hook_function(0x080F5682, (int)custom_G_SetClientContents);
 		cracking_hook_function(0x0809CD64, (int)custom_SV_ClipMoveToEntity);
+		cracking_hook_function(0x0811CEA8, (int)custom_G_CheckHitTriggerDamage);
+		cracking_hook_function(0x0811D096, (int)custom_G_GrenadeTouchTriggerDamage);
+		cracking_hook_function(0x0809C63A, (int)custom_SV_LinkEntity);
+		cracking_hook_function(0x0805E986, (int)custom_CM_AreaEntities);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC718, (int)Jump_ClearState);

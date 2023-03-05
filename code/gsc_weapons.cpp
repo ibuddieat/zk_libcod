@@ -306,7 +306,7 @@ void gsc_weapons_getweaponfusetime()
 	}
 
 	WeaponDef_t *weapon = BG_WeaponDefs(id);
-	stackPushInt(weapon->fuseTime);
+	stackPushInt(weapon->iFuseTime);
 }
 
 void gsc_weapons_setweapondamage()
@@ -604,7 +604,7 @@ void gsc_weapons_setweaponfusetime()
 	}
 
 	WeaponDef_t *weapon = BG_WeaponDefs(id);
-	weapon->fuseTime = time;
+	weapon->iFuseTime = time;
 
 	stackPushBool(qtrue);
 }
@@ -713,7 +713,7 @@ void gsc_weapons_getmovespeedscale()
 
 	WeaponDef_t *weapon = BG_WeaponDefs(id);
 
-	stackPushFloat(weapon->moveSpeedScale);
+	stackPushFloat(weapon->fMoveSpeedScale);
 }
 
 void gsc_weapons_setmovespeedscale()
@@ -742,7 +742,7 @@ void gsc_weapons_setmovespeedscale()
 
 	WeaponDef_t *weapon = BG_WeaponDefs(id);
 
-	weapon->moveSpeedScale = scale;
+	weapon->fMoveSpeedScale = scale;
 	stackPushBool(qtrue);
 }
 
@@ -1009,7 +1009,7 @@ void gsc_weapons_spawngrenade(scr_entref_t ref)
 	}
 	else
 	{
-		fuseTime = weapon->fuseTime;
+		fuseTime = weapon->iFuseTime;
 	}
 
 	grenade = fire_grenade(owner, &origin, &dir, weaponIndex, fuseTime);

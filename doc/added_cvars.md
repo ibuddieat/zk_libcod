@@ -31,6 +31,12 @@ Added cvars:
     * Type: Boolean
     * Default: True
     * Effect: If false, weapons loaded from map files are neither precached nor spawned. Instead, the list of loaded weapons is sent to the `CodeCallback_MapWeaponsLoad` script callback function.
+  * `g_triggerMode`
+    * Type: Integer
+    * Default: 1
+    * Min. Value: 0
+    * Max. Value: 2
+    * Effect: Toggle experimental fix for broken map damage and use-touch triggers. Possible values: `0`: Triggers disabled. `1`: Stock behavior, fix disabled. `2`: Fix enabled.
   * `logfileName`
     * Type: String
     * Default: "console_mp_server.log"
