@@ -65,7 +65,7 @@
 #define MAX_QPATH                   64
 #define MAX_SNAPSHOT_ENTITIES       1024
 #define MAX_STRINGLENGTH            1024
-#define MAX_TOTAL_ENT_LEAFS			128
+#define MAX_TOTAL_ENT_LEAFS         128
 #define MAX_VASTRINGS               2
 #define MAX_VOICEFRAMESIZE          160
 #define MAX_VOICEPACKETDATALEN      256

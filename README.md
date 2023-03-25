@@ -23,6 +23,7 @@
   + For details, see the updated [Script Docs](https://www.ibuddie.at/libcod/index.html)
 
 **Supported/Tested GCC+OS**
+- gcc (Ubuntu 11.3.0-1ubuntu1~22.04) 11.3.0 (with Speex)
 - gcc (Ubuntu 9.4.0-1ubuntu1~20.04.1) 9.4.0
 - gcc (Ubuntu 7.5.0-3ubuntu1~18.04) 7.5.0 (with Speex)
 
@@ -32,19 +33,19 @@
 - MySQL client (if required by functionality)
 - Speex 1.1.9 (can be disabled in [config.hpp](code/config.hpp))
 
-**Base requirements installation (for 64-bit Ubuntu 18.04.5 LTS)**
+**Base requirements installation (for 64-bit Ubuntu 22.04 LTS)**
 ```
 sudo dpkg --add-architecture i386
 sudo apt update
 sudo apt install gcc-multilib g++-multilib libstdc++5:i386
 ```
 
-**MySQL requirements installation (for 64-bit Ubuntu 18.04.5 LTS)**
+**MySQL requirements installation (for 64-bit Ubuntu 22.04 LTS)**
 ```
 sudo apt install libmysqlclient-dev:i386
 ```
 
-**Custom sound file docs (for 64-bit Ubuntu 18.04.5 LTS)**
+**Custom sound file docs (for 64-bit Ubuntu 22.04 LTS)**
 - [Speex installation](doc/install_speex.md)
 - [Audio file conversion](doc/convert_audio_files.md)
 - Note: This feature increases RAM usage by about 500 MB. Disable `COMPILE_CUSTOM_VOICE` in [config.hpp](code/config.hpp) to avoid this
