@@ -4318,6 +4318,58 @@ void custom_Script_bulletTrace(void)
 	}
 }
 
+void custom_Script_sightTracePassed(void)
+{
+	int args;
+	int type;
+	int hitNum;
+	uint contentmask;
+	int passEntityNum;
+	gentity_t *passEnt;
+	int hitCharacters;
+	vec3_t end;
+	vec3_t start;
+	float visibility;
+
+	passEntityNum = ENTITY_NONE;
+	Scr_GetVector(0, &start);
+	Scr_GetVector(1, &end);
+	hitCharacters = Scr_GetInt(2);
+
+	if ( hitCharacters == 0 )
+	{
+		contentmask = MASK_OPAQUE_AI ^ CONTENTS_BODY;
+	}
+	else
+	{
+		contentmask = MASK_OPAQUE_AI;
+	}
+
+	/* New code: sightTracePassed contentmask override */
+	args = Scr_GetNumParam();
+	if ( args > 4 )
+		contentmask = Scr_GetInt(4);
+	/* New code end */
+
+	type = Scr_GetType(3);
+	if ( type == STACK_OBJECT )
+	{
+		type = Scr_GetPointerType(3);
+		if ( type == STACK_ENTITY )
+		{
+			passEnt = Scr_GetEntity(3);
+			passEntityNum = (passEnt->s).number;
+		}
+	}
+	G_SightTrace(&hitNum, start, end, passEntityNum, contentmask);
+	visibility = SV_FX_GetVisibility(start, end);
+	if ( !hitNum && visibility < 0.2 )
+	{
+		hitNum = 1;
+	}
+	Scr_AddBool(hitNum == 0);
+}
+
 void custom_Script_obituary(void)
 {
 	int args;
@@ -6025,6 +6077,7 @@ public:
 		cracking_hook_function(0x0811B770, (int)custom_G_SpawnEntitiesFromString);
 		cracking_hook_function(0x080584F0, (int)custom_CM_IsBadStaticModel);
 		cracking_hook_function(0x08113818, (int)custom_Script_bulletTrace);
+		cracking_hook_function(0x08113B0C, (int)custom_Script_sightTracePassed);
 		cracking_hook_function(0x08113128, (int)custom_Script_obituary);
 		cracking_hook_function(0x081124F6, (int)custom_Script_setHintString);
 		cracking_hook_function(0x08092302, (int)custom_SV_MapExists);

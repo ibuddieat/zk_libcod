@@ -2145,6 +2145,24 @@ static const SV_Trace_t SV_Trace = (SV_Trace_t)0x0; // Not tested
 static const SV_Trace_t SV_Trace = (SV_Trace_t)0x0809d884;
 #endif
 
+typedef void (*G_SightTrace_t)(int *hitNum, const float *start, const float *end, int passEntityNum, int contentmask);
+#if COD_VERSION == COD2_1_0
+static const G_SightTrace_t G_SightTrace = (G_SightTrace_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_SightTrace_t G_SightTrace = (G_SightTrace_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_SightTrace_t G_SightTrace = (G_SightTrace_t)0x0810A672;
+#endif
+
+typedef float (*SV_FX_GetVisibility_t)(const float *start, const float *end);
+#if COD_VERSION == COD2_1_0
+static const SV_FX_GetVisibility_t SV_FX_GetVisibility = (SV_FX_GetVisibility_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_FX_GetVisibility_t SV_FX_GetVisibility = (SV_FX_GetVisibility_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_FX_GetVisibility_t SV_FX_GetVisibility = (SV_FX_GetVisibility_t)0x08090AFA;
+#endif
+
 typedef int (*SV_PointContents_t)(const vec3_t *p, int passEntityNum, int contentmask);
 #if COD_VERSION == COD2_1_0
 static const SV_PointContents_t SV_PointContents = (SV_PointContents_t)0x0; // Not tested
