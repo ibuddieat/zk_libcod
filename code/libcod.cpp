@@ -579,16 +579,7 @@ void custom_G_SetClientContents(gentity_t *ent)
 			}
 			else
 			{
-				if( player_collision[ent - g_entities] != COLLISION_TEAM_BOTH )
-				{
-					// CONTENTS_CLIPSHOT: For bullet collision
-					// CONTENTS_ITEM: For mover/elevator
-					(ent->r).contents = ( CONTENTS_CLIPSHOT | CONTENTS_ITEM );
-				}
-				else
-				{
-					(ent->r).contents = CONTENTS_BODY;
-				}
+				(ent->r).contents = CONTENTS_BODY;
 			}
 		}
 		else
@@ -625,7 +616,7 @@ qboolean custom_StuckInClient(gentity_t *self)
 		hit = g_entities;
 		for ( i = 0; i < level.maxclients; i++, hit++)
 		{
-			if ( ( ( ( ( ( (hit->r).inuse != 0 ) && ( ((hit->client->ps).pm_flags & PMF_VIEWLOCKED) != 0 ) ) && ( (hit->client->sess).state == STATE_PLAYING )  ) && ( (hit != self && hit->client != NULL ) ) ) && ( 0 < hit->health && ( player_collision[i] != COLLISION_TEAM_BOTH /* New condition */ || ( (hit->r).contents == CONTENTS_BODY || ( (hit->r).contents == CONTENTS_CORPSE ) ) ) ) ) &&
+			if ( ( ( ( ( ( (hit->r).inuse != 0 ) && ( ((hit->client->ps).pm_flags & PMF_VIEWLOCKED) != 0 ) ) && ( (hit->client->sess).state == STATE_PLAYING )  ) && ( (hit != self && hit->client != NULL ) ) ) && ( 0 < hit->health && ( /* New condition */ player_collision[i] != COLLISION_TEAM_BOTH || ( (hit->r).contents == CONTENTS_BODY || ( (hit->r).contents == CONTENTS_CORPSE ) ) ) ) ) &&
 			( (hit->r).absmin[0] <= (self->r).absmax[0] && ( ( ( (self->r).absmin[0] <= (hit->r).absmax[0] && ( (hit->r).absmin[1] <= (self->r).absmax[1] ) ) && ( (self->r).absmin[1] <= (hit->r).absmax[1] ) ) && ( (hit->r).absmin[2] <= (self->r).absmax[2] && ( (self->r).absmin[2] <= (hit->r).absmax[2] ) ) ) ) )
 			{
 				/* New code: per-player/team collison */
@@ -4266,7 +4257,7 @@ void custom_Script_bulletTrace(void)
 	hitCharacters = Scr_GetInt(2);
 	if ( hitCharacters == 0 )
 	{
-		contentmask = MASK_SHOT ^ ( CONTENTS_BODY | CONTENTS_CLIPSHOT );
+		contentmask = MASK_SHOT ^ CONTENTS_BODY;
 	}
 	else
 	{
@@ -4691,11 +4682,8 @@ void bullet_fire_extended_trace(trace_t *results, const vec3_t *start, const vec
 		hitEffect->s.eventParm = DirToByte(trace.normal) & 0xFF;
 		hitEffect->s.surfType = (trace.surfaceFlags >> 20) & 0x1F;
 
-		/* Set contentmask to only hit player bodies (default: MASK_SHOT), with
-		 and without collision. We cannot use CONTENTS_CLIPSHOT here as this
-		 would include solid script_model entities. Probably negligible side-
-		 effect: Dropped weapons can still block bullets here */
-		contentmask = CONTENTS_BODY | CONTENTS_ITEM;
+		// Set contentmask to only hit player bodies (default: MASK_SHOT)
+		contentmask = CONTENTS_BODY;
 	}
 	G_LocationalTrace(results, start, end, passEntityNum, contentmask, priorityMap);
 }
