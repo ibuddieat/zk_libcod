@@ -37,6 +37,10 @@ Added cvars:
     * Min. Value: 0
     * Max. Value: 2
     * Effect: Toggle experimental fix for broken map damage and use-touch triggers. Possible values: `0`: Triggers disabled. `1`: Stock behavior, fix disabled. `2`: Fix enabled.
+  * `logErrors`
+    * Type: Boolean
+    * Default: False
+    * Effect: If true, log (non-terminal) script runtime errors as if developer mode was enabled.
   * `logfileName`
     * Type: String
     * Default: "console_mp_server.log"

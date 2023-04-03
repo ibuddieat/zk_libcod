@@ -52,6 +52,7 @@ cvar_t *g_resetSlide;
 cvar_t *g_spawnMapTurrets;
 cvar_t *g_spawnMapWeapons;
 cvar_t *g_triggerMode;
+cvar_t *logErrors;
 cvar_t *logfileName;
 cvar_t *logfileRotate;
 cvar_t *sv_allowRcon;
@@ -328,6 +329,7 @@ void common_init_complete_print(const char *format, ...)
 	g_spawnMapTurrets = Cvar_RegisterBool("g_spawnMapTurrets", qtrue, CVAR_ARCHIVE);
 	g_spawnMapWeapons = Cvar_RegisterBool("g_spawnMapWeapons", qtrue, CVAR_ARCHIVE);
 	g_triggerMode = Cvar_RegisterInt("g_triggerMode", 1, 0, 2, CVAR_ARCHIVE);
+	logErrors = Cvar_RegisterBool("logErrors", qfalse, CVAR_ARCHIVE);
 	sv_allowRcon = Cvar_RegisterBool("sv_allowRcon", qtrue, CVAR_ARCHIVE);
 	sv_botKickMessages = Cvar_RegisterBool("sv_botKickMessages", qtrue, CVAR_ARCHIVE);
 	sv_cracked = Cvar_RegisterBool("sv_cracked", qfalse, CVAR_ARCHIVE);
@@ -2281,10 +2283,11 @@ void custom_SV_BotUserMove(client_t *client)
 
 void hook_RuntimeError_in_VM_Execute(const char *pos, int error_index, const char *error_message, const char *dialog_error_message)
 {
-	if ( developer->integer == 2 )
-		RuntimeError_Debug(0, pos, error_index, error_message); // TODO: This (new) branch causes infinite error loops
-	else
-		RuntimeError(pos, error_index, error_message, dialog_error_message);
+	RuntimeError(pos, error_index, error_message, dialog_error_message);
+
+	// If enabled, log errors even if developer mode is off
+	if ( developer->integer == 0 && logErrors->boolean )
+		RuntimeError_Debug(0, pos, error_index, error_message);
 }
 
 #if COMPILE_PLAYER == 1
@@ -5990,7 +5993,7 @@ public:
 		cracking_hook_call(0x08090A52, (int)hook_ClientUserinfoChanged);
 		cracking_hook_call(0x08070BE7, (int)Scr_GetCustomFunction);
 		cracking_hook_call(0x08070E0B, (int)Scr_GetCustomMethod);
-		//cracking_hook_call(0x08082346, (int)hook_RuntimeError_in_VM_Execute);
+		cracking_hook_call(0x08082346, (int)hook_RuntimeError_in_VM_Execute);
 		cracking_hook_call(0x0808FD52, (int)hook_bad_printf);
 		cracking_hook_call(0x080EBC58, (int)hook_findWeaponIndex);
 		cracking_hook_call(0x08062644, (int)hitch_warning_print);
