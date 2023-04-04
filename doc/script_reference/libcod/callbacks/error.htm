@@ -27,10 +27,11 @@ Module: Callbacks<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Calls CodeCallback_Error() in maps/mp/gametypes/_callbacksetup.gsc. Called immideately on critical/terminal script runtime errors, else on the next invocation of G_RunFrame. Not called on script compile errors. Avoid using wait statements in this callback.</p>
+<p>Calls CodeCallback_Error() in maps/mp/gametypes/_callbacksetup.gsc. Called immideately on critical/terminal script runtime errors, else on the next invocation of G_RunFrame. Not called on script compile errors.</p>
 </H3>
 </TR></TD></TABLE>
 <p>Note: The existance of the callback function is checked only once on server start. Functions added later are not taken into account, even after a map switch.</p>
+<p>Note: Avoid using wait statements in this callback.</p>
 
 <BR><BR>
 <H2>Parameters:</H2>
