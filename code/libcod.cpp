@@ -55,6 +55,7 @@ cvar_t *g_triggerMode;
 cvar_t *logErrors;
 cvar_t *logfileName;
 cvar_t *logfileRotate;
+cvar_t *logTimestamps;
 cvar_t *sv_allowRcon;
 cvar_t *sv_botKickMessages;
 cvar_t *sv_cracked;
@@ -266,6 +267,7 @@ void custom_Com_InitCvars(void)
 	// Register custom cvars required early on server start
 	logfileName = Cvar_RegisterString("logfileName", "console_mp_server.log", CVAR_ARCHIVE);
 	logfileRotate = Cvar_RegisterInt("logfileRotate", 0, 0, 1000, CVAR_ARCHIVE);
+	logTimestamps = Cvar_RegisterBool("logTimestamps", qfalse, CVAR_ARCHIVE);
 
 	hook_com_initcvars->unhook();
 	void (*Com_InitCvars)(void);
@@ -4923,7 +4925,24 @@ void custom_Com_PrintMessage(int /* print_msg_type_t */ channel, char *message)
 				}
 				if ( logfile != 0 )
 				{
-					FS_Write(message, strlen(message), logfile);
+					if ( logTimestamps->boolean )
+					{
+						time_t timer;
+						struct tm *timeInfo;
+						const char *timeString;
+						char timedmessage[0x2000];
+
+						time(&timer);
+						timeInfo = localtime(&timer);
+						timeString = asctime(timeInfo);
+						Com_sprintf(timedmessage, 0x2000, "%s%s", timeString, message);
+						timedmessage[strlen(timeString) - 1] = ' ';
+						FS_Write(timedmessage, strlen(timedmessage), logfile);
+					}
+					else
+					{
+						FS_Write(message, strlen(message), logfile);
+					}
 					if ( 1 < com_logfile->integer ) // "logfile" cvar
 					{
 						FS_Flush(logfile);

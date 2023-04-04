@@ -51,6 +51,10 @@ Added cvars:
     * Min. Value: 0
     * Max. Value: 1000
     * Effect: Defines how many console log files are preserved on a server restart. Naming scheme: &lt;logfileName cvar value&gt;.&lt;incrementing integer&gt;
+  * `logTimestamps`
+    * Type: Boolean
+    * Default: False
+    * Effect: If true, prepend a timestamp (example: "Mon Apr  4 13:37:00 2023 ") to each console log entry.
   * `sv_disconnectMessages`
     * Type: Boolean
     * Default: True
