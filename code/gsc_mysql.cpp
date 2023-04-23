@@ -257,7 +257,7 @@ void gsc_mysql_async_initializer()//returns array with mysql connection handlers
 		newconnection->next = NULL;
 		newconnection->connection = mysql_init(NULL);
 		newconnection->connection = mysql_real_connect((MYSQL*)newconnection->connection, host, user, pass, db, port, NULL, 0);
-		my_bool reconnect = true;
+		bool reconnect = true;
 		mysql_options(newconnection->connection, MYSQL_OPT_RECONNECT, &reconnect);
 		newconnection->task = NULL;
 		if(current == NULL)
@@ -318,7 +318,7 @@ void gsc_mysql_real_connect()
 	}
 
 	mysql = (int) mysql_real_connect((MYSQL *)mysql, host, user, pass, db, port, NULL, 0);
-	my_bool reconnect = true;
+	bool reconnect = true;
 	mysql_options((MYSQL*)mysql, MYSQL_OPT_RECONNECT, &reconnect);
 	if(cod_mysql_connection == NULL)
 		cod_mysql_connection = (MYSQL*) mysql;

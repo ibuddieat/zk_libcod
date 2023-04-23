@@ -127,7 +127,7 @@ void gsc_async_mysql_initialize()
 	if (async_mysql_connection == NULL)
 	{
 		MYSQL *my = mysql_init(NULL);
-		my_bool reconnect = true;
+		bool reconnect = true;
 		mysql_options(my, MYSQL_OPT_RECONNECT, &reconnect);
 
 		if (!mysql_real_connect(my, host, user, pass, db, port, NULL, 0))
@@ -371,7 +371,7 @@ void gsc_async_mysql_create_query_nosave()
 	stackPushBool(qtrue);
 }
 
-void gsc_async_mysql_create_entity_query(scr_entref_t entid)
+void gsc_async_mysql_create_entity_query(scr_entref_t entref)
 {
 	char *query;
 
@@ -419,7 +419,7 @@ void gsc_async_mysql_create_entity_query(scr_entref_t entid)
 	newtask->levelId = scrVarPub.levelId;
 	newtask->hasargument = true;
 	newtask->hasentity = true;
-	newtask->gentity = &g_entities[entid];
+	newtask->gentity = &g_entities[entref.entnum];
 
 	int valueInt;
 	float valueFloat;
@@ -467,7 +467,7 @@ void gsc_async_mysql_create_entity_query(scr_entref_t entid)
 	stackPushBool(qtrue);
 }
 
-void gsc_async_mysql_create_entity_query_nosave(scr_entref_t entid)
+void gsc_async_mysql_create_entity_query_nosave(scr_entref_t entref)
 {
 	char *query;
 
@@ -515,7 +515,7 @@ void gsc_async_mysql_create_entity_query_nosave(scr_entref_t entid)
 	newtask->levelId = scrVarPub.levelId;
 	newtask->hasargument = true;
 	newtask->hasentity = true;
-	newtask->gentity = &g_entities[entid];
+	newtask->gentity = &g_entities[entref.entnum];
 
 	int valueInt;
 	float valueFloat;
@@ -983,7 +983,7 @@ void gsc_mysql_initialize()
 	if (mysql_connection == NULL)
 	{
 		MYSQL *my = mysql_init(NULL);
-		my_bool reconnect = true;
+		bool reconnect = true;
 		mysql_options(my, MYSQL_OPT_RECONNECT, &reconnect);
 
 		if (!mysql_real_connect(my, host, user, pass, db, port, NULL, 0))
