@@ -5912,6 +5912,34 @@ void custom_Cmd_PrintEntities_f(void)
 		G_PrintEntities();
 }
 
+void custom_GScr_LogPrint(void)
+{
+	unsigned int len;
+	int iStringLen;
+	char string[1024];
+	int iNumParms;
+	int i;
+	const char *pszToken;
+
+	string[0] = 0;
+	iStringLen = 0;
+	iNumParms = Scr_GetNumParam();
+
+	for ( i = 0; i < iNumParms; ++i )
+	{
+		pszToken = Scr_GetString(i);
+		len = strlen(pszToken);
+
+		if ( (int)(len + iStringLen) >= MAX_STRINGLENGTH )
+			break;
+
+		I_strncat(string, MAX_STRINGLENGTH, pszToken);
+		iStringLen += len;
+	}
+
+	G_LogPrintf("%s", string); // New: Fixed potential format string crash
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -6224,6 +6252,7 @@ public:
 		cracking_hook_function(0x080FD518, (int)custom_PlayerCmd_DeactivateReverb);
 		cracking_hook_function(0x080FD7C0, (int)custom_PlayerCmd_DeactivateChannelVolumes);
 		cracking_hook_function(0x08100E54, (int)custom_Cmd_PrintEntities_f);
+		cracking_hook_function(0x08113076, (int)custom_GScr_LogPrint);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC718, (int)Jump_ClearState);

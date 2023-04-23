@@ -1479,7 +1479,7 @@ static const I_strupr_t I_strupr = (I_strupr_t)0x080B7C12;
 static const I_strupr_t I_strupr = (I_strupr_t)0x080B7D56;
 #endif
 
-typedef void (*I_strncat_t)(char *dest, int size, char *src);
+typedef void (*I_strncat_t)(char *dest, int size, const char *src);
 #if COD_VERSION == COD2_1_0
 static const I_strncat_t I_strncat = (I_strncat_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
