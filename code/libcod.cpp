@@ -775,7 +775,7 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 	qboolean isBot = qfalse;
 	const char *translatedReason;
 	qboolean showIngameMessage = qtrue;
-	char name[0x40];
+	char name[32];
 	
 	Com_DPrintf("SV_DropClient for %s\n", drop->name);
 
