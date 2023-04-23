@@ -1218,6 +1218,15 @@ static const DirToByte_t DirToByte = (DirToByte_t)0x080A3E4A;
 static const DirToByte_t DirToByte = (DirToByte_t)0x080A3F8E;
 #endif
 
+typedef void (*G_PrintEntities_t)(void);
+#if COD_VERSION == COD2_1_0
+static const G_PrintEntities_t G_PrintEntities = (G_PrintEntities_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_PrintEntities_t G_PrintEntities = (G_PrintEntities_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_PrintEntities_t G_PrintEntities = (G_PrintEntities_t)0x0811E8D4;
+#endif
+
 typedef const char * (*G_ModelName_t)(int index);
 #if COD_VERSION == COD2_1_0
 static const G_ModelName_t G_ModelName = (G_ModelName_t)0x0; // Not tested

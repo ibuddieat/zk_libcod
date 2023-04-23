@@ -17,6 +17,7 @@ cvar_t *player_meleeRange;
 cvar_t *player_meleeWidth;
 cvar_t *rcon_password;
 cvar_t *sv_allowDownload;
+cvar_t *sv_cheats;
 cvar_t *sv_floodProtect;
 cvar_t *sv_fps;
 cvar_t *sv_maxclients;
@@ -92,7 +93,6 @@ cHook *hook_scr_loadgametype;
 cHook *hook_scr_notify;
 cHook *hook_script_cloneplayer;
 cHook *hook_bg_playanim;
-cHook *hook_sv_init;
 cHook *hook_sv_masterheartbeat;
 cHook *hook_touch_item_auto;
 cHook *hook_vm_notify;
@@ -297,6 +297,7 @@ void common_init_complete_print(const char *format, ...)
 	developer = Cvar_FindVar("developer");
 	rcon_password = Cvar_FindVar("rcon_password");
 	sv_allowDownload = Cvar_FindVar("sv_allowDownload");
+	sv_cheats = Cvar_FindVar("sv_cheats");
 	sv_floodProtect = Cvar_FindVar("sv_floodProtect");
 	sv_fps = Cvar_FindVar("sv_fps");
 	sv_maxclients = Cvar_FindVar("sv_maxclients");
@@ -5905,6 +5906,12 @@ void custom_PlayerCmd_DeactivateChannelVolumes(scr_entref_t entref)
 	SV_GameSendServerCommand(entref.entnum, 1, custom_va("%c %i %g", 70, priority, fadetime)); // New: Fixed command that is broken in stock
 }
 
+void custom_Cmd_PrintEntities_f(void)
+{
+	if ( sv_cheats->boolean ) // New: Omit request if cheats are disabled as this could lag servers with low IOPS
+		G_PrintEntities();
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -6216,6 +6223,7 @@ public:
 		cracking_hook_function(0x0805E986, (int)custom_CM_AreaEntities);
 		cracking_hook_function(0x080FD518, (int)custom_PlayerCmd_DeactivateReverb);
 		cracking_hook_function(0x080FD7C0, (int)custom_PlayerCmd_DeactivateChannelVolumes);
+		cracking_hook_function(0x08100E54, (int)custom_Cmd_PrintEntities_f);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC718, (int)Jump_ClearState);

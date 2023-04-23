@@ -15,6 +15,7 @@
 - Patched `Com_PrintMessage` so that strings that begin with a caret are printed properly
 - Patched the `clonePlayer` script function to not crash the server if called on a player without model
 - Excluded client userinfo updates from flood protection
+- Blocked client `printentities` command if cheats are disabled
 - Added compile flag `ENABLE_UNSAFE` to toggle the availability of potentially unsafe script functions that would make it easy to harm the server with malicious map scripts
 - Added/updated some missing/unknown declarations in [declarations.hpp](code/declarations.hpp)
 - Fixed some minor bugs
