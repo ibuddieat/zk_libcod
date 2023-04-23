@@ -804,13 +804,13 @@ static const MSG_ReadLong_t MSG_ReadLong = (MSG_ReadLong_t)0x0; // Not tested
 static const MSG_ReadLong_t MSG_ReadLong = (MSG_ReadLong_t)0x08068450;
 #endif
 
-typedef char * (*MSG_ReadString_t)(msg_t *msg);
+typedef char * (*MSG_ReadCommandString_t)(msg_t *msg);
 #if COD_VERSION == COD2_1_0
-static const MSG_ReadString_t MSG_ReadString = (MSG_ReadString_t)0x0; // Not tested
+static const MSG_ReadCommandString_t MSG_ReadCommandString = (MSG_ReadCommandString_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
-static const MSG_ReadString_t MSG_ReadString = (MSG_ReadString_t)0x0; // Not tested
+static const MSG_ReadCommandString_t MSG_ReadCommandString = (MSG_ReadCommandString_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
-static const MSG_ReadString_t MSG_ReadString = (MSG_ReadString_t)0x08068522;
+static const MSG_ReadCommandString_t MSG_ReadCommandString = (MSG_ReadCommandString_t)0x08068522;
 #endif
 
 typedef void (*SV_ExecuteClientCommand_t)(client_t *cl, char *s, qboolean clientOK);
@@ -975,7 +975,7 @@ static const Scr_IsSystemActive_t Scr_IsSystemActive = (Scr_IsSystemActive_t)0x0
 static const Scr_IsSystemActive_t Scr_IsSystemActive = (Scr_IsSystemActive_t)0x08084678;
 #endif
 
-typedef int (*Scr_GetInt_t)(uint param);
+typedef int (*Scr_GetInt_t)(unsigned int param);
 #if COD_VERSION == COD2_1_0
 static const Scr_GetInt_t Scr_GetInt = (Scr_GetInt_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
@@ -984,7 +984,7 @@ static const Scr_GetInt_t Scr_GetInt = (Scr_GetInt_t)0x0; // Not tested
 static const Scr_GetInt_t Scr_GetInt = (Scr_GetInt_t)0x08084694;
 #endif
 
-typedef float (*Scr_GetFloat_t)(uint param);
+typedef float (*Scr_GetFloat_t)(unsigned int param);
 #if COD_VERSION == COD2_1_0
 static const Scr_GetFloat_t Scr_GetFloat = (Scr_GetFloat_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
@@ -993,7 +993,7 @@ static const Scr_GetFloat_t Scr_GetFloat = (Scr_GetFloat_t)0x0; // Not tested
 static const Scr_GetFloat_t Scr_GetFloat = (Scr_GetFloat_t)0x08084968;
 #endif
 
-typedef void (*Scr_GetVector_t)(uint param, vec3_t *vec);
+typedef void (*Scr_GetVector_t)(unsigned int param, vec3_t *vec);
 #if COD_VERSION == COD2_1_0
 static const Scr_GetVector_t Scr_GetVector = (Scr_GetVector_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
@@ -1002,7 +1002,7 @@ static const Scr_GetVector_t Scr_GetVector = (Scr_GetVector_t)0x0; // Not tested
 static const Scr_GetVector_t Scr_GetVector = (Scr_GetVector_t)0x08084D40;
 #endif
 
-typedef const char * (*Scr_GetString_t)(uint param);
+typedef const char * (*Scr_GetString_t)(unsigned int param);
 #if COD_VERSION == COD2_1_0
 static const Scr_GetString_t Scr_GetString = (Scr_GetString_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
@@ -1011,7 +1011,7 @@ static const Scr_GetString_t Scr_GetString = (Scr_GetString_t)0x0; // Not tested
 static const Scr_GetString_t Scr_GetString = (Scr_GetString_t)0x08084BB2;
 #endif
 
-typedef int (*Scr_GetType_t)(uint param);
+typedef int (*Scr_GetType_t)(unsigned int param);
 #if COD_VERSION == COD2_1_0
 static const Scr_GetType_t Scr_GetType = (Scr_GetType_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
@@ -1020,7 +1020,7 @@ static const Scr_GetType_t Scr_GetType = (Scr_GetType_t)0x0; // Not tested
 static const Scr_GetType_t Scr_GetType = (Scr_GetType_t)0x08084FF0;
 #endif
 
-typedef int (*Scr_GetPointerType_t)(uint param);
+typedef int (*Scr_GetPointerType_t)(unsigned int param);
 #if COD_VERSION == COD2_1_0
 static const Scr_GetPointerType_t Scr_GetPointerType = (Scr_GetPointerType_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2

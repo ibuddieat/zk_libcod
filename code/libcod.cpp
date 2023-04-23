@@ -91,7 +91,7 @@ cHook *hook_g_initgentity;
 cHook *hook_print_codepos;
 cHook *hook_scr_loadgametype;
 cHook *hook_scr_notify;
-cHook *hook_script_cloneplayer;
+cHook *hook_playercmd_cloneplayer;
 cHook *hook_bg_playanim;
 cHook *hook_sv_masterheartbeat;
 cHook *hook_touch_item_auto;
@@ -2760,7 +2760,7 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 		scripts after executing gsc_utils_remotecommand() (via VM_Resume).
 		A potential solution for getting these commands into the callback too
 		could be to use something as follows in gsc_utils_remotecommand(), just
-		like Script_map() does:
+		like GScr_LoadMap() does:
 
 		level.finished = 2;
 		level.savePersist = 0;
@@ -4215,13 +4215,13 @@ LAB_08121ee6:
 	}
 }
 
-void custom_Script_clonePlayer(scr_entref_t ref)
+void custom_PlayerCmd_ClonePlayer(scr_entref_t ref)
 {
 	int id = ref.entnum;
 
-	hook_script_cloneplayer->unhook();
-	void (*Script_clonePlayer)(scr_entref_t ref);
-	*(int *)&Script_clonePlayer = hook_script_cloneplayer->from;
+	hook_playercmd_cloneplayer->unhook();
+	void (*PlayerCmd_ClonePlayer)(scr_entref_t ref);
+	*(int *)&PlayerCmd_ClonePlayer = hook_playercmd_cloneplayer->from;
 
 	if ( id >= MAX_CLIENTS )
 	{
@@ -4237,13 +4237,13 @@ void custom_Script_clonePlayer(scr_entref_t ref)
 	}
 	else
 	{
-		Script_clonePlayer(ref);
+		PlayerCmd_ClonePlayer(ref);
 	}
 
-	hook_script_cloneplayer->hook();
+	hook_playercmd_cloneplayer->hook();
 }
 
-void custom_Script_bulletTrace(void)
+void custom_Scr_BulletTrace(void)
 {
 	int args;
 	int hitCharacters;
@@ -4324,7 +4324,7 @@ void custom_Script_bulletTrace(void)
 	}
 }
 
-void custom_Script_sightTracePassed(void)
+void custom_Scr_SightTracePassed(void)
 {
 	int args;
 	int type;
@@ -4376,7 +4376,7 @@ void custom_Script_sightTracePassed(void)
 	Scr_AddBool(hitNum == 0);
 }
 
-void custom_Script_obituary(void)
+void custom_GScr_Obituary(void)
 {
 	int args;
 	int sWeapon;
@@ -4451,7 +4451,7 @@ LAB_081131e1:
 		ent->s.eventParm = sWeapon;
 }
 
-void custom_Script_setHintString(scr_entref_t ref)
+void custom_GScr_SetHintString(scr_entref_t ref)
 {
 	int id = ref.entnum;
 	gentity_t *ent;
@@ -5337,7 +5337,7 @@ qboolean custom_SV_ClientCommand(client_t *cl, msg_t *msg)
 	clientOk = 1;
 	floodprotect = true;
 	seq = MSG_ReadLong(msg);
-	s = MSG_ReadString(msg);
+	s = MSG_ReadCommandString(msg);
 	if ( seq <= cl->lastClientCommand )
 	{
 		return qtrue;
@@ -5696,7 +5696,7 @@ int custom_CM_AreaEntities(const float *mins, const float *maxs, int *entityList
 	 0x00200000	Player_GetUseList
 	 0x00400000	G_GrenadeTouchTriggerDamage
 	 0x00400000	G_CheckHitTriggerDamage
-	 0x02000000	Script_positionwouldtelefrag
+	 0x02000000	GScr_positionWouldTelefrag
 	 0x02000000	? indirection
 	 0x02000180	G_MoverPush
 	 0x405c0008	G_TouchTriggers
@@ -6157,8 +6157,8 @@ public:
 		hook_g_processipbans->hook();
 		hook_scr_notify = new cHook(0x0811B2DE, (int)custom_Scr_Notify);
 		hook_scr_notify->hook();
-		hook_script_cloneplayer = new cHook(0x080FCC76, (int)custom_Script_clonePlayer);
-		hook_script_cloneplayer->hook();
+		hook_playercmd_cloneplayer = new cHook(0x080FCC76, (int)custom_PlayerCmd_ClonePlayer);
+		hook_playercmd_cloneplayer->hook();
 		hook_com_initcvars = new cHook(0x08061D90, (int)custom_Com_InitCvars);
 		hook_com_initcvars->hook();
 		hook_sv_verifyiwds_f = new cHook(0x08090534, int(custom_SV_VerifyIwds_f));
@@ -6201,10 +6201,10 @@ public:
 		cracking_hook_function(0x0809A408, (int)custom_SV_BuildClientSnapshot);
 		cracking_hook_function(0x0811B770, (int)custom_G_SpawnEntitiesFromString);
 		cracking_hook_function(0x080584F0, (int)custom_CM_IsBadStaticModel);
-		cracking_hook_function(0x08113818, (int)custom_Script_bulletTrace);
-		cracking_hook_function(0x08113B0C, (int)custom_Script_sightTracePassed);
-		cracking_hook_function(0x08113128, (int)custom_Script_obituary);
-		cracking_hook_function(0x081124F6, (int)custom_Script_setHintString);
+		cracking_hook_function(0x08113818, (int)custom_Scr_BulletTrace);
+		cracking_hook_function(0x08113B0C, (int)custom_Scr_SightTracePassed);
+		cracking_hook_function(0x08113128, (int)custom_GScr_Obituary);
+		cracking_hook_function(0x081124F6, (int)custom_GScr_SetHintString);
 		cracking_hook_function(0x08092302, (int)custom_SV_MapExists);
 		cracking_hook_function(0x08109CE0, (int)custom_G_UpdateObjectives); // Guessed function name
 		cracking_hook_function(0x08120A70, (int)custom_FireWeaponMelee);
