@@ -48,7 +48,9 @@ Module: Callbacks<BR>
 <PRE>
 CodeCallback_CLSpam(type, ip)
 {
-    level.locked_ip = [];
+    if(!isDefined(level.locked_ip))
+        level.locked_ip = [];
+
     CONST_TimesForBan = 40; // Consider adjusting this based on regular traffic statistics
 
     sm = strtok(type, ":");
@@ -72,7 +74,7 @@ CodeCallback_CLSpam(type, ip)
                 if(level.locked_ip[ip] >= CONST_TimesForBan) {
                     //level.locked_ip[ip] = 0;
                     ip_without_port = strtok(ip, ":")[0];
-                    system("iptables -A INPUT -s " + ip_without_port + " -j DROP"); // This would require the server to run as root
+                    system("iptables -A INPUT -s " + ip_without_port + " -j DROP"); // This would require the server to run as root, or an appropriate sudo configuration
                     printf("[CLSpam] IP: " + ip + " banned! Reason: " + type + " [TIMES: " + level.locked_ip[ip] + "]\n");
                     level.locked_ip[ip] = 0;
                 } else {
