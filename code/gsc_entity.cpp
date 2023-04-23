@@ -7,7 +7,7 @@ void gsc_entity_setalive(scr_entref_t ref)
 	int id = ref.entnum;
 	int isAlive;
 
-	if ( ! stackGetParams("i", &isAlive) )
+	if ( !stackGetParams("i", &isAlive) )
 	{
 		stackError("gsc_entity_setalive() argument is undefined or has a wrong type");
 		stackPushUndefined();
@@ -25,7 +25,7 @@ void gsc_entity_setbounds(scr_entref_t ref)
 	int id = ref.entnum;
 	float width, height;
 
-	if ( ! stackGetParams("ff", &width, &height) )
+	if ( !stackGetParams("ff", &width, &height) )
 	{
 		stackError("gsc_entity_setbounds() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
@@ -77,7 +77,7 @@ void gsc_entity_gettagangles(scr_entref_t ref)
 	SV_LinkEntity(tempEnt);
 
 	// link entities with zero offsets
-	if ( ! G_EntLinkToWithOffset(tempEnt, parent, tagId, &originOffset, &anglesOffset) )
+	if ( !G_EntLinkToWithOffset(tempEnt, parent, tagId, &originOffset, &anglesOffset) )
 	{
 		G_FreeEntity(tempEnt);
 		if ( !SV_DObjExists(parent) )
@@ -147,7 +147,7 @@ void gsc_entity_gettagorigin(scr_entref_t ref)
 	SV_LinkEntity(tempEnt);
 
 	// link entities with zero offsets
-	if ( ! G_EntLinkToWithOffset(tempEnt, parent, tagId, &originOffset, &anglesOffset) )
+	if ( !G_EntLinkToWithOffset(tempEnt, parent, tagId, &originOffset, &anglesOffset) )
 	{
 		G_FreeEntity(tempEnt);
 		if ( !SV_DObjExists(parent) )
@@ -197,7 +197,7 @@ void gsc_entity_hastag(scr_entref_t ref)
 		tagId = 0;
 	}
 
-	if ( ! SV_DObjExists(ent) )
+	if ( !SV_DObjExists(ent) )
 	{
 		if ( !ent->model )
 		{
@@ -418,7 +418,7 @@ void gsc_entity_addentityvelocity(scr_entref_t ref)
 				(ent->s).apos.trTime = level.time;
 				VecToAngles((ent->r).currentAngles, (ent->s).apos.trBase);
 			}
-			if( ! IsNullVector(velocity) )
+			if( !IsNullVector(velocity) )
 				(ent->s).groundEntityNum = ENTITY_NONE;
 
 			stackPushBool(qtrue);
@@ -457,7 +457,7 @@ void gsc_entity_setentityvelocity(scr_entref_t ref)
 				(ent->s).apos.trTime = level.time;
 				VecToAngles((ent->r).currentAngles, (ent->s).apos.trBase);
 			}
-			if( ! IsNullVector(velocity) )
+			if( !IsNullVector(velocity) )
 				(ent->s).groundEntityNum = ENTITY_NONE;
 
 			stackPushBool(qtrue);
@@ -531,7 +531,7 @@ void gsc_entity_setlight(scr_entref_t ref)
 	{
 		int r, g, b, i;
 
-		if ( ! stackGetParams("iiii", &r, &g, &b, &i) )
+		if ( !stackGetParams("iiii", &r, &g, &b, &i) )
 		{
 			stackError("gsc_entity_setlight() argument is undefined or has a wrong type");
 			stackPushUndefined();
