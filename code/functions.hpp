@@ -615,6 +615,15 @@ static const NET_CompareAdr_t NET_CompareAdr = (NET_CompareAdr_t)0x0; // Not tes
 static const NET_CompareAdr_t NET_CompareAdr = (NET_CompareAdr_t)0x0806C54C;
 #endif
 
+typedef void (*Scr_ObjectError_t)(const char *error);
+#if COD_VERSION == COD2_1_0
+static const Scr_ObjectError_t Scr_ObjectError = (Scr_ObjectError_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Scr_ObjectError_t Scr_ObjectError = (Scr_ObjectError_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Scr_ObjectError_t Scr_ObjectError = (Scr_ObjectError_t)0x08085478;
+#endif
+
 typedef void (*Scr_Error_t)(const char *string);
 #if COD_VERSION == COD2_1_0
 static const Scr_Error_t Scr_Error = (Scr_Error_t)0x08084DB4;

@@ -5809,6 +5809,102 @@ void ServerCrash(int sig)
 	exit(1);
 }
 
+void custom_PlayerCmd_DeactivateReverb(scr_entref_t entref)
+{
+	unsigned short priorityString;
+	int paramNum;
+	float fadetime;
+	int priority;
+
+	if ( entref.classnum )
+	{
+		Scr_ObjectError("not an entity");
+	}
+	else if ( !g_entities[entref.entnum].client )
+	{
+		Scr_ObjectError(custom_va("entity %i is not a player", entref.entnum));
+	}
+
+	fadetime = 0.0;
+	paramNum = Scr_GetNumParam();
+	if ( paramNum != 1 )
+	{
+		if ( paramNum != 2 )
+		{
+			Scr_Error(
+			"USAGE: player deactivateReverb(\"priority\", fadetime = 0);\nValid priorities are \"snd_enveffectsprio_level\" or \"snd_enveffectsprio_shellshock\", fadetime is the time spent fading t o the next lowest active reverb priority level in seconds\n"
+			);
+			return;
+		}
+		fadetime = Scr_GetFloat(1);
+	}
+	priorityString = Scr_GetConstString(0);
+	priority = 1;
+	if ( priorityString == scr_const.snd_enveffectsprio_level )
+	{
+		priority = 1;
+	}
+	else if ( priorityString == scr_const.snd_enveffectsprio_shellshock )
+	{
+		priority = 2;
+	}
+	else
+	{
+		Scr_Error("priority must be \'snd_enveffectsprio_level\' or \'snd_enveffectsprio_shellshock\'\n");
+	}
+	SV_GameSendServerCommand(entref.entnum, 1, custom_va("%c %i %g", 68, priority, fadetime)); // New: Fixed command that is broken in stock
+}
+
+void custom_PlayerCmd_DeactivateChannelVolumes(scr_entref_t entref)
+{
+	unsigned short priorityString;
+	int paramNum;
+	float fadetime;
+	int priority;
+
+	if ( entref.classnum )
+	{
+		Scr_ObjectError("not an entity");
+	}
+	else if ( !g_entities[entref.entnum].client )
+	{
+		Scr_ObjectError(custom_va("entity %i is not a player", entref.entnum));
+	}
+
+	fadetime = 0.0;
+	paramNum = Scr_GetNumParam();
+	if ( paramNum != 1 )
+	{
+		if ( paramNum != 2 )
+		{
+			Scr_Error(
+			"USAGE: player deactivatechannelvolumes(\"priority\", fadetime = 0);\nValid priorities are \"snd_channelvolprio_holdbreath\", \"snd_channelvolprio_pain\", or \"snd_channelvolprio_shells hock\", fadetime is the time spent fading to the next lowest active reverb priority level in seconds\n"
+			);
+			return;
+		}
+		fadetime = Scr_GetFloat(1);
+	}
+	priorityString = Scr_GetConstString(0);
+	priority = 1;
+	if ( priorityString == scr_const.snd_channelvolprio_holdbreath )
+	{
+		priority = 1;
+	}
+	else if ( priorityString == scr_const.snd_channelvolprio_pain )
+	{
+		priority = 2;
+	}
+	else if ( priorityString == scr_const.snd_channelvolprio_shellshock )
+	{
+		priority = 3;
+	}
+	else
+	{
+		Scr_Error("priority must be \'snd_channelvolprio_holdbreath\', \'snd_channelvolprio_pain\', or \'snd_channelvolprio_shellshock\'\n");
+	}
+	SV_GameSendServerCommand(entref.entnum, 1, custom_va("%c %i %g", 70, priority, fadetime)); // New: Fixed command that is broken in stock
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -6118,6 +6214,8 @@ public:
 		cracking_hook_function(0x0811D096, (int)custom_G_GrenadeTouchTriggerDamage);
 		cracking_hook_function(0x0809C63A, (int)custom_SV_LinkEntity);
 		cracking_hook_function(0x0805E986, (int)custom_CM_AreaEntities);
+		cracking_hook_function(0x080FD518, (int)custom_PlayerCmd_DeactivateReverb);
+		cracking_hook_function(0x080FD7C0, (int)custom_PlayerCmd_DeactivateChannelVolumes);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC718, (int)Jump_ClearState);
