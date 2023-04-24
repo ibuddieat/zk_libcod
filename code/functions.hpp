@@ -435,6 +435,15 @@ static const SV_VerifyIwds_f_t SV_VerifyIwds_f = (SV_VerifyIwds_f_t)0x0; // Not 
 static const SV_VerifyIwds_f_t SV_VerifyIwds_f = (SV_VerifyIwds_f_t)0x08090534;
 #endif
 
+typedef void (*SV_UserMove_t)(client_t *cl, msg_t *msg, qboolean delta);
+#if COD_VERSION == COD2_1_0
+static const SV_UserMove_t SV_UserMove = (SV_UserMove_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_UserMove_t SV_UserMove = (SV_UserMove_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_UserMove_t SV_UserMove = (SV_UserMove_t)0x08090E34;
+#endif
+
 typedef int (*NET_CompareBaseAdr_t)(netadr_t a,netadr_t b);
 #if COD_VERSION == COD2_1_0
 static const NET_CompareBaseAdr_t NET_CompareBaseAdr = (NET_CompareBaseAdr_t)0x0; // Not tested
@@ -460,6 +469,15 @@ static const SV_GameSendServerCommand_t SV_GameSendServerCommand = (SV_GameSendS
 static const SV_GameSendServerCommand_t SV_GameSendServerCommand = (SV_GameSendServerCommand_t)0x080916A6;
 #elif COD_VERSION == COD2_1_3
 static const SV_GameSendServerCommand_t SV_GameSendServerCommand = (SV_GameSendServerCommand_t)0x080917AA;
+#endif
+
+typedef void (*SV_SendClientSnapshot_t)(client_t *cl);
+#if COD_VERSION == COD2_1_0
+static const SV_SendClientSnapshot_t SV_SendClientSnapshot = (SV_SendClientSnapshot_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_SendClientSnapshot_t SV_SendClientSnapshot = (SV_SendClientSnapshot_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_SendClientSnapshot_t SV_SendClientSnapshot = (SV_SendClientSnapshot_t)0x0809ADEA;
 #endif
 
 typedef void (QDECL *SV_SendServerCommand_t)(client_t *cl, int type, const char *fmt, ...);
@@ -496,6 +514,24 @@ static const ClientUserinfoChanged_t ClientUserinfoChanged = (ClientUserinfoChan
 static const ClientUserinfoChanged_t ClientUserinfoChanged = (ClientUserinfoChanged_t)0x080F8B1A;
 #elif COD_VERSION == COD2_1_3
 static const ClientUserinfoChanged_t ClientUserinfoChanged = (ClientUserinfoChanged_t)0x080F8C5E;
+#endif
+
+typedef qboolean (*SV_ClientCommand_t)(client_t *cl, msg_t *msg);
+#if COD_VERSION == COD2_1_0
+static const SV_ClientCommand_t SV_ClientCommand = (SV_ClientCommand_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_ClientCommand_t SV_ClientCommand = (SV_ClientCommand_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_ClientCommand_t SV_ClientCommand = (SV_ClientCommand_t)0x08090BAC;
+#endif
+
+typedef void (*SV_SendClientGameState_t)(client_t *cl);
+#if COD_VERSION == COD2_1_0
+static const SV_SendClientGameState_t SV_SendClientGameState = (SV_SendClientGameState_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_SendClientGameState_t SV_SendClientGameState = (SV_SendClientGameState_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_SendClientGameState_t SV_SendClientGameState = (SV_SendClientGameState_t)0x0808F302;
 #endif
 
 typedef void (*SV_UpdateServerCommandsToClient_t)(client_t *client, msg_t *msg);
@@ -831,6 +867,15 @@ static const MSG_BeginReading_t MSG_BeginReading = (MSG_BeginReading_t)0x0; // N
 static const MSG_BeginReading_t MSG_BeginReading = (MSG_BeginReading_t)0x08067C1C;
 #endif
 
+typedef int (*MSG_ReadBits_t)(msg_t *msg, int numBits);
+#if COD_VERSION == COD2_1_0
+static const MSG_ReadBits_t MSG_ReadBits = (MSG_ReadBits_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const MSG_ReadBits_t MSG_ReadBits = (MSG_ReadBits_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const MSG_ReadBits_t MSG_ReadBits = (MSG_ReadBits_t)0x08067E20;
+#endif
+
 typedef int (*MSG_ReadByte_t)(msg_t *msg);
 #if COD_VERSION == COD2_1_0
 static const MSG_ReadByte_t MSG_ReadByte = (MSG_ReadByte_t)0x0; // Not tested
@@ -865,6 +910,15 @@ static const MSG_ReadCommandString_t MSG_ReadCommandString = (MSG_ReadCommandStr
 static const MSG_ReadCommandString_t MSG_ReadCommandString = (MSG_ReadCommandString_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const MSG_ReadCommandString_t MSG_ReadCommandString = (MSG_ReadCommandString_t)0x08068522;
+#endif
+
+typedef void (*SV_ClientEnterWorld_t)(client_t *cl, usercmd_t *cmd);
+#if COD_VERSION == COD2_1_0
+static const SV_ClientEnterWorld_t SV_ClientEnterWorld = (SV_ClientEnterWorld_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_ClientEnterWorld_t SV_ClientEnterWorld = (SV_ClientEnterWorld_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_ClientEnterWorld_t SV_ClientEnterWorld = (SV_ClientEnterWorld_t)0x0808F628;
 #endif
 
 typedef void (*SV_ExecuteClientCommand_t)(client_t *cl, char *s, qboolean clientOK);
@@ -2692,6 +2746,15 @@ static const use_trigger_use_t use_trigger_use = (use_trigger_use_t)0x0; // Not 
 static const use_trigger_use_t use_trigger_use = (use_trigger_use_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const use_trigger_use_t use_trigger_use = (use_trigger_use_t)0x0810FE4A;
+#endif
+
+typedef int (*get_bit_t)(byte *fin);
+#if COD_VERSION == COD2_1_0
+static const get_bit_t get_bit = (get_bit_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const get_bit_t get_bit = (get_bit_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const get_bit_t get_bit = (get_bit_t)0x0806627A;
 #endif
 
 #endif

@@ -356,6 +356,14 @@ enum svc_ops_e
 	svc_EOF
 };
 
+enum clc_ops_e
+{
+	clc_move,
+	clc_moveNoDelta,
+	clc_clientCommand,
+	clc_EOF
+};
+
 typedef enum
 {
 	ET_GENERAL = 0,
@@ -938,6 +946,39 @@ typedef enum
 	EV_GRENADE_SUICIDE,
 	EV_OBITUARY                 // 198
 } entity_event_t;
+
+#define HMAX 256 /* Maximum symbol */
+#define INTERNAL_NODE ( HMAX + 1 )
+
+typedef struct nodetype
+{
+	struct  nodetype *left, *right, *parent; /* tree structure */
+	struct  nodetype *next, *prev; /* doubly-linked list */
+	struct  nodetype **head; /* highest ranked node in block */
+	int weight;
+	int symbol;
+} node_t;
+
+typedef struct
+{
+	int blocNode;
+	int blocPtrs;
+
+	node_t*     tree;
+	node_t*     lhead;
+	node_t*     ltail;
+	node_t*     loc[HMAX + 1];
+	node_t**    freelist;
+
+	node_t nodeList[768];
+	node_t*     nodePtrs[768];
+} huff_t;
+
+typedef struct
+{
+	huff_t compressor;
+	huff_t decompressor;
+} huffman_t;
 
 typedef struct netField_s
 {
@@ -3352,6 +3393,30 @@ static const int cm_world_offset = 0x0;
 static const int cm_world_offset = 0x08189000;
 #endif
 
+#if COD_VERSION == COD2_1_0 // Not tested
+static const int bloc_offset = 0x0;
+#elif COD_VERSION == COD2_1_2 // Not tested
+static const int bloc_offset = 0x0;
+#elif COD_VERSION == COD2_1_3
+static const int bloc_offset = 0x081E9544;
+#endif
+
+#if COD_VERSION == COD2_1_0 // Not tested
+static const int sv_serverId_value_offset = 0x0;
+#elif COD_VERSION == COD2_1_2 // Not tested
+static const int sv_serverId_value_offset = 0x0;
+#elif COD_VERSION == COD2_1_3
+static const int sv_serverId_value_offset = 0x08423008;
+#endif
+
+#if COD_VERSION == COD2_1_0 // Not tested
+static const int msgHuff_offset = 0x0;
+#elif COD_VERSION == COD2_1_2 // Not tested
+static const int msgHuff_offset = 0x0;
+#elif COD_VERSION == COD2_1_3
+static const int msgHuff_offset = 0x081E9C60;
+#endif
+
 #define g_entities ((gentity_t*)(gentities_offset))
 #define g_clients ((gclient_t*)(gclients_offset))
 #define scrVarPub (*((scrVarPub_t*)( varpub_offset )))
@@ -3395,6 +3460,9 @@ static const int cm_world_offset = 0x08189000;
 #define actorLocationalMins ((float*)( actorLocationalMins_offset ))
 #define actorLocationalMaxs ((float*)( actorLocationalMaxs_offset ))
 #define cm_world (*((cm_world_t*)(cm_world_offset)))
+#define bloc (*((int*)( bloc_offset )))
+#define sv_serverId_value (*((int*)( sv_serverId_value_offset )))
+#define msgHuff (*((huffman_t*)( msgHuff_offset )))
 
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6

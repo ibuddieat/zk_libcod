@@ -5940,6 +5940,130 @@ void custom_GScr_LogPrint(void)
 	G_LogPrintf("%s", string); // New: Fixed potential format string crash
 }
 
+void custom_Huff_offsetReceive(node_t *node, int *ch, byte *fin, int readsize, int *offset)
+{
+	// New: Fixed a design flaw (OOB access), see https://github.com/callofduty4x/CoD4x_Server/pull/396
+	bloc = *offset;
+	while ( node && node->symbol == INTERNAL_NODE && bloc < readsize )
+	{
+		if ( !get_bit(fin) )
+		{
+			node = node->left;
+		}
+		else
+		{
+			node = node->right;
+		}
+		if ( bloc >= readsize )
+		{
+			*ch = 7; // EOF
+			*offset = bloc;
+			return;
+		}
+	}
+	if ( !node )
+	{
+		*ch = 0;
+	}
+	else
+	{
+		*ch = node->symbol;
+		*offset = bloc;
+	}
+}
+
+int custom_MSG_ReadBitsCompress(const byte* input, byte* outputBuf, int readsize)
+{
+	// New: Added readsize parameter to Huff_offsetReceive call
+	readsize = readsize * 8;
+	byte *outptr = outputBuf;
+
+	int get;
+	int offset;
+	int i;
+
+	if ( readsize <= 0 )
+	{
+		return 0;
+	}
+
+	for ( offset = 0, i = 0; offset < readsize; i++ )
+	{
+		custom_Huff_offsetReceive(msgHuff.decompressor.tree, &get, (byte*)input, readsize, &offset);
+		*outptr = (byte)get;
+		outptr++;
+	}
+
+	return i;
+}
+
+void custom_SV_ExecuteClientMessage(client_t *cl, msg_t *msg)
+{
+	byte *outputBuf;
+	LargeLocal buf;
+	msg_t decompressMsg;
+	int c;
+	
+	LargeLocalConstructor(&buf, MAX_MSGLEN);
+	outputBuf = LargeLocalGetBuf(&buf);
+	MSG_Init(&decompressMsg, outputBuf, MAX_MSGLEN);
+	decompressMsg.cursize = custom_MSG_ReadBitsCompress(msg->data + msg->readcount, outputBuf, msg->cursize - msg->readcount);
+	if ( cl->serverId == sv_serverId_value || cl->downloadName[0] )
+	{
+		do {
+			c = MSG_ReadBits(&decompressMsg, 3);
+			if ( c == clc_EOF || c != clc_clientCommand )
+			{
+				if ( sv_pure->boolean && cl->pureAuthentic == 2 )
+				{
+					cl->nextSnapshotTime = -1;
+					SV_DropClient(cl, "EXE_UNPURECLIENTDETECTED");
+					cl->state = CS_ACTIVE;
+					SV_SendClientSnapshot(cl);
+					cl->state = CS_ZOMBIE;
+				}
+				if ( c == clc_move )
+				{
+					SV_UserMove(cl, &decompressMsg, 1);
+				}
+				else if ( c == clc_moveNoDelta )
+				{
+					SV_UserMove(cl, &decompressMsg, 0);
+				}
+				else if ( c != clc_EOF )
+				{
+					Com_Printf("WARNING: bad command byte %i for client %i\n", c, cl - svs.clients);
+				}
+				LargeLocalDestructor(&buf);
+				return;
+			}
+			if ( !SV_ClientCommand(cl, &decompressMsg) )
+			{
+				LargeLocalDestructor(&buf);
+				return;
+			}
+		} while ( cl->state != CS_ZOMBIE );
+		LargeLocalDestructor(&buf);
+	}
+	else if ( (cl->serverId & 0xF0) == (sv_serverId_value & 0xF0) )
+	{
+		if ( cl->state == CS_PRIMED )
+		{
+			SV_ClientEnterWorld(cl, &cl->lastUsercmd);
+		}
+		LargeLocalDestructor(&buf);
+	}
+	else
+	{
+		if ( cl->gamestateMessageNum < cl->messageAcknowledge )
+		{
+			Com_DPrintf("%s : dropped gamestate, resending\n", cl->name);
+			SV_SendClientGameState(cl);
+		}
+		LargeLocalDestructor(&buf);
+	}
+}
+
 void custom_SV_PacketEvent(netadr_t from, msg_t *msg)
 {
 	int qport;
