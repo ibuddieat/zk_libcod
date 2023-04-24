@@ -63,6 +63,7 @@
 #define MAX_NETNAME                 16
 #define MAX_OSPATH                  256
 #define MAX_QPATH                   64
+#define MAX_RELIABLE_COMMANDS		128
 #define MAX_SNAPSHOT_ENTITIES       1024
 #define MAX_STRINGLENGTH            1024
 #define MAX_TOTAL_ENT_LEAFS         128

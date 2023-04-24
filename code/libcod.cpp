@@ -5940,6 +5940,72 @@ void custom_GScr_LogPrint(void)
 	G_LogPrintf("%s", string); // New: Fixed potential format string crash
 }
 
+void custom_SV_PacketEvent(netadr_t from, msg_t *msg)
+{
+	int qport;
+	client_t *cl;
+	int i;
+
+	if ( msg->cursize < 4 || *(int *)msg->data != -1 )
+	{
+		SV_ResetSkeletonCache();
+		MSG_BeginReading(msg);
+		MSG_ReadLong(msg);
+		qport = MSG_ReadShort(msg);
+		cl = svs.clients;
+		for ( i = 0; i < sv_maxclients->integer; i++, cl++ )
+		{
+			if ( cl->state != CS_FREE && NET_CompareBaseAdr(from, (cl->netchan).remoteAddress) && (cl->netchan).qport == (qport & 0xffff) )
+			{
+				if ( (cl->netchan).remoteAddress.port != from.port )
+				{
+					Com_Printf("SV_ReadPackets: fixing up a translated port\n");
+					(cl->netchan).remoteAddress.port = from.port;
+				}
+
+				if ( !Netchan_Process(&cl->netchan, msg) )
+				{
+					return;
+				}
+
+				cl->serverId = MSG_ReadByte(msg);
+				cl->messageAcknowledge = MSG_ReadLong(msg);
+				if ( cl->messageAcknowledge < 0 )
+				{
+					Com_Printf("Invalid reliableAcknowledge message from %s - reliableAcknowledge is %i\n", cl->name, cl->reliableAcknowledge);
+					return;
+				}
+
+				cl->reliableAcknowledge = MSG_ReadLong(msg);
+				// New: Fix for invalid reliableAcknowledge exploit, see https://github.com/callofduty4x/CoD4x_Server/pull/407
+				if ( ( cl->reliableSequence - cl->reliableAcknowledge ) > ( MAX_RELIABLE_COMMANDS - 1 ) || cl->reliableAcknowledge < 0 || ( cl->reliableSequence - cl->reliableAcknowledge ) < 0 )
+				{
+					Com_Printf("Out of range reliableAcknowledge message from %s - cl->reliableSequence is %i, reliableAcknowledge is %i\n",
+					cl->name, cl->reliableSequence, cl->reliableAcknowledge);
+					cl->reliableAcknowledge = cl->reliableSequence;
+					return;
+				}
+
+				SV_Netchan_Decode(cl, msg->data + msg->readcount, msg->cursize - msg->readcount);
+
+				if ( cl->state == CS_ZOMBIE )
+				{
+					return;
+				}
+				cl->lastPacketTime = svs.time;
+				SV_ExecuteClientMessage(cl, msg);
+				bgs = NULL;
+				return;
+			}
+		}
+		NET_OutOfBandPrint(NS_SERVER, from, "disconnect");
+	}
+	else
+	{
+		SV_ConnectionlessPacket(from, msg);
+	}
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -6253,6 +6319,7 @@ public:
 		cracking_hook_function(0x080FD7C0, (int)custom_PlayerCmd_DeactivateChannelVolumes);
 		cracking_hook_function(0x08100E54, (int)custom_Cmd_PrintEntities_f);
 		cracking_hook_function(0x08113076, (int)custom_GScr_LogPrint);
+		cracking_hook_function(0x080960E2, (int)custom_SV_PacketEvent);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC718, (int)Jump_ClearState);

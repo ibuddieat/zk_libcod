@@ -408,6 +408,24 @@ static const SV_ConnectionlessPacket_t SV_ConnectionlessPacket = (SV_Connectionl
 static const SV_ConnectionlessPacket_t SV_ConnectionlessPacket = (SV_ConnectionlessPacket_t)0x0809594E;
 #endif
 
+typedef void (*SV_ExecuteClientMessage_t)(client_t *cl, msg_t *msg);
+#if COD_VERSION == COD2_1_0
+static const SV_ExecuteClientMessage_t SV_ExecuteClientMessage = (SV_ExecuteClientMessage_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_ExecuteClientMessage_t SV_ExecuteClientMessage = (SV_ExecuteClientMessage_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_ExecuteClientMessage_t SV_ExecuteClientMessage = (SV_ExecuteClientMessage_t)0x0809114E;
+#endif
+
+typedef void (*SV_ResetSkeletonCache_t)(void);
+#if COD_VERSION == COD2_1_0
+static const SV_ResetSkeletonCache_t SV_ResetSkeletonCache = (SV_ResetSkeletonCache_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_ResetSkeletonCache_t SV_ResetSkeletonCache = (SV_ResetSkeletonCache_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_ResetSkeletonCache_t SV_ResetSkeletonCache = (SV_ResetSkeletonCache_t)0x08091EDC;
+#endif
+
 typedef void (*SV_VerifyIwds_f_t)(client_t *cl);
 #if COD_VERSION == COD2_1_0
 static const SV_VerifyIwds_f_t SV_VerifyIwds_f = (SV_VerifyIwds_f_t)0x0; // Not tested
@@ -415,6 +433,15 @@ static const SV_VerifyIwds_f_t SV_VerifyIwds_f = (SV_VerifyIwds_f_t)0x0; // Not 
 static const SV_VerifyIwds_f_t SV_VerifyIwds_f = (SV_VerifyIwds_f_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const SV_VerifyIwds_f_t SV_VerifyIwds_f = (SV_VerifyIwds_f_t)0x08090534;
+#endif
+
+typedef int (*NET_CompareBaseAdr_t)(netadr_t a,netadr_t b);
+#if COD_VERSION == COD2_1_0
+static const NET_CompareBaseAdr_t NET_CompareBaseAdr = (NET_CompareBaseAdr_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const NET_CompareBaseAdr_t NET_CompareBaseAdr = (NET_CompareBaseAdr_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const NET_CompareBaseAdr_t NET_CompareBaseAdr = (NET_CompareBaseAdr_t)0x0806C424;
 #endif
 
 typedef void (*NET_OutOfBandPrint_t)(netsrc_t net_socket, netadr_t adr, const char *format, ...);
@@ -795,6 +822,33 @@ static const MSG_WriteDeltaHudElems_t MSG_WriteDeltaHudElems = (MSG_WriteDeltaHu
 static const MSG_WriteDeltaHudElems_t MSG_WriteDeltaHudElems = (MSG_WriteDeltaHudElems_t)0x08069f84;
 #endif
 
+typedef void (*MSG_BeginReading_t)(msg_t *buf);
+#if COD_VERSION == COD2_1_0
+static const MSG_BeginReading_t MSG_BeginReading = (MSG_BeginReading_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const MSG_BeginReading_t MSG_BeginReading = (MSG_BeginReading_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const MSG_BeginReading_t MSG_BeginReading = (MSG_BeginReading_t)0x08067C1C;
+#endif
+
+typedef int (*MSG_ReadByte_t)(msg_t *msg);
+#if COD_VERSION == COD2_1_0
+static const MSG_ReadByte_t MSG_ReadByte = (MSG_ReadByte_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const MSG_ReadByte_t MSG_ReadByte = (MSG_ReadByte_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const MSG_ReadByte_t MSG_ReadByte = (MSG_ReadByte_t)0x080683A8;
+#endif
+
+typedef int (*MSG_ReadShort_t)(msg_t *msg);
+#if COD_VERSION == COD2_1_0
+static const MSG_ReadShort_t MSG_ReadShort = (MSG_ReadShort_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const MSG_ReadShort_t MSG_ReadShort = (MSG_ReadShort_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const MSG_ReadShort_t MSG_ReadShort = (MSG_ReadShort_t)0x080683F2;
+#endif
+
 typedef int (*MSG_ReadLong_t)(msg_t *msg);
 #if COD_VERSION == COD2_1_0
 static const MSG_ReadLong_t MSG_ReadLong = (MSG_ReadLong_t)0x0; // Not tested
@@ -831,6 +885,15 @@ static const SV_SendMessageToClient_t SV_SendMessageToClient = (SV_SendMessageTo
 static const SV_SendMessageToClient_t SV_SendMessageToClient = (SV_SendMessageToClient_t)0x0809ABA2;
 #endif
 
+typedef void (*SV_Netchan_Decode_t)(client_t *client, byte *data, int remaining);
+#if COD_VERSION == COD2_1_0
+static const SV_Netchan_Decode_t SV_Netchan_Decode = (SV_Netchan_Decode_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_Netchan_Decode_t SV_Netchan_Decode = (SV_Netchan_Decode_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_Netchan_Decode_t SV_Netchan_Decode = (SV_Netchan_Decode_t)0x08097562;
+#endif
+
 typedef void (*SV_Netchan_TransmitNextFragment_t)(netchan_t *chan);
 #if COD_VERSION == COD2_1_0
 static const SV_Netchan_TransmitNextFragment_t SV_Netchan_TransmitNextFragment = (SV_Netchan_TransmitNextFragment_t)0x0; // Not tested
@@ -838,6 +901,15 @@ static const SV_Netchan_TransmitNextFragment_t SV_Netchan_TransmitNextFragment =
 static const SV_Netchan_TransmitNextFragment_t SV_Netchan_TransmitNextFragment = (SV_Netchan_TransmitNextFragment_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const SV_Netchan_TransmitNextFragment_t SV_Netchan_TransmitNextFragment = (SV_Netchan_TransmitNextFragment_t)0x08097610;
+#endif
+
+typedef qboolean (*Netchan_Process_t)(netchan_t *chan, msg_t *msg);
+#if COD_VERSION == COD2_1_0
+static const Netchan_Process_t Netchan_Process = (Netchan_Process_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Netchan_Process_t Netchan_Process = (Netchan_Process_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Netchan_Process_t Netchan_Process = (Netchan_Process_t)0x0806BE8A;
 #endif
 
 typedef WeaponDef_t * (*BG_WeaponDefs_t)(unsigned int weaponIndex);
