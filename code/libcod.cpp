@@ -6006,6 +6006,12 @@ void custom_SV_PacketEvent(netadr_t from, msg_t *msg)
 	}
 }
 
+int custom_SV_CanReplaceServerCommand(client_t *client, const char *command)
+{
+	// New: Exploit fix, see https://github.com/XLabsProject/iw4x-client/commit/338c65689bd363a65e2025f56661bde910317d5b
+	return -1;
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -6320,6 +6326,7 @@ public:
 		cracking_hook_function(0x08100E54, (int)custom_Cmd_PrintEntities_f);
 		cracking_hook_function(0x08113076, (int)custom_GScr_LogPrint);
 		cracking_hook_function(0x080960E2, (int)custom_SV_PacketEvent);
+		cracking_hook_function(0x08094530, (int)custom_SV_CanReplaceServerCommand);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC718, (int)Jump_ClearState);
