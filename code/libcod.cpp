@@ -5945,10 +5945,15 @@ void custom_Huff_offsetReceive(node_t *node, int *ch, byte *fin, int readsize, i
 {
 	// New: Fixed a design flaw (OOB access), see https://github.com/callofduty4x/CoD4x_Server/pull/396
 	// Related reference: https://github.com/ioquake/ioq3/commit/d2b1d124d4055c2fcbe5126863487c52fd58cca1
-	// TODO: Commented implementation caused movement/command artifacts
 	bloc = *offset;
-	while ( node && node->symbol == INTERNAL_NODE /*&& bloc < readsize*/ )
+	while ( node && node->symbol == INTERNAL_NODE )
 	{
+		if ( bloc >= readsize )
+		{
+			*ch = 0;
+			*offset = readsize + 1;
+			return;
+		}
 		if ( !get_bit(fin) )
 		{
 			node = node->left;
@@ -5957,14 +5962,6 @@ void custom_Huff_offsetReceive(node_t *node, int *ch, byte *fin, int readsize, i
 		{
 			node = node->right;
 		}
-		/*
-		if ( bloc >= readsize )
-		{
-			*ch = 7; // EOF
-			*offset = bloc;
-			return;
-		}
-		*/
 	}
 	if ( !node )
 	{

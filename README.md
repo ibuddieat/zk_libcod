@@ -17,6 +17,7 @@
 - Excluded client userinfo updates from flood protection
 - Blocked client `printentities` command if cheats are disabled
 - Added compile flag `ENABLE_UNSAFE` to toggle the availability of potentially unsafe script functions that would make it easy to harm the server with malicious map scripts
+- Added security fixes/exploit patches known from other Call of Duty&reg; games
 - Added/updated some missing/unknown declarations in [declarations.hpp](code/declarations.hpp)
 - Fixed some minor bugs
 - Tried to align some coding styles
