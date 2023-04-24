@@ -5348,7 +5348,8 @@ qboolean custom_SV_ClientCommand(client_t *cl, msg_t *msg)
 	}
 	if ( seq <= cl->lastClientCommand + 1 )
 	{
-		if ( !I_strncmp("team ", s, 5) || !I_strncmp("score ", s, 6) || !I_strncmp("mr ", s, 3) || !I_strncmp("userinfo ", s, 9) ) // New: Added userinfo
+		// New: Added userinfo
+		if ( !I_strncmp("team ", s, 5) || !I_strncmp("score ", s, 6) || !I_strncmp("mr ", s, 3) || !I_strncmp("userinfo ", s, 9) )
 		{
 			floodprotect = false;
 		}
@@ -5943,6 +5944,7 @@ void custom_GScr_LogPrint(void)
 void custom_Huff_offsetReceive(node_t *node, int *ch, byte *fin, int readsize, int *offset)
 {
 	// New: Fixed a design flaw (OOB access), see https://github.com/callofduty4x/CoD4x_Server/pull/396
+	// Related reference: https://github.com/ioquake/ioq3/commit/d2b1d124d4055c2fcbe5126863487c52fd58cca1
 	bloc = *offset;
 	while ( node && node->symbol == INTERNAL_NODE && bloc < readsize )
 	{
@@ -5972,9 +5974,10 @@ void custom_Huff_offsetReceive(node_t *node, int *ch, byte *fin, int readsize, i
 	}
 }
 
-int custom_MSG_ReadBitsCompress(const byte* input, byte* outputBuf, int readsize)
+int custom_MSG_ReadBitsCompress(const byte* input, byte* outputBuf, int readsize, int outputBufSize)
 {
 	// New: Added readsize parameter to Huff_offsetReceive call
+	// New: Added outputBufSize for overflow check (see custom_SV_ExecuteClientMessage)
 	readsize = readsize * 8;
 	byte *outptr = outputBuf;
 
@@ -5987,7 +5990,7 @@ int custom_MSG_ReadBitsCompress(const byte* input, byte* outputBuf, int readsize
 		return 0;
 	}
 
-	for ( offset = 0, i = 0; offset < readsize; i++ )
+	for ( offset = 0, i = 0; offset < readsize && i < outputBufSize; i++ )
 	{
 		custom_Huff_offsetReceive(msgHuff.decompressor.tree, &get, (byte*)input, readsize, &offset);
 		*outptr = (byte)get;
@@ -6007,7 +6010,16 @@ void custom_SV_ExecuteClientMessage(client_t *cl, msg_t *msg)
 	LargeLocalConstructor(&buf, MAX_MSGLEN);
 	outputBuf = LargeLocalGetBuf(&buf);
 	MSG_Init(&decompressMsg, outputBuf, MAX_MSGLEN);
-	decompressMsg.cursize = custom_MSG_ReadBitsCompress(msg->data + msg->readcount, outputBuf, msg->cursize - msg->readcount);
+
+	// New: Fix for potential decompression exploit, see CVE-2018-10718
+	// Note: This happens after packet defragmentation
+	decompressMsg.cursize = custom_MSG_ReadBitsCompress(msg->data + msg->readcount, outputBuf, msg->cursize - msg->readcount, decompressMsg.maxsize);
+	if ( decompressMsg.cursize == decompressMsg.maxsize )
+	{
+		SV_DropClient(cl, "SV_ExecuteClientMessage: Client sent oversize message");
+		return;
+	}
+
 	if ( cl->serverId == sv_serverId_value || cl->downloadName[0] )
 	{
 		do {
@@ -6451,6 +6463,7 @@ public:
 		cracking_hook_function(0x08113076, (int)custom_GScr_LogPrint);
 		cracking_hook_function(0x080960E2, (int)custom_SV_PacketEvent);
 		cracking_hook_function(0x08094530, (int)custom_SV_CanReplaceServerCommand);
+		cracking_hook_function(0x0809114E, (int)custom_SV_ExecuteClientMessage);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC718, (int)Jump_ClearState);
