@@ -2315,7 +2315,7 @@ void gsc_player_playsoundfile(scr_entref_t ref)
 	}
 
 	VoicePacket_t *voicePacket = &voiceDataStore[soundIndex - 1][packetOffset];
-	if ( !voicePacket->data )
+	if ( !*voicePacket->data )
 	{
 		stackError("gsc_player_playsoundfile() too large offset for sound with index %d", soundIndex);
 		stackPushBool(qfalse);
