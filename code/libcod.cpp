@@ -2290,8 +2290,10 @@ void hook_RuntimeError_in_VM_Execute(const char *pos, int error_index, const cha
 {
 	RuntimeError(pos, error_index, error_message, dialog_error_message);
 
-	// If enabled, log errors even if developer mode is off
-	if ( developer->integer == 0 && logErrors->boolean )
+	/* If enabled, log errors even if developer mode is off. Skip errors during
+	 initialization since the source buffer lookup tables might be corrupt at
+	 that point if developer mode is off */
+	if ( developer->integer == 0 && logErrors->boolean && !level.initializing )
 		RuntimeError_Debug(0, pos, error_index, error_message);
 }
 
