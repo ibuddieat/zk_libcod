@@ -74,11 +74,14 @@ cvar_t *sv_wwwDlDisconnectedMessages;
 #endif
 
 cHook *hook_add_opcode;
+cHook *hook_bg_playanim;
 cHook *hook_clientendframe;
 cHook *hook_com_initcvars;
 cHook *hook_console_print;
 cHook *hook_developer_prints;
 cHook *hook_fire_grenade;
+cHook *hook_g_freeentity;
+cHook *hook_g_initgentity;
 cHook *hook_g_processipbans;
 cHook *hook_g_runframe;
 cHook *hook_g_tempentity;
@@ -86,19 +89,16 @@ cHook *hook_gametype_scripts;
 cHook *hook_gscr_loadconsts;
 cHook *hook_init_opcode;
 cHook *hook_play_movement;
-cHook *hook_g_freeentity;
-cHook *hook_g_initgentity;
-cHook *hook_print_codepos;
-cHook *hook_scr_loadgametype;
-cHook *hook_scr_notify;
 cHook *hook_playercmd_cloneplayer;
-cHook *hook_bg_playanim;
-cHook *hook_sv_masterheartbeat;
-cHook *hook_touch_item_auto;
-cHook *hook_vm_notify;
-cHook *hook_sv_verifyiwds_f;
+cHook *hook_print_codepos;
 cHook *hook_scr_execentthread;
 cHook *hook_scr_execthread;
+cHook *hook_scr_loadgametype;
+cHook *hook_scr_notify;
+cHook *hook_sv_masterheartbeat;
+cHook *hook_sv_verifyiwds_f;
+cHook *hook_touch_item_auto;
+cHook *hook_vm_notify;
 
 // Stock callbacks
 int codecallback_startgametype = 0;
@@ -3117,7 +3117,7 @@ void Scr_CodeCallback_Error(qboolean terminal, qboolean emit, const char *intern
 			}
 			else
 			{
-				printf("Warning: errors buffer full, not calling CodeCallback_Error for '%s'\n", message);
+				printf("Warning: Errors buffer full, not calling CodeCallback_Error for '%s'\n", message);
 			}
 		}
 	}
@@ -3343,7 +3343,7 @@ void custom_G_RunFrame(int levelTime)
 	{
 		if ( loadSoundFileResultsIndex == MAX_THREAD_RESULTS_BUFFER )
 		{
-			Com_Printf("Warning: loadSoundFile results buffer full\n");
+			Com_Printf("Warning: LoadSoundFile results buffer full\n");
 		}
 		for ( i = 0; i < loadSoundFileResultsIndex; i++ )
 		{
