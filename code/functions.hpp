@@ -714,6 +714,15 @@ static const SV_GetConfigstringConst_t SV_GetConfigstringConst = (SV_GetConfigst
 static const SV_GetConfigstringConst_t SV_GetConfigstringConst = (SV_GetConfigstringConst_t)0x08092A1C;
 #endif
 
+typedef void (*SV_FreeConfigstrings_t)(void);
+#if COD_VERSION == COD2_1_0
+static const SV_FreeConfigstrings_t SV_FreeConfigstrings = (SV_FreeConfigstrings_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_FreeConfigstrings_t SV_FreeConfigstrings = (SV_FreeConfigstrings_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_FreeConfigstrings_t SV_FreeConfigstrings = (SV_FreeConfigstrings_t)0x080932B6;
+#endif
+
 typedef void (*SV_SetConfigstring_t)(int index, const char *val);
 #if COD_VERSION == COD2_1_0
 static const SV_SetConfigstring_t SV_SetConfigstring = (SV_SetConfigstring_t)0x08090E6C;

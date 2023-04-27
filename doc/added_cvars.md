@@ -23,6 +23,10 @@ Added cvars:
     * Type: Boolean
     * Default: False
     * Effect: Potential fix for slide-like player movement after receiving damage from falling not being reset.
+  * `g_safePrecache`
+    * Type: Boolean
+    * Default: False
+    * Effect: If true, exceeding the limits of loadFx or precacheModel will generate console log warnings instead of stopping the server. Excess effects will be replaced by (= displayed as) `fx/misc/missing_fx.efx` and excess models as `xmodel/default_static_model`. These default assets are loaded automatically (and therefore occupy one config string each) if the cvar is set to true.
   * `g_spawnMapTurrets`
     * Type: Boolean
     * Default: True

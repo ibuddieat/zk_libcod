@@ -50,6 +50,7 @@ cvar_t *g_logPickup;
 cvar_t *g_playerCollision;
 cvar_t *g_playerEject;
 cvar_t *g_resetSlide;
+cvar_t *g_safePrecache;
 cvar_t *g_spawnMapTurrets;
 cvar_t *g_spawnMapWeapons;
 cvar_t *g_triggerMode;
@@ -95,6 +96,7 @@ cHook *hook_scr_execentthread;
 cHook *hook_scr_execthread;
 cHook *hook_scr_loadgametype;
 cHook *hook_scr_notify;
+cHook *hook_sv_freeconfigstrings;
 cHook *hook_sv_masterheartbeat;
 cHook *hook_sv_verifyiwds_f;
 cHook *hook_touch_item_auto;
@@ -6148,6 +6150,132 @@ int custom_SV_CanReplaceServerCommand(client_t *client, const char *command)
 	return -1;
 }
 
+void custom_SV_FreeConfigstrings(void)
+{
+	hook_sv_freeconfigstrings->unhook();
+	SV_FreeConfigstrings();
+	hook_sv_freeconfigstrings->hook();
+
+	// We (re)register the cvar here so that any latched value is applied in time
+	g_safePrecache = Cvar_RegisterBool("g_safePrecache", qfalse, CVAR_ARCHIVE | CVAR_LATCH | CVAR_UNSAFE);
+	if ( g_safePrecache->boolean )
+	{
+		SV_SetConfigstring(847, "fx/misc/missing_fx.efx");
+		SV_SetConfigstring(335, "xmodel/default_static_model");
+		cached_models[1] = SV_XModelGet("xmodel/default_static_model");
+	}
+}
+
+int custom_G_FindConfigstringIndex(const char *name, int start, int max, qboolean create, const char *fieldname)
+{
+	const char *s1;
+	int i;
+
+	if ( !name || !*name )
+		return 0;
+
+	for ( i = 1; i < max; ++i )
+	{
+		s1 = SV_GetConfigstringConst(start + i);
+
+		if ( !*s1 )
+			break;
+
+		if ( !strcasecmp(s1, name) )
+			return i;
+	}
+
+	if ( create )
+	{
+		if ( i == max )
+		{
+			// New: Added g_safePrecache cvar logic
+			if ( !g_safePrecache->boolean )
+			{
+				Com_Error(1, custom_va("G_FindConfigstringIndex: overflow (%d): %s", start, name));
+			}
+			else
+			{
+				if ( fieldname && !strncmp(fieldname, "effect", 6) )
+				{
+					Com_Printf("Warning: Exceeded number of effect files, defaulting \"%s\"\n", name);
+					return 1;
+				}
+				else
+				{
+					Com_Error(1, custom_va("G_FindConfigstringIndex: overflow (%d): %s", start, name));
+				}
+			}
+		}
+
+		SV_SetConfigstring(start + i, name);
+		return i;
+	}
+	else
+	{
+		if ( fieldname )
+		{
+			Scr_Error(custom_va("%s \"%s\" not precached", fieldname, name));
+		}
+
+		return 0;
+	}
+}
+
+unsigned int custom_G_ModelIndex(const char *name)
+{
+	const char *modelName;
+	signed int i;
+
+	if ( !*name )
+		return 0;
+
+	for ( i = 1; i < MAX_MODELS; ++i )
+	{
+		modelName = SV_GetConfigstringConst(i + 334);
+
+		if ( !*modelName )
+			break;
+
+		if ( !strcasecmp(modelName, name) )
+			return i;
+	}
+
+	if ( !level.initializing )
+	{
+		// New: Added g_safePrecache cvar logic
+		if ( !g_safePrecache->boolean )
+		{
+			Scr_Error(custom_va("model '%s' not precached", name));
+		}
+		else
+		{
+			Com_Printf("Warning: Model '%s' not precached\n", name);
+			Scr_CodeCallback_Error(qfalse, qfalse, "G_ModelIndex", custom_va("Model '%s' not precached", name));
+			return 1;
+		}
+	}
+
+	if ( i == MAX_MODELS )
+	{
+		// New: Added g_safePrecache cvar logic
+		if ( !g_safePrecache->boolean )
+		{
+			Com_Error(1, "G_ModelIndex: overflow");
+		}
+		else
+		{
+			Com_Printf("Warning: Exceeded number of models, defaulting '%s'\n", name);
+			return 1;
+		}
+	}
+
+	cached_models[i] = SV_XModelGet(name);
+	SV_SetConfigstring(i + 334, name);
+
+	return i;
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -6407,6 +6535,8 @@ public:
 		hook_scr_execentthread->hook();
 		hook_scr_execthread = new cHook(0x08083FD6, int(custom_Scr_ExecThread));
 		hook_scr_execthread->hook();
+		hook_sv_freeconfigstrings = new cHook(0x080932B6, int(custom_SV_FreeConfigstrings));
+		hook_sv_freeconfigstrings->hook();
 
 		#if COMPILE_PLAYER == 1
 		hook_play_movement = new cHook(0x08090DAC, (int)play_movement);
@@ -6464,6 +6594,8 @@ public:
 		cracking_hook_function(0x080960E2, (int)custom_SV_PacketEvent);
 		cracking_hook_function(0x08094530, (int)custom_SV_CanReplaceServerCommand);
 		cracking_hook_function(0x0809114E, (int)custom_SV_ExecuteClientMessage);
+		cracking_hook_function(0x0811D300, (int)custom_G_FindConfigstringIndex);
+		cracking_hook_function(0x0811D49C, (int)custom_G_ModelIndex);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC718, (int)Jump_ClearState);
