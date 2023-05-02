@@ -55,6 +55,7 @@ New script code methods:
   * `<weapon> setWeaponItemAmmo(<value>)`
 
 New script code functions:
+  * `chr(<number>)`
   * `getWeaponFuseTime(<weapon name>)`
   * `setWeaponFuseTime(<weapon name>, <time in ms>)`
   * `fromHex(<hex string>)`
@@ -63,6 +64,7 @@ New script code functions:
   * `loadSoundFile(<file path>, <callback function>, [<volume>], [<sound index>])`
   * `loadSpeexFile(<file path>, [<sound index>])`
   * `logPrintConsole(<message>)`
+  * `ord(<string character>)`
   * `resetTestClientNaming()`
   * `saveSpeexFile(<sound index>, <file path>)`
   * `setNextTestClientName(<name>)`

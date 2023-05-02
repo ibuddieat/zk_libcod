@@ -960,6 +960,52 @@ void gsc_utils_sqrtinv()
 	stackPushFloat(x);
 }
 
+void gsc_utils_chr()
+{
+	int input;
+
+	if ( ! stackGetParams("i", &input))
+	{
+		stackError("gsc_utils_chr() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	char output[2];
+	if ( input == 0x25 )
+	{
+		output[0] = '.';
+		output[1] = '\0';
+	}
+	else
+	{
+		Com_sprintf(output, 2, "%c", input & 0xFF);
+	}
+
+	stackPushString(output);
+}
+
+void gsc_utils_ord()
+{
+	char *input;
+
+	if ( ! stackGetParams("s", &input))
+	{
+		stackError("gsc_utils_ord() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( strlen(input) != 1 )
+	{
+		stackError("gsc_utils_ord() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushInt((unsigned char)*input);
+}
+
 void gsc_utils_fromhex()
 {
 	char *input;

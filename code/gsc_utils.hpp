@@ -51,6 +51,8 @@ void gsc_utils_sqrt();
 void gsc_utils_sqrtinv();
 void gsc_utils_vectorscale();
 
+void gsc_utils_chr();
+void gsc_utils_ord();
 void gsc_utils_fromhex();
 void gsc_utils_tohex();
 

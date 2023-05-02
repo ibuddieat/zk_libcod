@@ -208,6 +208,8 @@ scr_function_t scriptFunctions[] =
 	{"sqrtinv", gsc_utils_sqrtinv, 0},
 	{"vectorscale", gsc_utils_vectorscale, 0},
 
+	{"chr", gsc_utils_chr, 0},
+	{"ord", gsc_utils_ord, 0},
 	{"fromhex", gsc_utils_fromhex, 0},
 	{"tohex", gsc_utils_tohex, 0},
 
