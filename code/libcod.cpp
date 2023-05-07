@@ -3198,8 +3198,14 @@ void custom_Scr_ErrorInternal(void)
 void custom_RuntimeError_Debug(int channel, const char *pos, int index, const char *message)
 {
 	int i, j;
+	byte logTimestampsValue;
 
 	Scr_CodeCallback_Error(qfalse, qfalse, "RuntimeError_Debug", (char *)message); // New
+
+	// New: Do not print log message timestamps in runtime error information
+	logTimestampsValue = logTimestamps->boolean;
+	logTimestamps->boolean = 0;
+
 	Com_PrintMessage(channel, custom_va("\n******* script runtime error *******\n%s: ", message));
 	Scr_PrintPrevCodePos(channel, pos, index);
 	i = scrVmPub.function_count;
@@ -3215,6 +3221,8 @@ void custom_RuntimeError_Debug(int channel, const char *pos, int index, const ch
 		Scr_PrintPrevCodePos(channel, (char *)scrVmPub.function_frame_start[0].fs.pos, 1);
 	}
 	Com_PrintMessage(channel, "************************************\n");
+
+	logTimestamps->boolean = logTimestampsValue;
 }
 
 void custom_RuntimeError(const char *pos, int index, const char *message, const char *dialog_error)
@@ -4930,7 +4938,7 @@ void custom_Com_PrintMessage(int /* print_msg_type_t */ channel, char *message)
 				}
 				if ( logfile != 0 )
 				{
-					if ( logTimestamps->boolean )
+					if ( logTimestamps->boolean && strlen(message) && strcmp(message, " ") != 0 )
 					{
 						time_t timer;
 						struct tm *timeInfo;
