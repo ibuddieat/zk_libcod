@@ -1,4 +1,4 @@
-Conversion of audio files (for 64-bit Ubuntu 18.04.5 LTS):
+Conversion of audio files (for 64-bit Ubuntu 22.04 LTS):
 ```
 # Install ffmpeg:
 sudo apt update
