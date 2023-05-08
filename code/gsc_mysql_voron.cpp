@@ -47,12 +47,12 @@ async_mysql_task *task_id_to_pointer(int id)
 {
 	async_mysql_task *current = first_async_mysql_task;
 
-	while (current != NULL)
+	while ( current != NULL )
 	{
 		async_mysql_task *task = current;
 		current = current->next;
 
-		if (task->id == id)
+		if ( task->id == id )
 			return task;
 	}
 
@@ -61,20 +61,20 @@ async_mysql_task *task_id_to_pointer(int id)
 
 void *async_mysql_query_handler(void* dummy)
 {
-	while(1)
+	while( 1 )
 	{
 		async_mysql_task *current = first_async_mysql_task;
 
-		while (current != NULL)
+		while ( current != NULL )
 		{
 			async_mysql_task *task = current;
 			current = current->next;
 
-			if (!task->done)
+			if ( !task->done )
 			{
 				int res = mysql_query(async_mysql_connection, task->query);
 
-				if (res == 0)
+				if ( res == 0 )
 					task->result = mysql_store_result(async_mysql_connection);
 				else
 				{
@@ -85,19 +85,19 @@ void *async_mysql_query_handler(void* dummy)
 				task->done = true;
 			}
 
-			if (task->cleanup)
+			if ( task->cleanup )
 			{
 				pthread_mutex_lock(&lock_async_mysql);
 
-				if (task->next != NULL)
+				if ( task->next != NULL )
 					task->next->prev = task->prev;
 
-				if (task->prev != NULL)
+				if ( task->prev != NULL )
 					task->prev->next = task->next;
 				else
 					first_async_mysql_task = task->next;
 
-				if (task->result != NULL)
+				if ( task->result != NULL )
 					mysql_free_result(task->result);
 
 				delete task;
@@ -105,7 +105,6 @@ void *async_mysql_query_handler(void* dummy)
 				pthread_mutex_unlock(&lock_async_mysql);
 			}
 		}
-
 		usleep(10000);
 	}
 
@@ -117,27 +116,27 @@ void gsc_async_mysql_initialize()
 	char *host, *user, *pass, *db;
 	int port;
 
-	if ( ! stackGetParams("ssssi", &host, &user, &pass, &db, &port))
+	if ( !stackGetParams("ssssi", &host, &user, &pass, &db, &port) )
 	{
 		stackError("gsc_async_mysql_initialize() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	if (async_mysql_connection == NULL)
+	if ( async_mysql_connection == NULL )
 	{
 		MYSQL *my = mysql_init(NULL);
 		bool reconnect = true;
 		mysql_options(my, MYSQL_OPT_RECONNECT, &reconnect);
 
-		if (!mysql_real_connect(my, host, user, pass, db, port, NULL, 0))
+		if ( !mysql_real_connect(my, host, user, pass, db, port, NULL, 0) )
 		{
 			stackError("gsc_async_mysql_initialize() failed to initialize async mysql connection!");
 			stackPushUndefined();
 			return;
 		}
 
-		if (pthread_mutex_init(&lock_async_mysql, NULL) != 0)
+		if ( pthread_mutex_init(&lock_async_mysql, NULL) != 0 )
 		{
 			stackError("gsc_async_mysql_initialize() mutex initialization failed!");
 			stackPushUndefined();
@@ -146,14 +145,14 @@ void gsc_async_mysql_initialize()
 
 		pthread_t async_handler;
 
-		if (pthread_create(&async_handler, NULL, async_mysql_query_handler, NULL) != 0)
+		if ( pthread_create(&async_handler, NULL, async_mysql_query_handler, NULL) != 0 )
 		{
 			stackError("gsc_mysql_async_initializer() error creating async mysql handler thread!");
 			stackPushUndefined();
 			return;
 		}
 
-		if (pthread_detach(async_handler) != 0)
+		if ( pthread_detach(async_handler) != 0 )
 		{
 			stackError("gsc_mysql_async_initializer() error detaching async mysql handler thread!");
 			stackPushUndefined();
@@ -170,7 +169,7 @@ void gsc_async_mysql_initialize()
 
 void gsc_async_mysql_close()
 {
-	if (async_mysql_connection != NULL)
+	if ( async_mysql_connection != NULL )
 	{
 		mysql_close(async_mysql_connection);
 		stackPushBool(qtrue);
@@ -183,7 +182,7 @@ void gsc_async_mysql_create_query()
 {
 	char *query;
 
-	if ( ! stackGetParams("s", &query))
+	if ( !stackGetParams("s", &query) )
 	{
 		stackError("gsc_async_mysql_create_query() argument is undefined or has a wrong type");
 		stackPushUndefined();
@@ -194,14 +193,14 @@ void gsc_async_mysql_create_query()
 
 	async_mysql_task *current = first_async_mysql_task;
 
-	while (current != NULL && current->next != NULL)
+	while ( current != NULL && current->next != NULL )
 		current = current->next;
 
 	async_mysql_task *newtask = new async_mysql_task;
 
 	newtask->id = async_task_id;
 
-	if (async_task_id == 2147483647)
+	if ( async_task_id == 2147483647 )
 		async_task_id = 0;
 	else
 		async_task_id++;
@@ -214,7 +213,7 @@ void gsc_async_mysql_create_query()
 
 	int callback;
 
-	if (!stackGetParamFunction(1, &callback))
+	if ( !stackGetParamFunction(1, &callback) )
 		newtask->callback = 0;
 	else
 		newtask->callback = callback;
@@ -235,29 +234,29 @@ void gsc_async_mysql_create_query()
 	vec3_t valueVector;
 	unsigned int valueObject;
 
-	if (stackGetParamInt(2, &valueInt))
+	if ( stackGetParamInt(2, &valueInt) )
 	{
 		newtask->valueType = INT_VALUE;
 		newtask->intValue = valueInt;
 	}
-	else if (stackGetParamFloat(2, &valueFloat))
+	else if ( stackGetParamFloat(2, &valueFloat) )
 	{
 		newtask->valueType = FLOAT_VALUE;
 		newtask->floatValue = valueFloat;
 	}
-	else if (stackGetParamString(2, &valueString))
+	else if ( stackGetParamString(2, &valueString) )
 	{
 		newtask->valueType = STRING_VALUE;
 		strcpy(newtask->stringValue, valueString);
 	}
-	else if (stackGetParamVector(2, valueVector))
+	else if ( stackGetParamVector(2, valueVector) )
 	{
 		newtask->valueType = VECTOR_VALUE;
 		newtask->vectorValue[0] = valueVector[0];
 		newtask->vectorValue[1] = valueVector[1];
 		newtask->vectorValue[2] = valueVector[2];
 	}
-	else if (stackGetParamObject(2, &valueObject))
+	else if ( stackGetParamObject(2, &valueObject) )
 	{
 		newtask->valueType = OBJECT_VALUE;
 		newtask->objectValue = valueObject;
@@ -265,7 +264,7 @@ void gsc_async_mysql_create_query()
 	else
 		newtask->hasargument = false;
 
-	if (current != NULL)
+	if ( current != NULL )
 		current->next = newtask;
 	else
 		first_async_mysql_task = newtask;
@@ -279,7 +278,7 @@ void gsc_async_mysql_create_query_nosave()
 {
 	char *query;
 
-	if ( ! stackGetParams("s", &query))
+	if ( !stackGetParams("s", &query) )
 	{
 		stackError("gsc_async_mysql_create_query_nosave() argument is undefined or has a wrong type");
 		stackPushUndefined();
@@ -290,14 +289,14 @@ void gsc_async_mysql_create_query_nosave()
 
 	async_mysql_task *current = first_async_mysql_task;
 
-	while (current != NULL && current->next != NULL)
+	while ( current != NULL && current->next != NULL )
 		current = current->next;
 
 	async_mysql_task *newtask = new async_mysql_task;
 
 	newtask->id = async_task_id;
 
-	if (async_task_id == 2147483647)
+	if ( async_task_id == 2147483647 )
 		async_task_id = 0;
 	else
 		async_task_id++;
@@ -310,7 +309,7 @@ void gsc_async_mysql_create_query_nosave()
 
 	int callback;
 
-	if (!stackGetParamFunction(1, &callback))
+	if (  !stackGetParamFunction(1, &callback))
 		newtask->callback = 0;
 	else
 		newtask->callback = callback;
@@ -331,29 +330,29 @@ void gsc_async_mysql_create_query_nosave()
 	vec3_t valueVector;
 	unsigned int valueObject;
 
-	if (stackGetParamInt(2, &valueInt))
+	if ( stackGetParamInt(2, &valueInt) )
 	{
 		newtask->valueType = INT_VALUE;
 		newtask->intValue = valueInt;
 	}
-	else if (stackGetParamFloat(2, &valueFloat))
+	else if ( stackGetParamFloat(2, &valueFloat) )
 	{
 		newtask->valueType = FLOAT_VALUE;
 		newtask->floatValue = valueFloat;
 	}
-	else if (stackGetParamString(2, &valueString))
+	else if ( stackGetParamString(2, &valueString) )
 	{
 		newtask->valueType = STRING_VALUE;
 		strcpy(newtask->stringValue, valueString);
 	}
-	else if (stackGetParamVector(2, valueVector))
+	else if ( stackGetParamVector(2, valueVector) )
 	{
 		newtask->valueType = VECTOR_VALUE;
 		newtask->vectorValue[0] = valueVector[0];
 		newtask->vectorValue[1] = valueVector[1];
 		newtask->vectorValue[2] = valueVector[2];
 	}
-	else if (stackGetParamObject(2, &valueObject))
+	else if ( stackGetParamObject(2, &valueObject) )
 	{
 		newtask->valueType = OBJECT_VALUE;
 		newtask->objectValue = valueObject;
@@ -361,7 +360,7 @@ void gsc_async_mysql_create_query_nosave()
 	else
 		newtask->hasargument = false;
 
-	if (current != NULL)
+	if ( current != NULL )
 		current->next = newtask;
 	else
 		first_async_mysql_task = newtask;
@@ -375,7 +374,7 @@ void gsc_async_mysql_create_entity_query(scr_entref_t entref)
 {
 	char *query;
 
-	if ( ! stackGetParams("s", &query))
+	if ( !stackGetParams("s", &query) )
 	{
 		stackError("gsc_async_mysql_create_entity_query() argument is undefined or has a wrong type");
 		stackPushUndefined();
@@ -386,7 +385,7 @@ void gsc_async_mysql_create_entity_query(scr_entref_t entref)
 
 	async_mysql_task *current = first_async_mysql_task;
 
-	while (current != NULL && current->next != NULL)
+	while ( current != NULL && current->next != NULL )
 		current = current->next;
 
 	async_mysql_task *newtask = new async_mysql_task;
@@ -406,7 +405,7 @@ void gsc_async_mysql_create_entity_query(scr_entref_t entref)
 
 	int callback;
 
-	if (!stackGetParamFunction(1, &callback))
+	if ( !stackGetParamFunction(1, &callback) )
 		newtask->callback = 0;
 	else
 		newtask->callback = callback;
@@ -427,29 +426,29 @@ void gsc_async_mysql_create_entity_query(scr_entref_t entref)
 	vec3_t valueVector;
 	unsigned int valueObject;
 
-	if (stackGetParamInt(2, &valueInt))
+	if ( stackGetParamInt(2, &valueInt) )
 	{
 		newtask->valueType = INT_VALUE;
 		newtask->intValue = valueInt;
 	}
-	else if (stackGetParamFloat(2, &valueFloat))
+	else if ( stackGetParamFloat(2, &valueFloat) )
 	{
 		newtask->valueType = FLOAT_VALUE;
 		newtask->floatValue = valueFloat;
 	}
-	else if (stackGetParamString(2, &valueString))
+	else if ( stackGetParamString(2, &valueString) )
 	{
 		newtask->valueType = STRING_VALUE;
 		strcpy(newtask->stringValue, valueString);
 	}
-	else if (stackGetParamVector(2, valueVector))
+	else if ( stackGetParamVector(2, valueVector) )
 	{
 		newtask->valueType = VECTOR_VALUE;
 		newtask->vectorValue[0] = valueVector[0];
 		newtask->vectorValue[1] = valueVector[1];
 		newtask->vectorValue[2] = valueVector[2];
 	}
-	else if (stackGetParamObject(2, &valueObject))
+	else if ( stackGetParamObject(2, &valueObject) )
 	{
 		newtask->valueType = OBJECT_VALUE;
 		newtask->objectValue = valueObject;
@@ -457,7 +456,7 @@ void gsc_async_mysql_create_entity_query(scr_entref_t entref)
 	else
 		newtask->hasargument = false;
 
-	if (current != NULL)
+	if ( current != NULL )
 		current->next = newtask;
 	else
 		first_async_mysql_task = newtask;
@@ -471,7 +470,7 @@ void gsc_async_mysql_create_entity_query_nosave(scr_entref_t entref)
 {
 	char *query;
 
-	if ( ! stackGetParams("s", &query))
+	if ( !stackGetParams("s", &query) )
 	{
 		stackError("gsc_async_mysql_create_entity_query_nosave() argument is undefined or has a wrong type");
 		stackPushUndefined();
@@ -482,14 +481,14 @@ void gsc_async_mysql_create_entity_query_nosave(scr_entref_t entref)
 
 	async_mysql_task *current = first_async_mysql_task;
 
-	while (current != NULL && current->next != NULL)
+	while ( current != NULL && current->next != NULL )
 		current = current->next;
 
 	async_mysql_task *newtask = new async_mysql_task;
 
 	newtask->id = async_task_id;
 
-	if (async_task_id == 2147483647)
+	if ( async_task_id == 2147483647 )
 		async_task_id = 0;
 	else
 		async_task_id++;
@@ -502,7 +501,7 @@ void gsc_async_mysql_create_entity_query_nosave(scr_entref_t entref)
 
 	int callback;
 
-	if (!stackGetParamFunction(1, &callback))
+	if ( !stackGetParamFunction(1, &callback) )
 		newtask->callback = 0;
 	else
 		newtask->callback = callback;
@@ -523,29 +522,29 @@ void gsc_async_mysql_create_entity_query_nosave(scr_entref_t entref)
 	vec3_t valueVector;
 	unsigned int valueObject;
 
-	if (stackGetParamInt(2, &valueInt))
+	if ( stackGetParamInt(2, &valueInt) )
 	{
 		newtask->valueType = INT_VALUE;
 		newtask->intValue = valueInt;
 	}
-	else if (stackGetParamFloat(2, &valueFloat))
+	else if ( stackGetParamFloat(2, &valueFloat) )
 	{
 		newtask->valueType = FLOAT_VALUE;
 		newtask->floatValue = valueFloat;
 	}
-	else if (stackGetParamString(2, &valueString))
+	else if ( stackGetParamString(2, &valueString) )
 	{
 		newtask->valueType = STRING_VALUE;
 		strcpy(newtask->stringValue, valueString);
 	}
-	else if (stackGetParamVector(2, valueVector))
+	else if ( stackGetParamVector(2, valueVector) )
 	{
 		newtask->valueType = VECTOR_VALUE;
 		newtask->vectorValue[0] = valueVector[0];
 		newtask->vectorValue[1] = valueVector[1];
 		newtask->vectorValue[2] = valueVector[2];
 	}
-	else if (stackGetParamObject(2, &valueObject))
+	else if ( stackGetParamObject(2, &valueObject) )
 	{
 		newtask->valueType = OBJECT_VALUE;
 		newtask->objectValue = valueObject;
@@ -553,7 +552,7 @@ void gsc_async_mysql_create_entity_query_nosave(scr_entref_t entref)
 	else
 		newtask->hasargument = false;
 
-	if (current != NULL)
+	if ( current != NULL )
 		current->next = newtask;
 	else
 		first_async_mysql_task = newtask;
@@ -567,24 +566,24 @@ void gsc_async_mysql_checkdone()
 {
 	async_mysql_task *current = first_async_mysql_task;
 
-	while (current != NULL)
+	while ( current != NULL )
 	{
 		async_mysql_task *task = current;
 		current = current->next;
 
-		if (task->done && !task->complete)
+		if ( task->done && !task->complete )
 		{
 			task->complete = true;
 
-			if (Scr_IsSystemActive() && task->save && task->callback && (scrVarPub.levelId == task->levelId))
+			if ( Scr_IsSystemActive() && task->save && task->callback && ( scrVarPub.levelId == task->levelId ) )
 			{
-				if (task->hasentity)
+				if ( task->hasentity )
 				{
-					if (task->gentity != NULL)
+					if ( task->gentity != NULL )
 					{
-						if (task->hasargument)
+						if ( task->hasargument )
 						{
-							switch(task->valueType)
+							switch( task->valueType )
 							{
 							case INT_VALUE:
 								stackPushInt(task->intValue);
@@ -622,9 +621,9 @@ void gsc_async_mysql_checkdone()
 				}
 				else
 				{
-					if (task->hasargument)
+					if ( task->hasargument )
 					{
-						switch(task->valueType)
+						switch( task->valueType )
 						{
 						case INT_VALUE:
 							stackPushInt(task->intValue);
@@ -662,7 +661,7 @@ void gsc_async_mysql_checkdone()
 
 void gsc_async_mysql_errno()
 {
-	if (async_mysql_connection == NULL)
+	if ( async_mysql_connection == NULL )
 	{
 		stackError("gsc_async_mysql_errno() async connection is not initialized!");
 		stackPushUndefined();
@@ -674,7 +673,7 @@ void gsc_async_mysql_errno()
 
 void gsc_async_mysql_error()
 {
-	if (async_mysql_connection == NULL)
+	if ( async_mysql_connection == NULL )
 	{
 		stackError("gsc_async_mysql_error() async connection is not initialized!");
 		stackPushUndefined();
@@ -686,7 +685,7 @@ void gsc_async_mysql_error()
 
 void gsc_async_mysql_affected_rows()
 {
-	if (async_mysql_connection == NULL)
+	if ( async_mysql_connection == NULL )
 	{
 		stackError("gsc_async_mysql_affected_rows() async connection is not initialized!");
 		stackPushUndefined();
@@ -700,14 +699,14 @@ void gsc_async_mysql_num_rows()
 {
 	int id;
 
-	if ( ! stackGetParams("i", &id))
+	if ( !stackGetParams("i", &id) )
 	{
 		stackError("gsc_async_mysql_num_rows() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	if (async_mysql_connection == NULL)
+	if ( async_mysql_connection == NULL )
 	{
 		stackError("gsc_async_mysql_num_rows() async connection is not initialized!");
 		stackPushUndefined();
@@ -716,14 +715,14 @@ void gsc_async_mysql_num_rows()
 
 	async_mysql_task *target_task = task_id_to_pointer(id);
 
-	if (target_task == NULL)
+	if ( target_task == NULL )
 	{
 		stackError("gsc_async_mysql_num_rows() target_task is a NULL-pointer");
 		stackPushUndefined();
 		return;
 	}
 
-	if (target_task->result == NULL)
+	if ( target_task->result == NULL )
 	{
 		stackError("gsc_async_mysql_num_rows() result is a NULL-pointer");
 		stackPushUndefined();
@@ -737,14 +736,14 @@ void gsc_async_mysql_num_fields()
 {
 	int id;
 
-	if ( ! stackGetParams("i", &id))
+	if ( !stackGetParams("i", &id) )
 	{
 		stackError("gsc_async_mysql_num_fields() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	if (async_mysql_connection == NULL)
+	if ( async_mysql_connection == NULL )
 	{
 		stackError("gsc_async_mysql_num_fields() async connection is not initialized!");
 		stackPushUndefined();
@@ -753,14 +752,14 @@ void gsc_async_mysql_num_fields()
 
 	async_mysql_task *target_task = task_id_to_pointer(id);
 
-	if (target_task == NULL)
+	if ( target_task == NULL )
 	{
 		stackError("gsc_async_mysql_num_fields() target_task is a NULL-pointer");
 		stackPushUndefined();
 		return;
 	}
 
-	if (target_task->result == NULL)
+	if ( target_task->result == NULL )
 	{
 		stackError("gsc_async_mysql_num_fields() result is a NULL-pointer");
 		stackPushUndefined();
@@ -775,14 +774,14 @@ void gsc_async_mysql_field_seek()
 	int id;
 	int offset;
 
-	if ( ! stackGetParams("ii", &id, &offset))
+	if ( !stackGetParams("ii", &id, &offset) )
 	{
 		stackError("gsc_async_mysql_field_seek() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	if (async_mysql_connection == NULL)
+	if ( async_mysql_connection == NULL )
 	{
 		stackError("gsc_async_mysql_field_seek() async connection is not initialized!");
 		stackPushUndefined();
@@ -791,14 +790,14 @@ void gsc_async_mysql_field_seek()
 
 	async_mysql_task *target_task = task_id_to_pointer(id);
 
-	if (target_task == NULL)
+	if ( target_task == NULL )
 	{
 		stackError("gsc_async_mysql_field_seek() target_task is a NULL-pointer");
 		stackPushUndefined();
 		return;
 	}
 
-	if (target_task->result == NULL)
+	if ( target_task->result == NULL )
 	{
 		stackError("gsc_async_mysql_field_seek() result is a NULL-pointer");
 		stackPushUndefined();
@@ -812,14 +811,14 @@ void gsc_async_mysql_fetch_field()
 {
 	int id;
 
-	if ( ! stackGetParams("i", &id))
+	if ( !stackGetParams("i", &id) )
 	{
 		stackError("gsc_async_mysql_fetch_field() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	if (async_mysql_connection == NULL)
+	if ( async_mysql_connection == NULL )
 	{
 		stackError("gsc_async_mysql_fetch_field() async connection is not initialized!");
 		stackPushUndefined();
@@ -828,14 +827,14 @@ void gsc_async_mysql_fetch_field()
 
 	async_mysql_task *target_task = task_id_to_pointer(id);
 
-	if (target_task == NULL)
+	if ( target_task == NULL )
 	{
 		stackError("gsc_async_mysql_fetch_field() target_task is a NULL-pointer");
 		stackPushUndefined();
 		return;
 	}
 
-	if (target_task->result == NULL)
+	if ( target_task->result == NULL )
 	{
 		stackError("gsc_async_mysql_fetch_field() result is a NULL-pointer");
 		stackPushUndefined();
@@ -844,13 +843,14 @@ void gsc_async_mysql_fetch_field()
 
 	MYSQL_FIELD *field = mysql_fetch_field(target_task->result);
 
-	if (field == NULL)
+	if ( field == NULL )
 	{
 		stackPushUndefined();
 		return;
 	}
 
 	char *ret = field->name;
+
 	stackPushString(ret);
 }
 
@@ -858,14 +858,14 @@ void gsc_async_mysql_fetch_row()
 {
 	int id;
 
-	if ( ! stackGetParams("i", &id))
+	if ( !stackGetParams("i", &id) )
 	{
 		stackError("gsc_async_mysql_fetch_row() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	if (async_mysql_connection == NULL)
+	if ( async_mysql_connection == NULL )
 	{
 		stackError("gsc_async_mysql_fetch_row() async connection is not initialized!");
 		stackPushUndefined();
@@ -874,14 +874,14 @@ void gsc_async_mysql_fetch_row()
 
 	async_mysql_task *target_task = task_id_to_pointer(id);
 
-	if (target_task == NULL)
+	if ( target_task == NULL )
 	{
 		stackError("gsc_async_mysql_fetch_row() target_task is a NULL-pointer");
 		stackPushUndefined();
 		return;
 	}
 
-	if (target_task->result == NULL)
+	if ( target_task->result == NULL )
 	{
 		stackError("gsc_async_mysql_fetch_row() result is a NULL-pointer");
 		stackPushUndefined();
@@ -890,7 +890,7 @@ void gsc_async_mysql_fetch_row()
 
 	MYSQL_ROW row = mysql_fetch_row(target_task->result);
 
-	if (!row)
+	if ( !row )
 	{
 		stackPushUndefined();
 		return;
@@ -900,9 +900,9 @@ void gsc_async_mysql_fetch_row()
 
 	int numfields = mysql_num_fields(target_task->result);
 
-	for (int i = 0; i < numfields; i++)
+	for ( int i = 0; i < numfields; i++ )
 	{
-		if (row[i] == NULL)
+		if ( row[i] == NULL )
 			stackPushUndefined();
 		else
 			stackPushString(row[i]);
@@ -915,14 +915,14 @@ void gsc_async_mysql_free_task()
 {
 	int id;
 
-	if ( ! stackGetParams("i", &id))
+	if ( !stackGetParams("i", &id) )
 	{
 		stackError("gsc_async_mysql_free_task() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	if (async_mysql_connection == NULL)
+	if ( async_mysql_connection == NULL )
 	{
 		stackError("gsc_async_mysql_free_task() async connection is not initialized!");
 		stackPushUndefined();
@@ -931,7 +931,7 @@ void gsc_async_mysql_free_task()
 
 	async_mysql_task *target_task = task_id_to_pointer(id);
 
-	if (target_task == NULL)
+	if ( target_task == NULL )
 	{
 		stackError("gsc_async_mysql_free_task() target_task is a NULL-pointer");
 		stackPushUndefined();
@@ -939,6 +939,7 @@ void gsc_async_mysql_free_task()
 	}
 
 	target_task->cleanup = true;
+
 	stackPushBool(qtrue);
 }
 
@@ -946,14 +947,14 @@ void gsc_async_mysql_real_escape_string()
 {
 	char *str;
 
-	if ( ! stackGetParams("s", &str))
+	if ( !stackGetParams("s", &str) )
 	{
 		stackError("gsc_async_mysql_real_escape_string() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	if (async_mysql_connection == NULL)
+	if ( async_mysql_connection == NULL )
 	{
 		stackError("gsc_async_mysql_real_escape_string() async connection is not initialized!");
 		stackPushUndefined();
@@ -962,6 +963,7 @@ void gsc_async_mysql_real_escape_string()
 
 	char *to = (char *)malloc(strlen(str) * 2 + 1);
 	mysql_real_escape_string(async_mysql_connection, to, str, strlen(str));
+
 	stackPushString(to);
 	free(to);
 }
@@ -973,20 +975,20 @@ void gsc_mysql_initialize()
 	char *host, *user, *pass, *db;
 	int port;
 
-	if ( ! stackGetParams("ssssi", &host, &user, &pass, &db, &port))
+	if ( !stackGetParams("ssssi", &host, &user, &pass, &db, &port) )
 	{
 		stackError("gsc_mysql_initialize() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	if (mysql_connection == NULL)
+	if ( mysql_connection == NULL )
 	{
 		MYSQL *my = mysql_init(NULL);
 		bool reconnect = true;
 		mysql_options(my, MYSQL_OPT_RECONNECT, &reconnect);
 
-		if (!mysql_real_connect(my, host, user, pass, db, port, NULL, 0))
+		if ( !mysql_real_connect(my, host, user, pass, db, port, NULL, 0) )
 		{
 			stackError("gsc_mysql_initialize() failed to initialize synchronous mysql connection!");
 			stackPushUndefined();
@@ -1003,7 +1005,7 @@ void gsc_mysql_initialize()
 
 void gsc_mysql_close()
 {
-	if (mysql_connection != NULL)
+	if ( mysql_connection != NULL )
 	{
 		mysql_close(mysql_connection);
 		stackPushBool(qtrue);
@@ -1016,14 +1018,14 @@ void gsc_mysql_query()
 {
 	char *query;
 
-	if ( ! stackGetParams("s", &query))
+	if ( !stackGetParams("s", &query) )
 	{
 		stackError("gsc_mysql_query() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	if (mysql_connection == NULL)
+	if ( mysql_connection == NULL )
 	{
 		stackError("gsc_mysql_query() synchronous connection is not initialized!");
 		stackPushUndefined();
@@ -1035,7 +1037,7 @@ void gsc_mysql_query()
 
 void gsc_mysql_errno()
 {
-	if (mysql_connection == NULL)
+	if ( mysql_connection == NULL )
 	{
 		stackError("gsc_mysql_errno() synchronous connection is not initialized!");
 		stackPushUndefined();
@@ -1047,7 +1049,7 @@ void gsc_mysql_errno()
 
 void gsc_mysql_error()
 {
-	if (mysql_connection == NULL)
+	if ( mysql_connection == NULL )
 	{
 		stackError("gsc_mysql_error() synchronous connection is not initialized!");
 		stackPushUndefined();
@@ -1059,7 +1061,7 @@ void gsc_mysql_error()
 
 void gsc_mysql_affected_rows()
 {
-	if (mysql_connection == NULL)
+	if ( mysql_connection == NULL )
 	{
 		stackError("gsc_mysql_affected_rows() synchronous connection is not initialized!");
 		stackPushUndefined();
@@ -1071,7 +1073,7 @@ void gsc_mysql_affected_rows()
 
 void gsc_mysql_store_result()
 {
-	if (mysql_connection == NULL)
+	if ( mysql_connection == NULL )
 	{
 		stackError("gsc_mysql_store_result() synchronous connection is not initialized!");
 		stackPushUndefined();
@@ -1079,6 +1081,7 @@ void gsc_mysql_store_result()
 	}
 
 	MYSQL_RES *result = mysql_store_result(mysql_connection);
+
 	stackPushInt((int)result);
 }
 
@@ -1086,14 +1089,14 @@ void gsc_mysql_num_rows()
 {
 	int result;
 
-	if ( ! stackGetParams("i", &result))
+	if ( !stackGetParams("i", &result) )
 	{
 		stackError("gsc_mysql_num_rows() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	if (mysql_connection == NULL)
+	if ( mysql_connection == NULL )
 	{
 		stackError("gsc_mysql_num_rows() synchronous connection is not initialized!");
 		stackPushUndefined();
@@ -1101,6 +1104,7 @@ void gsc_mysql_num_rows()
 	}
 
 	int ret = mysql_num_rows((MYSQL_RES *)result);
+
 	stackPushInt(ret);
 }
 
@@ -1108,14 +1112,14 @@ void gsc_mysql_num_fields()
 {
 	int result;
 
-	if ( ! stackGetParams("i", &result))
+	if ( !stackGetParams("i", &result) )
 	{
 		stackError("gsc_mysql_num_fields() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	if (mysql_connection == NULL)
+	if ( mysql_connection == NULL )
 	{
 		stackError("gsc_mysql_num_fields() synchronous connection is not initialized!");
 		stackPushUndefined();
@@ -1123,6 +1127,7 @@ void gsc_mysql_num_fields()
 	}
 
 	int ret = mysql_num_fields((MYSQL_RES *)result);
+
 	stackPushInt(ret);
 }
 
@@ -1131,14 +1136,14 @@ void gsc_mysql_field_seek()
 	int result;
 	int offset;
 
-	if ( ! stackGetParams("ii", &result, &offset))
+	if ( !stackGetParams("ii", &result, &offset) )
 	{
 		stackError("gsc_mysql_field_seek() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	if (mysql_connection == NULL)
+	if ( mysql_connection == NULL )
 	{
 		stackError("gsc_mysql_field_seek() synchronous connection is not initialized!");
 		stackPushUndefined();
@@ -1146,6 +1151,7 @@ void gsc_mysql_field_seek()
 	}
 
 	int ret = mysql_field_seek((MYSQL_RES *)result, offset);
+
 	stackPushInt(ret);
 }
 
@@ -1153,14 +1159,14 @@ void gsc_mysql_fetch_field()
 {
 	int result;
 
-	if ( ! stackGetParams("i", &result))
+	if ( !stackGetParams("i", &result) )
 	{
 		stackError("gsc_mysql_fetch_field() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	if (mysql_connection == NULL)
+	if ( mysql_connection == NULL )
 	{
 		stackError("gsc_mysql_fetch_field() synchronous connection is not initialized!");
 		stackPushUndefined();
@@ -1169,13 +1175,14 @@ void gsc_mysql_fetch_field()
 
 	MYSQL_FIELD *field = mysql_fetch_field((MYSQL_RES *)result);
 
-	if (field == NULL)
+	if ( field == NULL )
 	{
 		stackPushUndefined();
 		return;
 	}
 
 	char *ret = field->name;
+
 	stackPushString(ret);
 }
 
@@ -1183,14 +1190,14 @@ void gsc_mysql_fetch_row()
 {
 	int result;
 
-	if ( ! stackGetParams("i", &result))
+	if ( !stackGetParams("i", &result) )
 	{
 		stackError("gsc_mysql_fetch_row() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	if (mysql_connection == NULL)
+	if ( mysql_connection == NULL )
 	{
 		stackError("gsc_mysql_fetch_row() synchronous connection is not initialized!");
 		stackPushUndefined();
@@ -1199,7 +1206,7 @@ void gsc_mysql_fetch_row()
 
 	MYSQL_ROW row = mysql_fetch_row((MYSQL_RES *)result);
 
-	if (!row)
+	if ( !row )
 	{
 		stackPushUndefined();
 		return;
@@ -1209,9 +1216,9 @@ void gsc_mysql_fetch_row()
 
 	int numfields = mysql_num_fields((MYSQL_RES *)result);
 
-	for (int i = 0; i < numfields; i++)
+	for ( int i = 0; i < numfields; i++ )
 	{
-		if (row[i] == NULL)
+		if ( row[i] == NULL )
 			stackPushUndefined();
 		else
 			stackPushString(row[i]);
@@ -1224,14 +1231,14 @@ void gsc_mysql_free_result()
 {
 	int result;
 
-	if ( ! stackGetParams("i", &result))
+	if ( !stackGetParams("i", &result) )
 	{
 		stackError("gsc_mysql_free_result() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	if (mysql_connection == NULL)
+	if ( mysql_connection == NULL )
 	{
 		stackError("gsc_mysql_free_result() synchronous connection is not initialized!");
 		stackPushUndefined();
@@ -1239,6 +1246,7 @@ void gsc_mysql_free_result()
 	}
 
 	mysql_free_result((MYSQL_RES *)result);
+
 	stackPushBool(qtrue);
 }
 
@@ -1246,14 +1254,14 @@ void gsc_mysql_real_escape_string()
 {
 	char *str;
 
-	if ( ! stackGetParams("s", &str))
+	if ( !stackGetParams("s", &str) )
 	{
 		stackError("gsc_mysql_real_escape_string() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	if (mysql_connection == NULL)
+	if ( mysql_connection == NULL )
 	{
 		stackError("gsc_mysql_real_escape_string() synchronous connection is not initialized!");
 		stackPushUndefined();
@@ -1262,6 +1270,7 @@ void gsc_mysql_real_escape_string()
 
 	char *to = (char *)malloc(strlen(str) * 2 + 1);
 	mysql_real_escape_string(mysql_connection, to, str, strlen(str));
+
 	stackPushString(to);
 	free(to);
 }
