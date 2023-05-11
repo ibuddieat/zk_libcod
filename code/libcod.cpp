@@ -8,6 +8,7 @@
 
 // Stock cvars
 cvar_t *cl_allowDownload;
+cvar_t *com_hunkMegs;
 cvar_t *com_logfile;
 cvar_t *developer;
 cvar_t *g_playerCollisionEjectSpeed;
@@ -264,7 +265,9 @@ void custom_Com_InitCvars(void)
 {
 	/* Register stock cvars here with different settings, scheme:
 	cvar_t *cvar = Cvar_Register<Type>(var_name, default value, [min. value, max. value,] flags); */
-	sv_maxRate = Cvar_RegisterInt("sv_maxRate", 0, 0, 25000, CVAR_ARCHIVE | CVAR_SERVERINFO | CVAR_UNSAFE);
+
+	// Force server memory setting for clients to be able to counter Hunk_AllocateTempMemory failures
+	com_hunkMegs = Cvar_RegisterInt("com_hunkMegs", 160, 1, 512, CVAR_UNSAFE | CVAR_LATCH | CVAR_SYSTEMINFO | CVAR_ARCHIVE );
 
 	// Register custom cvars required early on server start
 	logfileName = Cvar_RegisterString("logfileName", "console_mp_server.log", CVAR_ARCHIVE);
