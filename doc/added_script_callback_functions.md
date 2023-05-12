@@ -10,10 +10,10 @@ Added script callback functions:
   * `CodeCallback_CrouchButton`
   * `CodeCallback_FragButton`
   * `CodeCallback_HoldBreathButton`
-  * `CodeCallback_JumpButton`
   * `CodeCallback_LeanLeftButton`
   * `CodeCallback_LeanRightButton`
   * `CodeCallback_MeleeBreathButton`
   * `CodeCallback_ProneButton`
   * `CodeCallback_ReloadButton`
   * `CodeCallback_SmokeButton`
+  * `CodeCallback_StandButton`
