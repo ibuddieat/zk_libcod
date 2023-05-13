@@ -813,7 +813,7 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 		}
 	}
 
-	if ( isBot && !sv_botKickMessages->boolean && I_stricmp(reason, "EXE_DISCONNECTED") == 0 )
+	if ( isBot && !sv_botKickMessages->boolean && ( I_stricmp(reason, "EXE_DISCONNECTED") == 0 || I_stricmp(reason, "EXE_PLAYERKICKED") == 0 ) )
 		showIngameMessage = qfalse;
 
 	if ( !sv_kickMessages->boolean && I_stricmp(reason, "EXE_PLAYERKICKED") == 0 )
