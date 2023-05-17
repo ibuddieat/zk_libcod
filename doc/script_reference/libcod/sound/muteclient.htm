@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>muteClient( &lt;player&gt; )</H1>
+<H1>muteClient( &lt;player id&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
@@ -45,7 +45,7 @@ Player A
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-player_a muteClient(player_b);
+player_a muteClient(player_b getEntityNumber());
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -54,7 +54,7 @@ player_a muteClient(player_b);
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;player&gt; The player to mute for player A.</LI>
+<LI>1 : &lt;player id&gt; The entity number of the player to mute for player A.</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>
