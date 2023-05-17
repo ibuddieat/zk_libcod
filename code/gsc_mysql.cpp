@@ -36,7 +36,7 @@ void *mysql_async_execute_query(void *input_c) // cannot be called from gsc, is 
 	int res = mysql_query(c->connection, c->task->query);
 	if ( !res && c->task->save )
 		c->task->result = mysql_store_result(c->connection);
-	else if (res)
+	else if ( res )
 	{
 		// mysql show error here?
 	}

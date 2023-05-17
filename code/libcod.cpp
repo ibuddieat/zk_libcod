@@ -223,6 +223,7 @@ int num_map_turrets;
 map_turret_t map_turrets[MAX_GENTITIES];
 
 customEntityState_t customEntityState[MAX_GENTITIES];
+customPlayerState_t customPlayerState[MAX_CLIENTS];
 
 FILE *voiceDataDumpFile;
 #if COMPILE_CUSTOM_VOICE == 1
@@ -231,34 +232,6 @@ loadSoundFileResult_t loadSoundFileResults[MAX_THREAD_RESULTS_BUFFER];
 int loadSoundFileResultsIndex = 0;
 int currentMaxSoundIndex = 0;
 VoicePacket_t voiceDataStore[MAX_CUSTOMSOUNDS][MAX_STOREDVOICEPACKETS];
-float player_pendingVoiceDataFrames[MAX_CLIENTS] = {0.0};
-int player_currentSoundTalker[MAX_CLIENTS] = {0};
-int player_currentSoundIndex[MAX_CLIENTS] = {0};
-int player_sentVoiceDataIndex[MAX_CLIENTS] = {0};
-#endif
-objective_t player_objectives[MAX_CLIENTS][16];
-float player_meleeHeightScale[MAX_CLIENTS] = {0.0}; // Defaults to 1.0 on connect
-float player_meleeRangeScale[MAX_CLIENTS] = {0.0}; // Defaults to 1.0 on connect
-float player_meleeWidthScale[MAX_CLIENTS] = {0.0}; // Defaults to 1.0 on connect
-int player_fireThroughWalls[MAX_CLIENTS] = {0};
-float player_fireRangeScale[MAX_CLIENTS] = {0.0}; // Defaults to 1.0 on connect
-int player_no_pickup[MAX_CLIENTS] = {0};
-int player_no_earthquakes[MAX_CLIENTS] = {0};
-collisionTeam_t player_collision[MAX_CLIENTS] = {COLLISION_TEAM_BOTH}; // Defaults to COLLISION_TEAM_BOTH on connect
-int player_silent[MAX_CLIENTS] = {0};
-int player_g_speed[MAX_CLIENTS] = {0};
-int player_g_gravity[MAX_CLIENTS] = {0};
-int gamestate_size[MAX_CLIENTS] = {0};
-int custom_animation[MAX_CLIENTS] = {0};
-int clientfps[MAX_CLIENTS] = {0};
-int clientframes[MAX_CLIENTS] = {0};
-uint64_t clientframetime[MAX_CLIENTS] = {0};
-int previousbuttons[MAX_CLIENTS] = {0};
-#if COMPILE_BOTS == 1
-int bot_buttons[MAX_CLIENTS] = {0};
-int bot_weapon[MAX_CLIENTS] = {0};
-char bot_forwardmove[MAX_CLIENTS] = {0};
-char bot_rightmove[MAX_CLIENTS] = {0};
 #endif
 
 void custom_Com_InitCvars(void)
@@ -493,39 +466,39 @@ qboolean SkipCollision(gentity_t *client1, gentity_t *client2)
 
 	if ( id1 < MAX_CLIENTS && id2 < MAX_CLIENTS && client1->client && client2->client && client1->client->sess.connected == CON_CONNECTED && client2->client->sess.connected == CON_CONNECTED )
 	{
-		if ( player_collision[id1] == COLLISION_TEAM_NONE || player_collision[id2] == COLLISION_TEAM_NONE )
+		if ( customPlayerState[id1].collisionTeam == COLLISION_TEAM_NONE || customPlayerState[id2].collisionTeam == COLLISION_TEAM_NONE )
 			return qtrue;
 
-		if ( player_collision[id1] == COLLISION_TEAM_AXIS && (client2->client->sess).team != TEAM_AXIS )
+		if ( customPlayerState[id1].collisionTeam == COLLISION_TEAM_AXIS && (client2->client->sess).team != TEAM_AXIS )
 			return qtrue;
 
-		if ( player_collision[id1] == COLLISION_TEAM_ALLIES && (client2->client->sess).team != TEAM_ALLIES )
+		if ( customPlayerState[id1].collisionTeam == COLLISION_TEAM_ALLIES && (client2->client->sess).team != TEAM_ALLIES )
 			return qtrue;
 
-		if ( player_collision[id2] == COLLISION_TEAM_AXIS && (client1->client->sess).team != TEAM_AXIS )
+		if ( customPlayerState[id2].collisionTeam == COLLISION_TEAM_AXIS && (client1->client->sess).team != TEAM_AXIS )
 			return qtrue;
 
-		if ( player_collision[id2] == COLLISION_TEAM_ALLIES && (client1->client->sess).team != TEAM_ALLIES )
+		if ( customPlayerState[id2].collisionTeam == COLLISION_TEAM_ALLIES && (client1->client->sess).team != TEAM_ALLIES )
 			return qtrue;
 
-		if ( player_collision[id1] == COLLISION_TEAM_BOTH )
+		if ( customPlayerState[id1].collisionTeam == COLLISION_TEAM_BOTH )
 		{
-			if ( player_collision[id2] == COLLISION_TEAM_BOTH )
+			if ( customPlayerState[id2].collisionTeam == COLLISION_TEAM_BOTH )
 				return qfalse;
 
-			if ( player_collision[id2] == COLLISION_TEAM_AXIS && (client1->client->sess).team == TEAM_AXIS )
+			if ( customPlayerState[id2].collisionTeam == COLLISION_TEAM_AXIS && (client1->client->sess).team == TEAM_AXIS )
 				return qfalse;
 
-			if ( player_collision[id2] == COLLISION_TEAM_ALLIES && (client1->client->sess).team == TEAM_ALLIES )
+			if ( customPlayerState[id2].collisionTeam == COLLISION_TEAM_ALLIES && (client1->client->sess).team == TEAM_ALLIES )
 				return qfalse;
 		}
 
-		if ( player_collision[id2] == COLLISION_TEAM_BOTH )
+		if ( customPlayerState[id2].collisionTeam == COLLISION_TEAM_BOTH )
 		{
-			if ( player_collision[id1] == COLLISION_TEAM_AXIS && (client2->client->sess).team == TEAM_AXIS )
+			if ( customPlayerState[id1].collisionTeam == COLLISION_TEAM_AXIS && (client2->client->sess).team == TEAM_AXIS )
 				return qfalse;
 
-			if ( player_collision[id1] == COLLISION_TEAM_ALLIES && (client2->client->sess).team == TEAM_ALLIES )
+			if ( customPlayerState[id1].collisionTeam == COLLISION_TEAM_ALLIES && (client2->client->sess).team == TEAM_ALLIES )
 				return qfalse;
 		}
 	}
@@ -621,12 +594,12 @@ qboolean custom_StuckInClient(gentity_t *self)
 		return qfalse;
 	/* New code end */
 
-	if ( ( ( ((self->client->ps).pm_flags & PMF_VIEWLOCKED) != 0 ) && ( (self->client->sess).state == STATE_PLAYING ) ) && ( player_collision[id] != COLLISION_TEAM_BOTH /* New condition */ || ( (self->r).contents == CONTENTS_BODY || ( (self->r).contents == CONTENTS_CORPSE ) ) ) )
+	if ( ( ( ((self->client->ps).pm_flags & PMF_VIEWLOCKED) != 0 ) && ( (self->client->sess).state == STATE_PLAYING ) ) && ( customPlayerState[id].collisionTeam != COLLISION_TEAM_BOTH /* New condition */ || ( (self->r).contents == CONTENTS_BODY || ( (self->r).contents == CONTENTS_CORPSE ) ) ) )
 	{
 		hit = g_entities;
 		for ( i = 0; i < level.maxclients; i++, hit++)
 		{
-			if ( ( ( ( ( ( (hit->r).inuse != 0 ) && ( ((hit->client->ps).pm_flags & PMF_VIEWLOCKED) != 0 ) ) && ( (hit->client->sess).state == STATE_PLAYING )  ) && ( (hit != self && hit->client != NULL ) ) ) && ( 0 < hit->health && ( /* New condition */ player_collision[i] != COLLISION_TEAM_BOTH || ( (hit->r).contents == CONTENTS_BODY || ( (hit->r).contents == CONTENTS_CORPSE ) ) ) ) ) &&
+			if ( ( ( ( ( ( (hit->r).inuse != 0 ) && ( ((hit->client->ps).pm_flags & PMF_VIEWLOCKED) != 0 ) ) && ( (hit->client->sess).state == STATE_PLAYING )  ) && ( (hit != self && hit->client != NULL ) ) ) && ( 0 < hit->health && ( /* New condition */ customPlayerState[i].collisionTeam != COLLISION_TEAM_BOTH || ( (hit->r).contents == CONTENTS_BODY || ( (hit->r).contents == CONTENTS_CORPSE ) ) ) ) ) &&
 			( (hit->r).absmin[0] <= (self->r).absmax[0] && ( ( ( (self->r).absmin[0] <= (hit->r).absmax[0] && ( (hit->r).absmin[1] <= (self->r).absmax[1] ) ) && ( (self->r).absmin[1] <= (hit->r).absmax[1] ) ) && ( (hit->r).absmin[2] <= (self->r).absmax[2] && ( (self->r).absmin[2] <= (hit->r).absmax[2] ) ) ) ) )
 			{
 				/* New code: per-player/team collison */
@@ -861,7 +834,7 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 
 void custom_Touch_Item_Auto(gentity_t * item, gentity_t * entity, int touch)
 {
-	if ( player_no_pickup[entity->client->ps.clientNum] )
+	if ( customPlayerState[entity->client->ps.clientNum].noPickup )
 		return;
 	
 	hook_touch_item_auto->unhook();
@@ -991,7 +964,7 @@ void custom_BG_AddPredictableEventToPlayerstate(int event, int eventParm, player
 			Com_DPrintf("BG_AddPredictableEventToPlayerstate() event %26s for client %2d\n", *(&entity_event_names + event), ps->clientNum);
 		
 		/* New code start: silent */
-		if ( ( ( event >= EV_FOOTSTEP_RUN_DEFAULT && event <= EV_FOLIAGE_SOUND ) || event == EV_NOAMMO ) && player_silent[ps->clientNum] )
+		if ( ( ( event >= EV_FOOTSTEP_RUN_DEFAULT && event <= EV_FOLIAGE_SOUND ) || event == EV_NOAMMO ) && customPlayerState[ps->clientNum].silent )
 			return;
 		/* New code end */
 		
@@ -1563,14 +1536,14 @@ void custom_MSG_WriteDeltaEntity(msg_t *msg, entityState_t *from, entityState_t 
 				if ( !client->gentity->client->sess.archiveTime )
 				{
 					// Client spectates someone and is not in killcam
-					if ( player_no_earthquakes[spectatorClientNum] )
+					if ( customPlayerState[spectatorClientNum].noEarthquakes )
 						disable = qtrue;
 				}
 			}
 			else
 			{
 				// Client plays normally
-				if ( player_no_earthquakes[clientNum] )
+				if ( customPlayerState[clientNum].noEarthquakes )
 					disable = qtrue;
 			}
 		}
@@ -1798,6 +1771,7 @@ void custom_SV_SendClientGameState(client_t *client)
 	msg_t			msg;
 	byte			*data;
 	LargeLocal		buf;
+	int				id = client - svs.clients;
 	
 	LargeLocalConstructor(&buf, MAX_MSGLEN);
 	data = LargeLocalGetBuf(&buf);
@@ -1812,37 +1786,11 @@ void custom_SV_SendClientGameState(client_t *client)
 	client->gamestateMessageNum = client->netchan.outgoingSequence;
 	
 	/* New code start */
-	#if COMPILE_CUSTOM_VOICE == 1
-	player_pendingVoiceDataFrames[client - svs.clients] = 0.0;
-	player_currentSoundTalker[client - svs.clients] = 0;
-	player_currentSoundIndex[client - svs.clients] = 0;
-	player_sentVoiceDataIndex[client - svs.clients] = 0;
-	#endif
-	memset(&player_objectives[client - svs.clients], 0, sizeof(player_objectives[client - svs.clients]));
-	player_meleeHeightScale[client - svs.clients] = 1.0;
-	player_meleeRangeScale[client - svs.clients] = 1.0;
-	player_meleeWidthScale[client - svs.clients] = 1.0;
-	player_fireThroughWalls[client - svs.clients] = 0;
-	player_fireRangeScale[client - svs.clients] = 1.0;
-	player_no_pickup[client - svs.clients] = 0;
-	player_no_earthquakes[client - svs.clients] = 0;
-	player_collision[client - svs.clients] = COLLISION_TEAM_BOTH;
-	player_silent[client - svs.clients] = 0;
-	player_g_speed[client - svs.clients] = 0;
-	player_g_gravity[client - svs.clients] = 0;
-	custom_animation[client - svs.clients] = 0;
-	
-	clientfps[client - svs.clients] = 0;
-	clientframes[client - svs.clients] = 0;
-	clientframetime[client - svs.clients] = 0;
-	previousbuttons[client - svs.clients] = 0;
-	
-	#if COMPILE_BOTS == 1
-	bot_buttons[client - svs.clients] = 0;
-	bot_weapon[client - svs.clients] = 0;
-	bot_forwardmove[client - svs.clients] = 0;
-	bot_rightmove[client - svs.clients] = 0;
-	#endif
+	memset(&customPlayerState[id], 0, sizeof(customPlayerState_t));
+	customPlayerState[id].meleeHeightScale = 1.0;
+	customPlayerState[id].meleeRangeScale = 1.0;
+	customPlayerState[id].meleeWidthScale = 1.0;
+	customPlayerState[id].fireRangeScale = 1.0;
 	/* New code end */
 	
 	MSG_Init(&msg, data, MAX_MSGLEN);
@@ -1866,16 +1814,16 @@ void custom_SV_SendClientGameState(client_t *client)
 		if ( !base->number )
 			continue;
 		MSG_WriteByte(&msg, svc_baseline);
-		custom_MSG_WriteDeltaEntity(&msg, &nullstate, base, qtrue, client - svs.clients, start);
+		custom_MSG_WriteDeltaEntity(&msg, &nullstate, base, qtrue, id, start);
 	}
 	MSG_WriteByte(&msg, svc_EOF);
-	MSG_WriteLong(&msg, client - svs.clients);
+	MSG_WriteLong(&msg, id);
 	MSG_WriteLong(&msg, sv.checksumFeed);
 	MSG_WriteByte(&msg, svc_EOF);
 	
-	Com_DPrintf("Sending %i bytes in gamestate to client: %i\n", msg.cursize, client - svs.clients);
+	Com_DPrintf("Sending %i bytes in gamestate to client: %i\n", msg.cursize, id);
 	
-	gamestate_size[client - svs.clients] = int(msg.cursize); // New code
+	customPlayerState[id].gamestateSize = int(msg.cursize); // New code
 	
 	SV_SendMessageToClient(&msg, client);
 	LargeLocalDestructor(&buf);
@@ -2266,8 +2214,8 @@ void custom_SV_BotUserMove(client_t *client)
 	playerState_t *ps = SV_GameClientNum(num);
 	gentity_t *ent = SV_GentityNum(num);
 
-	if ( bot_weapon[num] )
-		ucmd.weapon = (byte)(bot_weapon[num] & 0xFF);
+	if ( customPlayerState[num].botWeapon )
+		ucmd.weapon = (byte)(customPlayerState[num].botWeapon & 0xFF);
 	else
 		ucmd.weapon = (byte)(ps->weapon & 0xFF);
 
@@ -2276,10 +2224,9 @@ void custom_SV_BotUserMove(client_t *client)
 
 	if ( ent->client->sess.archiveTime == 0 )
 	{
-		ucmd.buttons = bot_buttons[num];
-
-		ucmd.forwardmove = bot_forwardmove[num];
-		ucmd.rightmove = bot_rightmove[num];
+		ucmd.buttons = customPlayerState[num].botButtons;
+		ucmd.forwardmove = customPlayerState[num].botForwardMove;
+		ucmd.rightmove = customPlayerState[num].botRightMove;
 
 		VectorCopy(ent->client->sess.cmd.angles, ucmd.angles);
 	}
@@ -2314,20 +2261,20 @@ void hook_gamestate_info(const char *format, ...)
 	Com_DPrintf("%s", s);
 		
 	char *tok;
-	int gamestate = 0;
-	int clientnum = 0;
+	int gamestateSize = 0;
+	int clientNum = 0;
 	tok = strtok(s, " ");
 
 	for ( int i = 0; tok != NULL; i++ )
 	{
 		if ( i == 1 )
-			gamestate = atoi(tok);
+			gamestateSize = atoi(tok);
 		if ( i == 7 )
-			clientnum = atoi(tok);
+			clientNum = atoi(tok);
 		tok = strtok(NULL, " ");
 	}
 
-	gamestate_size[clientnum] = gamestate;
+	customPlayerState[clientNum].gamestateSize = gamestateSize;
 }
 
 int play_movement(client_t *cl, usercmd_t *ucmd)
@@ -2343,19 +2290,19 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 
 	int clientnum = cl - svs.clients;
 
-	clientframes[clientnum]++;
+	customPlayerState[clientnum].frames++;
 
-	if ( Sys_MilliSeconds64() - clientframetime[clientnum] >= 1000 )
+	if ( Sys_MilliSeconds64() - customPlayerState[clientnum].frameTime >= 1000 )
 	{
-		if (clientframes[clientnum] > 1000)
-			clientframes[clientnum] = 1000;
+		if (customPlayerState[clientnum].frames > 1000)
+			customPlayerState[clientnum].frames = 1000;
 
-		clientfps[clientnum] = clientframes[clientnum];
-		clientframetime[clientnum] = Sys_MilliSeconds64();
-		clientframes[clientnum] = 0;
+		customPlayerState[clientnum].fps = customPlayerState[clientnum].frames;
+		customPlayerState[clientnum].frameTime = Sys_MilliSeconds64();
+		customPlayerState[clientnum].frames = 0;
 	}
 	
-	if ( ucmd->buttons & KEY_MASK_FIRE && !(previousbuttons[clientnum] & KEY_MASK_FIRE) )
+	if ( ucmd->buttons & KEY_MASK_FIRE && !(customPlayerState[clientnum].previousButtons & KEY_MASK_FIRE) )
 	{
 		if ( codecallback_attackbutton )
 		{
@@ -2364,7 +2311,7 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 		}
 	}
 	
-	if ( ucmd->buttons & KEY_MASK_MELEE && !(previousbuttons[clientnum] & KEY_MASK_MELEE) )
+	if ( ucmd->buttons & KEY_MASK_MELEE && !(customPlayerState[clientnum].previousButtons & KEY_MASK_MELEE) )
 	{
 		if ( codecallback_meleebutton )
 		{
@@ -2373,7 +2320,7 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 		}
 	}
 
-	if ( ucmd->buttons & KEY_MASK_USE && !(previousbuttons[clientnum] & KEY_MASK_USE) )
+	if ( ucmd->buttons & KEY_MASK_USE && !(customPlayerState[clientnum].previousButtons & KEY_MASK_USE) )
 	{
 		if ( codecallback_usebutton )
 		{
@@ -2382,7 +2329,7 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 		}
 	}
 
-	if ( ucmd->buttons & KEY_MASK_RELOAD && !(previousbuttons[clientnum] & KEY_MASK_RELOAD) )
+	if ( ucmd->buttons & KEY_MASK_RELOAD && !(customPlayerState[clientnum].previousButtons & KEY_MASK_RELOAD) )
 	{
 		if( codecallback_reloadbutton )
 		{
@@ -2391,7 +2338,7 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 		}
 	}
 	
-	if ( ucmd->buttons & KEY_MASK_LEANLEFT && !(previousbuttons[clientnum] & KEY_MASK_LEANLEFT) )
+	if ( ucmd->buttons & KEY_MASK_LEANLEFT && !(customPlayerState[clientnum].previousButtons & KEY_MASK_LEANLEFT) )
 	{
 		if ( codecallback_leanleftbutton )
 		{
@@ -2400,7 +2347,7 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 		}
 	}
 	
-	if ( ucmd->buttons & KEY_MASK_LEANRIGHT && !(previousbuttons[clientnum] & KEY_MASK_LEANRIGHT) )
+	if ( ucmd->buttons & KEY_MASK_LEANRIGHT && !(customPlayerState[clientnum].previousButtons & KEY_MASK_LEANRIGHT) )
 	{
 		if ( codecallback_leanrightbutton )
 		{
@@ -2409,7 +2356,7 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 		}
 	}
 	
-	if ( ucmd->buttons & KEY_MASK_PRONE && !(previousbuttons[clientnum] & KEY_MASK_PRONE) )
+	if ( ucmd->buttons & KEY_MASK_PRONE && !(customPlayerState[clientnum].previousButtons & KEY_MASK_PRONE) )
 	{
 		if ( codecallback_pronebutton )
 		{
@@ -2418,7 +2365,7 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 		}
 	}
 	
-	if ( ucmd->buttons & KEY_MASK_CROUCH && !(previousbuttons[clientnum] & KEY_MASK_CROUCH) )
+	if ( ucmd->buttons & KEY_MASK_CROUCH && !(customPlayerState[clientnum].previousButtons & KEY_MASK_CROUCH) )
 	{
 		if ( codecallback_crouchbutton )
 		{
@@ -2427,7 +2374,7 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 		}
 	}
 	
-	if ( ucmd->buttons & KEY_MASK_JUMP && !(previousbuttons[clientnum] & KEY_MASK_JUMP) )
+	if ( ucmd->buttons & KEY_MASK_JUMP && !(customPlayerState[clientnum].previousButtons & KEY_MASK_JUMP) )
 	{
 		if ( codecallback_standbutton )
 		{
@@ -2436,7 +2383,7 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 		}
 	}
 	
-	if ( ucmd->buttons & KEY_MASK_ADS_MODE && !(previousbuttons[clientnum] & KEY_MASK_ADS_MODE) )
+	if ( ucmd->buttons & KEY_MASK_ADS_MODE && !(customPlayerState[clientnum].previousButtons & KEY_MASK_ADS_MODE) )
 	{
 		if ( codecallback_adsbutton )
 		{
@@ -2445,7 +2392,7 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 		}
 	}
 	
-	if ( ucmd->buttons & KEY_MASK_MELEE_BREATH && !(previousbuttons[clientnum] & KEY_MASK_MELEE_BREATH) )
+	if ( ucmd->buttons & KEY_MASK_MELEE_BREATH && !(customPlayerState[clientnum].previousButtons & KEY_MASK_MELEE_BREATH) )
 	{
 		if ( codecallback_meleebreathbutton )
 		{
@@ -2454,7 +2401,7 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 		}
 	}
 	
-	if ( ucmd->buttons & KEY_MASK_HOLDBREATH && !(previousbuttons[clientnum] & KEY_MASK_HOLDBREATH) )
+	if ( ucmd->buttons & KEY_MASK_HOLDBREATH && !(customPlayerState[clientnum].previousButtons & KEY_MASK_HOLDBREATH) )
 	{
 		if ( codecallback_holdbreathbutton )
 		{
@@ -2463,7 +2410,7 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 		}
 	}
 	
-	if ( ucmd->buttons & KEY_MASK_FRAG && !(previousbuttons[clientnum] & KEY_MASK_FRAG) )
+	if ( ucmd->buttons & KEY_MASK_FRAG && !(customPlayerState[clientnum].previousButtons & KEY_MASK_FRAG) )
 	{
 		if ( codecallback_fragbutton )
 		{
@@ -2472,7 +2419,7 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 		}
 	}
 	
-	if ( ucmd->buttons & KEY_MASK_SMOKE && !(previousbuttons[clientnum] & KEY_MASK_SMOKE) )
+	if ( ucmd->buttons & KEY_MASK_SMOKE && !(customPlayerState[clientnum].previousButtons & KEY_MASK_SMOKE) )
 	{
 		if ( codecallback_smokebutton )
 		{
@@ -2481,7 +2428,7 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 		}
 	}
 
-	previousbuttons[clientnum] = ucmd->buttons;
+	customPlayerState[clientnum].previousButtons = ucmd->buttons;
 	return ret;
 }
 
@@ -2497,11 +2444,11 @@ int custom_ClientEndFrame(gentity_t *ent)
 	{
 		int num = ent - g_entities;
 
-		if ( player_g_speed[num] > 0 )
-			ent->client->ps.speed = player_g_speed[num];
+		if ( customPlayerState[num].speed > 0 )
+			ent->client->ps.speed = customPlayerState[num].speed;
 
-		if ( player_g_gravity[num] > 0 )
-			ent->client->ps.gravity = player_g_gravity[num];
+		if ( customPlayerState[num].gravity > 0 )
+			ent->client->ps.gravity = customPlayerState[num].gravity;
 
 		// Experimental slide bug fix
 		if ( g_resetSlide->boolean )
@@ -2525,10 +2472,10 @@ int custom_BG_PlayAnim(playerState_t *ps, int animNum, animBodyPart_t bodyPart, 
 
 	int duration;
 
-	if ( !custom_animation[ps->clientNum] )
+	if ( !customPlayerState[ps->clientNum].animation )
 		duration = BG_PlayAnim(ps, animNum, bodyPart, forceDuration, setTimer, isContinue, force);
 	else
-		duration = BG_PlayAnim(ps, custom_animation[ps->clientNum], bodyPart, forceDuration, qtrue, isContinue, qtrue);
+		duration = BG_PlayAnim(ps, customPlayerState[ps->clientNum].animation, bodyPart, forceDuration, qtrue, isContinue, qtrue);
 
 	hook_bg_playanim->hook();
 
@@ -2714,9 +2661,9 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 	{
 		unsigned char *ip = from.ip;
 	
-		if ( !( ip[0] == 10 ||									// 10.0.0.0 – 10.255.255.255
+		if ( !( ip[0] == 10 ||                                      // 10.0.0.0 – 10.255.255.255
 			  ( ip[0] == 172 && ( ip[1] >= 16 && ip[1] <= 31 ) ) || // 172.16.0.0 – 172.31.255.255
-			  ( ip[0] == 192 && ip[1] == 168 ) ) )					// 192.168.0.0 – 192.168.255.255
+			  ( ip[0] == 192 && ip[1] == 168 ) ) )                  // 192.168.0.0 – 192.168.255.255
 		{
 			if ( SVC_ApplyRconLimit(from, badRconPassword) )
 				return;
@@ -3399,24 +3346,24 @@ void custom_G_RunFrame(int levelTime)
 			if ( client->state < CS_CONNECTED )
 				continue;
 
-			if ( player_currentSoundIndex[id] )
+			if ( customPlayerState[id].currentSoundIndex )
 			{
-				player_pendingVoiceDataFrames[id] += MAX_VOICEPACKETSPERFRAME; // 51.2 packets per second @ 20 server fps
+				customPlayerState[id].pendingVoiceDataFrames += MAX_VOICEPACKETSPERFRAME; // 51.2 packets per second @ 20 server fps
 				VoicePacket_t *voicePacket;
 
-				for ( ; player_pendingVoiceDataFrames[id] > 1.0 && player_sentVoiceDataIndex[id] < MAX_STOREDVOICEPACKETS; player_sentVoiceDataIndex[id]++, player_pendingVoiceDataFrames[id] -= 1.0 )
+				for ( ; customPlayerState[id].pendingVoiceDataFrames > 1.0 && customPlayerState[id].sentVoiceDataIndex < MAX_STOREDVOICEPACKETS; customPlayerState[id].sentVoiceDataIndex++, customPlayerState[id].pendingVoiceDataFrames -= 1.0 )
 				{
-					voicePacket = &voiceDataStore[player_currentSoundIndex[id] - 1][player_sentVoiceDataIndex[id]];
-					if ( svs.clients[player_currentSoundTalker[id]].state < CS_CONNECTED || !voicePacket->dataLen )
+					voicePacket = &voiceDataStore[customPlayerState[id].currentSoundIndex - 1][customPlayerState[id].sentVoiceDataIndex];
+					if ( svs.clients[customPlayerState[id].currentSoundTalker].state < CS_CONNECTED || !voicePacket->dataLen )
 					{
-						player_pendingVoiceDataFrames[id] = 0.0;
-						player_currentSoundTalker[id] = 0;
-						player_currentSoundIndex[id] = 0;
-						player_sentVoiceDataIndex[id] = 0;
+						customPlayerState[id].pendingVoiceDataFrames = 0.0;
+						customPlayerState[id].currentSoundTalker = 0;
+						customPlayerState[id].currentSoundIndex = 0;
+						customPlayerState[id].sentVoiceDataIndex = 0;
 						Scr_Notify(&g_entities[id], scr_const.sound_file_done, 0);
 						break;
 					}
-					voicePacket->talkerNum = player_currentSoundTalker[id];
+					voicePacket->talkerNum = customPlayerState[id].currentSoundTalker;
 					SV_QueueVoicePacket(voicePacket->talkerNum, id, voicePacket);
 				}
 			}
@@ -3556,7 +3503,7 @@ LAB_0809b5f4:
 						{
 							for ( l = 0; l < sv_maxclients->integer; l++ )
 							{
-								if ( player_no_earthquakes[l] )
+								if ( customPlayerState[l].noEarthquakes )
 								{
 									if ( l > 31 )
 										archEnt->r.clientMask[1] |= 1 << (l - 32);
@@ -3666,7 +3613,7 @@ LAB_0809b5f4:
 						{
 							for ( l = 0; l < sv_maxclients->integer; l++ )
 							{
-								if ( player_no_earthquakes[l] )
+								if ( customPlayerState[l].noEarthquakes )
 								{
 									if ( l > 31 )
 										to.r.clientMask[1] |= 1 << (l - 32);
@@ -4688,7 +4635,7 @@ void custom_G_UpdateObjectives(void)
 			for ( j = 0; j < 16; j++ )
 			{
 				/* New code start: per-player objective functions */
-				obj = &player_objectives[i][j];
+				obj = &customPlayerState[i].objectives[j];
 				if ( obj->state != OBJST_EMPTY )
 				{
 					G_UpdateSingleObjective(&(client->ps).objective[j], obj);
@@ -4697,7 +4644,7 @@ void custom_G_UpdateObjectives(void)
 				{
 				/* New code end */
 					obj = &level.objectives[j];
-					if ( obj->state == OBJST_EMPTY || ( obj->teamNum != 0 &&  obj->teamNum != team ) )
+					if ( obj->state == OBJST_EMPTY || ( obj->teamNum != 0 && obj->teamNum != team ) )
 					{
 						(client->ps).objective[j].state = OBJST_EMPTY;
 					}
@@ -4731,9 +4678,9 @@ void custom_FireWeaponMelee(gentity_t *player)
 		*/
 
 		/* New code start: per-player melee values */
-		range = player_meleeRange->floatval * player_meleeRangeScale[id];
-		width = player_meleeWidth->floatval * player_meleeWidthScale[id];
-		height = player_meleeHeight->floatval * player_meleeHeightScale[id];
+		range = player_meleeRange->floatval * customPlayerState[id].meleeRangeScale;
+		width = player_meleeWidth->floatval * customPlayerState[id].meleeWidthScale;
+		height = player_meleeHeight->floatval * customPlayerState[id].meleeHeightScale;
 		/* New code end */
 
 		Weapon_Melee(player, &wp, range, width, height);
@@ -4742,7 +4689,7 @@ void custom_FireWeaponMelee(gentity_t *player)
 
 void bullet_fire_extended_trace(trace_t *results, const vec3_t *start, const vec3_t *end, int passEntityNum, int contentmask, uint8_t *priorityMap)
 {
-	if ( passEntityNum < 64 && player_fireThroughWalls[passEntityNum] )
+	if ( passEntityNum < 64 && customPlayerState[passEntityNum].fireThroughWalls )
 	{
 		// Recreate bullet hit effect that would otherwise be missing with that mask
 		trace_t trace;
@@ -4768,7 +4715,7 @@ void custom_Bullet_Fire_Spread(gentity_t *source, gentity_t *inflictor, weaponPa
 
 	/* New code start: per-player min. fire distance */
 	int id = inflictor->client->ps.clientNum;
-	float distance = wp->weapDef->fMinDamageRange * player_fireRangeScale[id];
+	float distance = wp->weapDef->fMinDamageRange * customPlayerState[id].fireRangeScale;
 	/* New code end */
 
 	VectorCopy(wp->muzzleTrace, start);
@@ -4793,7 +4740,7 @@ void custom_Bullet_Fire(gentity_t *inflictor, float spread, weaponParms *wp, gen
 	{
 		/* New code start: per-player min. fire distance */
 		int id = inflictor->client->ps.clientNum;
-		float distance = 8192.0 * player_fireRangeScale[id];
+		float distance = 8192.0 * customPlayerState[id].fireRangeScale;
 		/* New code end */
 
 		Bullet_Endpos(spread, end, wp, distance);
@@ -6289,6 +6236,13 @@ unsigned int custom_G_ModelIndex(const char *name)
 	return i;
 }
 
+int custom_SV_GetClientPing(int clientNum)
+{
+	if ( customPlayerState[clientNum].overridePing )
+		return customPlayerState[clientNum].ping;
+	return svs.clients[clientNum].ping;
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -6609,6 +6563,7 @@ public:
 		cracking_hook_function(0x0809114E, (int)custom_SV_ExecuteClientMessage);
 		cracking_hook_function(0x0811D300, (int)custom_G_FindConfigstringIndex);
 		cracking_hook_function(0x0811D49C, (int)custom_G_ModelIndex);
+		cracking_hook_function(0x08092456, (int)custom_SV_GetClientPing);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC718, (int)Jump_ClearState);

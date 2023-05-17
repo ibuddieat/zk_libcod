@@ -28,7 +28,7 @@ New script code methods:
   * `<player> getServerCommandQueueSize()`
   * `<player> getViewOrigin()`
   * `<player> isPlayingSoundFile()`
-  * `<player> muteClient(<player>)`
+  * `<player> muteClient(<player id>)`
   * `<player> noclip("on|off|toggle")`
   * `<player> objective_player_add(<objective_number>, <state>, <position>, <iconshader>)`
   * `<player> objective_player_delete(<objective_number>)`
@@ -46,10 +46,11 @@ New script code methods:
   * `<player> setMeleeHeightScale(<scale>)`
   * `<player> setMeleeRangeScale(<scale>)`
   * `<player> setMeleeWidthScale(<scale>)`
+  * `<player> setPing(<value>)`
   * `<player> silent("on|off|toggle")`
   * `<player> stopSoundFile()`
   * `<player> stopUseTurret()`
-  * `<player> unmuteClient(<player>)`
+  * `<player> unmuteClient(<player id>)`
   * `<turret> getTurretOwner()`
   * `<weapon> getWeaponItemAmmo()`
   * `<weapon> setWeaponItemAmmo(<value>)`

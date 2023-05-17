@@ -344,6 +344,7 @@ scr_method_t scriptMethods[] =
 	{"smokeButtonPressed", gsc_player_button_smoke, 0},
 	{"getIP", gsc_player_getip, 0},
 	{"getPing", gsc_player_getping, 0},
+	{"setPing", gsc_player_setping, 0},
 	{"getSpectatorClient", gsc_player_spectatorclient_get, 0},
 	{"ClientCommand", gsc_player_clientcommand, 0},
 	{"getLastConnectTime", gsc_player_getlastconnecttime, 0},

@@ -259,6 +259,7 @@ void gsc_entity_getturretowner(scr_entref_t ref)
 }
 
 extern customEntityState_t customEntityState[MAX_GENTITIES];
+
 void gsc_entity_enablebounce(scr_entref_t ref)
 {
 	int id = ref.entnum;

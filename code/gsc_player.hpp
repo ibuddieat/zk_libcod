@@ -24,6 +24,7 @@ void gsc_player_get_userinfo(scr_entref_t id);
 void gsc_player_set_userinfo(scr_entref_t id);
 void gsc_player_getip(scr_entref_t id);
 void gsc_player_getping(scr_entref_t id);
+void gsc_player_setping(scr_entref_t id);
 void gsc_player_clientuserinfochanged(scr_entref_t id);
 void gsc_player_clientcommand(scr_entref_t id);
 void gsc_player_getlastconnecttime(scr_entref_t id);

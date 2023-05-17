@@ -11,14 +11,14 @@ void gsc_level_getstaticmodelname()
 {
 	int index;
 
-	if ( ! stackGetParams("i", &index))
+	if ( !stackGetParams("i", &index) )
 	{
 		stackError("gsc_level_getstaticmodelname() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	if (index < 0 || index >= (int)cm.numStaticModels)
+	if ( index < 0 || index >= (int)cm.numStaticModels )
 	{
 		stackError("gsc_level_getstaticmodelname() index is out of range");
 		stackPushUndefined();
@@ -32,14 +32,14 @@ void gsc_level_getstaticmodelorigin()
 {
 	int index;
 
-	if ( ! stackGetParams("i", &index))
+	if ( !stackGetParams("i", &index) )
 	{
 		stackError("gsc_level_getstaticmodelorigin() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	if (index < 0 || index >= (int)cm.numStaticModels)
+	if ( index < 0 || index >= (int)cm.numStaticModels )
 	{
 		stackError("gsc_level_getstaticmodelorigin() index is out of range");
 		stackPushUndefined();
@@ -56,7 +56,7 @@ void gsc_level_getentitycount()
 	int i;
 	int entities = 0;
 
-	if ( ! stackGetParams("i", &inUseOnly))
+	if ( !stackGetParams("i", &inUseOnly) )
 	{
 		inUseOnly = 0;
 	}

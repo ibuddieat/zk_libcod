@@ -10,10 +10,7 @@ cvar_t *jump_spreadAdd;
 
 #define JUMP_LAND_SLOWDOWN_TIME 1800
 
-bool player_jump_height_enabled[MAX_CLIENTS] = {0};
-float player_jump_height[MAX_CLIENTS] = {0};
-bool player_jump_slowdownenable_enabled[MAX_CLIENTS] = {0};
-bool player_jump_slowdownenable[MAX_CLIENTS] = {0};
+extern customPlayerState_t customPlayerState[MAX_CLIENTS];
 
 int playerstateToClientNum(playerState_t* ps)
 {
@@ -22,45 +19,44 @@ int playerstateToClientNum(playerState_t* ps)
 
 float getJumpHeight(playerState_t* ps)
 {
-	int clientid = playerstateToClientNum(ps);
-	if(player_jump_height_enabled[clientid])
-		return player_jump_height[clientid];
+	int id = playerstateToClientNum(ps);
+
+	if ( customPlayerState[id].overrideJumpHeight )
+		return customPlayerState[id].jumpHeight;
 	return jump_height->floatval;
 }
 
 bool getJumpSlowdownEnable(playerState_t* ps)
 {
-	int clientid = playerstateToClientNum(ps);
-	if(player_jump_slowdownenable_enabled[clientid])
-		return player_jump_slowdownenable[clientid];
+	int id = playerstateToClientNum(ps);
+
+	if ( customPlayerState[id].overrideJumpSlowdown )
+		return customPlayerState[id].jumpSlowdown;
 	return jump_slowdownEnable->boolean;
 }
 
-float Jump_CalcHeight(playerState_t* ps )
+float Jump_CalcHeight(playerState_t* ps)
 {
 	float val;
 	float newdiv;
-	float jumpHeight = getJumpHeight(ps);//jump_height->floatval;
+	float jumpHeight = getJumpHeight(ps); // jump_height->floatval;
 
 	val = jumpHeight;
-	val = (val + val) * ps->gravity;
+	val = ( val + val ) * ps->gravity;
 
-	if(ps->pm_flags & PMF_JUMPING && ps->pm_time <= JUMP_LAND_SLOWDOWN_TIME )
+	if ( ps->pm_flags & PMF_JUMPING && ps->pm_time <= JUMP_LAND_SLOWDOWN_TIME )
 	{
-		if(getJumpSlowdownEnable(ps))//jump_slowdownEnable->boolean)
+		if( getJumpSlowdownEnable(ps) ) // jump_slowdownEnable->boolean)
 		{
 
-			if(ps->pm_time > 1699)
+			if( ps->pm_time > 1699 )
 			{
-
 				newdiv = 2.5;
-
 			}
 			else
 			{
 				newdiv = ps->pm_time * (float)1.5 * (float)0.00058823527 + (float)1.0;
 			}
-
 		}
 		else
 		{
@@ -74,7 +70,7 @@ float Jump_CalcHeight(playerState_t* ps )
 
 double Jump_GetLandFactor(playerState_s *ps)
 {
-	if ( !getJumpSlowdownEnable(ps))//jump_slowdownEnable->boolean )
+	if ( !getJumpSlowdownEnable(ps)) // jump_slowdownEnable->boolean
 	{
 		return 1.0;
 	}
@@ -137,8 +133,6 @@ void Jump_Start(pmove_t *pm, pml_t *pml, float height)
 	playerState_s *ps;
 
 	ps = pm->ps;
-
-
 	velocitySqrd = (float)(height * 2.0) * (float)ps->gravity;
 	if ( ps->pm_flags & PMF_JUMPING )
 	{
@@ -192,58 +186,51 @@ void Jump_ClampVelocity(playerState_t* ps, vec3_t vec)
 	float comp;
 	float newZVelocity;
 
-	if(ps->origin[2] - vec[2] > 0)
+	if ( ps->origin[2] - vec[2] > 0 )
 	{
-
-		float jumpHeight = getJumpHeight(ps);//jump_height->floatval;
-
+		float jumpHeight = getJumpHeight(ps); // jump_height->floatval;
 		comp = ps->jumpOriginZ + jumpHeight - ps->origin[2];
 
-		if(comp >= (float)0.1)
+		if ( comp >= (float)0.1 )
 		{
+			newZVelocity = sqrtf((comp + comp) * (float)ps->gravity);
 
-			newZVelocity = sqrtf( (comp + comp) * (float)ps->gravity);
-
-			if(ps->velocity[2] > newZVelocity )
+			if ( ps->velocity[2] > newZVelocity )
 			{
 				ps->velocity[2] = newZVelocity;
 			}
-
 		}
 		else
 		{
 			ps->velocity[2] = 0;
 			return;
 		}
-
 	}
 }
 
 qboolean Jump_IsPlayerAboveMax(playerState_t* ps)
 {
-	float jumpHeight = getJumpHeight(ps);//jump_height->floatval;
+	float jumpHeight = getJumpHeight(ps); // jump_height->floatval;
 
-	if(ps->origin[2] >= ps->jumpOriginZ + jumpHeight )
+	if ( ps->origin[2] >= ps->jumpOriginZ + jumpHeight )
 		return qtrue;
 	else
 		return qfalse;
-
 }
 
 qboolean Jump_GetStepHeight(playerState_t* ps, const vec3_t vec1, float* val2)
 {
-	float jumpHeight = getJumpHeight(ps);//jump_height->floatval;
+	float jumpHeight = getJumpHeight(ps); // jump_height->floatval;
 
-	if(vec1[2] > ps->jumpOriginZ + jumpHeight)
+	if ( vec1[2] > ps->jumpOriginZ + jumpHeight )
 		return qfalse;
 
 	*val2 = jump_stepSize->floatval;
 
-	if(vec1[2] + jump_stepSize->floatval > ps->jumpOriginZ + jumpHeight)
+	if ( vec1[2] + jump_stepSize->floatval > ps->jumpOriginZ + jumpHeight )
 		*val2 = ps->jumpOriginZ + jumpHeight - vec1[2];
 
 	return qtrue;
-
 }
 
 qboolean Jump_Check(pmove_t *pm, pml_t *pml)
@@ -285,7 +272,7 @@ qboolean Jump_Check(pmove_t *pm, pml_t *pml)
 		pm->cmd.buttons &= 0xFFFFFBFF;
 		return qfalse;
 	}
-	Jump_Start(pm, pml, getJumpHeight(ps));//jump_height->floatval);
+	Jump_Start(pm, pml, getJumpHeight(ps)); // jump_height->floatval
 	Jump_AddSurfaceEvent(ps, pml);
 	if ( ps->pm_flags & PMF_LADDER )
 	{
@@ -328,7 +315,7 @@ void Jump_ApplySlowdown(playerState_s *ps)
 		Jump_ClearState(ps);
 		scale = 0.64999998;
 	}
-	if ( getJumpSlowdownEnable(ps))//jump_slowdownEnable->boolean )
+	if ( getJumpSlowdownEnable(ps) ) // jump_slowdownEnable->boolean
 	{
 		VectorScale(ps->velocity, scale, ps->velocity);
 	}

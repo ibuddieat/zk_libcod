@@ -45,7 +45,7 @@ void gsc_exec()
 {
 	char *command;
 
-	if (!stackGetParamString(0, &command))
+	if ( !stackGetParamString(0, &command) )
 	{
 		stackError("gsc_exec() argument is undefined or has wrong type");
 		stackPushUndefined();
@@ -58,7 +58,7 @@ void gsc_exec()
 
 	fp = popen(command, "r");
 
-	if (fp == NULL)
+	if ( fp == NULL )
 	{
 		stackPushUndefined();
 		return;
@@ -70,9 +70,9 @@ void gsc_exec()
 
 	stackPushArray();
 
-	while ((c = getc(fp)) != EOF)
+	while ( (c = getc(fp)) != EOF )
 	{
-		if (c == '\n' || curpos == MAX_STRINGLENGTH - 1)
+		if ( c == '\n' || curpos == MAX_STRINGLENGTH - 1 )
 		{
 			content[curpos] = '\0';
 			stackPushString(content);
@@ -101,13 +101,13 @@ void *exec_async(void *input_c)
 
 	fp = popen(task->command, "r");
 
-	if (fp == NULL)
+	if ( fp == NULL )
 	{	
-		if (task->callback)
+		if ( task->callback )
 		{
-			if (task->hasargument)
+			if ( task->hasargument )
 			{
-				switch(task->valueType)
+				switch( task->valueType )
 				{
 				case INT_VALUE:
 					stackPushInt(task->intValue);
@@ -137,7 +137,7 @@ void *exec_async(void *input_c)
 			
 			stackPushArray();
 			
-			if (task->save)
+			if ( task->save )
 			{
 				stackPushUndefined();
 				stackPushArrayLast();
@@ -151,7 +151,7 @@ void *exec_async(void *input_c)
 		return NULL;
 	}
 
-	if (task->save)
+	if ( task->save )
 	{
 		exec_outputline *output = new exec_outputline;
 		task->output = output;
@@ -160,9 +160,9 @@ void *exec_async(void *input_c)
 		char c;
 		int curpos = 0;
 
-		while ((c = getc(fp)) != EOF)
+		while ( (c = getc(fp)) != EOF )
 		{
-			if (c == '\n' || curpos == MAX_STRINGLENGTH - 1)
+			if ( c == '\n' || curpos == MAX_STRINGLENGTH - 1 )
 			{
 				output->content[curpos] = '\0';
 				output->next = new exec_outputline;
@@ -180,7 +180,7 @@ void *exec_async(void *input_c)
 		output->content[curpos] = '\0';
 	}
 	else
-		while(getc(fp) != EOF); //make thread wait for function to finish
+		while ( getc(fp) != EOF ); //make thread wait for function to finish
 	
 	pclose(fp);
 	task->done = true;
@@ -192,7 +192,7 @@ void gsc_exec_async_create()
 	char *command;
 	int callback;
 	
-	if (!stackGetParamString(0, &command))
+	if ( !stackGetParamString(0, &command) )
 	{
 		stackError("gsc_exec_async_create() argument is undefined or has wrong type");
 		stackPushUndefined();
@@ -201,7 +201,7 @@ void gsc_exec_async_create()
 
 	exec_async_task *current = first_exec_async_task;
 
-	while (current != NULL && current->next != NULL)
+	while ( current != NULL && current->next != NULL )
 		current = current->next;
 
 	exec_async_task *newtask = new exec_async_task;
@@ -212,7 +212,7 @@ void gsc_exec_async_create()
 	newtask->prev = current;
 	newtask->next = NULL;
 
-	if (!stackGetParamFunction(1, &callback))
+	if ( !stackGetParamFunction(1, &callback) )
 		newtask->callback = 0;
 	else
 		newtask->callback = callback;
@@ -229,29 +229,29 @@ void gsc_exec_async_create()
 	vec3_t valueVector;
 	unsigned int valueObject;
 
-	if (stackGetParamInt(2, &valueInt))
+	if ( stackGetParamInt(2, &valueInt) )
 	{
 		newtask->valueType = INT_VALUE;
 		newtask->intValue = valueInt;
 	}
-	else if (stackGetParamFloat(2, &valueFloat))
+	else if ( stackGetParamFloat(2, &valueFloat) )
 	{
 		newtask->valueType = FLOAT_VALUE;
 		newtask->floatValue = valueFloat;
 	}
-	else if (stackGetParamString(2, &valueString))
+	else if ( stackGetParamString(2, &valueString) )
 	{
 		newtask->valueType = STRING_VALUE;
 		strcpy(newtask->stringValue, valueString);
 	}
-	else if (stackGetParamVector(2, valueVector))
+	else if ( stackGetParamVector(2, valueVector) )
 	{
 		newtask->valueType = VECTOR_VALUE;
 		newtask->vectorValue[0] = valueVector[0];
 		newtask->vectorValue[1] = valueVector[1];
 		newtask->vectorValue[2] = valueVector[2];
 	}
-	else if (stackGetParamObject(2, &valueObject))
+	else if ( stackGetParamObject(2, &valueObject) )
 	{
 		newtask->valueType = OBJECT_VALUE;
 		newtask->objectValue = valueObject;
@@ -259,7 +259,7 @@ void gsc_exec_async_create()
 	else
 		newtask->hasargument = false;
 
-	if (current != NULL)
+	if ( current != NULL )
 		current->next = newtask;
 	else
 		first_exec_async_task = newtask;
@@ -268,14 +268,14 @@ void gsc_exec_async_create()
 	
 	pthread_t exec_doer;
 
-	if (pthread_create(&exec_doer, NULL, exec_async, newtask) != 0)
+	if ( pthread_create(&exec_doer, NULL, exec_async, newtask) != 0 )
 	{
 		stackError("gsc_exec_async_create() error creating exec async handler thread!");
 		stackPushUndefined();
 		return;
 	}
 
-	if (pthread_detach(exec_doer) != 0)
+	if ( pthread_detach(exec_doer) != 0 )
 	{
 		stackError("gsc_exec_async_create() error detaching exec async handler thread!");
 		stackPushUndefined();
@@ -290,7 +290,7 @@ void gsc_exec_async_create_nosave()
 	char *command;
 	int callback;
 
-	if (!stackGetParamString(0, &command))
+	if ( !stackGetParamString(0, &command) )
 	{
 		stackError("gsc_exec_async_create_nosave() argument is undefined or has wrong type");
 		stackPushUndefined();
@@ -299,7 +299,7 @@ void gsc_exec_async_create_nosave()
 
 	exec_async_task *current = first_exec_async_task;
 
-	while (current != NULL && current->next != NULL)
+	while ( current != NULL && current->next != NULL )
 		current = current->next;
 
 	exec_async_task *newtask = new exec_async_task;
@@ -310,7 +310,7 @@ void gsc_exec_async_create_nosave()
 	newtask->prev = current;
 	newtask->next = NULL;
 
-	if (!stackGetParamFunction(1, &callback))
+	if ( !stackGetParamFunction(1, &callback) )
 		newtask->callback = 0;
 	else
 		newtask->callback = callback;
@@ -327,29 +327,29 @@ void gsc_exec_async_create_nosave()
 	vec3_t valueVector;
 	unsigned int valueObject;
 
-	if (stackGetParamInt(2, &valueInt))
+	if ( stackGetParamInt(2, &valueInt) )
 	{
 		newtask->valueType = INT_VALUE;
 		newtask->intValue = valueInt;
 	}
-	else if (stackGetParamFloat(2, &valueFloat))
+	else if ( stackGetParamFloat(2, &valueFloat) )
 	{
 		newtask->valueType = FLOAT_VALUE;
 		newtask->floatValue = valueFloat;
 	}
-	else if (stackGetParamString(2, &valueString))
+	else if ( stackGetParamString(2, &valueString) )
 	{
 		newtask->valueType = STRING_VALUE;
 		strcpy(newtask->stringValue, valueString);
 	}
-	else if (stackGetParamVector(2, valueVector))
+	else if ( stackGetParamVector(2, valueVector) )
 	{
 		newtask->valueType = VECTOR_VALUE;
 		newtask->vectorValue[0] = valueVector[0];
 		newtask->vectorValue[1] = valueVector[1];
 		newtask->vectorValue[2] = valueVector[2];
 	}
-	else if (stackGetParamObject(2, &valueObject))
+	else if ( stackGetParamObject(2, &valueObject) )
 	{
 		newtask->valueType = OBJECT_VALUE;
 		newtask->objectValue = valueObject;
@@ -357,7 +357,7 @@ void gsc_exec_async_create_nosave()
 	else
 		newtask->hasargument = false;
 
-	if (current != NULL)
+	if ( current != NULL )
 		current->next = newtask;
 	else
 		first_exec_async_task = newtask;
@@ -366,14 +366,14 @@ void gsc_exec_async_create_nosave()
 	
 	pthread_t exec_doer;
 
-	if (pthread_create(&exec_doer, NULL, exec_async, newtask) != 0)
+	if ( pthread_create(&exec_doer, NULL, exec_async, newtask) != 0 )
 	{
 		stackError("gsc_exec_async_create_nosave() error creating exec async handler thread!");
 		stackPushUndefined();
 		return;
 	}
 
-	if (pthread_detach(exec_doer) != 0)
+	if ( pthread_detach(exec_doer) != 0 )
 	{
 		stackError("gsc_exec_async_create_nosave() error detaching exec async handler thread!");
 		stackPushUndefined();
@@ -387,17 +387,17 @@ void gsc_exec_async_checkdone()
 {
 	exec_async_task *current = first_exec_async_task;
 
-	while (current != NULL)
+	while ( current != NULL )
 	{
 		exec_async_task *task = current;
 		current = current->next;
-		if (task->done)
+		if ( task->done )
 		{
-			if (Scr_IsSystemActive() && task->save && task->callback && !task->error && (scrVarPub.levelId == task->levelId))
+			if ( Scr_IsSystemActive() && task->save && task->callback && !task->error && (scrVarPub.levelId == task->levelId) )
 			{
-				if (task->hasargument)
+				if ( task->hasargument )
 				{
-					switch(task->valueType)
+					switch( task->valueType )
 					{
 					case INT_VALUE:
 						stackPushInt(task->intValue);
@@ -428,7 +428,7 @@ void gsc_exec_async_checkdone()
 				stackPushArray();
 				exec_outputline *output = task->output;
 
-				while (output != NULL)
+				while ( output != NULL )
 				{
 					exec_outputline *next = output->next;
 					stackPushString(output->content);
@@ -442,10 +442,10 @@ void gsc_exec_async_checkdone()
 			}
 
 			//free task
-			if (task->next != NULL)
+			if ( task->next != NULL )
 				task->next->prev = task->prev;
 
-			if (task->prev != NULL)
+			if ( task->prev != NULL )
 				task->prev->next = task->next;
 			else
 				first_exec_async_task = task->next;

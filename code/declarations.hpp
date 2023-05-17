@@ -3587,6 +3587,14 @@ typedef enum
 	GRAVITY_NUM
 } customGravityType_t;
 
+typedef enum
+{
+	COLLISION_TEAM_BOTH,
+	COLLISION_TEAM_AXIS,
+	COLLISION_TEAM_ALLIES,
+	COLLISION_TEAM_NONE
+} collisionTeam_t;
+
 typedef struct customEntityState_s
 {
 	// Note: Some stock fields are still reused for new stuff where archiving is required
@@ -3599,13 +3607,47 @@ typedef struct customEntityState_s
 	qboolean convertedTrigger;
 } customEntityState_t;
 
-typedef enum
+typedef struct customPlayerState_s
 {
-	COLLISION_TEAM_BOTH,
-	COLLISION_TEAM_AXIS,
-	COLLISION_TEAM_ALLIES,
-	COLLISION_TEAM_NONE
-} collisionTeam_t;
+	int ping;
+	qboolean overridePing;
+	objective_t objectives[16];
+	float meleeHeightScale;
+	float meleeRangeScale;
+	float meleeWidthScale;
+	int fireThroughWalls;
+	float fireRangeScale;
+	qboolean noPickup;
+	qboolean noEarthquakes;
+	collisionTeam_t collisionTeam;
+	qboolean silent;
+	int speed;
+	int gravity;
+	int gamestateSize;
+	int animation;
+	int fps;
+	int frames;
+	uint64_t frameTime;
+	int previousButtons;
+	#if COMPILE_BOTS == 1
+	int botButtons;
+	int botWeapon;
+	char botForwardMove;
+	char botRightMove;
+	#endif
+	#if COMPILE_CUSTOM_VOICE == 1
+	float pendingVoiceDataFrames;
+	int currentSoundTalker;
+	int currentSoundIndex;
+	int sentVoiceDataIndex;
+	#endif
+	#if COMPILE_JUMP == 1
+	qboolean overrideJumpHeight;
+	int jumpHeight;
+	qboolean overrideJumpSlowdown;
+	int jumpSlowdown;
+	#endif
+} customPlayerState_t;
 
 typedef struct callback_s
 {
