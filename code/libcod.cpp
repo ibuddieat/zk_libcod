@@ -2277,15 +2277,10 @@ void hook_gamestate_info(const char *format, ...)
 	customPlayerState[clientNum].gamestateSize = gamestateSize;
 }
 
-int play_movement(client_t *cl, usercmd_t *ucmd)
+void custom_SV_ClientThink(client_t *cl, usercmd_t *ucmd)
 {
 	hook_play_movement->unhook();
-
-	int (*sig)(client_t *cl, usercmd_t *ucmd);
-	*(int *)&sig = hook_play_movement->from;
-
-	int ret = sig(cl, ucmd);
-
+	SV_ClientThink(cl, ucmd);
 	hook_play_movement->hook();
 
 	int clientnum = cl - svs.clients;
@@ -2294,7 +2289,7 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 
 	if ( Sys_MilliSeconds64() - customPlayerState[clientnum].frameTime >= 1000 )
 	{
-		if (customPlayerState[clientnum].frames > 1000)
+		if ( customPlayerState[clientnum].frames > 1000 )
 			customPlayerState[clientnum].frames = 1000;
 
 		customPlayerState[clientnum].fps = customPlayerState[clientnum].frames;
@@ -2429,7 +2424,6 @@ int play_movement(client_t *cl, usercmd_t *ucmd)
 	}
 
 	customPlayerState[clientnum].previousButtons = ucmd->buttons;
-	return ret;
 }
 
 int custom_ClientEndFrame(gentity_t *ent)
@@ -6312,7 +6306,7 @@ public:
 		hook_sv_verifyiwds_f->hook();
 
 		#if COMPILE_PLAYER == 1
-		hook_play_movement = new cHook(0x0808F488, (int)play_movement);
+		hook_play_movement = new cHook(0x0808F488, (int)custom_SV_ClientThink);
 		hook_play_movement->hook();
 		hook_clientendframe = new cHook(0x080F4DBE, (int)custom_ClientEndFrame);
 		hook_clientendframe->hook();
@@ -6395,7 +6389,7 @@ public:
 		hook_sv_verifyiwds_f->hook();
 
 		#if COMPILE_PLAYER == 1
-		hook_play_movement = new cHook(0x08090D18, (int)play_movement);
+		hook_play_movement = new cHook(0x08090D18, (int)custom_SV_ClientThink);
 		hook_play_movement->hook();
 		hook_clientendframe = new cHook(0x080F73D2, (int)custom_ClientEndFrame);
 		hook_clientendframe->hook();
@@ -6506,7 +6500,7 @@ public:
 		hook_sv_freeconfigstrings->hook();
 
 		#if COMPILE_PLAYER == 1
-		hook_play_movement = new cHook(0x08090DAC, (int)play_movement);
+		hook_play_movement = new cHook(0x08090DAC, (int)custom_SV_ClientThink);
 		hook_play_movement->hook();
 		hook_clientendframe = new cHook(0x080F7516, (int)custom_ClientEndFrame);
 		hook_clientendframe->hook();
