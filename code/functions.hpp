@@ -489,6 +489,15 @@ static const SV_SendServerCommand_t SV_SendServerCommand = (SV_SendServerCommand
 static const SV_SendServerCommand_t SV_SendServerCommand = (SV_SendServerCommand_t)0x08094A10;
 #endif
 
+typedef void (*SV_FreeClientScriptId_t)(client_t *client);
+#if COD_VERSION == COD2_1_0
+static const SV_FreeClientScriptId_t SV_FreeClientScriptId = (SV_FreeClientScriptId_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_FreeClientScriptId_t SV_FreeClientScriptId = (SV_FreeClientScriptId_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_FreeClientScriptId_t SV_FreeClientScriptId = (SV_FreeClientScriptId_t)0x08096558;
+#endif
+
 typedef void (*SV_FreeClient_t)(client_t *client);
 #if COD_VERSION == COD2_1_0
 static const SV_FreeClient_t SV_FreeClient = (SV_FreeClient_t)0x0; // Not tested
@@ -2764,6 +2773,15 @@ static const get_bit_t get_bit = (get_bit_t)0x0; // Not tested
 static const get_bit_t get_bit = (get_bit_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const get_bit_t get_bit = (get_bit_t)0x0806627A;
+#endif
+
+typedef void (*CalculateRanks_t)(void);
+#if COD_VERSION == COD2_1_0
+static const CalculateRanks_t CalculateRanks = (CalculateRanks_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const CalculateRanks_t CalculateRanks = (CalculateRanks_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const CalculateRanks_t CalculateRanks = (CalculateRanks_t)0x081097E6;
 #endif
 
 #endif

@@ -747,6 +747,18 @@ void hook_ClientUserinfoChanged(int clientNum)
 	Scr_FreeThread(ret);
 }
 
+void invalid_password(client_t *client)
+{
+	SV_FreeClientScriptId(client);
+
+	// New: Remove rejected client from scoreboard
+	// Note: This does not cover rejection by pbsv.m_AuthClient (Punkbuster)
+	gclient_t *gclient = &level.clients[client - svs.clients];
+
+	gclient->sess.connected = CON_DISCONNECTED;
+	CalculateRanks();
+}
+
 void custom_SV_DropClient(client_t *drop, const char *reason)
 {
 	int i;
@@ -6445,6 +6457,7 @@ public:
 		cracking_hook_call(0x080EBC58, (int)hook_findWeaponIndex);
 		cracking_hook_call(0x08062644, (int)hitch_warning_print);
 		cracking_hook_call(0x0811FF47, (int)bullet_fire_extended_trace);
+		cracking_hook_call(0x0808EE0A, (int)invalid_password);
 
 		hook_gametype_scripts = new cHook(0x08110286, (int)custom_GScr_LoadGameTypeScript);
 		hook_gametype_scripts->hook();
