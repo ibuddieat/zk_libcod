@@ -66,6 +66,15 @@ static const Scr_GetFunctionHandle_t Scr_GetFunctionHandle = (Scr_GetFunctionHan
 static const Scr_GetFunctionHandle_t Scr_GetFunctionHandle = (Scr_GetFunctionHandle_t)0x08110208;
 #endif
 
+typedef int (*Scr_GetNumParam_t)(void);
+#if COD_VERSION == COD2_1_0
+static const Scr_GetNumParam_t Scr_GetNumParam = (Scr_GetNumParam_t)0x08084AEE;
+#elif COD_VERSION == COD2_1_2
+static const Scr_GetNumParam_t Scr_GetNumParam = (Scr_GetNumParam_t)0x0808506A;
+#elif COD_VERSION == COD2_1_3
+static const Scr_GetNumParam_t Scr_GetNumParam = (Scr_GetNumParam_t)0x08085136;
+#endif
+
 typedef char * (*Cmd_Argv_t)(int arg);
 #if COD_VERSION == COD2_1_0
 static const Cmd_Argv_t Cmd_Argv = (Cmd_Argv_t)0x0806001C;
@@ -84,13 +93,22 @@ static const Cmd_Argc_t Cmd_Argc = (Cmd_Argc_t)0x080601E8;
 static const Cmd_Argc_t Cmd_Argc = (Cmd_Argc_t)0x080601E0;
 #endif
 
-typedef int (*Scr_GetNumParam_t)(void);
+typedef int (*SV_Cmd_Argc_t)(void);
 #if COD_VERSION == COD2_1_0
-static const Scr_GetNumParam_t Scr_GetNumParam = (Scr_GetNumParam_t)0x08084AEE;
+static const SV_Cmd_Argc_t SV_Cmd_Argc = (SV_Cmd_Argc_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
-static const Scr_GetNumParam_t Scr_GetNumParam = (Scr_GetNumParam_t)0x0808506A;
+static const SV_Cmd_Argc_t SV_Cmd_Argc = (SV_Cmd_Argc_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
-static const Scr_GetNumParam_t Scr_GetNumParam = (Scr_GetNumParam_t)0x08085136;
+static const SV_Cmd_Argc_t SV_Cmd_Argc = (SV_Cmd_Argc_t)0x080601EA;
+#endif
+
+typedef char * (*SV_Cmd_Argv_t)(unsigned int arg);
+#if COD_VERSION == COD2_1_0
+static const SV_Cmd_Argv_t SV_Cmd_Argv = (SV_Cmd_Argv_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_Cmd_Argv_t SV_Cmd_Argv = (SV_Cmd_Argv_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_Cmd_Argv_t SV_Cmd_Argv = (SV_Cmd_Argv_t)0x08060220;
 #endif
 
 typedef void (*SV_Cmd_ArgvBuffer_t)(int arg, char *buffer, int bufferLength);
@@ -100,6 +118,24 @@ static const SV_Cmd_ArgvBuffer_t SV_Cmd_ArgvBuffer = (SV_Cmd_ArgvBuffer_t)0x0806
 static const SV_Cmd_ArgvBuffer_t SV_Cmd_ArgvBuffer = (SV_Cmd_ArgvBuffer_t)0x08060280;
 #elif COD_VERSION == COD2_1_3
 static const SV_Cmd_ArgvBuffer_t SV_Cmd_ArgvBuffer = (SV_Cmd_ArgvBuffer_t)0x08060278;
+#endif
+
+typedef void (*SV_Cmd_ExecuteString_t)(const char *cmd);
+#if COD_VERSION == COD2_1_0
+static const SV_Cmd_ExecuteString_t SV_Cmd_ExecuteString = (SV_Cmd_ExecuteString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_Cmd_ExecuteString_t SV_Cmd_ExecuteString = (SV_Cmd_ExecuteString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_Cmd_ExecuteString_t SV_Cmd_ExecuteString = (SV_Cmd_ExecuteString_t)0x080609CC;
+#endif
+
+typedef void (*SV_Cmd_TokenizeString_t)(const char *text_in);
+#if COD_VERSION == COD2_1_0
+static const SV_Cmd_TokenizeString_t SV_Cmd_TokenizeString = (SV_Cmd_TokenizeString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_Cmd_TokenizeString_t SV_Cmd_TokenizeString = (SV_Cmd_TokenizeString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_Cmd_TokenizeString_t SV_Cmd_TokenizeString = (SV_Cmd_TokenizeString_t)0x0806064C;
 #endif
 
 typedef void (*Sys_Error_t)(const char *fmt, ...);
@@ -174,6 +210,15 @@ static const Sys_SetValue_t Sys_SetValue = (Sys_SetValue_t)0x080D6A6A;
 static const Sys_SetValue_t Sys_SetValue = (Sys_SetValue_t)0x080D6BAE;
 #endif
 
+typedef unsigned int (*Com_AddToString_t)(const char* string, char* buffer, unsigned int current, unsigned int length, bool escapeSpaces);
+#if COD_VERSION == COD2_1_0
+static const Com_AddToString_t Com_AddToString = (Com_AddToString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Com_AddToString_t Com_AddToString = (Com_AddToString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Com_AddToString_t Com_AddToString = (Com_AddToString_t)0x080629CE;
+#endif
+
 typedef void (*Com_Printf_t)(const char *format, ...);
 #if COD_VERSION == COD2_1_0
 static const Com_Printf_t Com_Printf = (Com_Printf_t)0x08060B2C;
@@ -210,6 +255,24 @@ static const Com_PrintMessage_t Com_PrintMessage = (Com_PrintMessage_t)0x0; // N
 static const Com_PrintMessage_t Com_PrintMessage = (Com_PrintMessage_t)0x08060C20;
 #endif
 
+typedef void (*Com_BeginRedirect_t)(char *buffer, int buffersize, void (*flush)(char *));
+#if COD_VERSION == COD2_1_0
+static const Com_BeginRedirect_t Com_BeginRedirect = (Com_BeginRedirect_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Com_BeginRedirect_t Com_BeginRedirect = (Com_BeginRedirect_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Com_BeginRedirect_t Com_BeginRedirect = (Com_BeginRedirect_t)0x08060BA2;
+#endif
+
+typedef void (*Com_EndRedirect_t)(void);
+#if COD_VERSION == COD2_1_0
+static const Com_EndRedirect_t Com_EndRedirect = (Com_EndRedirect_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Com_EndRedirect_t Com_EndRedirect = (Com_EndRedirect_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Com_EndRedirect_t Com_EndRedirect = (Com_EndRedirect_t)0x08060BDC;
+#endif
+
 typedef void (*Cmd_AddCommand_t)(const char *cmd_name, xcommand_t function);
 #if COD_VERSION == COD2_1_0
 static const Cmd_AddCommand_t Cmd_AddCommand = (Cmd_AddCommand_t)0x080604B2;
@@ -225,7 +288,7 @@ static const Cmd_ExecuteString_t Cmd_ExecuteString = (Cmd_ExecuteString_t)0x0806
 #elif COD_VERSION == COD2_1_2
 static const Cmd_ExecuteString_t Cmd_ExecuteString = (Cmd_ExecuteString_t)0x080609D4;
 #elif COD_VERSION == COD2_1_3
-static const Cmd_ExecuteString_t Cmd_ExecuteString = (Cmd_ExecuteString_t)0x080609CC;
+static const Cmd_ExecuteString_t Cmd_ExecuteString = (Cmd_ExecuteString_t)0x080609CC; // That's actually SV_Cmd_ExecuteString, but doesn't matter
 #endif
 
 typedef void (*ClientCommand_t)(int clientNum);
@@ -354,6 +417,15 @@ static const Cvar_FindVar_t Cvar_FindVar = (Cvar_FindVar_t)0x080B2D94;
 static const Cvar_FindVar_t Cvar_FindVar = (Cvar_FindVar_t)0x080B2ED8;
 #endif
 
+typedef void (*Cvar_SetBool_t)(cvar_t *cvar, bool value);
+#if COD_VERSION == COD2_1_0
+static const Cvar_SetBool_t Cvar_SetBool = (Cvar_SetBool_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Cvar_SetBool_t Cvar_SetBool = (Cvar_SetBool_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Cvar_SetBool_t Cvar_SetBool = (Cvar_SetBool_t)0x080B4980;
+#endif
+
 typedef void (*Cvar_SetString_t)(cvar_t *cvar, char *value);
 #if COD_VERSION == COD2_1_0
 static const Cvar_SetString_t Cvar_SetString = (Cvar_SetString_t)0x0; // Not tested
@@ -453,6 +525,15 @@ static const NET_CompareBaseAdr_t NET_CompareBaseAdr = (NET_CompareBaseAdr_t)0x0
 static const NET_CompareBaseAdr_t NET_CompareBaseAdr = (NET_CompareBaseAdr_t)0x0806C424;
 #endif
 
+typedef qboolean (*NET_IsLocalAddress_t)(netadr_t from);
+#if COD_VERSION == COD2_1_0
+static const NET_IsLocalAddress_t NET_IsLocalAddress = (NET_IsLocalAddress_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const NET_IsLocalAddress_t NET_IsLocalAddress = (NET_IsLocalAddress_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const NET_IsLocalAddress_t NET_IsLocalAddress = (NET_IsLocalAddress_t)0x0806C57A;
+#endif
+
 typedef void (*NET_OutOfBandPrint_t)(netsrc_t net_socket, netadr_t adr, const char *format, ...);
 #if COD_VERSION == COD2_1_0
 static const NET_OutOfBandPrint_t NET_OutOfBandPrint = (NET_OutOfBandPrint_t)0x0806C40C;
@@ -541,6 +622,15 @@ static const SV_SendClientGameState_t SV_SendClientGameState = (SV_SendClientGam
 static const SV_SendClientGameState_t SV_SendClientGameState = (SV_SendClientGameState_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const SV_SendClientGameState_t SV_SendClientGameState = (SV_SendClientGameState_t)0x0808F302;
+#endif
+
+typedef void (*SV_UpdateLastTimeMasterServerCommunicated_t)(netadr_t from);
+#if COD_VERSION == COD2_1_0
+static const SV_UpdateLastTimeMasterServerCommunicated_t SV_UpdateLastTimeMasterServerCommunicated = (SV_UpdateLastTimeMasterServerCommunicated_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_UpdateLastTimeMasterServerCommunicated_t SV_UpdateLastTimeMasterServerCommunicated = (SV_UpdateLastTimeMasterServerCommunicated_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_UpdateLastTimeMasterServerCommunicated_t SV_UpdateLastTimeMasterServerCommunicated = (SV_UpdateLastTimeMasterServerCommunicated_t)0x0808CF40;
 #endif
 
 typedef void (*SV_UpdateServerCommandsToClient_t)(client_t *client, msg_t *msg);
@@ -930,6 +1020,15 @@ static const MSG_ReadCommandString_t MSG_ReadCommandString = (MSG_ReadCommandStr
 static const MSG_ReadCommandString_t MSG_ReadCommandString = (MSG_ReadCommandString_t)0x08068522;
 #endif
 
+typedef char * (*MSG_ReadStringLine_t)(msg_t *msg);
+#if COD_VERSION == COD2_1_0
+static const MSG_ReadStringLine_t MSG_ReadStringLine = (MSG_ReadStringLine_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const MSG_ReadStringLine_t MSG_ReadStringLine = (MSG_ReadStringLine_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const MSG_ReadStringLine_t MSG_ReadStringLine = (MSG_ReadStringLine_t)0x08068606;
+#endif
+
 typedef void (*SV_ClientEnterWorld_t)(client_t *cl, usercmd_t *cmd);
 #if COD_VERSION == COD2_1_0
 static const SV_ClientEnterWorld_t SV_ClientEnterWorld = (SV_ClientEnterWorld_t)0x0; // Not tested
@@ -955,6 +1054,15 @@ static const SV_SendMessageToClient_t SV_SendMessageToClient = (SV_SendMessageTo
 static const SV_SendMessageToClient_t SV_SendMessageToClient = (SV_SendMessageToClient_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const SV_SendMessageToClient_t SV_SendMessageToClient = (SV_SendMessageToClient_t)0x0809ABA2;
+#endif
+
+typedef void (*SV_Netchan_AddOOBProfilePacket_t)(int iLength);
+#if COD_VERSION == COD2_1_0
+static const SV_Netchan_AddOOBProfilePacket_t SV_Netchan_AddOOBProfilePacket = (SV_Netchan_AddOOBProfilePacket_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_Netchan_AddOOBProfilePacket_t SV_Netchan_AddOOBProfilePacket = (SV_Netchan_AddOOBProfilePacket_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_Netchan_AddOOBProfilePacket_t SV_Netchan_AddOOBProfilePacket = (SV_Netchan_AddOOBProfilePacket_t)0x0809766E;
 #endif
 
 typedef void (*SV_Netchan_Decode_t)(client_t *client, byte *data, int remaining);
@@ -1605,6 +1713,15 @@ static const I_strncmp_t I_strncmp = (I_strncmp_t)0x0; // Not tested
 static const I_strncmp_t I_strncmp = (I_strncmp_t)0x080B7B88;
 #endif
 
+typedef int (*I_strnicmp_t)(const char *s1, const char *s2, int n);
+#if COD_VERSION == COD2_1_0
+static const I_strnicmp_t I_strnicmp = (I_strnicmp_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const I_strnicmp_t I_strnicmp = (I_strnicmp_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const I_strnicmp_t I_strnicmp = (I_strnicmp_t)0x080B7AE2;
+#endif
+
 typedef char * (*I_strlwr_t)(char *s1);
 #if COD_VERSION == COD2_1_0
 static const I_strlwr_t I_strlwr = (I_strlwr_t)0x080B573C;
@@ -1747,6 +1864,15 @@ static const SV_DObjExists_t SV_DObjExists = (SV_DObjExists_t)0x08090A5A;
 static const SV_DObjExists_t SV_DObjExists = (SV_DObjExists_t)0x0809226A;
 #elif COD_VERSION == COD2_1_3
 static const SV_DObjExists_t SV_DObjExists = (SV_DObjExists_t)0x0809236E;
+#endif
+
+typedef int (*Com_Milliseconds_t)(void);
+#if COD_VERSION == COD2_1_0
+static const Com_Milliseconds_t Com_Milliseconds = (Com_Milliseconds_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Com_Milliseconds_t Com_Milliseconds = (Com_Milliseconds_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Com_Milliseconds_t Com_Milliseconds = (Com_Milliseconds_t)0x08061B7C;
 #endif
 
 typedef void (*Com_Error_t)(int errorLevel, const char *error, ...);
@@ -2235,6 +2361,24 @@ static const Bullet_Fire_Extended_t Bullet_Fire_Extended = (Bullet_Fire_Extended
 static const Bullet_Fire_Extended_t Bullet_Fire_Extended = (Bullet_Fire_Extended_t)0x0811FE90;
 #endif
 
+typedef void (*SV_AuthorizeIpPacket_t)(netadr_t from);
+#if COD_VERSION == COD2_1_0
+static const SV_AuthorizeIpPacket_t SV_AuthorizeIpPacket = (SV_AuthorizeIpPacket_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_AuthorizeIpPacket_t SV_AuthorizeIpPacket = (SV_AuthorizeIpPacket_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_AuthorizeIpPacket_t SV_AuthorizeIpPacket = (SV_AuthorizeIpPacket_t)0x0808DA2A;
+#endif
+
+typedef void (*SV_VoicePacket_t)(netadr_t from);
+#if COD_VERSION == COD2_1_0
+static const SV_VoicePacket_t SV_VoicePacket = (SV_VoicePacket_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_VoicePacket_t SV_VoicePacket = (SV_VoicePacket_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_VoicePacket_t SV_VoicePacket = (SV_VoicePacket_t)0x08094B56;
+#endif
+
 typedef void (*SV_QueueVoicePacket_t)(int talkerNum, int clientNum, VoicePacket_t *voicePacket);
 #if COD_VERSION == COD2_1_0
 static const SV_QueueVoicePacket_t SV_QueueVoicePacket = (SV_QueueVoicePacket_t)0x0; // Not tested
@@ -2269,6 +2413,33 @@ static const PbCaptureConsoleOutput_t PbCaptureConsoleOutput = (PbCaptureConsole
 static const PbCaptureConsoleOutput_t PbCaptureConsoleOutput = (PbCaptureConsoleOutput_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const PbCaptureConsoleOutput_t PbCaptureConsoleOutput = (PbCaptureConsoleOutput_t)0x0813C214;
+#endif
+
+typedef void (*PbPassConnectString_t)(const char *addr, byte *data);
+#if COD_VERSION == COD2_1_0
+static const PbPassConnectString_t PbPassConnectString = (PbPassConnectString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const PbPassConnectString_t PbPassConnectString = (PbPassConnectString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const PbPassConnectString_t PbPassConnectString = (PbPassConnectString_t)0x0813C0EC;
+#endif
+
+typedef void (*PbServerForceProcess_t)(void);
+#if COD_VERSION == COD2_1_0
+static const PbServerForceProcess_t PbServerForceProcess = (PbServerForceProcess_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const PbServerForceProcess_t PbServerForceProcess = (PbServerForceProcess_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const PbServerForceProcess_t PbServerForceProcess = (PbServerForceProcess_t)0x0813C096;
+#endif
+
+typedef void (*PbSvAddEvent_t)(int event, int clientNum, int offset, byte *msg);
+#if COD_VERSION == COD2_1_0
+static const PbSvAddEvent_t PbSvAddEvent = (PbSvAddEvent_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const PbSvAddEvent_t PbSvAddEvent = (PbSvAddEvent_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const PbSvAddEvent_t PbSvAddEvent = (PbSvAddEvent_t)0x0813BF4C;
 #endif
 
 typedef void (*G_RunThink_t)(gentity_t *ent);
@@ -2782,6 +2953,15 @@ static const CalculateRanks_t CalculateRanks = (CalculateRanks_t)0x0; // Not tes
 static const CalculateRanks_t CalculateRanks = (CalculateRanks_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const CalculateRanks_t CalculateRanks = (CalculateRanks_t)0x081097E6;
+#endif
+
+typedef void (*SV_FlushRedirect_t)(char *outputbuf);
+#if COD_VERSION == COD2_1_0
+static const SV_FlushRedirect_t SV_FlushRedirect = (SV_FlushRedirect_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_FlushRedirect_t SV_FlushRedirect = (SV_FlushRedirect_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_FlushRedirect_t SV_FlushRedirect = (SV_FlushRedirect_t)0x08097050;
 #endif
 
 #endif

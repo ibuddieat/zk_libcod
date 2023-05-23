@@ -1,4 +1,5 @@
 #include "gsc.hpp"
+#include "libcod.hpp"
 
 #include <signal.h>
 
@@ -23,6 +24,7 @@ cvar_t *sv_floodProtect;
 cvar_t *sv_fps;
 cvar_t *sv_maxclients;
 cvar_t *sv_maxRate;
+cvar_t *sv_packet_info;
 cvar_t *sv_padPackets;
 cvar_t *sv_pure;
 cvar_t *sv_showCommands;
@@ -203,7 +205,6 @@ const entityHandler_t entityHandlers[] =
 	{ G_FreeEntity, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0 },
 };
 
-qboolean logRcon = qtrue;
 qboolean logHeartbeat = qtrue;
 
 int hitchFrameTime = 0;
@@ -279,6 +280,7 @@ void common_init_complete_print(const char *format, ...)
 	sv_floodProtect = Cvar_FindVar("sv_floodProtect");
 	sv_fps = Cvar_FindVar("sv_fps");
 	sv_maxclients = Cvar_FindVar("sv_maxclients");
+	sv_packet_info = Cvar_FindVar("sv_packet_info");
 	sv_padPackets = Cvar_FindVar("sv_padPackets");
 	sv_pure = Cvar_FindVar("sv_pure");
 	sv_showCommands = Cvar_FindVar("sv_showCommands");
@@ -2630,7 +2632,7 @@ bool SVC_callback(const char *str, const char *ip)
 	return false;
 }
 
-bool SVC_ApplyRconLimit( netadr_t from, bool badRconPassword )
+bool SVC_ApplyRconLimit( netadr_t from, qboolean badRconPassword )
 {
 	// Prevent using rcon as an amplifier and make dictionary attacks impractical
 	if ( SVC_RateLimitAddress(from, 10, 1000) )
@@ -2656,13 +2658,43 @@ bool SVC_ApplyRconLimit( netadr_t from, bool badRconPassword )
 	return false;
 }
 
-void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
+void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 {
+	char *sv_outputbuf;
+	int argc;
+	char *argv;
+	LargeLocal buf;
+	char *password;
+	char cmd_aux[1024];
+	int len;
+	int max_len;
+	int arg;
+	int args;
+	int i;
+	qboolean valid;
+
+	/* New: sv_allowRcon cvar */
 	if ( !sv_allowRcon->boolean )
 		return;
-	
-	bool badRconPassword = !strlen(rcon_password->string) || strcmp(Cmd_Argv(1), rcon_password->string) != 0;
-	
+	/* New code end */
+
+	LargeLocalConstructor(&buf, SV_OUTPUTBUF_LENGTH);
+	sv_outputbuf = (char *)LargeLocalGetBuf(&buf);
+
+	/* New: Patched out half-second limit
+	int time = Com_Milliseconds();
+	if ( rcon_lasttime != 0 && ( time - rcon_lasttime < 500 ) )
+	{
+		LargeLocalDestructor(&buf);
+		return;
+	}
+	rcon_lasttime = time;
+	*/
+
+	password = SV_Cmd_Argv(1);
+	qboolean badRconPassword = !strlen(rcon_password->string) || strcmp(password, rcon_password->string) != 0;
+
+	/* New: Rate limiting and sv_limitLocalRcon cvar */
 	if ( !sv_limitLocalRcon->boolean )
 	{
 		unsigned char *ip = from.ip;
@@ -2680,57 +2712,33 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 		if ( SVC_ApplyRconLimit(from, badRconPassword) )
 			return;
 	}
-	
-	#if COD_VERSION == COD2_1_0
-	int rcon_from_string_offset = 0x0; // Not tested
-	#elif COD_VERSION == COD2_1_2
-	int rcon_from_string_offset = 0x0; // Not tested
-	#elif COD_VERSION == COD2_1_3
-	int rcon_from_string_offset = 0x0814bC61;
-	#endif
-	
-	if ( logRcon && !sv_logRcon->boolean )
+	/* New code end */
+
+	if ( badRconPassword )
 	{
-		byte disable = 0;
-		memcpy((void *)rcon_from_string_offset, &disable, 1);
-		logRcon = qfalse;
-		Com_DPrintf("Disabled rcon messages logging\n");
+		valid = 0;
+		if ( sv_logRcon->boolean ) // New: sv_logRcon cvar
+			Com_Printf("Bad rcon from %s:\n%s\n", NET_AdrToString(from), SV_Cmd_Argv(2));
 	}
-	else if ( !logRcon && sv_logRcon->boolean )
+	else
 	{
-		byte enable = 0x52; // "R"
-		memcpy((void *)rcon_from_string_offset, &enable, 1);
-		logRcon = qtrue;
-		Com_DPrintf("Enabled rcon messages logging\n");
+		valid = 1;
+		if ( sv_logRcon->boolean ) // New: sv_logRcon cvar
+			Com_Printf("Rcon from %s: %s ", NET_AdrToString(from), SV_Cmd_Argv(2));
 	}
 
+	/* New: CodeCallback_RemoteCommand */
 	if (
+		!from_script &&
 		codecallback_remotecommand && 
 		!badRconPassword && 
-		Scr_IsSystemActive() && 
-		strcmp(Cmd_Argv(2), "devmap") != 0 && 
-		strcmp(Cmd_Argv(2), "fast_restart") != 0 &&
-		strcmp(Cmd_Argv(2), "map") != 0 && 
-		strcmp(Cmd_Argv(2), "map_restart") != 0 && 
-		strcmp(Cmd_Argv(2), "map_rotate") != 0
+		Scr_IsSystemActive()
 		)
 	{
-		/*
-		The map commands would crash because the server would continue running
-		scripts after executing gsc_utils_remotecommand() (via VM_Resume).
-		A potential solution for getting these commands into the callback too
-		could be to use something as follows in gsc_utils_remotecommand(), just
-		like GScr_LoadMap() does:
-
-		level.finished = 2;
-		level.savePersist = 0;
-		Cbuf_ExecuteText(2, custom_va("map %s\n", <mapname>));
-		*/
-
 		stackPushInt((int)msg);
 		stackPushArray();
-		int args = Cmd_Argc();
-		for ( int i = 2; i < args; i++ )
+		args = SV_Cmd_Argc();
+		for ( i = 2; i < args; i++ )
 		{
 			char tmp[MAX_STRINGLENGTH];
 			SV_Cmd_ArgvBuffer(i, tmp, sizeof(tmp));
@@ -2743,18 +2751,195 @@ void hook_SVC_RemoteCommand(netadr_t from, msg_t *msg)
 		Scr_FreeThread(ret);
 		return;
 	}
-	
-	#if COD_VERSION == COD2_1_0
-	int lasttime_offset = 0x0848B674;
-	#elif COD_VERSION == COD2_1_2
-	int lasttime_offset = 0x0849EB74;
-	#elif COD_VERSION == COD2_1_3
-	int lasttime_offset = 0x0849FBF4;
-	#endif
-	
-	*(int *)lasttime_offset = 0;
-	
-	SVC_RemoteCommand(from, msg);
+	/* New code end */
+
+	svs.redirectAddress = from;
+	Com_BeginRedirect(sv_outputbuf, SV_OUTPUTBUF_LENGTH, SV_FlushRedirect);
+	if ( !strlen(rcon_password->string) )
+	{
+		Com_Printf("The server must set \'rcon_password\' for clients to use \'rcon\'.\n");
+	}
+	else if ( !valid )
+	{
+		if ( *password == '\0' )
+		{
+			Com_Printf("You must log in with \'rcon login <password>\' before using \'rcon\'.\n");
+		}
+		else
+		{
+			Com_Printf("Invalid password.\n");
+		}
+	}
+	else
+	{
+		len = 0;
+		max_len = MAX_STRINGLENGTH;
+		arg = 2;
+		while ( argc = SV_Cmd_Argc(), arg < argc )
+		{
+			argv = SV_Cmd_Argv(arg);
+			len = Com_AddToString(argv, cmd_aux, len, max_len, 1);
+			len = Com_AddToString(" ", cmd_aux, len, max_len, 0);
+			arg++;
+		}
+		if ( len < max_len )
+		{
+			cmd_aux[len] = 0;
+
+			/* New: Delayed processing of map-related commands when passed 
+			 through CodeCallback_RemoteCommand. Note that Com_Printf output
+			 here between Com_BeginRedirect and Com_EndRedirect is passed to
+			 the rcon client */
+			if ( from_script )
+			{
+				if ( strcmp(SV_Cmd_Argv(2), "fast_restart") == 0 )
+				{
+					if ( level.finished )
+					{
+						if ( level.finished == 1 )
+							Com_Printf("fast_restart or map_restart already called\n");
+						else
+							Com_Printf("exitlevel or map_rotate already called\n");
+					}
+					else
+					{
+						level.finished = 1;
+						level.savePersist = 0;
+						if ( SV_Cmd_Argc() > 3 )
+						{
+							level.savePersist = atoi(SV_Cmd_Argv(3));
+						}
+						Cbuf_ExecuteText(2, cmd_aux);
+					}
+				}
+				else if ( strcmp(SV_Cmd_Argv(2), "map_restart") == 0 )
+				{
+					/* Note: The operator command map_restart behaves 
+					 differently than the map_restart script function, as the
+					 latter actually performs a fast_restart. Here we follow
+					 the stock operator command logic. This implies that
+					 level.savePersist is always false here. Use the map
+					 command instead if level.savePersist is required to be
+					 true */
+					if ( level.finished )
+					{
+						if ( level.finished == 1 )
+							Com_Printf("fast_restart or map_restart already called\n");
+						else
+							Com_Printf("exitlevel or map_rotate already called\n");
+					}
+					else
+					{
+						level.finished = 1;
+						Cbuf_ExecuteText(2, cmd_aux);
+					}
+				}
+				else if ( strcmp(SV_Cmd_Argv(2), "devmap") == 0 )
+				{
+					if ( SV_Cmd_Argc() > 3 && custom_SV_MapExists(SV_Cmd_Argv(3)) )
+					{
+						if ( level.finished )
+						{
+							if ( level.finished == 2 )
+								Com_Printf("devmap or map already called\n");
+							else
+								Com_Printf("exitlevel or map_rotate already called\n");
+						}
+						else
+						{
+							level.finished = 2;
+							level.savePersist = 0;
+							if ( SV_Cmd_Argc() > 4 )
+							{
+								level.savePersist = atoi(SV_Cmd_Argv(4));
+							}
+							Cvar_SetBool(sv_cheats, 1);
+							Cbuf_ExecuteText(2, cmd_aux);
+						}
+					}
+				}
+				else if ( strcmp(SV_Cmd_Argv(2), "map") == 0 )
+				{
+					if ( SV_Cmd_Argc() > 3 && custom_SV_MapExists(SV_Cmd_Argv(3)) )
+					{
+						if ( level.finished )
+						{
+							if ( level.finished == 2 )
+								Com_Printf("map or devmap already called\n");
+							else
+								Com_Printf("exitlevel or map_rotate already called\n");
+						}
+						else
+						{
+							level.finished = 2;
+							level.savePersist = 0;
+							if ( SV_Cmd_Argc() > 4 )
+							{
+								level.savePersist = atoi(SV_Cmd_Argv(4));
+							}
+							Cbuf_ExecuteText(2, cmd_aux);
+						}
+					}
+				}
+				else if ( strcmp(SV_Cmd_Argv(2), "map_rotate") == 0 )
+				{
+					/* Note: This does not do a map existence check, just like
+					 the ExitLevel script function. If that is required, check
+					 out sv_mapRotationCurrent cvar parsing in
+					 SV_MapRotate_f */
+					if ( level.finished )
+					{
+						if ( level.finished == 1 )
+							Com_Printf("map_restart or fast_restart already called\n");
+						else
+							Com_Printf("map_rotate or exitlevel already called\n");
+					}
+					else
+					{
+						level.finished = 3;
+						level.savePersist = 0;
+						if ( SV_Cmd_Argc() > 3 )
+						{
+							level.savePersist = atoi(SV_Cmd_Argv(3));
+						}
+						Cbuf_ExecuteText(2, cmd_aux);
+						level.teamScores[1] = 0;
+						level.teamScores[2] = 0;
+						for ( i = 0; i < sv_maxclients->integer; i++ )
+						{
+							if ( level.clients[i].sess.connected == CON_CONNECTED )
+							{
+								level.clients[i].sess.score = 0;
+							}
+						}
+						for ( i = 0; i < sv_maxclients->integer; i++ )
+						{
+							if ( level.clients[i].sess.connected == CON_CONNECTED )
+							{
+								level.clients[i].sess.connected = CON_CONNECTING;
+							}
+						}
+					}
+				}
+				else
+				{
+					SV_Cmd_ExecuteString(cmd_aux);
+				}
+			}
+			/* New code end */
+			else
+			{
+				SV_Cmd_ExecuteString(cmd_aux);
+			}
+			
+			if ( I_strnicmp(cmd_aux, "pb_sv_", 6) == 0 )
+			{
+				PbServerForceProcess();
+			}
+		}
+	}
+	Com_EndRedirect();
+	LargeLocalDestructor(&buf);
 }
 
 void hook_SV_GetChallenge(netadr_t from)
@@ -6044,6 +6229,99 @@ void custom_SV_ExecuteClientMessage(client_t *cl, msg_t *msg)
 	}
 }
 
+void custom_SV_ConnectionlessPacket(netadr_t from, msg_t *msg)
+{
+	char *s;
+	const char *c;
+	client_t *cl;
+	int i;
+	int clientNum;
+	
+	clientNum = -1;
+	MSG_BeginReading(msg);
+	MSG_ReadLong(msg);
+	SV_Netchan_AddOOBProfilePacket(msg->cursize);
+	if ( !I_strnicmp((const char *)msg->data + 4, "pb_", 3) )
+	{
+		cl = svs.clients;
+		for ( i = 0; i < sv_maxclients->integer; i++, cl++ )
+		{
+			if ( cl->state != CS_FREE && NET_CompareBaseAdr(from, (cl->netchan).remoteAddress) && (cl->netchan).remoteAddress.port == from.port )
+			{
+				clientNum = i;
+				break;
+			}
+		}
+		if ( msg->data[7] != 0x43 && msg->data[7] != 0x31 && msg->data[7] != 0x4a )
+		{
+			PbSvAddEvent(0xd, clientNum, msg->cursize + -4, msg->data + 4);
+		}
+	}
+	else
+	{
+		s = MSG_ReadStringLine(msg);
+		SV_Cmd_TokenizeString(s);
+		c = SV_Cmd_Argv(0);
+
+		if ( sv_packet_info->boolean )
+		{
+			Com_Printf("SV packet %s : %s\n", NET_AdrToString(from), c);
+		}
+
+		if ( !I_stricmp(c, "getstatus") )
+		{
+			SV_UpdateLastTimeMasterServerCommunicated(from);
+			SVC_Status(from);
+		}
+		else if ( !I_stricmp(c, "getinfo") )
+		{
+			SV_UpdateLastTimeMasterServerCommunicated(from);
+			SVC_Info(from);
+		}
+		else if ( !I_stricmp(c, "getchallenge") )
+		{
+			SV_UpdateLastTimeMasterServerCommunicated(from);
+			SV_GetChallenge(from);
+		}
+		else if ( !I_stricmp(c, "connect") )
+		{
+			if ( !NET_IsLocalAddress(from) )
+			{
+				PbPassConnectString(NET_AdrToString(from), msg->data);
+			}
+			else
+			{
+				PbPassConnectString("localhost", msg->data);
+			}
+			SV_DirectConnect(from);
+		}
+		else if ( !I_stricmp(c, "ipAuthorize") )
+		{
+			SV_UpdateLastTimeMasterServerCommunicated(from);
+			SV_AuthorizeIpPacket(from);
+		}
+		else if ( !I_stricmp(c, "rcon") )
+		{
+			// New: Replaced call to original SVC_RemoteCommand
+			custom_SVC_RemoteCommand(from, msg, qfalse);
+		}
+		else if ( !I_stricmp(c , "v") )
+		{
+			SV_VoicePacket(from);
+		}
+		else if ( !I_stricmp(c, "disconnect") )
+		{
+			// if a client starts up a local server, we may see some spurious
+			// server disconnect messages when their new server sees our final
+			// sequenced messages to the old client
+		}
+		else
+		{
+			Com_DPrintf("bad connectionless packet from %s:\n%s\n", NET_AdrToString(from), s);
+		}
+	}
+}
+
 void custom_SV_PacketEvent(netadr_t from, msg_t *msg)
 {
 	int qport;
@@ -6106,7 +6384,7 @@ void custom_SV_PacketEvent(netadr_t from, msg_t *msg)
 	}
 	else
 	{
-		SV_ConnectionlessPacket(from, msg);
+		custom_SV_ConnectionlessPacket(from, msg);
 	}
 }
 
@@ -6354,7 +6632,6 @@ public:
 		#if COMPILE_RATELIMITER == 1
 		cracking_hook_call(0x08094081, (int)hook_SVC_Info);
 		cracking_hook_call(0x0809403E, (int)hook_SVC_Status);
-		cracking_hook_call(0x08094191, (int)hook_SVC_RemoteCommand);
 		cracking_hook_call(0x080940C4, (int)hook_SV_GetChallenge);
 		cracking_hook_call(0x08094107, (int)hook_SV_DirectConnect);
 		#endif
@@ -6437,7 +6714,6 @@ public:
 		#if COMPILE_RATELIMITER == 1
 		cracking_hook_call(0x08095B8E, (int)hook_SVC_Info);
 		cracking_hook_call(0x08095ADA, (int)hook_SVC_Status);
-		cracking_hook_call(0x08095D63, (int)hook_SVC_RemoteCommand);
 		cracking_hook_call(0x08095BF8, (int)hook_SV_GetChallenge);
 		cracking_hook_call(0x08095CB2, (int)hook_SV_DirectConnect);
 		#endif
@@ -6591,7 +6867,6 @@ public:
 		#if COMPILE_RATELIMITER == 1
 		cracking_hook_call(0x08095C48, (int)hook_SVC_Info);
 		cracking_hook_call(0x08095B94, (int)hook_SVC_Status);
-		cracking_hook_call(0x08095E1D, (int)hook_SVC_RemoteCommand);
 		cracking_hook_call(0x08095CB2, (int)hook_SV_GetChallenge);
 		cracking_hook_call(0x08095D6C, (int)hook_SV_DirectConnect);
 		#endif

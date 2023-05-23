@@ -1,4 +1,5 @@
 #include "gsc_utils.hpp"
+#include "libcod.hpp"
 
 #if COMPILE_CUSTOM_VOICE == 1
 #include <speex/speex.h>
@@ -150,18 +151,7 @@ void gsc_utils_remotecommand()
 	msg_t *msg = (msg_t *)pointerMsg;
 
 	NET_StringToAdr(sFrom, &from);
-
-#if COD_VERSION == COD2_1_0
-	int lasttime_offset = 0x0848B674;
-#elif COD_VERSION == COD2_1_2
-	int lasttime_offset = 0x0849EB74;
-#elif COD_VERSION == COD2_1_3
-	int lasttime_offset = 0x0849FBF4;
-#endif
-
-	*(int *)lasttime_offset = 0;
-
-	SVC_RemoteCommand(from, msg);
+	custom_SVC_RemoteCommand(from, msg, qtrue);
 }
 
 void gsc_utils_executestring()

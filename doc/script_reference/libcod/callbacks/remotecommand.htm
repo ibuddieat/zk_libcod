@@ -27,13 +27,7 @@ Module: Callbacks<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Calls CodeCallback_RemoteCommand() in maps/mp/gametypes/_callbacksetup.gsc when an authenticated remote (rcon) command is received and provides the sender's source IP address (string) and the received command (list of strings). Requires <a href="../system/remotecommand.htm">remoteCommand</a> to be executed for the command to be processed properly by the game engine. Commands not causing this callback to be invoked are:</p>
-<UL>
-<LI>map</LI>
-<LI>devmap</LI>
-<LI>map_restart</LI>
-<LI>fast_restart</LI>
-</UL>
+<p>Calls CodeCallback_RemoteCommand() in maps/mp/gametypes/_callbacksetup.gsc when an authenticated remote (rcon) command is received and provides the sender's source IP address (string) and the received command (list of strings). Requires <a href="../system/remotecommand.htm">remoteCommand</a> to be executed for the command to be processed properly by the game engine.</p>
 </H3>
 </TR></TD></TABLE>
 <p>Note: The existance of the callback function is checked only once on server start. Functions added later are not taken into account, even after a map switch.</p>
@@ -56,7 +50,7 @@ Module: Callbacks<BR>
 <PRE>
 CodeCallback_RemoteCommand(from, args, messagePointer)
 {
-    // Parse command for further actions
+    // Parse commands in args array for filtering or further actions
     remoteCommand(from, messagePointer);
 }
 </PRE>

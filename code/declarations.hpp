@@ -43,6 +43,7 @@
 #define GENTITYNUM_BITS             10
 #define PACKET_BACKUP               32
 #define PACKET_MASK                 ( PACKET_BACKUP - 1 )
+#define SV_OUTPUTBUF_LENGTH         ( 2048 * MAX_CLIENTS - 16 )
 
 #define MAX_BPS_WINDOW              20
 #define MAX_CHALLENGES              1024
@@ -3425,6 +3426,14 @@ static const int cached_models_offset = 0x0;
 static const int cached_models_offset = 0x08852E20;
 #endif
 
+#if COD_VERSION == COD2_1_0 // Not tested
+static const int rcon_lasttime_offset = 0x0;
+#elif COD_VERSION == COD2_1_2 // Not tested
+static const int rcon_lasttime_offset = 0x0;
+#elif COD_VERSION == COD2_1_3
+static const int rcon_lasttime_offset = 0x0849FBF4;
+#endif
+
 #define g_entities ((gentity_t*)(gentities_offset))
 #define g_clients ((gclient_t*)(gclients_offset))
 #define scrVarPub (*((scrVarPub_t*)( varpub_offset )))
@@ -3472,6 +3481,7 @@ static const int cached_models_offset = 0x08852E20;
 #define sv_serverId_value (*((int*)( sv_serverId_value_offset )))
 #define msgHuff (*((huffman_t*)( msgHuff_offset )))
 #define cached_models (((XModel_t**)( cached_models_offset )))
+#define rcon_lasttime (*((int*)( rcon_lasttime_offset )))
 
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6
