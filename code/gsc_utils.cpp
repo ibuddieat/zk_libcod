@@ -137,18 +137,18 @@ int stackPrintParam(int param)
 
 void gsc_utils_remotecommand()
 {
-	char * sFrom;
+	char *sFrom;
 	int pointerMsg;
 
-	if ( ! stackGetParams("si", &sFrom, &pointerMsg) )
+	if ( !stackGetParams("si", &sFrom, &pointerMsg) )
 	{
 		stackError("gsc_utils_remotecommand() one or more arguments is undefined or has a wrong type");
 		return;
 	}
 
 	netadr_t from;
+	msg_t *msg = (msg_t *)pointerMsg;
 
-	msg_t * msg = (msg_t *)pointerMsg;
 	NET_StringToAdr(sFrom, &from);
 
 #if COD_VERSION == COD2_1_0
@@ -168,7 +168,7 @@ void gsc_utils_executestring()
 {
 	char *str;
 
-	if ( ! stackGetParams("s", &str) )
+	if ( !stackGetParams("s", &str) )
 	{
 		stackError("gsc_utils_executestring() argument is undefined or has a wrong type");
 		stackPushUndefined();
@@ -184,7 +184,7 @@ void gsc_utils_sendgameservercommand()
 	int clientNum;
 	char *message;
 
-	if ( ! stackGetParams("is", &clientNum, &message) )
+	if ( !stackGetParams("is", &clientNum, &message) )
 	{
 		stackError("gsc_utils_sendgameservercommand() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
@@ -199,7 +199,7 @@ void gsc_utils_system()
 {
 	char *cmd;
 
-	if ( ! stackGetParams("s",  &cmd) )
+	if ( !stackGetParams("s",  &cmd) )
 	{
 		stackError("gsc_utils_system() argument is undefined or has a wrong type");
 		stackPushUndefined();
@@ -213,7 +213,7 @@ void gsc_utils_printf()
 {
 	char *str;
 
-	if ( ! stackGetParams("s", &str) )
+	if ( !stackGetParams("s", &str) )
 	{
 		stackError("gsc_utils_printf() argument is undefined or has a wrong type");
 		stackPushUndefined();
@@ -227,7 +227,7 @@ void gsc_utils_printf()
 	{
 		if ( str[i] == '%' )
 		{
-			if( str[i + 1] == '%' )
+			if ( str[i + 1] == '%' )
 			{
 				putchar('%');
 				i++;
@@ -247,7 +247,7 @@ void gsc_utils_sprintf()
 	char result[MAX_STRINGLENGTH];
 	char *str;
 
-	if ( ! stackGetParams("s", &str) )
+	if ( !stackGetParams("s", &str) )
 	{
 		stackError("gsc_utils_sprintf() argument is undefined or has a wrong type");
 		stackPushUndefined();
@@ -315,7 +315,7 @@ void gsc_utils_outofbandprint()
 	char *address;
 	char *msg;
 
-	if ( ! stackGetParams("ss", &address, &msg) )
+	if ( !stackGetParams("ss", &address, &msg) )
 	{
 		stackError("gsc_utils_outofbandprint() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
@@ -332,7 +332,7 @@ void gsc_utils_putchar()
 {
 	int val;
 
-	if ( ! stackGetParams("i",  &val) )
+	if ( !stackGetParams("i",  &val) )
 	{
 		stackError("gsc_utils_putchar() argument is undefined or has a wrong type");
 		stackPushUndefined();
@@ -358,7 +358,7 @@ void gsc_utils_logprintconsole()
 {
 	char *str;
 
-	if ( ! stackGetParams("s", &str) )
+	if ( !stackGetParams("s", &str) )
 	{
 		stackError("gsc_utils_logprintconsole() argument is undefined or has a wrong type");
 		stackPushUndefined();
@@ -381,7 +381,7 @@ void gsc_utils_getarraykeys()
 {
 	unsigned int arrIndex;
 
-	if ( ! stackGetParamObject(0, &arrIndex) )
+	if ( !stackGetParamObject(0, &arrIndex) )
 	{
 		stackError("gsc_utils_getarraykeys() argument is undefined or has a wrong type");
 		stackPushUndefined();
@@ -419,14 +419,14 @@ void gsc_utils_getascii()
 {
 	char *str;
 
-	if ( ! stackGetParams("s", &str) )
+	if ( !stackGetParams("s", &str) )
 	{
 		stackError("gsc_utils_getascii() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	if ( ! strlen(str) )
+	if ( !strlen(str) )
 	{
 		stackError("gsc_utils_getascii() string length is 0");
 		stackPushUndefined();
@@ -440,14 +440,14 @@ void gsc_utils_toupper()
 {
 	char *str;
 
-	if ( ! stackGetParams("s", &str) )
+	if ( !stackGetParams("s", &str) )
 	{
 		stackError("gsc_utils_toupper() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	if ( ! strlen(str) )
+	if ( !strlen(str) )
 	{
 		stackError("gsc_utils_toupper() string length is 0");
 		stackPushUndefined();
@@ -461,7 +461,7 @@ void gsc_utils_file_link()
 {
 	char *source, *dest;
 
-	if ( ! stackGetParams("ss",  &source, &dest) )
+	if ( !stackGetParams("ss",  &source, &dest) )
 	{
 		stackError("gsc_utils_file_link() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
@@ -476,7 +476,7 @@ void gsc_utils_file_unlink()
 {
 	char *file;
 
-	if ( ! stackGetParams("s",  &file) )
+	if ( !stackGetParams("s",  &file) )
 	{
 		stackError("gsc_utils_file_unlink() argument is undefined or has a wrong type");
 		stackPushUndefined();
@@ -491,7 +491,7 @@ void gsc_utils_file_exists()
 {
 	char *filename;
 
-	if ( ! stackGetParams("s", &filename) )
+	if ( !stackGetParams("s", &filename) )
 	{
 		stackError("gsc_utils_file_exists() argument is undefined or has a wrong type");
 		stackPushUndefined();
@@ -506,7 +506,7 @@ void gsc_utils_FS_LoadDir()
 {
 	char *path, *dir;
 
-	if ( ! stackGetParams("ss", &path, &dir) )
+	if ( !stackGetParams("ss", &path, &dir) )
 	{
 		stackError("gsc_utils_FS_LoadDir() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
@@ -521,7 +521,7 @@ void gsc_utils_scandir()
 {
 	char *dirname;
 
-	if ( ! stackGetParams("s", &dirname) )
+	if ( !stackGetParams("s", &dirname) )
 	{
 		stackError("gsc_utils_scandir() argument is undefined or has a wrong type");
 		stackPushUndefined();
@@ -555,7 +555,7 @@ void gsc_utils_fopen()
 	FILE *file;
 	char *filename, *mode;
 
-	if ( ! stackGetParams("ss", &filename, &mode) )
+	if ( !stackGetParams("ss", &filename, &mode) )
 	{
 		stackError("gsc_utils_fopen() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
@@ -578,7 +578,7 @@ void gsc_utils_fread()
 {
 	FILE *file;
 
-	if ( ! stackGetParams("i", &file) )
+	if ( !stackGetParams("i", &file) )
 	{
 		stackError("gsc_utils_fread() argument is undefined or has a wrong type");
 		stackPushUndefined();
@@ -610,7 +610,7 @@ void gsc_utils_fwrite()
 	FILE *file;
 	char *buffer;
 
-	if ( ! stackGetParams("is", &file, &buffer) )
+	if ( !stackGetParams("is", &file, &buffer) )
 	{
 		stackError("gsc_utils_fwrite() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
@@ -631,7 +631,7 @@ void gsc_utils_fclose()
 {
 	FILE *file;
 
-	if ( ! stackGetParams("i", &file) )
+	if ( !stackGetParams("i", &file) )
 	{
 		stackError("gsc_utils_fclose() argument is undefined or has a wrong type");
 		stackPushUndefined();
@@ -652,7 +652,7 @@ void gsc_utils_fsize()
 {
 	FILE *file;
 
-	if ( ! stackGetParams("i", &file) )
+	if ( !stackGetParams("i", &file) )
 	{
 		stackError("gsc_utils_fsize() argument is undefined or has a wrong type");
 		stackPushUndefined();
@@ -676,7 +676,7 @@ void gsc_utils_fremove()
 {
 	char *file;
 	
-	if ( ! stackGetParams("s", &file) )
+	if ( !stackGetParams("s", &file) )
 	{
 		stackError("gsc_utils_fremove() argument is undefined or has a wrong type");
 		stackPushUndefined();
@@ -721,7 +721,7 @@ void gsc_utils_g_findconfigstringindexoriginal()
 	char *name;
 	int min, max, create;
 
-	if ( ! stackGetParams("siii", &name, &min, &max, &create) )
+	if ( !stackGetParams("siii", &name, &min, &max, &create) )
 	{
 		stackError("gsc_g_findconfigstringindexoriginal() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
@@ -744,7 +744,7 @@ void gsc_utils_g_findconfigstringindex()
 	char *name;
 	int min, max;
 
-	if ( ! stackGetParams("sii", &name, &min, &max) )
+	if ( !stackGetParams("sii", &name, &min, &max) )
 	{
 		stackError("gsc_g_findconfigstringindex() one or more arguments is undefined or has a wrong type");
 		return;
@@ -764,7 +764,7 @@ void gsc_utils_g_findconfigstringindex()
 		if ( !*curitem )
 			break;
 
-		if ( ! strcasecmp(name, curitem) )
+		if ( !strcasecmp(name, curitem) )
 		{
 			stackPushInt(i + min);
 			return;
@@ -778,7 +778,7 @@ void gsc_utils_get_configstring()
 {
 	int index;
 
-	if ( ! stackGetParams("i", &index) )
+	if ( !stackGetParams("i", &index) )
 	{
 		stackError("gsc_get_configstring() argument is undefined or has a wrong type");
 		stackPushUndefined();
@@ -794,7 +794,7 @@ void gsc_utils_get_configstring()
 
 	const char *string = SV_GetConfigstringConst(index);
 
-	if ( ! *string )
+	if ( !*string )
 		stackPushUndefined();
 	else
 		stackPushString(string);
@@ -805,7 +805,7 @@ void gsc_utils_set_configstring()
 	int index;
 	char *string;
 
-	if ( ! stackGetParams("is", &index, &string) )
+	if ( !stackGetParams("is", &index, &string) )
 	{
 		stackError("gsc_set_configstring() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
@@ -827,7 +827,7 @@ void gsc_utils_make_localized_string()
 {
 	char *str;
 
-	if ( ! stackGetParams("s", &str) )
+	if ( !stackGetParams("s", &str) )
 	{
 		stackError("gsc_make_localized_string() argument is undefined or has a wrong type");
 		stackPushUndefined();
@@ -847,7 +847,7 @@ void gsc_utils_make_client_localized_string()
 {
 	char *input;
 
-	if ( ! stackGetParams("s", &input) )
+	if ( !stackGetParams("s", &input) )
 	{
 		stackError("gsc_make_client_localized_string() argument is undefined or has a wrong type");
 		stackPushUndefined();
@@ -901,7 +901,7 @@ void gsc_utils_exponent()
 	float basis;
 	float exponent;
 
-	if ( ! stackGetParams("ff", &basis, &exponent))
+	if ( !stackGetParams("ff", &basis, &exponent) )
 	{
 		stackError("gsc_utils_exponent() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
@@ -915,7 +915,7 @@ void gsc_utils_round()
 {
 	float val;
 
-	if ( ! stackGetParams("f",  &val))
+	if ( !stackGetParams("f",  &val) )
 	{
 		stackError("gsc_utils_round() argument is undefined or has a wrong type");
 		stackPushUndefined();
@@ -929,7 +929,7 @@ void gsc_utils_sqrt()
 {
 	float x;
 
-	if ( ! stackGetParams("f", &x))
+	if ( !stackGetParams("f", &x) )
 	{
 		stackError("gsc_utils_sqrt() argument is undefined or has a wrong type");
 		stackPushUndefined();
@@ -943,7 +943,7 @@ void gsc_utils_sqrtinv()
 {
 	float x;
 
-	if ( ! stackGetParams("f", &x))
+	if ( !stackGetParams("f", &x) )
 	{
 		stackError("gsc_utils_sqrtinv() argument is undefined or has a wrong type");
 		stackPushUndefined();
@@ -964,7 +964,7 @@ void gsc_utils_chr()
 {
 	int input;
 
-	if ( ! stackGetParams("i", &input))
+	if ( !stackGetParams("i", &input) )
 	{
 		stackError("gsc_utils_chr() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
@@ -989,7 +989,7 @@ void gsc_utils_ord()
 {
 	char *input;
 
-	if ( ! stackGetParams("s", &input))
+	if ( !stackGetParams("s", &input) )
 	{
 		stackError("gsc_utils_ord() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
@@ -1010,7 +1010,7 @@ void gsc_utils_fromhex()
 {
 	char *input;
 
-	if ( ! stackGetParams("s", &input))
+	if ( !stackGetParams("s", &input) )
 	{
 		stackError("gsc_utils_fromhex() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
@@ -1033,7 +1033,7 @@ void gsc_utils_tohex()
 {
 	int input;
 
-	if ( ! stackGetParams("i", &input))
+	if ( !stackGetParams("i", &input) )
 	{
 		stackError("gsc_utils_tohex() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
@@ -1051,7 +1051,7 @@ void gsc_utils_vectorscale()
 	vec3_t vector;
 	float scale;
 
-	if ( ! stackGetParams("vf", &vector, &scale) )
+	if ( !stackGetParams("vf", &vector, &scale) )
 	{
 		stackError("gsc_utils_vectorscale() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
@@ -1082,7 +1082,7 @@ void gsc_utils_bullethiteffect()
 	vec3_t origin;
 	vec3_t normal;
 
-	if ( ! stackGetParams("vv", &origin, &normal) )
+	if ( !stackGetParams("vv", &origin, &normal) )
 	{
 		stackError("gsc_utils_bullethiteffect() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
@@ -1258,14 +1258,14 @@ void gsc_utils_getsoundfileduration()
 	char *filePath;
 	int overrideLimit;
 
-	if ( ! stackGetParamString(0, &filePath) )
+	if ( !stackGetParamString(0, &filePath) )
 	{
 		stackError("gsc_utils_getsoundfileduration() requires a file path (string) as argument");
 		stackPushUndefined();
 		return;
 	}
 
-	if ( ! stackGetParamInt(1, &overrideLimit) )
+	if ( !stackGetParamInt(1, &overrideLimit) )
 	{
 		overrideLimit = 0;
 	}
@@ -1314,21 +1314,21 @@ void gsc_utils_loadsoundfile()
 	float volume;
 	int soundIndex;
 
-	if ( ! stackGetParamString(0, &filePath) )
+	if ( !stackGetParamString(0, &filePath) )
 	{
 		stackError("gsc_utils_loadsoundfile() requires a file path (string) as first argument");
 		stackPushUndefined();
 		return;
 	}
 
-	if ( ! stackGetParamFunction(1, &callback) )
+	if ( !stackGetParamFunction(1, &callback) )
 	{
 		stackError("gsc_utils_loadsoundfile() requires a callback function as second argument");
 		stackPushUndefined();
 		return;
 	}
 
-	if ( ! stackGetParamFloat(2, &volume) )
+	if ( !stackGetParamFloat(2, &volume) )
 	{
 		volume = 1.0;
 	}
@@ -1338,7 +1338,7 @@ void gsc_utils_loadsoundfile()
 	if ( volume < 0.0 )
 		volume = 0.0;
 
-	if ( ! stackGetParamInt(3, &soundIndex) )
+	if ( !stackGetParamInt(3, &soundIndex) )
 	{
 		soundIndex = ++currentMaxSoundIndex;
 	}
@@ -1407,14 +1407,14 @@ void gsc_utils_loadspeexfile()
 	char *filePath;
 	int soundIndex;
 
-	if ( ! stackGetParamString(0, &filePath) )
+	if ( !stackGetParamString(0, &filePath) )
 	{
 		stackError("gsc_utils_loadspeexfile() requires a file path (string) as first argument");
 		stackPushBool(qfalse);
 		return;
 	}
 
-	if ( ! stackGetParamInt(1, &soundIndex) )
+	if ( !stackGetParamInt(1, &soundIndex) )
 	{
 		stackError("gsc_utils_loadspeexfile() requires a sound index (integer) as second argument");
 		stackPushBool(qfalse);
@@ -1467,7 +1467,7 @@ void gsc_utils_savespeexfile()
 	int soundIndex;
 	char *filePath;
 
-	if ( ! stackGetParamInt(0, &soundIndex) )
+	if ( !stackGetParamInt(0, &soundIndex) )
 	{
 		stackError("gsc_utils_savespeexfile() requires a sound index (integer) as first argument");
 		stackPushBool(qfalse);
@@ -1481,7 +1481,7 @@ void gsc_utils_savespeexfile()
 		return;
 	}
 
-	if ( ! stackGetParamString(1, &filePath) )
+	if ( !stackGetParamString(1, &filePath) )
 	{
 		stackError("gsc_utils_savespeexfile() requires a file path (string) as second argument");
 		stackPushBool(qfalse);
