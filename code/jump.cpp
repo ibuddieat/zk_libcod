@@ -2,11 +2,11 @@
 
 #if COMPILE_JUMP == 1
 
-cvar_t *jump_height;
-cvar_t *jump_stepSize;
-cvar_t *jump_slowdownEnable;
-cvar_t *jump_ladderPushVel;
-cvar_t *jump_spreadAdd;
+dvar_t *jump_height;
+dvar_t *jump_stepSize;
+dvar_t *jump_slowdownEnable;
+dvar_t *jump_ladderPushVel;
+dvar_t *jump_spreadAdd;
 
 #define JUMP_LAND_SLOWDOWN_TIME 1800
 
@@ -23,7 +23,7 @@ float getJumpHeight(playerState_t* ps)
 
 	if ( customPlayerState[id].overrideJumpHeight )
 		return customPlayerState[id].jumpHeight;
-	return jump_height->floatval;
+	return jump_height->current.decimal;
 }
 
 bool getJumpSlowdownEnable(playerState_t* ps)
@@ -32,21 +32,21 @@ bool getJumpSlowdownEnable(playerState_t* ps)
 
 	if ( customPlayerState[id].overrideJumpSlowdown )
 		return customPlayerState[id].jumpSlowdown;
-	return jump_slowdownEnable->boolean;
+	return jump_slowdownEnable->current.boolean;
 }
 
 float Jump_CalcHeight(playerState_t* ps)
 {
 	float val;
 	float newdiv;
-	float jumpHeight = getJumpHeight(ps); // jump_height->floatval;
+	float jumpHeight = getJumpHeight(ps); // jump_height->current.decimal;
 
 	val = jumpHeight;
 	val = ( val + val ) * ps->gravity;
 
 	if ( ps->pm_flags & PMF_JUMPING && ps->pm_time <= JUMP_LAND_SLOWDOWN_TIME )
 	{
-		if( getJumpSlowdownEnable(ps) ) // jump_slowdownEnable->boolean)
+		if( getJumpSlowdownEnable(ps) ) // jump_slowdownEnable->current.boolean)
 		{
 
 			if( ps->pm_time > 1699 )
@@ -70,7 +70,7 @@ float Jump_CalcHeight(playerState_t* ps)
 
 double Jump_GetLandFactor(playerState_s *ps)
 {
-	if ( !getJumpSlowdownEnable(ps)) // jump_slowdownEnable->boolean
+	if ( !getJumpSlowdownEnable(ps)) // jump_slowdownEnable->current.boolean
 	{
 		return 1.0;
 	}
@@ -121,8 +121,8 @@ void Jump_PushOffLadder(playerState_s *ps, pml_t *pml)
 		VectorMA(flatForward, -2.0 * dot, ps->vLadderVec, pushOffDir);
 		Vec3Normalize(pushOffDir);
 	}
-	ps->velocity[0] = jump_ladderPushVel->floatval * pushOffDir[0];
-	ps->velocity[1] = jump_ladderPushVel->floatval * pushOffDir[1];
+	ps->velocity[0] = jump_ladderPushVel->current.decimal * pushOffDir[0];
+	ps->velocity[1] = jump_ladderPushVel->current.decimal * pushOffDir[1];
 	ps->pm_flags &= 0xFFFFFFDF;
 }
 
@@ -152,7 +152,7 @@ void Jump_Start(pmove_t *pm, pml_t *pml, float height)
 	ps->pm_flags &= 0xFFFFFE7F;
 	ps->pm_flags |= PMF_JUMPING;
 	ps->pm_time = 0;
-	ps->aimSpreadScale = ps->aimSpreadScale + jump_spreadAdd->floatval;
+	ps->aimSpreadScale = ps->aimSpreadScale + jump_spreadAdd->current.decimal;
 	if ( ps->aimSpreadScale > 255.0 )
 	{
 		ps->aimSpreadScale = 255.0;
@@ -188,7 +188,7 @@ void Jump_ClampVelocity(playerState_t* ps, vec3_t vec)
 
 	if ( ps->origin[2] - vec[2] > 0 )
 	{
-		float jumpHeight = getJumpHeight(ps); // jump_height->floatval;
+		float jumpHeight = getJumpHeight(ps); // jump_height->current.decimal;
 		comp = ps->jumpOriginZ + jumpHeight - ps->origin[2];
 
 		if ( comp >= (float)0.1 )
@@ -210,7 +210,7 @@ void Jump_ClampVelocity(playerState_t* ps, vec3_t vec)
 
 qboolean Jump_IsPlayerAboveMax(playerState_t* ps)
 {
-	float jumpHeight = getJumpHeight(ps); // jump_height->floatval;
+	float jumpHeight = getJumpHeight(ps); // jump_height->current.decimal;
 
 	if ( ps->origin[2] >= ps->jumpOriginZ + jumpHeight )
 		return qtrue;
@@ -220,14 +220,14 @@ qboolean Jump_IsPlayerAboveMax(playerState_t* ps)
 
 qboolean Jump_GetStepHeight(playerState_t* ps, const vec3_t vec1, float* val2)
 {
-	float jumpHeight = getJumpHeight(ps); // jump_height->floatval;
+	float jumpHeight = getJumpHeight(ps); // jump_height->current.decimal;
 
 	if ( vec1[2] > ps->jumpOriginZ + jumpHeight )
 		return qfalse;
 
-	*val2 = jump_stepSize->floatval;
+	*val2 = jump_stepSize->current.decimal;
 
-	if ( vec1[2] + jump_stepSize->floatval > ps->jumpOriginZ + jumpHeight )
+	if ( vec1[2] + jump_stepSize->current.decimal > ps->jumpOriginZ + jumpHeight )
 		*val2 = ps->jumpOriginZ + jumpHeight - vec1[2];
 
 	return qtrue;
@@ -272,7 +272,7 @@ qboolean Jump_Check(pmove_t *pm, pml_t *pml)
 		pm->cmd.buttons &= 0xFFFFFBFF;
 		return qfalse;
 	}
-	Jump_Start(pm, pml, getJumpHeight(ps)); // jump_height->floatval
+	Jump_Start(pm, pml, getJumpHeight(ps)); // jump_height->current.decimal
 	Jump_AddSurfaceEvent(ps, pml);
 	if ( ps->pm_flags & PMF_LADDER )
 	{
@@ -315,7 +315,7 @@ void Jump_ApplySlowdown(playerState_s *ps)
 		Jump_ClearState(ps);
 		scale = 0.64999998;
 	}
-	if ( getJumpSlowdownEnable(ps) ) // jump_slowdownEnable->boolean
+	if ( getJumpSlowdownEnable(ps) ) // jump_slowdownEnable->current.boolean
 	{
 		VectorScale(ps->velocity, scale, ps->velocity);
 	}
@@ -332,11 +332,11 @@ void Jump_ActivateSlowdown(playerState_s *ps)
 
 void Jump_RegisterDvars()
 {
-	jump_height = Cvar_RegisterFloat("jump_height", 39.0, 0.0, 128.0, CVAR_CHEAT | CVAR_SYSTEMINFO);
-	jump_stepSize = Cvar_RegisterFloat("jump_stepSize", 18.0, 0.0, 64.0, CVAR_CHEAT | CVAR_SYSTEMINFO);
-	jump_slowdownEnable = Cvar_RegisterBool("jump_slowdownEnable", qtrue, CVAR_CHEAT | CVAR_SYSTEMINFO);
-	jump_ladderPushVel = Cvar_RegisterFloat("jump_ladderPushVel", 128.0, 0.0, 1024.0, CVAR_CHEAT | CVAR_SYSTEMINFO);
-	jump_spreadAdd = Cvar_RegisterFloat("jump_spreadAdd", 64.0, 0.0, 512.0, CVAR_CHEAT | CVAR_SYSTEMINFO);
+	jump_height = Dvar_RegisterFloat("jump_height", 39.0, 0.0, 128.0, DVAR_CHEAT | DVAR_SYSTEMINFO);
+	jump_stepSize = Dvar_RegisterFloat("jump_stepSize", 18.0, 0.0, 64.0, DVAR_CHEAT | DVAR_SYSTEMINFO);
+	jump_slowdownEnable = Dvar_RegisterBool("jump_slowdownEnable", qtrue, DVAR_CHEAT | DVAR_SYSTEMINFO);
+	jump_ladderPushVel = Dvar_RegisterFloat("jump_ladderPushVel", 128.0, 0.0, 1024.0, DVAR_CHEAT | DVAR_SYSTEMINFO);
+	jump_spreadAdd = Dvar_RegisterFloat("jump_spreadAdd", 64.0, 0.0, 512.0, DVAR_CHEAT | DVAR_SYSTEMINFO);
 }
 
 #endif

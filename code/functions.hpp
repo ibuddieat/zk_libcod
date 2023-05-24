@@ -318,13 +318,13 @@ static const FS_ReadFile_t FS_ReadFile = (FS_ReadFile_t)0x080A0958;
 static const FS_ReadFile_t FS_ReadFile = (FS_ReadFile_t)0x080A0A9C;
 #endif
 
-typedef void (*FS_LoadDir_t)(char *path, char *dir);
+typedef void (*FS_AddIwdFilesForGameDirectory_t)(const char *path, const char *dir);
 #if COD_VERSION == COD2_1_0
-static const FS_LoadDir_t FS_LoadDir = (FS_LoadDir_t)0x080A01A4;
+static const FS_AddIwdFilesForGameDirectory_t FS_AddIwdFilesForGameDirectory = (FS_AddIwdFilesForGameDirectory_t)0x080A01A4;
 #elif COD_VERSION == COD2_1_2
-static const FS_LoadDir_t FS_LoadDir = (FS_LoadDir_t)0x080A22D8;
+static const FS_AddIwdFilesForGameDirectory_t FS_AddIwdFilesForGameDirectory = (FS_AddIwdFilesForGameDirectory_t)0x080A22D8;
 #elif COD_VERSION == COD2_1_3
-static const FS_LoadDir_t FS_LoadDir = (FS_LoadDir_t)0x080A241C;
+static const FS_AddIwdFilesForGameDirectory_t FS_AddIwdFilesForGameDirectory = (FS_AddIwdFilesForGameDirectory_t)0x080A241C;
 #endif
 
 typedef void (*FS_Printf_t)(fileHandle_t h, const char *fmt, ...);
@@ -408,67 +408,67 @@ static const Scr_GetMethod_t Scr_GetMethod = (Scr_GetMethod_t)0x08117C8E;
 static const Scr_GetMethod_t Scr_GetMethod = (Scr_GetMethod_t)0x08117DEA;
 #endif
 
-typedef cvar_t * (*Cvar_FindVar_t)(const char *var_name);
+typedef dvar_t * (*Dvar_FindVar_t)(const char *var_name);
 #if COD_VERSION == COD2_1_0
-static const Cvar_FindVar_t Cvar_FindVar = (Cvar_FindVar_t)0x080B0AE4;
+static const Dvar_FindVar_t Dvar_FindVar = (Dvar_FindVar_t)0x080B0AE4;
 #elif COD_VERSION == COD2_1_2
-static const Cvar_FindVar_t Cvar_FindVar = (Cvar_FindVar_t)0x080B2D94;
+static const Dvar_FindVar_t Dvar_FindVar = (Dvar_FindVar_t)0x080B2D94;
 #elif COD_VERSION == COD2_1_3
-static const Cvar_FindVar_t Cvar_FindVar = (Cvar_FindVar_t)0x080B2ED8;
+static const Dvar_FindVar_t Dvar_FindVar = (Dvar_FindVar_t)0x080B2ED8;
 #endif
 
-typedef void (*Cvar_SetBool_t)(cvar_t *cvar, bool value);
+typedef void (*Dvar_SetBool_t)(dvar_t *dvar, bool value);
 #if COD_VERSION == COD2_1_0
-static const Cvar_SetBool_t Cvar_SetBool = (Cvar_SetBool_t)0x0; // Not tested
+static const Dvar_SetBool_t Dvar_SetBool = (Dvar_SetBool_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
-static const Cvar_SetBool_t Cvar_SetBool = (Cvar_SetBool_t)0x0; // Not tested
+static const Dvar_SetBool_t Dvar_SetBool = (Dvar_SetBool_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
-static const Cvar_SetBool_t Cvar_SetBool = (Cvar_SetBool_t)0x080B4980;
+static const Dvar_SetBool_t Dvar_SetBool = (Dvar_SetBool_t)0x080B4980;
 #endif
 
-typedef void (*Cvar_SetString_t)(cvar_t *cvar, char *value);
+typedef void (*Dvar_SetString_t)(dvar_t *dvar, char *value);
 #if COD_VERSION == COD2_1_0
-static const Cvar_SetString_t Cvar_SetString = (Cvar_SetString_t)0x0; // Not tested
+static const Dvar_SetString_t Dvar_SetString = (Dvar_SetString_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
-static const Cvar_SetString_t Cvar_SetString = (Cvar_SetString_t)0x0; // Not tested
+static const Dvar_SetString_t Dvar_SetString = (Dvar_SetString_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
-static const Cvar_SetString_t Cvar_SetString = (Cvar_SetString_t)0x080B4A80;
+static const Dvar_SetString_t Dvar_SetString = (Dvar_SetString_t)0x080B4A80;
 #endif
 
-typedef cvar_t * (*Cvar_RegisterBool_t)(const char *var_name, qboolean var_value, unsigned short flags);
+typedef dvar_t * (*Dvar_RegisterBool_t)(const char *var_name, qboolean var_value, unsigned short flags);
 #if COD_VERSION == COD2_1_0
-static const Cvar_RegisterBool_t Cvar_RegisterBool = (Cvar_RegisterBool_t)0x080B1B72;
+static const Dvar_RegisterBool_t Dvar_RegisterBool = (Dvar_RegisterBool_t)0x080B1B72;
 #elif COD_VERSION == COD2_1_2
-static const Cvar_RegisterBool_t Cvar_RegisterBool = (Cvar_RegisterBool_t)0x080B3E8E;
+static const Dvar_RegisterBool_t Dvar_RegisterBool = (Dvar_RegisterBool_t)0x080B3E8E;
 #elif COD_VERSION == COD2_1_3
-static const Cvar_RegisterBool_t Cvar_RegisterBool = (Cvar_RegisterBool_t)0x080B3FD2;
+static const Dvar_RegisterBool_t Dvar_RegisterBool = (Dvar_RegisterBool_t)0x080B3FD2;
 #endif
 
-typedef cvar_t * (*Cvar_RegisterString_t)(const char *var_name, const char *var_value, unsigned short flags);
+typedef dvar_t * (*Dvar_RegisterString_t)(const char *var_name, const char *var_value, unsigned short flags);
 #if COD_VERSION == COD2_1_0
-static const Cvar_RegisterString_t Cvar_RegisterString = (Cvar_RegisterString_t)0x080B1DD2;
+static const Dvar_RegisterString_t Dvar_RegisterString = (Dvar_RegisterString_t)0x080B1DD2;
 #elif COD_VERSION == COD2_1_2
-static const Cvar_RegisterString_t Cvar_RegisterString = (Cvar_RegisterString_t)0x080B40EE;
+static const Dvar_RegisterString_t Dvar_RegisterString = (Dvar_RegisterString_t)0x080B40EE;
 #elif COD_VERSION == COD2_1_3
-static const Cvar_RegisterString_t Cvar_RegisterString = (Cvar_RegisterString_t)0x080B4232;
+static const Dvar_RegisterString_t Dvar_RegisterString = (Dvar_RegisterString_t)0x080B4232;
 #endif
 
-typedef cvar_t * (*Cvar_RegisterInt_t)(const char * var_name, int var_value, int min_value, int max_value, unsigned short flags);
+typedef dvar_t * (*Dvar_RegisterInt_t)(const char * var_name, int var_value, int min_value, int max_value, unsigned short flags);
 #if COD_VERSION == COD2_1_0
-static const Cvar_RegisterInt_t Cvar_RegisterInt = (Cvar_RegisterInt_t)0x0; // Not tested
+static const Dvar_RegisterInt_t Dvar_RegisterInt = (Dvar_RegisterInt_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
-static const Cvar_RegisterInt_t Cvar_RegisterInt = (Cvar_RegisterInt_t)0x0; // Not tested
+static const Dvar_RegisterInt_t Dvar_RegisterInt = (Dvar_RegisterInt_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
-static const Cvar_RegisterInt_t Cvar_RegisterInt = (Cvar_RegisterInt_t)0x080B403A;
+static const Dvar_RegisterInt_t Dvar_RegisterInt = (Dvar_RegisterInt_t)0x080B403A;
 #endif
 
-typedef cvar_t* (*Cvar_RegisterFloat_t)(const char* var_name, float var_value, float var_min, float var_max, unsigned short flags);
+typedef dvar_t* (*Dvar_RegisterFloat_t)(const char* var_name, float var_value, float var_min, float var_max, unsigned short flags);
 #if COD_VERSION == COD2_1_0
-static const Cvar_RegisterFloat_t Cvar_RegisterFloat = (Cvar_RegisterFloat_t)0x080B1C2C;
+static const Dvar_RegisterFloat_t Dvar_RegisterFloat = (Dvar_RegisterFloat_t)0x080B1C2C;
 #elif COD_VERSION == COD2_1_2
-static const Cvar_RegisterFloat_t Cvar_RegisterFloat = (Cvar_RegisterFloat_t)0x080B3F48;
+static const Dvar_RegisterFloat_t Dvar_RegisterFloat = (Dvar_RegisterFloat_t)0x080B3F48;
 #elif COD_VERSION == COD2_1_3
-static const Cvar_RegisterFloat_t Cvar_RegisterFloat = (Cvar_RegisterFloat_t)0x080B408C;
+static const Dvar_RegisterFloat_t Dvar_RegisterFloat = (Dvar_RegisterFloat_t)0x080B408C;
 #endif
 
 typedef void (*SV_ConnectionlessPacket_t)(netadr_t from, msg_t *msg);

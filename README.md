@@ -8,7 +8,7 @@
 
 **List of high-level changes provided by this repository**
 <br>(in comparison to its parent repository, see the initial fork path below)
-- [Added cvars](doc/added_cvars.md)
+- [Added dvars](doc/added_dvars.md)
 - [Added script callback functions](doc/added_script_callback_functions.md)
 - [Added script code functions](doc/added_script_functions.md)
 - [Changed script code functions](doc/changed_script_functions.md)

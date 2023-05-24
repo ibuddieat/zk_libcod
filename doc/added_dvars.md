@@ -1,4 +1,4 @@
-Added cvars:
+Added dvars:
   * `g_debugCallbacks`
     * Type: Boolean
     * Default: False
@@ -26,7 +26,7 @@ Added cvars:
   * `g_safePrecache`
     * Type: Boolean
     * Default: False
-    * Effect: If true, exceeding the limits of loadFx or precacheModel will generate console log warnings instead of stopping the server. Excess effects will be replaced by (= displayed as) `fx/misc/missing_fx.efx` and excess models as `xmodel/default_static_model`. These default assets are loaded automatically (and therefore occupy one config string each) if the cvar is set to true.
+    * Effect: If true, exceeding the limits of loadFx or precacheModel will generate console log warnings instead of stopping the server. Excess effects will be replaced by (= displayed as) `fx/misc/missing_fx.efx` and excess models as `xmodel/default_static_model`. These default assets are loaded automatically (and therefore occupy one config string each) if the dvar is set to true.
   * `g_spawnMapTurrets`
     * Type: Boolean
     * Default: True
@@ -48,13 +48,13 @@ Added cvars:
   * `logfileName`
     * Type: String
     * Default: "console_mp_server.log"
-    * Effect: Controls the console log file name. Should be set before the stock "logfile" cvar is set to a value greater than zero.
+    * Effect: Controls the console log file name. Should be set before the stock "logfile" dvar is set to a value greater than zero.
   * `logfileRotate`
     * Type: Integer
     * Default: 0
     * Min. Value: 0
     * Max. Value: 1000
-    * Effect: Defines how many console log files are preserved on a server restart. Naming scheme: &lt;logfileName cvar value&gt;.&lt;incrementing integer&gt;
+    * Effect: Defines how many console log files are preserved on a server restart. Naming scheme: &lt;logfileName dvar value&gt;.&lt;incrementing integer&gt;
   * `logTimestamps`
     * Type: Boolean
     * Default: False
@@ -98,4 +98,4 @@ Added cvars:
     * Max. Value: 2
     * Effect: Toggle output of download-disconnected game messages. A value of `2` prints the relative path to the file requested by the connecting player.
 
-Note: All default values of the cvars listed above are defined to preserve the stock behavior of the game.
+Note: All default values of the dvars listed above are defined to preserve the stock behavior of the game.

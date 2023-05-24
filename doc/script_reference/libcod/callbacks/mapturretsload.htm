@@ -27,7 +27,7 @@ Module: Callbacks<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Calls CodeCallback_MapTurretsLoad() in maps/mp/gametypes/_callbacksetup.gsc right after <a href="mapweaponsload.htm">Map Weapons Load</a>, once on server start and again for every map change. If the value of the g_spawnMapTurrets cvar equals false, information about turrets that would have been loaded from the map file is provided and the turrets are neither spawned, nor precached.</p>
+<p>Calls CodeCallback_MapTurretsLoad() in maps/mp/gametypes/_callbacksetup.gsc right after <a href="mapweaponsload.htm">Map Weapons Load</a>, once on server start and again for every map change. If the value of the g_spawnMapTurrets dvar equals false, information about turrets that would have been loaded from the map file is provided and the turrets are neither spawned, nor precached.</p>
 </H3>
 </TR></TD></TABLE>
 <p>Note: The existance of the callback function is checked only once on server start. Functions added later are not taken into account, even after a map switch.</p>
@@ -37,8 +37,8 @@ Module: Callbacks<BR>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;num&gt; Number of turrets loaded from the map file, or zero if the value of the g_spawnMapTurrets cvar equals true.</LI>
-<LI>2 : &lt;info&gt; Array of size 11 * num, or undefined if the value of the g_spawnMapTurrets cvar equals true. Provides the following attributes for each turret: classname (string), origin (vector), angles (vector), toparc (int), bottomarc (int), leftarc (int), rightarc (int), model (string), weaponinfo (string), export (int), script_gameobjectname (string).</LI>
+<LI>1 : &lt;num&gt; Number of turrets loaded from the map file, or zero if the value of the g_spawnMapTurrets dvar equals true.</LI>
+<LI>2 : &lt;info&gt; Array of size 11 * num, or undefined if the value of the g_spawnMapTurrets dvar equals true. Provides the following attributes for each turret: classname (string), origin (vector), angles (vector), toparc (int), bottomarc (int), leftarc (int), rightarc (int), model (string), weaponinfo (string), export (int), script_gameobjectname (string).</LI>
 </UL></TR></TD></TABLE>
 <BR><BR>
 <H2>Example:</H2>

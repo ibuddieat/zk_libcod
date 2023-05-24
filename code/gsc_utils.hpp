@@ -24,7 +24,7 @@ void gsc_utils_toupper();
 void gsc_utils_file_link();
 void gsc_utils_file_unlink();
 void gsc_utils_file_exists();
-void gsc_utils_FS_LoadDir();
+void gsc_utils_fs_loaddir();
 void gsc_utils_scandir();
 void gsc_utils_fopen();
 void gsc_utils_fread();

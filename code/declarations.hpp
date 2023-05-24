@@ -74,18 +74,21 @@
 #define MAX_VOICEPACKETS            40
 #define MAX_VOICEPACKETSPERFRAME    2.56
 
-#define CVAR_ARCHIVE        0x1
-#define CVAR_USERINFO       0x2
-#define CVAR_SERVERINFO     0x4
-#define CVAR_SYSTEMINFO     0x8
-#define CVAR_INIT           0x10
-#define CVAR_LATCH          0x20
-#define CVAR_ROM            0x40
-#define CVAR_CHEAT          0x80
-#define CVAR_TEMP           0x100
-#define CVAR_NORESTART      0x400
-#define CVAR_UNSAFE         0x1000
-#define CVAR_USER_CREATED   0x4000
+#define DVAR_NOFLAG				0				// 0x0000
+#define DVAR_ARCHIVE            (1 << 0)        // 0x0001
+#define DVAR_USERINFO           (1 << 1)        // 0x0002
+#define DVAR_SERVERINFO         (1 << 2)        // 0x0004
+#define DVAR_SYSTEMINFO         (1 << 3)        // 0x0008
+#define DVAR_INIT               (1 << 4)        // 0x0010
+#define DVAR_LATCH              (1 << 5)        // 0x0020
+#define DVAR_ROM                (1 << 6)        // 0x0040
+#define DVAR_CHEAT              (1 << 7)        // 0x0080
+#define DVAR_DEVELOPER          (1 << 8)        // 0x0100
+#define DVAR_SAVED              (1 << 9)        // 0x0200
+#define DVAR_NORESTART          (1 << 10)       // 0x0400
+#define DVAR_CHANGEABLE_RESET   (1 << 12)       // 0x1000
+#define DVAR_EXTERNAL           (1 << 14)       // 0x4000
+#define DVAR_AUTOEXEC           (1 << 15)       // 0x8000
 
 #define HASH_STAT_HEAD    0x8000
 #define HASH_NEXT_MASK    0x3FFF
@@ -258,7 +261,7 @@ typedef enum
 	CRITSECT_UNKNOWN1 = 1,
 	CRITSECT_COM_ERROR = 2,
 	CRITSECT_UNKNOWN3 = 3,
-	CRITSECT_CVAR = 4,
+	CRITSECT_DVAR = 4,
 	CRITSECT_RD_BUFFER = 5,
 	CRITSECT_COUNT = 6
 } criticalSection_t;
@@ -453,65 +456,66 @@ typedef vec_t vec3_t[3];
 typedef vec_t vec4_t[4];
 typedef vec_t vec5_t[5];
 
-typedef union
+enum DvarType : char
 {
-	int i;
-	byte rgba[4];
-} ucolor_t;
+	DVAR_TYPE_BOOL = 0x00,
+	DVAR_TYPE_FLOAT = 0x01,
+	DVAR_TYPE_VEC2 = 0x02,
+	DVAR_TYPE_VEC3 = 0x03,
+	DVAR_TYPE_VEC4 = 0x04,
+	DVAR_TYPE_INT = 0x05,
+	DVAR_TYPE_ENUM = 0x06,
+	DVAR_TYPE_STRING = 0x07,
+	DVAR_TYPE_COLOR = 0x08
+};
 
-typedef struct cvar_s
+union DvarLimits
 {
-	char *name;
-	unsigned short flags;
-	byte type;
-	byte modified;
+	struct
+	{
+		int stringCount;
+		const char **strings;
+	} enumeration;
+	struct
+	{
+		int min;
+		int max;
+	} integer;
+	struct
+	{
+		float min;
+		float max;
+	} decimal;
+};
+
+typedef struct
+{
 	union
 	{
-		float floatval;
+		bool boolean;
 		int integer;
-		char* string;
-		byte boolean;
+		float decimal;
 		vec2_t vec2;
 		vec3_t vec3;
 		vec4_t vec4;
-		ucolor_t color;
+		const char *string;
+		unsigned char color[4];
 	};
-	union
-	{
-		float latchedFloatval;
-		int latchedInteger;
-		char* latchedString;
-		byte latchedBoolean;
-		vec2_t latchedVec2;
-		vec3_t latchedVec3;
-		vec4_t latchedVec4;
-		ucolor_t latchedColor;
-	};
-	union
-	{
-		float resetFloatval;
-		int resetInteger;
-		char* resetString;
-		byte resetBoolean;
-		vec2_t resetVec2;
-		vec3_t resetVec3;
-		vec4_t resetVec4;
-		ucolor_t resetColor;
-	};
-	union
-	{
-		int imin;
-		float fmin;
-	};
-	union
-	{
-		int imax;
-		float fmax;
-		const char** enumStr;
-	};
-	struct cvar_s *next;
-	struct cvar_s *hashNext;
-} cvar_t;
+} DvarValue;
+
+typedef struct dvar_s
+{
+	const char *name;
+	unsigned short flags;
+	DvarType type;
+	bool modified;
+	DvarValue current;
+	DvarValue latched;
+	DvarValue reset;
+	DvarLimits domain;
+	dvar_s *next;
+	dvar_s *hashNext;
+} dvar_t;
 
 #pragma pack(push, 4)
 struct __attribute__((aligned(4))) RefString

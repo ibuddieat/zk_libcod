@@ -180,7 +180,7 @@ scr_function_t scriptFunctions[] =
 	{"file_link", gsc_utils_file_link, 0},
 	{"file_unlink", gsc_utils_file_unlink, 0},
 	{"file_exists", gsc_utils_file_exists, 0},
-	{"FS_LoadDir", gsc_utils_FS_LoadDir, 0},
+	{"fs_loaddir", gsc_utils_fs_loaddir, 0},
 	{"scandir", gsc_utils_scandir, 0},
 	{"fopen", gsc_utils_fopen, 0},
 	{"fread", gsc_utils_fread, 0},

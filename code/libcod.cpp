@@ -7,80 +7,80 @@
 #include <pthread.h>
 #endif
 
-// Stock cvars
-cvar_t *cl_allowDownload;
-cvar_t *com_hunkMegs;
-cvar_t *com_logfile;
-cvar_t *developer;
-cvar_t *g_playerCollisionEjectSpeed;
-cvar_t *g_voiceChatTalkingDuration;
-cvar_t *player_meleeHeight;
-cvar_t *player_meleeRange;
-cvar_t *player_meleeWidth;
-cvar_t *rcon_password;
-cvar_t *sv_allowDownload;
-cvar_t *sv_cheats;
-cvar_t *sv_floodProtect;
-cvar_t *sv_fps;
-cvar_t *sv_maxclients;
-cvar_t *sv_maxRate;
-cvar_t *sv_packet_info;
-cvar_t *sv_padPackets;
-cvar_t *sv_pure;
-cvar_t *sv_showCommands;
-cvar_t *sv_timeout;
-cvar_t *sv_voice;
-cvar_t *sv_voiceQuality;
-cvar_t *sv_zombietime;
+// Stock dvars
+dvar_t *cl_allowDownload;
+dvar_t *com_hunkMegs;
+dvar_t *com_logfile;
+dvar_t *developer;
+dvar_t *g_playerCollisionEjectSpeed;
+dvar_t *g_voiceChatTalkingDuration;
+dvar_t *player_meleeHeight;
+dvar_t *player_meleeRange;
+dvar_t *player_meleeWidth;
+dvar_t *rcon_password;
+dvar_t *sv_allowDownload;
+dvar_t *sv_cheats;
+dvar_t *sv_floodProtect;
+dvar_t *sv_fps;
+dvar_t *sv_maxclients;
+dvar_t *sv_maxRate;
+dvar_t *sv_packet_info;
+dvar_t *sv_padPackets;
+dvar_t *sv_pure;
+dvar_t *sv_showCommands;
+dvar_t *sv_timeout;
+dvar_t *sv_voice;
+dvar_t *sv_voiceQuality;
+dvar_t *sv_zombietime;
 #if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
-cvar_t *cl_wwwDownload;
-cvar_t *sv_wwwBaseURL;
-cvar_t *sv_wwwDlDisconnected;
-cvar_t *sv_wwwDownload;
+dvar_t *cl_wwwDownload;
+dvar_t *sv_wwwBaseURL;
+dvar_t *sv_wwwDlDisconnected;
+dvar_t *sv_wwwDownload;
 #endif
 
-// Custom cvars
+// Custom dvars
 #if COMPILE_UTILS == 1
-cvar_t *con_coloredPrints;
+dvar_t *con_coloredPrints;
 #endif
-cvar_t *fs_callbacks;
-cvar_t *fs_library;
-cvar_t *g_debugCallbacks;
-cvar_t *g_debugEvents;
-cvar_t *g_debugStaticModels;
-cvar_t *g_dumpVoiceData;
-cvar_t *g_logPickup;
-cvar_t *g_playerCollision;
-cvar_t *g_playerEject;
-cvar_t *g_resetSlide;
-cvar_t *g_safePrecache;
-cvar_t *g_spawnMapTurrets;
-cvar_t *g_spawnMapWeapons;
-cvar_t *g_triggerMode;
-cvar_t *logErrors;
-cvar_t *logfileName;
-cvar_t *logfileRotate;
-cvar_t *logTimestamps;
-cvar_t *sv_allowRcon;
-cvar_t *sv_botKickMessages;
-cvar_t *sv_cracked;
-cvar_t *sv_disconnectMessages;
-cvar_t *sv_downloadMessage;
-cvar_t *sv_kickMessages;
-cvar_t *sv_limitLocalRcon;
-cvar_t *sv_logHeartbeats;
-cvar_t *sv_logRcon;
-cvar_t *sv_noauthorize;
-cvar_t *sv_timeoutMessages;
-cvar_t *sv_verifyIwds;
+dvar_t *fs_callbacks;
+dvar_t *fs_library;
+dvar_t *g_debugCallbacks;
+dvar_t *g_debugEvents;
+dvar_t *g_debugStaticModels;
+dvar_t *g_dumpVoiceData;
+dvar_t *g_logPickup;
+dvar_t *g_playerCollision;
+dvar_t *g_playerEject;
+dvar_t *g_resetSlide;
+dvar_t *g_safePrecache;
+dvar_t *g_spawnMapTurrets;
+dvar_t *g_spawnMapWeapons;
+dvar_t *g_triggerMode;
+dvar_t *logErrors;
+dvar_t *logfileName;
+dvar_t *logfileRotate;
+dvar_t *logTimestamps;
+dvar_t *sv_allowRcon;
+dvar_t *sv_botKickMessages;
+dvar_t *sv_cracked;
+dvar_t *sv_disconnectMessages;
+dvar_t *sv_downloadMessage;
+dvar_t *sv_kickMessages;
+dvar_t *sv_limitLocalRcon;
+dvar_t *sv_logHeartbeats;
+dvar_t *sv_logRcon;
+dvar_t *sv_noauthorize;
+dvar_t *sv_timeoutMessages;
+dvar_t *sv_verifyIwds;
 #if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
-cvar_t *sv_wwwDlDisconnectedMessages;
+dvar_t *sv_wwwDlDisconnectedMessages;
 #endif
 
 cHook *hook_add_opcode;
 cHook *hook_bg_playanim;
 cHook *hook_clientendframe;
-cHook *hook_com_initcvars;
+cHook *hook_com_initdvars;
 cHook *hook_console_print;
 cHook *hook_developer_prints;
 cHook *hook_fire_grenade;
@@ -235,27 +235,27 @@ int currentMaxSoundIndex = 0;
 VoicePacket_t voiceDataStore[MAX_CUSTOMSOUNDS][MAX_STOREDVOICEPACKETS];
 #endif
 
-void custom_Com_InitCvars(void)
+void custom_Com_InitDvars(void)
 {
-	/* Register stock cvars here with different settings, scheme:
-	cvar_t *cvar = Cvar_Register<Type>(var_name, default value, [min. value, max. value,] flags); */
+	/* Register stock dvars here with different settings, scheme:
+	dvar_t *dvar = Dvar_Register<Type>(var_name, default value, [min. value, max. value,] flags); */
 
 	// Force server memory setting for clients to be able to counter Hunk_AllocateTempMemory failures
-	com_hunkMegs = Cvar_RegisterInt("com_hunkMegs", 160, 1, 512, CVAR_UNSAFE | CVAR_LATCH | CVAR_SYSTEMINFO | CVAR_ARCHIVE );
+	com_hunkMegs = Dvar_RegisterInt("com_hunkMegs", 160, 1, 512, DVAR_CHANGEABLE_RESET | DVAR_LATCH | DVAR_SYSTEMINFO | DVAR_ARCHIVE );
 
-	// Register custom cvars required early on server start
-	logfileName = Cvar_RegisterString("logfileName", "console_mp_server.log", CVAR_ARCHIVE);
-	logfileRotate = Cvar_RegisterInt("logfileRotate", 0, 0, 1000, CVAR_ARCHIVE);
-	logTimestamps = Cvar_RegisterBool("logTimestamps", qfalse, CVAR_ARCHIVE);
+	// Register custom dvars required early on server start
+	logfileName = Dvar_RegisterString("logfileName", "console_mp_server.log", DVAR_ARCHIVE);
+	logfileRotate = Dvar_RegisterInt("logfileRotate", 0, 0, 1000, DVAR_ARCHIVE);
+	logTimestamps = Dvar_RegisterBool("logTimestamps", qfalse, DVAR_ARCHIVE);
 
-	hook_com_initcvars->unhook();
-	void (*Com_InitCvars)(void);
-	*(int *)&Com_InitCvars = hook_com_initcvars->from;
-	Com_InitCvars();
-	hook_com_initcvars->hook();
+	hook_com_initdvars->unhook();
+	void (*Com_InitDvars)(void);
+	*(int *)&Com_InitDvars = hook_com_initdvars->from;
+	Com_InitDvars();
+	hook_com_initdvars->hook();
 
-	// Get references to early loaded stock cvars
-	com_logfile = Cvar_FindVar("logfile");
+	// Get references to early loaded stock dvars
+	com_logfile = Dvar_FindVar("logfile");
 }
 
 void common_init_complete_print(const char *format, ...)
@@ -271,65 +271,65 @@ void common_init_complete_print(const char *format, ...)
 
 	// Do stuff after sv has been initialized here
 	
-	// Get references to stock cvars
-	cl_allowDownload = Cvar_RegisterBool("cl_allowDownload", qtrue, CVAR_ARCHIVE | CVAR_SYSTEMINFO); // Force-enable download for clients
-	developer = Cvar_FindVar("developer");
-	rcon_password = Cvar_FindVar("rcon_password");
-	sv_allowDownload = Cvar_FindVar("sv_allowDownload");
-	sv_cheats = Cvar_FindVar("sv_cheats");
-	sv_floodProtect = Cvar_FindVar("sv_floodProtect");
-	sv_fps = Cvar_FindVar("sv_fps");
-	sv_maxclients = Cvar_FindVar("sv_maxclients");
-	sv_packet_info = Cvar_FindVar("sv_packet_info");
-	sv_padPackets = Cvar_FindVar("sv_padPackets");
-	sv_pure = Cvar_FindVar("sv_pure");
-	sv_showCommands = Cvar_FindVar("sv_showCommands");
-	sv_timeout = Cvar_FindVar("sv_timeout");
-	sv_voice = Cvar_FindVar("sv_voice");
-	sv_voiceQuality = Cvar_FindVar("sv_voiceQuality");
-	sv_zombietime = Cvar_FindVar("sv_zombietime");
+	// Get references to stock dvars
+	cl_allowDownload = Dvar_RegisterBool("cl_allowDownload", qtrue, DVAR_ARCHIVE | DVAR_SYSTEMINFO); // Force-enable download for clients
+	developer = Dvar_FindVar("developer");
+	rcon_password = Dvar_FindVar("rcon_password");
+	sv_allowDownload = Dvar_FindVar("sv_allowDownload");
+	sv_cheats = Dvar_FindVar("sv_cheats");
+	sv_floodProtect = Dvar_FindVar("sv_floodProtect");
+	sv_fps = Dvar_FindVar("sv_fps");
+	sv_maxclients = Dvar_FindVar("sv_maxclients");
+	sv_packet_info = Dvar_FindVar("sv_packet_info");
+	sv_padPackets = Dvar_FindVar("sv_padPackets");
+	sv_pure = Dvar_FindVar("sv_pure");
+	sv_showCommands = Dvar_FindVar("sv_showCommands");
+	sv_timeout = Dvar_FindVar("sv_timeout");
+	sv_voice = Dvar_FindVar("sv_voice");
+	sv_voiceQuality = Dvar_FindVar("sv_voiceQuality");
+	sv_zombietime = Dvar_FindVar("sv_zombietime");
 	#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
-	cl_wwwDownload = Cvar_RegisterBool("cl_wwwDownload", qtrue, CVAR_ARCHIVE | CVAR_SYSTEMINFO); // Force-enable wwwDownload for clients
-	sv_wwwBaseURL = Cvar_FindVar("sv_wwwBaseURL");
-	sv_wwwDlDisconnected = Cvar_FindVar("sv_wwwDlDisconnected");
-	sv_wwwDownload = Cvar_FindVar("sv_wwwDownload");
+	cl_wwwDownload = Dvar_RegisterBool("cl_wwwDownload", qtrue, DVAR_ARCHIVE | DVAR_SYSTEMINFO); // Force-enable wwwDownload for clients
+	sv_wwwBaseURL = Dvar_FindVar("sv_wwwBaseURL");
+	sv_wwwDlDisconnected = Dvar_FindVar("sv_wwwDlDisconnected");
+	sv_wwwDownload = Dvar_FindVar("sv_wwwDownload");
 	#endif
 
-	// Register custom cvars
+	// Register custom dvars
 	#if COMPILE_UTILS == 1
-	con_coloredPrints = Cvar_RegisterBool("con_coloredPrints", qfalse, CVAR_ARCHIVE);
+	con_coloredPrints = Dvar_RegisterBool("con_coloredPrints", qfalse, DVAR_ARCHIVE);
 	#endif
-	fs_callbacks = Cvar_RegisterString("fs_callbacks", "", CVAR_ARCHIVE);
-	fs_library = Cvar_RegisterString("fs_library", "", CVAR_ARCHIVE);
-	g_debugCallbacks = Cvar_RegisterBool("g_debugCallbacks", qfalse, CVAR_ARCHIVE);
-	g_debugEvents = Cvar_RegisterBool("g_debugEvents", qfalse, CVAR_ARCHIVE);
-	g_debugStaticModels = Cvar_RegisterBool("g_debugStaticModels", qfalse, CVAR_ARCHIVE);
-	g_dumpVoiceData = Cvar_RegisterBool("g_dumpVoiceData", qfalse, CVAR_ARCHIVE);
-	g_logPickup = Cvar_RegisterBool("g_logPickup", qtrue, CVAR_ARCHIVE);
-	g_playerCollision = Cvar_RegisterBool("g_playerCollision", qtrue, CVAR_ARCHIVE);
-	g_playerEject = Cvar_RegisterBool("g_playerEject", qtrue, CVAR_ARCHIVE);
-	g_resetSlide = Cvar_RegisterBool("g_resetSlide", qfalse, CVAR_ARCHIVE);
-	g_spawnMapTurrets = Cvar_RegisterBool("g_spawnMapTurrets", qtrue, CVAR_ARCHIVE);
-	g_spawnMapWeapons = Cvar_RegisterBool("g_spawnMapWeapons", qtrue, CVAR_ARCHIVE);
-	g_triggerMode = Cvar_RegisterInt("g_triggerMode", 1, 0, 2, CVAR_ARCHIVE);
-	logErrors = Cvar_RegisterBool("logErrors", qfalse, CVAR_ARCHIVE);
-	sv_allowRcon = Cvar_RegisterBool("sv_allowRcon", qtrue, CVAR_ARCHIVE);
-	sv_botKickMessages = Cvar_RegisterBool("sv_botKickMessages", qtrue, CVAR_ARCHIVE);
-	sv_cracked = Cvar_RegisterBool("sv_cracked", qfalse, CVAR_ARCHIVE);
-	sv_disconnectMessages = Cvar_RegisterBool("sv_disconnectMessages", qtrue, CVAR_ARCHIVE);
-	sv_downloadMessage = Cvar_RegisterString("sv_downloadMessage", "", CVAR_ARCHIVE);
-	sv_kickMessages = Cvar_RegisterBool("sv_kickMessages", qtrue, CVAR_ARCHIVE);
-	sv_limitLocalRcon = Cvar_RegisterBool("sv_limitLocalRcon", qtrue, CVAR_ARCHIVE);
-	sv_logHeartbeats = Cvar_RegisterBool("sv_logHeartbeats", qtrue, CVAR_ARCHIVE);
-	sv_logRcon = Cvar_RegisterBool("sv_logRcon", qtrue, CVAR_ARCHIVE);
-	sv_noauthorize = Cvar_RegisterBool("sv_noauthorize", qfalse, CVAR_ARCHIVE);
-	sv_timeoutMessages = Cvar_RegisterBool("sv_timeoutMessages", qtrue, CVAR_ARCHIVE);
-	sv_verifyIwds = Cvar_RegisterBool("sv_verifyIwds", qtrue, CVAR_ARCHIVE);
+	fs_callbacks = Dvar_RegisterString("fs_callbacks", "", DVAR_ARCHIVE);
+	fs_library = Dvar_RegisterString("fs_library", "", DVAR_ARCHIVE);
+	g_debugCallbacks = Dvar_RegisterBool("g_debugCallbacks", qfalse, DVAR_ARCHIVE);
+	g_debugEvents = Dvar_RegisterBool("g_debugEvents", qfalse, DVAR_ARCHIVE);
+	g_debugStaticModels = Dvar_RegisterBool("g_debugStaticModels", qfalse, DVAR_ARCHIVE);
+	g_dumpVoiceData = Dvar_RegisterBool("g_dumpVoiceData", qfalse, DVAR_ARCHIVE);
+	g_logPickup = Dvar_RegisterBool("g_logPickup", qtrue, DVAR_ARCHIVE);
+	g_playerCollision = Dvar_RegisterBool("g_playerCollision", qtrue, DVAR_ARCHIVE);
+	g_playerEject = Dvar_RegisterBool("g_playerEject", qtrue, DVAR_ARCHIVE);
+	g_resetSlide = Dvar_RegisterBool("g_resetSlide", qfalse, DVAR_ARCHIVE);
+	g_spawnMapTurrets = Dvar_RegisterBool("g_spawnMapTurrets", qtrue, DVAR_ARCHIVE);
+	g_spawnMapWeapons = Dvar_RegisterBool("g_spawnMapWeapons", qtrue, DVAR_ARCHIVE);
+	g_triggerMode = Dvar_RegisterInt("g_triggerMode", 1, 0, 2, DVAR_ARCHIVE);
+	logErrors = Dvar_RegisterBool("logErrors", qfalse, DVAR_ARCHIVE);
+	sv_allowRcon = Dvar_RegisterBool("sv_allowRcon", qtrue, DVAR_ARCHIVE);
+	sv_botKickMessages = Dvar_RegisterBool("sv_botKickMessages", qtrue, DVAR_ARCHIVE);
+	sv_cracked = Dvar_RegisterBool("sv_cracked", qfalse, DVAR_ARCHIVE);
+	sv_disconnectMessages = Dvar_RegisterBool("sv_disconnectMessages", qtrue, DVAR_ARCHIVE);
+	sv_downloadMessage = Dvar_RegisterString("sv_downloadMessage", "", DVAR_ARCHIVE);
+	sv_kickMessages = Dvar_RegisterBool("sv_kickMessages", qtrue, DVAR_ARCHIVE);
+	sv_limitLocalRcon = Dvar_RegisterBool("sv_limitLocalRcon", qtrue, DVAR_ARCHIVE);
+	sv_logHeartbeats = Dvar_RegisterBool("sv_logHeartbeats", qtrue, DVAR_ARCHIVE);
+	sv_logRcon = Dvar_RegisterBool("sv_logRcon", qtrue, DVAR_ARCHIVE);
+	sv_noauthorize = Dvar_RegisterBool("sv_noauthorize", qfalse, DVAR_ARCHIVE);
+	sv_timeoutMessages = Dvar_RegisterBool("sv_timeoutMessages", qtrue, DVAR_ARCHIVE);
+	sv_verifyIwds = Dvar_RegisterBool("sv_verifyIwds", qtrue, DVAR_ARCHIVE);
 	#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
-	sv_wwwDlDisconnectedMessages = Cvar_RegisterInt("sv_wwwDlDisconnectedMessages", 1, 0, 2, CVAR_ARCHIVE);
+	sv_wwwDlDisconnectedMessages = Dvar_RegisterInt("sv_wwwDlDisconnectedMessages", 1, 0, 2, DVAR_ARCHIVE);
 	#endif
 
-	if ( g_dumpVoiceData->boolean )
+	if ( g_dumpVoiceData->current.boolean )
 	{
 		voiceDataDumpFile = fopen("voiceData.spx", "ab");	
 		if ( !voiceDataDumpFile )
@@ -341,13 +341,13 @@ void common_init_complete_print(const char *format, ...)
 
 void custom_G_ProcessIPBans(void)
 {
-	/* This is right after G_RegisterCvars, giving us access to variables that
+	/* This is right after G_RegisterDvars, giving us access to variables that
 	 are not yet defined at the common_init_complete_print hook */
-	g_playerCollisionEjectSpeed = Cvar_FindVar("g_playerCollisionEjectSpeed");
-	g_voiceChatTalkingDuration = Cvar_FindVar("g_voiceChatTalkingDuration");
-	player_meleeHeight = Cvar_FindVar("player_meleeHeight");
-	player_meleeRange = Cvar_FindVar("player_meleeRange");
-	player_meleeWidth = Cvar_FindVar("player_meleeWidth");
+	g_playerCollisionEjectSpeed = Dvar_FindVar("g_playerCollisionEjectSpeed");
+	g_voiceChatTalkingDuration = Dvar_FindVar("g_voiceChatTalkingDuration");
+	player_meleeHeight = Dvar_FindVar("player_meleeHeight");
+	player_meleeRange = Dvar_FindVar("player_meleeRange");
+	player_meleeWidth = Dvar_FindVar("player_meleeWidth");
 
 	hook_g_processipbans->unhook();
 	void (*G_ProcessIPBans)(void);
@@ -405,7 +405,7 @@ void hook_sv_spawnserver(const char *format, ...)
 	hook_developer_prints->hook();
 }
 
-void custom_sv_masterheartbeat(const char *hbname)
+void custom_SV_MasterHeartbeat(const char *hbname)
 {
 	#if COD_VERSION == COD2_1_0
 	int sending_heartbeat_string_offset = 0x0; // Not tested
@@ -415,14 +415,14 @@ void custom_sv_masterheartbeat(const char *hbname)
 	int sending_heartbeat_string_offset = 0x0814BBC0;
 	#endif
 
-	if ( logHeartbeat && !sv_logHeartbeats->boolean )
+	if ( logHeartbeat && !sv_logHeartbeats->current.boolean )
 	{
 		byte disable = 0;
 		memcpy((void *)sending_heartbeat_string_offset, &disable, 1);
 		logHeartbeat = qfalse;
 		Com_DPrintf("Disabled heartbeat logging\n");
 	}
-	else if ( !logHeartbeat && sv_logHeartbeats->boolean )
+	else if ( !logHeartbeat && sv_logHeartbeats->current.boolean )
 	{
 		byte enable = 0x53; // "S"
 		memcpy((void *)sending_heartbeat_string_offset, &enable, 1);
@@ -448,13 +448,13 @@ int custom_GScr_LoadGameTypeScript()
 	int ret = GScr_LoadGameTypeScript();
 	hook_gametype_scripts->hook();
 
-	if ( strlen(fs_callbacks->string) )
-		strncpy(path_for_cb, fs_callbacks->string, sizeof(path_for_cb));
+	if ( strlen(fs_callbacks->current.string) )
+		strncpy(path_for_cb, fs_callbacks->current.string, sizeof(path_for_cb));
 
 	for ( i = 0; i < sizeof(callbacks)/sizeof(callbacks[0]); i++ )
 	{
 		*callbacks[i].pos = Scr_GetFunctionHandle(path_for_cb, callbacks[i].name, 0);
-		if ( *callbacks[i].pos && g_debugCallbacks->boolean )
+		if ( *callbacks[i].pos && g_debugCallbacks->current.boolean )
 			Com_Printf("%s found @ %p\n", callbacks[i].name, scrVarPub.programBuffer + *callbacks[i].pos);
 	}
 
@@ -551,7 +551,7 @@ void custom_SV_ClipMoveToEntity(moveclip_t *clip, svEntity_s *entity, trace_t *t
 
 void custom_G_SetClientContents(gentity_t *ent)
 {
-	if ( !g_playerCollision->boolean )
+	if ( !g_playerCollision->current.boolean )
 		return;
 
 	if ( ent->client->noclip == 0 )
@@ -591,8 +591,8 @@ qboolean custom_StuckInClient(gentity_t *self)
 	int i;
 	int id = self - g_entities;
 
-	/* New code: g_playerEject cvar */
-	if ( !g_playerEject->boolean )
+	/* New code: g_playerEject dvar */
+	if ( !g_playerEject->current.boolean )
 		return qfalse;
 	/* New code end */
 
@@ -622,7 +622,7 @@ qboolean custom_StuckInClient(gentity_t *self)
 					Vec2Normalize(dir);
 					if ( 0.0 < VectorLength2((hit->client->ps).velocity) )
 					{
-						hitEjectSpeed = (float)g_playerCollisionEjectSpeed->integer;
+						hitEjectSpeed = (float)g_playerCollisionEjectSpeed->current.integer;
 					}
 					else
 					{
@@ -631,7 +631,7 @@ qboolean custom_StuckInClient(gentity_t *self)
 					hitSpeed = hitEjectSpeed;
 					if ( 0.0 < VectorLength2((self->client->ps).velocity) )
 					{
-						selfEjectSpeed = (float)g_playerCollisionEjectSpeed->integer;
+						selfEjectSpeed = (float)g_playerCollisionEjectSpeed->current.integer;
 					}
 					else
 					{
@@ -718,7 +718,7 @@ void hook_ClientCommand(int clientNum)
 
 int hook_isLanAddress(netadr_t adr)
 {
-	if ( sv_noauthorize->boolean )
+	if ( sv_noauthorize->current.boolean )
 		return 1;
 
 	return Sys_IsLANAddress(adr);
@@ -728,7 +728,7 @@ const char* hook_AuthorizeState(int arg)
 {
 	const char *s = Cmd_Argv(arg);
 
-	if ( sv_cracked->boolean && strcmp(s, "deny") == 0 )
+	if ( sv_cracked->current.boolean && strcmp(s, "deny") == 0 )
 		return "accept";
 
 	return s;
@@ -800,19 +800,19 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 		}
 	}
 
-	if ( isBot && !sv_botKickMessages->boolean && ( I_stricmp(reason, "EXE_DISCONNECTED") == 0 || I_stricmp(reason, "EXE_PLAYERKICKED") == 0 ) )
+	if ( isBot && !sv_botKickMessages->current.boolean && ( I_stricmp(reason, "EXE_DISCONNECTED") == 0 || I_stricmp(reason, "EXE_PLAYERKICKED") == 0 ) )
 		showIngameMessage = qfalse;
 
-	if ( !sv_kickMessages->boolean && I_stricmp(reason, "EXE_PLAYERKICKED") == 0 )
+	if ( !sv_kickMessages->current.boolean && I_stricmp(reason, "EXE_PLAYERKICKED") == 0 )
 		showIngameMessage = qfalse; // This overrides enabled sv_botKickMessages
 
-	if ( !sv_timeoutMessages->boolean && I_stricmp(reason, "EXE_TIMEDOUT") == 0 )
+	if ( !sv_timeoutMessages->current.boolean && I_stricmp(reason, "EXE_TIMEDOUT") == 0 )
 		showIngameMessage = qfalse;
 
-	if ( !sv_disconnectMessages->boolean && I_stricmp(reason, "EXE_DISCONNECTED") == 0 )
+	if ( !sv_disconnectMessages->current.boolean && I_stricmp(reason, "EXE_DISCONNECTED") == 0 )
 		showIngameMessage = qfalse;
 
-	if ( sv_wwwDlDisconnectedMessages->integer != 1 && I_stricmp(reason, "PC_PATCH_1_1_DOWNLOADDISCONNECTED") == 0 )
+	if ( sv_wwwDlDisconnectedMessages->current.integer != 1 && I_stricmp(reason, "PC_PATCH_1_1_DOWNLOADDISCONNECTED") == 0 )
 		showIngameMessage = qfalse;
 
 	translatedReason = SEH_StringEd_GetString(reason);
@@ -837,12 +837,12 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 	 master so it is known the server is empty send a heartbeat now so the
 	 master will get up to date info if there is already a slot for this ip,
 	 reuse it */
-	for ( i = 0 ; i < sv_maxclients->integer ; i++ )
+	for ( i = 0 ; i < sv_maxclients->current.integer ; i++ )
 	{
 		if ( svs.clients[i].state >= CS_CONNECTED )
 			break;
 	}
-	if ( i == sv_maxclients->integer )
+	if ( i == sv_maxclients->current.integer )
 		SV_Heartbeat();
 }
 
@@ -898,7 +898,7 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 		I_strncpyz(name, (entity->client->sess).manualModeName, sizeof(name));
 		I_CleanStr(name);
 		
-		if ( g_logPickup->boolean )
+		if ( g_logPickup->current.boolean )
 		{
 			if ( bg_item->giType == IT_WEAPON )
 				G_LogPrintf("Weapon;%d;%d;%s;%s\n", SV_GetGuid((entity->s).number), (entity->s).number, name, BG_WeaponDefs(bg_item->giTag)->szInternalName);
@@ -974,7 +974,7 @@ void custom_BG_AddPredictableEventToPlayerstate(int event, int eventParm, player
 {
 	if ( event != EV_NONE )
 	{
-		if ( g_debugEvents->boolean )
+		if ( g_debugEvents->current.boolean )
 			Com_DPrintf("BG_AddPredictableEventToPlayerstate() event %26s for client %2d\n", *(&entity_event_names + event), ps->clientNum);
 		
 		/* New code start: silent */
@@ -992,7 +992,7 @@ void custom_G_AddEvent(gentity_t * ent, int event, int eventParm)
 {
 	if ( ent->client )
 	{
-		if ( g_debugEvents->boolean )
+		if ( g_debugEvents->current.boolean )
 			Com_DPrintf("G_AddEvent() event %26s for client %2d\n", *(&entity_event_names + event), ent->client->ps.clientNum);
 		ent->client->ps.events[ent->client->ps.eventSequence & ( MAX_EVENTS - 1 )] = event;
 		ent->client->ps.eventParms[ent->client->ps.eventSequence & ( MAX_EVENTS - 1 )] = eventParm;
@@ -1000,7 +1000,7 @@ void custom_G_AddEvent(gentity_t * ent, int event, int eventParm)
 	}
 	else
 	{
-		if ( g_debugEvents->boolean )
+		if ( g_debugEvents->current.boolean )
 			Com_DPrintf("G_AddEvent() event %26s for entity %2d\n", *(&entity_event_names + event), ent->s.number);
 		ent->s.events[ent->s.eventSequence & ( MAX_EVENTS - 1 )] = event;
 		ent->s.eventParms[ent->s.eventSequence & ( MAX_EVENTS - 1 )] = eventParm;
@@ -1017,7 +1017,7 @@ gentity_t* custom_G_TempEntity(vec3_t * origin, int event)
 	gentity_t* (*sig)(vec3_t * origin, int event);
 	*(int *)&sig = hook_g_tempentity->from;
 
-	if ( g_debugEvents->boolean )
+	if ( g_debugEvents->current.boolean )
 		Com_DPrintf("G_TempEntity() event %26s at (%f,%f,%f)\n", *(&entity_event_names + event), &origin[0], &origin[1], &origin[2]);
 
 	/* Filter example:
@@ -1774,7 +1774,7 @@ void custom_SV_WriteSnapshotToClient(client_t *client, msg_t *msg)
 	custom_SV_EmitPacketEntities(client - svs.clients, from_num_entities, from_first_entity, client->frames[frame_index].num_entities, client->frames[frame_index].first_entity, msg);
 	custom_SV_EmitPacketClients(client - svs.clients, from_num_clients, from_first_client, client->frames[frame_index].num_clients, client->frames[frame_index].first_client, msg);
 	
-	for ( i = 0; i < sv_padPackets->integer; i++ )
+	for ( i = 0; i < sv_padPackets->current.integer; i++ )
 		MSG_WriteByte(msg, 0);
 }
 
@@ -1856,17 +1856,17 @@ int custom_SV_WWWRedirectClient(client_t *cl, msg_t *msg)
 	else
 	{
 		FS_FCloseFile(fp);
-		I_strncpyz(cl->wwwDownloadURL, custom_va("%s/%s", sv_wwwBaseURL->string, cl->downloadName), MAX_OSPATH);
+		I_strncpyz(cl->wwwDownloadURL, custom_va("%s/%s", sv_wwwBaseURL->current.string, cl->downloadName), MAX_OSPATH);
 		Com_Printf("Redirecting client \'%s\'^7 to %s\n", cl->name, cl->wwwDownloadURL);
 		cl->wwwDownloadStarted = 1;
 		MSG_WriteByte(msg, 5);
 		MSG_WriteShort(msg, -1);
 		MSG_WriteString(msg, cl->wwwDownloadURL);
 		MSG_WriteLong(msg, size);
-		MSG_WriteLong(msg, sv_wwwDlDisconnected->boolean != 0);
+		MSG_WriteLong(msg, sv_wwwDlDisconnected->current.boolean != 0);
 
 		/* New code start */
-		if ( sv_wwwDlDisconnectedMessages->integer == 2 )
+		if ( sv_wwwDlDisconnectedMessages->current.integer == 2 )
 			SV_SendServerCommand(0, 0, "f \"%s^7 downloads %s\"", cl->name, cl->downloadName);
 		/* New code end */
 
@@ -1898,9 +1898,9 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 		return;
 	#endif
 
-	if ( strlen(sv_downloadMessage->string) )
+	if ( strlen(sv_downloadMessage->current.string) )
 	{
-		Com_sprintf(errorMessage, sizeof(errorMessage), sv_downloadMessage->string);
+		Com_sprintf(errorMessage, sizeof(errorMessage), sv_downloadMessage->current.string);
 
 		MSG_WriteByte( msg, svc_download );
 		MSG_WriteShort( msg, 0 ); // Client is expecting block zero
@@ -1912,7 +1912,7 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 	}
 
 	#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
-	if ( sv_wwwDownload->boolean && cl->wwwDownload )
+	if ( sv_wwwDownload->current.boolean && cl->wwwDownload )
 	{
 		if ( !cl->wwwDl_failed )
 		{
@@ -1934,7 +1934,7 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 
 		iwdFile = FS_iwIwd(cl->downloadName, "main");
 
-		if ( !sv_allowDownload->integer || iwdFile || ( cl->downloadSize = FS_SV_FOpenFileRead( cl->downloadName, &cl->download ) ) <= 0 )
+		if ( !sv_allowDownload->current.integer || iwdFile || ( cl->downloadSize = FS_SV_FOpenFileRead( cl->downloadName, &cl->download ) ) <= 0 )
 		{
 			// Cannot auto-download file
 			if (iwdFile)
@@ -1942,11 +1942,11 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 				Com_Printf("clientDownload: %d : \"%s\" cannot download iwd files\n", cl - svs.clients, cl->downloadName);
 				Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_CANTAUTODLGAMEIWD\x15%s", cl->downloadName);
 			}
-			else if ( !sv_allowDownload->boolean )
+			else if ( !sv_allowDownload->current.boolean )
 			{
 				Com_Printf("clientDownload: %d : \"%s\" download disabled\n", cl - svs.clients, cl->downloadName);
 
-				if ( sv_pure->boolean )
+				if ( sv_pure->current.boolean )
 					Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_AUTODL_SERVERDISABLED_PURE\x15%s", cl->downloadName);
 				else
 					Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_AUTODL_SERVERDISABLED\x15%s", cl->downloadName);
@@ -2089,9 +2089,9 @@ char *custom_va(const char *format, ...)
 
 void custom_SV_VerifyIwds_f(client_t *cl)
 {
-	if ( sv_pure->boolean )
+	if ( sv_pure->current.boolean )
 	{
-		if ( sv_verifyIwds->boolean )
+		if ( sv_verifyIwds->current.boolean )
 		{
 			hook_sv_verifyiwds_f->unhook();
 			SV_VerifyIwds_f(cl);
@@ -2126,7 +2126,7 @@ void custom_SV_CalcPings(void)
 	int total, count;
 	int delta;
 
-	for ( i = 0 ; i < sv_maxclients->integer ; i++ )
+	for ( i = 0 ; i < sv_maxclients->current.integer ; i++ )
 	{
 		cl = &svs.clients[i];
 
@@ -2181,10 +2181,10 @@ void custom_SV_CheckTimeouts( void )
 	int	droppoint;
 	int	zombiepoint;
 
-	droppoint = svs.time - 1000 * sv_timeout->integer;
-	zombiepoint = svs.time - 1000 * sv_zombietime->integer;
+	droppoint = svs.time - 1000 * sv_timeout->current.integer;
+	zombiepoint = svs.time - 1000 * sv_zombietime->current.integer;
 
-	for ( i = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ )
+	for ( i = 0, cl = svs.clients; i < sv_maxclients->current.integer; i++, cl++ )
 	{
 		// Message times may be wrong across a changelevel
 		if ( cl->lastPacketTime > svs.time )
@@ -2257,7 +2257,7 @@ void hook_RuntimeError_in_VM_Execute(const char *pos, int error_index, const cha
 	/* If enabled, log errors even if developer mode is off. Skip errors during
 	 initialization since the source buffer lookup tables might be corrupt at
 	 that point if developer mode is off */
-	if ( developer->integer == 0 && logErrors->boolean && !level.initializing )
+	if ( developer->current.integer == 0 && logErrors->current.boolean && !level.initializing )
 		RuntimeError_Debug(0, pos, error_index, error_message);
 }
 
@@ -2459,7 +2459,7 @@ int custom_ClientEndFrame(gentity_t *ent)
 			ent->client->ps.gravity = customPlayerState[num].gravity;
 
 		// Experimental slide bug fix
-		if ( g_resetSlide->boolean )
+		if ( g_resetSlide->current.boolean )
 		{
 			if ( ( (ent->client->ps).pm_flags & PMF_SLIDING ) != 0 && (ent->client->ps).pm_time == 0 )
 			{
@@ -2673,8 +2673,8 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 	int i;
 	qboolean valid;
 
-	/* New: sv_allowRcon cvar */
-	if ( !sv_allowRcon->boolean )
+	/* New: sv_allowRcon dvar */
+	if ( !sv_allowRcon->current.boolean )
 		return;
 	/* New code end */
 
@@ -2692,10 +2692,10 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 	*/
 
 	password = SV_Cmd_Argv(1);
-	qboolean badRconPassword = !strlen(rcon_password->string) || strcmp(password, rcon_password->string) != 0;
+	qboolean badRconPassword = !strlen(rcon_password->current.string) || strcmp(password, rcon_password->current.string) != 0;
 
-	/* New: Rate limiting and sv_limitLocalRcon cvar */
-	if ( !sv_limitLocalRcon->boolean )
+	/* New: Rate limiting and sv_limitLocalRcon dvar */
+	if ( !sv_limitLocalRcon->current.boolean )
 	{
 		unsigned char *ip = from.ip;
 	
@@ -2717,13 +2717,13 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 	if ( badRconPassword )
 	{
 		valid = 0;
-		if ( sv_logRcon->boolean ) // New: sv_logRcon cvar
+		if ( sv_logRcon->current.boolean ) // New: sv_logRcon dvar
 			Com_Printf("Bad rcon from %s:\n%s\n", NET_AdrToString(from), SV_Cmd_Argv(2));
 	}
 	else
 	{
 		valid = 1;
-		if ( sv_logRcon->boolean ) // New: sv_logRcon cvar
+		if ( sv_logRcon->current.boolean ) // New: sv_logRcon dvar
 			Com_Printf("Rcon from %s: %s ", NET_AdrToString(from), SV_Cmd_Argv(2));
 	}
 
@@ -2755,7 +2755,7 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 
 	svs.redirectAddress = from;
 	Com_BeginRedirect(sv_outputbuf, SV_OUTPUTBUF_LENGTH, SV_FlushRedirect);
-	if ( !strlen(rcon_password->string) )
+	if ( !strlen(rcon_password->current.string) )
 	{
 		Com_Printf("The server must set \'rcon_password\' for clients to use \'rcon\'.\n");
 	}
@@ -2853,7 +2853,7 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 							{
 								level.savePersist = atoi(SV_Cmd_Argv(4));
 							}
-							Cvar_SetBool(sv_cheats, 1);
+							Dvar_SetBool(sv_cheats, 1);
 							Cbuf_ExecuteText(2, cmd_aux);
 						}
 					}
@@ -2885,7 +2885,7 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 				{
 					/* Note: This does not do a map existence check, just like
 					 the ExitLevel script function. If that is required, check
-					 out sv_mapRotationCurrent cvar parsing in
+					 out sv_mapRotationCurrent dvar parsing in
 					 SV_MapRotate_f */
 					if ( level.finished )
 					{
@@ -2905,14 +2905,14 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 						Cbuf_ExecuteText(2, cmd_aux);
 						level.teamScores[1] = 0;
 						level.teamScores[2] = 0;
-						for ( i = 0; i < sv_maxclients->integer; i++ )
+						for ( i = 0; i < sv_maxclients->current.integer; i++ )
 						{
 							if ( level.clients[i].sess.connected == CON_CONNECTED )
 							{
 								level.clients[i].sess.score = 0;
 							}
 						}
-						for ( i = 0; i < sv_maxclients->integer; i++ )
+						for ( i = 0; i < sv_maxclients->current.integer; i++ )
 						{
 							if ( level.clients[i].sess.connected == CON_CONNECTED )
 							{
@@ -3034,14 +3034,14 @@ void manymaps_prepare(const char *mapname, int read)
 	char map_check[MAX_OSPATH];
 	char library_path[MAX_OSPATH];
 	
-	cvar_t *fs_homepath = Cvar_FindVar("fs_homepath");
-	cvar_t *fs_game = Cvar_FindVar("fs_game");
-	cvar_t *map = Cvar_FindVar("mapname");
+	dvar_t *fs_homepath = Dvar_FindVar("fs_homepath");
+	dvar_t *fs_game = Dvar_FindVar("fs_game");
+	dvar_t *map = Dvar_FindVar("mapname");
 
-	if ( strlen(fs_library->string) )
-		strncpy(library_path, fs_library->string, sizeof(library_path));
+	if ( strlen(fs_library->current.string) )
+		strncpy(library_path, fs_library->current.string, sizeof(library_path));
 	else
-		snprintf(library_path, sizeof(library_path), "%s/%s/Library", fs_homepath->string, fs_game->string);
+		snprintf(library_path, sizeof(library_path), "%s/%s/Library", fs_homepath->current.string, fs_game->current.string);
 
 	Com_sprintf(map_check, MAX_OSPATH, "%s/%s.iwd", library_path, mapname);
 
@@ -3055,7 +3055,7 @@ void manymaps_prepare(const char *mapname, int read)
 
 	for ( int i = 0; i < int( sizeof(stock_maps) / sizeof(stock_maps[0]) ); i++ )
 	{
-		if ( strcmp(map->string, stock_maps[i]) == 0 )
+		if ( strcmp(map->current.string, stock_maps[i]) == 0 )
 		{
 			from_stock_map = true;
 			break;
@@ -3094,7 +3094,7 @@ void manymaps_prepare(const char *mapname, int read)
 			continue;
 
 		char fileDelete[MAX_OSPATH];
-		Com_sprintf(fileDelete, MAX_OSPATH, "%s/%s/%s", fs_homepath->string, fs_game->string, dir_ent->d_name);
+		Com_sprintf(fileDelete, MAX_OSPATH, "%s/%s/%s", fs_homepath->current.string, fs_game->current.string, dir_ent->d_name);
 
 		if ( access(fileDelete, F_OK) != -1 )
 		{
@@ -3111,15 +3111,15 @@ void manymaps_prepare(const char *mapname, int read)
 		char dst[MAX_OSPATH];
 
 		Com_sprintf(src, MAX_OSPATH, "%s/%s.iwd", library_path, mapname);
-		Com_sprintf(dst, MAX_OSPATH, "%s/%s/%s.iwd", fs_homepath->string, fs_game->string, mapname);
+		Com_sprintf(dst, MAX_OSPATH, "%s/%s/%s.iwd", fs_homepath->current.string, fs_game->current.string, mapname);
 
 		if ( access(src, F_OK) != -1 )
 		{
 			int link_success = symlink(src, dst) == 0;
 			printf("manymaps> NEW LINK: src=%s dst=%s result of link: %s\n", src, dst, link_success?"success":"failed");
 
-			if ( link_success && read == -1 ) // FS_LoadDir is needed when empty.iwd is missing (then .d3dbsp isn't referenced anywhere)
-				FS_LoadDir(fs_homepath->string, fs_game->string);
+			if ( link_success && read == -1 ) // FS_AddIwdFilesForGameDirectory_t is needed when empty.iwd is missing (then .d3dbsp isn't referenced anywhere)
+				FS_AddIwdFilesForGameDirectory(fs_homepath->current.string, fs_game->current.string);
 		}
 	}
 }
@@ -3147,7 +3147,7 @@ void custom_Scr_InitOpcodeLookup()
 	vars->developer = 1;
 	GE_Scr_InitOpcodeLookup();
 	
-	if( !developer->integer )
+	if( !developer->current.integer )
 		vars->developer = 0;
 	
 	hook_init_opcode->hook();
@@ -3165,7 +3165,7 @@ void custom_AddOpcodePos(int a1, int a2)
 	vars->developer = 1;
 	GE_AddOpcodePos(a1, a2);
 	
-	if( !developer->integer )
+	if( !developer->current.integer )
 		vars->developer = 0;
 	
 	hook_add_opcode->hook();
@@ -3183,7 +3183,7 @@ void custom_Scr_PrintPrevCodePos(int a1, char *a2, int a3)
 	vars->developer = 1;
 	GE_Scr_PrintPrevCodePos(a1, a2, a3);
 	
-	if( !developer->integer )
+	if( !developer->current.integer )
 		vars->developer = 0;
 	
 	hook_print_codepos->hook();
@@ -3191,7 +3191,7 @@ void custom_Scr_PrintPrevCodePos(int a1, char *a2, int a3)
 
 void hook_Sys_Print(const char *msg)
 {
-	if ( Scr_IsSystemActive() && con_coloredPrints->boolean )
+	if ( Scr_IsSystemActive() && con_coloredPrints->current.boolean )
 	{
 		Sys_AnsiColorPrint(msg);
 	}
@@ -3221,7 +3221,7 @@ void custom_Com_DPrintf(const char *format, ...)
 		return;
 	}
 
-	if ( !developer->integer )
+	if ( !developer->current.integer )
 		return;
 	
 	Com_Printf("%s", s);
@@ -3344,8 +3344,8 @@ void custom_RuntimeError_Debug(int channel, const char *pos, int index, const ch
 	Scr_CodeCallback_Error(qfalse, qfalse, "RuntimeError_Debug", (char *)message); // New
 
 	// New: Do not print log message timestamps in runtime error information
-	logTimestampsValue = logTimestamps->boolean;
-	logTimestamps->boolean = 0;
+	logTimestampsValue = logTimestamps->current.boolean;
+	logTimestamps->current.boolean = 0;
 
 	Com_PrintMessage(channel, custom_va("\n******* script runtime error *******\n%s: ", message));
 	Scr_PrintPrevCodePos(channel, pos, index);
@@ -3363,7 +3363,7 @@ void custom_RuntimeError_Debug(int channel, const char *pos, int index, const ch
 	}
 	Com_PrintMessage(channel, "************************************\n");
 
-	logTimestamps->boolean = logTimestampsValue;
+	logTimestamps->current.boolean = logTimestampsValue;
 }
 
 void custom_RuntimeError(const char *pos, int index, const char *message, const char *dialog_error)
@@ -3512,14 +3512,14 @@ void custom_G_RunFrame(int levelTime)
 	// Process custom voice data queue
 	qboolean aPlayerIsTalking = qfalse;
 
-	if ( sv_voice->boolean )
+	if ( sv_voice->current.boolean )
 	{
 		int durationSinceLastTalk;
 		gclient_t *gclient = level.clients;
-		for ( i = 0; i < sv_maxclients->integer; i++, gclient++ )
+		for ( i = 0; i < sv_maxclients->current.integer; i++, gclient++ )
 		{
 			durationSinceLastTalk = level.time - gclient->lastVoiceTime;
-			if ( durationSinceLastTalk >= 0 && g_voiceChatTalkingDuration->integer > durationSinceLastTalk )
+			if ( durationSinceLastTalk >= 0 && g_voiceChatTalkingDuration->current.integer > durationSinceLastTalk )
 			{
 				aPlayerIsTalking = qtrue;
 				break;
@@ -3531,7 +3531,7 @@ void custom_G_RunFrame(int levelTime)
 	{
 		int id;
 		client_t *client = svs.clients;
-		for ( i = 0; i < sv_maxclients->integer; i++, client++ )
+		for ( i = 0; i < sv_maxclients->current.integer; i++, client++ )
 		{
 			id = client - svs.clients;
 			if ( client->state < CS_CONNECTED )
@@ -3617,7 +3617,7 @@ void custom_SV_ArchiveSnapshot(void)
 					cachedFrameIndex = i + 0x1fe;
 				cachedFrame = svs.cachedSnapshotFrames + m + (cachedFrameIndex >> 9) * -0x200;
 				i = m;
-			} while ( cachedFrame->archivedFrame < svs.nextArchivedSnapshotFrames - sv_fps->integer || cachedFrame->usesDelta );
+			} while ( cachedFrame->archivedFrame < svs.nextArchivedSnapshotFrames - sv_fps->current.integer || cachedFrame->usesDelta );
 			
 			if ( cachedFrame->first_entity < svs.nextCachedSnapshotEntities - 0x4000 || cachedFrame->first_client < svs.nextCachedSnapshotClients - 0x1000 )
 			{
@@ -3637,7 +3637,7 @@ LAB_0809b5f4:
 				cachedFrame->usesDelta = 0;
 				cachedFrame->time = svs.time;
 				client = svs.clients;
-				for ( m = 0; m < sv_maxclients->integer; m++, client++ )
+				for ( m = 0; m < sv_maxclients->current.integer; m++, client++ )
 				{
 					if ( CS_ZOMBIE < client->state )
 					{
@@ -3692,7 +3692,7 @@ LAB_0809b5f4:
 						/* New code start: setEarthquakes */
 						if ( (archEnt->s.eType - 10) == EV_EARTHQUAKE )
 						{
-							for ( l = 0; l < sv_maxclients->integer; l++ )
+							for ( l = 0; l < sv_maxclients->current.integer; l++ )
 							{
 								if ( customPlayerState[l].noEarthquakes )
 								{
@@ -3725,9 +3725,9 @@ LAB_0809b5f4:
 				cachedClient2 = NULL;
 				clientNum = 0;
 				j = 0;
-				while ( clientNum < sv_maxclients->integer || j < cachedFrame->num_clients )
+				while ( clientNum < sv_maxclients->current.integer || j < cachedFrame->num_clients )
 				{
-					if ( clientNum < sv_maxclients->integer && svs.clients[clientNum].state < CS_CONNECTED )
+					if ( clientNum < sv_maxclients->current.integer && svs.clients[clientNum].state < CS_CONNECTED )
 					{
 						clientNum++;
 					}
@@ -3802,7 +3802,7 @@ LAB_0809b5f4:
 						/* New code start: setEarthquakes */
 						if ( ( to.s.eType - 10 ) == EV_EARTHQUAKE )
 						{
-							for ( l = 0; l < sv_maxclients->integer; l++ )
+							for ( l = 0; l < sv_maxclients->current.integer; l++ )
 							{
 								if ( customPlayerState[l].noEarthquakes )
 								{
@@ -3926,7 +3926,7 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 					frame->num_entities++;
 				}
 				snapClient = svs.clients;
-				for (i = 0; i < sv_maxclients->integer; i++, snapClient++)
+				for (i = 0; i < sv_maxclients->current.integer; i++, snapClient++)
 				{
 					if ( CS_ZOMBIE < snapClient->state )
 					{
@@ -4075,7 +4075,7 @@ void custom_G_CallSpawn(void)
 	else
 	{
 		/* New code start: map weapons callback */
-		if ( !strncmp(classname, "weapon_", 7) && !g_spawnMapWeapons->boolean )
+		if ( !strncmp(classname, "weapon_", 7) && !g_spawnMapWeapons->current.boolean )
 		{
 			ent = G_Spawn();
 			custom_G_SetEntityPlacement(ent);
@@ -4093,7 +4093,7 @@ void custom_G_CallSpawn(void)
 		/* New code end */
 
 		/* New code start: map turrets callback */
-		if ( ( !strncmp(classname, "misc_mg42", 9) || !strncmp(classname, "misc_turret", 11) ) && !g_spawnMapTurrets->boolean )
+		if ( ( !strncmp(classname, "misc_mg42", 9) || !strncmp(classname, "misc_turret", 11) ) && !g_spawnMapTurrets->current.boolean )
 		{
 			ent = G_Spawn();
 			custom_G_SetEntityPlacement(ent);
@@ -4266,7 +4266,7 @@ bool custom_CM_IsBadStaticModel(cStaticModel_t *model, char *src, float *origin,
 		// On the server side, scale is only used for trace functions (see model->invScaledAxis)
 		// The entity axis scale values are not synced to the players
 		CM_InitStaticModel(model, origin, angles, scale);
-		if ( g_debugStaticModels->boolean )
+		if ( g_debugStaticModels->current.boolean )
 			Com_Printf("Initialized static model [%s] with scale (%f, %f, %f) at (%f, %f, %f)\n", src, (*scale)[0], (*scale)[1], (*scale)[2], model->origin[0], model->origin[1], model->origin[2]);
 	}
 	
@@ -4655,13 +4655,13 @@ qboolean custom_SV_MapExists(const char *name)
 		char map_check[MAX_OSPATH];
 		char library_path[MAX_OSPATH];
 		
-		cvar_t *fs_homepath = Cvar_FindVar("fs_homepath");
-		cvar_t *fs_game = Cvar_FindVar("fs_game");
+		dvar_t *fs_homepath = Dvar_FindVar("fs_homepath");
+		dvar_t *fs_game = Dvar_FindVar("fs_game");
 
-		if ( strlen(fs_library->string) )
-			strncpy(library_path, fs_library->string, sizeof(library_path));
+		if ( strlen(fs_library->current.string) )
+			strncpy(library_path, fs_library->current.string, sizeof(library_path));
 		else
-			snprintf(library_path, sizeof(library_path), "%s/%s/Library", fs_homepath->string, fs_game->string);
+			snprintf(library_path, sizeof(library_path), "%s/%s/Library", fs_homepath->current.string, fs_game->current.string);
 
 		Com_sprintf(map_check, MAX_OSPATH, "%s/%s.iwd", library_path, name);
 
@@ -4862,16 +4862,16 @@ void custom_FireWeaponMelee(gentity_t *player)
 		G_GetPlayerViewOrigin(player, wp.muzzleTrace);
 		G_GetPlayerViewDirection(player, wp.forward, wp.right, wp.up);
 
-		/* Stock values from G_RegisterCvars:
-		player_meleeRange = Cvar_RegisterFloat("player_meleeRange", 64.0, 0.0, 1000.0, CVAR_CHEAT | CVAR_UNSAFE);
-		player_meleeWidth = Cvar_RegisterFloat("player_meleeWidth", 10.0, 0.0, 1000.0, CVAR_CHEAT | CVAR_UNSAFE);
-		player_meleeHeight = Cvar_RegisterFloat("player_meleeHeight", 10.0, 0.0, 1000.0, CVAR_CHEAT | CVAR_UNSAFE);
+		/* Stock values from G_RegisterDvars:
+		player_meleeRange = Dvar_RegisterFloat("player_meleeRange", 64.0, 0.0, 1000.0, DVAR_CHEAT | DVAR_CHANGEABLE_RESET);
+		player_meleeWidth = Dvar_RegisterFloat("player_meleeWidth", 10.0, 0.0, 1000.0, DVAR_CHEAT | DVAR_CHANGEABLE_RESET);
+		player_meleeHeight = Dvar_RegisterFloat("player_meleeHeight", 10.0, 0.0, 1000.0, DVAR_CHEAT | DVAR_CHANGEABLE_RESET);
 		*/
 
 		/* New code start: per-player melee values */
-		range = player_meleeRange->floatval * customPlayerState[id].meleeRangeScale;
-		width = player_meleeWidth->floatval * customPlayerState[id].meleeWidthScale;
-		height = player_meleeHeight->floatval * customPlayerState[id].meleeHeightScale;
+		range = player_meleeRange->current.decimal * customPlayerState[id].meleeRangeScale;
+		width = player_meleeWidth->current.decimal * customPlayerState[id].meleeWidthScale;
+		height = player_meleeHeight->current.decimal * customPlayerState[id].meleeHeightScale;
 		/* New code end */
 
 		Weapon_Melee(player, &wp, range, width, height);
@@ -4943,7 +4943,7 @@ void custom_Bullet_Fire(gentity_t *inflictor, float spread, weaponParms *wp, gen
 void custom_SV_QueueVoicePacket(int talkerNum, int clientNum, VoicePacket_t *voicePacket)
 {
 	/* New code start: voice chat dump */
-	if ( voiceDataDumpFile && g_dumpVoiceData->boolean )
+	if ( voiceDataDumpFile && g_dumpVoiceData->current.boolean )
 	{
 		char voiceLogData[(256*4)+1];
 		char voiceLogEntry[(256*4)+64]; // {"talker": "64", "client": "64", "data": ""}\n
@@ -4990,19 +4990,19 @@ void openLogfile(qboolean reopen)
 		FS_FCloseFile(logfile);
 	}
 
-	if( logfileRotate->integer > 0 )
+	if( logfileRotate->current.integer > 0 )
 	{
 		char logfilePath[512];
 		char newLogfilePath[512];
-		cvar_t *fs_homepath = Cvar_FindVar("fs_homepath");
-		cvar_t *fs_game = Cvar_FindVar("fs_game");
-		int maxFileIndex = logfileRotate->integer;
+		dvar_t *fs_homepath = Dvar_FindVar("fs_homepath");
+		dvar_t *fs_game = Dvar_FindVar("fs_game");
+		int maxFileIndex = logfileRotate->current.integer;
 		int fileIndex = maxFileIndex;
 
 		// Check existance of older log files
 		while( fileIndex > 0 )
 		{
-			snprintf(logfilePath, sizeof(logfilePath), "%s/%s/%s.%d", fs_homepath->string, fs_game->string, logfileName->string, fileIndex);
+			snprintf(logfilePath, sizeof(logfilePath), "%s/%s/%s.%d", fs_homepath->current.string, fs_game->current.string, logfileName->current.string, fileIndex);
 			if ( access(logfilePath, F_OK) != -1 )
 			{
 				// Older log file exists, increment file extension unless it already has the max. index
@@ -5018,7 +5018,7 @@ void openLogfile(qboolean reopen)
 				else
 				{
 					// Rename the file
-					snprintf(newLogfilePath, sizeof(newLogfilePath), "%s/%s/%s.%d", fs_homepath->string, fs_game->string, logfileName->string, fileIndex + 1);
+					snprintf(newLogfilePath, sizeof(newLogfilePath), "%s/%s/%s.%d", fs_homepath->current.string, fs_game->current.string, logfileName->current.string, fileIndex + 1);
 					if ( rename(logfilePath, newLogfilePath) != 0 )
 					{
 						printf("Warning: Failed to rotate existing log file '%s', aborting rotation\n", logfilePath);
@@ -5030,17 +5030,17 @@ void openLogfile(qboolean reopen)
 		}
 
 		// Target file already exists? Append .1 to extension
-		snprintf(logfilePath, sizeof(logfilePath), "%s/%s/%s", fs_homepath->string, fs_game->string, logfileName->string);
+		snprintf(logfilePath, sizeof(logfilePath), "%s/%s/%s", fs_homepath->current.string, fs_game->current.string, logfileName->current.string);
 		if ( access(logfilePath, F_OK) != -1 )
 		{
-			snprintf(newLogfilePath, sizeof(newLogfilePath), "%s/%s/%s.%d", fs_homepath->string, fs_game->string, logfileName->string, fileIndex + 1);
-			if( rename(logfilePath, newLogfilePath) != 0 )
-				printf("Warning: Failed to rotate existing log file '%s'\n", logfileName->string);
+			snprintf(newLogfilePath, sizeof(newLogfilePath), "%s/%s/%s.%d", fs_homepath->current.string, fs_game->current.string, logfileName->current.string, fileIndex + 1);
+			if ( rename(logfilePath, newLogfilePath) != 0 )
+				printf("Warning: Failed to rotate existing log file '%s'\n", logfileName->current.string);
 		}
 	}
 
-	logfile = FS_FOpenFileWrite(logfileName->string);
-	I_strncpyz(openLogfileName, logfileName->string, MAX_OSPATH);
+	logfile = FS_FOpenFileWrite(logfileName->current.string);
+	I_strncpyz(openLogfileName, logfileName->current.string, MAX_OSPATH);
 
 	opening_qconsole = 0;
 
@@ -5063,23 +5063,23 @@ void custom_Com_PrintMessage(int /* print_msg_type_t */ channel, char *message)
 			Sys_Print(message);
 		}
 
-		if ( com_logfile != NULL && com_logfile->integer != 0 )
+		if ( com_logfile != NULL && com_logfile->current.integer != 0 )
 		{
 			Sys_EnterCriticalSectionInternal(CRITSECT_CONSOLE);
 			if ( FS_Initialized() )
 			{
-				if ( logfile == 0 && opening_qconsole == 0 && logfileName->string )
+				if ( logfile == 0 && opening_qconsole == 0 && logfileName->current.string )
 				{
 					openLogfile(qfalse);
 				}
-				else if ( logfile && !opening_qconsole && logfileName->string && strncmp(logfileName->string, openLogfileName, strlen(openLogfileName)) )
+				else if ( logfile && !opening_qconsole && logfileName->current.string && strncmp(logfileName->current.string, openLogfileName, strlen(openLogfileName)) )
 				{
-					// logfileName cvar value changed since log file initialization
+					// logfileName dvar value changed since log file initialization
 					openLogfile(qtrue);
 				}
 				if ( logfile != 0 )
 				{
-					if ( logTimestamps->boolean && strlen(message) && strcmp(message, " ") != 0 )
+					if ( logTimestamps->current.boolean && strlen(message) && strcmp(message, " ") != 0 )
 					{
 						time_t timer;
 						struct tm *timeInfo;
@@ -5097,7 +5097,7 @@ void custom_Com_PrintMessage(int /* print_msg_type_t */ channel, char *message)
 					{
 						FS_Write(message, strlen(message), logfile);
 					}
-					if ( 1 < com_logfile->integer ) // "logfile" cvar
+					if ( 1 < com_logfile->current.integer ) // "logfile" dvar
 					{
 						FS_Flush(logfile);
 					}
@@ -5495,7 +5495,7 @@ qboolean custom_SV_ClientCommand(client_t *cl, msg_t *msg)
 	{
 		return qtrue;
 	}
-	if ( sv_showCommands->boolean )
+	if ( sv_showCommands->current.boolean )
 	{
 		Com_Printf("clientCommand: %i : %s\n", seq, s);
 	}
@@ -5506,7 +5506,7 @@ qboolean custom_SV_ClientCommand(client_t *cl, msg_t *msg)
 		{
 			floodprotect = false;
 		}
-		if ( ( ( *(legacyHacks + 4) == 0 ) && ( CS_PRIMED < cl->state ) ) && ( sv_floodProtect->boolean && ( svs.time < cl->floodprotect && floodprotect ) ) )
+		if ( ( ( *(legacyHacks + 4) == 0 ) && ( CS_PRIMED < cl->state ) ) && ( sv_floodProtect->current.boolean && ( svs.time < cl->floodprotect && floodprotect ) ) )
 		{
 			clientOk = 0;
 			Com_DPrintf("client text ignored for %s: %s\n", cl->name, Cmd_Argv(0));
@@ -5859,16 +5859,16 @@ int custom_CM_AreaEntities(const float *mins, const float *maxs, int *entityList
 	 0xFFFFFFFF	G_RadiusDamage
 	*/
 
-	/* New code: g_triggerMode cvar */
-	if ( g_triggerMode->integer == 0 && ( contentmask == 0x400000 || contentmask == 0x405c0008 ) )
+	/* New code: g_triggerMode dvar */
+	if ( g_triggerMode->current.integer == 0 && ( contentmask == 0x400000 || contentmask == 0x405c0008 ) )
 	{
 		return 0;
 	}
-	else if ( g_triggerMode->integer == 2 && contentmask == 0x400000 )
+	else if ( g_triggerMode->current.integer == 2 && contentmask == 0x400000 )
 	{
 		return TriggerDamageEntities(entityList);
 	}
-	else if ( g_triggerMode->integer == 2 && contentmask == 0x405c0008 )
+	else if ( g_triggerMode->current.integer == 2 && contentmask == 0x405c0008 )
 	{
 		return TriggerTouchEntities(mins, maxs, entityList);
 	}
@@ -5915,7 +5915,7 @@ void PrintCallbackInfo(gentity_t *ent, int callbackHook, unsigned int numArgs)
 
 short custom_Scr_ExecEntThread(gentity_t *ent, int callbackHook, unsigned int numArgs)
 {
-	if ( g_debugCallbacks->boolean )
+	if ( g_debugCallbacks->current.boolean )
 		PrintCallbackInfo(ent, callbackHook, numArgs);
 
 	hook_scr_execentthread->unhook();
@@ -5929,7 +5929,7 @@ short custom_Scr_ExecEntThread(gentity_t *ent, int callbackHook, unsigned int nu
 
 short custom_Scr_ExecThread(int callbackHook, unsigned int numArgs)
 {
-	if ( g_debugCallbacks->boolean )
+	if ( g_debugCallbacks->current.boolean )
 		PrintCallbackInfo(NULL, callbackHook, numArgs);
 
 	hook_scr_execthread->unhook();
@@ -6062,7 +6062,7 @@ void custom_PlayerCmd_DeactivateChannelVolumes(scr_entref_t entref)
 
 void custom_Cmd_PrintEntities_f(void)
 {
-	if ( sv_cheats->boolean ) // New: Omit request if cheats are disabled as this could lag servers with low IOPS
+	if ( sv_cheats->current.boolean ) // New: Omit request if cheats are disabled as this could lag servers with low IOPS
 		G_PrintEntities();
 }
 
@@ -6179,7 +6179,7 @@ void custom_SV_ExecuteClientMessage(client_t *cl, msg_t *msg)
 			c = MSG_ReadBits(&decompressMsg, 3);
 			if ( c == clc_EOF || c != clc_clientCommand )
 			{
-				if ( sv_pure->boolean && cl->pureAuthentic == 2 )
+				if ( sv_pure->current.boolean && cl->pureAuthentic == 2 )
 				{
 					cl->nextSnapshotTime = -1;
 					SV_DropClient(cl, "EXE_UNPURECLIENTDETECTED");
@@ -6244,7 +6244,7 @@ void custom_SV_ConnectionlessPacket(netadr_t from, msg_t *msg)
 	if ( !I_strnicmp((const char *)msg->data + 4, "pb_", 3) )
 	{
 		cl = svs.clients;
-		for ( i = 0; i < sv_maxclients->integer; i++, cl++ )
+		for ( i = 0; i < sv_maxclients->current.integer; i++, cl++ )
 		{
 			if ( cl->state != CS_FREE && NET_CompareBaseAdr(from, (cl->netchan).remoteAddress) && (cl->netchan).remoteAddress.port == from.port )
 			{
@@ -6263,7 +6263,7 @@ void custom_SV_ConnectionlessPacket(netadr_t from, msg_t *msg)
 		SV_Cmd_TokenizeString(s);
 		c = SV_Cmd_Argv(0);
 
-		if ( sv_packet_info->boolean )
+		if ( sv_packet_info->current.boolean )
 		{
 			Com_Printf("SV packet %s : %s\n", NET_AdrToString(from), c);
 		}
@@ -6335,7 +6335,7 @@ void custom_SV_PacketEvent(netadr_t from, msg_t *msg)
 		MSG_ReadLong(msg);
 		qport = MSG_ReadShort(msg);
 		cl = svs.clients;
-		for ( i = 0; i < sv_maxclients->integer; i++, cl++ )
+		for ( i = 0; i < sv_maxclients->current.integer; i++, cl++ )
 		{
 			if ( cl->state != CS_FREE && NET_CompareBaseAdr(from, (cl->netchan).remoteAddress) && (cl->netchan).qport == (qport & 0xffff) )
 			{
@@ -6400,9 +6400,9 @@ void custom_SV_FreeConfigstrings(void)
 	SV_FreeConfigstrings();
 	hook_sv_freeconfigstrings->hook();
 
-	// We (re)register the cvar here so that any latched value is applied in time
-	g_safePrecache = Cvar_RegisterBool("g_safePrecache", qfalse, CVAR_ARCHIVE | CVAR_LATCH | CVAR_UNSAFE);
-	if ( g_safePrecache->boolean )
+	// We (re)register the dvar here so that any latched value is applied in time
+	g_safePrecache = Dvar_RegisterBool("g_safePrecache", qfalse, DVAR_ARCHIVE | DVAR_LATCH | DVAR_CHANGEABLE_RESET);
+	if ( g_safePrecache->current.boolean )
 	{
 		SV_SetConfigstring(847, "fx/misc/missing_fx.efx");
 		SV_SetConfigstring(335, "xmodel/default_static_model");
@@ -6433,8 +6433,8 @@ int custom_G_FindConfigstringIndex(const char *name, int start, int max, qboolea
 	{
 		if ( i == max )
 		{
-			// New: Added g_safePrecache cvar logic
-			if ( !g_safePrecache->boolean )
+			// New: Added g_safePrecache dvar logic
+			if ( !g_safePrecache->current.boolean )
 			{
 				Com_Error(1, custom_va("G_FindConfigstringIndex: overflow (%d): %s", start, name));
 			}
@@ -6487,8 +6487,8 @@ unsigned int custom_G_ModelIndex(const char *name)
 
 	if ( !level.initializing )
 	{
-		// New: Added g_safePrecache cvar logic
-		if ( !g_safePrecache->boolean )
+		// New: Added g_safePrecache dvar logic
+		if ( !g_safePrecache->current.boolean )
 		{
 			Scr_Error(custom_va("model '%s' not precached", name));
 		}
@@ -6502,8 +6502,8 @@ unsigned int custom_G_ModelIndex(const char *name)
 
 	if ( i == MAX_MODELS )
 	{
-		// New: Added g_safePrecache cvar logic
-		if ( !g_safePrecache->boolean )
+		// New: Added g_safePrecache dvar logic
+		if ( !g_safePrecache->current.boolean )
 		{
 			Com_Error(1, "G_ModelIndex: overflow");
 		}
@@ -6759,7 +6759,7 @@ public:
 		hook_g_tempentity->hook();
 		hook_gscr_loadconsts = new cHook(0x081224F8, (int)custom_GScr_LoadConsts);
 		hook_gscr_loadconsts->hook();
-		hook_sv_masterheartbeat = new cHook(0x08096ED6, (int)custom_sv_masterheartbeat);
+		hook_sv_masterheartbeat = new cHook(0x08096ED6, (int)custom_SV_MasterHeartbeat);
 		hook_sv_masterheartbeat->hook();
 		hook_g_runframe = new cHook(0x0810A13A, (int)custom_G_RunFrame);
 		hook_g_runframe->hook();
@@ -6773,8 +6773,8 @@ public:
 		hook_scr_notify->hook();
 		hook_playercmd_cloneplayer = new cHook(0x080FCC76, (int)custom_PlayerCmd_ClonePlayer);
 		hook_playercmd_cloneplayer->hook();
-		hook_com_initcvars = new cHook(0x08061D90, (int)custom_Com_InitCvars);
-		hook_com_initcvars->hook();
+		hook_com_initdvars = new cHook(0x08061D90, (int)custom_Com_InitDvars);
+		hook_com_initdvars->hook();
 		hook_sv_verifyiwds_f = new cHook(0x08090534, int(custom_SV_VerifyIwds_f));
 		hook_sv_verifyiwds_f->hook();
 		hook_g_freeentity = new cHook(0x0811EE50, int(custom_G_FreeEntity));

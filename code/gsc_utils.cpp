@@ -96,7 +96,7 @@ void Sys_AnsiColorPrint(const char *msg)
 	}
 }
 
-extern cvar_t *con_coloredPrints;
+extern dvar_t *con_coloredPrints;
 int stackPrintParam(int param)
 {
 	if ( param >= Scr_GetNumParam() )
@@ -107,7 +107,7 @@ int stackPrintParam(int param)
 	case STACK_STRING:
 		char *str;
 		stackGetParamString(param, &str); // no error checking, since we know it's a string
-		if ( con_coloredPrints->boolean )
+		if ( con_coloredPrints->current.boolean )
 			Sys_AnsiColorPrint(str);
 		else
 			printf("%s", str);
@@ -492,18 +492,18 @@ void gsc_utils_file_exists()
 	stackPushInt(file_exists);
 }
 
-void gsc_utils_FS_LoadDir()
+void gsc_utils_fs_loaddir()
 {
 	char *path, *dir;
 
 	if ( !stackGetParams("ss", &path, &dir) )
 	{
-		stackError("gsc_utils_FS_LoadDir() one or more arguments is undefined or has a wrong type");
+		stackError("gsc_utils_fs_loaddir() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	FS_LoadDir(path, dir);
+	FS_AddIwdFilesForGameDirectory(path, dir);
 	stackPushBool(qtrue);
 }
 
@@ -1109,14 +1109,14 @@ void gsc_utils_gettype()
 #if COMPILE_CUSTOM_VOICE == 1
 
 extern VoicePacket_t voiceDataStore[MAX_CUSTOMSOUNDS][MAX_STOREDVOICEPACKETS];
-extern cvar_t *sv_voiceQuality;
+extern dvar_t *sv_voiceQuality;
 encoder_async_task *first_encoder_async_task = NULL;
 extern int currentMaxSoundIndex;
 
 void Encode_SetOptions(void *encoder)
 {
 	int g_encoder_samplerate = 8192;
-	int g_encoder_quality = sv_voiceQuality->integer;
+	int g_encoder_quality = sv_voiceQuality->current.integer;
 	int enabled = 0;
 	speex_encoder_ctl(encoder, SPEEX_SET_SAMPLING_RATE /* 24 */, &g_encoder_samplerate);
 	speex_encoder_ctl(encoder, SPEEX_SET_QUALITY /* 4 */, &g_encoder_quality);
