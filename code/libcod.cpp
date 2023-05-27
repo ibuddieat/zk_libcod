@@ -9,11 +9,15 @@
 
 // Stock dvars
 dvar_t *cl_allowDownload;
+dvar_t *cl_paused;
+dvar_t *com_dedicated;
 dvar_t *com_hunkMegs;
 dvar_t *com_logfile;
+dvar_t *com_sv_running;
 dvar_t *developer;
 dvar_t *g_playerCollisionEjectSpeed;
 dvar_t *g_voiceChatTalkingDuration;
+dvar_t *nextmap;
 dvar_t *player_meleeHeight;
 dvar_t *player_meleeRange;
 dvar_t *player_meleeWidth;
@@ -22,11 +26,17 @@ dvar_t *sv_allowDownload;
 dvar_t *sv_cheats;
 dvar_t *sv_floodProtect;
 dvar_t *sv_fps;
+dvar_t *sv_gametype;
+dvar_t *sv_iwdNames;
+dvar_t *sv_iwds;
 dvar_t *sv_maxclients;
 dvar_t *sv_maxRate;
 dvar_t *sv_packet_info;
 dvar_t *sv_padPackets;
 dvar_t *sv_pure;
+dvar_t *sv_referencedIwdNames;
+dvar_t *sv_referencedIwds;
+dvar_t *sv_serverid;
 dvar_t *sv_showCommands;
 dvar_t *sv_timeout;
 dvar_t *sv_voice;
@@ -63,6 +73,7 @@ dvar_t *logfileRotate;
 dvar_t *logTimestamps;
 dvar_t *sv_allowRcon;
 dvar_t *sv_botKickMessages;
+dvar_t *sv_botReconnectMode;
 dvar_t *sv_cracked;
 dvar_t *sv_disconnectMessages;
 dvar_t *sv_downloadMessage;
@@ -255,34 +266,38 @@ void custom_Com_InitDvars(void)
 	hook_com_initdvars->hook();
 
 	// Get references to early loaded stock dvars
+	cl_paused = Dvar_FindVar("cl_paused");
+	com_dedicated = Dvar_FindVar("dedicated");
 	com_logfile = Dvar_FindVar("logfile");
+	com_sv_running = Dvar_FindVar("sv_running");
 }
 
 void common_init_complete_print(const char *format, ...)
 {
-	char s[MAX_STRINGLENGTH];
-	va_list va;
+	/* We are in Com_Init_Try_Block_Function, after executing Com_InitDvars()
+	 and SV_Init() where a big chunk of dvars are defined. However, there is
+	 still some that are defined later, see custom_G_ProcessIPBans */
+	Com_Printf("--- Common Initialization Complete ---\n");
 
-	va_start(va, format);
-	Q_vsnprintf(s, sizeof(s), format, va);
-	va_end(va);
-
-	Com_Printf("%s", s);
-
-	// Do stuff after sv has been initialized here
-	
 	// Get references to stock dvars
 	cl_allowDownload = Dvar_RegisterBool("cl_allowDownload", qtrue, DVAR_ARCHIVE | DVAR_SYSTEMINFO); // Force-enable download for clients
 	developer = Dvar_FindVar("developer");
+	nextmap = Dvar_FindVar("nextmap");
 	rcon_password = Dvar_FindVar("rcon_password");
 	sv_allowDownload = Dvar_FindVar("sv_allowDownload");
 	sv_cheats = Dvar_FindVar("sv_cheats");
 	sv_floodProtect = Dvar_FindVar("sv_floodProtect");
 	sv_fps = Dvar_FindVar("sv_fps");
+	sv_gametype = Dvar_FindVar("g_gametype");
+	sv_iwdNames = Dvar_FindVar("sv_iwdNames");
+	sv_iwds = Dvar_FindVar("sv_iwds");
 	sv_maxclients = Dvar_FindVar("sv_maxclients");
 	sv_packet_info = Dvar_FindVar("sv_packet_info");
 	sv_padPackets = Dvar_FindVar("sv_padPackets");
 	sv_pure = Dvar_FindVar("sv_pure");
+	sv_referencedIwdNames = Dvar_FindVar("sv_referencedIwdNames");
+	sv_referencedIwds = Dvar_FindVar("sv_referencedIwds");
+	sv_serverid = Dvar_FindVar("sv_serverid");
 	sv_showCommands = Dvar_FindVar("sv_showCommands");
 	sv_timeout = Dvar_FindVar("sv_timeout");
 	sv_voice = Dvar_FindVar("sv_voice");
@@ -315,6 +330,7 @@ void common_init_complete_print(const char *format, ...)
 	logErrors = Dvar_RegisterBool("logErrors", qfalse, DVAR_ARCHIVE);
 	sv_allowRcon = Dvar_RegisterBool("sv_allowRcon", qtrue, DVAR_ARCHIVE);
 	sv_botKickMessages = Dvar_RegisterBool("sv_botKickMessages", qtrue, DVAR_ARCHIVE);
+	sv_botReconnectMode = Dvar_RegisterInt("sv_botReconnectMode", 0, 0, 2, DVAR_ARCHIVE);
 	sv_cracked = Dvar_RegisterBool("sv_cracked", qfalse, DVAR_ARCHIVE);
 	sv_disconnectMessages = Dvar_RegisterBool("sv_disconnectMessages", qtrue, DVAR_ARCHIVE);
 	sv_downloadMessage = Dvar_RegisterString("sv_downloadMessage", "", DVAR_ARCHIVE);
@@ -391,18 +407,211 @@ void hook_bad_printf(const char *format, ...) {}
 
 void hook_sv_spawnserver(const char *format, ...)
 {
-	char s[MAX_STRINGLENGTH];
-	va_list va;
-
-	va_start(va, format);
-	Q_vsnprintf(s, sizeof(s), format, va);
-	va_end(va);
-
-	Com_Printf("%s", s);
+	Com_Printf("------ Server Initialization ------\n");
 	
 	// Do stuff after sv has been spawned here
 
 	hook_developer_prints->hook();
+}
+
+void custom_SV_SpawnServer(char *server)
+{
+	char mapname[64];
+	int persist;
+	client_t *cl;
+	const char* dropreason;
+	const char* iwdChecksums;
+	const char* iwdNames;
+	int checksum;
+	int index;
+	int i;
+
+	Scr_ParseGameTypeList();
+	SV_SetGametype();
+
+	if ( com_sv_running->current.boolean )
+	{
+		persist = G_GetSavePersist();
+		index = 0;
+		cl = svs.clients;
+
+		while ( index < sv_maxclients->current.integer )
+		{
+			if ( cl->state > CS_CONNECTED )
+			{
+				Com_sprintf(mapname, sizeof(mapname), "loadingnewmap\n%s\n%s", server, sv_gametype->current.string);
+				NET_OutOfBandPrint(NS_SERVER, cl->netchan.remoteAddress, mapname);
+			}
+
+			++index;
+			++cl;
+		}
+
+		NET_Sleep(250);
+	}
+	else
+	{
+		persist = 0;
+	}
+
+	Dvar_SetStringByName("mapname", server);
+	SV_ShutdownGameProgs();
+	Com_Printf("------ Server Initialization ------\n");
+	Com_Printf("Server: %s\n", server);
+
+	hook_developer_prints->hook(); // New
+
+	SV_ClearServer();
+
+	if ( com_dedicated->current.integer )
+		FX_FreeSystem();
+
+	FS_Shutdown();
+	FS_ClearIwdReferences();
+	Com_Restart();
+
+	if ( com_sv_running->current.boolean )
+		SV_ChangeMaxClients();
+	else
+		SV_Startup();
+
+	I_strncpyz(sv.gametype, sv_gametype->current.string, 64);
+
+	srand(Sys_MillisecondsRaw());
+	sv.checksumFeed = rand() ^ rand() << 16 ^ Sys_MilliSeconds();
+
+	FS_Restart(sv.checksumFeed);
+	Com_sprintf(mapname, 64, "maps/mp/%s.%s", server, GetBspExtension());
+	SV_SetExpectedHunkUsage(mapname);
+
+	for ( index = 0; index < MAX_CONFIGSTRINGS; ++index )
+	{
+		sv.configstrings[index] = CopyStringInternal("");
+	}
+
+	Dvar_ResetScriptInfo();
+
+	svs.snapshotEntities = (entityState_t *)Hunk_AllocInternal(sizeof(entityState_t) * svs.numSnapshotEntities);
+	svs.nextSnapshotEntities = 0;
+	svs.snapshotClients = (clientState_t *)Hunk_AllocInternal(sizeof(clientState_t) * svs.numSnapshotClients);
+	svs.nextSnapshotClients = 0;
+
+	SV_InitArchivedSnapshot();
+
+	svs.snapFlagServerBit ^= 4u;
+	Dvar_SetString(nextmap, "map_restart");
+	Dvar_SetInt(cl_paused, 0);
+
+	Com_sprintf(mapname, 64, "maps/mp/%s.%s", server, GetBspExtension());
+
+	Com_LoadBsp(mapname);
+	CM_LoadMap(mapname, &checksum);
+	Com_UnloadBsp();
+	CM_LinkWorld();
+
+	sv_serverId_value = (byte)(sv_serverId_value + 16);
+
+	if ( (sv_serverId_value & 0xF0) == 0 )
+		sv_serverId_value += 16;
+
+	Dvar_SetInt(sv_serverid, sv_serverId_value);
+	sv.start_frameTime = com_frameTime;
+	sv.state = SS_LOADING;
+
+	Com_sprintf(mapname, 64, "maps/mp/%s.%s", server, GetBspExtension());
+	Com_LoadSoundAliases(mapname, "all_mp", SASYS_GAME);
+
+	SV_InitGameProgs(persist);
+	if ( com_dedicated->current.integer )
+	{
+		FX_InitSystem(0);
+		FX_CreateDefaultEffect();
+	}
+
+	for(i = 0; i < 3; ++i)
+	{
+		svs.time += 100;
+		SV_RunFrame();
+	}
+
+	SV_CreateBaseline();
+
+	for(i = 0, cl = svs.clients; i < sv_maxclients->current.integer; ++i, ++cl)
+	{
+		if ( cl->state < CS_CONNECTED )
+		{
+			continue;
+		}
+
+		/* New: sv_botReconnectMode dvar */
+		if ( cl->bot )
+		{
+			if ( sv_botReconnectMode->current.integer == 1 )
+			{
+				SV_DropClient(cl, "EXE_DISCONNECTED");
+				continue;
+			}
+			else if ( sv_botReconnectMode->current.integer == 2 )
+			{
+				usercmd_t ucmd;
+
+				ClientConnect(i, cl->clscriptid);
+				cl->state = CS_CONNECTED;
+				SV_SendClientGameState(cl);
+				memset(&ucmd, 0, sizeof(ucmd));
+				SV_ClientEnterWorld(cl, &ucmd);
+				continue;
+			}
+		}
+		/* New code end */
+
+		dropreason = ClientConnect(i, cl->clscriptid);
+
+		if ( dropreason )
+		{
+			SV_DropClient(cl, dropreason);
+			Com_Printf("SV_SpawnServer: dropped client %i - denied!\n", i); // New
+		}
+		else
+		{
+			cl->state = CS_CONNECTED;
+		}
+	}
+
+	if ( sv_pure->current.boolean )
+	{
+		iwdChecksums = FS_LoadedIwdChecksums();
+		Dvar_SetString(sv_iwds, iwdChecksums);
+
+		if ( !*iwdChecksums )
+			Com_Printf("WARNING: sv_pure set but no IWD files loaded\n");
+
+		iwdNames = FS_LoadedIwdNames();
+		Dvar_SetString(sv_iwdNames, iwdNames);
+	}
+	else
+	{
+		Dvar_SetString(sv_iwds, "");
+		Dvar_SetString(sv_iwdNames, "");
+	}
+
+	Dvar_SetString(sv_referencedIwds, FS_ReferencedIwdChecksums());
+	Dvar_SetString(sv_referencedIwdNames, FS_ReferencedIwdNames());
+
+	SV_SaveSystemInfo();
+
+	sv.state = SS_GAME;
+	SV_Heartbeat_f();
+	Com_Printf("-----------------------------------\n");
+
+	if ( Dvar_GetBool("sv_punkbuster") == 0 )
+	{
+		DisablePbSv();
+	}
+	else
+	{
+		EnablePbSv();
+	}
 }
 
 void custom_SV_MasterHeartbeat(const char *hbname)
@@ -843,7 +1052,7 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 			break;
 	}
 	if ( i == sv_maxclients->current.integer )
-		SV_Heartbeat();
+		SV_Heartbeat_f();
 }
 
 void custom_Touch_Item_Auto(gentity_t * item, gentity_t * entity, int touch)
@@ -6720,7 +6929,7 @@ public:
 
 		#elif COD_VERSION == COD2_1_3
 		cracking_hook_call(0x080622F9, (int)common_init_complete_print);
-		cracking_hook_call(0x0809362A, (int)hook_sv_spawnserver);
+		//cracking_hook_call(0x0809362A, (int)hook_sv_spawnserver);
 		cracking_hook_call(0x08090BA0, (int)hook_ClientCommand);
 		cracking_hook_call(0x0808DB12, (int)hook_AuthorizeState);
 		cracking_hook_call(0x0808D2FA, (int)hook_isLanAddress);
@@ -6847,6 +7056,7 @@ public:
 		cracking_hook_function(0x0811D300, (int)custom_G_FindConfigstringIndex);
 		cracking_hook_function(0x0811D49C, (int)custom_G_ModelIndex);
 		cracking_hook_function(0x08092456, (int)custom_SV_GetClientPing);
+		cracking_hook_function(0x08093520, (int)custom_SV_SpawnServer);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC718, (int)Jump_ClearState);

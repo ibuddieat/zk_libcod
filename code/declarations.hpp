@@ -83,7 +83,7 @@
 #define DVAR_LATCH              (1 << 5)        // 0x0020
 #define DVAR_ROM                (1 << 6)        // 0x0040
 #define DVAR_CHEAT              (1 << 7)        // 0x0080
-#define DVAR_DEVELOPER          (1 << 8)        // 0x0100
+#define DVAR_CODINFO            (1 << 8)        // 0x0100
 #define DVAR_SAVED              (1 << 9)        // 0x0200
 #define DVAR_NORESTART          (1 << 10)       // 0x0400
 #define DVAR_CHANGEABLE_RESET   (1 << 12)       // 0x1000
@@ -265,6 +265,13 @@ typedef enum
 	CRITSECT_RD_BUFFER = 5,
 	CRITSECT_COUNT = 6
 } criticalSection_t;
+
+typedef enum
+{
+	SASYS_UNK0 = 0,
+	SASYS_UNK1 = 1,
+	SASYS_GAME = 2
+} snd_alias_system_t;
 
 typedef enum
 {
@@ -3438,6 +3445,14 @@ static const int rcon_lasttime_offset = 0x0;
 static const int rcon_lasttime_offset = 0x0849FBF4;
 #endif
 
+#if COD_VERSION == COD2_1_0 // Not tested
+static const int com_frameTime_offset = 0x0;
+#elif COD_VERSION == COD2_1_2 // Not tested
+static const int com_frameTime_offset = 0x0;
+#elif COD_VERSION == COD2_1_3
+static const int com_frameTime_offset = 0x081A21B8;
+#endif
+
 #define g_entities ((gentity_t*)(gentities_offset))
 #define g_clients ((gclient_t*)(gclients_offset))
 #define scrVarPub (*((scrVarPub_t*)( varpub_offset )))
@@ -3486,6 +3501,7 @@ static const int rcon_lasttime_offset = 0x0849FBF4;
 #define msgHuff (*((huffman_t*)( msgHuff_offset )))
 #define cached_models (((XModel_t**)( cached_models_offset )))
 #define rcon_lasttime (*((int*)( rcon_lasttime_offset )))
+#define com_frameTime (*((int*)( com_frameTime_offset )))
 
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6

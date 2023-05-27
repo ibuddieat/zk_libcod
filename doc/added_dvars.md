@@ -67,6 +67,12 @@ Added dvars:
     * Type: Boolean
     * Default: True
     * Effect: Toggle output of bot disconnect game messages.
+  * `sv_botReconnectMode`
+    * Type: Integer
+    * Default: 0
+    * Min. Value: 0
+    * Max. Value: 2
+    * Effect: 0: Stock behavior, bots stay in connecting state after map switch and get kicked after sv_timeout. 1: Bots get kicked right on map switch. 2: Bots properly reconnect on map switch, using the same slot each.
   * `sv_kickMessages`
     * Type: Boolean
     * Default: True
