@@ -15,7 +15,9 @@
 - Patched `Com_PrintMessage` so that strings that begin with a caret are printed properly
 - Patched the `clonePlayer` script function to not crash the server if called on a player without model
 - Excluded client userinfo updates from flood protection
+- Excluded clients with wrong password from scoreboard
 - Blocked client `printentities` command if cheats are disabled
+- Added support for map commands in custom rcon callback
 - Added compile flag `ENABLE_UNSAFE` to toggle the availability of potentially unsafe script functions that would make it easy to harm the server with malicious map scripts
 - Added security fixes/exploit patches known from other Call of Duty&reg; games
 - Added/updated some missing/unknown declarations in [declarations.hpp](code/declarations.hpp)
