@@ -3517,7 +3517,7 @@ void custom_Com_Error(errorParm_t code, const char *format, ...)
 			com_fixedConsolePosition = 0;
 	}
 	
-	errorcode = errorLevel;
+	com_errorType = code;
 	
 	Sys_LeaveCriticalSectionInternal(CRITSECT_COM_ERROR);
 

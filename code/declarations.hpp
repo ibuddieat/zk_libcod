@@ -3363,15 +3363,15 @@ static const int opening_qconsole_offset = 0x081A4F9C;
 #if COD_VERSION == COD2_1_0 // Not tested
 static const int com_errorEntered_offset = 0x0;
 static const int com_fixedConsolePosition_offset = 0x0;
-static const int errorcode_offset = 0x0;
+static const int com_errorType_offset = 0x0;
 #elif COD_VERSION == COD2_1_2 // Not tested
 static const int com_errorEntered_offset = 0x0;
 static const int com_fixedConsolePosition_offset = 0x0;
-static const int errorcode_offset = 0x0;
+static const int com_errorType_offset = 0x0;
 #elif COD_VERSION == COD2_1_3
 static const int com_errorEntered_offset = 0x081A21C0;
 static const int com_fixedConsolePosition_offset = 0x081A21C4;
-static const int errorcode_offset = 0x081A2264;
+static const int com_errorType_offset = 0x081A2264;
 #endif
 
 #if COD_VERSION == COD2_1_0 // Not tested
@@ -3500,7 +3500,7 @@ static const int com_frameTime_offset = 0x081A21B8;
 #define opening_qconsole (*((int*)( opening_qconsole_offset )))
 #define com_errorEntered (*((int*)( com_errorEntered_offset )))
 #define com_fixedConsolePosition (*((int*)( com_fixedConsolePosition_offset )))
-#define errorcode (*((int*)( errorcode_offset )))
+#define com_errorType (*((int*)( com_errorType_offset )))
 #define testclient_connect_string (*((char*)( testclient_connect_string_offset )))
 #define legacyHacks ((int*)( legacyHacks_offset ))
 #define vec3_origin ((float*)( vec3_origin_offset ))
