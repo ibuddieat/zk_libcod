@@ -32,7 +32,7 @@ Module: Utils<BR>
 </TD></TR>
 <TR><TD BGCOLOR="222222">
 <PRE>
-"B": calls CG_MapRestart()
+"B": calls CG_MapRestart(0)
 "C": (int) switchToOffHand()
 "D": (int, str, float, float, float) deactivateReverb()
 "E": (int, int, float) setChannelVolumes()
@@ -41,7 +41,7 @@ Module: Utils<BR>
 "H": (int) setTeamScore() for allies
 "I": (str) giveWeapon() (str indicates type, includes item pickup stuff)
      (str) setNormalHealth()
-"J": (int) is sent on player disconnect
+"J": (int) calls CL_ResetPlayerMuting() for each disconnecting player
 "K": closeIngameMenu()
 "a": (int) switchToWeapon()
 "b": (int, int, int, ...) scoreboard info (/+score)
@@ -53,6 +53,7 @@ Module: Utils<BR>
         b 3 0 0 1 0 32 0 0
                 2 0 61 0 0 
                 0 0 48 1 0
+"c": (str) announcement()
 "d": (int, str) update of configstrings, e.g., when changing sv_voice, or at the use of functions like:
      (int, str) playSound(), ambientPlay()
      (int, str) playFx(), playFxOnTag()
@@ -62,6 +63,7 @@ Module: Utils<BR>
 "g": (str) iprintLnBold()
 "h": (str) chat message
 "i": (str) team chat message
+"n": calls CG_MapRestart(1)
 "o": (str) musicPlay()
 "p": (int) musicStop()
 "q": (int) soundFade()
