@@ -2118,7 +2118,7 @@ static const Com_Milliseconds_t Com_Milliseconds = (Com_Milliseconds_t)0x0; // N
 static const Com_Milliseconds_t Com_Milliseconds = (Com_Milliseconds_t)0x08061B7C;
 #endif
 
-typedef void (*Com_Error_t)(int errorLevel, const char *error, ...);
+typedef void (*Com_Error_t)(errorParm_t code, const char *format, ...);
 #if COD_VERSION == COD2_1_0
 static const Com_Error_t Com_Error = (Com_Error_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2

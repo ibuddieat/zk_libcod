@@ -3445,7 +3445,7 @@ void Scr_CodeCallback_Error(qboolean terminal, qboolean emit, const char *intern
 			/* Since we cannot allocate more script variables, further
 			 execution of scripts or script callbacks could lead to an
 			 undefined state (in script) or endless error loops, so we stop */
-			Com_Error(1, "\x15%s", "exceeded maximum number of script variables");
+			Com_Error(ERR_DROP, "\x15%s", "exceeded maximum number of script variables");
 		}
 
 		if ( terminal || emit )
@@ -3477,7 +3477,7 @@ void Scr_CodeCallback_Error(qboolean terminal, qboolean emit, const char *intern
 	}
 }
 
-void custom_Com_Error(int errorLevel, const char *error, ...)
+void custom_Com_Error(errorParm_t code, const char *format, ...)
 {
 	Sys_EnterCriticalSectionInternal(CRITSECT_COM_ERROR);
 	
@@ -3499,20 +3499,20 @@ void custom_Com_Error(int errorLevel, const char *error, ...)
 	com_errorEntered = 1;
 	
 	va_list va;
-	va_start(va, error);
-	Q_vsnprintf((char *)va_string_156, 0x1000, error, va);
+	va_start(va, format);
+	Q_vsnprintf((char *)va_string_156, 0x1000, format, va);
 	va_end(va);
 	
 	Scr_CodeCallback_Error(scrVmPub.terminal_error, qtrue, "Com_Error", (char *)va_string_156);
 	
 	*(byte *)unk1 = 0;
 	
-	if ( errorLevel != 1 )
+	if ( code != ERR_DROP )
 	{
-		if ( errorLevel == 4 || errorLevel == 6 )
-			errorLevel = 1;
-		else if ( errorLevel == 5 )
-			errorLevel = 1;
+		if ( code == ERR_SCRIPT || code == ERR_LOCALIZATION )
+			code = ERR_DROP;
+		else if ( code == ERR_SCRIPT_DROP )
+			code = ERR_DROP;
 		else
 			com_fixedConsolePosition = 0;
 	}
@@ -3542,7 +3542,7 @@ void custom_Scr_ErrorInternal(void)
 	{
 		return;
 	}
-	Com_Error(1, "\x15%s", scrVarPub.error_message);
+	Com_Error(ERR_DROP, "\x15%s", scrVarPub.error_message);
 }
 
 void custom_RuntimeError_Debug(int channel, const char *pos, int index, const char *message)
@@ -3577,7 +3577,7 @@ void custom_RuntimeError_Debug(int channel, const char *pos, int index, const ch
 
 void custom_RuntimeError(const char *pos, int index, const char *message, const char *dialog_error)
 {
-	int channel_1, channel_2;
+	errorParm_t code, debugCode;
 	char newline[2];
 	qboolean terminate;
 
@@ -3590,11 +3590,11 @@ void custom_RuntimeError(const char *pos, int index, const char *message, const 
 				terminate = true;
 			
 			if ( terminate )
-				channel_2 = 0;
+				debugCode = ERR_FATAL;
 			else
-				channel_2 = 4;
+				debugCode = ERR_SCRIPT;
 			
-			custom_RuntimeError_Debug(channel_2, pos, index, message);
+			custom_RuntimeError_Debug(debugCode, pos, index, message);
 			if ( !terminate )
 				return;
 		}
@@ -3618,11 +3618,11 @@ void custom_RuntimeError(const char *pos, int index, const char *message, const 
 			newline[1] = '\0';
 		}
 		if ( !scrVmPub.terminal_error )
-			channel_1 = 4;
+			code = ERR_SCRIPT;
 		else
-			channel_1 = 5;
+			code = ERR_SCRIPT_DROP;
 		
-		Com_Error(channel_1, "\x15script runtime error\n(see console for details)\n%s%s%s", message, newline, dialog_error);
+		Com_Error(code, "\x15script runtime error\n(see console for details)\n%s%s%s", message, newline, dialog_error);
 	}
 }
 
@@ -3874,7 +3874,7 @@ LAB_0809b5f4:
 						i = svs.nextCachedSnapshotClients;
 						svs.nextCachedSnapshotClients++;
 						if ( i != 0x7ffffffc && 0x7ffffffc < svs.nextCachedSnapshotClients )
-							Com_Error(0, "\x15svs.nextCachedSnapshotClients wrapped");
+							Com_Error(ERR_FATAL, "\x15svs.nextCachedSnapshotClients wrapped");
 						cachedFrame->num_clients++;
 					}
 				}
@@ -3918,13 +3918,13 @@ LAB_0809b5f4:
 						i = svs.nextCachedSnapshotEntities;
 						svs.nextCachedSnapshotEntities++;
 						if ( i != 0x7ffffffc && 0x7ffffffc < svs.nextCachedSnapshotEntities )
-							Com_Error(0, "\x15svs.nextCachedSnapshotEntities wrapped");
+							Com_Error(ERR_FATAL, "\x15svs.nextCachedSnapshotEntities wrapped");
 						cachedFrame->num_entities++;
 					}
 				}
 				svs.nextCachedSnapshotFrames++;
 				if ( i != 0x7ffffffc && 0x7ffffffc < svs.nextCachedSnapshotFrames )
-					Com_Error(0, "\x15svs.nextCachedSnapshotFrames wrapped");
+					Com_Error(ERR_FATAL, "\x15svs.nextCachedSnapshotFrames wrapped");
 			}
 			else
 			{
@@ -4040,7 +4040,7 @@ LAB_0809b5f4:
 				index = svs.nextArchivedSnapshotBuffer + (nextArchSnapBuffer >> 0x19) * -0x2000000;
 				svs.nextArchivedSnapshotBuffer += msg.cursize;
 				if ( 0x7ffffffd < svs.nextArchivedSnapshotBuffer )
-					Com_Error(0, "\x15svs.nextArchivedSnapshotBuffer wrapped");
+					Com_Error(ERR_FATAL, "\x15svs.nextArchivedSnapshotBuffer wrapped");
 				freeBytes = ARCHIVEDSSBUF_SIZE - index;
 				
 				if ( freeBytes < msg.cursize )
@@ -4055,7 +4055,7 @@ LAB_0809b5f4:
 				i = svs.nextArchivedSnapshotFrames;
 				svs.nextArchivedSnapshotFrames++;
 				if ( i != 0x7ffffffc && 0x7ffffffc < svs.nextArchivedSnapshotFrames )
-					Com_Error(0, "\x15svs.nextArchivedSnapshotFrames wrapped");
+					Com_Error(ERR_FATAL, "\x15svs.nextArchivedSnapshotFrames wrapped");
 				LargeLocalDestructor(&buf);
 			}
 			else
@@ -4117,7 +4117,7 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 			frame->ps = *ps;
 			clientNum = frame->ps.clientNum;
 			if ( clientNum < 0 || clientNum >= MAX_GENTITIES )
-				Com_Error(1, "\x15SV_BuildClientSnapshot: bad gEnt");
+				Com_Error(ERR_DROP, "\x15SV_BuildClientSnapshot: bad gEnt");
 			VectorCopy(ps->origin, org);
 			org[2] += ps->viewHeightCurrent;
 			AddLeanToPosition(org, ps->viewangles[1], ps->leanf, 16.0, 20.0);
@@ -4131,7 +4131,7 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 					*entState = ent->s;
 					svs.nextSnapshotEntities++;
 					if ( svs.nextSnapshotEntities >= 0x7ffffffe )
-						Com_Error(0, "\x15svs.nextSnapshotEntities wrapped");
+						Com_Error(ERR_FATAL, "\x15svs.nextSnapshotEntities wrapped");
 					frame->num_entities++;
 				}
 				snapClient = svs.clients;
@@ -4145,7 +4145,7 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 						
 						svs.nextSnapshotClients++;
 						if ( svs.nextSnapshotClients >= 0x7ffffffe )
-							Com_Error(0, "\x15svs.nextSnapshotClients wrapped");
+							Com_Error(ERR_FATAL, "\x15svs.nextSnapshotClients wrapped");
 						frame->num_clients++;
 					}
 				}
@@ -4189,7 +4189,7 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 					
 					svs.nextSnapshotEntities++;
 					if ( svs.nextSnapshotEntities >= 0x7ffffffe )
-						Com_Error(0, "\x15svs.nextSnapshotEntities wrapped");
+						Com_Error(ERR_FATAL, "\x15svs.nextSnapshotEntities wrapped");
 					frame->num_entities++;
 				}
 				for (i = 0; i < cachedSnap->num_clients; i++)
@@ -4203,7 +4203,7 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 					*clientState = cachedClient->cs;
 					svs.nextSnapshotClients++;
 					if ( svs.nextSnapshotClients >= 0x7ffffffe )
-						Com_Error(0, "\x15svs.nextSnapshotClients wrapped");
+						Com_Error(ERR_FATAL, "\x15svs.nextSnapshotClients wrapped");
 					frame->num_clients++;
 				}
 			}
@@ -4348,7 +4348,7 @@ void custom_G_CallSpawn(void)
 void custom_G_SpawnEntitiesFromString(void)
 {
 	if ( !G_ParseSpawnVars(&level.spawnVars) ) 
-		Com_Error(1, "\x15SpawnEntities: no entities");
+		Com_Error(ERR_DROP, "\x15SpawnEntities: no entities");
 
 	SP_worldspawn();
 	
@@ -4457,16 +4457,16 @@ bool custom_CM_IsBadStaticModel(cStaticModel_t *model, char *src, float *origin,
 	XModel_t *xmodel;
 
 	if ( src == NULL || *src == '\0' )
-		Com_Error(1, "\x15Invalid static model name\n");
+		Com_Error(ERR_DROP, "\x15Invalid static model name\n");
 	
 	if ( (*scale)[0] == 0.0 )
-		Com_Error(1, "\x15Static model [%s] has x scale of 0.0\n", src);
+		Com_Error(ERR_DROP, "\x15Static model [%s] has x scale of 0.0\n", src);
 	
 	if ( (*scale)[1] == 0.0 )
-		Com_Error(1, "\x15Static model [%s] has y scale of 0.0\n", src);
+		Com_Error(ERR_DROP, "\x15Static model [%s] has y scale of 0.0\n", src);
 	
 	if ( (*scale)[2] == 0.0 )
-		Com_Error(1, "\x15Static model [%s] has z scale of 0.0\n", src);
+		Com_Error(ERR_DROP, "\x15Static model [%s] has z scale of 0.0\n", src);
 	
 	xmodel = CM_XModelPrecache(src);
 	if ( xmodel != NULL )
@@ -6645,7 +6645,7 @@ int custom_G_FindConfigstringIndex(const char *name, int start, int max, qboolea
 			// New: Added g_safePrecache dvar logic
 			if ( !g_safePrecache->current.boolean )
 			{
-				Com_Error(1, custom_va("G_FindConfigstringIndex: overflow (%d): %s", start, name));
+				Com_Error(ERR_DROP, custom_va("G_FindConfigstringIndex: overflow (%d): %s", start, name));
 			}
 			else
 			{
@@ -6656,7 +6656,7 @@ int custom_G_FindConfigstringIndex(const char *name, int start, int max, qboolea
 				}
 				else
 				{
-					Com_Error(1, custom_va("G_FindConfigstringIndex: overflow (%d): %s", start, name));
+					Com_Error(ERR_DROP, custom_va("G_FindConfigstringIndex: overflow (%d): %s", start, name));
 				}
 			}
 		}
@@ -6714,7 +6714,7 @@ unsigned int custom_G_ModelIndex(const char *name)
 		// New: Added g_safePrecache dvar logic
 		if ( !g_safePrecache->current.boolean )
 		{
-			Com_Error(1, "G_ModelIndex: overflow");
+			Com_Error(ERR_DROP, "G_ModelIndex: overflow");
 		}
 		else
 		{
