@@ -252,7 +252,7 @@ void custom_Com_InitDvars(void)
 	dvar_t *dvar = Dvar_Register<Type>(var_name, default value, [min. value, max. value,] flags); */
 
 	// Force server memory setting for clients to be able to counter Hunk_AllocateTempMemory failures
-	com_hunkMegs = Dvar_RegisterInt("com_hunkMegs", 160, 1, 512, DVAR_CHANGEABLE_RESET | DVAR_LATCH | DVAR_SYSTEMINFO | DVAR_ARCHIVE );
+	com_hunkMegs = Dvar_RegisterInt("com_hunkMegs", 160, 1, 512, DVAR_CHANGEABLE_RESET | DVAR_LATCH | DVAR_SYSTEMINFO | DVAR_ARCHIVE);
 
 	// Register custom dvars required early on server start
 	logfileName = Dvar_RegisterString("logfileName", "console_mp_server.log", DVAR_ARCHIVE);
@@ -528,7 +528,7 @@ void custom_SV_SpawnServer(char *server)
 		FX_CreateDefaultEffect();
 	}
 
-	for(i = 0; i < 3; ++i)
+	for( i = 0; i < 3; ++i )
 	{
 		svs.time += 100;
 		SV_RunFrame();
@@ -536,7 +536,7 @@ void custom_SV_SpawnServer(char *server)
 
 	SV_CreateBaseline();
 
-	for(i = 0, cl = svs.clients; i < sv_maxclients->current.integer; ++i, ++cl)
+	for( i = 0, cl = svs.clients; i < sv_maxclients->current.integer; ++i, ++cl )
 	{
 		if ( cl->state < CS_CONNECTED )
 		{

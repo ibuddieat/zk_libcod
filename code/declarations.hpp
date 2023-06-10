@@ -74,7 +74,7 @@
 #define MAX_VOICEPACKETS            40
 #define MAX_VOICEPACKETSPERFRAME    2.56
 
-#define DVAR_NOFLAG				0				// 0x0000
+#define DVAR_NOFLAG             0               // 0x0000
 #define DVAR_ARCHIVE            (1 << 0)        // 0x0001
 #define DVAR_USERINFO           (1 << 1)        // 0x0002
 #define DVAR_SERVERINFO         (1 << 2)        // 0x0004
