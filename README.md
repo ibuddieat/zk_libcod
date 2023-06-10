@@ -28,6 +28,7 @@
 
 **Supported/Tested GCC+OS**
 - gcc (Ubuntu 11.3.0-1ubuntu1~22.04) 11.3.0 (with Speex)
+- gcc (Debian 10.2.1-6) 10.2.1
 - gcc (Ubuntu 9.4.0-1ubuntu1~20.04.1) 9.4.0
 - gcc (Ubuntu 7.5.0-3ubuntu1~18.04) 7.5.0 (with Speex)
 
@@ -49,17 +50,22 @@ sudo apt install gcc-multilib g++-multilib libstdc++5:i386
 sudo apt install libmysqlclient-dev:i386
 ```
 
+**MySQL requirements installation (for 64-bit Debian 11.6)**
+```
+sudo apt install libmariadb-dev-compat:i386
+```
+
 **Custom sound file docs (for 64-bit Ubuntu 22.04 LTS)**
 - [Speex installation](doc/install_speex.md)
 - [Audio file conversion](doc/convert_audio_files.md)
-- Note: This feature increases RAM usage by about 500 MB. Disable `COMPILE_CUSTOM_VOICE` in [config.hpp](code/config.hpp) to avoid this
+- Note: This feature is enabled by default and increases RAM usage by about 500 MB. See below for how to disable it (`nospeex`).
 
 **Creating the binary (written to `./code/bin`)**
 ```
 cd code
 ./doit.sh
 
-# Or without Speex (you have to disable COMPILE_CUSTOM_VOICE in code/config.hpp if you do not have Speex installed)
+# Or without Speex
 ./doit.sh nospeex
 ```
 
