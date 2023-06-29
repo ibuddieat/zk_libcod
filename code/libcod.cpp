@@ -2148,8 +2148,8 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 			// Cannot auto-download file
 			if ( iwdFile )
 			{
-				Com_Printf("clientDownload: %d : \"%s\" cannot download iwd files\n", cl - svs.clients, cl->downloadName);
-				Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_CANTAUTODLGAMEIWD\x15%s", cl->downloadName);
+				Com_Printf("clientDownload: %d : \"%s\" cannot download IW iwd files\n", cl - svs.clients, cl->downloadName);
+				Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_CANTAUTODLGAMEPAK\x15%s", cl->downloadName);
 			}
 			else if ( !sv_allowDownload->current.boolean )
 			{
