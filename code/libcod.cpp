@@ -2088,6 +2088,7 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 {
 	int curindex;
 	int iwdFile;
+	char svrFile;
 	char errorMessage[MAX_STRINGLENGTH];
 
 	if ( cl->state == CS_ACTIVE )
@@ -2142,13 +2143,19 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 		Com_Printf("clientDownload: %d : begining \"%s\"\n", cl - svs.clients, cl->downloadName);
 
 		iwdFile = FS_iwIwd(cl->downloadName, "main");
+		svrFile = FS_svrIwd(cl->downloadName);
 
-		if ( !sv_allowDownload->current.integer || iwdFile || ( cl->downloadSize = FS_SV_FOpenFileRead( cl->downloadName, &cl->download ) ) <= 0 )
+		if ( !sv_allowDownload->current.integer || iwdFile || svrFile || ( cl->downloadSize = FS_SV_FOpenFileRead( cl->downloadName, &cl->download ) ) <= 0 )
 		{
 			// Cannot auto-download file
 			if ( iwdFile )
 			{
 				Com_Printf("clientDownload: %d : \"%s\" cannot download IW iwd files\n", cl - svs.clients, cl->downloadName);
+				Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_CANTAUTODLGAMEPAK\x15%s", cl->downloadName);
+			}
+			else if ( svrFile )
+			{
+				Com_Printf("clientDownload: %d : \"%s\" cannot download server-only iwd files\n", cl - svs.clients, cl->downloadName);
 				Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_CANTAUTODLGAMEPAK\x15%s", cl->downloadName);
 			}
 			else if ( !sv_allowDownload->current.boolean )

@@ -507,6 +507,15 @@ static const FS_iwIwd_t FS_iwIwd = (FS_iwIwd_t)0x0806532C;
 static const FS_iwIwd_t FS_iwIwd = (FS_iwIwd_t)0x08065324;
 #endif
 
+typedef char (*FS_svrIwd_t)(const char *filename); // Guessed function name
+#if COD_VERSION == COD2_1_0
+static const FS_svrIwd_t FS_svrIwd = (FS_svrIwd_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const FS_svrIwd_t FS_svrIwd = (FS_svrIwd_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const FS_svrIwd_t FS_svrIwd = (FS_svrIwd_t)0x08065450;
+#endif
+
 typedef void (*FS_ClearIwdReferences_t)(void);
 #if COD_VERSION == COD2_1_0
 static const FS_ClearIwdReferences_t FS_ClearIwdReferences = (FS_ClearIwdReferences_t)0x0; // Not tested
