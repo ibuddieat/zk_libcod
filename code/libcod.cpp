@@ -2111,10 +2111,10 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 	{
 		Com_sprintf(errorMessage, sizeof(errorMessage), sv_downloadMessage->current.string);
 
-		MSG_WriteByte( msg, svc_download );
-		MSG_WriteShort( msg, 0 ); // Client is expecting block zero
-		MSG_WriteLong( msg, -1 ); // Illegal file size
-		MSG_WriteString( msg, errorMessage );
+		MSG_WriteByte(msg, svc_download);
+		MSG_WriteShort(msg, 0); // Client is expecting block zero
+		MSG_WriteLong(msg, -1); // Illegal file size
+		MSG_WriteString(msg, errorMessage);
 
 		*cl->downloadName = 0;
 		return; // Download message instead of download
@@ -2146,7 +2146,7 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 		if ( !sv_allowDownload->current.integer || iwdFile || ( cl->downloadSize = FS_SV_FOpenFileRead( cl->downloadName, &cl->download ) ) <= 0 )
 		{
 			// Cannot auto-download file
-			if (iwdFile)
+			if ( iwdFile )
 			{
 				Com_Printf("clientDownload: %d : \"%s\" cannot download iwd files\n", cl - svs.clients, cl->downloadName);
 				Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_CANTAUTODLGAMEIWD\x15%s", cl->downloadName);
