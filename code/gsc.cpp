@@ -311,6 +311,8 @@ scr_method_t scriptMethods[] =
 	{"gettagangles", gsc_entity_gettagangles, 0},
 	{"gettagorigin", gsc_entity_gettagorigin, 0},
 	{"getturretowner", gsc_entity_getturretowner, 0},
+	{"getvmax", gsc_entity_getvmax, 0},
+	{"getvmin", gsc_entity_getvmin, 0},
 	{"hastag", gsc_entity_hastag, 0},
 	{"islinkedto", gsc_entity_islinkedto, 0},
 	{"setAlive", gsc_entity_setalive, 0},

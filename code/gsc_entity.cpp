@@ -43,6 +43,22 @@ void gsc_entity_setbounds(scr_entref_t ref)
 	stackPushBool(qtrue);
 }
 
+void gsc_entity_getvmax(scr_entref_t ref)
+{
+	int id = ref.entnum;
+	gentity_t *entity = &g_entities[id];
+
+	stackPushVector(entity->r.maxs);
+}
+
+void gsc_entity_getvmin(scr_entref_t ref)
+{
+	int id = ref.entnum;
+	gentity_t *entity = &g_entities[id];
+
+	stackPushVector(entity->r.mins);
+}
+
 void gsc_entity_gettagangles(scr_entref_t ref)
 {
 	int id = ref.entnum;
