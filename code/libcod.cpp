@@ -345,6 +345,12 @@ void common_init_complete_print(const char *format, ...)
 	sv_wwwDlDisconnectedMessages = Dvar_RegisterInt("sv_wwwDlDisconnectedMessages", 1, 0, 2, DVAR_ARCHIVE);
 	#endif
 
+	/* Register (thus override) dvars that would otherwise be defined later in
+	 G_RegisterDvars, example:
+	g_gravity = Dvar_RegisterFloat("g_gravity", 800.0, 1.0, 3.402823e+38, DVAR_CHANGEABLE_RESET);
+	*/
+
+	// Voice data dumping
 	if ( g_dumpVoiceData->current.boolean )
 	{
 		voiceDataDumpFile = fopen("voiceData.spx", "ab");	
