@@ -2019,7 +2019,7 @@ static const G_Spawn_t G_Spawn = (G_Spawn_t)0x0811E87A;
 static const G_Spawn_t G_Spawn = (G_Spawn_t)0x0811E9D6;
 #endif
 
-typedef gentity_t * (*G_TempEntity_t)(vec3_t *origin, int event);
+typedef gentity_t * (*G_TempEntity_t)(vec3_t origin, int event);
 #if COD_VERSION == COD2_1_0
 static const G_TempEntity_t G_TempEntity = (G_TempEntity_t)0x0811CB34;
 #elif COD_VERSION == COD2_1_2

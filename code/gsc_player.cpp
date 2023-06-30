@@ -1571,7 +1571,7 @@ void gsc_player_earthquakeforplayer(scr_entref_t ref)
 		Scr_ParamError(3, "Radius must be greater than 0");
 	}
 
-	gentity_t *ent = G_TempEntity(&source, EV_EARTHQUAKE);
+	gentity_t *ent = G_TempEntity(source, EV_EARTHQUAKE);
 	ent->s.angles2[0] = scale;
 	ent->s.time = (int)duration;
 	ent->s.angles2[1] = radius;
@@ -1628,7 +1628,7 @@ void gsc_player_playfxforplayer(scr_entref_t ref)
 		return;
 	}
 
-	gentity_t *ent = G_TempEntity(&origin, EV_PLAY_FX);
+	gentity_t *ent = G_TempEntity(origin, EV_PLAY_FX);
 	ent->s.eventParm = index & 0xff;
 	ent->s.otherEntityNum = id + 1;
 

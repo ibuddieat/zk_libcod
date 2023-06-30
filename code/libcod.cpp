@@ -1225,15 +1225,15 @@ void custom_G_AddEvent(gentity_t * ent, int event, int eventParm)
 	ent->r.eventTime = level.time;
 }
 
-gentity_t* custom_G_TempEntity(vec3_t * origin, int event)
+gentity_t* custom_G_TempEntity(vec3_t origin, int event)
 {
 	hook_g_tempentity->unhook();
 
-	gentity_t* (*sig)(vec3_t * origin, int event);
+	gentity_t* (*sig)(vec3_t origin, int event);
 	*(int *)&sig = hook_g_tempentity->from;
 
 	if ( g_debugEvents->current.boolean )
-		Com_DPrintf("G_TempEntity() event %26s at (%f,%f,%f)\n", *(&entity_event_names + event), &origin[0], &origin[1], &origin[2]);
+		Com_DPrintf("G_TempEntity() event %26s at (%f,%f,%f)\n", *(&entity_event_names + event), origin[0], origin[1], origin[2]);
 
 	/* Filter example:
 	if (event == EV_PLAY_FX)
@@ -4776,12 +4776,12 @@ void custom_GScr_Obituary(void)
 	// Custom origin
 	if ( args < 6 )
 	{
-		ent = G_TempEntity((vec3_t *)vec3_origin, EV_OBITUARY);
+		ent = G_TempEntity(vec3_origin, EV_OBITUARY);
 	}
 	else
 	{
 		Scr_GetVector(args - 2, &origin);
-		ent = G_TempEntity(&origin, EV_OBITUARY);
+		ent = G_TempEntity(origin, EV_OBITUARY);
 	}
 	
 	// Custom team (default 0 = all)
@@ -5115,7 +5115,7 @@ void bullet_fire_extended_trace(trace_t *results, const vec3_t *start, const vec
 
 		G_LocationalTrace(&trace, start, end, passEntityNum, contentmask, priorityMap);
 		Vec3Lerp((float *)start, (float *)end, trace.fraction, origin);
-		hitEffect = G_TempEntity(&origin, EV_SHOTGUN_HIT);
+		hitEffect = G_TempEntity(origin, EV_SHOTGUN_HIT);
 		hitEffect->s.eventParm = DirToByte(trace.normal) & 0xFF;
 		hitEffect->s.surfType = (trace.surfaceFlags >> 20) & 0x1F;
 

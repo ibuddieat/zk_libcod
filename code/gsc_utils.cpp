@@ -1079,7 +1079,7 @@ void gsc_utils_bullethiteffect()
 		return;
 	}
 
-	gentity_t *entity = G_TempEntity(&origin, EV_SHOTGUN_HIT);
+	gentity_t *entity = G_TempEntity(origin, EV_SHOTGUN_HIT);
 	entity->s.eventParm = DirToByte(normal);
 
 	trace_t trace;
