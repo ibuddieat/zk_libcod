@@ -15,9 +15,12 @@ dvar_t *com_hunkMegs;
 dvar_t *com_logfile;
 dvar_t *com_sv_running;
 dvar_t *developer;
+dvar_t *g_knockback;
 dvar_t *g_playerCollisionEjectSpeed;
 dvar_t *g_voiceChatTalkingDuration;
 dvar_t *nextmap;
+dvar_t *player_dmgtimer_maxTime;
+dvar_t *player_dmgtimer_timePerPoint;
 dvar_t *player_meleeHeight;
 dvar_t *player_meleeRange;
 dvar_t *player_meleeWidth;
@@ -363,10 +366,14 @@ void common_init_complete_print(const char *format, ...)
 
 void custom_G_ProcessIPBans(void)
 {
-	/* This is right after G_RegisterDvars, giving us access to variables that
-	 are not yet defined at the common_init_complete_print hook */
+	/* This is right after G_RegisterDvars() and BG_RegisterDvars(), giving us
+	 access to variables that are not yet defined at the
+	 common_init_complete_print hook */
+	g_knockback = Dvar_FindVar("g_knockback");
 	g_playerCollisionEjectSpeed = Dvar_FindVar("g_playerCollisionEjectSpeed");
 	g_voiceChatTalkingDuration = Dvar_FindVar("g_voiceChatTalkingDuration");
+	player_dmgtimer_maxTime = Dvar_FindVar("player_dmgtimer_maxTime");
+	player_dmgtimer_timePerPoint = Dvar_FindVar("player_dmgtimer_timePerPoint");
 	player_meleeHeight = Dvar_FindVar("player_meleeHeight");
 	player_meleeRange = Dvar_FindVar("player_meleeRange");
 	player_meleeWidth = Dvar_FindVar("player_meleeWidth");
@@ -4619,6 +4626,248 @@ void custom_PlayerCmd_ClonePlayer(scr_entref_t ref)
 	hook_playercmd_cloneplayer->hook();
 }
 
+void custom_PlayerCmd_finishPlayerDamage(scr_entref_t entRef)
+{
+	const char *mod;
+	const char *weaponName;
+	unsigned short hitlocStr;
+	gentity_s *tempEnt;
+	gclient_s *client;
+	float knockback;
+	gentity_s *ent;
+	float flinch;
+	float dmgTime;
+	float maxTime;
+	void (*pain)(gentity_t *, gentity_t *, int, const float *, meansOfDeath_t, const float *, hitLocation_t);
+	void (*die)(gentity_t *, gentity_t *, gentity_t *, int, meansOfDeath_t, const int, const float *, hitLocation_t, int);
+	int bulletImpacts;
+	int psOffsetTime;
+	int maxDmg;
+	vec3_t velocaityScale;
+	vec3_t localdir;
+	float dmgRange;
+	int minDmg;
+	hitLocation_t hitlocIndex;
+	int weaponIndex;
+	meansOfDeath_t modIndex;
+	int dflags;
+	int damage;
+	const float *point;
+	vec3_t vPoint;
+	vec_t *dir;
+	vec3_t vDir;
+	gentity_s *attacker;
+	gentity_s *inflictor;
+
+	inflictor = &g_entities[1022];
+	attacker = &g_entities[1022];
+	dir = 0;
+	point = 0;
+
+	if ( entRef.classnum )
+	{
+		Scr_ObjectError("not an entity");
+		ent = 0;
+	}
+	else
+	{
+		ent = &g_entities[entRef.entnum];
+
+		if ( !ent->client )
+		{
+			Scr_ObjectError(custom_va("entity %i is not a player", entRef.entnum));
+		}
+	}
+
+	damage = Scr_GetInt(2u);
+
+	if ( damage > 0 )
+	{
+		if ( Scr_GetType(0) && Scr_GetPointerType(0) == VAR_ENTITY )
+			inflictor = Scr_GetEntity(1u);
+
+		if ( Scr_GetType(1u) && Scr_GetPointerType(1u) == VAR_ENTITY )
+			attacker = Scr_GetEntity(1u);
+
+		dflags = Scr_GetInt(3u);
+		mod = Scr_GetString(4u);
+		modIndex = G_IndexForMeansOfDeath(mod);
+		weaponName = Scr_GetString(5u);
+		weaponIndex = G_GetWeaponIndexForName(weaponName);
+
+		if ( Scr_GetType(6u) )
+		{
+			Scr_GetVector(6u, &vPoint);
+			point = vPoint;
+		}
+
+		if ( Scr_GetType(7u) )
+		{
+			Scr_GetVector(7u, &vDir);
+			dir = vDir;
+		}
+
+		hitlocStr = Scr_GetConstString(8u);
+		hitlocIndex = G_GetHitLocationIndexFromString(hitlocStr);
+		psOffsetTime = Scr_GetInt(9u);
+		/* New code start: Additional parameter to skip bullet impacts */
+		bulletImpacts = 1;
+		if ( Scr_GetNumParam() > 10 )
+			bulletImpacts = Scr_GetInt(10u);
+		/* New code end */
+
+		if ( dir )
+			Vec3NormalizeTo(dir, localdir);
+		else
+			VectorClear(localdir);
+
+		if ( (ent->flags & 8) != 0 || (dflags & 4) != 0 )
+		{
+			minDmg = 0;
+		}
+		else
+		{
+			dmgRange = 0.30000001;
+
+			if ( (ent->client->ps.pm_flags & 1) != 0 )
+			{
+				dmgRange = 0.02;
+			}
+			else if ( (ent->client->ps.pm_flags & 2) != 0 )
+			{
+				dmgRange = 0.15000001;
+			}
+
+			minDmg = (int)((float)damage * dmgRange);
+
+			if ( minDmg > 60 )
+				minDmg = 60;
+
+			if ( minDmg )
+			{
+				if ( (ent->client->ps.eFlags & 0x300) == 0 )
+				{
+					knockback = (float)minDmg * g_knockback->current.decimal / 250.0;
+					VectorScale(localdir, knockback, velocaityScale);
+					VectorAdd(ent->client->ps.velocity, velocaityScale, ent->client->ps.velocity);
+
+					if ( !ent->client->ps.pm_time )
+					{
+						maxDmg = 2 * minDmg;
+
+						if ( 2 * minDmg <= 49 )
+							maxDmg = 50;
+
+						if ( maxDmg > 200 )
+							maxDmg = 200;
+
+						ent->client->ps.pm_time = maxDmg;
+						ent->client->ps.pm_flags |= 0x400u;
+					}
+				}
+			}
+		}
+
+		if ( (ent->flags & 1) == 0 )
+		{
+			if ( weaponIndex && BG_GetWeaponDef(weaponIndex)->weapType == WEAPTYPE_BULLET && bulletImpacts )
+			{
+				if ( BG_GetWeaponDef(weaponIndex)->bRifleBullet )
+					tempEnt = G_TempEntity(vPoint, EV_SHOTGUN_HIT);
+				else
+					tempEnt = G_TempEntity(vPoint, EV_BULLET_HIT_LARGE);
+
+				tempEnt->s.eventParm = DirToByte(localdir);
+				tempEnt->s.scale = DirToByte(localdir);
+				tempEnt->s.surfType = 7;
+				tempEnt->s.otherEntityNum = attacker->s.number;
+				tempEnt->r.clientMask[ent->client->ps.clientNum >> 5] |= 1 << (ent->client->ps.clientNum & 0x1F);
+
+				if ( BG_GetWeaponDef(weaponIndex)->bRifleBullet )
+					tempEnt = G_TempEntity(vPoint, EV_BULLET_HIT_CLIENT_LARGE);
+				else
+					tempEnt = G_TempEntity(vPoint, EV_BULLET_HIT_CLIENT_SMALL);
+
+				tempEnt->s.surfType = 7;
+				tempEnt->s.otherEntityNum = attacker->s.number;
+				tempEnt->s.clientNum = ent->client->ps.clientNum;
+				tempEnt->r.clientMask[0] = -1;
+				tempEnt->r.clientMask[1] = -1;
+				tempEnt->r.clientMask[ent->client->ps.clientNum >> 5] &= ~(1 << (ent->client->ps.clientNum & 0x1F));
+			}
+
+			ent->client->damage_blood += damage;
+
+			if ( dir )
+			{
+				VectorCopy(localdir, ent->client->damage_from);
+				ent->client->damage_fromWorld = 0;
+			}
+			else
+			{
+				VectorCopy(ent->r.currentOrigin, ent->client->damage_from);
+				ent->client->damage_fromWorld = 1;
+			}
+
+			if ( (ent->flags & 2) != 0 && ent->health - damage <= 0 )
+				damage = ent->health - 1;
+
+			maxTime = player_dmgtimer_maxTime->current.decimal;
+			dmgTime = (float)damage * player_dmgtimer_timePerPoint->current.decimal;
+			ent->client->ps.damageTimer += (int)dmgTime;
+
+			if ( dir )
+			{
+				client = ent->client;
+				client->ps.flinchYaw = (int)vectoyaw(dir);
+			}
+			else
+			{
+				ent->client->ps.flinchYaw = 0;
+			}
+
+			flinch = ent->client->ps.viewangles[1];
+
+			if ( flinch < 0.0 )
+				flinch = flinch + 360.0;
+
+			ent->client->ps.flinchYaw -= (int)flinch;
+
+			if ( (float)ent->client->ps.damageTimer > maxTime )
+				ent->client->ps.damageTimer = (int)maxTime;
+
+			ent->client->ps.damageDuration = ent->client->ps.damageTimer;
+			ent->health -= damage;
+			Scr_AddEntity(attacker);
+			Scr_AddInt(damage);
+			Scr_Notify(ent, scr_const.damage, 2u);
+
+			if ( ent->health > 0 )
+			{
+				pain = entityHandlers[ent->handler].pain;
+
+				if ( pain )
+					pain(ent, attacker, damage, point, modIndex, localdir, hitlocIndex);
+			}
+			else
+			{
+				if ( ent->health < -999 )
+					ent->health = -999;
+
+				die = entityHandlers[ent->handler].die;
+
+				if ( die )
+					die(ent, inflictor, attacker, damage, modIndex, weaponIndex, localdir, hitlocIndex, psOffsetTime);
+
+				if ( !ent->r.inuse )
+					return;
+			}
+
+			ent->client->ps.stats[0] = ent->health;
+		}
+	}
+}
+
 void custom_Scr_BulletTrace(void)
 {
 	int args;
@@ -7065,6 +7314,7 @@ public:
 		cracking_hook_function(0x0805E986, (int)custom_CM_AreaEntities);
 		cracking_hook_function(0x080FD518, (int)custom_PlayerCmd_DeactivateReverb);
 		cracking_hook_function(0x080FD7C0, (int)custom_PlayerCmd_DeactivateChannelVolumes);
+		cracking_hook_function(0x080FB170, (int)custom_PlayerCmd_finishPlayerDamage);
 		cracking_hook_function(0x08100E54, (int)custom_Cmd_PrintEntities_f);
 		cracking_hook_function(0x08113076, (int)custom_GScr_LogPrint);
 		cracking_hook_function(0x080960E2, (int)custom_SV_PacketEvent);

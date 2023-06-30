@@ -2280,13 +2280,22 @@ static const G_GetWeaponIndexForName_t G_GetWeaponIndexForName = (G_GetWeaponInd
 static const G_GetWeaponIndexForName_t G_GetWeaponIndexForName = (G_GetWeaponIndexForName_t)0x08120DD0;
 #endif
 
-typedef int (*G_IndexForMeansOfDeath_t)(const char *meansOfDeath);
+typedef meansOfDeath_t (*G_IndexForMeansOfDeath_t)(const char *meansOfDeath);
 #if COD_VERSION == COD2_1_0
 static const G_IndexForMeansOfDeath_t G_IndexForMeansOfDeath = (G_IndexForMeansOfDeath_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
 static const G_IndexForMeansOfDeath_t G_IndexForMeansOfDeath = (G_IndexForMeansOfDeath_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const G_IndexForMeansOfDeath_t G_IndexForMeansOfDeath = (G_IndexForMeansOfDeath_t)0x081016FA;
+#endif
+
+typedef hitLocation_t (*G_GetHitLocationIndexFromString_t)(unsigned short constString);
+#if COD_VERSION == COD2_1_0
+static const G_GetHitLocationIndexFromString_t G_GetHitLocationIndexFromString = (G_GetHitLocationIndexFromString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_GetHitLocationIndexFromString_t G_GetHitLocationIndexFromString = (G_GetHitLocationIndexFromString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_GetHitLocationIndexFromString_t G_GetHitLocationIndexFromString = (G_GetHitLocationIndexFromString_t)0x08102886;
 #endif
 
 typedef int (*G_GetHintStringIndex_t)(int *index, const char *str);
@@ -2487,6 +2496,15 @@ static const AxisToAngles_t AxisToAngles = (AxisToAngles_t)0x0; // Not tested
 static const AxisToAngles_t AxisToAngles = (AxisToAngles_t)0x080A9558;
 #endif
 
+typedef float (*vectoyaw_t)(const vec3_t vec);
+#if COD_VERSION == COD2_1_0
+static const vectoyaw_t vectoyaw = (vectoyaw_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const vectoyaw_t vectoyaw = (vectoyaw_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const vectoyaw_t vectoyaw = (vectoyaw_t)0x080A4D5A;
+#endif
+
 typedef void (*VecToAngles_t)(vec3_t value1, vec3_t angles);
 #if COD_VERSION == COD2_1_0
 static const VecToAngles_t VecToAngles = (VecToAngles_t)0x0; // Not tested
@@ -2512,6 +2530,15 @@ static const Vec3Normalize_t Vec3Normalize = (Vec3Normalize_t)0x080A20C0;
 static const Vec3Normalize_t Vec3Normalize = (Vec3Normalize_t)0x080A42E0;
 #elif COD_VERSION == COD2_1_3
 static const Vec3Normalize_t Vec3Normalize = (Vec3Normalize_t)0x080A4424;
+#endif
+
+typedef vec_t (*Vec3NormalizeTo_t)(vec3_t v, vec3_t out);
+#if COD_VERSION == COD2_1_0
+static const Vec3NormalizeTo_t Vec3NormalizeTo = (Vec3NormalizeTo_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Vec3NormalizeTo_t Vec3NormalizeTo = (Vec3NormalizeTo_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Vec3NormalizeTo_t Vec3NormalizeTo = (Vec3NormalizeTo_t)0x080A45FC;
 #endif
 
 typedef void (*Vec3Lerp_t)(const float *from, const float *to, float frac, float *result);
@@ -3117,7 +3144,7 @@ static const Use_trigger_damage_t Use_trigger_damage = (Use_trigger_damage_t)0x0
 static const Use_trigger_damage_t Use_trigger_damage = (Use_trigger_damage_t)0x0811CD62;
 #endif
 
-typedef void (*Pain_trigger_damage_t)(gentity_t *trigger, gentity_t *player, int damage, int param_4, meansOfDeath_t meansOfDeath);
+typedef void (*Pain_trigger_damage_t)(gentity_t *trigger, gentity_t *player, int damage, const float *point, meansOfDeath_t meansOfDeath, const float *dir, hitLocation_t hitLoc);
 #if COD_VERSION == COD2_1_0
 static const Pain_trigger_damage_t Pain_trigger_damage = (Pain_trigger_damage_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
@@ -3126,7 +3153,7 @@ static const Pain_trigger_damage_t Pain_trigger_damage = (Pain_trigger_damage_t)
 static const Pain_trigger_damage_t Pain_trigger_damage = (Pain_trigger_damage_t)0x0811CD92;
 #endif
 
-typedef void (*Die_trigger_damage_t)(gentity_t *trigger, gentity_t *inflictor, gentity_t *player, int damage, meansOfDeath_t meansOfDeath, int iWeapon, float *vDir, hitLocation_t hitLoc, int psTimeOffset);
+typedef void (*Die_trigger_damage_t)(gentity_t *trigger, gentity_t *inflictor, gentity_t *player, int damage, meansOfDeath_t meansOfDeath, int weapon, const float *dir, hitLocation_t hitLoc, int psTimeOffset);
 #if COD_VERSION == COD2_1_0
 static const Die_trigger_damage_t Die_trigger_damage = (Die_trigger_damage_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
@@ -3162,7 +3189,7 @@ static const Touch_Item_Auto_t Touch_Item_Auto = (Touch_Item_Auto_t)0x0; // Not 
 static const Touch_Item_Auto_t Touch_Item_Auto = (Touch_Item_Auto_t)0x08105C80;
 #endif
 
-typedef void (*player_die_t)(gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, meansOfDeath_t meansOfDeath, int iWeapon, float *vDir, hitLocation_t hitLoc, int psTimeOffset);
+typedef void (*player_die_t)(gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, meansOfDeath_t meansOfDeath, int iWeapon, const float *vDir, hitLocation_t hitLoc, int psTimeOffset);
 #if COD_VERSION == COD2_1_0
 static const player_die_t player_die = (player_die_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2

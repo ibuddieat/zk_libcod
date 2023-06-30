@@ -360,8 +360,8 @@ typedef struct entityHandler_s
 	void (*blocked)(gentity_t *, gentity_t *);
 	void (*touch)(gentity_t *, gentity_t *, int);
 	void (*use)(gentity_t *, gentity_t *);
-	void (*pain)(gentity_t *, gentity_t *, int, int, meansOfDeath_t);
-	void (*die)(gentity_t *, gentity_t *, gentity_t *, int, meansOfDeath_t, int, float *, hitLocation_t, int);
+	void (*pain)(gentity_t *, gentity_t *, int, const float *, meansOfDeath_t, const float *, hitLocation_t);
+	void (*die)(gentity_t *, gentity_t *, gentity_t *, int, meansOfDeath_t, const int, const float *, hitLocation_t, int);
 	void (*controller)(gentity_t *, gentity_t *);
 	int methodOfDeath;
 	int splashMethodOfDeath;
@@ -657,6 +657,35 @@ typedef struct
 	union VariableValueInternal_v v;
 	u_int16_t nextSibling;
 } VariableValueInternal;
+
+typedef enum
+{
+	VAR_UNDEFINED,
+	VAR_OBJECT,
+	VAR_STRING,
+	VAR_ISTRING,
+	VAR_VECTOR,
+	VAR_FLOAT,
+	VAR_INTEGER,
+	VAR_CODEPOS,
+	VAR_PRECODEPOS,
+	VAR_FUNCTION,
+	VAR_STACK,
+	VAR_ANIMATION,
+	VAR_DEVELOPER_CODEPOS,
+	VAR_INCLUDE_CODEPOS,
+	VAR_THREAD_LIST,
+	VAR_THREAD,
+	VAR_NOTIFY_THREAD,
+	VAR_TIME_THREAD,
+	VAR_CHILD_THREAD,
+	VAR_STRUCT,
+	VAR_REMOVED_ENTITY,
+	VAR_ENTITY,
+	VAR_ARRAY,
+	VAR_REMOVED_THREAD,
+	VAR_COUNT
+} var_type_t;
 
 typedef struct
 {
