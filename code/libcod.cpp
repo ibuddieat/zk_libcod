@@ -3653,15 +3653,16 @@ void Scr_CodeCallback_NotifyDebug(unsigned int entId, char *message, unsigned in
 			for ( unsigned int i = 0; i < argc; i++ )
 			{
 				SavedVariableValue *arg = arguments + i;
-				switch(arg->type) {
-					case STACK_UNDEFINED: stackPushUndefined(); break;
-					case STACK_OBJECT: stackPushObject(arg->u.pointerValue); RemoveRefToObject(arg->u.pointerValue); break;
-					case STACK_STRING:
-					case STACK_LOCALIZED_STRING: stackPushString(arg->u.stringValue); break;
-					case STACK_VECTOR: stackPushVector(arg->u.vectorValue); break;
-					case STACK_FLOAT: stackPushFloat(arg->u.floatValue); break;
-					case STACK_INT: stackPushInt(arg->u.intValue); break;
-					case STACK_FUNCTION: stackPushFunc(arg->u.codePosValue); break;
+				switch ( arg->type )
+				{
+				case STACK_UNDEFINED: stackPushUndefined(); break;
+				case STACK_OBJECT: stackPushObject(arg->u.pointerValue); RemoveRefToObject(arg->u.pointerValue); break;
+				case STACK_STRING:
+				case STACK_LOCALIZED_STRING: stackPushString(arg->u.stringValue); break;
+				case STACK_VECTOR: stackPushVector(arg->u.vectorValue); break;
+				case STACK_FLOAT: stackPushFloat(arg->u.floatValue); break;
+				case STACK_INT: stackPushInt(arg->u.intValue); break;
+				case STACK_FUNCTION: stackPushFunc(arg->u.codePosValue); break;
 				}
 				stackPushArrayLast();
 			}
@@ -4906,21 +4907,22 @@ void Scr_QueueNotifyDebugForCallback(unsigned int entId, unsigned int constStrin
 		{
 			savedArg = &scr_notify[scr_notify_index].arguments[argc];
 			savedArg->type = arg->type;
-			switch(savedArg->type) {
-				case STACK_UNDEFINED: break;
-				case STACK_OBJECT: AddRefToObject(arg->u.pointerValue); savedArg->u.pointerValue = arg->u.pointerValue; break;
-				case STACK_STRING:
-				case STACK_LOCALIZED_STRING:
-					stringValueSrc = SL_ConvertToString(arg->u.stringValue);
-					I_strncpyz(savedArg->u.stringValue, stringValueSrc, strlen(stringValueSrc) + 1);
-					break;
-				case STACK_VECTOR: VectorCopy(arg->u.vectorValue, savedArg->u.vectorValue); break;
-				case STACK_FLOAT: savedArg->u.floatValue = arg->u.floatValue; break;
-				case STACK_INT: savedArg->u.intValue = arg->u.intValue; break;
-				case STACK_FUNCTION: savedArg->u.codePosValue = arg->u.codePosValue; break;
-				default:
-					printf("Warning: Notify debug with param %d of type 0x%x is currently not supported for CodeCallback_NotifyDebug\n", argc + 1, savedArg->type);
-					savedArg->type = STACK_UNDEFINED;
+			switch ( savedArg->type )
+			{
+			case STACK_UNDEFINED: break;
+			case STACK_OBJECT: AddRefToObject(arg->u.pointerValue); savedArg->u.pointerValue = arg->u.pointerValue; break;
+			case STACK_STRING:
+			case STACK_LOCALIZED_STRING:
+				stringValueSrc = SL_ConvertToString(arg->u.stringValue);
+				I_strncpyz(savedArg->u.stringValue, stringValueSrc, strlen(stringValueSrc) + 1);
+				break;
+			case STACK_VECTOR: VectorCopy(arg->u.vectorValue, savedArg->u.vectorValue); break;
+			case STACK_FLOAT: savedArg->u.floatValue = arg->u.floatValue; break;
+			case STACK_INT: savedArg->u.intValue = arg->u.intValue; break;
+			case STACK_FUNCTION: savedArg->u.codePosValue = arg->u.codePosValue; break;
+			default:
+				printf("Warning: Notify debug with param %d of type 0x%x is currently not supported for CodeCallback_NotifyDebug\n", argc + 1, savedArg->type);
+				savedArg->type = STACK_UNDEFINED;
 			}
 			argc++;
 		}
@@ -4963,21 +4965,22 @@ void custom_Scr_Notify(gentity_t *ent, unsigned short constString, unsigned int 
 			arg = scrVmPub.top - i;
 			savedArg = &savedArgs[i];
 			savedArg->type = arg->type;
-			switch(savedArg->type) {
-				case STACK_UNDEFINED: break;
-				case STACK_OBJECT: AddRefToObject(arg->u.pointerValue); savedArg->u.pointerValue = arg->u.pointerValue; break;
-				case STACK_STRING:
-				case STACK_LOCALIZED_STRING:
-					stringValueSrc = SL_ConvertToString(arg->u.stringValue);
-					I_strncpyz(savedArg->u.stringValue, stringValueSrc, strlen(stringValueSrc) + 1);
-					break;
-				case STACK_VECTOR: VectorCopy(arg->u.vectorValue, savedArg->u.vectorValue); break;
-				case STACK_FLOAT: savedArg->u.floatValue = arg->u.floatValue; break;
-				case STACK_INT: savedArg->u.intValue = arg->u.intValue; break;
-				case STACK_FUNCTION: savedArg->u.codePosValue = arg->u.codePosValue; break;
-				default:
-					printf("Warning: Notify with param %d of type 0x%x is currently not supported for CodeCallback_Notify\n", i + 1, savedArg->type);
-					savedArg->type = STACK_UNDEFINED;
+			switch ( savedArg->type )
+			{
+			case STACK_UNDEFINED: break;
+			case STACK_OBJECT: AddRefToObject(arg->u.pointerValue); savedArg->u.pointerValue = arg->u.pointerValue; break;
+			case STACK_STRING:
+			case STACK_LOCALIZED_STRING:
+				stringValueSrc = SL_ConvertToString(arg->u.stringValue);
+				I_strncpyz(savedArg->u.stringValue, stringValueSrc, strlen(stringValueSrc) + 1);
+				break;
+			case STACK_VECTOR: VectorCopy(arg->u.vectorValue, savedArg->u.vectorValue); break;
+			case STACK_FLOAT: savedArg->u.floatValue = arg->u.floatValue; break;
+			case STACK_INT: savedArg->u.intValue = arg->u.intValue; break;
+			case STACK_FUNCTION: savedArg->u.codePosValue = arg->u.codePosValue; break;
+			default:
+				printf("Warning: Notify with param %d of type 0x%x is currently not supported for CodeCallback_Notify\n", i + 1, savedArg->type);
+				savedArg->type = STACK_UNDEFINED;
 			}
 		}
 	}
@@ -4995,15 +4998,16 @@ void custom_Scr_Notify(gentity_t *ent, unsigned short constString, unsigned int 
 		for ( unsigned int i = 0; i < numArgs; i++ )
 		{
 			SavedVariableValue *arg = &savedArgs[i];
-			switch(arg->type) {
-				case STACK_UNDEFINED: stackPushUndefined(); break;
-				case STACK_OBJECT: stackPushObject(arg->u.pointerValue); RemoveRefToObject(arg->u.pointerValue); break;
-				case STACK_STRING:
-				case STACK_LOCALIZED_STRING: stackPushString(arg->u.stringValue); break;
-				case STACK_VECTOR: stackPushVector(arg->u.vectorValue); break;
-				case STACK_FLOAT: stackPushFloat(arg->u.floatValue); break;
-				case STACK_INT: stackPushInt(arg->u.intValue); break;
-				case STACK_FUNCTION: stackPushFunc(arg->u.codePosValue); break;
+			switch ( arg->type )
+			{
+			case STACK_UNDEFINED: stackPushUndefined(); break;
+			case STACK_OBJECT: stackPushObject(arg->u.pointerValue); RemoveRefToObject(arg->u.pointerValue); break;
+			case STACK_STRING:
+			case STACK_LOCALIZED_STRING: stackPushString(arg->u.stringValue); break;
+			case STACK_VECTOR: stackPushVector(arg->u.vectorValue); break;
+			case STACK_FLOAT: stackPushFloat(arg->u.floatValue); break;
+			case STACK_INT: stackPushInt(arg->u.intValue); break;
+			case STACK_FUNCTION: stackPushFunc(arg->u.codePosValue); break;
 			}
 			stackPushArrayLast();
 		}
