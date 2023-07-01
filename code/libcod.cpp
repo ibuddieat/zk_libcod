@@ -7491,6 +7491,8 @@ public:
 		cracking_hook_call(0x08095CB2, (int)hook_SV_GetChallenge);
 		cracking_hook_call(0x08095D6C, (int)hook_SV_DirectConnect);
 		#endif
+
+		cracking_write_hex(0x0818815c, (char *)"00"); // Removes debug flag from getentbynum
 		#endif
 
 		gsc_weapons_init();
