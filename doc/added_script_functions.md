@@ -11,13 +11,17 @@ New script code methods:
   * `<entity> getEntityVelocity()`
   * `<entity> getTagAngles(<tag name>)`
   * `<entity> getTagOrigin(<tag name>)`
+  * `<entity> getVmax()`
+  * `<entity> getVmin()`
   * `<entity> hasTag(<tag name>)`
   * `<entity> isLinkedTo()`
   * `<entity> setClipmask(<clip mask>)`
   * `<entity> setEntityVelocity(<velocity>)`
   * `<entity> setLight(<red>, <green>, <blue>, <intensity>)`
   * `<entity> spawnGrenade(<weapon>, <origin>, [<direction>], [<velocity>], [<fuseTime>])`
+  * `<player> disableBulletImpacts()`
   * `<player> earthquakeForPlayer(<scale>, <duration>, <source>, <radius>)`
+  * `<player> enableBulletImpacts()`
   * `<player> getClientHudElemCount()`
   * `<player> getCollisionTeam()`
   * `<player> getEnterTime()`
