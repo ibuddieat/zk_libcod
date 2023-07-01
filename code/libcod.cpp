@@ -75,6 +75,7 @@ dvar_t *logErrors;
 dvar_t *logfileName;
 dvar_t *logfileRotate;
 dvar_t *logTimestamps;
+dvar_t *scr_turretDamageName;
 dvar_t *sv_allowRcon;
 dvar_t *sv_botKickMessages;
 dvar_t *sv_botReconnectMode;
@@ -333,6 +334,7 @@ void common_init_complete_print(const char *format, ...)
 	g_spawnMapWeapons = Dvar_RegisterBool("g_spawnMapWeapons", qtrue, DVAR_ARCHIVE);
 	g_triggerMode = Dvar_RegisterInt("g_triggerMode", 1, 0, 2, DVAR_ARCHIVE);
 	logErrors = Dvar_RegisterBool("logErrors", qfalse, DVAR_ARCHIVE);
+	scr_turretDamageName = Dvar_RegisterBool("scr_turretDamageName", qfalse, DVAR_ARCHIVE);
 	sv_allowRcon = Dvar_RegisterBool("sv_allowRcon", qtrue, DVAR_ARCHIVE);
 	sv_botKickMessages = Dvar_RegisterBool("sv_botKickMessages", qtrue, DVAR_ARCHIVE);
 	sv_botReconnectMode = Dvar_RegisterInt("sv_botReconnectMode", 0, 0, 2, DVAR_ARCHIVE);
@@ -4633,10 +4635,10 @@ void custom_PlayerCmd_finishPlayerDamage(scr_entref_t entRef)
 	const char *mod;
 	const char *weaponName;
 	unsigned short hitlocStr;
-	gentity_s *tempEnt;
+	gentity_t *tempEnt;
 	gclient_s *client;
 	float knockback;
-	gentity_s *ent;
+	gentity_t *ent;
 	float flinch;
 	float dmgTime;
 	float maxTime;
@@ -4658,8 +4660,8 @@ void custom_PlayerCmd_finishPlayerDamage(scr_entref_t entRef)
 	vec3_t vPoint;
 	vec_t *dir;
 	vec3_t vDir;
-	gentity_s *attacker;
-	gentity_s *inflictor;
+	gentity_t *attacker;
+	gentity_t *inflictor;
 
 	inflictor = &g_entities[1022];
 	attacker = &g_entities[1022];
@@ -5326,6 +5328,44 @@ void custom_G_UpdateObjectives(void)
 	}
 }
 
+void custom_G_DamageClient(gentity_t *self, gentity_t *inflictor, gentity_t *attacker, const float *vDir, const float *vPoint, int damage, int dFlags, meansOfDeath_t meansOfDeath, hitLocation_t hitLoc, int timeOffset)
+{
+	int iWeapon;
+	int dmg;
+
+	if ( self->takedamage && !self->client->noclip && !self->client->ufo && self->client->sess.connected == CON_CONNECTED )
+	{
+		if ( inflictor )
+		{
+			/* New code start: scr_turretDamageName dvar */
+			if ( scr_turretDamageName->current.boolean && inflictor->s.eFlags & EF_USETURRET )
+			{
+				gentity_t *turret = &level.gentities[inflictor->client->ps.viewlocked_entNum];
+
+				iWeapon = turret->s.weapon;
+			}
+			else
+			/* New code end */
+			{
+				iWeapon = inflictor->s.weapon;
+			}
+		}
+		else if ( attacker )
+		{
+			iWeapon = attacker->s.weapon;
+		}
+		else
+		{
+			iWeapon = 0;
+		}
+
+		dmg = (int)(G_GetWeaponHitLocationMultiplier(hitLoc, iWeapon) * (float)damage);
+
+		if ( dmg > 0 )
+			Scr_PlayerDamage(self, inflictor, attacker, dmg, dFlags, meansOfDeath, iWeapon, vPoint, vDir, hitLoc, timeOffset);
+	}
+}
+
 void custom_FireWeaponMelee(gentity_t *player)
 {
 	weaponParms wp;
@@ -5355,7 +5395,7 @@ void custom_FireWeaponMelee(gentity_t *player)
 	}
 }
 
-void custom_Bullet_Fire_Extended(const gentity_t *inflictor, gentity_t *attacker, float *start, float *end, float dmgScale, int callCount, const weaponParms *wp, const gentity_s *weaponEnt, int gameTime)
+void custom_Bullet_Fire_Extended(const gentity_t *inflictor, gentity_t *attacker, float *start, float *end, float dmgScale, int callCount, const weaponParms *wp, const gentity_t *weaponEnt, int gameTime)
 {
 	float scale;
 	float scaleSquared;
@@ -7452,6 +7492,7 @@ public:
 		cracking_hook_function(0x080F6E9E, (int)custom_StuckInClient);
 		cracking_hook_function(0x080F5682, (int)custom_G_SetClientContents);
 		cracking_hook_function(0x0809CD64, (int)custom_SV_ClipMoveToEntity);
+		cracking_hook_function(0x08101B40, (int)custom_G_DamageClient);
 		cracking_hook_function(0x0811CEA8, (int)custom_G_CheckHitTriggerDamage);
 		cracking_hook_function(0x0811D096, (int)custom_G_GrenadeTouchTriggerDamage);
 		cracking_hook_function(0x0809C63A, (int)custom_SV_LinkEntity);

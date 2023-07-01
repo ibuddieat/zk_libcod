@@ -1722,6 +1722,15 @@ static const Scr_PrintPrevCodePos_t Scr_PrintPrevCodePos = (Scr_PrintPrevCodePos
 static const Scr_PrintPrevCodePos_t Scr_PrintPrevCodePos = (Scr_PrintPrevCodePos_t)0x080783FA;
 #endif
 
+typedef void (*Scr_PlayerDamage_t)(gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int dFlags, meansOfDeath_t meansOfDeath, int iWeapon, const float *vPoint, const float *vDir, hitLocation_t hitLoc, int timeOffset);
+#if COD_VERSION == COD2_1_0
+static const Scr_PlayerDamage_t Scr_PlayerDamage = (Scr_PlayerDamage_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Scr_PlayerDamage_t Scr_PlayerDamage = (Scr_PlayerDamage_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Scr_PlayerDamage_t Scr_PlayerDamage = (Scr_PlayerDamage_t)0x081183B8;
+#endif
+
 typedef int (*DirToByte_t)(vec3_t dir);
 #if COD_VERSION == COD2_1_0
 static const DirToByte_t DirToByte = (DirToByte_t)0x080A1C2A;
@@ -2800,6 +2809,15 @@ static const G_Damage_t G_Damage = (G_Damage_t)0x0; // Not tested
 static const G_Damage_t G_Damage = (G_Damage_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const G_Damage_t G_Damage = (G_Damage_t)0x08101C58;
+#endif
+
+typedef float (*G_GetWeaponHitLocationMultiplier_t)(int hitLoc, int weapon);
+#if COD_VERSION == COD2_1_0
+static const G_GetWeaponHitLocationMultiplier_t G_GetWeaponHitLocationMultiplier = (G_GetWeaponHitLocationMultiplier_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_GetWeaponHitLocationMultiplier_t G_GetWeaponHitLocationMultiplier = (G_GetWeaponHitLocationMultiplier_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_GetWeaponHitLocationMultiplier_t G_GetWeaponHitLocationMultiplier = (G_GetWeaponHitLocationMultiplier_t)0x08101AE2;
 #endif
 
 typedef void (*G_RunThink_t)(gentity_t *ent);

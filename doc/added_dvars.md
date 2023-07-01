@@ -63,6 +63,10 @@ Added dvars:
     * Type: Boolean
     * Default: False
     * Effect: If true, prepend a timestamp (example: "Mon Apr  4 13:37:00 2023 ") to each console log entry.
+  * `scr_turretDamageName`
+    * Type: Boolean
+    * Default: False
+    * Effect: If true, turret weapon names are passed to Callback_PlayerDamage when using a turret, instead of the player's current weapon slot's weapon. 
   * `sv_disconnectMessages`
     * Type: Boolean
     * Default: True
