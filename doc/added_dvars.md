@@ -1,4 +1,8 @@
 Added dvars:
+  * `g_corpseHit`
+    * Type: Boolean
+    * Default: True
+    * Effect: Toggle bullet hit events (sound + effect) for corpses during death animation.
   * `g_debugCallbacks`
     * Type: Boolean
     * Default: False

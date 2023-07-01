@@ -58,6 +58,7 @@ dvar_t *con_coloredPrints;
 #endif
 dvar_t *fs_callbacks;
 dvar_t *fs_library;
+dvar_t *g_corpseHit;
 dvar_t *g_debugCallbacks;
 dvar_t *g_debugEvents;
 dvar_t *g_debugStaticModels;
@@ -319,6 +320,7 @@ void common_init_complete_print(const char *format, ...)
 	#endif
 	fs_callbacks = Dvar_RegisterString("fs_callbacks", "", DVAR_ARCHIVE);
 	fs_library = Dvar_RegisterString("fs_library", "", DVAR_ARCHIVE);
+	g_corpseHit = Dvar_RegisterBool("g_corpseHit", qfalse, DVAR_ARCHIVE);
 	g_debugCallbacks = Dvar_RegisterBool("g_debugCallbacks", qfalse, DVAR_ARCHIVE);
 	g_debugEvents = Dvar_RegisterBool("g_debugEvents", qfalse, DVAR_ARCHIVE);
 	g_debugStaticModels = Dvar_RegisterBool("g_debugStaticModels", qfalse, DVAR_ARCHIVE);
@@ -4640,7 +4642,7 @@ void custom_PlayerCmd_finishPlayerDamage(scr_entref_t entRef)
 	float maxTime;
 	void (*pain)(gentity_t *, gentity_t *, int, const float *, meansOfDeath_t, const float *, hitLocation_t);
 	void (*die)(gentity_t *, gentity_t *, gentity_t *, int, meansOfDeath_t, const int, const float *, hitLocation_t, int);
-	int bulletImpacts;
+	int bodyBulletImpacts;
 	int psOffsetTime;
 	int maxDmg;
 	vec3_t velocaityScale;
@@ -4710,10 +4712,10 @@ void custom_PlayerCmd_finishPlayerDamage(scr_entref_t entRef)
 		hitlocStr = Scr_GetConstString(8u);
 		hitlocIndex = G_GetHitLocationIndexFromString(hitlocStr);
 		psOffsetTime = Scr_GetInt(9u);
-		/* New code start: Additional parameter to skip bullet impacts */
-		bulletImpacts = 1;
+		/* New code start: Additional parameter to skip body bullet impacts */
+		bodyBulletImpacts = 1;
 		if ( Scr_GetNumParam() > 10 )
-			bulletImpacts = Scr_GetInt(10u);
+			bodyBulletImpacts = Scr_GetInt(10u);
 		/* New code end */
 
 		if ( dir )
@@ -4770,7 +4772,7 @@ void custom_PlayerCmd_finishPlayerDamage(scr_entref_t entRef)
 
 		if ( (ent->flags & 1) == 0 )
 		{
-			if ( weaponIndex && BG_GetWeaponDef(weaponIndex)->weapType == WEAPTYPE_BULLET && bulletImpacts )
+			if ( weaponIndex && BG_GetWeaponDef(weaponIndex)->weapType == WEAPTYPE_BULLET && bodyBulletImpacts )
 			{
 				if ( BG_GetWeaponDef(weaponIndex)->bRifleBullet )
 					tempEnt = G_TempEntity(vPoint, EV_SHOTGUN_HIT);
@@ -4911,7 +4913,7 @@ void custom_Scr_BulletTrace(void)
 			passEntityNum = (passEnt->s).number;
 		}
 	}
-	G_LocationalTrace(&trace, &start, &end, passEntityNum, contentmask, NULL);
+	G_LocationalTrace(&trace, start, end, passEntityNum, contentmask, NULL);
 	Scr_MakeArray();
 	Scr_AddFloat(trace.fraction);
 	Scr_AddArrayStringIndexed(scr_const.fraction);
@@ -5353,25 +5355,167 @@ void custom_FireWeaponMelee(gentity_t *player)
 	}
 }
 
-void bullet_fire_extended_trace(trace_t *results, const vec3_t *start, const vec3_t *end, int passEntityNum, int contentmask, uint8_t *priorityMap)
+void custom_Bullet_Fire_Extended(const gentity_t *inflictor, gentity_t *attacker, float *start, float *end, float dmgScale, int callCount, const weaponParms *wp, const gentity_s *weaponEnt, int gameTime)
 {
-	if ( passEntityNum < 64 && customPlayerState[passEntityNum].fireThroughWalls )
+	float scale;
+	float scaleSquared;
+	float dirScale;
+	int surfaceType;
+	int event;
+	float dot;
+	vec3_t dir;
+	vec3_t origin;
+	meansOfDeath_t meansOfDeath;
+	int dflags;
+	int damage;
+	float dist;
+	vec3_t temp;
+	gentity_t *self;
+	gentity_t *tempEnt;
+	trace_t trace;
+	int contentMask;
+	uint8_t *priorityMap;
+	qboolean noBulletImpacts;
+
+	dflags = 0;
+
+	if ( callCount <= 12 )
 	{
-		// Recreate bullet hit effect that would otherwise be missing with that mask
-		trace_t trace;
-		gentity_t *hitEffect;
-		vec3_t origin;
+		if ( wp->weapDef->bRifleBullet )
+		{
+			meansOfDeath = MOD_RIFLE_BULLET;
+			dflags = 32;
+		}
+		else
+		{
+			meansOfDeath = MOD_PISTOL_BULLET;
+		}
 
-		G_LocationalTrace(&trace, start, end, passEntityNum, contentmask, priorityMap);
-		Vec3Lerp((float *)start, (float *)end, trace.fraction, origin);
-		hitEffect = G_TempEntity(origin, EV_SHOTGUN_HIT);
-		hitEffect->s.eventParm = DirToByte(trace.normal) & 0xFF;
-		hitEffect->s.surfType = (trace.surfaceFlags >> 20) & 0x1F;
+		if ( wp->weapDef->armorPiercing )
+			dflags |= 2u;
 
-		// Set contentmask to only hit player bodies (default: MASK_SHOT)
-		contentmask = CONTENTS_BODY;
+		contentMask = MASK_SHOT | CONTENTS_GLASS;
+
+		if ( wp->weapDef->bRifleBullet )
+			priorityMap = &riflePriorityMap;
+		else
+			priorityMap = &bulletPriorityMap;
+
+		/* New code start: Firing through walls */
+		if ( attacker->s.number < 64 && customPlayerState[attacker->s.number].fireThroughWalls )
+		{
+			// Set contentmask to only hit player bodies (default: MASK_SHOT)
+			contentMask = CONTENTS_BODY;
+		}
+		/* New code end */
+
+		G_LocationalTrace(&trace, start, end, inflictor->s.number, contentMask, priorityMap);
+		Vec3Lerp(start, end, trace.fraction, origin);
+		custom_G_CheckHitTriggerDamage(attacker, start, origin, wp->weapDef->damage, meansOfDeath);
+		self = &g_entities[trace.entityNum];
+		VectorSubtract(end, start, dir);
+		Vec3Normalize(dir);
+		dot = DotProduct(dir, trace.normal) * -2.0;
+		VectorMA(dir, dot, trace.normal, dir);
+
+		if ( (trace.surfaceFlags & SURF_SKY) == 0 && !self->client && trace.fraction < 1.0 )
+		{
+			if ( wp->weapDef->weapClass == WEAPCLASS_SPREAD )
+			{
+				event = EV_BULLET_HIT_SMALL;
+			}
+			else if ( wp->weapDef->bRifleBullet )
+			{
+				event = EV_SHOTGUN_HIT;
+			}
+			else
+			{
+				event = EV_BULLET_HIT_LARGE;
+			}
+
+			if ( wp->weapDef->bRifleBullet )
+				event = EV_SHOTGUN_HIT;
+			else
+				event = EV_BULLET_HIT_LARGE;
+
+			/* New code start: Bullet impact control, firing through walls */
+			if ( attacker->s.number < 64 )
+				noBulletImpacts = customPlayerState[attacker->s.number].noBulletImpacts;
+			else
+				noBulletImpacts = qfalse;
+
+			if ( attacker->s.number < 64 && customPlayerState[attacker->s.number].fireThroughWalls )
+			{
+				if ( !noBulletImpacts )
+				{
+					// Recreate bullet hit effect that would otherwise be missing with a player-only mask
+					trace_t effectTrace;
+					gentity_t *hitEffect;
+					vec3_t effectOrigin;
+
+					G_LocationalTrace(&effectTrace, start, end, inflictor->s.number, contentMask, priorityMap);
+					Vec3Lerp(start, end, effectTrace.fraction, effectOrigin);
+					hitEffect = G_TempEntity(effectOrigin, event);
+					hitEffect->s.eventParm = DirToByte(effectTrace.normal) & 0xFF;
+					hitEffect->s.surfType = (effectTrace.surfaceFlags >> 20) & 0x1F;
+				}
+			}
+			else if ( !noBulletImpacts )
+			/* New code end */
+			{
+				tempEnt = G_TempEntity(origin, event);
+				tempEnt->s.eventParm = DirToByte(trace.normal);
+				tempEnt->s.scale = DirToByte(dir);
+
+				if ( self->s.eType == ET_PLAYER_CORPSE && g_corpseHit->current.boolean )
+					surfaceType = 7;
+				else
+					surfaceType = (trace.surfaceFlags & 0x1F00000) >> 20;
+
+				tempEnt->s.surfType = surfaceType;
+				tempEnt->s.otherEntityNum = weaponEnt->s.number;
+			}
+		}
+
+		if ( (trace.contents & CONTENTS_GLASS) != 0 )
+		{
+			VectorSubtract(end, start, dir);
+			Vec3Normalize(dir);
+			scaleSquared = DotProduct(trace.normal, dir);
+
+			if ( -scaleSquared < 0.125 )
+				dirScale = 0.0;
+			else
+				dirScale = 0.25 / -scaleSquared;
+
+			VectorMA(origin, dirScale, dir, start);
+			custom_Bullet_Fire_Extended(inflictor, attacker, start, end, dmgScale, callCount + 1, wp, weaponEnt, gameTime);
+		}
+		else if ( self->takedamage )
+		{
+			if ( self != attacker )
+			{
+				VectorSubtract(start, origin, temp);
+				dist = VectorLength(temp);
+				damage = (int)((float)Bullet_CalcDamageRange(wp, dist) * dmgScale);
+
+				G_Damage(self, attacker, attacker, wp->forward, origin, damage, dflags, meansOfDeath, (hitLocation_t)trace.partGroup, level.time - gameTime);
+
+				if ( self->client )
+				{
+					if ( (dflags & 0x20) != 0 && ( Dvar_GetInt("scr_friendlyfire") || !OnSameTeam(self, attacker) ) )
+					{
+						scale = dmgScale * 0.5;
+						custom_Bullet_Fire_Extended(self, attacker, origin, end, scale, callCount + 1, wp, weaponEnt, gameTime);
+					}
+				}
+			}
+		}
 	}
-	G_LocationalTrace(results, start, end, passEntityNum, contentmask, priorityMap);
+	else
+	{
+		Com_DPrintf("Bullet_Fire_Extended: Too many resursions, bullet aborted\n");
+	}
 }
 
 void custom_Bullet_Fire_Spread(gentity_t *source, gentity_t *inflictor, weaponParms *wp, int offset, float spread) // Guessed function name
@@ -5388,7 +5532,7 @@ void custom_Bullet_Fire_Spread(gentity_t *source, gentity_t *inflictor, weaponPa
 	for ( i = 0; i < wp->weapDef->shotCount; i++ )
 	{
 		Bullet_Endpos(spread, end, wp, distance);
-		Bullet_Fire_Extended(source, inflictor, &start, &end, 1.0, 0, wp, source, offset);
+		custom_Bullet_Fire_Extended(source, inflictor, start, end, 1.0, 0, wp, source, offset);
 	}
 }
 
@@ -5410,7 +5554,7 @@ void custom_Bullet_Fire(gentity_t *inflictor, float spread, weaponParms *wp, gen
 		/* New code end */
 
 		Bullet_Endpos(spread, end, wp, distance);
-		Bullet_Fire_Extended(source, inflictor, &wp->muzzleTrace, &end, 1.0, 0, wp, source, offset);
+		custom_Bullet_Fire_Extended(source, inflictor, wp->muzzleTrace, end, 1.0, 0, wp, source, offset);
 	}
 	G_AntiLag_RestoreClientPos(&antilagStore);
 }
@@ -5796,9 +5940,9 @@ void G_RunGravityModelAsItem(gentity_t *ent) // G_RunItem as base
 		}
 
 		if ( customEntityState[(ent->s).number].collideModels )
-			SV_Trace(&trace, &(ent->r).currentOrigin, &(ent->r).mins, &(ent->r).maxs, &origin, (ent->s).number, ent->clipmask, 1, NULL, 1);
+			SV_Trace(&trace, (ent->r).currentOrigin, (ent->r).mins, (ent->r).maxs, origin, (ent->s).number, ent->clipmask, 1, NULL, 1);
 		else
-			SV_Trace(&trace, &(ent->r).currentOrigin, &(ent->r).mins, &(ent->r).maxs, &origin, (ent->s).number, ent->clipmask, 0, NULL, 1);
+			SV_Trace(&trace, (ent->r).currentOrigin, (ent->r).mins, (ent->r).maxs, origin, (ent->s).number, ent->clipmask, 0, NULL, 1);
 		if ( trace.fraction < 1.0 )
 		{
 			Vec3Lerp((ent->r).currentOrigin, origin, trace.fraction, lerpOrigin);
@@ -5807,9 +5951,9 @@ void G_RunGravityModelAsItem(gentity_t *ent) // G_RunItem as base
 				VectorSubtract(origin, (ent->r).currentOrigin, subOrigin);
 				VectorMA(origin, 1 - DotProduct(subOrigin, trace.normal), trace.normal, origin);
 				if ( customEntityState[(ent->s).number].collideModels )
-					SV_Trace(&trace, &(ent->r).currentOrigin, &(ent->r).mins, &(ent->r).maxs, &origin, (ent->s).number, ent->clipmask, 1, NULL, 1);
+					SV_Trace(&trace, (ent->r).currentOrigin, (ent->r).mins, (ent->r).maxs, origin, (ent->s).number, ent->clipmask, 1, NULL, 1);
 				else
-					SV_Trace(&trace, &(ent->r).currentOrigin, &(ent->r).mins, &(ent->r).maxs, &origin, (ent->s).number, ent->clipmask, 0, NULL, 1);
+					SV_Trace(&trace, (ent->r).currentOrigin, (ent->r).mins, (ent->r).maxs, origin, (ent->s).number, ent->clipmask, 0, NULL, 1);
 				Vec3Lerp(lerpOrigin, origin, trace.fraction, lerpOrigin);
 			}
 			(ent->s).pos.trType = TR_LINEAR_STOP;
@@ -5911,7 +6055,7 @@ void custom_G_RunFrameForEntity(gentity_t *ent)
 						G_RunThink(ent);
 					}
 				}
-				else if ( (ent->s).eType == ET_CORPSE )
+				else if ( (ent->s).eType == ET_PLAYER_CORPSE )
 				{
 					G_RunCorpse(ent);
 				}
@@ -6000,7 +6144,7 @@ qboolean custom_SV_ClientCommand(client_t *cl, msg_t *msg)
 	return qfalse;
 }
 
-void custom_G_CheckHitTriggerDamage(gentity_t *inflictor, float *muzzleTrace, float *origin, int damage, meansOfDeath_t meansOfDeath)
+void custom_G_CheckHitTriggerDamage(gentity_t *pActivator, float *vStart, float *vEnd, int iDamage, meansOfDeath_t iMOD)
 {
 	// Function has stock logic
 	gentity_t *ent;
@@ -6011,9 +6155,9 @@ void custom_G_CheckHitTriggerDamage(gentity_t *inflictor, float *muzzleTrace, fl
 	int i;
 	int entNum;
 
-	VectorCopy(muzzleTrace, mins);
-	VectorCopy(muzzleTrace, maxs);
-	AddPointToBounds(origin, mins, maxs);
+	VectorCopy(vStart, mins);
+	VectorCopy(vStart, maxs);
+	AddPointToBounds(vEnd, mins, maxs);
 	count = CM_AreaEntities(mins, maxs, entityList, MAX_GENTITIES, CONTENTS_DONOTENTER_LARGE);
 	for ( i = 0; i < count; i++)
 	{
@@ -6021,12 +6165,12 @@ void custom_G_CheckHitTriggerDamage(gentity_t *inflictor, float *muzzleTrace, fl
 		ent = g_entities + entNum;
 		if ( g_entities[entNum].classname == scr_const.trigger_damage )
 		{
-			if ( SV_SightTraceToEntity(muzzleTrace, vec3_origin, vec3_origin, origin, (ent->s).number, -1) )
+			if ( SV_SightTraceToEntity(vStart, vec3_origin, vec3_origin, vEnd, (ent->s).number, -1) )
 			{
-				Scr_AddEntity(inflictor);
-				Scr_AddInt(damage);
+				Scr_AddEntity(pActivator);
+				Scr_AddInt(iDamage);
 				Scr_Notify(ent, scr_const.damage, 2);
-				Activate_trigger_damage(ent, inflictor, damage, meansOfDeath);
+				Activate_trigger_damage(ent, pActivator, iDamage, iMOD);
 				if ( g_entities[entNum].trigger.accumulate == 0 )
 				{
 					g_entities[entNum].health = 32000;
@@ -6036,7 +6180,7 @@ void custom_G_CheckHitTriggerDamage(gentity_t *inflictor, float *muzzleTrace, fl
 	}
 }
 
-void custom_G_GrenadeTouchTriggerDamage(gentity_t *inflictor, float *muzzleTrace, float *origin, int damage, meansOfDeath_t meansOfDeath)
+void custom_G_GrenadeTouchTriggerDamage(gentity_t *pActivator, float *vStart, float *vEnd, int iDamage, meansOfDeath_t iMOD)
 {
 	// Function has stock logic
 	gentity_t *ent;
@@ -6047,9 +6191,9 @@ void custom_G_GrenadeTouchTriggerDamage(gentity_t *inflictor, float *muzzleTrace
 	int i;
 	int entNum;
 
-	VectorCopy(muzzleTrace,mins);
-	VectorCopy(muzzleTrace,maxs);
-	AddPointToBounds(origin,mins,maxs);
+	VectorCopy(vStart, mins);
+	VectorCopy(vStart, maxs);
+	AddPointToBounds(vEnd, mins, maxs);
 	count = CM_AreaEntities(mins, maxs, entityList, MAX_GENTITIES, CONTENTS_DONOTENTER_LARGE);
 	for ( i = 0; i < count; i++ )
 	{
@@ -6057,12 +6201,12 @@ void custom_G_GrenadeTouchTriggerDamage(gentity_t *inflictor, float *muzzleTrace
 		ent = g_entities + entNum;
 		if ( g_entities[entNum].classname == scr_const.trigger_damage && (g_entities[entNum].flags & FL_GRENADE_TOUCH_DAMAGE) != 0 )
 		{
-			if ( SV_SightTraceToEntity(muzzleTrace, vec3_origin, vec3_origin, origin, (ent->s).number, -1) )
+			if ( SV_SightTraceToEntity(vStart, vec3_origin, vec3_origin, vEnd, (ent->s).number, -1) )
 			{
-				Scr_AddEntity(inflictor);
-				Scr_AddInt(damage);
+				Scr_AddEntity(pActivator);
+				Scr_AddInt(iDamage);
 				Scr_Notify(ent, scr_const.damage, 2);
-				Activate_trigger_damage(ent, inflictor,damage, meansOfDeath);
+				Activate_trigger_damage(ent, pActivator, iDamage, iMOD);
 				if ( g_entities[entNum].trigger.accumulate == 0 )
 				{
 					g_entities[entNum].health = 32000;
@@ -7207,7 +7351,6 @@ public:
 		cracking_hook_call(0x0808FD52, (int)hook_bad_printf);
 		cracking_hook_call(0x080EBC58, (int)hook_findWeaponIndex);
 		cracking_hook_call(0x08062644, (int)hitch_warning_print);
-		cracking_hook_call(0x0811FF47, (int)bullet_fire_extended_trace);
 		cracking_hook_call(0x0808EE0A, (int)invalid_password);
 
 		hook_gametype_scripts = new cHook(0x08110286, (int)custom_GScr_LoadGameTypeScript);
@@ -7300,6 +7443,7 @@ public:
 		cracking_hook_function(0x08109CE0, (int)custom_G_UpdateObjectives); // Guessed function name
 		cracking_hook_function(0x08120A70, (int)custom_FireWeaponMelee);
 		cracking_hook_function(0x08120484, (int)custom_Bullet_Fire);
+		cracking_hook_function(0x0811FE90, (int)custom_Bullet_Fire_Extended);
 		cracking_hook_function(0x0809C21C, (int)custom_SV_QueueVoicePacket);
 		cracking_hook_function(0x08121BC6, (int)custom_Player_UpdateCursorHints);
 		cracking_hook_function(0x08060C20, (int)custom_Com_PrintMessage);

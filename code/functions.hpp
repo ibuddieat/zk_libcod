@@ -570,6 +570,15 @@ static const Dvar_GetBool_t Dvar_GetBool = (Dvar_GetBool_t)0x0; // Not tested
 static const Dvar_GetBool_t Dvar_GetBool = (Dvar_GetBool_t)0x080B2FAA;
 #endif
 
+typedef int (*Dvar_GetInt_t)(const char *dvarName);
+#if COD_VERSION == COD2_1_0
+static const Dvar_GetInt_t Dvar_GetInt = (Dvar_GetInt_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Dvar_GetInt_t Dvar_GetInt = (Dvar_GetInt_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Dvar_GetInt_t Dvar_GetInt = (Dvar_GetInt_t)0x080B2FFC;
+#endif
+
 typedef void (*Dvar_SetBool_t)(dvar_t *dvar, byte value);
 #if COD_VERSION == COD2_1_0
 static const Dvar_SetBool_t Dvar_SetBool = (Dvar_SetBool_t)0x0; // Not tested
@@ -2667,6 +2676,15 @@ static const G_AntiLag_RestoreClientPos_t G_AntiLag_RestoreClientPos = (G_AntiLa
 static const G_AntiLag_RestoreClientPos_t G_AntiLag_RestoreClientPos = (G_AntiLag_RestoreClientPos_t)0x0811FDEC;
 #endif
 
+typedef int (*Bullet_CalcDamageRange_t)(const weaponParms *wp, float dist);
+#if COD_VERSION == COD2_1_0
+static const Bullet_CalcDamageRange_t Bullet_CalcDamageRange = (Bullet_CalcDamageRange_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Bullet_CalcDamageRange_t Bullet_CalcDamageRange = (Bullet_CalcDamageRange_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Bullet_CalcDamageRange_t Bullet_CalcDamageRange = (Bullet_CalcDamageRange_t)0x0811FB7C;
+#endif
+
 typedef void (*Bullet_Endpos_t)(float spread, float *end, weaponParms *wp, float distance);
 #if COD_VERSION == COD2_1_0
 static const Bullet_Endpos_t Bullet_Endpos = (Bullet_Endpos_t)0x0; // Not tested
@@ -2674,15 +2692,6 @@ static const Bullet_Endpos_t Bullet_Endpos = (Bullet_Endpos_t)0x0; // Not tested
 static const Bullet_Endpos_t Bullet_Endpos = (Bullet_Endpos_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const Bullet_Endpos_t Bullet_Endpos = (Bullet_Endpos_t)0x0811FAC8;
-#endif
-
-typedef void (*Bullet_Fire_Extended_t)(gentity_t *source, gentity_t *inflictor, vec3_t *start, vec3_t *end, float damage, int recursion, weaponParms *wp, gentity_t *target, int offset);
-#if COD_VERSION == COD2_1_0
-static const Bullet_Fire_Extended_t Bullet_Fire_Extended = (Bullet_Fire_Extended_t)0x0; // Not tested
-#elif COD_VERSION == COD2_1_2
-static const Bullet_Fire_Extended_t Bullet_Fire_Extended = (Bullet_Fire_Extended_t)0x0; // Not tested
-#elif COD_VERSION == COD2_1_3
-static const Bullet_Fire_Extended_t Bullet_Fire_Extended = (Bullet_Fire_Extended_t)0x0811FE90;
 #endif
 
 typedef void (*SV_AuthorizeIpPacket_t)(netadr_t from);
@@ -2784,6 +2793,15 @@ static const PbSvAddEvent_t PbSvAddEvent = (PbSvAddEvent_t)0x0; // Not tested
 static const PbSvAddEvent_t PbSvAddEvent = (PbSvAddEvent_t)0x0813BF4C;
 #endif
 
+typedef void (*G_Damage_t)(gentity_t *self, gentity_t *inflictor, gentity_t *ent, const float *vDir, const float *vPoint, int value, int dFlags, meansOfDeath_t meansOfDeath, hitLocation_t hitLoc, int timeOffset);
+#if COD_VERSION == COD2_1_0
+static const G_Damage_t G_Damage = (G_Damage_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_Damage_t G_Damage = (G_Damage_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_Damage_t G_Damage = (G_Damage_t)0x08101C58;
+#endif
+
 typedef void (*G_RunThink_t)(gentity_t *ent);
 #if COD_VERSION == COD2_1_0
 static const G_RunThink_t G_RunThink = (G_RunThink_t)0x0; // Not tested
@@ -2793,7 +2811,7 @@ static const G_RunThink_t G_RunThink = (G_RunThink_t)0x0; // Not tested
 static const G_RunThink_t G_RunThink = (G_RunThink_t)0x08109E60;
 #endif
 
-typedef void (*G_LocationalTrace_t)(trace_t *results, const vec3_t *start, const vec3_t *end, int passEntityNum, int contentmask, uint8_t *priorityMap);
+typedef void (*G_LocationalTrace_t)(trace_t *results, const float *start, const float *end, int passEntityNum, int contentmask, uint8_t *priorityMap);
 #if COD_VERSION == COD2_1_0
 static const G_LocationalTrace_t G_LocationalTrace = (G_LocationalTrace_t)0x08108134;
 #elif COD_VERSION == COD2_1_2
@@ -2802,7 +2820,7 @@ static const G_LocationalTrace_t G_LocationalTrace = (G_LocationalTrace_t)0x0810
 static const G_LocationalTrace_t G_LocationalTrace = (G_LocationalTrace_t)0x0810A5CC;
 #endif
 
-typedef void (*G_TraceCapsule_t)(trace_t *results, vec3_t *start, vec3_t *mins, vec3_t *maxs, vec3_t *end, int passEntityNum, int contentMask);
+typedef void (*G_TraceCapsule_t)(trace_t *results, const float *start, const float *mins, const float *maxs, const float *end, int passEntityNum, int contentMask);
 #if COD_VERSION == COD2_1_0
 static const G_TraceCapsule_t G_TraceCapsule = (G_TraceCapsule_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
@@ -2811,7 +2829,7 @@ static const G_TraceCapsule_t G_TraceCapsule = (G_TraceCapsule_t)0x0; // Not tes
 static const G_TraceCapsule_t G_TraceCapsule = (G_TraceCapsule_t)0x0810A528;
 #endif
 
-typedef void (*SV_Trace_t)(trace_t *results, vec3_t *start, vec3_t *mins, vec3_t *maxs, vec3_t *end, int passEntityNum, int contentMask, int locational, uint8_t *priorityMap, int staticmodels);
+typedef void (*SV_Trace_t)(trace_t *results, const float *start, const float *mins, const float *maxs, const float *end, int passEntityNum, int contentMask, int locational, uint8_t *priorityMap, int staticmodels);
 #if COD_VERSION == COD2_1_0
 static const SV_Trace_t SV_Trace = (SV_Trace_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
@@ -3358,6 +3376,15 @@ static const ClientConnect_t ClientConnect = (ClientConnect_t)0x0; // Not tested
 static const ClientConnect_t ClientConnect = (ClientConnect_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const ClientConnect_t ClientConnect = (ClientConnect_t)0x080F8E7A;
+#endif
+
+typedef qboolean (*OnSameTeam_t)(gentity_t *ent1, gentity_t *ent2);
+#if COD_VERSION == COD2_1_0
+static const OnSameTeam_t OnSameTeam = (OnSameTeam_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const OnSameTeam_t OnSameTeam = (OnSameTeam_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const OnSameTeam_t OnSameTeam = (OnSameTeam_t)0x0811C0D0;
 #endif
 
 #endif

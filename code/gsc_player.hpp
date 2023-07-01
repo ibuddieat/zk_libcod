@@ -89,6 +89,8 @@ void gsc_player_getservercommandqueuesize(scr_entref_t id);
 void gsc_player_setconfigstring(scr_entref_t id);
 void gsc_player_getcollisionteam(scr_entref_t id);
 void gsc_player_setcollisionteam(scr_entref_t id);
+void gsc_player_disablebulletimpacts(scr_entref_t id);
+void gsc_player_enablebulletimpacts(scr_entref_t id);
 #if COMPILE_CUSTOM_VOICE == 1
 void gsc_player_playsoundfile(scr_entref_t id);
 void gsc_player_stopsoundfile(scr_entref_t id);

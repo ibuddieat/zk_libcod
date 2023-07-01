@@ -287,31 +287,6 @@ typedef enum
 
 typedef enum
 {
-	ENT_HANDLER_NULL = 0x0,
-	ENT_HANDLER_TRIGGER_MULTIPLE = 0x1,
-	ENT_HANDLER_TRIGGER_HURT = 0x2,
-	ENT_HANDLER_TRIGGER_HURT_TOUCH = 0x3,
-	ENT_HANDLER_TRIGGER_DAMAGE = 0x4,
-	ENT_HANDLER_SCRIPT_MOVER = 0x5,
-	ENT_HANDLER_SCRIPT_MODEL = 0x6,
-	ENT_HANDLER_GRENADE = 0x7,
-	ENT_HANDLER_ROCKET = 0x8,
-	ENT_HANDLER_CLIENT = 0x9,
-	ENT_HANDLER_CLIENT_SPECTATOR = 0xA,
-	ENT_HANDLER_CLIENT_DEAD = 0xB,
-	ENT_HANDLER_PLAYER_CLONE = 0xC,
-	ENT_HANDLER_TURRET_INIT = 0xD,
-	ENT_HANDLER_TURRET = 0xE,
-	ENT_HANDLER_DROPPED_ITEM = 0xF,
-	ENT_HANDLER_ITEM_INIT = 0x10,
-	ENT_HANDLER_ITEM = 0x11,
-	ENT_HANDLER_TRIGGER_USE = 0x12,
-	ENT_HANDLER_PLAYER_BLOCK = 0x13,
-	ENT_HANDLER_COUNT = 0x14
-} entHandlers_t;
-
-typedef enum
-{
 	HITLOC_NONE,
 	HITLOC_HELMET,
 	HITLOC_HEAD,
@@ -353,6 +328,31 @@ typedef enum
 	MOD_EXPLOSIVE
 } meansOfDeath_t;
 
+typedef enum 
+{
+	ENT_HANDLER_NULL = 0x0,
+	ENT_HANDLER_TRIGGER_MULTIPLE = 0x1,
+	ENT_HANDLER_TRIGGER_HURT = 0x2,
+	ENT_HANDLER_TRIGGER_HURT_TOUCH = 0x3,
+	ENT_HANDLER_TRIGGER_DAMAGE = 0x4,
+	ENT_HANDLER_SCRIPT_MOVER = 0x5,
+	ENT_HANDLER_SCRIPT_MODEL = 0x6,
+	ENT_HANDLER_GRENADE = 0x7,
+	ENT_HANDLER_ROCKET = 0x8,
+	ENT_HANDLER_CLIENT = 0x9,
+	ENT_HANDLER_CLIENT_SPECTATOR = 0xA,
+	ENT_HANDLER_CLIENT_DEAD = 0xB,
+	ENT_HANDLER_PLAYER_CLONE = 0xC,
+	ENT_HANDLER_TURRET_INIT = 0xD,
+	ENT_HANDLER_TURRET = 0xE,
+	ENT_HANDLER_DROPPED_ITEM = 0xF,
+	ENT_HANDLER_ITEM_INIT = 0x10,
+	ENT_HANDLER_ITEM = 0x11,
+	ENT_HANDLER_TRIGGER_USE = 0x12,
+	ENT_HANDLER_PLAYER_BLOCK = 0x13,
+	ENT_HANDLER_COUNT = 0x14
+} entHandlers_t;
+
 typedef struct entityHandler_s
 {
 	void (*think)(gentity_t *);
@@ -389,16 +389,17 @@ enum clc_ops_e
 
 typedef enum
 {
-	ET_GENERAL = 0,
-	ET_PLAYER = 1,
-	ET_CORPSE = 2,
-	ET_ITEM = 3,
-	ET_MISSILE = 4,
-	ET_INVISIBLE = 5,
-	ET_SCRIPTMOVER = 6,
-	ET_UNK1 = 7, // ET_FX ?
-	ET_LOOP_FX = 8,
-	ET_TURRET = 9
+	ET_GENERAL = 0x0,
+	ET_PLAYER = 0x1,
+	ET_PLAYER_CORPSE = 0x2,
+	ET_ITEM = 0x3,
+	ET_MISSILE = 0x4,
+	ET_INVISIBLE = 0x5,
+	ET_SCRIPTMOVER = 0x6,
+	ET_FX = 0x7,
+	ET_LOOP_FX = 0x8,
+	ET_TURRET = 0x9,
+	ET_EVENTS = 0xA
 } entityType_t;
 
 typedef enum
@@ -3494,6 +3495,17 @@ static const int com_frameTime_offset = 0x0;
 static const int com_frameTime_offset = 0x081A21B8;
 #endif
 
+#if COD_VERSION == COD2_1_0 // Not tested
+static const int bulletPriorityMap_offset = 0x0;
+static const int riflePriorityMap_offset = 0x0;
+#elif COD_VERSION == COD2_1_2 // Not tested
+static const int bulletPriorityMap_offset = 0x0;
+static const int riflePriorityMap_offset = 0x0;
+#elif COD_VERSION == COD2_1_3
+static const int bulletPriorityMap_offset = 0x08187C0C;
+static const int riflePriorityMap_offset = 0x08187C1F;
+#endif
+
 #define g_entities ((gentity_t*)(gentities_offset))
 #define g_clients ((gclient_t*)(gclients_offset))
 #define scrVarPub (*((scrVarPub_t*)( varpub_offset )))
@@ -3543,6 +3555,8 @@ static const int com_frameTime_offset = 0x081A21B8;
 #define cached_models (((XModel_t**)( cached_models_offset )))
 #define rcon_lasttime (*((int*)( rcon_lasttime_offset )))
 #define com_frameTime (*((int*)( com_frameTime_offset )))
+#define bulletPriorityMap (*((uint8_t*)( bulletPriorityMap_offset )))
+#define riflePriorityMap (*((uint8_t*)( riflePriorityMap_offset )))
 
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6
@@ -3699,6 +3713,7 @@ typedef struct customPlayerState_s
 	int fps;
 	int frames;
 	uint64_t frameTime;
+	qboolean noBulletImpacts;
 	int previousButtons;
 	#if COMPILE_BOTS == 1
 	int botButtons;

@@ -1221,7 +1221,7 @@ void gsc_player_set_anim(scr_entref_t ref)
 
 	gentity_t *entity = &g_entities[id];
 
-	if ( entity->s.eType == ET_CORPSE )
+	if ( entity->s.eType == ET_PLAYER_CORPSE )
 	{
 		int index = BG_AnimationIndexForString(animation);
 		entity->s.legsAnim = index;
@@ -2247,6 +2247,38 @@ void gsc_player_setcollisionteam(scr_entref_t ref)
 	{
 		Scr_ParamError(0, "collision team must be \"axis\", \"allies\", \"none\", or \"both\"");
 	}
+
+	stackPushBool(qtrue);
+}
+
+void gsc_player_disablebulletimpacts(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_disablebulletimpacts() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	customPlayerState[id].noBulletImpacts = qtrue;
+
+	stackPushBool(qtrue);
+}
+
+void gsc_player_enablebulletimpacts(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_enablebulletimpacts() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	customPlayerState[id].noBulletImpacts = qfalse;
 
 	stackPushBool(qtrue);
 }
