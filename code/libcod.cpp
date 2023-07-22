@@ -208,8 +208,8 @@ const entityHandler_t entityHandlers[] =
 	/* Script Model          */ { NULL, Reached_ScriptMover, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0 },
 	/* Grenade               */ { G_ExplodeMissile, NULL, NULL, Touch_Item_Auto, NULL, NULL, NULL, NULL, 3, 4},
 	/* Rocket                */ { G_ExplodeMissile, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 5, 6 },
-	/* Client                */ { NULL, NULL, NULL, NULL, NULL, NULL, player_die, G_PlayerController, 0, 0 },
-	/* Client Spectator      */ { NULL, NULL, NULL, NULL, NULL, NULL, player_die, NULL, 0, 0 },
+	/* Client                */ { NULL, NULL, NULL, NULL, NULL, NULL, custom_player_die, G_PlayerController, 0, 0 },
+	/* Client Spectator      */ { NULL, NULL, NULL, NULL, NULL, NULL, custom_player_die, NULL, 0, 0 },
 	/* Client Dead           */ { NULL, NULL, NULL, NULL, NULL, NULL, NULL, G_PlayerController, 0, 0 },
 	/* Player Clone          */ { BodyEnd, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0 },
 	/* Turret Init           */ { turret_think_init, NULL, NULL, NULL, turret_use, NULL, NULL, turret_controller, 0, 0},
@@ -784,7 +784,7 @@ void custom_G_SetClientContents(gentity_t *ent)
 	{
 		if ( ent->client->ufo == 0 )
 		{
-			if ( (ent->client->sess).state == STATE_DEAD )
+			if ( (ent->client->sess).sessionState == STATE_DEAD )
 			{
 				(ent->r).contents = 0;
 			}
@@ -822,12 +822,12 @@ qboolean custom_StuckInClient(gentity_t *self)
 		return qfalse;
 	/* New code end */
 
-	if ( ( ( ((self->client->ps).pm_flags & PMF_VIEWLOCKED) != 0 ) && ( (self->client->sess).state == STATE_PLAYING ) ) && ( customPlayerState[id].collisionTeam != COLLISION_TEAM_BOTH /* New condition */ || ( (self->r).contents == CONTENTS_BODY || ( (self->r).contents == CONTENTS_CORPSE ) ) ) )
+	if ( ( ( ((self->client->ps).pm_flags & PMF_VIEWLOCKED) != 0 ) && ( (self->client->sess).sessionState == STATE_PLAYING ) ) && ( customPlayerState[id].collisionTeam != COLLISION_TEAM_BOTH /* New condition */ || ( (self->r).contents == CONTENTS_BODY || ( (self->r).contents == CONTENTS_CORPSE ) ) ) )
 	{
 		hit = g_entities;
 		for ( i = 0; i < level.maxclients; i++, hit++)
 		{
-			if ( ( ( ( ( ( (hit->r).inuse != 0 ) && ( ((hit->client->ps).pm_flags & PMF_VIEWLOCKED) != 0 ) ) && ( (hit->client->sess).state == STATE_PLAYING )  ) && ( (hit != self && hit->client != NULL ) ) ) && ( 0 < hit->health && ( /* New condition */ customPlayerState[i].collisionTeam != COLLISION_TEAM_BOTH || ( (hit->r).contents == CONTENTS_BODY || ( (hit->r).contents == CONTENTS_CORPSE ) ) ) ) ) &&
+			if ( ( ( ( ( ( (hit->r).inuse != 0 ) && ( ((hit->client->ps).pm_flags & PMF_VIEWLOCKED) != 0 ) ) && ( (hit->client->sess).sessionState == STATE_PLAYING )  ) && ( (hit != self && hit->client != NULL ) ) ) && ( 0 < hit->health && ( /* New condition */ customPlayerState[i].collisionTeam != COLLISION_TEAM_BOTH || ( (hit->r).contents == CONTENTS_BODY || ( (hit->r).contents == CONTENTS_CORPSE ) ) ) ) ) &&
 			( (hit->r).absmin[0] <= (self->r).absmax[0] && ( ( ( (self->r).absmin[0] <= (hit->r).absmax[0] && ( (hit->r).absmin[1] <= (self->r).absmax[1] ) ) && ( (self->r).absmin[1] <= (hit->r).absmax[1] ) ) && ( (hit->r).absmin[2] <= (self->r).absmax[2] && ( (self->r).absmin[2] <= (hit->r).absmax[2] ) ) ) ) )
 			{
 				/* New code: per-player/team collison */
@@ -841,10 +841,10 @@ qboolean custom_StuckInClient(gentity_t *self)
 				if ( dTemp <= ( (double)fTemp * (double)fTemp ) )
 				{
 					VectorSubtract2((hit->r).currentOrigin, (self->r).currentOrigin, dir);
-					dTemp = crandom();
-					dir[0] = dir[0] + (float)((dTemp + dTemp) - 1.0);
-					dTemp = crandom();
-					dir[1] = dir[1] + (float)((dTemp + dTemp) - 1.0);
+					fTemp = G_random();
+					dir[0] = dir[0] + ((fTemp + fTemp) - 1.0);
+					fTemp = G_random();
+					dir[1] = dir[1] + ((fTemp + fTemp) - 1.0);
 					Vec2Normalize(dir);
 					if ( 0.0 < VectorLength2((hit->client->ps).velocity) )
 					{
@@ -2681,7 +2681,7 @@ int custom_ClientEndFrame(gentity_t *ent)
 	int ret = ClientEndFrame(ent);
 	hook_clientendframe->hook();
 
-	if ( ent->client->sess.state == STATE_PLAYING )
+	if ( ent->client->sess.sessionState == STATE_PLAYING )
 	{
 		int num = ent - g_entities;
 
@@ -4628,6 +4628,97 @@ void custom_PlayerCmd_ClonePlayer(scr_entref_t ref)
 	}
 
 	hook_playercmd_cloneplayer->hook();
+}
+
+void custom_player_die(gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, meansOfDeath_t meansOfDeath, int iWeapon, const float *vDir, hitLocation_t hitLoc, int psTimeOffset)
+{
+	int type;
+	gentity_t *turret;
+	gclient_t *client;
+	vec3_t origin;
+	vec3_t dir;
+	int deathAnimDuration;
+	int i;
+
+	if ( Com_GetServerDObj(self->client->ps.clientNum)
+	        && self->client->ps.pm_type <= 1
+	        && (self->client->ps.pm_flags & 0x400000) == 0 )
+	{
+		if ( attacker->s.eType == ET_TURRET && attacker->r.ownerNum != ENTITY_NONE )
+			attacker = &g_entities[attacker->r.ownerNum];
+
+		Scr_AddEntity(attacker);
+		Scr_Notify(self, scr_const.death, 1);
+
+		if ( !scr_turretDamageName->current.boolean && iWeapon ) // New: scr_turretDamageName dvar condition
+		{
+			if ( attacker->client )
+			{
+				if ( (attacker->client->ps.eFlags & EF_USETURRET) != 0 )
+				{
+					turret = &g_entities[attacker->s.otherEntityNum];
+
+					if ( turret->s.eType == ET_TURRET )
+						iWeapon = turret->s.weapon;
+				}
+			}
+		}
+
+		if ( self->client->ps.grenadeTimeLeft )
+		{
+			dir[0] = G_crandom();
+			dir[1] = G_crandom();
+			dir[2] = G_random();
+			VectorScale(dir, 160.0, dir);
+			VectorCopy(self->r.currentOrigin, origin);
+			origin[2] = origin[2] + 40.0;
+			fire_grenade(self, origin, dir, self->client->ps.offHandIndex, self->client->ps.grenadeTimeLeft);
+		}
+
+		if ( self->client->ps.pm_type == 1 )
+			type = 7;
+		else
+			type = 6;
+
+		self->client->ps.pm_type = type;
+		deathAnimDuration = BG_AnimScriptEvent(&self->client->ps, ANIM_ET_DEATH, 0, 1);
+
+		Scr_PlayerKilled(
+		    self,
+		    inflictor,
+		    attacker,
+		    damage,
+		    meansOfDeath,
+		    iWeapon,
+		    vDir,
+		    hitLoc,
+		    psTimeOffset,
+		    deathAnimDuration);
+
+		for ( i = 0; i < level.maxclients; ++i )
+		{
+			client = &level.clients[i];
+
+			if ( client->sess.connected == CON_CONNECTED
+			        && client->sess.sessionState == STATE_SPECTATOR
+			        && client->spectatorClient == self->s.number )
+			{
+				Cmd_Score_f(&g_entities[i]);
+			}
+		}
+
+		self->takedamage = 1;
+		self->r.contents = CONTENTS_CORPSE;
+		self->r.currentAngles[2] = 0.0;
+		LookAtKiller(self, inflictor, attacker);
+		VectorCopy(self->r.currentAngles, self->client->ps.viewangles);
+		self->s.loopSound = 0;
+		SV_UnlinkEntity(self);
+		self->r.maxs[2] = 30.0;
+		SV_LinkEntity(self);
+		self->health = 0;
+		self->handler = 11;
+	}
 }
 
 void custom_PlayerCmd_finishPlayerDamage(scr_entref_t entRef)

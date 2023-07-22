@@ -75,6 +75,15 @@ static const Scr_GetNumParam_t Scr_GetNumParam = (Scr_GetNumParam_t)0x0808506A;
 static const Scr_GetNumParam_t Scr_GetNumParam = (Scr_GetNumParam_t)0x08085136;
 #endif
 
+typedef void (*Cmd_Score_f_t)(gentity_t *ent);
+#if COD_VERSION == COD2_1_0
+static const Cmd_Score_f_t Cmd_Score_f = (Cmd_Score_f_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Cmd_Score_f_t Cmd_Score_f = (Cmd_Score_f_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Cmd_Score_f_t Cmd_Score_f = (Cmd_Score_f_t)0x080FE0EE;
+#endif
+
 typedef char * (*Cmd_Argv_t)(int arg);
 #if COD_VERSION == COD2_1_0
 static const Cmd_Argv_t Cmd_Argv = (Cmd_Argv_t)0x0806001C;
@@ -1461,6 +1470,15 @@ static const BG_AnimationIndexForString_t BG_AnimationIndexForString = (BG_Anima
 static const BG_AnimationIndexForString_t BG_AnimationIndexForString = (BG_AnimationIndexForString_t)0x080D6DD0;
 #endif
 
+typedef void (*Scr_PlayerKilled_t)(gentity_t *self, gentity_t *eInflictor, gentity_t *eAttacker, int iDamage, meansOfDeath_t meansOfDeath, int iWeapon, const float *vDir, hitLocation_t hitLoc, int timeOffset, int deathAnimDuration);
+#if COD_VERSION == COD2_1_0
+static const Scr_PlayerKilled_t Scr_PlayerKilled = (Scr_PlayerKilled_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Scr_PlayerKilled_t Scr_PlayerKilled = (Scr_PlayerKilled_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Scr_PlayerKilled_t Scr_PlayerKilled = (Scr_PlayerKilled_t)0x08118492;
+#endif
+
 typedef void (*LookAtKiller_t)(gentity_t *self, gentity_t *inflictor, gentity_t *attacker);
 #if COD_VERSION == COD2_1_0
 static const LookAtKiller_t LookAtKiller = (LookAtKiller_t)0x080FF17A;
@@ -2658,7 +2676,7 @@ static const SetObjectiveIcon_t SetObjectiveIcon = (SetObjectiveIcon_t)0x0; // N
 static const SetObjectiveIcon_t SetObjectiveIcon = (SetObjectiveIcon_t)0x081128CE;
 #endif
 
-typedef gentity_t * (*fire_grenade_t)(gentity_t *attacker, vec3_t *start, vec3_t *dir, int weaponIndex, int fuseTime);
+typedef gentity_t * (*fire_grenade_t)(gentity_t *attacker, const float *start, const float *dir, int weaponIndex, int fuseTime);
 #if COD_VERSION == COD2_1_0
 static const fire_grenade_t fire_grenade = (fire_grenade_t)0x0810C1F6;
 #elif COD_VERSION == COD2_1_2
@@ -3000,13 +3018,22 @@ static const VectorLength2_t VectorLength2 = (VectorLength2_t)0x0; // Not tested
 static const VectorLength2_t VectorLength2 = (VectorLength2_t)0x080F7C08;
 #endif
 
-typedef double (*crandom_t)(void);
+typedef float (*G_crandom_t)(void);
 #if COD_VERSION == COD2_1_0
-static const crandom_t crandom = (crandom_t)0x0; // Not tested
+static const G_crandom_t G_crandom = (G_crandom_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
-static const crandom_t crandom = (crandom_t)0x0; // Not tested
+static const G_crandom_t G_crandom = (G_crandom_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
-static const crandom_t crandom = (crandom_t)0x080A3774;
+static const G_crandom_t G_crandom = (G_crandom_t)0x080A3792;
+#endif
+
+typedef float (*G_random_t)(void);
+#if COD_VERSION == COD2_1_0
+static const G_random_t G_random = (G_random_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_random_t G_random = (G_random_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_random_t G_random = (G_random_t)0x080A3774;
 #endif
 
 typedef void (*Cbuf_ExecuteText_t)(int exec_when, const char* text);

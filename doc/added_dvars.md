@@ -66,7 +66,7 @@ Added dvars:
   * `scr_turretDamageName`
     * Type: Boolean
     * Default: False
-    * Effect: If true, turret weapon names are passed to Callback_PlayerDamage when using a turret, instead of the player's current weapon slot's weapon. 
+    * Effect: If true, turret weapon names are passed to Callback_PlayerDamage when using a turret, instead of the player's current weapon slot's weapon. Also fixes the game issue where grenade (and other) kills are shown as turret kills while the player is using a turret.
   * `sv_disconnectMessages`
     * Type: Boolean
     * Default: True

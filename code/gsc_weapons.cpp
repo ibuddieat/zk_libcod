@@ -1018,7 +1018,7 @@ void gsc_weapons_spawngrenade(scr_entref_t ref)
 		fuseTime = weapon->iFuseTime;
 	}
 
-	grenade = fire_grenade(owner, &origin, &dir, weaponIndex, fuseTime);
+	grenade = fire_grenade(owner, origin, dir, weaponIndex, fuseTime);
 	Vec3Normalize(dir);
 	VectorMA(grenade->s.pos.trDelta, DotProduct(velocity, dir), dir, grenade->s.pos.trDelta);
 

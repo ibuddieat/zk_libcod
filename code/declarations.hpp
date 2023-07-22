@@ -1469,7 +1469,7 @@ typedef enum
 
 typedef struct
 {
-	sessionState_t state;
+	sessionState_t sessionState;
 	int forceSpectatorClient;
 	int statusIcon;
 	int archiveTime;
