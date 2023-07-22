@@ -81,6 +81,7 @@ dvar_t *g_safePrecache;
 dvar_t *g_spawnMapTurrets;
 dvar_t *g_spawnMapWeapons;
 dvar_t *g_triggerMode;
+dvar_t *loc_loadLocalizedMods;
 dvar_t *logErrors;
 dvar_t *logfileName;
 dvar_t *logfileRotate;
@@ -345,6 +346,7 @@ void common_init_complete_print(const char *format, ...)
 	g_spawnMapTurrets = Dvar_RegisterBool("g_spawnMapTurrets", qtrue, DVAR_ARCHIVE);
 	g_spawnMapWeapons = Dvar_RegisterBool("g_spawnMapWeapons", qtrue, DVAR_ARCHIVE);
 	g_triggerMode = Dvar_RegisterInt("g_triggerMode", 1, 0, 2, DVAR_ARCHIVE);
+	loc_loadLocalizedMods = Dvar_RegisterBool("loc_loadLocalizedMods", qfalse, DVAR_ARCHIVE);
 	logErrors = Dvar_RegisterBool("logErrors", qfalse, DVAR_ARCHIVE);
 	scr_turretDamageName = Dvar_RegisterBool("scr_turretDamageName", qfalse, DVAR_ARCHIVE);
 	sv_allowRcon = Dvar_RegisterBool("sv_allowRcon", qtrue, DVAR_ARCHIVE);
@@ -441,6 +443,68 @@ void hook_sv_spawnserver(const char *format, ...)
 	// Do stuff after sv has been spawned here
 
 	hook_developer_prints->hook();
+}
+
+qboolean IsMainLocalizedIwd(searchpath_t *search)
+{
+	// Include all non-localized files
+	if ( search->localized == 0 )
+		return qfalse;
+
+	// Exclude localized files from main folder
+	// iwdFilename: Absolute path to .iwd file, including suffix
+	// iwdBasename: .iwd file name without suffix
+	// iwdGamename: folder name (main and/or fs_game)
+	if ( !strncmp(search->iwd->iwdGamename, "main", 4) )
+		return qfalse;
+
+	// If configured, include localized mod files
+	if ( !loc_loadLocalizedMods->current.boolean )
+		return qfalse;
+
+	return qtrue;
+}
+
+const char * custom_FS_LoadedIwdChecksums(void)
+{
+	char *src;
+	searchpath_t *search;
+	static char info[BIG_INFO_STRING];
+
+	info[0] = '\0';
+
+	for ( search = fs_searchpaths; search != (searchpath_t *)0x0; search = search->next )
+	{
+		// New: Replaced "search->localized == 0" with "!IsMainLocalizedIwd(search)"
+		if ( ( search->iwd != NULL ) && !IsMainLocalizedIwd(search) )
+		{
+			src = custom_va("%i ", search->iwd->checksum);
+			I_strncat(info, BIG_INFO_STRING, src);
+		}
+	}
+	return info;
+}
+
+const char * custom_FS_LoadedIwdNames(void)
+{
+	searchpath_t *search;
+	static char info[BIG_INFO_STRING];
+
+	info[0] = '\0';
+
+	for ( search = fs_searchpaths; search != (searchpath_t *)0x0; search = search->next )
+	{
+		// New: Replaced "search->localized == 0" with "!IsMainLocalizedIwd(search)"
+		if ( ( search->iwd != NULL ) && !IsMainLocalizedIwd(search) )
+		{
+			if ( info[0] != '\0' )
+			{
+				I_strncat(info, BIG_INFO_STRING, " ");
+			}
+			I_strncat(info, BIG_INFO_STRING, search->iwd->iwdBasename);
+		}
+	}
+	return info;
 }
 
 void custom_SV_SpawnServer(char *server)
@@ -609,13 +673,13 @@ void custom_SV_SpawnServer(char *server)
 
 	if ( sv_pure->current.boolean )
 	{
-		iwdChecksums = FS_LoadedIwdChecksums();
+		iwdChecksums = custom_FS_LoadedIwdChecksums();
 		Dvar_SetString(sv_iwds, iwdChecksums);
 
 		if ( !*iwdChecksums )
 			Com_Printf("WARNING: sv_pure set but no IWD files loaded\n");
 
-		iwdNames = FS_LoadedIwdNames();
+		iwdNames = custom_FS_LoadedIwdNames();
 		Dvar_SetString(sv_iwdNames, iwdNames);
 	}
 	else

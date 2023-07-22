@@ -36,6 +36,7 @@
 #define VectorSubtract4( a, b, c )  ( ( c )[0] = ( a )[0] - ( b )[0],( c )[1] = ( a )[1] - ( b )[1],( c )[2] = ( a )[2] - ( b )[2],( c )[3] = ( a )[3] - ( b )[3] )
 
 #define ARCHIVEDSSBUF_SIZE          0x2000000
+#define BIG_INFO_STRING             0x2000
 #define ENTFIELD_MASK               0xC000
 #define FLOAT_INT_BITS              13
 #define FLOAT_INT_BIAS              ( 1 << ( FLOAT_INT_BITS - 1 ) ) // 0x1000
@@ -73,6 +74,7 @@
 #define MAX_VOICEPACKETDATALEN      256
 #define MAX_VOICEPACKETS            40
 #define MAX_VOICEPACKETSPERFRAME    2.56
+#define MAX_ZPATH                   256
 
 #define DVAR_NOFLAG             0               // 0x0000
 #define DVAR_ARCHIVE            (1 << 0)        // 0x0001
@@ -780,6 +782,7 @@ typedef struct
 } scrVmGlob_t;
 
 typedef int	fileHandle_t;
+typedef void *unzFile;
 typedef void (*xfunction_t)();
 typedef void (*xmethod_t)(scr_entref_t);
 typedef void (*xcommand_t) (void);
@@ -797,6 +800,66 @@ typedef struct scr_method_s
 	xmethod_t      call;
 	qboolean       developer;
 } scr_method_t;
+
+struct directory_t
+{
+	char path[MAX_OSPATH];
+	char gamedir[MAX_OSPATH];
+};
+
+union qfile_gus
+{
+	FILE *o;
+	unzFile z;
+};
+
+struct qfile_us
+{
+	qfile_gus file;
+	qboolean unique;
+};
+
+struct fileInIwd_t
+{
+	unsigned long pos;
+	char *name;
+	fileInIwd_t *next;
+};
+
+struct iwd_t
+{
+	char iwdFilename[MAX_OSPATH];
+	char iwdBasename[MAX_OSPATH];
+	char iwdGamename[MAX_OSPATH];
+	unzFile handle;
+	int checksum;
+	int pure_checksum;
+	int numFiles;
+	int referenced;
+	int hashSize;
+	fileInIwd_t **hashTable;
+	fileInIwd_t *buildBuffer;
+};
+
+struct fileHandleData_t
+{
+	qfile_us handleFiles;
+	qboolean handleSync;
+	int fileSize;
+	int zipFilePos;
+	qboolean zipFile;
+	qboolean streamed;
+	char name[MAX_ZPATH];
+};
+
+struct searchpath_t
+{
+	searchpath_t *next;
+	iwd_t *iwd;
+	directory_t *dir;
+	qboolean localized;
+	int language;
+};
 
 typedef enum
 {
@@ -3506,6 +3569,14 @@ static const int bulletPriorityMap_offset = 0x08187C0C;
 static const int riflePriorityMap_offset = 0x08187C1F;
 #endif
 
+#if COD_VERSION == COD2_1_0 // Not tested
+static const int fs_searchpaths_offset = 0x0;
+#elif COD_VERSION == COD2_1_2 // Not tested
+static const int fs_searchpaths_offset = 0x0;
+#elif COD_VERSION == COD2_1_3
+static const int fs_searchpaths_offset = 0x0849FD68;
+#endif
+
 #define g_entities ((gentity_t*)(gentities_offset))
 #define g_clients ((gclient_t*)(gclients_offset))
 #define scrVarPub (*((scrVarPub_t*)( varpub_offset )))
@@ -3557,6 +3628,7 @@ static const int riflePriorityMap_offset = 0x08187C1F;
 #define com_frameTime (*((int*)( com_frameTime_offset )))
 #define bulletPriorityMap (*((uint8_t*)( bulletPriorityMap_offset )))
 #define riflePriorityMap (*((uint8_t*)( riflePriorityMap_offset )))
+#define fs_searchpaths (*((searchpath_t**)( fs_searchpaths_offset )))
 
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6

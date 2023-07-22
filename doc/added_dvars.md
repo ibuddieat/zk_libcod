@@ -45,6 +45,10 @@ Added dvars:
     * Min. Value: 0
     * Max. Value: 2
     * Effect: Toggle experimental fix for broken map damage and use-touch triggers. Possible values: `0`: Triggers disabled. `1`: Stock behavior, fix disabled. `2`: Fix enabled.
+  * `loc_loadLocalizedMods`
+    * Type: Boolean
+    * Default: False
+    * Effect: If true, localized .iwd files (such that follow the "localized_&lt;language&gt;_&lt;text&gt;.iwd" pattern) in the fs_game folder (unless it is "main") will be downloaded by clients too.
   * `logErrors`
     * Type: Boolean
     * Default: False
