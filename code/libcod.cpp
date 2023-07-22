@@ -8,16 +8,25 @@
 #endif
 
 // Stock dvars
+dvar_t *bg_fallDamageMaxHeight;
+dvar_t *bg_fallDamageMinHeight;
 dvar_t *cl_allowDownload;
 dvar_t *cl_paused;
 dvar_t *com_dedicated;
 dvar_t *com_hunkMegs;
 dvar_t *com_logfile;
 dvar_t *com_sv_running;
+dvar_t *com_timescale;
 dvar_t *developer;
 dvar_t *g_knockback;
 dvar_t *g_playerCollisionEjectSpeed;
+dvar_t *g_synchronousClients;
 dvar_t *g_voiceChatTalkingDuration;
+dvar_t *jump_height;
+dvar_t *jump_stepSize;
+dvar_t *jump_slowdownEnable;
+dvar_t *jump_ladderPushVel;
+dvar_t *jump_spreadAdd;
 dvar_t *nextmap;
 dvar_t *player_dmgtimer_maxTime;
 dvar_t *player_dmgtimer_timePerPoint;
@@ -27,6 +36,7 @@ dvar_t *player_meleeWidth;
 dvar_t *rcon_password;
 dvar_t *sv_allowDownload;
 dvar_t *sv_cheats;
+dvar_t *sv_disableClientConsole;
 dvar_t *sv_floodProtect;
 dvar_t *sv_fps;
 dvar_t *sv_gametype;
@@ -86,6 +96,7 @@ dvar_t *sv_kickMessages;
 dvar_t *sv_limitLocalRcon;
 dvar_t *sv_logHeartbeats;
 dvar_t *sv_logRcon;
+dvar_t *sv_minimizeSysteminfo;
 dvar_t *sv_noauthorize;
 dvar_t *sv_timeoutMessages;
 dvar_t *sv_verifyIwds;
@@ -253,16 +264,17 @@ VoicePacket_t voiceDataStore[MAX_CUSTOMSOUNDS][MAX_STOREDVOICEPACKETS];
 
 void custom_Com_InitDvars(void)
 {
-	/* Register stock dvars here with different settings, scheme:
-	dvar_t *dvar = Dvar_Register<Type>(var_name, default value, [min. value, max. value,] flags); */
-
-	// Force server memory setting for clients to be able to counter Hunk_AllocateTempMemory failures
-	com_hunkMegs = Dvar_RegisterInt("com_hunkMegs", 160, 1, 512, DVAR_CHANGEABLE_RESET | DVAR_LATCH | DVAR_SYSTEMINFO | DVAR_ARCHIVE);
-
 	// Register custom dvars required early on server start
 	logfileName = Dvar_RegisterString("logfileName", "console_mp_server.log", DVAR_ARCHIVE);
 	logfileRotate = Dvar_RegisterInt("logfileRotate", 0, 0, 1000, DVAR_ARCHIVE);
 	logTimestamps = Dvar_RegisterBool("logTimestamps", qfalse, DVAR_ARCHIVE);
+
+	/* Register stock dvars here with different settings, scheme:
+	dvar_t *dvar = Dvar_Register<Type>(var_name, default value, [min. value, max. value,] flags); */
+
+	/* Force server memory setting for clients to be able to counter 
+	 Hunk_AllocateTempMemory failures */
+	com_hunkMegs = Dvar_RegisterInt("com_hunkMegs", 160, 1, 512, DVAR_CHANGEABLE_RESET | DVAR_LATCH | DVAR_SYSTEMINFO | DVAR_ARCHIVE);
 
 	hook_com_initdvars->unhook();
 	void (*Com_InitDvars)(void);
@@ -614,6 +626,63 @@ void custom_SV_SpawnServer(char *server)
 
 	Dvar_SetString(sv_referencedIwds, FS_ReferencedIwdChecksums());
 	Dvar_SetString(sv_referencedIwdNames, FS_ReferencedIwdNames());
+
+	/* New code start: sv_minimizeSysteminfo dvar */
+	sv_minimizeSysteminfo = Dvar_RegisterInt("sv_minimizeSysteminfo", 0, 0, 3, DVAR_LATCH | DVAR_ARCHIVE);
+	if ( sv_minimizeSysteminfo->current.integer )
+	{
+		// Get references to dvars if not done yet elsewhere
+		bg_fallDamageMaxHeight = Dvar_FindVar("bg_fallDamageMaxHeight");
+		bg_fallDamageMinHeight = Dvar_FindVar("bg_fallDamageMinHeight");
+		com_timescale = Dvar_FindVar("timescale");
+		g_synchronousClients = Dvar_FindVar("g_synchronousClients");
+		sv_disableClientConsole = Dvar_FindVar("sv_disableClientConsole");
+
+		// Remove SYSTEMINFO flag
+		bg_fallDamageMaxHeight->flags &= ~DVAR_SYSTEMINFO;
+		bg_fallDamageMinHeight->flags &= ~DVAR_SYSTEMINFO;
+		com_timescale->flags &= ~DVAR_SYSTEMINFO;
+		g_synchronousClients->flags &= ~DVAR_SYSTEMINFO;
+		sv_cheats->flags &= ~DVAR_SYSTEMINFO;
+		sv_disableClientConsole->flags &= ~DVAR_SYSTEMINFO;
+		sv_voice->flags &= ~DVAR_SYSTEMINFO;
+		sv_voiceQuality->flags &= ~DVAR_SYSTEMINFO;
+
+		// Set CODINFO flag instead
+		bg_fallDamageMaxHeight->flags |= DVAR_CODINFO;
+		bg_fallDamageMinHeight->flags |= DVAR_CODINFO;
+		com_timescale->flags |= DVAR_CODINFO;
+		g_synchronousClients->flags |= DVAR_CODINFO;
+		sv_cheats->flags |= DVAR_CODINFO;
+		sv_disableClientConsole->flags |= DVAR_CODINFO;
+		sv_voice->flags |= DVAR_CODINFO;
+		sv_voiceQuality->flags |= DVAR_CODINFO;
+
+		if ( sv_minimizeSysteminfo->current.integer > 1 )
+		{
+			jump_height->flags &= ~DVAR_SYSTEMINFO;
+			jump_stepSize->flags &= ~DVAR_SYSTEMINFO;
+			jump_slowdownEnable->flags &= ~DVAR_SYSTEMINFO;
+			jump_ladderPushVel->flags &= ~DVAR_SYSTEMINFO;
+			jump_spreadAdd->flags &= ~DVAR_SYSTEMINFO;
+
+			jump_height->flags |= DVAR_CODINFO;
+			jump_stepSize->flags |= DVAR_CODINFO;
+			jump_slowdownEnable->flags |= DVAR_CODINFO;
+			jump_ladderPushVel->flags |= DVAR_CODINFO;
+			jump_spreadAdd->flags |= DVAR_CODINFO;
+
+			if ( sv_minimizeSysteminfo->current.integer > 2 )
+			{
+				cl_allowDownload->flags &= ~DVAR_SYSTEMINFO;
+				cl_wwwDownload->flags &= ~DVAR_SYSTEMINFO;
+
+				cl_allowDownload->flags |= DVAR_CODINFO;
+				cl_wwwDownload->flags |= DVAR_CODINFO;
+			}
+		}
+	}
+	/* New code end */
 
 	SV_SaveSystemInfo();
 

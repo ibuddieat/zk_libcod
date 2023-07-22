@@ -97,6 +97,21 @@ Added dvars:
     * Type: Boolean
     * Default: True
     * Effect: Toggle logging of successful rcon commands.
+  * `sv_minimizeSysteminfo`
+    * Type: Integer
+    * Default: 0
+    * Min. Value: 0
+    * Max. Value: 3
+    * Effect:
+      * If set to 1, removes some dvars from systeminfo config string so that more .iwd files can be used in a mod without having clients running into "iwd sum/name mismatch errors". Instead, the cod info flag will be set on them so that they are still synchronized with the clients on connect. However, further changes during runtime are not synchronized until gamestate is resent (e.g., during a map switch). Therefore, when using this functionality, it is advised to synchronize these dvars with the clients via script whenever their value changes. Dvars that still stay in the systeminfo config string, unless configured otherwise, are:
+      	* cl_allowDownload
+      	* cl_wwwDownload
+      	* com_hunkMegs
+      	* fs_game
+      	* sv_serverid
+      	* and the jump_... dvars if jump.cpp is compiled.
+    	* If set to 2 or greater, also overrides jump-related dvars set in jump.cpp.
+    	* If set to 3, also overrides download-related dvars set in libcod.cpp. Note that sending these dvars this way is too late to auto-enable downloading right on a client's first connect. Instead, a reconnect is necessary for the client then, if downloading wasn't enabled already in the first place.
   * `sv_timeoutMessages`
     * Type: Boolean
     * Default: True

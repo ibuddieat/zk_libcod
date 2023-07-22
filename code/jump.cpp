@@ -2,11 +2,11 @@
 
 #if COMPILE_JUMP == 1
 
-dvar_t *jump_height;
-dvar_t *jump_stepSize;
-dvar_t *jump_slowdownEnable;
-dvar_t *jump_ladderPushVel;
-dvar_t *jump_spreadAdd;
+extern dvar_t *jump_height;
+extern dvar_t *jump_stepSize;
+extern dvar_t *jump_slowdownEnable;
+extern dvar_t *jump_ladderPushVel;
+extern dvar_t *jump_spreadAdd;
 
 #define JUMP_LAND_SLOWDOWN_TIME 1800
 
@@ -332,6 +332,7 @@ void Jump_ActivateSlowdown(playerState_s *ps)
 
 void Jump_RegisterDvars()
 {
+	// Original flags: DVAR_CHANGEABLE_RESET | DVAR_CODINFO | DVAR_CHEAT
 	jump_height = Dvar_RegisterFloat("jump_height", 39.0, 0.0, 128.0, DVAR_CHEAT | DVAR_SYSTEMINFO);
 	jump_stepSize = Dvar_RegisterFloat("jump_stepSize", 18.0, 0.0, 64.0, DVAR_CHEAT | DVAR_SYSTEMINFO);
 	jump_slowdownEnable = Dvar_RegisterBool("jump_slowdownEnable", qtrue, DVAR_CHEAT | DVAR_SYSTEMINFO);
