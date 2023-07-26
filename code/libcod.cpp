@@ -445,11 +445,11 @@ void hook_sv_spawnserver(const char *format, ...)
 	hook_developer_prints->hook();
 }
 
-qboolean IsMainLocalizedIwd(searchpath_t *search)
+qboolean IsNeededIwd(searchpath_t *search)
 {
 	// Include all non-localized files
 	if ( search->localized == 0 )
-		return qfalse;
+		return qtrue;
 
 	// Exclude localized files from main folder
 	// iwdFilename: Absolute path to .iwd file, including suffix
@@ -459,10 +459,10 @@ qboolean IsMainLocalizedIwd(searchpath_t *search)
 		return qfalse;
 
 	// If configured, include localized mod files
-	if ( !loc_loadLocalizedMods->current.boolean )
+	if ( loc_loadLocalizedMods->current.boolean )
+		return qtrue;
+	else
 		return qfalse;
-
-	return qtrue;
 }
 
 const char * custom_FS_LoadedIwdChecksums(void)
@@ -475,8 +475,8 @@ const char * custom_FS_LoadedIwdChecksums(void)
 
 	for ( search = fs_searchpaths; search != (searchpath_t *)0x0; search = search->next )
 	{
-		// New: Replaced "search->localized == 0" with "!IsMainLocalizedIwd(search)"
-		if ( ( search->iwd != NULL ) && !IsMainLocalizedIwd(search) )
+		// New: Replaced "search->localized == 0" with "IsNeededIwd(search)"
+		if ( ( search->iwd != NULL ) && IsNeededIwd(search) )
 		{
 			src = custom_va("%i ", search->iwd->checksum);
 			I_strncat(info, BIG_INFO_STRING, src);
@@ -494,8 +494,8 @@ const char * custom_FS_LoadedIwdNames(void)
 
 	for ( search = fs_searchpaths; search != (searchpath_t *)0x0; search = search->next )
 	{
-		// New: Replaced "search->localized == 0" with "!IsMainLocalizedIwd(search)"
-		if ( ( search->iwd != NULL ) && !IsMainLocalizedIwd(search) )
+		// New: Replaced "search->localized == 0" with "IsNeededIwd(search)"
+		if ( ( search->iwd != NULL ) && IsNeededIwd(search) )
 		{
 			if ( info[0] != '\0' )
 			{
