@@ -270,6 +270,15 @@ typedef enum
 
 typedef enum
 {
+	CON_CHANNEL_DONT_FILTER = 0x0,
+	CON_CHANNEL_ERROR = 0x1,
+	CON_CHANNEL_GAMENOTIFY = 0x2,
+	CON_CHANNEL_BOLDGAME = 0x3,
+	CON_CHANNEL_LOGFILEONLY = 0x4,
+} conChannel_t;
+
+typedef enum
+{
 	ERR_FATAL = 0x0,
 	ERR_DROP = 0x1,
 	ERR_SERVERDISCONNECT = 0x2,
@@ -771,6 +780,24 @@ typedef struct
 	int func_table_size;
 	int *func_table[1024];
 } scrCompilePub_t;
+
+typedef struct 
+{
+	const char *codePos;
+	char *buf;
+	const char *sourceBuf;
+	int len;
+	int sortedIndex;
+	bool archive;
+} SourceBufferInfo;
+
+typedef struct
+{
+	SourceBufferInfo *sourceBufferLookup;
+	unsigned int sourceBufferLookupLen;
+	const char *scriptfilename;
+	const char *sourceBuf;
+} scrParserPub_t;
 
 typedef struct 
 {
@@ -3577,6 +3604,17 @@ static const int fs_searchpaths_offset = 0x0;
 static const int fs_searchpaths_offset = 0x0849FD68;
 #endif
 
+#if COD_VERSION == COD2_1_0 // Not tested
+static const int g_EndPos_offset = 0x0;
+static const int scrParserPub_offset = 0x0;
+#elif COD_VERSION == COD2_1_2 // Not tested
+static const int g_EndPos_offset = 0x0;
+static const int scrParserPub_offset = 0x0;
+#elif COD_VERSION == COD2_1_3
+static const int g_EndPos_offset = 0x083D7600;
+static const int scrParserPub_offset = 0x08287334;
+#endif
+
 #define g_entities ((gentity_t*)(gentities_offset))
 #define g_clients ((gclient_t*)(gclients_offset))
 #define scrVarPub (*((scrVarPub_t*)( varpub_offset )))
@@ -3586,6 +3624,7 @@ static const int fs_searchpaths_offset = 0x0849FD68;
 #define scrStringGlob (*((scrStringGlob_t*)( stringglob_offset )))
 #define scrCompilePub (*((scrCompilePub_t*)( compilepub_offset )))
 #define scrVmGlob (*((scrVmGlob_t*)( vmglob_offset )))
+#define scrParserPub (*((scrParserPub_t*)( scrParserPub_offset )))
 #define g_script_error (*((jmp_buf*)( g_script_error_offset )))
 #define g_script_error_level (*((int*)( g_script_error_level_offset )))
 #define sv (*((server_t*)( sv_offset )))
@@ -3629,6 +3668,7 @@ static const int fs_searchpaths_offset = 0x0849FD68;
 #define bulletPriorityMap (*((uint8_t*)( bulletPriorityMap_offset )))
 #define riflePriorityMap (*((uint8_t*)( riflePriorityMap_offset )))
 #define fs_searchpaths (*((searchpath_t**)( fs_searchpaths_offset )))
+#define g_EndPos (*((char*)( g_EndPos_offset )))
 
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6

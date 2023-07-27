@@ -122,7 +122,6 @@ cHook *hook_gscr_loadconsts;
 cHook *hook_init_opcode;
 cHook *hook_play_movement;
 cHook *hook_playercmd_cloneplayer;
-cHook *hook_print_codepos;
 cHook *hook_scr_execentthread;
 cHook *hook_scr_execthread;
 cHook *hook_scr_loadgametype;
@@ -3523,13 +3522,13 @@ void custom_AddOpcodePos(int a1, int a2)
 {
 	hook_add_opcode->unhook();
 	
-	void (*GE_AddOpcodePos)(int, int);
-	*(int *)&GE_AddOpcodePos = hook_add_opcode->from;
+	void (*AddOpcodePos)(int, int);
+	*(int *)&AddOpcodePos = hook_add_opcode->from;
 	
 	scrVarPub_t *vars = &scrVarPub;
 	
 	vars->developer = 1;
-	GE_AddOpcodePos(a1, a2);
+	AddOpcodePos(a1, a2);
 	
 	if( !developer->current.integer )
 		vars->developer = 0;
@@ -3537,22 +3536,45 @@ void custom_AddOpcodePos(int a1, int a2)
 	hook_add_opcode->hook();
 }
 
-void custom_Scr_PrintPrevCodePos(int a1, char *a2, int a3)
+void custom_Scr_PrintPrevCodePos(conChannel_t channel, const char *codePos, unsigned int index)
 {
-	hook_print_codepos->unhook();
-	
-	void (*GE_Scr_PrintPrevCodePos)(int, char *, int);
-	*(int *)&GE_Scr_PrintPrevCodePos = hook_print_codepos->from;
-	
-	scrVarPub_t *vars = &scrVarPub;
-	
-	vars->developer = 1;
-	GE_Scr_PrintPrevCodePos(a1, a2, a3);
-	
-	if( !developer->current.integer )
-		vars->developer = 0;
-	
-	hook_print_codepos->hook();
+	unsigned int bufferIndex;
+	unsigned int pos;
+
+	if ( !codePos )
+	{
+		Com_PrintMessage(channel, "<frozen thread>\n");
+		return;
+	}
+
+	if ( codePos == &g_EndPos )
+	{
+		Com_PrintMessage(channel, "<removed thread>\n");
+	}
+	else
+	{
+		/* Changed logic here so that in non-developer mode as much debug
+		  information as available is still logged */
+		if ( scrVarPub.programBuffer && Scr_IsInOpcodeMemory(codePos) )
+		{
+			pos = Scr_GetPrevSourcePos(codePos - 1, index);
+			if ( (int)pos < 0 )
+			{
+				Com_PrintMessage(channel, "<unknown thread, enable developer mode to see the full trace>\n");
+			}
+			else
+			{
+				bufferIndex = Scr_GetSourceBuffer(codePos - 1);
+				Scr_PrintSourcePos(
+					channel,
+					scrParserPub.sourceBufferLookup[bufferIndex].buf,
+					scrParserPub.sourceBufferLookup[bufferIndex].sourceBuf,
+					pos);
+			}
+			return;
+		}
+		Com_PrintMessage(channel, custom_va("%s\n\n", codePos));
+	}
 }
 
 void hook_Sys_Print(const char *msg)
@@ -3702,7 +3724,7 @@ void custom_Scr_ErrorInternal(void)
 	Com_Error(ERR_DROP, "\x15%s", scrVarPub.error_message);
 }
 
-void custom_RuntimeError_Debug(int channel, const char *pos, int index, const char *message)
+void custom_RuntimeError_Debug(conChannel_t channel, const char *pos, int index, const char *message)
 {
 	int i, j;
 	byte logTimestampsValue;
@@ -3714,18 +3736,18 @@ void custom_RuntimeError_Debug(int channel, const char *pos, int index, const ch
 	logTimestamps->current.boolean = 0;
 
 	Com_PrintMessage(channel, custom_va("\n******* script runtime error *******\n%s: ", message));
-	Scr_PrintPrevCodePos(channel, pos, index);
+	custom_Scr_PrintPrevCodePos(channel, pos, index);
 	i = scrVmPub.function_count;
 	if ( scrVmPub.function_count )
 	{
 		while ( j = i - 1, 0 < j )
 		{
 			Com_PrintMessage(channel, "called from:\n");
-			Scr_PrintPrevCodePos(channel, (char *)scrVmPub.function_frame_start[i - 1].fs.pos, scrVmPub.function_frame_start[i - 1].fs.localId == 0);
+			custom_Scr_PrintPrevCodePos(channel, scrVmPub.function_frame_start[i - 1].fs.pos, scrVmPub.function_frame_start[i - 1].fs.localId == 0);
 			i = j;
 		}
 		Com_PrintMessage(channel, "started from:\n");
-		Scr_PrintPrevCodePos(channel, (char *)scrVmPub.function_frame_start[0].fs.pos, 1);
+		custom_Scr_PrintPrevCodePos(channel, scrVmPub.function_frame_start[0].fs.pos, 1);
 	}
 	Com_PrintMessage(channel, "************************************\n");
 
@@ -3734,7 +3756,6 @@ void custom_RuntimeError_Debug(int channel, const char *pos, int index, const ch
 
 void custom_RuntimeError(const char *pos, int index, const char *message, const char *dialog_error)
 {
-	errorParm_t code, debugCode;
 	char newline[2];
 	qboolean terminate;
 
@@ -3747,11 +3768,11 @@ void custom_RuntimeError(const char *pos, int index, const char *message, const 
 				terminate = true;
 			
 			if ( terminate )
-				debugCode = ERR_FATAL;
+				custom_RuntimeError_Debug(CON_CHANNEL_DONT_FILTER, pos, index, message);
 			else
-				debugCode = ERR_SCRIPT;
+				custom_RuntimeError_Debug(CON_CHANNEL_LOGFILEONLY, pos, index, message);
 			
-			custom_RuntimeError_Debug(debugCode, pos, index, message);
+			
 			if ( !terminate )
 				return;
 		}
@@ -3775,11 +3796,11 @@ void custom_RuntimeError(const char *pos, int index, const char *message, const 
 			newline[1] = '\0';
 		}
 		if ( !scrVmPub.terminal_error )
-			code = ERR_SCRIPT;
+			Com_Error(ERR_SCRIPT, "\x15script runtime error\n(see console for details)\n%s%s%s", message, newline, dialog_error);
 		else
-			code = ERR_SCRIPT_DROP;
+			Com_Error(ERR_SCRIPT_DROP, "\x15script runtime error\n(see console for details)\n%s%s%s", message, newline, dialog_error);
 		
-		Com_Error(code, "\x15script runtime error\n(see console for details)\n%s%s%s", message, newline, dialog_error);
+		
 	}
 }
 
@@ -7468,8 +7489,6 @@ public:
 		hook_init_opcode->hook();
 		hook_add_opcode = new cHook(0x08076D92, (int)custom_AddOpcodePos);
 		hook_add_opcode->hook();
-		hook_print_codepos = new cHook(0x08077DBA, (int)custom_Scr_PrintPrevCodePos);
-		hook_print_codepos->hook();
 
 		hook_fire_grenade = new cHook(0x0810C1F6, (int)custom_fire_grenade);
 		hook_fire_grenade->hook();
@@ -7550,8 +7569,6 @@ public:
 		hook_init_opcode->hook();
 		hook_add_opcode = new cHook(0x08077306, (int)custom_AddOpcodePos);
 		hook_add_opcode->hook();
-		hook_print_codepos = new cHook(0x0807832E, (int)custom_Scr_PrintPrevCodePos);
-		hook_print_codepos->hook();
 
 		hook_fire_grenade = new cHook(0x0810E532, (int)custom_fire_grenade);
 		hook_fire_grenade->hook();
@@ -7630,8 +7647,6 @@ public:
 		hook_init_opcode->hook();
 		hook_add_opcode = new cHook(0x080773D2, (int)custom_AddOpcodePos);
 		hook_add_opcode->hook();
-		hook_print_codepos = new cHook(0x080783FA, (int)custom_Scr_PrintPrevCodePos);
-		hook_print_codepos->hook();
 
 		hook_fire_grenade = new cHook(0x0810E68E, (int)custom_fire_grenade);
 		hook_fire_grenade->hook();
@@ -7695,6 +7710,7 @@ public:
 		cracking_hook_function(0x08061124, (int)custom_Com_Error);
 		cracking_hook_function(0x080788D2, (int)custom_RuntimeError);
 		cracking_hook_function(0x080787DC, (int)custom_RuntimeError_Debug);
+		cracking_hook_function(0x080783FA, (int)custom_Scr_PrintPrevCodePos);
 		cracking_hook_function(0x0809B016, (int)custom_SV_ArchiveSnapshot);
 		cracking_hook_function(0x0809A408, (int)custom_SV_BuildClientSnapshot);
 		cracking_hook_function(0x0811B770, (int)custom_G_SpawnEntitiesFromString);

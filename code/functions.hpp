@@ -1731,15 +1731,6 @@ static const Scr_ParamError_t Scr_ParamError = (Scr_ParamError_t)0x0; // Not tes
 static const Scr_ParamError_t Scr_ParamError = (Scr_ParamError_t)0x0808545C;
 #endif
 
-typedef void (*Scr_PrintPrevCodePos_t)(int channel, const char *codePos, int index);
-#if COD_VERSION == COD2_1_0
-static const Scr_PrintPrevCodePos_t Scr_PrintPrevCodePos = (Scr_PrintPrevCodePos_t)0x0; // Not tested
-#elif COD_VERSION == COD2_1_2
-static const Scr_PrintPrevCodePos_t Scr_PrintPrevCodePos = (Scr_PrintPrevCodePos_t)0x0; // Not tested
-#elif COD_VERSION == COD2_1_3
-static const Scr_PrintPrevCodePos_t Scr_PrintPrevCodePos = (Scr_PrintPrevCodePos_t)0x080783FA;
-#endif
-
 typedef void (*Scr_PlayerDamage_t)(gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int dFlags, meansOfDeath_t meansOfDeath, int iWeapon, const float *vPoint, const float *vDir, hitLocation_t hitLoc, int timeOffset);
 #if COD_VERSION == COD2_1_0
 static const Scr_PlayerDamage_t Scr_PlayerDamage = (Scr_PlayerDamage_t)0x0; // Not tested
@@ -1747,6 +1738,42 @@ static const Scr_PlayerDamage_t Scr_PlayerDamage = (Scr_PlayerDamage_t)0x0; // N
 static const Scr_PlayerDamage_t Scr_PlayerDamage = (Scr_PlayerDamage_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const Scr_PlayerDamage_t Scr_PlayerDamage = (Scr_PlayerDamage_t)0x081183B8;
+#endif
+
+typedef qboolean (*Scr_IsInOpcodeMemory_t)(const char *pos);
+#if COD_VERSION == COD2_1_0
+static const Scr_IsInOpcodeMemory_t Scr_IsInOpcodeMemory = (Scr_IsInOpcodeMemory_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Scr_IsInOpcodeMemory_t Scr_IsInOpcodeMemory = (Scr_IsInOpcodeMemory_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Scr_IsInOpcodeMemory_t Scr_IsInOpcodeMemory = (Scr_IsInOpcodeMemory_t)0x08075E14;
+#endif
+
+typedef unsigned int (*Scr_GetSourceBuffer_t)(const char *codePos);
+#if COD_VERSION == COD2_1_0
+static const Scr_GetSourceBuffer_t Scr_GetSourceBuffer = (Scr_GetSourceBuffer_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Scr_GetSourceBuffer_t Scr_GetSourceBuffer = (Scr_GetSourceBuffer_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Scr_GetSourceBuffer_t Scr_GetSourceBuffer = (Scr_GetSourceBuffer_t)0x0807839A;
+#endif
+
+typedef unsigned int (*Scr_GetPrevSourcePos_t)(const char *codePos, unsigned int index);
+#if COD_VERSION == COD2_1_0
+static const Scr_GetPrevSourcePos_t Scr_GetPrevSourcePos = (Scr_GetPrevSourcePos_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Scr_GetPrevSourcePos_t Scr_GetPrevSourcePos = (Scr_GetPrevSourcePos_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Scr_GetPrevSourcePos_t Scr_GetPrevSourcePos = (Scr_GetPrevSourcePos_t)0x08077B6A;
+#endif
+
+typedef void (*Scr_PrintSourcePos_t)(conChannel_t channel, const char *filename, const char *buf, unsigned int sourcePos);
+#if COD_VERSION == COD2_1_0
+static const Scr_PrintSourcePos_t Scr_PrintSourcePos = (Scr_PrintSourcePos_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Scr_PrintSourcePos_t Scr_PrintSourcePos = (Scr_PrintSourcePos_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Scr_PrintSourcePos_t Scr_PrintSourcePos = (Scr_PrintSourcePos_t)0x080781D6;
 #endif
 
 typedef int (*DirToByte_t)(vec3_t dir);
