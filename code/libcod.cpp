@@ -870,27 +870,6 @@ qboolean SkipCollision(gentity_t *client1, gentity_t *client2)
 
 		if ( customPlayerState[id2].collisionTeam == COLLISION_TEAM_ALLIES && (client1->client->sess).team != TEAM_ALLIES )
 			return qtrue;
-
-		if ( customPlayerState[id1].collisionTeam == COLLISION_TEAM_BOTH )
-		{
-			if ( customPlayerState[id2].collisionTeam == COLLISION_TEAM_BOTH )
-				return qfalse;
-
-			if ( customPlayerState[id2].collisionTeam == COLLISION_TEAM_AXIS && (client1->client->sess).team == TEAM_AXIS )
-				return qfalse;
-
-			if ( customPlayerState[id2].collisionTeam == COLLISION_TEAM_ALLIES && (client1->client->sess).team == TEAM_ALLIES )
-				return qfalse;
-		}
-
-		if ( customPlayerState[id2].collisionTeam == COLLISION_TEAM_BOTH )
-		{
-			if ( customPlayerState[id1].collisionTeam == COLLISION_TEAM_AXIS && (client2->client->sess).team == TEAM_AXIS )
-				return qfalse;
-
-			if ( customPlayerState[id1].collisionTeam == COLLISION_TEAM_ALLIES && (client2->client->sess).team == TEAM_ALLIES )
-				return qfalse;
-		}
 	}
 
 	return qfalse;
