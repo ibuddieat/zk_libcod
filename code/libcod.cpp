@@ -3365,6 +3365,26 @@ void hook_SV_DirectConnect(netadr_t from)
 	SV_DirectConnect(from);
 }
 
+void hook_SV_AuthorizeIpPacket(netadr_t from)
+{
+	// Prevent ipAuthorize log spam DoS
+	if ( SVC_RateLimitAddress(from, 20, 1000) )
+	{
+		Com_DPrintf("SV_AuthorizeIpPacket: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
+		return;
+	}
+
+	// Allow ipAuthorize to be DoSed relatively easily, but prevent
+	// excess outbound bandwidth usage when being flooded inbound
+	if ( SVC_RateLimit(&outboundLeakyBucket, 10, 100) )
+	{
+		Com_DPrintf("SV_AuthorizeIpPacket: rate limit exceeded, dropping request\n");
+		return;
+	}
+
+	SV_AuthorizeIpPacket(from);
+}
+
 void hook_SVC_Info(netadr_t from)
 {
 	// Prevent using getinfo as an amplifier
@@ -7218,7 +7238,7 @@ void custom_SV_ConnectionlessPacket(netadr_t from, msg_t *msg)
 		else if ( !I_stricmp(c, "ipAuthorize") )
 		{
 			SV_UpdateLastTimeMasterServerCommunicated(from);
-			SV_AuthorizeIpPacket(from);
+			hook_SV_AuthorizeIpPacket(from);
 		}
 		else if ( !I_stricmp(c, "rcon") )
 		{
@@ -7788,6 +7808,7 @@ public:
 		cracking_hook_call(0x08095B94, (int)hook_SVC_Status);
 		cracking_hook_call(0x08095CB2, (int)hook_SV_GetChallenge);
 		cracking_hook_call(0x08095D6C, (int)hook_SV_DirectConnect);
+		cracking_hook_call(0x08095DD6, (int)hook_SV_AuthorizeIpPacket);
 		#endif
 
 		cracking_write_hex(0x0818815c, (char *)"00"); // Removes debug flag from getentbynum
