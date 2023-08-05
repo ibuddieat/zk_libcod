@@ -7191,17 +7191,17 @@ void custom_SV_ConnectionlessPacket(netadr_t from, msg_t *msg)
 		if ( !I_stricmp(c, "getstatus") )
 		{
 			SV_UpdateLastTimeMasterServerCommunicated(from);
-			SVC_Status(from);
+			hook_SVC_Status(from);
 		}
 		else if ( !I_stricmp(c, "getinfo") )
 		{
 			SV_UpdateLastTimeMasterServerCommunicated(from);
-			SVC_Info(from);
+			hook_SVC_Info(from);
 		}
 		else if ( !I_stricmp(c, "getchallenge") )
 		{
 			SV_UpdateLastTimeMasterServerCommunicated(from);
-			SV_GetChallenge(from);
+			hook_SV_GetChallenge(from);
 		}
 		else if ( !I_stricmp(c, "connect") )
 		{
@@ -7213,7 +7213,7 @@ void custom_SV_ConnectionlessPacket(netadr_t from, msg_t *msg)
 			{
 				PbPassConnectString("localhost", msg->data);
 			}
-			SV_DirectConnect(from);
+			hook_SV_DirectConnect(from);
 		}
 		else if ( !I_stricmp(c, "ipAuthorize") )
 		{
@@ -7237,7 +7237,7 @@ void custom_SV_ConnectionlessPacket(netadr_t from, msg_t *msg)
 		}
 		else
 		{
-			Com_DPrintf("bad connectionless packet from %s:\n%s\n", NET_AdrToString(from), s);
+			// bad connectionless packet
 		}
 	}
 }
