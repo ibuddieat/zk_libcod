@@ -3078,13 +3078,19 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 			  ( ip[0] == 192 && ip[1] == 168 ) ) )                  // 192.168.0.0 – 192.168.255.255
 		{
 			if ( SVC_ApplyRconLimit(from, badRconPassword) )
+			{
+				LargeLocalDestructor(&buf);
 				return;
+			}
 		}
 	}
 	else
 	{
 		if ( SVC_ApplyRconLimit(from, badRconPassword) )
+		{
+			LargeLocalDestructor(&buf);
 			return;
+		}
 	}
 	/* New code end */
 
@@ -3123,6 +3129,7 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 	
 		short ret = Scr_ExecThread(codecallback_remotecommand, 3);
 		Scr_FreeThread(ret);
+		LargeLocalDestructor(&buf);
 		return;
 	}
 	/* New code end */
