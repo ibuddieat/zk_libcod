@@ -19,6 +19,7 @@ dvar_t *com_sv_running;
 dvar_t *com_timescale;
 dvar_t *developer;
 dvar_t *g_knockback;
+dvar_t *g_mantleBlockTimeBuffer;
 dvar_t *g_playerCollisionEjectSpeed;
 dvar_t *g_synchronousClients;
 dvar_t *g_voiceChatTalkingDuration;
@@ -74,6 +75,7 @@ dvar_t *g_debugEvents;
 dvar_t *g_debugStaticModels;
 dvar_t *g_dumpVoiceData;
 dvar_t *g_logPickup;
+dvar_t *g_mantleBlockEnable;
 dvar_t *g_playerCollision;
 dvar_t *g_playerEject;
 dvar_t *g_resetSlide;
@@ -339,6 +341,7 @@ void common_init_complete_print(const char *format, ...)
 	g_debugStaticModels = Dvar_RegisterBool("g_debugStaticModels", qfalse, DVAR_ARCHIVE);
 	g_dumpVoiceData = Dvar_RegisterBool("g_dumpVoiceData", qfalse, DVAR_ARCHIVE);
 	g_logPickup = Dvar_RegisterBool("g_logPickup", qtrue, DVAR_ARCHIVE);
+	g_mantleBlockEnable = Dvar_RegisterBool("g_mantleBlockEnable", qfalse, DVAR_ARCHIVE);
 	g_playerCollision = Dvar_RegisterBool("g_playerCollision", qtrue, DVAR_ARCHIVE);
 	g_playerEject = Dvar_RegisterBool("g_playerEject", qtrue, DVAR_ARCHIVE);
 	g_resetSlide = Dvar_RegisterBool("g_resetSlide", qfalse, DVAR_ARCHIVE);
@@ -387,6 +390,7 @@ void custom_G_ProcessIPBans(void)
 	 access to variables that are not yet defined at the
 	 common_init_complete_print hook */
 	g_knockback = Dvar_FindVar("g_knockback");
+	g_mantleBlockTimeBuffer = Dvar_FindVar("g_mantleBlockTimeBuffer");
 	g_playerCollisionEjectSpeed = Dvar_FindVar("g_playerCollisionEjectSpeed");
 	g_voiceChatTalkingDuration = Dvar_FindVar("g_voiceChatTalkingDuration");
 	player_dmgtimer_maxTime = Dvar_FindVar("player_dmgtimer_maxTime");
@@ -817,6 +821,32 @@ int custom_GScr_LoadGameTypeScript()
 	}
 
 	return ret;
+}
+
+void custom_G_AddPlayerMantleBlockage(float *endPos, int duration, pmove_t *pm)
+{
+	gentity_t *owner;
+	gentity_t *ent;
+
+	/* New code start: g_mantleBlockEnable dvar */
+	if ( !g_mantleBlockEnable->current.boolean )
+		return;
+	/* New code end */
+
+	owner = &g_entities[pm->ps->clientNum];
+	ent = G_Spawn();
+	ent->parent = owner;
+	ent->r.ownerNum = pm->ps->clientNum;
+	ent->r.contents = CONTENTS_PLAYERCLIP;
+	ent->clipmask = CONTENTS_PLAYERCLIP;
+	ent->r.svFlags = 33;
+	ent->s.eType = ET_INVISIBLE;
+	ent->handler = ENT_HANDLER_PLAYER_BLOCK;
+	VectorCopy(owner->r.mins, ent->r.mins);
+	VectorCopy(owner->r.maxs, ent->r.maxs);
+	G_SetOrigin(ent, endPos);
+	SV_LinkEntity(ent);
+	ent->nextthink = g_mantleBlockTimeBuffer->current.integer + level.time + duration;
 }
 
 qboolean SkipCollision(gentity_t *client1, gentity_t *client2)
@@ -7749,6 +7779,7 @@ public:
 		cracking_hook_function(0x0811D49C, (int)custom_G_ModelIndex);
 		cracking_hook_function(0x08092456, (int)custom_SV_GetClientPing);
 		cracking_hook_function(0x08093520, (int)custom_SV_SpawnServer);
+		cracking_hook_function(0x080F5C34, (int)custom_G_AddPlayerMantleBlockage);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC718, (int)Jump_ClearState);
