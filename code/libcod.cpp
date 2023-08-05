@@ -2873,11 +2873,11 @@ int custom_BG_PlayAnim(playerState_t *ps, int animNum, animBodyPart_t bodyPart, 
 #define MAX_BUCKETS	16384
 #define MAX_HASHES 1024
 
-static leakyBucket_t buckets[ MAX_BUCKETS ];
-static leakyBucket_t* bucketHashes[ MAX_HASHES ];
+static leakyBucket_t buckets[MAX_BUCKETS];
+static leakyBucket_t* bucketHashes[MAX_HASHES];
 leakyBucket_t outboundLeakyBucket;
 
-static long SVC_HashForAddress( netadr_t address )
+static long SVC_HashForAddress(netadr_t address)
 {
 	unsigned char *ip = address.ip;
 	int	i;
@@ -2885,7 +2885,7 @@ static long SVC_HashForAddress( netadr_t address )
 
 	for ( i = 0; i < 4; i++ )
 	{
-		hash += (long)( ip[ i ] ) * ( i + 119 );
+		hash += (long)( ip[i] ) * ( i + 119 );
 	}
 
 	hash = ( hash ^ ( hash >> 10 ) ^ ( hash >> 20 ) );
@@ -2894,16 +2894,16 @@ static long SVC_HashForAddress( netadr_t address )
 	return hash;
 }
 
-static leakyBucket_t *SVC_BucketForAddress( netadr_t address, int burst, int period )
+static leakyBucket_t *SVC_BucketForAddress(netadr_t address, int burst, int period)
 {
 	leakyBucket_t *bucket = NULL;
 	int	i;
-	long hash = SVC_HashForAddress( address );
+	long hash = SVC_HashForAddress(address);
 	int now = Sys_MilliSeconds();
 
-	for ( bucket = bucketHashes[ hash ]; bucket; bucket = bucket->next )
+	for ( bucket = bucketHashes[hash]; bucket; bucket = bucket->next )
 	{
-		if ( memcmp( bucket->adr, address.ip, 4 ) == 0 )
+		if ( memcmp(bucket->adr, address.ip, 4) == 0 )
 			return bucket;
 	}
 
@@ -2911,7 +2911,7 @@ static leakyBucket_t *SVC_BucketForAddress( netadr_t address, int burst, int per
 	{
 		int interval;
 
-		bucket = &buckets[ i ];
+		bucket = &buckets[i];
 		interval = now - bucket->lastTime;
 
 		// Reclaim expired buckets
@@ -2921,30 +2921,30 @@ static leakyBucket_t *SVC_BucketForAddress( netadr_t address, int burst, int per
 			if ( bucket->prev != NULL )
 				bucket->prev->next = bucket->next;
 			else
-				bucketHashes[ bucket->hash ] = bucket->next;
+				bucketHashes[bucket->hash] = bucket->next;
 
 			if ( bucket->next != NULL )
 				bucket->next->prev = bucket->prev;
 
-			memset( bucket, 0, sizeof( leakyBucket_t ) );
+			memset(bucket, 0, sizeof(leakyBucket_t));
 		}
 
 		if ( bucket->type == 0 )
 		{
 			bucket->type = address.type;
-			memcpy( bucket->adr, address.ip, 4 );
+			memcpy(bucket->adr, address.ip, 4);
 
 			bucket->lastTime = now;
 			bucket->burst = 0;
 			bucket->hash = hash;
 
 			// Add to the head of the relevant hash chain
-			bucket->next = bucketHashes[ hash ];
-			if ( bucketHashes[ hash ] != NULL )
-				bucketHashes[ hash ]->prev = bucket;
+			bucket->next = bucketHashes[hash];
+			if ( bucketHashes[hash] != NULL )
+				bucketHashes[hash]->prev = bucket;
 
 			bucket->prev = NULL;
-			bucketHashes[ hash ] = bucket;
+			bucketHashes[hash] = bucket;
 
 			return bucket;
 		}
@@ -2954,7 +2954,7 @@ static leakyBucket_t *SVC_BucketForAddress( netadr_t address, int burst, int per
 	return NULL;
 }
 
-bool SVC_RateLimit( leakyBucket_t *bucket, int burst, int period )
+bool SVC_RateLimit(leakyBucket_t *bucket, int burst, int period)
 {
 	if ( bucket != NULL )
 	{
@@ -2984,11 +2984,11 @@ bool SVC_RateLimit( leakyBucket_t *bucket, int burst, int period )
 	return true;
 }
 
-bool SVC_RateLimitAddress( netadr_t from, int burst, int period )
+bool SVC_RateLimitAddress(netadr_t from, int burst, int period)
 {
-	leakyBucket_t *bucket = SVC_BucketForAddress( from, burst, period );
+	leakyBucket_t *bucket = SVC_BucketForAddress(from, burst, period);
 
-	return SVC_RateLimit( bucket, burst, period );
+	return SVC_RateLimit(bucket, burst, period);
 }
 
 bool SVC_callback(const char *str, const char *ip)
@@ -3006,7 +3006,7 @@ bool SVC_callback(const char *str, const char *ip)
 	return false;
 }
 
-bool SVC_ApplyRconLimit( netadr_t from, qboolean badRconPassword )
+bool SVC_ApplyRconLimit(netadr_t from, qboolean badRconPassword)
 {
 	// Prevent using rcon as an amplifier and make dictionary attacks impractical
 	if ( SVC_RateLimitAddress(from, 10, 1000) )
@@ -6063,7 +6063,7 @@ void custom_G_FreeEntity(gentity_t *ent)
 	hook_g_freeentity->hook();
 }
 
-qboolean G_BounceGrenade(gentity_t *ent,trace_t *trace) // G_BounceMissile as base
+qboolean G_BounceGrenade(gentity_t *ent, trace_t *trace) // G_BounceMissile as base
 {
 	int contents;
 	double length;
