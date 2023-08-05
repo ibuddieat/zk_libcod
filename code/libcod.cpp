@@ -4474,8 +4474,8 @@ void custom_G_SetEntityPlacement(gentity_t *ent)
 		/* New code end */
 		G_ParseEntityField(level.spawnVars.spawnVars[i].key, level.spawnVars.spawnVars[i].value, ent);
 	}
-	G_SetOrigin(ent, &ent->r.currentOrigin);
-	G_SetAngle(ent, &ent->r.currentAngles);
+	G_SetOrigin(ent, ent->r.currentOrigin);
+	G_SetAngle(ent, ent->r.currentAngles);
 }
 
 void custom_G_CallSpawn(void)
@@ -6108,9 +6108,9 @@ qboolean G_BounceGrenade(gentity_t *ent,trace_t *trace) // G_BounceMissile as ba
 			Scr_AddEntity(&g_entities[trace->entityNum]);
 			Scr_AddString(Com_SurfaceTypeToName((int)( trace->surfaceFlags & 0x1F00000U ) >> 0x14));
 			Scr_Notify(ent, scr_const.land, 2);
-			G_SetOrigin(ent, &(ent->r).currentOrigin);
+			G_SetOrigin(ent, (ent->r).currentOrigin);
 			G_MissileLandAngles(ent, trace, angle, 1);
-			G_SetAngle(ent, &angle);
+			G_SetAngle(ent, angle);
 			return qfalse;
 		}
 	}
@@ -6298,8 +6298,8 @@ void G_RunGravityModelAsItem(gentity_t *ent) // G_RunItem as base
 				VectorCross(v3, v1, v2);
 				VectorCross(v2, v3, v1);
 				AxisToAngles(v1, angles);
-				G_SetAngle(ent, &angles);
-				G_SetOrigin(ent, &lerpOrigin);
+				G_SetAngle(ent, angles);
+				G_SetOrigin(ent, lerpOrigin);
 				if ( (ent->s).groundEntityNum != trace.entityNum )
 				{
 					Scr_AddEntity(&g_entities[trace.entityNum]);
@@ -7241,7 +7241,7 @@ void custom_SV_ConnectionlessPacket(netadr_t from, msg_t *msg)
 		}
 		else if ( !I_stricmp(c , "v") )
 		{
-			SV_VoicePacket(from);
+			SV_VoicePacket(from, msg);
 		}
 		else if ( !I_stricmp(c, "disconnect") )
 		{

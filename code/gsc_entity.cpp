@@ -396,8 +396,8 @@ void gsc_entity_disablegravity(scr_entref_t ref)
 			ent->clipmask = 0;
 			ent->physicsObject = 0;
 			(ent->s).groundEntityNum = ENTITY_NONE;
-			G_SetOrigin(ent, &ent->r.currentOrigin);
-			G_SetAngle(ent, &ent->r.currentAngles);
+			G_SetOrigin(ent, ent->r.currentOrigin);
+			G_SetAngle(ent, ent->r.currentAngles);
 
 			stackPushBool(qtrue);
 		}

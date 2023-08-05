@@ -1323,8 +1323,7 @@ typedef struct
 	vec3_t absmax;
 	vec3_t currentOrigin;
 	vec3_t currentAngles;
-	u_int16_t ownerNum;
-	u_int16_t pad3;
+	int ownerNum;
 	int eventTime;
 } entityShared_t; // verified
 

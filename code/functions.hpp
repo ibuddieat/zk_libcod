@@ -1830,7 +1830,7 @@ static const G_GetItemForClassname_t G_GetItemForClassname = (G_GetItemForClassn
 static const G_GetItemForClassname_t G_GetItemForClassname = (G_GetItemForClassname_t)0x0811A9BA;
 #endif
 
-typedef void (*G_SetOrigin_t)(gentity_t *ent, vec3_t *origin);
+typedef void (*G_SetOrigin_t)(gentity_t *ent, const float *origin);
 #if COD_VERSION == COD2_1_0
 static const G_SetOrigin_t G_SetOrigin = (G_SetOrigin_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
@@ -1839,7 +1839,7 @@ static const G_SetOrigin_t G_SetOrigin = (G_SetOrigin_t)0x0; // Not tested
 static const G_SetOrigin_t G_SetOrigin = (G_SetOrigin_t)0x0811F3C6;
 #endif
 
-typedef void (*G_SetAngle_t)(gentity_t *ent, vec3_t *angle);
+typedef void (*G_SetAngle_t)(gentity_t *ent, const float *angle);
 #if COD_VERSION == COD2_1_0
 static const G_SetAngle_t G_SetAngle = (G_SetAngle_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
@@ -2757,7 +2757,7 @@ static const SV_AuthorizeIpPacket_t SV_AuthorizeIpPacket = (SV_AuthorizeIpPacket
 static const SV_AuthorizeIpPacket_t SV_AuthorizeIpPacket = (SV_AuthorizeIpPacket_t)0x0808DA2A;
 #endif
 
-typedef void (*SV_VoicePacket_t)(netadr_t from);
+typedef void (*SV_VoicePacket_t)(netadr_t from, msg_t *msg);
 #if COD_VERSION == COD2_1_0
 static const SV_VoicePacket_t SV_VoicePacket = (SV_VoicePacket_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
