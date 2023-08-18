@@ -172,7 +172,8 @@ int codecallback_smokebutton = 0;
 int codecallback_standbutton = 0;
 int codecallback_usebutton = 0;
 
-callback_t callbacks[] = {
+callback_t callbacks[] =
+{
 	{ &codecallback_startgametype, "CodeCallback_StartGameType" }, // g_scr_data.gametype.startupgametype
 	{ &codecallback_playerconnect, "CodeCallback_PlayerConnect" }, // g_scr_data.gametype.playerconnect
 	{ &codecallback_playerdisconnect, "CodeCallback_PlayerDisconnect" }, // g_scr_data.gametype.playerdisconnect
@@ -234,35 +235,8 @@ const entityHandler_t entityHandlers[] =
 	/* Player Mantling Block */ { G_FreeEntity, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0 },
 };
 
-qboolean logHeartbeat = qtrue;
-
-int hitchFrameTime = 0;
-
-char openLogfileName[MAX_OSPATH];
-
-scr_error_t scr_errors[MAX_ERROR_BUFFER];
-int scr_errors_index = 0;
-
-scr_notify_t scr_notify[MAX_NOTIFY_DEBUG_BUFFER];
-int scr_notify_index = 0;
-
-int num_map_weapons;
-map_weapon_t map_weapons[MAX_GENTITIES];
-
-int num_map_turrets;
-map_turret_t map_turrets[MAX_GENTITIES];
-
 customEntityState_t customEntityState[MAX_GENTITIES];
 customPlayerState_t customPlayerState[MAX_CLIENTS];
-
-FILE *voiceDataDumpFile;
-#if COMPILE_CUSTOM_VOICE == 1
-pthread_mutex_t loadSoundFileResultLock;
-loadSoundFileResult_t loadSoundFileResults[MAX_THREAD_RESULTS_BUFFER];
-int loadSoundFileResultsIndex = 0;
-int currentMaxSoundIndex = 0;
-VoicePacket_t voiceDataStore[MAX_CUSTOMSOUNDS][MAX_STOREDVOICEPACKETS];
-#endif
 
 void custom_Com_InitDvars(void)
 {
@@ -291,6 +265,7 @@ void custom_Com_InitDvars(void)
 	com_sv_running = Dvar_FindVar("sv_running");
 }
 
+FILE *voiceDataDumpFile;
 void common_init_complete_print(const char *format, ...)
 {
 	/* We are in Com_Init_Try_Block_Function, after executing Com_InitDvars()
@@ -429,6 +404,7 @@ void custom_GScr_LoadConsts(void)
 	hook_gscr_loadconsts->hook();
 }
 
+int hitchFrameTime = 0;
 void hitch_warning_print(const char *message, int frameTime)
 {
 	// Called if 500 < frameTime && frameTime < 500000
@@ -767,6 +743,7 @@ void custom_SV_SpawnServer(char *server)
 	}
 }
 
+qboolean logHeartbeat = qtrue;
 void custom_SV_MasterHeartbeat(const char *hbname)
 {
 	#if COD_VERSION == COD2_1_0
@@ -3651,6 +3628,8 @@ void custom_Com_DPrintf(const char *format, ...)
 	Com_Printf("%s", s);
 }
 
+scr_error_t scr_errors[MAX_ERROR_BUFFER];
+int scr_errors_index = 0;
 void Scr_CodeCallback_Error(qboolean terminal, qboolean emit, const char *internal_function, char *message)
 {
 	if ( codecallback_error && Scr_IsSystemActive() && !com_errorEntered )
@@ -3881,6 +3860,15 @@ void Scr_CodeCallback_NotifyDebug(unsigned int entId, char *message, unsigned in
 	}
 }
 
+scr_notify_t scr_notify[MAX_NOTIFY_DEBUG_BUFFER];
+int scr_notify_index = 0;
+#if COMPILE_CUSTOM_VOICE == 1
+pthread_mutex_t loadSoundFileResultLock;
+loadSoundFileResult_t loadSoundFileResults[MAX_THREAD_RESULTS_BUFFER];
+int loadSoundFileResultsIndex = 0;
+int currentMaxSoundIndex = 0;
+VoicePacket_t voiceDataStore[MAX_CUSTOMSOUNDS][MAX_STOREDVOICEPACKETS];
+#endif
 void custom_G_RunFrame(int levelTime)
 {
 	int i;
@@ -4426,6 +4414,8 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 	}
 }
 
+int num_map_turrets;
+map_turret_t map_turrets[MAX_GENTITIES];
 void custom_G_SetEntityPlacement(gentity_t *ent)
 {
 	/* New code start: map weapons callback */
@@ -4484,6 +4474,8 @@ void custom_G_SetEntityPlacement(gentity_t *ent)
 	G_SetAngle(ent, ent->r.currentAngles);
 }
 
+int num_map_weapons;
+map_weapon_t map_weapons[MAX_GENTITIES];
 void custom_G_CallSpawn(void)
 {
 	const char *classname;
@@ -5910,6 +5902,7 @@ void custom_SV_QueueVoicePacket(int talkerNum, int clientNum, VoicePacket_t *voi
 	}
 }
 
+char openLogfileName[MAX_OSPATH];
 void openLogfile(qboolean reopen)
 {
 	time_t timer;
