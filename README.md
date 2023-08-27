@@ -55,6 +55,12 @@ sudo apt install libmysqlclient-dev:i386
 sudo apt install libmariadb-dev-compat:i386
 ```
 
+**Sound alias duration support requirements installation**
+```
+sudo apt install ffmpeg
+```
+If not installed, `soundDuration(<aliasname>)` always returns undefined.
+
 **Custom sound file docs (for 64-bit Ubuntu 22.04 LTS)**
 - [Speex installation](doc/install_speex.md)
 - [Audio file conversion](doc/convert_audio_files.md)

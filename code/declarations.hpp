@@ -291,13 +291,6 @@ typedef enum
 
 typedef enum
 {
-	SASYS_UNK0 = 0,
-	SASYS_UNK1 = 1,
-	SASYS_GAME = 2
-} snd_alias_system_t;
-
-typedef enum
-{
 	HITLOC_NONE,
 	HITLOC_HELMET,
 	HITLOC_HEAD,
@@ -887,6 +880,41 @@ struct searchpath_t
 	qboolean localized;
 	int language;
 };
+
+typedef struct tm_unz_s
+{
+    unsigned int tm_sec;
+    unsigned int tm_min;
+    unsigned int tm_hour;
+    unsigned int tm_mday;
+    unsigned int tm_mon;
+    unsigned int tm_year;
+} tm_unz;
+
+typedef struct unz_global_info_s
+{
+    unsigned long number_entry;
+    unsigned long size_comment;
+} unz_global_info;
+
+typedef struct unz_file_info_s
+{
+    unsigned long version;
+    unsigned long version_needed;
+    unsigned long flag;
+    unsigned long compression_method;
+    unsigned long dosDate;
+    unsigned long crc;
+    unsigned long compressed_size;
+    unsigned long uncompressed_size;
+    unsigned long size_filename;
+    unsigned long size_file_extra;
+    unsigned long size_file_comment;
+    unsigned long disk_num_start;
+    unsigned long internal_fa;
+    unsigned long external_fa;
+    tm_unz tmu_date;
+} unz_file_info;
 
 typedef enum
 {
@@ -2124,8 +2152,94 @@ typedef enum weapProjExposion_t
 	WEAPPROJEXP_NUM = 0x4
 } weapProjExposion_t;
 
+typedef enum
+{
+	SASYS_UI = 0,
+	SASYS_CGAME = 1,
+	SASYS_GAME = 2,
+	SASYS_COUNT = 3
+} snd_alias_system_t;
+
+typedef enum
+{
+	SAT_UNKNOWN = 0,
+	SAT_LOADED = 1,
+	SAT_STREAMED = 2,
+	SAT_PRIMED = 3,
+	SAT_COUNT = 4
+} snd_alias_type_t;
+
+typedef struct
+{
+	unsigned int format;
+	void *data_ptr;
+	int data_len;
+	int rate;
+	unsigned int bits;
+	unsigned int channels;
+	int samples;
+	int block_size;
+	void *initial_ptr;
+} _AILSOUNDINFO;
+
+typedef struct
+{
+	_AILSOUNDINFO info;
+	byte data;
+} MssSound;
+
+typedef struct 
+{
+	const char *soundName;
+	MssSound *fileMem;
+	byte isStreamFound;
+	byte pad0[3];
+	snd_alias_type_t type;
+} SoundFile;
+
+typedef struct
+{
+	int count;
+	int files; // SoundFile *
+} SoundFileInfo;
+
+typedef struct
+{
+	float radius;
+	float mindist;
+	float maxdist;
+} volumeFalloffCurve_t;
+
+typedef struct
+{
+	const char *pszAliasName;
+	const char *pszSubtitle;
+	const char *pszSecondaryAliasName;
+	SoundFile *soundFile;
+	int iSequence;
+	float fVolMin;
+	float fVolMax;
+	float fPitchMin;
+	float fPitchMax;
+	float fDistMin;
+	float fDistMax;
+	int flags;
+	float fSlavePercentage;
+	float fProbability;
+	float fLfePercentage;
+	int startDelay;
+	volumeFalloffCurve_t *volumeFalloffCurve;
+} snd_alias_t;
+
+struct snd_alias_list_t
+{
+	const char *aliasName;
+	snd_alias_t *head;
+	int count;
+	snd_alias_list_t *pHashNext;
+};
+
 typedef const char FxEffectDef_t;
-typedef const char snd_alias_list_t;
 typedef const char Material_t;
 
 typedef struct WeaponDef_t

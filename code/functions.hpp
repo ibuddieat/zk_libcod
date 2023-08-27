@@ -354,6 +354,15 @@ static const Com_LoadSoundAliases_t Com_LoadSoundAliases = (Com_LoadSoundAliases
 static const Com_LoadSoundAliases_t Com_LoadSoundAliases = (Com_LoadSoundAliases_t)0x080AD0AA;
 #endif
 
+typedef snd_alias_list_t* (*Com_FindSoundAlias_t)(const char *name);
+#if COD_VERSION == COD2_1_0
+static const Com_FindSoundAlias_t Com_FindSoundAlias = (Com_FindSoundAlias_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Com_FindSoundAlias_t Com_FindSoundAlias = (Com_FindSoundAlias_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Com_FindSoundAlias_t Com_FindSoundAlias = (Com_FindSoundAlias_t)0x080ACC42;
+#endif
+
 typedef void (*Cmd_AddCommand_t)(const char *cmd_name, xcommand_t function);
 #if COD_VERSION == COD2_1_0
 static const Cmd_AddCommand_t Cmd_AddCommand = (Cmd_AddCommand_t)0x080604B2;
@@ -388,6 +397,24 @@ static const FS_Initialized_t FS_Initialized = (FS_Initialized_t)0x0; // Not tes
 static const FS_Initialized_t FS_Initialized = (FS_Initialized_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const FS_Initialized_t FS_Initialized = (FS_Initialized_t)0x0809E620;
+#endif
+
+typedef long (*FS_HashFileName_t)(const char *fname, int hashSize);
+#if COD_VERSION == COD2_1_0
+static const FS_HashFileName_t FS_HashFileName = (FS_HashFileName_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const FS_HashFileName_t FS_HashFileName = (FS_HashFileName_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const FS_HashFileName_t FS_HashFileName = (FS_HashFileName_t)0x0809E740;
+#endif
+
+typedef int (*FS_FilenameCompare_t)(const char *s1, const char *s2);
+#if COD_VERSION == COD2_1_0
+static const FS_FilenameCompare_t FS_FilenameCompare = (FS_FilenameCompare_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const FS_FilenameCompare_t FS_FilenameCompare = (FS_FilenameCompare_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const FS_FilenameCompare_t FS_FilenameCompare = (FS_FilenameCompare_t)0x0809F32C;
 #endif
 
 typedef const char * (*FS_LoadedIwdChecksums_t)(void);
@@ -1099,6 +1126,15 @@ static const Z_MallocInternal_t Z_MallocInternal = (Z_MallocInternal_t)0x080A92F
 static const Z_MallocInternal_t Z_MallocInternal = (Z_MallocInternal_t)0x080AB51A;
 #elif COD_VERSION == COD2_1_3
 static const Z_MallocInternal_t Z_MallocInternal = (Z_MallocInternal_t)0x080AB65E;
+#endif
+
+typedef void (*Z_FreeInternal_t)(void *ptr);
+#if COD_VERSION == COD2_1_0
+static const Z_FreeInternal_t Z_FreeInternal = (Z_FreeInternal_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Z_FreeInternal_t Z_FreeInternal = (Z_FreeInternal_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Z_FreeInternal_t Z_FreeInternal = (Z_FreeInternal_t)0x080AB5B8;
 #endif
 
 typedef int (*FS_Read_t)(void *buffer, int len, fileHandle_t f);
@@ -3457,6 +3493,78 @@ static const OnSameTeam_t OnSameTeam = (OnSameTeam_t)0x0; // Not tested
 static const OnSameTeam_t OnSameTeam = (OnSameTeam_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const OnSameTeam_t OnSameTeam = (OnSameTeam_t)0x0811C0D0;
+#endif
+
+typedef int (*unzGetGlobalInfo_t)(unzFile file, unz_global_info *pglobal_info);
+#if COD_VERSION == COD2_1_0
+static const unzGetGlobalInfo_t unzGetGlobalInfo = (unzGetGlobalInfo_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const unzGetGlobalInfo_t unzGetGlobalInfo = (unzGetGlobalInfo_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const unzGetGlobalInfo_t unzGetGlobalInfo = (unzGetGlobalInfo_t)0x080D22A1;
+#endif
+
+typedef int (*unzGoToFirstFile_t)(unzFile file);
+#if COD_VERSION == COD2_1_0
+static const unzGoToFirstFile_t unzGoToFirstFile = (unzGoToFirstFile_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const unzGoToFirstFile_t unzGoToFirstFile = (unzGoToFirstFile_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const unzGoToFirstFile_t unzGoToFirstFile = (unzGoToFirstFile_t)0x080D286D;
+#endif
+
+typedef int (*unzGetCurrentFileInfo_t)(unzFile file, unz_file_info *pfile_info, char *szFileName, unsigned long fileNameBufferSize, void *extraField, unsigned long extraFieldBufferSize, char *szComment, unsigned long commentBufferSize);
+#if COD_VERSION == COD2_1_0
+static const unzGetCurrentFileInfo_t unzGetCurrentFileInfo = (unzGetCurrentFileInfo_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const unzGetCurrentFileInfo_t unzGetCurrentFileInfo = (unzGetCurrentFileInfo_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const unzGetCurrentFileInfo_t unzGetCurrentFileInfo = (unzGetCurrentFileInfo_t)0x080D2821;
+#endif
+
+typedef int (*unzGoToNextFile_t)(unzFile file);
+#if COD_VERSION == COD2_1_0
+static const unzGoToNextFile_t unzGoToNextFile = (unzGoToNextFile_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const unzGoToNextFile_t unzGoToNextFile = (unzGoToNextFile_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const unzGoToNextFile_t unzGoToNextFile = (unzGoToNextFile_t)0x080D2915;
+#endif
+
+typedef int (*unzSetCurrentFileInfoPosition_t)(unzFile file, unsigned long pos);
+#if COD_VERSION == COD2_1_0
+static const unzGoToNextFile_t unzSetCurrentFileInfoPosition = (unzGoToNextFile_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const unzGoToNextFile_t unzSetCurrentFileInfoPosition = (unzGoToNextFile_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const unzGoToNextFile_t unzSetCurrentFileInfoPosition = (unzGoToNextFile_t)0x080D2A35;
+#endif
+
+typedef int (*unzOpenCurrentFile_t)(unzFile file);
+#if COD_VERSION == COD2_1_0
+static const unzOpenCurrentFile_t unzOpenCurrentFile = (unzOpenCurrentFile_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const unzOpenCurrentFile_t unzOpenCurrentFile = (unzOpenCurrentFile_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const unzOpenCurrentFile_t unzOpenCurrentFile = (unzOpenCurrentFile_t)0x080D2E9E;
+#endif
+
+typedef int (*unzReadCurrentFile_t)(unzFile file, void *buf, unsigned int len);
+#if COD_VERSION == COD2_1_0
+static const unzReadCurrentFile_t unzReadCurrentFile = (unzReadCurrentFile_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const unzReadCurrentFile_t unzReadCurrentFile = (unzReadCurrentFile_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const unzReadCurrentFile_t unzReadCurrentFile = (unzReadCurrentFile_t)0x080D3094;
+#endif
+
+typedef int (*unzCloseCurrentFile_t)(unzFile file);
+#if COD_VERSION == COD2_1_0
+static const unzCloseCurrentFile_t unzCloseCurrentFile = (unzCloseCurrentFile_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const unzCloseCurrentFile_t unzCloseCurrentFile = (unzCloseCurrentFile_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const unzCloseCurrentFile_t unzCloseCurrentFile = (unzCloseCurrentFile_t)0x080D3506;
 #endif
 
 #endif

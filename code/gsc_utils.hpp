@@ -6,6 +6,8 @@
 
 void Sys_AnsiColorPrint(const char *msg);
 
+void gsc_utils_soundduration();
+
 void gsc_utils_remotecommand();
 void gsc_utils_executestring();
 void gsc_utils_sendgameservercommand();

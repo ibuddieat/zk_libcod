@@ -159,6 +159,7 @@ scr_function_t scriptFunctions[] =
 	#endif
 
 	#if COMPILE_UTILS == 1
+	{"soundduration", gsc_utils_soundduration, 0},
 	{"remotecommand", gsc_utils_remotecommand, 0},
 	{"cmd_executestring", gsc_utils_executestring, 0},
 	{"sendgameservercommand", gsc_utils_sendgameservercommand, 0},

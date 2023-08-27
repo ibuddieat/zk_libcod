@@ -73,4 +73,5 @@ New script code functions:
   * `resetTestClientNaming()`
   * `saveSpeexFile(<sound index>, <file path>)`
   * `setNextTestClientName(<name>)`
+  * `soundDuration(<aliasname>)`
   * `toHex(<number>)`
