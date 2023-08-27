@@ -4327,7 +4327,7 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 			if ( !cachedSnap )
 			{
 				SV_AddEntitiesVisibleFromPoint(org, clientNum, &entityNumbers);
-				for (i = 0; i < entityNumbers.numSnapshotEntities; i++)
+				for ( i = 0; i < entityNumbers.numSnapshotEntities; i++ )
 				{
 					ent = SV_GentityNum(entityNumbers.snapshotEntities[i]);
 					entState = svs.snapshotEntities + svs.nextSnapshotEntities % svs.numSnapshotEntities;
@@ -4338,7 +4338,7 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 					frame->num_entities++;
 				}
 				snapClient = svs.clients;
-				for (i = 0; i < sv_maxclients->current.integer; i++, snapClient++)
+				for ( i = 0; i < sv_maxclients->current.integer; i++, snapClient++ )
 				{
 					if ( CS_ZOMBIE < snapClient->state )
 					{
@@ -4356,7 +4356,7 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 			else
 			{
 				SV_AddCachedEntitiesVisibleFromPoint(cachedSnap->num_entities, cachedSnap->first_entity, org, clientNum, &entityNumbers);
-				for (i = 0; i < entityNumbers.numSnapshotEntities; i++)
+				for ( i = 0; i < entityNumbers.numSnapshotEntities; i++ )
 				{
 					j = cachedSnap->first_entity + entityNumbers.snapshotEntities[i];
 					cachedSnapEnts = j;
@@ -4395,7 +4395,7 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 						Com_Error(ERR_FATAL, "\x15svs.nextSnapshotEntities wrapped");
 					frame->num_entities++;
 				}
-				for (i = 0; i < cachedSnap->num_clients; i++)
+				for ( i = 0; i < cachedSnap->num_clients; i++ )
 				{
 					j = cachedSnap->first_client + i;
 					cachedSnapClients = j;
