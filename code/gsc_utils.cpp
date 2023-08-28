@@ -207,6 +207,8 @@ void gsc_utils_soundduration()
 					if ( read < 0 )
 					{
 						Com_DPrintf("gsc_utils_soundduration() error at unzReadCurrentFile\n");
+						unzCloseCurrentFile(iwd->handle);
+						Z_FreeInternal(buffer);
 						break;
 					}
 
@@ -222,6 +224,8 @@ void gsc_utils_soundduration()
 					{
 						stackError("gsc_utils_soundduration() ffprobe not installed");
 						stackPushUndefined();
+						unzCloseCurrentFile(iwd->handle);
+						Z_FreeInternal(buffer);
 						return;
 					}
 
@@ -236,6 +240,8 @@ void gsc_utils_soundduration()
 					{
 						stackError("gsc_utils_soundduration() could not create temporary file");
 						stackPushUndefined();
+						unzCloseCurrentFile(iwd->handle);
+						Z_FreeInternal(buffer);
 						return;
 					}
 
@@ -245,6 +251,8 @@ void gsc_utils_soundduration()
 					{
 						stackError("gsc_utils_soundduration() could not execute ffmpeg");
 						stackPushUndefined();
+						unzCloseCurrentFile(iwd->handle);
+						Z_FreeInternal(buffer);
 						return;
 					}
 
