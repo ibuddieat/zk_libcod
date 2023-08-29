@@ -6,6 +6,7 @@
 
 void Sys_AnsiColorPrint(const char *msg);
 
+void gsc_utils_getsoundaliasesfromfile();
 void gsc_utils_soundduration();
 
 void gsc_utils_remotecommand();

@@ -2200,7 +2200,7 @@ typedef struct
 typedef struct
 {
 	int count;
-	int files; // SoundFile *
+	SoundFile *files;
 } SoundFileInfo;
 
 typedef struct
@@ -2209,6 +2209,41 @@ typedef struct
 	float mindist;
 	float maxdist;
 } volumeFalloffCurve_t;
+
+struct snd_alias_build_s
+{
+	char szSourceFile[64];
+	char szAliasName[64];
+	char szSecondaryAliasName[64];
+	int subtitleText;
+	int iSequence;
+	char szSoundFile[64];
+	int permSoundFile;
+	float fVolMin;
+	float fVolMax;
+	float fVolMod;
+	float fPitchMin;
+	float fPitchMax;
+	float fDistMin;
+	float fDistMax;
+	int iChannel;
+	snd_alias_type_t eType;
+	volumeFalloffCurve_t *volumeFalloffCurve;
+	float fSlavePercentage;
+	float fProbability;
+	float fLfePercentage;
+	int startDelay;
+	byte bLooping;
+	byte bMaster;
+	byte bSlave;
+	byte bFullDryLevel;
+	byte bNoWetLevel;
+	byte error;
+	byte keep;
+	byte pad0;
+	int pSameSoundFile; // SoundFile* ?
+	snd_alias_build_s *pNext;
+};
 
 typedef struct
 {
@@ -3728,6 +3763,17 @@ static const int g_EndPos_offset = 0x083D7600;
 static const int scrParserPub_offset = 0x08287334;
 #endif
 
+#if COD_VERSION == COD2_1_0 // Not tested
+static const int saLoadObjGlob_offset = 0x0;
+static const int saLoadedObjs_offset = 0x0;
+#elif COD_VERSION == COD2_1_2 // Not tested
+static const int saLoadObjGlob_offset = 0x0;
+static const int saLoadedObjs_offset = 0x0;
+#elif COD_VERSION == COD2_1_3
+static const int saLoadObjGlob_offset = 0x085AB160;
+static const int saLoadedObjs_offset = 0x085AB164;
+#endif
+
 #define g_entities ((gentity_t*)(gentities_offset))
 #define g_clients ((gclient_t*)(gclients_offset))
 #define scrVarPub (*((scrVarPub_t*)( varpub_offset )))
@@ -3782,6 +3828,8 @@ static const int scrParserPub_offset = 0x08287334;
 #define riflePriorityMap (*((uint8_t*)( riflePriorityMap_offset )))
 #define fs_searchpaths (*((searchpath_t**)( fs_searchpaths_offset )))
 #define g_EndPos (*((char*)( g_EndPos_offset )))
+#define saLoadObjGlob (*((snd_alias_build_s**)( saLoadObjGlob_offset )))
+#define saLoadedObjs (*((int*)( saLoadedObjs_offset ))) // Guessed variable name
 
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6

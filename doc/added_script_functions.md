@@ -65,6 +65,7 @@ New script code functions:
   * `setWeaponFuseTime(<weapon name>, <time in ms>)`
   * `fromHex(<hex string>)`
   * `getEntityCount([<in use>])`
+  * `getSoundAliasesFromFile(<filename>)`
   * `getSoundFileDuration(<file path>)`
   * `loadSoundFile(<file path>, <callback function>, [<volume>], [<sound index>])`
   * `loadSpeexFile(<file path>, [<sound index>])`

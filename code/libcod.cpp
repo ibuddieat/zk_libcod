@@ -128,6 +128,7 @@ cHook *hook_scr_execentthread;
 cHook *hook_scr_execthread;
 cHook *hook_scr_loadgametype;
 cHook *hook_scr_notify;
+cHook *hook_sys_quit;
 cHook *hook_sv_freeconfigstrings;
 cHook *hook_sv_masterheartbeat;
 cHook *hook_sv_verifyiwds_f;
@@ -741,6 +742,56 @@ void custom_SV_SpawnServer(char *server)
 	{
 		EnablePbSv();
 	}
+}
+
+snd_alias_build_s *customSoundAliasInfo = NULL;
+int customSoundAliasInfoCount = 0;
+void hook_Com_MakeSoundAliasesPermanent(snd_alias_list_t *aliasList, SoundFileInfo *fileInfo)
+{
+	/* Save detailed sound alias info before Hunk_ClearTempMemory() wipes this
+	  after Com_MakeSoundAliasesPermanent is called */
+	if ( customSoundAliasInfo )
+	{
+		memset(customSoundAliasInfo, 0, sizeof(snd_alias_build_s) * customSoundAliasInfoCount);
+	}
+	else
+	{
+		customSoundAliasInfo = (snd_alias_build_s *)Z_MallocInternal(sizeof(snd_alias_build_s) * saLoadedObjs);
+	}
+	customSoundAliasInfoCount = 0;
+
+	/* Members of saLoadObjGlob are not stored in a consecutive way in memory,
+	  so we cannot just go with a single memcpy. The new list is stored that
+	  way and the linked list pointers are updated */
+	snd_alias_build_s *previousBuild = NULL;
+	snd_alias_build_s *newBuild = NULL;
+	for ( snd_alias_build_s *build = saLoadObjGlob; build; build = build->pNext, customSoundAliasInfoCount++ )
+	{
+		newBuild = customSoundAliasInfo + customSoundAliasInfoCount;
+		memcpy(newBuild, build, sizeof(snd_alias_build_s));
+		if ( previousBuild )
+			previousBuild->pNext = newBuild;
+		previousBuild = newBuild;
+	}
+	if ( newBuild )
+		newBuild->pNext = NULL;
+
+	// Call the original function at this address
+	Com_MakeSoundAliasesPermanent(aliasList, fileInfo);
+}
+
+void custom_Sys_Quit(void)
+{
+	// Free stuff that is meant to be cleared on server (not map) quit
+	if ( customSoundAliasInfo )
+		Z_FreeInternal(customSoundAliasInfo);
+
+	// Continue exit routines
+	hook_sys_quit->unhook();
+	void (*Sys_Quit)(void);
+	*(int *)&Sys_Quit = hook_sys_quit->from;
+	Sys_Quit();
+	hook_sys_quit->hook();
 }
 
 qboolean logHeartbeat = qtrue;
@@ -7662,6 +7713,7 @@ public:
 		cracking_hook_call(0x080EBC58, (int)hook_findWeaponIndex);
 		cracking_hook_call(0x08062644, (int)hitch_warning_print);
 		cracking_hook_call(0x0808EE0A, (int)invalid_password);
+		cracking_hook_call(0x080AD1FE, (int)hook_Com_MakeSoundAliasesPermanent);
 
 		hook_gametype_scripts = new cHook(0x08110286, (int)custom_GScr_LoadGameTypeScript);
 		hook_gametype_scripts->hook();
@@ -7713,6 +7765,8 @@ public:
 		hook_scr_execthread->hook();
 		hook_sv_freeconfigstrings = new cHook(0x080932B6, int(custom_SV_FreeConfigstrings));
 		hook_sv_freeconfigstrings->hook();
+		hook_sys_quit = new cHook(0x080D3A7A, int(custom_Sys_Quit));
+		hook_sys_quit->hook();
 
 		#if COMPILE_PLAYER == 1
 		hook_play_movement = new cHook(0x08090DAC, (int)custom_SV_ClientThink);

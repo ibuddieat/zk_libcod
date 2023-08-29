@@ -136,6 +136,40 @@ int stackPrintParam(int param)
 	return 0;
 }
 
+extern snd_alias_build_s *customSoundAliasInfo;
+void gsc_utils_getsoundaliasesfromfile()
+{
+	char *inputfilename;
+
+	if ( !stackGetParams("s", &inputfilename) )
+	{
+		stackError("gsc_utils_getsoundaliasesfromfile() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( strlen(inputfilename) > 59 )
+	{
+		stackError("gsc_utils_getsoundaliasesfromfile() file name is too long");
+		stackPushUndefined();
+		return;
+	}
+
+	// Append .csv extension
+	char inputfilenamecsv[64];
+	Com_sprintf(inputfilenamecsv, 64, "%s.csv", inputfilename);
+
+	Scr_MakeArray();
+	for ( snd_alias_build_s *build = customSoundAliasInfo; build; build = build->pNext )
+	{
+		if ( !strcmp(inputfilenamecsv, build->szSourceFile) )
+		{
+			Scr_AddString(build->szAliasName);
+			Scr_AddArray();
+		}
+	}
+}
+
 void gsc_utils_soundduration()
 {
 	char *soundalias;

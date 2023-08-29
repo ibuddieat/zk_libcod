@@ -354,6 +354,15 @@ static const Com_LoadSoundAliases_t Com_LoadSoundAliases = (Com_LoadSoundAliases
 static const Com_LoadSoundAliases_t Com_LoadSoundAliases = (Com_LoadSoundAliases_t)0x080AD0AA;
 #endif
 
+typedef void (*Com_MakeSoundAliasesPermanent_t)(snd_alias_list_t *aliasList, SoundFileInfo *fileInfo);
+#if COD_VERSION == COD2_1_0
+static const Com_MakeSoundAliasesPermanent_t Com_MakeSoundAliasesPermanent = (Com_MakeSoundAliasesPermanent_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Com_MakeSoundAliasesPermanent_t Com_MakeSoundAliasesPermanent = (Com_MakeSoundAliasesPermanent_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Com_MakeSoundAliasesPermanent_t Com_MakeSoundAliasesPermanent = (Com_MakeSoundAliasesPermanent_t)0x080AF224;
+#endif
+
 typedef snd_alias_list_t* (*Com_FindSoundAlias_t)(const char *name);
 #if COD_VERSION == COD2_1_0
 static const Com_FindSoundAlias_t Com_FindSoundAlias = (Com_FindSoundAlias_t)0x0; // Not tested
