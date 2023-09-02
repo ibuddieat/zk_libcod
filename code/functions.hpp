@@ -1992,6 +1992,15 @@ static const G_GetPlayerViewDirection_t G_GetPlayerViewDirection = (G_GetPlayerV
 static const G_GetPlayerViewDirection_t G_GetPlayerViewDirection = (G_GetPlayerViewDirection_t)0x080F8AF8;
 #endif
 
+typedef qboolean (*G_DObjGetWorldTagPos_t)(gentity_t *ent, unsigned int tagName, float *pos);
+#if COD_VERSION == COD2_1_0
+static const G_DObjGetWorldTagPos_t G_DObjGetWorldTagPos = (G_DObjGetWorldTagPos_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_DObjGetWorldTagPos_t G_DObjGetWorldTagPos = (G_DObjGetWorldTagPos_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_DObjGetWorldTagPos_t G_DObjGetWorldTagPos = (G_DObjGetWorldTagPos_t)0x0811E5FA;
+#endif
+
 typedef playerState_t * (*SV_GameClientNum_t)(int num);
 #if COD_VERSION == COD2_1_0
 static const SV_GameClientNum_t SV_GameClientNum = (SV_GameClientNum_t)0x0808FE02;

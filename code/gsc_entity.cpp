@@ -66,7 +66,7 @@ void gsc_entity_gettagangles(scr_entref_t ref)
 
 	if ( ( parent->flags & FL_LINKTO_ENABLED ) == 0 )
 	{
-		// try to enableLinkTo if it's disabled
+		// Try to enableLinkTo if it's disabled
 		if ( parent->s.eType || parent->physicsObject )
 		{
 			stackError("gsc_entity_gettagangles() entity (classname: \'%s\') does not currently support enableLinkTo", SL_ConvertToString(parent->classname));
@@ -88,11 +88,11 @@ void gsc_entity_gettagangles(scr_entref_t ref)
 		tagId = 0;
 	}
 
-	// create an entity that we can link to
+	// Create an entity that we can link to
 	gentity_t *tempEnt = G_Spawn();
 	SV_LinkEntity(tempEnt);
 
-	// link entities with zero offsets
+	// Link entities with zero offsets
 	if ( !G_EntLinkToWithOffset(tempEnt, parent, tagId, &originOffset, &anglesOffset) )
 	{
 		G_FreeEntity(tempEnt);
@@ -120,7 +120,7 @@ void gsc_entity_gettagangles(scr_entref_t ref)
 		return;
 	}
 
-	// apply movement as if a frame would have passed
+	// Apply movement as if a frame would have passed
 	vec3_t angles;
 	G_GeneralLink(tempEnt);
 	VectorCopy(tempEnt->r.currentAngles, angles);
@@ -132,70 +132,23 @@ void gsc_entity_gettagangles(scr_entref_t ref)
 void gsc_entity_gettagorigin(scr_entref_t ref)
 {
 	int id = ref.entnum;
-	gentity_t *parent = &g_entities[id];
-
-	if ( ( parent->flags & FL_LINKTO_ENABLED ) == 0 )
-	{
-		// try to enableLinkTo if it's disabled
-		if ( parent->s.eType || parent->physicsObject )
-		{
-			stackError("gsc_entity_gettagorigin() entity (classname: \'%s\') does not currently support enableLinkTo", SL_ConvertToString(parent->classname));
-			stackPushUndefined();
-			return;
-		}
-		parent->flags = parent->flags | FL_LINKTO_ENABLED;
-	}
-
+	gentity_t *ent = &g_entities[id];
+	vec3_t origin;
 	unsigned int tagId;
 	char *tagName;
-	vec3_t originOffset = {0, 0, 0};
-	vec3_t anglesOffset = {0, 0, 0};
 
 	tagId = Scr_GetConstLowercaseString(0);
 	tagName = SL_ConvertToString(tagId);
 	if ( !*tagName )
-	{
-		tagId = 0;
-	}
+		tagId = 0; // Defaults to origin
 
-	// create an entity that we can link to
-	gentity_t *tempEnt = G_Spawn();
-	SV_LinkEntity(tempEnt);
-
-	// link entities with zero offsets
-	if ( !G_EntLinkToWithOffset(tempEnt, parent, tagId, &originOffset, &anglesOffset) )
+	if ( !G_DObjGetWorldTagPos(ent, tagId, origin) )
 	{
-		G_FreeEntity(tempEnt);
-		if ( !SV_DObjExists(parent) )
-		{
-			if ( !parent->model )
-			{
-				stackError("gsc_entity_gettagorigin() failed to link entity since parent has no model");
-				stackPushUndefined();
-				return;
-			}
-			stackError("gsc_entity_gettagorigin() failed to link entity since parent model \'%s\' is invalid", G_ModelName(parent->model));
-			stackPushUndefined();
-			return;
-		}
-		if ( tagId && SV_DObjGetBoneIndex(parent, tagId) < 0 )
-		{
-			SV_DObjDumpInfo(parent);
-			stackError("gsc_entity_gettagorigin() failed to link entity since tag \'%s\' does not exist in parent model \'%s\'", tagName, G_ModelName(parent->model));
-			stackPushUndefined();
-			return;
-		}
-		stackError("gsc_entity_gettagorigin() failed to link entity due to link cycle");
+		stackError("gsc_entity_gettagorigin2() could not find tag \'%s\' on model \'%s\'", tagName, G_ModelName(ent->model));
 		stackPushUndefined();
 		return;
 	}
 
-	// apply movement as if a frame would have passed
-	vec3_t origin;
-	G_GeneralLink(tempEnt);
-	VectorCopy(tempEnt->r.currentOrigin, origin);
-	G_FreeEntity(tempEnt);
-	
 	stackPushVector(origin);
 }
 
