@@ -751,13 +751,9 @@ void hook_Com_MakeSoundAliasesPermanent(snd_alias_list_t *aliasList, SoundFileIn
 	/* Save detailed sound alias info before Hunk_ClearTempMemory() wipes this
 	  after Com_MakeSoundAliasesPermanent is called */
 	if ( customSoundAliasInfo )
-	{
-		memset(customSoundAliasInfo, 0, sizeof(snd_alias_build_s) * customSoundAliasInfoCount);
-	}
-	else
-	{
-		customSoundAliasInfo = (snd_alias_build_s *)Z_MallocInternal(sizeof(snd_alias_build_s) * saLoadedObjs);
-	}
+		Z_FreeInternal(customSoundAliasInfo);
+
+	customSoundAliasInfo = (snd_alias_build_s *)Z_MallocInternal(sizeof(snd_alias_build_s) * saLoadedObjs);
 	customSoundAliasInfoCount = 0;
 
 	/* Members of saLoadObjGlob are not stored in a consecutive way in memory,
