@@ -735,13 +735,9 @@ void custom_SV_SpawnServer(char *server)
 	Com_Printf("-----------------------------------\n");
 
 	if ( Dvar_GetBool("sv_punkbuster") == 0 )
-	{
 		DisablePbSv();
-	}
 	else
-	{
 		EnablePbSv();
-	}
 }
 
 snd_alias_build_s *customSoundAliasInfo = NULL;
@@ -7696,7 +7692,6 @@ public:
 
 		#elif COD_VERSION == COD2_1_3
 		cracking_hook_call(0x080622F9, (int)common_init_complete_print);
-		//cracking_hook_call(0x0809362A, (int)hook_sv_spawnserver);
 		cracking_hook_call(0x08090BA0, (int)hook_ClientCommand);
 		cracking_hook_call(0x0808DB12, (int)hook_AuthorizeState);
 		cracking_hook_call(0x0808D2FA, (int)hook_isLanAddress);
