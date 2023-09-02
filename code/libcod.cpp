@@ -92,6 +92,7 @@ dvar_t *scr_turretDamageName;
 dvar_t *sv_allowRcon;
 dvar_t *sv_botKickMessages;
 dvar_t *sv_botReconnectMode;
+dvar_t *sv_botUseTriggerUse;
 dvar_t *sv_cracked;
 dvar_t *sv_disconnectMessages;
 dvar_t *sv_downloadMessage;
@@ -330,6 +331,7 @@ void common_init_complete_print(const char *format, ...)
 	sv_allowRcon = Dvar_RegisterBool("sv_allowRcon", qtrue, DVAR_ARCHIVE);
 	sv_botKickMessages = Dvar_RegisterBool("sv_botKickMessages", qtrue, DVAR_ARCHIVE);
 	sv_botReconnectMode = Dvar_RegisterInt("sv_botReconnectMode", 0, 0, 2, DVAR_ARCHIVE);
+	sv_botUseTriggerUse = Dvar_RegisterBool("sv_botUseTriggerUse", qfalse, DVAR_ARCHIVE);
 	sv_cracked = Dvar_RegisterBool("sv_cracked", qfalse, DVAR_ARCHIVE);
 	sv_disconnectMessages = Dvar_RegisterBool("sv_disconnectMessages", qtrue, DVAR_ARCHIVE);
 	sv_downloadMessage = Dvar_RegisterString("sv_downloadMessage", "", DVAR_ARCHIVE);
@@ -4743,6 +4745,7 @@ void custom_Player_UpdateCursorHints(gentity_t *player)
 	gentity_t *useList[2050];
 	gentity_t *ent;
 	gclient_t *client;
+	client_t *cl = svs.clients - player->s.number;
 
 	client = player->client;
 	(client->ps).cursorHint = 0;
@@ -4778,6 +4781,15 @@ LAB_08121ee6:
 								(client->ps).cursorHintEntIndex = (ent->s).number;
 								(client->ps).cursorHint = cursorHint;
 								(client->ps).cursorHintString = cursorHintString;
+
+								/* New code start: sv_botUseTriggerUse dvar */
+								if ( cl->bot && sv_botUseTriggerUse->current.boolean )
+								{
+									Scr_AddEntity(player);
+									Scr_Notify(ent, scr_const.trigger, 1);
+								}
+								/* New code end */
+
 								if ( (client->ps).cursorHint != 0 )
 								{
 									return;

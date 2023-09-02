@@ -85,6 +85,10 @@ Added dvars:
     * Min. Value: 0
     * Max. Value: 2
     * Effect: 0: Stock behavior, bots stay in connecting state after map switch and get kicked after sv_timeout. 1: Bots get kicked right on map switch. 2: Bots properly reconnect on map switch, using the same slot each.
+  * `sv_botUseTriggerUse`
+    * Type: Boolean
+    * Default: False
+    * Effect: Toggle whether bots should automatically trigger triggers of type trigger_use and trigger_use_touch.
   * `sv_kickMessages`
     * Type: Boolean
     * Default: True
