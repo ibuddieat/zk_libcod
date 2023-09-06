@@ -1851,7 +1851,7 @@ typedef struct client_s
 	qboolean wwwDl_failed;
 #endif
 	int deltaMessage;
-	int floodprotect;
+	int nextReliableTime;
 	int lastPacketTime;
 	int lastConnectTime;
 	int nextSnapshotTime;
@@ -1864,7 +1864,7 @@ typedef struct client_s
 	int pureAuthentic;
 	netchan_t netchan;
 	int guid;
-	short clscriptid;
+	unsigned short clscriptid;
 	int bot;
 	int serverId;
 	VoicePacket_t voicedata[MAX_VOICEPACKETS];

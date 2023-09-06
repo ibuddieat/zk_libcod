@@ -777,7 +777,7 @@ void gsc_player_resetnextreliabletime(scr_entref_t ref)
 
 	client_t *client = &svs.clients[id];
 
-	client->floodprotect = 0;
+	client->nextReliableTime = 0;
 
 	stackPushBool(qtrue);
 }
