@@ -7,6 +7,7 @@
 #if COMPILE_PLAYER == 1
 
 extern customPlayerState_t customPlayerState[MAX_CLIENTS];
+extern customStringIndex_t custom_scr_const;
 
 void gsc_player_getweaponindexoffhand(scr_entref_t ref)
 {
@@ -2199,7 +2200,7 @@ void gsc_player_getcollisionteam(scr_entref_t ref)
 
 	if ( customPlayerState[id].collisionTeam == COLLISION_TEAM_BOTH )
 	{
-		Scr_AddConstString(scr_const.both);
+		Scr_AddConstString(custom_scr_const.both);
 	}
 	else if ( customPlayerState[id].collisionTeam == COLLISION_TEAM_NONE )
 	{
@@ -2239,7 +2240,7 @@ void gsc_player_setcollisionteam(scr_entref_t ref)
 	{
 		customPlayerState[id].collisionTeam = COLLISION_TEAM_ALLIES;
 	}
-	else if ( team == scr_const.both )
+	else if ( team == custom_scr_const.both )
 	{
 		customPlayerState[id].collisionTeam = COLLISION_TEAM_BOTH;
 	}
@@ -2349,7 +2350,7 @@ void gsc_player_stopsoundfile(scr_entref_t ref)
 		customPlayerState[id].currentSoundTalker = 0;
 		customPlayerState[id].currentSoundIndex = 0;
 		customPlayerState[id].sentVoiceDataIndex = 0;
-		Scr_Notify(&g_entities[id], scr_const.sound_file_stop, 0);
+		Scr_Notify(&g_entities[id], custom_scr_const.sound_file_stop, 0);
 
 		stackPushBool(qtrue);
 	}
@@ -2438,7 +2439,7 @@ void gsc_player_playsoundfile(scr_entref_t ref)
 	}
 
 	if ( customPlayerState[id].currentSoundIndex )
-		Scr_Notify(&g_entities[id], scr_const.sound_file_stop, 0);
+		Scr_Notify(&g_entities[id], custom_scr_const.sound_file_stop, 0);
 
 	customPlayerState[id].pendingVoiceDataFrames = 0.0;
 	customPlayerState[id].currentSoundTalker = source;

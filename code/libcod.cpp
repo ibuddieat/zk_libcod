@@ -384,21 +384,23 @@ void custom_G_ProcessIPBans(void)
 	hook_g_processipbans->hook();
 }
 
+customStringIndex_t custom_scr_const;
 void custom_GScr_LoadConsts(void)
 {
 	/* Allocate custom strings for Scr_Notify() here, scheme:
-	scr_const.custom = GScr_AllocString("custom_string");
-	 Note: This new reference also has to be added to stringIndex_t in
+	custom_scr_const.custom = GScr_AllocString("custom_string");
+	 Note: This new reference also has to be added to customStringIndex_t in
 	 declarations.hpp */
-	scr_const.both = GScr_AllocString("both");
-	scr_const.bounce = GScr_AllocString("bounce");
-	scr_const.flags = GScr_AllocString("flags");
-	scr_const.land = GScr_AllocString("land");
+	custom_scr_const.bot_trigger = GScr_AllocString("bot_trigger");
+	custom_scr_const.both = GScr_AllocString("both");
+	custom_scr_const.bounce = GScr_AllocString("bounce");
+	custom_scr_const.flags = GScr_AllocString("flags");
+	custom_scr_const.land = GScr_AllocString("land");
 	#if COMPILE_CUSTOM_VOICE == 1
-	scr_const.sound_file_done = GScr_AllocString("sound_file_done");
-	scr_const.sound_file_stop = GScr_AllocString("sound_file_stop");
+	custom_scr_const.sound_file_done = GScr_AllocString("sound_file_done");
+	custom_scr_const.sound_file_stop = GScr_AllocString("sound_file_stop");
 	#endif
-	scr_const.trigger_radius = GScr_AllocString("trigger_radius");
+	custom_scr_const.trigger_radius = GScr_AllocString("trigger_radius");
 
 	hook_gscr_loadconsts->unhook();
 	void (*GScr_LoadConsts)(void);
@@ -4008,7 +4010,7 @@ void custom_G_RunFrame(int levelTime)
 						customPlayerState[id].currentSoundTalker = 0;
 						customPlayerState[id].currentSoundIndex = 0;
 						customPlayerState[id].sentVoiceDataIndex = 0;
-						Scr_Notify(&g_entities[id], scr_const.sound_file_done, 0);
+						Scr_Notify(&g_entities[id], custom_scr_const.sound_file_done, 0);
 						break;
 					}
 					voicePacket->talkerNum = customPlayerState[id].currentSoundTalker;
@@ -4785,8 +4787,8 @@ LAB_08121ee6:
 								/* New code start: sv_botUseTriggerUse dvar */
 								if ( cl->bot && sv_botUseTriggerUse->current.boolean )
 								{
-									Scr_AddEntity(player);
-									Scr_Notify(ent, scr_const.trigger, 1);
+									Scr_AddEntity(ent);
+									Scr_Notify(player, custom_scr_const.bot_trigger, 1);
 								}
 								/* New code end */
 
@@ -5266,7 +5268,7 @@ void custom_Scr_BulletTrace(void)
 		Scr_AddString(Com_SurfaceTypeToName((int)(trace.surfaceFlags & 0x1f00000U) >> 0x14));
 		Scr_AddArrayStringIndexed(scr_const.surfacetype);
 		Scr_AddInt(trace.surfaceFlags);
-		Scr_AddArrayStringIndexed(scr_const.flags);
+		Scr_AddArrayStringIndexed(custom_scr_const.flags);
 	}
 	else
 	{
@@ -5277,7 +5279,7 @@ void custom_Scr_BulletTrace(void)
 		Scr_AddConstString(scr_const.none);
 		Scr_AddArrayStringIndexed(scr_const.surfacetype);
 		Scr_AddInt(0);
-		Scr_AddArrayStringIndexed(scr_const.flags);
+		Scr_AddArrayStringIndexed(custom_scr_const.flags);
 	}
 }
 
@@ -5416,7 +5418,7 @@ void custom_GScr_SetHintString(scr_entref_t ref)
 	int index;
 
 	ent = G_GetEntity(id);
-	if ( ( ent->classname != scr_const.trigger_radius ) && ( ent->classname != scr_const.trigger_use ) && ( ent->classname != scr_const.trigger_use_touch ) )
+	if ( ( ent->classname != custom_scr_const.trigger_radius ) && ( ent->classname != scr_const.trigger_use ) && ( ent->classname != scr_const.trigger_use_touch ) )
 	{
 		Scr_Error("The setHintString command only works on trigger_radius, trigger_use or trigger_use_touch entities.\n");
 	}
@@ -5438,7 +5440,7 @@ void custom_GScr_SetHintString(scr_entref_t ref)
 	(ent->s).scale = index;
 
 	// Added trigger_radius support by converting it to a trigger_use_touch
-	if ( ent->classname == scr_const.trigger_radius )
+	if ( ent->classname == custom_scr_const.trigger_radius )
 	{
 		Scr_SetString(&ent->classname, scr_const.trigger_use_touch);
 		ent->trigger.singleUserEntIndex = ENTITY_NONE;
@@ -6161,7 +6163,7 @@ qboolean G_BounceGrenade(gentity_t *ent, trace_t *trace) // G_BounceMissile as b
 		{
 			Scr_AddEntity(&g_entities[trace->entityNum]);
 			Scr_AddString(Com_SurfaceTypeToName((int)( trace->surfaceFlags & 0x1F00000U ) >> 0x14));
-			Scr_Notify(ent, scr_const.land, 2);
+			Scr_Notify(ent, custom_scr_const.land, 2);
 			G_SetOrigin(ent, (ent->r).currentOrigin);
 			G_MissileLandAngles(ent, trace, angle, 1);
 			G_SetAngle(ent, angle);
@@ -6276,7 +6278,7 @@ void G_RunGravityModelAsGrenade(gentity_t *ent) // G_RunMissile as base
 		{
 			Scr_AddEntity(&g_entities[trace.entityNum]);
 			Scr_AddString(Com_SurfaceTypeToName((int)( trace.surfaceFlags & 0x1F00000U ) >> 0x14));
-			Scr_Notify(ent, scr_const.bounce, 2);
+			Scr_Notify(ent, custom_scr_const.bounce, 2);
 		}
 	}
 }
@@ -6358,7 +6360,7 @@ void G_RunGravityModelAsItem(gentity_t *ent) // G_RunItem as base
 				{
 					Scr_AddEntity(&g_entities[trace.entityNum]);
 					Scr_AddString(Com_SurfaceTypeToName((int)( trace.surfaceFlags & 0x1F00000U ) >> 0x14));
-					Scr_Notify(ent, scr_const.land, 2);
+					Scr_Notify(ent, custom_scr_const.land, 2);
 				}
 				(ent->s).groundEntityNum = trace.entityNum;
 				SV_LinkEntity(ent);

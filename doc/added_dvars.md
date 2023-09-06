@@ -88,7 +88,7 @@ Added dvars:
   * `sv_botUseTriggerUse`
     * Type: Boolean
     * Default: False
-    * Effect: Toggle whether bots should automatically trigger triggers of type trigger_use and trigger_use_touch.
+    * Effect: Toggle whether bots should be notified when triggers of type trigger_use or trigger_use_touch are nearby (i.e., when the hint string appears). Once available, the bot entity will be notified with a "bot_trigger" notify where the trigger entity is the first and only argument.
   * `sv_kickMessages`
     * Type: Boolean
     * Default: True
