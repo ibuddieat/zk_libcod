@@ -4745,7 +4745,7 @@ void custom_Player_UpdateCursorHints(gentity_t *player)
 	gentity_t *useList[2050];
 	gentity_t *ent;
 	gclient_t *client;
-	client_t *cl = svs.clients - player->s.number;
+	client_t *cl = svs.clients + player->s.number;
 
 	client = player->client;
 	(client->ps).cursorHint = 0;
