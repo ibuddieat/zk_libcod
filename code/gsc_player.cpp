@@ -1713,7 +1713,7 @@ void gsc_player_playfxontagforplayer(scr_entref_t ref)
 
 	tag_id = Scr_GetConstLowercaseString(2);
 	tag_name = SL_ConvertToString(tag_id);
-	if ( strchr(tag_name, 0x22) != 0 )
+	if ( strchr(tag_name, '"') != 0 )
 	{
 		Scr_ParamError(2, "cannot use \" characters in tag names\n");
 	}
@@ -1724,7 +1724,10 @@ void gsc_player_playfxontagforplayer(scr_entref_t ref)
 		Scr_ParamError(2, custom_va("tag \'%s\' does not exist on entity with model \'%s\'", tag_name, G_ModelName(ent->model)));
 	}
 
-	ent->s.attackerEntityNum = 1 + id; // reusing the attackerEntityNum field that is only used for obituary TempEntities
+	/* Reusing the attackerEntityNum field that is otherwise only used at
+	 obituary TempEntities. This way we have it archived, for correct killcam
+	 data */
+	ent->s.attackerEntityNum = 1 + id;
 	G_AddEvent(ent, EV_PLAY_FX_ON_TAG, G_FindConfigstringIndex(custom_va("%02d%s", index, tag_name), 0x38e, 0x100, 1, NULL));
 
 	stackPushBool(qtrue);
@@ -2198,19 +2201,19 @@ void gsc_player_getcollisionteam(scr_entref_t ref)
 		return;
 	}
 
-	if ( customPlayerState[id].collisionTeam == COLLISION_TEAM_BOTH )
+	if ( customPlayerState[id].collisionTeam == CUSTOM_TEAM_AXIS_ALLIES )
 	{
-		Scr_AddConstString(custom_scr_const.both);
+		Scr_AddConstString(custom_scr_const.axis_allies);
 	}
-	else if ( customPlayerState[id].collisionTeam == COLLISION_TEAM_NONE )
+	else if ( customPlayerState[id].collisionTeam == CUSTOM_TEAM_NONE )
 	{
 		Scr_AddConstString(scr_const.none);
 	}
-	else if ( customPlayerState[id].collisionTeam == COLLISION_TEAM_AXIS )
+	else if ( customPlayerState[id].collisionTeam == CUSTOM_TEAM_AXIS )
 	{
 		Scr_AddConstString(scr_const.axis);
 	}
-	else if ( customPlayerState[id].collisionTeam == COLLISION_TEAM_ALLIES )
+	else if ( customPlayerState[id].collisionTeam == CUSTOM_TEAM_ALLIES )
 	{
 		Scr_AddConstString(scr_const.allies);
 	}
@@ -2230,19 +2233,19 @@ void gsc_player_setcollisionteam(scr_entref_t ref)
 	short team = Scr_GetConstString(0);
 	if ( team == scr_const.none )
 	{
-		customPlayerState[id].collisionTeam = COLLISION_TEAM_NONE;
+		customPlayerState[id].collisionTeam = CUSTOM_TEAM_NONE;
 	}
 	else if ( team == scr_const.axis )
 	{
-		customPlayerState[id].collisionTeam = COLLISION_TEAM_AXIS;
+		customPlayerState[id].collisionTeam = CUSTOM_TEAM_AXIS;
 	}
 	else if ( team == scr_const.allies )
 	{
-		customPlayerState[id].collisionTeam = COLLISION_TEAM_ALLIES;
+		customPlayerState[id].collisionTeam = CUSTOM_TEAM_ALLIES;
 	}
-	else if ( team == custom_scr_const.both )
+	else if ( team == custom_scr_const.axis_allies )
 	{
-		customPlayerState[id].collisionTeam = COLLISION_TEAM_BOTH;
+		customPlayerState[id].collisionTeam = CUSTOM_TEAM_AXIS_ALLIES;
 	}
 	else
 	{

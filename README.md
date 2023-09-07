@@ -14,6 +14,7 @@
 - [Changed script code functions](doc/changed_script_functions.md)
 - Patched `Com_PrintMessage` so that strings that begin with a caret are printed properly
 - Patched the `clonePlayer` script function to not crash the server if called on a player without model
+- Allow to show head icons to both teams (via `axis_allies`)
 - Excluded client userinfo updates from flood protection
 - Excluded clients with wrong password from scoreboard
 - Blocked client `printentities` command if cheats are disabled

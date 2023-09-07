@@ -257,6 +257,15 @@ typedef struct scr_entref_s
 	u_int16_t classnum;
 } scr_entref_t;
 
+typedef struct game_client_field_s
+{
+	const char *name;
+	int ofs;
+	int type;
+	void (*setter)(gclient_s *, const game_client_field_s *);
+	void (*getter)(gclient_s *, const game_client_field_s *);
+} game_client_field_t;
+
 typedef enum
 {
 	CRITSECT_CONSOLE = 0,
@@ -3937,11 +3946,15 @@ typedef enum
 
 typedef enum
 {
-	COLLISION_TEAM_BOTH,
-	COLLISION_TEAM_AXIS,
-	COLLISION_TEAM_ALLIES,
-	COLLISION_TEAM_NONE
-} collisionTeam_t;
+	CUSTOM_TEAM_NONE,
+	CUSTOM_TEAM_AXIS,
+	CUSTOM_TEAM_ALLIES,
+	CUSTOM_TEAM_SPECTATOR,
+	CUSTOM_TEAM_AXIS_ALLIES,
+	CUSTOM_TEAM_AXIS_SPECTATOR,
+	CUSTOM_TEAM_ALLIES_SPECTATOR,
+	CUSTOM_TEAM_ALL
+} customTeam_t;
 
 typedef struct customEntityState_s
 {
@@ -3967,7 +3980,7 @@ typedef struct customPlayerState_s
 	float fireRangeScale;
 	qboolean noPickup;
 	qboolean noEarthquakes;
-	collisionTeam_t collisionTeam;
+	customTeam_t collisionTeam;
 	qboolean silent;
 	int speed;
 	int gravity;
@@ -3975,6 +3988,7 @@ typedef struct customPlayerState_s
 	int animation;
 	int fps;
 	int frames;
+	customTeam_t headIconTeam;
 	uint64_t frameTime;
 	qboolean noBulletImpacts;
 	int previousButtons;
@@ -4006,8 +4020,9 @@ typedef struct callback_s
 
 typedef struct
 {
+	unsigned short all;
+	unsigned short axis_allies;
 	unsigned short bot_trigger;
-	unsigned short both;
 	unsigned short bounce;
 	unsigned short flags;
 	unsigned short land;

@@ -391,8 +391,9 @@ void custom_GScr_LoadConsts(void)
 	custom_scr_const.custom = GScr_AllocString("custom_string");
 	 Note: This new reference also has to be added to customStringIndex_t in
 	 declarations.hpp */
+	custom_scr_const.all = GScr_AllocString("all");
+	custom_scr_const.axis_allies = GScr_AllocString("axis_allies");
 	custom_scr_const.bot_trigger = GScr_AllocString("bot_trigger");
-	custom_scr_const.both = GScr_AllocString("both");
 	custom_scr_const.bounce = GScr_AllocString("bounce");
 	custom_scr_const.flags = GScr_AllocString("flags");
 	custom_scr_const.land = GScr_AllocString("land");
@@ -880,19 +881,19 @@ qboolean SkipCollision(gentity_t *client1, gentity_t *client2)
 
 	if ( id1 < MAX_CLIENTS && id2 < MAX_CLIENTS && client1->client && client2->client && client1->client->sess.connected == CON_CONNECTED && client2->client->sess.connected == CON_CONNECTED )
 	{
-		if ( customPlayerState[id1].collisionTeam == COLLISION_TEAM_NONE || customPlayerState[id2].collisionTeam == COLLISION_TEAM_NONE )
+		if ( customPlayerState[id1].collisionTeam == CUSTOM_TEAM_NONE || customPlayerState[id2].collisionTeam == CUSTOM_TEAM_NONE )
 			return qtrue;
 
-		if ( customPlayerState[id1].collisionTeam == COLLISION_TEAM_AXIS && (client2->client->sess).team != TEAM_AXIS )
+		if ( customPlayerState[id1].collisionTeam == CUSTOM_TEAM_AXIS && (client2->client->sess).team != TEAM_AXIS )
 			return qtrue;
 
-		if ( customPlayerState[id1].collisionTeam == COLLISION_TEAM_ALLIES && (client2->client->sess).team != TEAM_ALLIES )
+		if ( customPlayerState[id1].collisionTeam == CUSTOM_TEAM_ALLIES && (client2->client->sess).team != TEAM_ALLIES )
 			return qtrue;
 
-		if ( customPlayerState[id2].collisionTeam == COLLISION_TEAM_AXIS && (client1->client->sess).team != TEAM_AXIS )
+		if ( customPlayerState[id2].collisionTeam == CUSTOM_TEAM_AXIS && (client1->client->sess).team != TEAM_AXIS )
 			return qtrue;
 
-		if ( customPlayerState[id2].collisionTeam == COLLISION_TEAM_ALLIES && (client1->client->sess).team != TEAM_ALLIES )
+		if ( customPlayerState[id2].collisionTeam == CUSTOM_TEAM_ALLIES && (client1->client->sess).team != TEAM_ALLIES )
 			return qtrue;
 	}
 
@@ -987,12 +988,12 @@ qboolean custom_StuckInClient(gentity_t *self)
 		return qfalse;
 	/* New code end */
 
-	if ( ( ( ((self->client->ps).pm_flags & PMF_VIEWLOCKED) != 0 ) && ( (self->client->sess).sessionState == STATE_PLAYING ) ) && ( customPlayerState[id].collisionTeam != COLLISION_TEAM_BOTH /* New condition */ || ( (self->r).contents == CONTENTS_BODY || ( (self->r).contents == CONTENTS_CORPSE ) ) ) )
+	if ( ( ( ((self->client->ps).pm_flags & PMF_VIEWLOCKED) != 0 ) && ( (self->client->sess).sessionState == STATE_PLAYING ) ) && ( customPlayerState[id].collisionTeam != CUSTOM_TEAM_AXIS_ALLIES /* New condition */ || ( (self->r).contents == CONTENTS_BODY || ( (self->r).contents == CONTENTS_CORPSE ) ) ) )
 	{
 		hit = g_entities;
 		for ( i = 0; i < level.maxclients; i++, hit++)
 		{
-			if ( ( ( ( ( ( (hit->r).inuse != 0 ) && ( ((hit->client->ps).pm_flags & PMF_VIEWLOCKED) != 0 ) ) && ( (hit->client->sess).sessionState == STATE_PLAYING )  ) && ( (hit != self && hit->client != NULL ) ) ) && ( 0 < hit->health && ( /* New condition */ customPlayerState[i].collisionTeam != COLLISION_TEAM_BOTH || ( (hit->r).contents == CONTENTS_BODY || ( (hit->r).contents == CONTENTS_CORPSE ) ) ) ) ) &&
+			if ( ( ( ( ( ( (hit->r).inuse != 0 ) && ( ((hit->client->ps).pm_flags & PMF_VIEWLOCKED) != 0 ) ) && ( (hit->client->sess).sessionState == STATE_PLAYING )  ) && ( (hit != self && hit->client != NULL ) ) ) && ( 0 < hit->health && ( /* New condition */ customPlayerState[i].collisionTeam != CUSTOM_TEAM_AXIS_ALLIES || ( (hit->r).contents == CONTENTS_BODY || ( (hit->r).contents == CONTENTS_CORPSE ) ) ) ) ) &&
 			( (hit->r).absmin[0] <= (self->r).absmax[0] && ( ( ( (self->r).absmin[0] <= (hit->r).absmax[0] && ( (hit->r).absmin[1] <= (self->r).absmax[1] ) ) && ( (self->r).absmin[1] <= (hit->r).absmax[1] ) ) && ( (hit->r).absmin[2] <= (self->r).absmax[2] && ( (self->r).absmin[2] <= (hit->r).absmax[2] ) ) ) ) )
 			{
 				/* New code: per-player/team collison */
@@ -1541,10 +1542,12 @@ void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t 
 	netField_t *field;
 	int lc;
 	int i;
-	int attackerEntityNum = 0; // For playFxOnTagForPlayer
-	int team; // For obituary
-	vec3_t origin; 	// For obituary
-	int max_distance; // For obituary
+	// New variables from here
+	int playFxOnTagForPlayerTargetNum = 0; // For playFxOnTagForPlayer
+	int team; // For custom obituary
+	vec3_t origin; 	// For custom obituary
+	int maxDistance; // For custom obituary
+	customTeam_t headIconTeam = CUSTOM_TEAM_NONE; // For custom headIconTeam
 
 	if ( !to )
 	{
@@ -1555,37 +1558,31 @@ void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t 
 	}
 	else
 	{
-		lc = 0;
+		/* New code start: Collect data for custom entity field usage */
 		field = stateFieldsPointer;
-
 		for ( i = 0; i < numFields; i++, field++ )
 		{
 			fromF = ( int * )( (byte *)from + field->offset );
 			toF = ( int * )( (byte *)to + field->offset );
 
+			// entityStateFields
 			if ( numFields == 0x3b )
 			{
-				/* New code: per-player/team collison */
-				if ( clientNum != -1 && i == 31 /* solid */ && entNum >= 0 && entNum < MAX_CLIENTS )
-				{
-					gentity_t *client1 = &g_entities[clientNum];
-					gentity_t *client2 = &g_entities[entNum];
-
-					if ( SkipCollision(client1, client2) )
-						*toF = 0;
-				}
+				/* New code start: Custom headIconTeam */
+				if ( i == 17 ) // scale
+					headIconTeam = (customTeam_t)*toF;
 				/* New code end */
 				
 				/* New code start: playFxOnTagForPlayer */
-				if ( i == 49 )
-					attackerEntityNum = *toF;
+				if ( i == 49 ) // attackerEntityNum
+					playFxOnTagForPlayerTargetNum = *toF;
 				/* New code end */
 				
 				/* New code start: obituary */
 				if ( i == 17 ) // scale
 					team = *toF;
 				else if ( i == 58 ) // dmgFlags
-					max_distance = *toF;
+					maxDistance = *toF;
 				else if ( i == 2 ) // pos.trBase[0]
 					origin[0] = *(vec_t *)toF;
 				else if ( i == 1 ) // pos.trBase[1]
@@ -1594,7 +1591,137 @@ void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t 
 					origin[2] = *(vec_t *)toF;
 				/* New code end */
 			}
-			
+		}
+		/* New code end */
+
+		lc = 0;
+		field = stateFieldsPointer;
+		for ( i = 0; i < numFields; i++, field++ )
+		{
+			fromF = ( int * )( (byte *)from + field->offset );
+			toF = ( int * )( (byte *)to + field->offset );
+
+			/* New code start: Apply data for custom entity field usage
+			 Here in the optimization loop we apply the changes to entity
+			 fields where necessary, so that lc is updated accordingly
+			*/
+			if ( numFields == 0x3b )
+			{
+				/* New code start: Custom headIconTeam */
+				// entityStateFields: iHeadIconTeam
+				if ( i == 46 )
+				{
+					client_t *client = NULL;
+					if ( spectatorClientNum != -1 )
+						client = &svs.clients[spectatorClientNum];
+					else if ( clientNum != -1 )
+						client = &svs.clients[clientNum];
+
+					// ClientDisconnect() nulls parts of clientSession_t
+					if ( client && client->gentity && client->gentity->client && client->gentity->client->sess.connected == CON_CONNECTED )
+					{
+						int clientTeam = client->gentity->client->sess.team;
+						if ( headIconTeam && headIconTeam != CUSTOM_TEAM_NONE )
+						{
+							if ( clientTeam == TEAM_AXIS )
+							{
+								if ( headIconTeam == CUSTOM_TEAM_AXIS ||
+									headIconTeam == CUSTOM_TEAM_AXIS_ALLIES ||
+									headIconTeam == CUSTOM_TEAM_AXIS_SPECTATOR ||
+									headIconTeam == CUSTOM_TEAM_ALL )
+									*toF = TEAM_AXIS;
+								else
+									*toF = TEAM_NONE;
+							}
+							else if ( clientTeam == TEAM_ALLIES )
+							{
+								if ( headIconTeam == CUSTOM_TEAM_ALLIES ||
+									headIconTeam == CUSTOM_TEAM_AXIS_ALLIES ||
+									headIconTeam == CUSTOM_TEAM_ALLIES_SPECTATOR ||
+									headIconTeam == CUSTOM_TEAM_ALL )
+									*toF = TEAM_ALLIES;
+								else
+									*toF = TEAM_NONE;
+							}
+							else if ( clientTeam == TEAM_SPECTATOR )
+							{
+								if ( headIconTeam == CUSTOM_TEAM_SPECTATOR ||
+									headIconTeam == CUSTOM_TEAM_AXIS_SPECTATOR ||
+									headIconTeam == CUSTOM_TEAM_ALLIES_SPECTATOR ||
+									headIconTeam == CUSTOM_TEAM_ALL )
+									*toF = TEAM_SPECTATOR;
+								else
+									*toF = TEAM_NONE;
+							}
+							else // TEAM_NONE
+							{
+								*toF = TEAM_NONE;
+							}
+						}
+					}
+				}
+				/* New code end */
+
+				/* New code: per-player/team collison */
+				if ( i == 31 ) // solid
+				{
+					if ( clientNum != -1 && entNum >= 0 && entNum < MAX_CLIENTS )
+					{
+						if ( SkipCollision(&g_entities[clientNum], &g_entities[entNum]) )
+							*toF = 0;
+					}
+				}
+				/* New code end */
+
+				/* New code start: playFxOnTagForPlayer */
+				// entityStateFields: events[0], ..., events[3]
+				if ( i == 21 || i == 22 || i == 23 || i == 25 )
+				{
+					toF = ( int * )( (byte *)to + field->offset );
+					if ( *toF == EV_PLAY_FX_ON_TAG && clientNum != playFxOnTagForPlayerTargetNum - 1 && spectatorClientNum != playFxOnTagForPlayerTargetNum - 1 )
+						*toF = EV_NONE;
+				}
+				/* New code end */
+				
+				/* New code start: obituary */
+				// entityStateFields: eType
+				if ( i == 12 )
+				{
+					toF = ( int * )( (byte *)to + field->offset );
+					if ( ( *toF - 10 ) == EV_OBITUARY )
+					{
+						client_t *client = NULL;
+						if ( spectatorClientNum != -1 )
+							client = &svs.clients[spectatorClientNum];
+						else if ( clientNum != -1 )
+							client = &svs.clients[clientNum];
+
+						// ClientDisconnect() nulls parts of clientSession_t
+						if ( client && client->gentity && client->gentity->client && client->gentity->client->sess.connected == CON_CONNECTED )
+						{
+							int clientTeam = client->gentity->client->sess.team;
+							if ( team )
+							{
+								if ( team != clientTeam && (
+									( clientTeam == TEAM_AXIS && team == CUSTOM_TEAM_ALLIES_SPECTATOR ) || 
+									( clientTeam == TEAM_ALLIES && team == CUSTOM_TEAM_AXIS_SPECTATOR ) || 
+									( clientTeam == TEAM_SPECTATOR && team == CUSTOM_TEAM_AXIS_ALLIES ) ) )
+									*toF = EV_NONE;
+							}
+							
+							if ( maxDistance > 0 )
+							{
+								double distance = Vec3DistanceSq(&client->gentity->r.currentOrigin, &origin);
+								if ( (int)distance > ( maxDistance * maxDistance ) )
+									*toF = EV_NONE;
+							}
+						}
+					}
+				}
+			}
+			/* New code end (obituary) */
+			/* New code end */
+
 			if ( *fromF != *toF )
 				lc = i + 1;
 		}
@@ -1622,51 +1749,7 @@ void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t 
 			
 			field = stateFieldsPointer;
 			for ( i = 0; i < lc; i++, field++ )
-			{
-				/* New code start: playFxOnTagForPlayer */
-				if ( numFields == 0x3b && ( i == 21 || i == 22 || i == 23 || i == 25 ) ) // entityStateFields: events[0], ..., events[3]
-				{
-					toF = ( int * )( (byte *)to + field->offset );
-					if ( *toF == EV_PLAY_FX_ON_TAG && clientNum != attackerEntityNum - 1 && spectatorClientNum != attackerEntityNum - 1 )
-						*toF = EV_NONE;
-				}
-				/* New code end */
-				
-				/* New code start: obituary */
-				if ( numFields == 0x3b && i == 12 ) // entityStateFields: eType
-				{
-					toF = ( int * )( (byte *)to + field->offset );
-					if ( ( *toF - 10 ) == EV_OBITUARY )
-					{
-						client_t *client = NULL;
-						if ( spectatorClientNum != -1 )
-							client = &svs.clients[spectatorClientNum];
-						else if ( clientNum != -1 )
-							client = &svs.clients[clientNum];
-
-						// ClientDisconnect() nulls parts of clientSession_t
-						if ( client && client->gentity->client && client->gentity->client->sess.connected == CON_CONNECTED )
-						{
-							int player_team = client->gentity->client->sess.team;
-							if ( team )
-							{
-								if ( team != player_team && ( ( player_team == 1 && team == 6 ) || ( player_team == 2 && team == 5 ) || ( player_team == 3 && team == 4 ) ) )
-									*toF = EV_NONE;
-							}
-							
-							if ( max_distance > 0 )
-							{
-								double distance = Vec3DistanceSq(&client->gentity->r.currentOrigin, &origin);
-								if ( (int)distance > ( max_distance * max_distance ) )
-									*toF = EV_NONE;
-							}
-						}
-					}
-				}
-				/* New code end */
-				
 				custom_MSG_WriteDeltaField(msg, (byte *)from, (byte *)to, field);
-			}
 		}
 	}
 }
@@ -2196,6 +2279,7 @@ void custom_SV_SendClientGameState(client_t *client)
 	customPlayerState[id].meleeRangeScale = 1.0;
 	customPlayerState[id].meleeWidthScale = 1.0;
 	customPlayerState[id].fireRangeScale = 1.0;
+	customPlayerState[id].collisionTeam = CUSTOM_TEAM_AXIS_ALLIES;
 	/* New code end */
 	
 	MSG_Init(&msg, data, MAX_MSGLEN);
@@ -5345,7 +5429,7 @@ void custom_GScr_Obituary(void)
 	gentity_t *attacker;
 	vec3_t origin;
 	const char *team_str;
-	int team = 0;
+	customTeam_t team = CUSTOM_TEAM_NONE;
 	int distance = 0;
 	
 	args = Scr_GetNumParam();
@@ -5372,19 +5456,19 @@ void custom_GScr_Obituary(void)
 	{
 		team_str = Scr_GetString(4);
 		if ( !strcmp(team_str, "axis") )
-			team = 1;
+			team = CUSTOM_TEAM_AXIS;
 		else if ( !strcmp(team_str, "allies") )
-			team = 2;
+			team = CUSTOM_TEAM_ALLIES;
 		else if ( !strcmp(team_str, "spectator") )
-			team = 3;
+			team = CUSTOM_TEAM_SPECTATOR;
 		else if ( !strcmp(team_str, "allies+axis") || !strcmp(team_str, "axis+allies") )
-			team = 4;
+			team = CUSTOM_TEAM_AXIS_ALLIES;
 		else if ( !strcmp(team_str, "spectator+axis") || !strcmp(team_str, "axis+spectator") )
-			team = 5;
+			team = CUSTOM_TEAM_AXIS_SPECTATOR;
 		else if ( !strcmp(team_str, "spectator+allies") || !strcmp(team_str, "allies+spectator") )
-			team = 6;
+			team = CUSTOM_TEAM_ALLIES_SPECTATOR;
 	}
-	ent->s.scale = team; // Reusing the scale field that is otherwise not used at obituary TempEntities
+	ent->s.scale = (int)team; // Reusing the scale field that is otherwise not used at obituary TempEntities
 	
 	// Custom max. distance
 	if ( args > 5 )
@@ -7517,6 +7601,88 @@ int custom_SV_GetClientPing(int clientNum)
 	return svs.clients[clientNum].ping;
 }
 
+void custom_ClientScr_SetHeadIconTeam(gclient_t *pSelf, const game_client_field_t *pField)
+{
+	unsigned short str;
+	gentity_t *player = &g_entities[pSelf - level.clients];
+
+	str = Scr_GetConstString(0);
+
+	/* No matter what is set here, spectators can always see all headicons.
+	 This might be a bug in the client, especially since the server part was
+	 broken too (spectator and invalid branch were flipped) */
+	if ( scr_const.none == str )
+	{
+		player->s.iHeadIconTeam = TEAM_NONE;
+
+		/* Reusing the scale field that is otherwise only used at trigger
+		 entities. This way we have it archived, for correct killcam data.
+		 At this field, only the first byte is synchronized between players */
+		player->s.scale = CUSTOM_TEAM_NONE;
+	}
+	else if ( scr_const.allies == str )
+	{
+		player->s.iHeadIconTeam = TEAM_ALLIES;
+		player->s.scale = CUSTOM_TEAM_NONE;
+	}
+	else if ( scr_const.axis == str )
+	{
+		player->s.iHeadIconTeam = TEAM_AXIS;
+		player->s.scale = CUSTOM_TEAM_NONE;
+	}
+	else if ( scr_const.spectator == str )
+	{
+		player->s.iHeadIconTeam = TEAM_SPECTATOR;
+		player->s.scale = CUSTOM_TEAM_NONE;
+	}
+	else if ( custom_scr_const.axis_allies == str )
+	{
+		player->s.iHeadIconTeam = TEAM_NONE;
+		player->s.scale = CUSTOM_TEAM_AXIS_ALLIES;
+	}
+	else if ( custom_scr_const.all == str )
+	{
+		player->s.iHeadIconTeam = TEAM_NONE;
+		player->s.scale = CUSTOM_TEAM_ALL;
+	}
+	else
+	{
+		Scr_Error(custom_va("'%s' is an illegal head icon team string. Must be none, allies, axis, or spectator.", SL_ConvertToString(str)));
+	}
+}
+
+void custom_ClientScr_GetHeadIconTeam(gclient_t *pSelf, const game_client_field_t *pField)
+{
+	unsigned int str;
+	gentity_t *player = &g_entities[pSelf - level.clients];
+
+	switch ( player->s.iHeadIconTeam )
+	{
+	case 1:
+		str = scr_const.axis;
+		break;
+
+	case 2:
+		str = scr_const.allies;
+		break;
+
+	case 3:
+		str = scr_const.spectator;
+		break;
+
+	default:
+		if ( player->s.scale == CUSTOM_TEAM_AXIS_ALLIES )
+			str = custom_scr_const.axis_allies;
+		else if ( player->s.scale == CUSTOM_TEAM_ALL )
+			str = custom_scr_const.all;
+		else
+			str = scr_const.none;
+		break;
+	}
+
+	Scr_AddConstString(str);
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -7838,6 +8004,8 @@ public:
 		cracking_hook_function(0x08092456, (int)custom_SV_GetClientPing);
 		cracking_hook_function(0x08093520, (int)custom_SV_SpawnServer);
 		cracking_hook_function(0x080F5C34, (int)custom_G_AddPlayerMantleBlockage);
+		cracking_hook_function(0x080F82B6, (int)custom_ClientScr_SetHeadIconTeam);
+		cracking_hook_function(0x080F8388, (int)custom_ClientScr_GetHeadIconTeam);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC718, (int)Jump_ClearState);
