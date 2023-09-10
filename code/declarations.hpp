@@ -3991,6 +3991,7 @@ typedef struct customPlayerState_s
 	customTeam_t headIconTeam;
 	uint64_t frameTime;
 	qboolean noBulletImpacts;
+	byte talkerIcons[64];
 	int previousButtons;
 	#if COMPILE_BOTS == 1
 	int botButtons;

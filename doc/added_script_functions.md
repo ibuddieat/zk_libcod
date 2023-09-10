@@ -4,8 +4,10 @@ New script code methods:
   * `<entity> addGrenadeFuseTime(<time>)`
   * `<entity> disableBounce()`
   * `<entity> disableGravity()`
+  * `<entity> disableTalkerIcon(<player>)`
   * `<entity> enableBounce([<parallelBounce>], [<perpendicularBounce>])`
   * `<entity> enableGravity([<model collide>])`
+  * `<entity> enableTalkerIcon(<player>)`
   * `<entity> getClipmask()`
   * `<entity> getContents()`
   * `<entity> getEntityVelocity()`

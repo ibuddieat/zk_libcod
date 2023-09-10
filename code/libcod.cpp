@@ -1166,7 +1166,12 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 
 	if ( drop->state == CS_ZOMBIE )
 		return;	// Already dropped
-	
+
+	/* New code: libcod cleanup */
+	for ( i = 0 ; i < sv_maxclients->current.integer; i++ )
+		customPlayerState[i].talkerIcons[drop - svs.clients] = 0;
+	/* New code end */
+
 	drop->delayDropMsg = 0;
 	I_strncpyz(name, drop->name, sizeof(name));
 	SV_FreeClient(drop);
@@ -4033,6 +4038,42 @@ void custom_G_RunFrame(int levelTime)
 	}
 	scr_notify_index = 0;
 
+	client_t *client = svs.clients;
+	int id;
+	int j;
+	gclient_t *gclient = level.clients;
+	int durationSinceLastTalk;
+	VoicePacket_t fakeVoicePacket;
+	fakeVoicePacket.data[0] = 0xFF; // Magic :)
+	fakeVoicePacket.dataLen = 1;
+
+	for ( i = 0; i < sv_maxclients->current.integer; i++, client++ )
+	{
+		id = client - svs.clients;
+		if ( client->state < CS_CONNECTED )
+			continue;
+
+		// Client talker icon trigger mechanism
+		for ( j = 0; j < sv_maxclients->current.integer; j++ )
+		{
+			if ( customPlayerState[id].talkerIcons[j] )
+			{
+				// No fake voice data if the player is actually talking
+				gclient = level.clients + j;
+				durationSinceLastTalk = level.time - gclient->lastVoiceTime;
+				if ( durationSinceLastTalk >= 0 && g_voiceChatTalkingDuration->current.integer > durationSinceLastTalk )
+					continue;
+#if COMPILE_CUSTOM_VOICE == 1
+				// No fake voice data if the player is streaming sound already
+				if ( customPlayerState[id].currentSoundIndex && customPlayerState[id].currentSoundTalker == j )
+					continue;
+#endif
+				fakeVoicePacket.talkerNum = j;
+				SV_QueueVoicePacket(j, id, &fakeVoicePacket);
+			}
+		}
+	}
+
 #if COMPILE_CUSTOM_VOICE == 1
 	// Try process results from Speex encoder tasks
 	if ( pthread_mutex_trylock(&loadSoundFileResultLock) == 0 && Scr_IsSystemActive() )
@@ -4057,8 +4098,7 @@ void custom_G_RunFrame(int levelTime)
 
 	if ( sv_voice->current.boolean )
 	{
-		int durationSinceLastTalk;
-		gclient_t *gclient = level.clients;
+		gclient = level.clients;
 		for ( i = 0; i < sv_maxclients->current.integer; i++, gclient++ )
 		{
 			durationSinceLastTalk = level.time - gclient->lastVoiceTime;
@@ -4072,8 +4112,7 @@ void custom_G_RunFrame(int levelTime)
 
 	if ( !aPlayerIsTalking ) // TODO: Use SV_ClientHasClientMuted() here to only pause if a non-muted player talks
 	{
-		int id;
-		client_t *client = svs.clients;
+		client = svs.clients;
 		for ( i = 0; i < sv_maxclients->current.integer; i++, client++ )
 		{
 			id = client - svs.clients;

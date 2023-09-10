@@ -415,6 +415,8 @@ scr_method_t scriptMethods[] =
 	{"setcollisionteam", gsc_player_setcollisionteam, 0},
 	{"disablebulletimpacts", gsc_player_disablebulletimpacts, 0},
 	{"enablebulletimpacts", gsc_player_enablebulletimpacts, 0},
+	{"disabletalkericon", gsc_player_disabletalkericon, 0},
+	{"enabletalkericon", gsc_player_enabletalkericon, 0},
 	#if COMPILE_CUSTOM_VOICE == 1
 	{"playsoundfile", gsc_player_playsoundfile, 0},
 	{"stopsoundfile", gsc_player_stopsoundfile, 0},

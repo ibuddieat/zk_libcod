@@ -2287,6 +2287,56 @@ void gsc_player_enablebulletimpacts(scr_entref_t ref)
 	stackPushBool(qtrue);
 }
 
+void gsc_player_disabletalkericon(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_disabletalkericon() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	gentity_t *talker = Scr_GetEntity(0);
+	int talkerNum = talker->s.number;
+	if ( talkerNum >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_disabletalkericon() specified talker is not a player");
+		stackPushUndefined();
+		return;
+	}
+
+	customPlayerState[id].talkerIcons[talkerNum] = 0;
+
+	stackPushBool(qtrue);
+}
+
+void gsc_player_enabletalkericon(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_enabletalkericon() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	gentity_t *talker = Scr_GetEntity(0);
+	int talkerNum = talker->s.number;
+	if ( talkerNum >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_disabletalkericon() specified talker is not a player");
+		stackPushUndefined();
+		return;
+	}
+
+	customPlayerState[id].talkerIcons[talkerNum] = 1;
+
+	stackPushBool(qtrue);
+}
+
 #if COMPILE_CUSTOM_VOICE == 1
 
 extern VoicePacket_t voiceDataStore[MAX_CUSTOMSOUNDS][MAX_STOREDVOICEPACKETS];
