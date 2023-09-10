@@ -2249,7 +2249,7 @@ void gsc_player_setcollisionteam(scr_entref_t ref)
 	}
 	else
 	{
-		Scr_ParamError(0, "collision team must be \"axis\", \"allies\", \"none\", or \"both\"");
+		Scr_ParamError(0, "collision team must be \"axis\", \"allies\", \"none\", or \"axis_allies\"");
 	}
 
 	stackPushBool(qtrue);
