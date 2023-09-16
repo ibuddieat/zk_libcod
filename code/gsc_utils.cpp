@@ -170,13 +170,13 @@ void gsc_utils_getsoundaliasesfromfile()
 	}
 }
 
-void gsc_utils_soundduration()
+void gsc_utils_getsoundduration()
 {
 	char *soundalias;
 
 	if ( !stackGetParams("s", &soundalias) )
 	{
-		stackError("gsc_utils_soundduration() argument is undefined or has a wrong type");
+		stackError("gsc_utils_getsoundduration() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
@@ -186,7 +186,7 @@ void gsc_utils_soundduration()
 	list = Com_FindSoundAlias(soundalias);
 	if ( !list )
 	{
-		stackError("gsc_utils_soundduration() unknown sound alias");
+		stackError("gsc_utils_getsoundduration() unknown sound alias");
 		stackPushUndefined();
 		return;
 	}
@@ -224,7 +224,7 @@ void gsc_utils_soundduration()
 				err = unzGetCurrentFileInfo(uf, &file_info, filename_inzip, sizeof(filename_inzip), NULL, 0, NULL, 0);
 				if ( err )
 				{
-					Com_DPrintf("gsc_utils_soundduration() error at unzGetCurrentFileInfo\n");
+					Com_DPrintf("gsc_utils_getsoundduration() error at unzGetCurrentFileInfo\n");
 					break;
 				}
 				Com_sprintf(filename, MAX_ZPATH, "sound/%s", list->head->soundFile->soundName);
@@ -232,7 +232,7 @@ void gsc_utils_soundduration()
 				{
 					if ( unzOpenCurrentFile(iwd->handle) )
 					{
-						Com_DPrintf("gsc_utils_soundduration() error at unzOpenCurrentFile\n");
+						Com_DPrintf("gsc_utils_getsoundduration() error at unzOpenCurrentFile\n");
 						break;
 					}
 
@@ -240,7 +240,7 @@ void gsc_utils_soundduration()
 					read = unzReadCurrentFile(iwd->handle, buffer, file_info.uncompressed_size);
 					if ( read < 0 )
 					{
-						Com_DPrintf("gsc_utils_soundduration() error at unzReadCurrentFile\n");
+						Com_DPrintf("gsc_utils_getsoundduration() error at unzReadCurrentFile\n");
 						unzCloseCurrentFile(iwd->handle);
 						Z_FreeInternal(buffer);
 						break;
@@ -256,7 +256,7 @@ void gsc_utils_soundduration()
 					// Check if ffprobe is installed
 					if ( system("which ffprobe > /dev/null 2>&1") )
 					{
-						stackError("gsc_utils_soundduration() ffprobe not installed");
+						stackError("gsc_utils_getsoundduration() ffprobe not installed");
 						stackPushUndefined();
 						unzCloseCurrentFile(iwd->handle);
 						Z_FreeInternal(buffer);
@@ -264,7 +264,7 @@ void gsc_utils_soundduration()
 					}
 
 					// Write our buffer from within the iwd to a temporary file
-					tempFile = fopen("soundDuration.tmp", "wb");
+					tempFile = fopen("getSoundDuration.tmp", "wb");
 					if ( tempFile )
 					{
 						fwrite(buffer, 1, file_info.uncompressed_size, tempFile);
@@ -272,7 +272,7 @@ void gsc_utils_soundduration()
 					}
 					else
 					{
-						stackError("gsc_utils_soundduration() could not create temporary file");
+						stackError("gsc_utils_getsoundduration() could not create temporary file");
 						stackPushUndefined();
 						unzCloseCurrentFile(iwd->handle);
 						Z_FreeInternal(buffer);
@@ -280,10 +280,10 @@ void gsc_utils_soundduration()
 					}
 
 					// Execute ffprobe on the file, delete the temporary file
-					tempFile = popen("ffprobe -show_entries stream=duration -of compact=p=0:nk=1 -v fatal soundDuration.tmp; rm soundDuration.tmp", "r");
+					tempFile = popen("ffprobe -show_entries stream=duration -of compact=p=0:nk=1 -v fatal getSoundDuration.tmp; rm getSoundDuration.tmp", "r");
 					if ( !tempFile )
 					{
-						stackError("gsc_utils_soundduration() could not execute ffmpeg");
+						stackError("gsc_utils_getsoundduration() could not execute ffprobe");
 						stackPushUndefined();
 						unzCloseCurrentFile(iwd->handle);
 						Z_FreeInternal(buffer);
@@ -317,7 +317,7 @@ void gsc_utils_soundduration()
 					// No output if input file is in invalid format or somehow corrupt
 					if ( !*content )
 					{
-						stackError("gsc_utils_soundduration() input file is corrupt");
+						stackError("gsc_utils_getsoundduration() input file is corrupt");
 						stackPushUndefined();
 						return;
 					}
@@ -331,7 +331,10 @@ void gsc_utils_soundduration()
 		}
 	}
 
-	stackError("gsc_utils_soundduration() could not open or process file");
+	stackError("gsc_utils_getsoundduration() could not open or process file");
+	stackPushUndefined();
+}
+
 	stackPushUndefined();
 }
 

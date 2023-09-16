@@ -63,6 +63,7 @@ New script code methods:
 
 New script code functions:
   * `chr(<number>)`
+  * `getSoundDuration(<aliasname>)`
   * `getWeaponFuseTime(<weapon name>)`
   * `setWeaponFuseTime(<weapon name>, <time in ms>)`
   * `fromHex(<hex string>)`
@@ -76,5 +77,4 @@ New script code functions:
   * `resetTestClientNaming()`
   * `saveSpeexFile(<sound index>, <file path>)`
   * `setNextTestClientName(<name>)`
-  * `soundDuration(<aliasname>)`
   * `toHex(<number>)`
