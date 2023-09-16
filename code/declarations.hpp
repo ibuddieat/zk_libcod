@@ -4022,6 +4022,7 @@ typedef struct callback_s
 typedef struct
 {
 	unsigned short all;
+	unsigned short artist;
 	unsigned short axis_allies;
 	unsigned short bot_trigger;
 	unsigned short bounce;
@@ -4031,5 +4032,6 @@ typedef struct
 	unsigned short sound_file_done;
 	unsigned short sound_file_stop;
 	#endif
+	unsigned short title;
 	unsigned short trigger_radius;
 } customStringIndex_t;

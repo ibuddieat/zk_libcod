@@ -335,6 +335,177 @@ void gsc_utils_getsoundduration()
 	stackPushUndefined();
 }
 
+extern customStringIndex_t custom_scr_const;
+void gsc_utils_getsoundinfo()
+{
+	char *soundalias;
+
+	if ( !stackGetParams("s", &soundalias) )
+	{
+		stackError("gsc_utils_getsoundinfo() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	snd_alias_list_t *list;
+
+	list = Com_FindSoundAlias(soundalias);
+	if ( !list )
+	{
+		stackError("gsc_utils_getsoundinfo() unknown sound alias");
+		stackPushUndefined();
+		return;
+	}
+
+	char filename[MAX_ZPATH];
+	searchpath_t *search;
+
+	for ( search = fs_searchpaths; search; search = search->next )
+	{
+		iwd_t *iwd;
+		unzFile uf;
+		int err;
+		unz_global_info gi;
+		unsigned int i;
+		unz_file_info file_info;
+		char filename_inzip[MAX_ZPATH];
+		void *buffer;
+		int read;
+		FILE *tempFile;
+
+		// Find the specified file in the loaded iwds
+		iwd = search->iwd;
+		if ( iwd && iwd->numFiles )
+		{
+			uf = iwd->handle;
+			err = unzGetGlobalInfo(uf, &gi);
+			if ( err )
+			{
+				continue;
+			}
+
+			unzGoToFirstFile(uf);
+			for ( i = 0; i < gi.number_entry; i++ )
+			{
+				err = unzGetCurrentFileInfo(uf, &file_info, filename_inzip, sizeof(filename_inzip), NULL, 0, NULL, 0);
+				if ( err )
+				{
+					Com_DPrintf("gsc_utils_getsoundinfo() error at unzGetCurrentFileInfo\n");
+					break;
+				}
+				Com_sprintf(filename, MAX_ZPATH, "sound/%s", list->head->soundFile->soundName);
+				if ( !FS_FilenameCompare(filename_inzip, filename) )
+				{
+					if ( unzOpenCurrentFile(iwd->handle) )
+					{
+						Com_DPrintf("gsc_utils_getsoundinfo() error at unzOpenCurrentFile\n");
+						break;
+					}
+
+					buffer = Z_MallocInternal(file_info.uncompressed_size);
+					read = unzReadCurrentFile(iwd->handle, buffer, file_info.uncompressed_size);
+					if ( read < 0 )
+					{
+						Com_DPrintf("gsc_utils_getsoundinfo() error at unzReadCurrentFile\n");
+						unzCloseCurrentFile(iwd->handle);
+						Z_FreeInternal(buffer);
+						break;
+					}
+
+					/* Decided against using a faster in-memory reader via
+					  libavcodec as that causes symbol name overlaps that
+					  cannot be fixed without refactoring the whole project.
+					  We now depend on ffprobe instead of libavcodec-dev:i386
+					  and potentially also libavformat-dev:i386.
+					*/
+
+					// Check if ffprobe is installed
+					if ( system("which ffprobe > /dev/null 2>&1") )
+					{
+						stackError("gsc_utils_getsoundinfo() ffprobe not installed");
+						stackPushUndefined();
+						unzCloseCurrentFile(iwd->handle);
+						Z_FreeInternal(buffer);
+						return;
+					}
+
+					// Write our buffer from within the iwd to a temporary file
+					tempFile = fopen("getSoundInfo.tmp", "wb");
+					if ( tempFile )
+					{
+						fwrite(buffer, 1, file_info.uncompressed_size, tempFile);
+						fclose(tempFile);
+					}
+					else
+					{
+						stackError("gsc_utils_getsoundinfo() could not create temporary file");
+						stackPushUndefined();
+						unzCloseCurrentFile(iwd->handle);
+						Z_FreeInternal(buffer);
+						return;
+					}
+
+					// Execute ffprobe on the file, delete the temporary file
+					tempFile = popen("ffprobe -loglevel error -show_entries format_tags=title,artist -of default=noprint_wrappers=1:nokey=1 getSoundInfo.tmp; rm getSoundInfo.tmp", "r");
+					if ( !tempFile )
+					{
+						stackError("gsc_utils_getsoundinfo() could not execute ffprobe");
+						stackPushUndefined();
+						unzCloseCurrentFile(iwd->handle);
+						Z_FreeInternal(buffer);
+						return;
+					}
+
+					char c;
+					int curpos = 0;
+					int curfield = 0;
+					char info[2][MAX_STRINGLENGTH];
+
+					memset(info, 0, MAX_STRINGLENGTH * 2);
+
+					while ( (c = getc(tempFile)) != EOF && curfield < 2 )
+					{
+						if ( c == '\n' || curpos == MAX_STRINGLENGTH - 1 )
+						{
+							info[curfield][curpos] = '\0';
+							curfield++;
+							curpos = 0;
+						}
+						else
+						{
+							info[curfield][curpos] = c;
+							curpos++;
+						}
+					}
+					info[curfield][curpos] = '\0';
+
+					// Free stuff
+					pclose(tempFile);
+					unzCloseCurrentFile(iwd->handle);
+					Z_FreeInternal(buffer);
+
+					// No output if input file is in invalid format or somehow corrupt
+					if ( strstr(info[0], "Invalid data found when processing input") != NULL )
+					{
+						stackError("gsc_utils_getsoundinfo() input file is corrupt");
+						stackPushUndefined();
+						return;
+					}
+
+					// Return string-indexed array
+					Scr_MakeArray();
+					Scr_AddString(info[0]);
+					Scr_AddArrayStringIndexed(custom_scr_const.title);
+					Scr_AddString(info[1]);
+					Scr_AddArrayStringIndexed(custom_scr_const.artist);
+					return;
+				}
+				unzGoToNextFile(uf);
+			}
+		}
+	}
+
+	stackError("gsc_utils_getsoundinfo() could not open or process file");
 	stackPushUndefined();
 }
 

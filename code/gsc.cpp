@@ -161,6 +161,7 @@ scr_function_t scriptFunctions[] =
 	#if COMPILE_UTILS == 1
 	{"getsoundaliasesfromfile", gsc_utils_getsoundaliasesfromfile, 0},
 	{"getsoundduration", gsc_utils_getsoundduration, 0},
+	{"getsoundinfo", gsc_utils_getsoundinfo, 0},
 	{"remotecommand", gsc_utils_remotecommand, 0},
 	{"cmd_executestring", gsc_utils_executestring, 0},
 	{"sendgameservercommand", gsc_utils_sendgameservercommand, 0},

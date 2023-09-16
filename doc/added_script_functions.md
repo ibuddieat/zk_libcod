@@ -64,6 +64,7 @@ New script code methods:
 New script code functions:
   * `chr(<number>)`
   * `getSoundDuration(<aliasname>)`
+  * `getSoundInfo(<aliasname>)`
   * `getWeaponFuseTime(<weapon name>)`
   * `setWeaponFuseTime(<weapon name>, <time in ms>)`
   * `fromHex(<hex string>)`

@@ -392,6 +392,7 @@ void custom_GScr_LoadConsts(void)
 	 Note: This new reference also has to be added to customStringIndex_t in
 	 declarations.hpp */
 	custom_scr_const.all = GScr_AllocString("all");
+	custom_scr_const.artist = GScr_AllocString("artist");
 	custom_scr_const.axis_allies = GScr_AllocString("axis_allies");
 	custom_scr_const.bot_trigger = GScr_AllocString("bot_trigger");
 	custom_scr_const.bounce = GScr_AllocString("bounce");
@@ -401,6 +402,7 @@ void custom_GScr_LoadConsts(void)
 	custom_scr_const.sound_file_done = GScr_AllocString("sound_file_done");
 	custom_scr_const.sound_file_stop = GScr_AllocString("sound_file_stop");
 	#endif
+	custom_scr_const.title = GScr_AllocString("title");
 	custom_scr_const.trigger_radius = GScr_AllocString("trigger_radius");
 
 	hook_gscr_loadconsts->unhook();
