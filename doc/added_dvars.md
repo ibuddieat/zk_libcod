@@ -23,6 +23,12 @@ Added dvars:
     * Type: Boolean
     * Default: True
     * Effect: Toggle game logging of item pickup actions.
+  * `g_playerCollisionEjectDuration`
+    * Type: Integer
+    * Default: 300
+    * Min. Value: 50
+    * Max. Value: 1000
+    * Effect: Defines the time in milliseconds how long players that are too close to each other will be moved away from each other with the speed defined via the g_playerCollisionEjectSpeed dvar.
   * `g_resetSlide`
     * Type: Boolean
     * Default: False
