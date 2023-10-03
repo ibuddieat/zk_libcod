@@ -219,6 +219,8 @@ scr_function_t scriptFunctions[] =
 	{"getlasttestclientnumber", gsc_utils_getlasttestclientnumber, 0},
 	{"bullethiteffect", gsc_utils_bullethiteffect, 0},
 	{"gettype", gsc_utils_gettype, 0},
+
+	{"error", gsc_utils_error, 0},
 	#endif
 
 	#if COMPILE_CUSTOM_VOICE == 1

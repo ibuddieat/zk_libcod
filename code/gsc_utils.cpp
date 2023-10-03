@@ -1476,6 +1476,23 @@ void gsc_utils_gettype()
 
 	stackPushString(stackGetParamTypeAsString(0));
 }
+
+void gsc_utils_error()
+{
+	int terminal;
+	const char *message;
+
+	message = Scr_GetString(0);
+	terminal = 0;
+	if ( Scr_GetNumParam() > 1 )
+		terminal = Scr_GetInt(1);
+
+	if ( !terminal )
+		Scr_Error(message);
+	else
+		Com_Error(ERR_SCRIPT_DROP, "\x15%s\n", message);
+}
+
 #endif
 
 

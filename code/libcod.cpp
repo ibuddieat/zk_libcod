@@ -3954,8 +3954,6 @@ void custom_RuntimeError(const char *pos, int index, const char *message, const 
 			Com_Error(ERR_SCRIPT, "\x15script runtime error\n(see console for details)\n%s%s%s", message, newline, dialog_error);
 		else
 			Com_Error(ERR_SCRIPT_DROP, "\x15script runtime error\n(see console for details)\n%s%s%s", message, newline, dialog_error);
-		
-		
 	}
 }
 

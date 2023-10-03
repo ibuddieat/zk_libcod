@@ -64,6 +64,8 @@ void gsc_utils_getlasttestclientnumber();
 void gsc_utils_bullethiteffect();
 void gsc_utils_gettype();
 
+void gsc_utils_error();
+
 #if COMPILE_CUSTOM_VOICE == 1
 void gsc_utils_getsoundfileduration();
 void gsc_utils_loadsoundfile();
