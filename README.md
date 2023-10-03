@@ -60,7 +60,7 @@ sudo apt install libmariadb-dev-compat:i386
 ```
 sudo apt install ffmpeg
 ```
-If not installed, `soundDuration(<aliasname>)` always returns undefined.
+If not installed, `getSoundDuration(<aliasname>)` always returns undefined.
 
 **Custom sound file docs (for 64-bit Ubuntu 22.04 LTS)**
 - [Speex installation](doc/install_speex.md)
