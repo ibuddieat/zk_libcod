@@ -52,6 +52,8 @@ New script code methods:
   * `<player> setMeleeHeightScale(<scale>)`
   * `<player> setMeleeRangeScale(<scale>)`
   * `<player> setMeleeWidthScale(<scale>)`
+  * `<player> setTurretSpreadScale(<scale>)`
+  * `<player> setWeaponSpreadScale(<scale>)`
   * `<player> setPing(<value>)`
   * `<player> silent("on|off|toggle")`
   * `<player> stopSoundFile()`

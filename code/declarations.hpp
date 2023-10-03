@@ -3993,6 +3993,8 @@ typedef struct customPlayerState_s
 	qboolean noBulletImpacts;
 	byte talkerIcons[64];
 	int previousButtons;
+	float turretSpreadScale;
+	float weaponSpreadScale;
 	#if COMPILE_BOTS == 1
 	int botButtons;
 	int botWeapon;

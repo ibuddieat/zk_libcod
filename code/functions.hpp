@@ -1398,6 +1398,15 @@ static const Netchan_Process_t Netchan_Process = (Netchan_Process_t)0x0; // Not 
 static const Netchan_Process_t Netchan_Process = (Netchan_Process_t)0x0806BE8A;
 #endif
 
+typedef void (*BG_GetSpreadForWeapon_t)(const playerState_s *ps, int weaponIndex, float *minSpread, float *maxSpread);
+#if COD_VERSION == COD2_1_0
+static const BG_GetSpreadForWeapon_t BG_GetSpreadForWeapon = (BG_GetSpreadForWeapon_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const BG_GetSpreadForWeapon_t BG_GetSpreadForWeapon = (BG_GetSpreadForWeapon_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const BG_GetSpreadForWeapon_t BG_GetSpreadForWeapon = (BG_GetSpreadForWeapon_t)0x080EC8CC;
+#endif
+
 typedef WeaponDef_t * (*BG_WeaponDefs_t)(unsigned int weaponIndex);
 #if COD_VERSION == COD2_1_0
 static const BG_WeaponDefs_t BG_WeaponDefs = (BG_WeaponDefs_t)0x080E9270;
@@ -1441,6 +1450,24 @@ static const Weapon_Melee_t Weapon_Melee = (Weapon_Melee_t)0x0; // Not tested
 static const Weapon_Melee_t Weapon_Melee = (Weapon_Melee_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const Weapon_Melee_t Weapon_Melee = (Weapon_Melee_t)0x0811F844;
+#endif
+
+typedef gentity_t * (*weapon_grenadelauncher_fire_t)(gentity_t *player, int weaponIndex, weaponParms *wp);
+#if COD_VERSION == COD2_1_0
+static const weapon_grenadelauncher_fire_t weapon_grenadelauncher_fire = (weapon_grenadelauncher_fire_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const weapon_grenadelauncher_fire_t weapon_grenadelauncher_fire = (weapon_grenadelauncher_fire_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const weapon_grenadelauncher_fire_t weapon_grenadelauncher_fire = (weapon_grenadelauncher_fire_t)0x08120552;
+#endif
+
+typedef void (*Weapon_RocketLauncher_Fire_t)(gentity_t *player, float spread, weaponParms *wp);
+#if COD_VERSION == COD2_1_0
+static const Weapon_RocketLauncher_Fire_t Weapon_RocketLauncher_Fire = (Weapon_RocketLauncher_Fire_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Weapon_RocketLauncher_Fire_t Weapon_RocketLauncher_Fire = (Weapon_RocketLauncher_Fire_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Weapon_RocketLauncher_Fire_t Weapon_RocketLauncher_Fire = (Weapon_RocketLauncher_Fire_t)0x0812061A;
 #endif
 
 typedef qboolean (*BG_IsWeaponIndexValid_t)(int index); // Guessed function name
@@ -1972,6 +1999,15 @@ static const G_IsTurretUsable_t G_IsTurretUsable = (G_IsTurretUsable_t)0x0; // N
 static const G_IsTurretUsable_t G_IsTurretUsable = (G_IsTurretUsable_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const G_IsTurretUsable_t G_IsTurretUsable = (G_IsTurretUsable_t)0x0810C358;
+#endif
+
+typedef void (*G_CalcMuzzlePoints_t)(gentity_t *ent, weaponParms *wp);
+#if COD_VERSION == COD2_1_0
+static const G_CalcMuzzlePoints_t G_CalcMuzzlePoints = (G_CalcMuzzlePoints_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_CalcMuzzlePoints_t G_CalcMuzzlePoints = (G_CalcMuzzlePoints_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_CalcMuzzlePoints_t G_CalcMuzzlePoints = (G_CalcMuzzlePoints_t)0x081207EC;
 #endif
 
 typedef void (*G_GetPlayerViewOrigin_t)(gentity_t *ent, float *origin);
@@ -3358,6 +3394,15 @@ static const BodyEnd_t BodyEnd = (BodyEnd_t)0x0; // Not tested
 static const BodyEnd_t BodyEnd = (BodyEnd_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const BodyEnd_t BodyEnd = (BodyEnd_t)0x080FCC48;
+#endif
+
+typedef void (*Turret_FillWeaponParms_t)(gentity_t *ent, gentity_t *activator, weaponParms *wp);
+#if COD_VERSION == COD2_1_0
+static const Turret_FillWeaponParms_t Turret_FillWeaponParms = (Turret_FillWeaponParms_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Turret_FillWeaponParms_t Turret_FillWeaponParms = (Turret_FillWeaponParms_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Turret_FillWeaponParms_t Turret_FillWeaponParms = (Turret_FillWeaponParms_t)0x0810A880;
 #endif
 
 typedef void (*turret_think_init_t)(gentity_t *turret);

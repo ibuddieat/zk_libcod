@@ -373,6 +373,8 @@ scr_method_t scriptMethods[] =
 	{"setweaponfiremeleedelay", gsc_player_setweaponfiremeleedelay, 0},
 	{"setmeleeheightscale", gsc_player_setmeleeheightscale, 0},
 	{"setmeleerangescale", gsc_player_setmeleerangescale, 0},
+	{"setturretspreadscale", gsc_player_setturretspreadscale, 0},
+	{"setweaponspreadscale", gsc_player_setweaponspreadscale, 0},
 	{"setmeleewidthscale", gsc_player_setmeleewidthscale, 0},
 	{"play_anim", gsc_player_set_anim, 0},
 	{"getjumpslowdowntimer", gsc_player_getjumpslowdowntimer, 0},

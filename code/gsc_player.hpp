@@ -52,6 +52,8 @@ void gsc_player_setweaponfiremeleedelay(scr_entref_t ref);
 void gsc_player_setmeleeheightscale(scr_entref_t ref);
 void gsc_player_setmeleerangescale(scr_entref_t ref);
 void gsc_player_setmeleewidthscale(scr_entref_t ref);
+void gsc_player_setweaponspreadscale(scr_entref_t ref);
+void gsc_player_setturretspreadscale(scr_entref_t ref);
 void gsc_player_getweaponindexoffhand(scr_entref_t ref);
 void gsc_player_getcurrentoffhandslotammo(scr_entref_t ref);
 void gsc_player_set_anim(scr_entref_t ref);

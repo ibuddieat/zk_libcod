@@ -2282,11 +2282,13 @@ void custom_SV_SendClientGameState(client_t *client)
 	
 	/* New code start */
 	memset(&customPlayerState[id], 0, sizeof(customPlayerState_t));
+	customPlayerState[id].collisionTeam = CUSTOM_TEAM_AXIS_ALLIES;
 	customPlayerState[id].meleeHeightScale = 1.0;
 	customPlayerState[id].meleeRangeScale = 1.0;
 	customPlayerState[id].meleeWidthScale = 1.0;
 	customPlayerState[id].fireRangeScale = 1.0;
-	customPlayerState[id].collisionTeam = CUSTOM_TEAM_AXIS_ALLIES;
+	customPlayerState[id].turretSpreadScale = 1.0;
+	customPlayerState[id].weaponSpreadScale = 1.0;
 	/* New code end */
 	
 	MSG_Init(&msg, data, MAX_MSGLEN);
@@ -5091,7 +5093,7 @@ void custom_PlayerCmd_finishPlayerDamage(scr_entref_t entRef)
 	const char *weaponName;
 	unsigned short hitlocStr;
 	gentity_t *tempEnt;
-	gclient_s *client;
+	gclient_t *client;
 	float knockback;
 	gentity_t *ent;
 	float flinch;
@@ -5747,7 +5749,7 @@ void G_UpdateSingleObjective(objective_t *from, objective_t *to)
 void custom_G_UpdateObjectives(void)
 {
 	int i, j;
-	gclient_s *client;
+	gclient_t *client;
 	sessionTeam_t team;
 	objective_t *obj;
 
@@ -6052,6 +6054,83 @@ void custom_Bullet_Fire(gentity_t *inflictor, float spread, weaponParms *wp, gen
 		custom_Bullet_Fire_Extended(source, inflictor, wp->muzzleTrace, end, 1.0, 0, wp, source, offset);
 	}
 	G_AntiLag_RestoreClientPos(&antilagStore);
+}
+
+void custom_Fire_Lead(gentity_t *ent, gentity_t *activator)
+{
+	gentity_t *attacker;
+	weaponParms wp;
+	float spread;
+
+	spread = ent->pTurretInfo->playerSpread;
+	if ( activator == g_entities + ENTITY_NONE )
+	{
+		attacker = g_entities + ENTITY_WORLD;
+	}
+	else
+	{
+		attacker = activator;
+
+		/* New code start: per-player turret spread scale */
+		if ( attacker->client )
+			spread = ent->pTurretInfo->playerSpread * customPlayerState[attacker->client->ps.clientNum].turretSpreadScale;
+		/* New code end */
+	}
+
+	Turret_FillWeaponParms(ent, attacker, &wp);
+	wp.weapDef = BG_GetWeaponDef((ent->s).weapon);
+	if ( (wp.weapDef)->weapType == WEAPTYPE_BULLET )
+		custom_Bullet_Fire(attacker, spread, &wp, ent, level.time);
+	else
+		Weapon_RocketLauncher_Fire(ent, 0.0, &wp);
+
+	G_AddEvent(ent, EV_FIRE_WEAPON_MG42, (attacker->s).number);
+}
+
+void custom_FireWeaponAntiLag(gentity_t *player, int time)
+{
+	float maxSpread;
+	float minSpread;
+	float spread;
+	float currentAimSpreadScale;
+	weaponParms wp;
+
+	if ( ((player->client->ps).eFlags & EF_USETURRET) == 0 || player->active == 0 )
+	{
+		wp.weapDef = BG_GetWeaponDef((player->s).weapon);
+		G_CalcMuzzlePoints(player, &wp);
+		currentAimSpreadScale = player->client->currentAimSpreadScale;
+		BG_GetSpreadForWeapon(&player->client->ps, (player->s).weapon, &minSpread, &maxSpread);
+		if ( (player->client->ps).fWeaponPosFrac == 1.0 )
+		{
+			spread = (wp.weapDef)->accuracy + (maxSpread - (wp.weapDef)->accuracy) * currentAimSpreadScale;
+		}
+		else
+		{
+			spread = minSpread + (maxSpread - minSpread) * currentAimSpreadScale;
+		}
+
+		/* New code start: per-player weapon spread scale */
+		spread *= customPlayerState[player->client->ps.clientNum].weaponSpreadScale;
+		/* New code end */
+
+		if ( (wp.weapDef)->weapType == WEAPTYPE_BULLET )
+		{
+			custom_Bullet_Fire(player, spread, &wp, player, time);
+		}
+		else if ( (wp.weapDef)->weapType == WEAPTYPE_GRENADE )
+		{
+			weapon_grenadelauncher_fire(player, (player->s).weapon, &wp);
+		}
+		else if ( (wp.weapDef)->weapType == WEAPTYPE_PROJECTILE )
+		{
+			Weapon_RocketLauncher_Fire(player, spread, &wp);
+		}
+		else
+		{
+			Com_Error(ERR_DROP, "\x15Unknown weapon type %i for %s\n", (wp.weapDef)->weapType, (wp.weapDef)->szInternalName);
+		}
+	}
 }
 
 void custom_SV_QueueVoicePacket(int talkerNum, int clientNum, VoicePacket_t *voicePacket)
@@ -8047,6 +8126,8 @@ public:
 		cracking_hook_function(0x080F5C34, (int)custom_G_AddPlayerMantleBlockage);
 		cracking_hook_function(0x080F82B6, (int)custom_ClientScr_SetHeadIconTeam);
 		cracking_hook_function(0x080F8388, (int)custom_ClientScr_GetHeadIconTeam);
+		cracking_hook_function(0x0810A982, (int)custom_Fire_Lead);
+		cracking_hook_function(0x08120870, (int)custom_FireWeaponAntiLag);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC718, (int)Jump_ClearState);

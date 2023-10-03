@@ -1157,6 +1157,64 @@ void gsc_player_setmeleewidthscale(scr_entref_t ref)
 	stackPushFloat(old_scale);
 }
 
+void gsc_player_setturretspreadscale(scr_entref_t ref)
+{
+	int id = ref.entnum;
+	float old_scale, new_scale;
+
+	if ( !stackGetParams("f", &new_scale) )
+	{
+		stackError("gsc_player_setturretspreadscale() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_setturretspreadscale() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	old_scale = customPlayerState[id].turretSpreadScale;
+	if ( new_scale < 0 )
+	{
+		new_scale = 0.0;
+	}
+	customPlayerState[id].turretSpreadScale = new_scale;
+
+	stackPushFloat(old_scale);
+}
+
+void gsc_player_setweaponspreadscale(scr_entref_t ref)
+{
+	int id = ref.entnum;
+	float old_scale, new_scale;
+
+	if ( !stackGetParams("f", &new_scale) )
+	{
+		stackError("gsc_player_setweaponspreadscale() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_setweaponspreadscale() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	old_scale = customPlayerState[id].weaponSpreadScale;
+	if ( new_scale < 0 )
+	{
+		new_scale = 0.0;
+	}
+	customPlayerState[id].weaponSpreadScale = new_scale;
+
+	stackPushFloat(old_scale);
+}
+
 int BG_AnimationCheckForBad(char *anim)
 {
 	int i, v6, v8;
