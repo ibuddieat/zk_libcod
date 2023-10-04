@@ -77,6 +77,7 @@ dvar_t *g_dumpVoiceData;
 dvar_t *g_logPickup;
 dvar_t *g_mantleBlockEnable;
 dvar_t *g_playerCollision;
+dvar_t *g_playerCollisionEjectDamageAllowed;
 dvar_t *g_playerCollisionEjectDuration;
 dvar_t *g_playerEject;
 dvar_t *g_resetSlide;
@@ -321,6 +322,7 @@ void common_init_complete_print(const char *format, ...)
 	g_logPickup = Dvar_RegisterBool("g_logPickup", qtrue, DVAR_ARCHIVE);
 	g_mantleBlockEnable = Dvar_RegisterBool("g_mantleBlockEnable", qfalse, DVAR_ARCHIVE);
 	g_playerCollision = Dvar_RegisterBool("g_playerCollision", qtrue, DVAR_ARCHIVE);
+	g_playerCollisionEjectDamageAllowed = Dvar_RegisterBool("g_playerCollisionEjectDamageAllowed", qfalse, DVAR_ARCHIVE);
 	g_playerCollisionEjectDuration = Dvar_RegisterInt("g_playerCollisionEjectDuration", 300, 50, 1000, DVAR_ARCHIVE);
 	g_playerEject = Dvar_RegisterBool("g_playerEject", qtrue, DVAR_ARCHIVE);
 	g_resetSlide = Dvar_RegisterBool("g_resetSlide", qfalse, DVAR_ARCHIVE);
@@ -1045,7 +1047,10 @@ qboolean custom_StuckInClient(gentity_t *self)
 					VectorScale2(dir, selfSpeed * -1, (self->client->ps).velocity);
 					(self->client->ps).pm_time = g_playerCollisionEjectDuration->current.integer; // New: g_playerCollisionEjectDuration dvar
 					(self->client->ps).pm_flags = (self->client->ps).pm_flags | PMF_SLIDING;
-					return qtrue;
+					if ( !g_playerCollisionEjectDamageAllowed->current.boolean ) // New: g_playerCollisionEjectDamageAllowed dvar
+						return qtrue;
+					else
+						return qfalse;
 				}
 			}
 		}

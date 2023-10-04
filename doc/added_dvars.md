@@ -23,6 +23,10 @@ Added dvars:
     * Type: Boolean
     * Default: True
     * Effect: Toggle game logging of item pickup actions.
+  * `g_playerCollisionEjectDamageAllowed`
+    * Type: Boolean
+    * Default: False
+    * Effect: By default, players that are stuck within each other cannot be damaged by bullets while being ejected (coming unstuck). With this dvar, damage can be enabled.
   * `g_playerCollisionEjectDuration`
     * Type: Integer
     * Default: 300
