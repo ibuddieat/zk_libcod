@@ -2037,6 +2037,15 @@ static const G_DObjGetWorldTagPos_t G_DObjGetWorldTagPos = (G_DObjGetWorldTagPos
 static const G_DObjGetWorldTagPos_t G_DObjGetWorldTagPos = (G_DObjGetWorldTagPos_t)0x0811E5FA;
 #endif
 
+typedef void (*G_DObjCalcPose_t)(gentity_t *ent);
+#if COD_VERSION == COD2_1_0
+static const G_DObjCalcPose_t G_DObjCalcPose = (G_DObjCalcPose_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_DObjCalcPose_t G_DObjCalcPose = (G_DObjCalcPose_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_DObjCalcPose_t G_DObjCalcPose = (G_DObjCalcPose_t)0x0811E3C0;
+#endif
+
 typedef playerState_t * (*SV_GameClientNum_t)(int num);
 #if COD_VERSION == COD2_1_0
 static const SV_GameClientNum_t SV_GameClientNum = (SV_GameClientNum_t)0x0808FE02;
@@ -2649,6 +2658,15 @@ static const AxisToAngles_t AxisToAngles = (AxisToAngles_t)0x0; // Not tested
 static const AxisToAngles_t AxisToAngles = (AxisToAngles_t)0x080A9558;
 #endif
 
+typedef void (*AnglesToAxis_t)(const vec3_t angles, vec3_t axis[3]);
+#if COD_VERSION == COD2_1_0
+static const AnglesToAxis_t AnglesToAxis = (AnglesToAxis_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const AnglesToAxis_t AnglesToAxis = (AnglesToAxis_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const AnglesToAxis_t AnglesToAxis = (AnglesToAxis_t)0x080A94AA;
+#endif
+
 typedef float (*vectoyaw_t)(const vec3_t vec);
 #if COD_VERSION == COD2_1_0
 static const vectoyaw_t vectoyaw = (vectoyaw_t)0x0; // Not tested
@@ -3027,6 +3045,24 @@ static const AngleVectors_t AngleVectors = (AngleVectors_t)0x0; // Not tested
 static const AngleVectors_t AngleVectors = (AngleVectors_t)0x080A5226;
 #endif
 
+typedef void (*MatrixTransposeTransformVector43_t)(const vec3_t in1, const float in2[4][3], vec3_t out);
+#if COD_VERSION == COD2_1_0
+static const MatrixTransposeTransformVector43_t MatrixTransposeTransformVector43 = (MatrixTransposeTransformVector43_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const MatrixTransposeTransformVector43_t MatrixTransposeTransformVector43 = (MatrixTransposeTransformVector43_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const MatrixTransposeTransformVector43_t MatrixTransposeTransformVector43 = (MatrixTransposeTransformVector43_t)0x080A74F8;
+#endif
+
+typedef void (*MatrixTransformVector_t)(const vec3_t in1, const vec3_t in2[3], vec3_t out);
+#if COD_VERSION == COD2_1_0
+static const MatrixTransformVector_t MatrixTransformVector = (MatrixTransformVector_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const MatrixTransformVector_t MatrixTransformVector = (MatrixTransformVector_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const MatrixTransformVector_t MatrixTransformVector = (MatrixTransformVector_t)0x080A71B6;
+#endif
+
 typedef void (*G_RunMissile_t)(gentity_t *ent);
 #if COD_VERSION == COD2_1_0
 static const G_RunMissile_t G_RunMissile = (G_RunMissile_t)0x0; // Not tested
@@ -3261,6 +3297,15 @@ static const CM_LinkEntity_t CM_LinkEntity = (CM_LinkEntity_t)0x0; // Not tested
 static const CM_LinkEntity_t CM_LinkEntity = (CM_LinkEntity_t)0x0805E390;
 #endif
 
+typedef int (*DObjHasContents_t)(DObj_t *obj, int contentmask);
+#if COD_VERSION == COD2_1_0
+static const DObjHasContents_t DObjHasContents = (DObjHasContents_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const DObjHasContents_t DObjHasContents = (DObjHasContents_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const DObjHasContents_t DObjHasContents = (DObjHasContents_t)0x080BBCD0;
+#endif
+
 typedef void (*DObjGetBounds_t)(DObj_t *dobj, float *min, float *max);
 #if COD_VERSION == COD2_1_0
 static const DObjGetBounds_t DObjGetBounds = (DObjGetBounds_t)0x0; // Not tested
@@ -3268,6 +3313,24 @@ static const DObjGetBounds_t DObjGetBounds = (DObjGetBounds_t)0x0; // Not tested
 static const DObjGetBounds_t DObjGetBounds = (DObjGetBounds_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const DObjGetBounds_t DObjGetBounds = (DObjGetBounds_t)0x080BAA78;
+#endif
+
+typedef void (*DObjTraceline_t)(DObj_t *obj, float *start, float *end, unsigned char *priorityMap, DObjTrace_t *trace);
+#if COD_VERSION == COD2_1_0
+static const DObjTraceline_t DObjTraceline = (DObjTraceline_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const DObjTraceline_t DObjTraceline = (DObjTraceline_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const DObjTraceline_t DObjTraceline = (DObjTraceline_t)0x080BB27E;
+#endif
+
+typedef void (*DObjGeomTraceline_t)(DObj_t *obj, float *localStart, float *localEnd, int contentmask, DObjTrace_t *results);
+#if COD_VERSION == COD2_1_0
+static const DObjGeomTraceline_t DObjGeomTraceline = (DObjGeomTraceline_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const DObjGeomTraceline_t DObjGeomTraceline = (DObjGeomTraceline_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const DObjGeomTraceline_t DObjGeomTraceline = (DObjGeomTraceline_t)0x080BBB32;
 #endif
 
 typedef int (*SV_GEntityForSvEntity_t)(svEntity_t *svEnt);

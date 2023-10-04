@@ -1176,6 +1176,15 @@ enum StanceState
 	CL_STANCE_DIVE_TO_PRONE = 0x3,
 };
 
+typedef struct DObjTrace_s
+{
+	float fraction;
+	int surfaceflags;
+	vec3_t normal;
+	unsigned short partName;
+	unsigned short partGroup;
+} DObjTrace_t;
+
 typedef struct trace_s
 {
 	float fraction;
@@ -1196,6 +1205,16 @@ typedef struct traceExtents_s
 	vec3_t end;
 	vec3_t invDelta;
 } traceExtents_t;
+
+typedef struct pointtrace_s
+{
+	traceExtents_t extents;
+	int passEntityNum;
+	int ignoreEntNum;
+	int contentmask;
+	int bLocational;
+	unsigned char *priorityMap;
+} pointtrace_t;
 
 typedef struct moveclip_s
 {
