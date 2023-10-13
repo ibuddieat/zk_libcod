@@ -6409,7 +6409,7 @@ qboolean G_BounceGrenade(gentity_t *ent, trace_t *trace) // G_BounceMissile as b
 	return bounce;
 }
 
-void G_RunGravityModelAsGrenade(gentity_t *ent) // G_RunMissile as base
+void G_RunGravityModelWithBounce(gentity_t *ent) // G_RunMissile as base
 {
 	double absDeltaZ;
 	vec3_t lerpOrigin;
@@ -6492,7 +6492,7 @@ void G_RunGravityModelAsGrenade(gentity_t *ent) // G_RunMissile as base
 	}
 }
 
-void G_RunGravityModelAsItem(gentity_t *ent) // G_RunItem as base
+void G_RunGravityModelNoBounce(gentity_t *ent) // G_RunItem as base
 {
 	vec3_t subOrigin;
 	vec3_t lerpOrigin;
@@ -6643,10 +6643,10 @@ void custom_G_RunFrameForEntity(gentity_t *ent)
 					vec3_t oldOrigin;
 
 					VectorCopy((ent->r).currentOrigin, oldOrigin);
-					if ( customEntityState[(ent->s).number].gravityType == GRAVITY_ITEM )
-						G_RunGravityModelAsItem(ent);
-					else if ( customEntityState[(ent->s).number].gravityType == GRAVITY_GRENADE )
-						G_RunGravityModelAsGrenade(ent);
+					if ( customEntityState[(ent->s).number].gravityType == GRAVITY_NO_BOUNCE )
+						G_RunGravityModelNoBounce(ent);
+					else if ( customEntityState[(ent->s).number].gravityType == GRAVITY_BOUNCE )
+						G_RunGravityModelWithBounce(ent);
 					VectorSubtract((ent->r).currentOrigin, oldOrigin, customEntityState[(ent->s).number].velocity);
 					VectorScale(customEntityState[(ent->s).number].velocity, 20.0, customEntityState[(ent->s).number].velocity);
 				}

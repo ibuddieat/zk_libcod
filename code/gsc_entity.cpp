@@ -248,7 +248,7 @@ void gsc_entity_enablebounce(scr_entref_t ref)
 					perpendicularBounce = Scr_GetFloat(1);
 			}
 
-			customEntityState[(ent->s).number].gravityType = GRAVITY_GRENADE;
+			customEntityState[(ent->s).number].gravityType = GRAVITY_BOUNCE;
 			customEntityState[(ent->s).number].parallelBounce = parallelBounce;
 			customEntityState[(ent->s).number].perpendicularBounce = perpendicularBounce;
 			(ent->s).eFlags |= EF_BOUNCE;
@@ -276,7 +276,7 @@ void gsc_entity_disablebounce(scr_entref_t ref)
 	{
 		if ( customEntityState[(ent->s).number].gravityType )
 		{
-			customEntityState[(ent->s).number].gravityType = GRAVITY_ITEM;
+			customEntityState[(ent->s).number].gravityType = GRAVITY_NO_BOUNCE;
 			(ent->s).eFlags &= ~EF_BOUNCE;
 
 			stackPushBool(qtrue);
@@ -313,7 +313,7 @@ void gsc_entity_enablegravity(scr_entref_t ref)
 			angledGravity = qfalse;
 		}
 
-		customEntityState[(ent->s).number].gravityType = GRAVITY_ITEM;
+		customEntityState[(ent->s).number].gravityType = GRAVITY_NO_BOUNCE;
 		customEntityState[(ent->s).number].collideModels = collideModels;
 		customEntityState[(ent->s).number].angledGravity = angledGravity;
 		ent->clipmask = 0x2812891;

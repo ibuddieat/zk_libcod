@@ -3958,8 +3958,8 @@ typedef struct
 typedef enum
 {
 	GRAVITY_NONE,
-	GRAVITY_ITEM,
-	GRAVITY_GRENADE,
+	GRAVITY_NO_BOUNCE,
+	GRAVITY_BOUNCE,
 	GRAVITY_NUM
 } customGravityType_t;
 
