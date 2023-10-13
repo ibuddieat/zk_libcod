@@ -6551,19 +6551,22 @@ void G_RunGravityModelAsItem(gentity_t *ent) // G_RunItem as base
 		SV_LinkEntity(ent);
 		if ( ( (ent->r).inuse != 0 ) && ( trace.fraction < 0.01 ) )
 		{
-			if ( trace.normal[2] > 0.0 && !SV_PointContents(&(ent->r).currentOrigin, -1, CONTENTS_NODROP) )
+			if ( trace.normal[2] > 0.0 )
 			{
-				vec3_t angles;
-				vec3_t v1;
-				vec3_t v2;
-				vec3_t v3;
-				
-				VectorCopy(trace.normal, v3);
-				AngleVectors(&(ent->r).currentAngles, &v1, 0, 0);
-				VectorCross(v3, v1, v2);
-				VectorCross(v2, v3, v1);
-				AxisToAngles(v1, angles);
-				G_SetAngle(ent, angles);
+				if ( customEntityState[(ent->s).number].angledGravity )
+				{
+					vec3_t angles;
+					vec3_t v1;
+					vec3_t v2;
+					vec3_t v3;
+					
+					VectorCopy(trace.normal, v3);
+					AngleVectors(&(ent->r).currentAngles, &v1, 0, 0);
+					VectorCross(v3, v1, v2);
+					VectorCross(v2, v3, v1);
+					AxisToAngles(v1, angles);
+					G_SetAngle(ent, angles);
+				}
 				G_SetOrigin(ent, lerpOrigin);
 				if ( (ent->s).groundEntityNum != trace.entityNum )
 				{
@@ -6573,10 +6576,6 @@ void G_RunGravityModelAsItem(gentity_t *ent) // G_RunItem as base
 				}
 				(ent->s).groundEntityNum = trace.entityNum;
 				SV_LinkEntity(ent);
-			}
-			else
-			{
-				G_FreeEntity(ent);
 			}
 		}
 	}
