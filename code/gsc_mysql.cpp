@@ -99,7 +99,7 @@ void *mysql_async_query_handler(void* input_nothing) // is threaded after initia
 	return NULL;
 }
 
-int mysql_async_query_initializer(char *sql, bool save) //cannot be called from gsc, helper function
+int mysql_async_query_initializer(char *sql, bool save) // cannot be called from gsc, helper function
 {
 	static int id = 0;
 	id++;
@@ -135,10 +135,10 @@ void gsc_mysql_async_create_query_nosave()
 		stackPushUndefined();
 		return;
 	}
+
 	int id = mysql_async_query_initializer(query, false);
 
 	stackPushInt(id);
-	return;
 }
 
 void gsc_mysql_async_create_query()
@@ -151,10 +151,10 @@ void gsc_mysql_async_create_query()
 		stackPushUndefined();
 		return;
 	}
+
 	int id = mysql_async_query_initializer(query, true);
 
 	stackPushInt(id);
-	return;
 }
 
 void gsc_mysql_async_getdone_list()
@@ -177,12 +177,14 @@ void gsc_mysql_async_getdone_list()
 void gsc_mysql_async_getresult_and_free() // same as above, but takes the id of a function instead and returns 0 (not done), undefined (not found) or the mem address of result
 {
 	int id;
+
 	if ( !stackGetParams("i", &id) )
 	{
 		stackError("gsc_mysql_async_getresult_and_free() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
+
 	pthread_mutex_lock(&lock_async_mysql);
 	mysql_async_task *c = first_async_task;
 	if ( c != NULL )
@@ -232,12 +234,14 @@ void gsc_mysql_async_initializer() // returns array with mysql connection handle
 		stackPushUndefined();
 		return;
 	}
+
 	if ( pthread_mutex_init(&lock_async_mysql, NULL) != 0 )
 	{
 		Com_DPrintf("Async mutex initialization failed\n");
 		stackPushUndefined();
 		return;
 	}
+
 	int port, connection_count;
 	char *host, *user, *pass, *db;
 
@@ -247,13 +251,16 @@ void gsc_mysql_async_initializer() // returns array with mysql connection handle
 		stackPushUndefined();
 		return;
 	}
+
 	if ( connection_count <= 0 )
 	{
 		stackError("gsc_mysql_async_initializer() need a positive connection_count in mysql_async_initializer");
 		stackPushUndefined();
 		return;
 	}
+
 	int i;
+
 	stackPushArray();
 	mysql_async_connection *current = first_async_connection;
 	for( i = 0; i < connection_count; i++ )
@@ -281,6 +288,7 @@ void gsc_mysql_async_initializer() // returns array with mysql connection handle
 		stackPushInt((int)newconnection->connection);
 		stackPushArrayLast();
 	}
+
 	pthread_t async_handler;
 	if ( pthread_create(&async_handler, NULL, mysql_async_query_handler, NULL) )
 	{
@@ -542,12 +550,14 @@ void gsc_mysql_free_result()
 		stackPushUndefined();
 		return;
 	}
+
 	if ( result == 0 )
 	{
 		stackError("mysql_free_result() input is a NULL-pointer");
 		stackPushUndefined();
 		return;
 	}
+
 	mysql_free_result((MYSQL_RES *)result);
 
 	stackPushUndefined();
