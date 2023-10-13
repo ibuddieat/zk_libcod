@@ -14,7 +14,7 @@ struct mysql_async_task
 	bool done;
 	bool started;
 	bool save;
-	char query[MAX_STRINGLENGTH + 1];
+	char query[MAX_STRINGLENGTH];
 };
 
 struct mysql_async_connection
@@ -109,7 +109,8 @@ int mysql_async_query_initializer(char *sql, bool save) //cannot be called from 
 		current = current->next;
 	mysql_async_task *newtask = new mysql_async_task;
 	newtask->id = id;
-	strncpy(newtask->query, sql, MAX_STRINGLENGTH);
+	strncpy(newtask->query, sql, MAX_STRINGLENGTH - 1);
+	newtask->query[MAX_STRINGLENGTH - 1] = '\0';
 	newtask->prev = current;
 	newtask->result = NULL;
 	newtask->save = save;
