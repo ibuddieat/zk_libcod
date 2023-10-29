@@ -32,8 +32,8 @@ void CM_DebugViewBasicDetails()
 void CM_DebugPrintMaterialInfo()
 {
 	unsigned int i;
-	u_int32_t content = 0;
-	u_int32_t surface = 0;
+	uint32_t content = 0;
+	uint32_t surface = 0;
 
 	FS_Printf( f, "--------------- MaterialInfo --------------------\n");
 
@@ -55,7 +55,7 @@ void CM_DebugCLeafBrushNodes()
 	unsigned int i;
 	FS_Printf( f, "--------------- CLeafBrushNodes ------------------\n");
 
-	u_int32_t content = 0;
+	uint32_t content = 0;
 	for(i = 0; i < cm.leafbrushNodesCount; ++i)
 	{
 		FS_Printf( f, "Count: %d cont: 0x%08x\n", cm.leafbrushNodes[i].leafBrushCount, cm.leafbrushNodes[i].contents);
@@ -71,7 +71,7 @@ void CM_DebugCBrush()
 {
 	unsigned int i;
 	FS_Printf( f, "-------------------- CBrush ----------------------\n");
-	u_int32_t content = 0;
+	uint32_t content = 0;
 	for(i = 0; i < cm.numBrushes; ++i)
 	{
 		FS_Printf( f, "cont: 0x%08x\n", cm.brushes[i].contents);
@@ -87,8 +87,8 @@ void CM_DebugCLeaf()
 {
 	unsigned int i;
 	FS_Printf( f, "-------------------- cLeaf ----------------------\n");
-	u_int32_t brushcontent = 0;
-	u_int32_t terriancontent = 0;
+	uint32_t brushcontent = 0;
+	uint32_t terriancontent = 0;
 
 	for(i = 0; i < cm.numLeafs; ++i)
 	{
@@ -106,7 +106,7 @@ void CM_DebugSubModels()
 {
 	unsigned int i;
 	FS_Printf( f, "------------- SubModels.cLeaf -----------------\n");
-	u_int32_t brushcontent = 0;
+	uint32_t brushcontent = 0;
 
 	for(i = 0; i < cm.numSubModels; ++i)
 	{

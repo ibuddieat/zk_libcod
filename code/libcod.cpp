@@ -20,6 +20,7 @@ dvar_t *com_timescale;
 dvar_t *developer;
 dvar_t *g_knockback;
 dvar_t *g_mantleBlockTimeBuffer;
+dvar_t *g_password;
 dvar_t *g_playerCollisionEjectSpeed;
 dvar_t *g_synchronousClients;
 dvar_t *g_voiceChatTalkingDuration;
@@ -373,6 +374,7 @@ void custom_G_ProcessIPBans(void)
 	 common_init_complete_print hook */
 	g_knockback = Dvar_FindVar("g_knockback");
 	g_mantleBlockTimeBuffer = Dvar_FindVar("g_mantleBlockTimeBuffer");
+	g_password = Dvar_FindVar("g_password");
 	g_playerCollisionEjectSpeed = Dvar_FindVar("g_playerCollisionEjectSpeed");
 	g_voiceChatTalkingDuration = Dvar_FindVar("g_voiceChatTalkingDuration");
 	player_dmgtimer_maxTime = Dvar_FindVar("player_dmgtimer_maxTime");
@@ -496,6 +498,65 @@ const char * custom_FS_LoadedIwdNames(void)
 		}
 	}
 	return info;
+}
+
+int hook_sv_privatePassword_strcmp(const char* str1, const char* str2)
+{
+	// New: Time-constant string comparison for sv_privatePassword dvar
+	return !strcmp_constant_time(str1, str2);
+}
+
+const char* custom_ClientConnect(unsigned int clientNum, unsigned int scriptPersId)
+{
+	XAnimTree *tree;
+	clientInfo_t *ci;
+	gentity_t *ent;
+	char userinfo[1024];
+	gclient_t *gclient;
+	const char *password;
+	uint16_t id;
+
+	id = scriptPersId;
+	ent = &g_entities[clientNum];
+	gclient = &level.clients[clientNum];
+	memset(gclient, 0, sizeof(gclient_s));
+	ci = &level_bgs.clientinfo[clientNum];
+	tree = level_bgs.clientinfo[clientNum].pXAnimTree;
+	memset(ci, 0, sizeof(clientInfo_t));
+	ci->pXAnimTree = tree;
+	ci->infoValid = 1;
+	ci->nextValid = 1;
+	gclient->sess.connected = CON_CONNECTING;
+	gclient->sess.pers = id;
+	gclient->sess.state.team = TEAM_SPECTATOR;
+	gclient->sess.sessionState = STATE_SPECTATOR;
+	gclient->spectatorClient = -1;
+	gclient->sess.forceSpectatorClient = -1;
+	G_InitGentity(ent);
+	ent->handler = ENT_HANDLER_NULL;
+	ent->client = gclient;
+	gclient->useHoldEntity = ENTITY_NONE;
+	gclient->sess.state.clientIndex = clientNum;
+	gclient->ps.clientNum = clientNum;
+	ClientUserinfoChanged(clientNum);
+	SV_GetUserinfo(clientNum, userinfo, MAX_STRINGLENGTH);
+	if ( gclient->sess.localClient
+	        || (password = Info_ValueForKey(userinfo, "password"), !*g_password->current.string)
+	        || !I_stricmp(g_password->current.string, "none")
+			// New: Time-constant string comparison for g_password dvar
+	        || strcmp_constant_time(g_password->current.string, password) )
+	{
+		Scr_PlayerConnect(ent);
+		CalculateRanks();
+		return 0;
+	}
+	else
+	{
+		G_FreeEntity(ent);
+		return "GAME_INVALIDPASSWORD";
+	}
+
+	return 0;
 }
 
 void custom_SV_SpawnServer(char *server)
@@ -890,16 +951,16 @@ qboolean SkipCollision(gentity_t *client1, gentity_t *client2)
 		if ( customPlayerState[id1].collisionTeam == CUSTOM_TEAM_NONE || customPlayerState[id2].collisionTeam == CUSTOM_TEAM_NONE )
 			return qtrue;
 
-		if ( customPlayerState[id1].collisionTeam == CUSTOM_TEAM_AXIS && (client2->client->sess).team != TEAM_AXIS )
+		if ( customPlayerState[id1].collisionTeam == CUSTOM_TEAM_AXIS && (client2->client->sess.state).team != TEAM_AXIS )
 			return qtrue;
 
-		if ( customPlayerState[id1].collisionTeam == CUSTOM_TEAM_ALLIES && (client2->client->sess).team != TEAM_ALLIES )
+		if ( customPlayerState[id1].collisionTeam == CUSTOM_TEAM_ALLIES && (client2->client->sess.state).team != TEAM_ALLIES )
 			return qtrue;
 
-		if ( customPlayerState[id2].collisionTeam == CUSTOM_TEAM_AXIS && (client1->client->sess).team != TEAM_AXIS )
+		if ( customPlayerState[id2].collisionTeam == CUSTOM_TEAM_AXIS && (client1->client->sess.state).team != TEAM_AXIS )
 			return qtrue;
 
-		if ( customPlayerState[id2].collisionTeam == CUSTOM_TEAM_ALLIES && (client1->client->sess).team != TEAM_ALLIES )
+		if ( customPlayerState[id2].collisionTeam == CUSTOM_TEAM_ALLIES && (client1->client->sess.state).team != TEAM_ALLIES )
 			return qtrue;
 	}
 
@@ -1301,7 +1362,7 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 	}
 	else
 	{
-		I_strncpyz(name, (entity->client->sess).manualModeName, sizeof(name));
+		I_strncpyz(name, (entity->client->sess.state).name, sizeof(name));
 		I_CleanStr(name);
 		
 		if ( g_logPickup->current.boolean )
@@ -1634,7 +1695,7 @@ void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t 
 					// ClientDisconnect() nulls parts of clientSession_t
 					if ( client && client->gentity && client->gentity->client && client->gentity->client->sess.connected == CON_CONNECTED )
 					{
-						int clientTeam = client->gentity->client->sess.team;
+						int clientTeam = (client->gentity->client->sess.state).team;
 						if ( headIconTeam && headIconTeam != CUSTOM_TEAM_NONE )
 						{
 							if ( clientTeam == TEAM_AXIS )
@@ -1713,7 +1774,7 @@ void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t 
 						// ClientDisconnect() nulls parts of clientSession_t
 						if ( client && client->gentity && client->gentity->client && client->gentity->client->sess.connected == CON_CONNECTED )
 						{
-							int clientTeam = client->gentity->client->sess.team;
+							int clientTeam = (client->gentity->client->sess.state).team;
 							if ( team )
 							{
 								if ( team != clientTeam && (
@@ -3190,7 +3251,8 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 	*/
 
 	password = SV_Cmd_Argv(1);
-	qboolean badRconPassword = !strlen(rcon_password->current.string) || strcmp(password, rcon_password->current.string) != 0;
+	// New: Time-constant string comparison for rcon_password dvar
+	qboolean badRconPassword = !strlen(rcon_password->current.string) || !strcmp_constant_time(password, rcon_password->current.string);
 
 	/* New: Rate limiting and sv_limitLocalRcon dvar */
 	if ( !sv_limitLocalRcon->current.boolean )
@@ -4840,7 +4902,7 @@ void custom_Scr_LoadGameType(void)
 
 bool custom_CM_IsBadStaticModel(cStaticModel_t *model, char *src, float *origin, float *angles, float (*scale) [3])
 {
-	XModel_t *xmodel;
+	XModel *xmodel;
 
 	if ( src == NULL || *src == '\0' )
 		Com_Error(ERR_DROP, "\x15Invalid static model name\n");
@@ -4940,7 +5002,7 @@ LAB_08121ee6:
 							}
 							/* New code end */
 
-							if ( ( ent->team == 0 || ent->team == (player->client->sess).team ) &&
+							if ( ( ent->team == 0 || ent->team == (player->client->sess.state).team ) &&
 							( ent->trigger.singleUserEntIndex == ENTITY_NONE || ent->trigger.singleUserEntIndex == (player->client->ps).clientNum ) )
 							{
 								temp = (ent->s).dmgFlags;
@@ -5755,7 +5817,7 @@ void custom_G_UpdateObjectives(void)
 {
 	int i, j;
 	gclient_t *client;
-	sessionTeam_t team;
+	team_t team;
 	objective_t *obj;
 
 	for ( i = 0; i < level.maxclients; i++ )
@@ -5763,7 +5825,7 @@ void custom_G_UpdateObjectives(void)
 		if ( level.gentities[i].r.inuse != 0 )
 		{
 			client = level.gentities[i].client;
-			team = ((level.gentities[i].client)->sess).team;
+			team = ((level.gentities[i].client)->sess.state).team;
 			for ( j = 0; j < 16; j++ )
 			{
 				/* New code start: per-player objective functions */
@@ -6802,7 +6864,7 @@ void custom_SV_LinkEntity(gentity_t *gEnt)
 	vec_t *angles;
 	vec_t *origin;
 	clipHandle_t clip;
-	DObj_t *dobj;
+	DObj *dobj;
 	double radius;
 	int i;
 	vec3_t max;
@@ -8009,6 +8071,7 @@ public:
 		cracking_hook_call(0x08062644, (int)hitch_warning_print);
 		cracking_hook_call(0x0808EE0A, (int)invalid_password);
 		cracking_hook_call(0x080AD1FE, (int)hook_Com_MakeSoundAliasesPermanent);
+		cracking_hook_call(0x0808EB3E, (int)hook_sv_privatePassword_strcmp);
 
 		hook_gametype_scripts = new cHook(0x08110286, (int)custom_GScr_LoadGameTypeScript);
 		hook_gametype_scripts->hook();
@@ -8132,6 +8195,7 @@ public:
 		cracking_hook_function(0x080F8388, (int)custom_ClientScr_GetHeadIconTeam);
 		cracking_hook_function(0x0810A982, (int)custom_Fire_Lead);
 		cracking_hook_function(0x08120870, (int)custom_FireWeaponAntiLag);
+		cracking_hook_function(0x080F8E7A, (int)custom_ClientConnect);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC718, (int)Jump_ClearState);

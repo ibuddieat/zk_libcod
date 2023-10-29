@@ -867,6 +867,15 @@ static const ClientUserinfoChanged_t ClientUserinfoChanged = (ClientUserinfoChan
 static const ClientUserinfoChanged_t ClientUserinfoChanged = (ClientUserinfoChanged_t)0x080F8C5E;
 #endif
 
+typedef void (*SV_GetUserinfo_t)(int index, char *buffer, int bufferSize);
+#if COD_VERSION == COD2_1_0
+static const SV_GetUserinfo_t SV_GetUserinfo = (SV_GetUserinfo_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_GetUserinfo_t SV_GetUserinfo = (SV_GetUserinfo_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_GetUserinfo_t SV_GetUserinfo = (SV_GetUserinfo_t)0x08092C04;
+#endif
+
 typedef void (*SV_ClearServer_t)(void);
 #if COD_VERSION == COD2_1_0
 static const SV_ClearServer_t SV_ClearServer = (SV_ClearServer_t)0x0; // Not tested
@@ -1542,6 +1551,15 @@ static const BG_AnimationIndexForString_t BG_AnimationIndexForString = (BG_Anima
 static const BG_AnimationIndexForString_t BG_AnimationIndexForString = (BG_AnimationIndexForString_t)0x080D6DD0;
 #endif
 
+typedef void (*Scr_PlayerConnect_t)(gentity_t *ent);
+#if COD_VERSION == COD2_1_0
+static const Scr_PlayerConnect_t Scr_PlayerConnect = (Scr_PlayerConnect_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Scr_PlayerConnect_t Scr_PlayerConnect = (Scr_PlayerConnect_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Scr_PlayerConnect_t Scr_PlayerConnect = (Scr_PlayerConnect_t)0x08118350;
+#endif
+
 typedef void (*Scr_PlayerKilled_t)(gentity_t *self, gentity_t *eInflictor, gentity_t *eAttacker, int iDamage, meansOfDeath_t meansOfDeath, int iWeapon, const float *vDir, hitLocation_t hitLoc, int timeOffset, int deathAnimDuration);
 #if COD_VERSION == COD2_1_0
 static const Scr_PlayerKilled_t Scr_PlayerKilled = (Scr_PlayerKilled_t)0x0; // Not tested
@@ -2163,13 +2181,22 @@ static const I_strncat_t I_strncat = (I_strncat_t)0x0; // Not tested
 static const I_strncat_t I_strncat = (I_strncat_t)0x080B7D98;
 #endif
 
-typedef void (*G_FreeEntity_t)(gentity_t *entity);
+typedef void (*G_FreeEntity_t)(gentity_t *ent);
 #if COD_VERSION == COD2_1_0
 static const G_FreeEntity_t G_FreeEntity = (G_FreeEntity_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
 static const G_FreeEntity_t G_FreeEntity = (G_FreeEntity_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const G_FreeEntity_t G_FreeEntity = (G_FreeEntity_t)0x0811EE50;
+#endif
+
+typedef void (*G_InitGentity_t)(gentity_t *ent);
+#if COD_VERSION == COD2_1_0
+static const G_InitGentity_t G_InitGentity = (G_InitGentity_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_InitGentity_t G_InitGentity = (G_InitGentity_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_InitGentity_t G_InitGentity = (G_InitGentity_t)0x0811E85C;
 #endif
 
 typedef gentity_t * (*G_Spawn_t)(void);
@@ -2253,7 +2280,7 @@ static const BG_GetItemHintString_t BG_GetItemHintString = (BG_GetItemHintString
 static const BG_GetItemHintString_t BG_GetItemHintString = (BG_GetItemHintString_t)0x08121AAA;
 #endif
 
-typedef XModel_t * (*SV_XModelGet_t)(const char *name);
+typedef XModel * (*SV_XModelGet_t)(const char *name);
 #if COD_VERSION == COD2_1_0
 static const SV_XModelGet_t SV_XModelGet = (SV_XModelGet_t)0x08090534;
 #elif COD_VERSION == COD2_1_2
@@ -2262,7 +2289,7 @@ static const SV_XModelGet_t SV_XModelGet = (SV_XModelGet_t)0x08091D44;
 static const SV_XModelGet_t SV_XModelGet = (SV_XModelGet_t)0x08091E48;
 #endif
 
-typedef XModel_t * (*SV_XModelForIndex_t)(unsigned int modelIndex);
+typedef XModel * (*SV_XModelForIndex_t)(unsigned int modelIndex);
 #if COD_VERSION == COD2_1_0
 static const SV_XModelForIndex_t SV_XModelForIndex = (SV_XModelForIndex_t)0x0811B0F8;
 #elif COD_VERSION == COD2_1_2
@@ -2298,7 +2325,7 @@ static const Com_Error_t Com_Error = (Com_Error_t)0x0; // Not tested
 static const Com_Error_t Com_Error = (Com_Error_t)0x08061124;
 #endif
 
-typedef DObj_t * (*Com_GetServerDObj_t)(int entNum);
+typedef DObj * (*Com_GetServerDObj_t)(int entNum);
 #if COD_VERSION == COD2_1_0
 static const Com_GetServerDObj_t Com_GetServerDObj = (Com_GetServerDObj_t)0x0806289C;
 #elif COD_VERSION == COD2_1_2
@@ -2334,7 +2361,7 @@ static const SV_DObjDumpInfo_t SV_DObjDumpInfo = (SV_DObjDumpInfo_t)0x08091D94;
 static const SV_DObjDumpInfo_t SV_DObjDumpInfo = (SV_DObjDumpInfo_t)0x08091E98;
 #endif
 
-typedef qboolean (*DObjSkelExists_t)(DObj_t *dobj, int skelTimeStamp);
+typedef qboolean (*DObjSkelExists_t)(DObj *dobj, int skelTimeStamp);
 #if COD_VERSION == COD2_1_0
 static const DObjSkelExists_t DObjSkelExists = (DObjSkelExists_t)0x080B83A2;
 #elif COD_VERSION == COD2_1_2
@@ -2550,7 +2577,7 @@ static const SV_GetCachedSnapshot_t SV_GetCachedSnapshot = (SV_GetCachedSnapshot
 static const SV_GetCachedSnapshot_t SV_GetCachedSnapshot = (SV_GetCachedSnapshot_t)0x08099C04;
 #endif
 
-typedef XModel_t * (*CM_XModelPrecache_t)(const char *src);
+typedef XModel * (*CM_XModelPrecache_t)(const char *src);
 #if COD_VERSION == COD2_1_0
 static const CM_XModelPrecache_t CM_XModelPrecache = (CM_XModelPrecache_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
@@ -3297,7 +3324,7 @@ static const CM_LinkEntity_t CM_LinkEntity = (CM_LinkEntity_t)0x0; // Not tested
 static const CM_LinkEntity_t CM_LinkEntity = (CM_LinkEntity_t)0x0805E390;
 #endif
 
-typedef int (*DObjHasContents_t)(DObj_t *obj, int contentmask);
+typedef int (*DObjHasContents_t)(DObj *obj, int contentmask);
 #if COD_VERSION == COD2_1_0
 static const DObjHasContents_t DObjHasContents = (DObjHasContents_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
@@ -3306,7 +3333,7 @@ static const DObjHasContents_t DObjHasContents = (DObjHasContents_t)0x0; // Not 
 static const DObjHasContents_t DObjHasContents = (DObjHasContents_t)0x080BBCD0;
 #endif
 
-typedef void (*DObjGetBounds_t)(DObj_t *dobj, float *min, float *max);
+typedef void (*DObjGetBounds_t)(DObj *dobj, float *min, float *max);
 #if COD_VERSION == COD2_1_0
 static const DObjGetBounds_t DObjGetBounds = (DObjGetBounds_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
@@ -3315,7 +3342,7 @@ static const DObjGetBounds_t DObjGetBounds = (DObjGetBounds_t)0x0; // Not tested
 static const DObjGetBounds_t DObjGetBounds = (DObjGetBounds_t)0x080BAA78;
 #endif
 
-typedef void (*DObjTraceline_t)(DObj_t *obj, float *start, float *end, unsigned char *priorityMap, DObjTrace_t *trace);
+typedef void (*DObjTraceline_t)(DObj *obj, float *start, float *end, unsigned char *priorityMap, DObjTrace_t *trace);
 #if COD_VERSION == COD2_1_0
 static const DObjTraceline_t DObjTraceline = (DObjTraceline_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
@@ -3324,7 +3351,7 @@ static const DObjTraceline_t DObjTraceline = (DObjTraceline_t)0x0; // Not tested
 static const DObjTraceline_t DObjTraceline = (DObjTraceline_t)0x080BB27E;
 #endif
 
-typedef void (*DObjGeomTraceline_t)(DObj_t *obj, float *localStart, float *localEnd, int contentmask, DObjTrace_t *results);
+typedef void (*DObjGeomTraceline_t)(DObj *obj, float *localStart, float *localEnd, int contentmask, DObjTrace_t *results);
 #if COD_VERSION == COD2_1_0
 static const DObjGeomTraceline_t DObjGeomTraceline = (DObjGeomTraceline_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2

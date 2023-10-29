@@ -46,6 +46,9 @@
 #define PACKET_MASK                 ( PACKET_BACKUP - 1 )
 #define SV_OUTPUTBUF_LENGTH         ( 2048 * MAX_CLIENTS - 16 )
 
+#define MAX_ANIMSCRIPT_ANIMCOMMANDS 8
+#define MAX_ANIMSCRIPT_ITEMS_PER_MODEL  2048
+#define MAX_ANIMSCRIPT_ITEMS        128
 #define MAX_BPS_WINDOW              20
 #define MAX_CHALLENGES              1024
 #define MAX_CLIENTS                 64
@@ -56,6 +59,7 @@
 #define MAX_EVENTS                  4
 #define MAX_GENTITIES               ( 1 << GENTITYNUM_BITS )
 #define MAX_ITEM_MODELS             2
+#define MAX_MODEL_ANIMATIONS        512 // animations per model
 #define MAX_MODELS                  256
 #if COD_VERSION == COD2_1_0 || COD_VERSION == COD2_1_2
 #define MAX_MSGLEN                  0x4000
@@ -253,8 +257,8 @@ typedef int clipHandle_t;
 
 typedef struct scr_entref_s
 {
-	u_int16_t entnum;
-	u_int16_t classnum;
+	uint16_t entnum;
+	uint16_t classnum;
 } scr_entref_t;
 
 typedef struct game_client_field_s
@@ -417,11 +421,13 @@ typedef enum
 
 typedef enum
 {
-	TEAM_FREE,
-	TEAM_RED,
-	TEAM_BLUE,
-	TEAM_SPEC,
-	TEAM_NUM_TEAMS
+	TEAM_FREE = 0x0,
+	TEAM_NONE = 0x0,
+	TEAM_BAD = 0x0,
+	TEAM_AXIS = 0x1,
+	TEAM_ALLIES = 0x2,
+	TEAM_SPECTATOR = 0x3,
+	TEAM_NUM_TEAMS = 0x4,
 } team_t;
 
 typedef enum
@@ -588,9 +594,9 @@ struct scrStringGlob_t
 struct VariableStackBuffer
 {
 	const char *pos;
-	u_int16_t size;
-	u_int16_t bufLen;
-	u_int16_t localId;
+	uint16_t size;
+	uint16_t bufLen;
+	uint16_t localId;
 	char time;
 	char buf[1];
 };
@@ -609,21 +615,21 @@ union VariableUnion
 
 union ObjectInfo_u
 {
-	u_int16_t size;
-	u_int16_t entnum;
-	u_int16_t nextEntId;
-	u_int16_t self;
+	uint16_t size;
+	uint16_t entnum;
+	uint16_t nextEntId;
+	uint16_t self;
 };
 
 struct ObjectInfo
 {
-	u_int16_t refCount;
+	uint16_t refCount;
 	union ObjectInfo_u u;
 };
 
 union VariableValueInternal_u
 {
-	u_int16_t next;
+	uint16_t next;
 	union VariableUnion u;
 	struct ObjectInfo o;
 };
@@ -641,8 +647,8 @@ union VariableValueInternal_w
 
 union VariableValueInternal_v
 {
-	u_int16_t next;
-	u_int16_t index;
+	uint16_t next;
+	uint16_t index;
 };
 
 typedef struct
@@ -653,13 +659,13 @@ typedef struct
 
 union Variable_u
 {
-	u_int16_t prev;
-	u_int16_t prevSibling;
+	uint16_t prev;
+	uint16_t prevSibling;
 };
 
 struct Variable
 {
-	u_int16_t id;
+	uint16_t id;
 	union Variable_u u;
 };
 
@@ -669,7 +675,7 @@ typedef struct
 	union VariableValueInternal_u u;
 	union VariableValueInternal_w w;
 	union VariableValueInternal_v v;
-	u_int16_t nextSibling;
+	uint16_t nextSibling;
 } VariableValueInternal;
 
 typedef enum
@@ -705,7 +711,7 @@ typedef struct
 {
 	const char *fieldBuffer;
 	struct HunkUser *programHunkUser;
-	u_int16_t canonicalStrCount;
+	uint16_t canonicalStrCount;
 	byte developer;
 	byte developer_script;
 	byte evaluate;
@@ -722,7 +728,7 @@ typedef struct
 	unsigned int tempVariable;
 	byte bInited;
 	byte pad2;
-	u_int16_t savecount;
+	uint16_t savecount;
 	unsigned int checksum;
 	unsigned int entId;
 	unsigned int entFieldName;
@@ -770,7 +776,7 @@ typedef struct
 	unsigned int scriptsPos;
 	unsigned int builtinFunc;
 	unsigned int builtinMeth;
-	u_int16_t *canonicalStrings;
+	uint16_t *canonicalStrings;
 	const char *in_ptr;
 	const char *parseBuf;
 	byte script_loading;
@@ -1192,9 +1198,9 @@ typedef struct trace_s
 	int surfaceFlags;
 	int contents;
 	const char *material;
-	u_int16_t entityNum;
-	u_int16_t partName;
-	u_int16_t partGroup;
+	uint16_t entityNum;
+	uint16_t partName;
+	uint16_t partGroup;
 	byte allsolid;
 	byte startsolid;
 } trace_t;
@@ -1313,16 +1319,6 @@ typedef struct
 	vec3_t trBase;
 	vec3_t trDelta;
 } trajectory_t;
-
-typedef struct clientState_s
-{
-	int clientIndex;
-	team_t team;
-	int modelIndex;
-	char name[32];
-	int attachModelIndex[6];
-	int attachTagIndex[6];
-} clientState_t;
 
 typedef struct entityState_s
 {
@@ -1604,13 +1600,15 @@ typedef struct playerState_s
 	hudElemState_t hud;
 } playerState_t;
 
-typedef enum
+typedef struct clientState_s
 {
-	TEAM_NONE,
-	TEAM_AXIS,
-	TEAM_ALLIES,
-	TEAM_SPECTATOR
-} sessionTeam_t;
+	int clientIndex;
+	team_t team;
+	int modelIndex;
+	char name[32];
+	int attachModelIndex[6];
+	int attachTagIndex[6];
+} clientState_t;
 
 typedef struct
 {
@@ -1620,7 +1618,7 @@ typedef struct
 	int archiveTime;
 	int score;
 	int deaths;
-	u_int16_t scriptPersId;
+	uint16_t pers;
 	byte pad2;
 	byte pad;
 	clientConnected_t connected;
@@ -1633,18 +1631,13 @@ typedef struct
 	int enterTime;
 	int voteCount;
 	int teamVoteCount;
-	float moveSpeedScaleMultiplier; // ?
+	float moveSpeedScaleMultiplier;
 	int viewmodelIndex;
 	qboolean noSpectate;
 	int teamInfo;
-	int clientIndex;
-	sessionTeam_t team;
-	int model;
-	int attachedModels[6];
-	int attachedModelsTags[6];
-	char manualModeName[32];
+	clientState_t state;
 	int psOffsetTime;
-} clientSession_t; // verified
+} clientSession_t;
 
 struct gclient_s
 {
@@ -1722,8 +1715,8 @@ struct turretInfo_s
 struct item_ent_t
 {
 	int count;
-	u_int16_t index;
-	u_int16_t pad;
+	uint16_t index;
+	uint16_t pad;
 };
 
 struct trigger_ent_t
@@ -1761,8 +1754,8 @@ typedef struct tagInfo_s
 {
 	struct gentity_s *parent;
 	struct gentity_s *next;
-	u_int16_t name;
-	u_int16_t pad;
+	uint16_t name;
+	uint16_t pad;
 	int index;
 	float axis[4][3];
 	float parentInvAxis[4][3];
@@ -1782,10 +1775,10 @@ struct gentity_s
 	byte attachIgnoreCollision; // 357
 	byte handler; // 358
 	byte team; // 359
-	u_int16_t classname; // 360
-	u_int16_t target;
-	u_int16_t targetname;
-	u_int16_t padding;
+	uint16_t classname; // 360
+	uint16_t target;
+	uint16_t targetname;
+	uint16_t padding;
 	int spawnflags;
 	int flags;
 	int eventTime;
@@ -1808,8 +1801,8 @@ struct gentity_s
 	};
 	tagInfo_t *tagInfo; // 520
 	gentity_t *tagChildren; // 524
-	u_int16_t attachModelNames[6];
-	u_int16_t attachTagNames[6];
+	uint16_t attachModelNames[6];
+	uint16_t attachTagNames[6];
 	int useCount; // 552
 	gentity_t *nextFree; // 556
 }; // verified
@@ -1990,8 +1983,8 @@ typedef struct
 
 typedef struct
 {
-	u_int16_t entnum;
-	u_int16_t otherEntnum;
+	uint16_t entnum;
+	uint16_t otherEntnum;
 	int useCount;
 	int otherUseCount;
 } trigger_info_t;
@@ -2068,8 +2061,8 @@ typedef enum
 
 typedef struct svEntity_s
 {
-	u_int16_t worldSector;
-	u_int16_t nextEntityInWorldSector;
+	uint16_t worldSector;
+	uint16_t nextEntityInWorldSector;
 	archivedEntity_t baseline;
 	int numClusters;
 	int clusternums[MAX_ENT_CLUSTERS];
@@ -2604,36 +2597,22 @@ struct antilagClientStore
 
 typedef enum
 {
+	AISTATE_RELAXED,
+	AISTATE_QUERY,
+	AISTATE_ALERT,
+	AISTATE_COMBAT,
+
+	MAX_AISTATES
+} aistateEnum_t;
+
+typedef enum
+{
 	ANIM_BP_UNUSED,
 	ANIM_BP_LEGS,
 	ANIM_BP_TORSO,
 	ANIM_BP_BOTH,
 	NUM_ANIM_BODYPARTS
 } animBodyPart_t;
-
-typedef enum
-{
-	ANIM_ET_PAIN = 0x0,
-	ANIM_ET_DEATH = 0x1,
-	ANIM_ET_FIREWEAPON = 0x2,
-	ANIM_ET_JUMP = 0x3,
-	ANIM_ET_JUMPBK = 0x4,
-	ANIM_ET_LAND = 0x5,
-	ANIM_ET_DROPWEAPON = 0x6,
-	ANIM_ET_RAISEWEAPON = 0x7,
-	ANIM_ET_CLIMB_MOUNT = 0x8,	    // no anim loaded
-	ANIM_ET_CLIMB_DISMOUNT = 0x9,   // no anim loaded
-	ANIM_ET_RELOAD = 0xA,
-	ANIM_ET_CROUCH_TO_PRONE = 0xB,
-	ANIM_ET_PRONE_TO_CROUCH = 0xC,
-	ANIM_ET_STAND_TO_CROUCH = 0xD,
-	ANIM_ET_CROUCH_TO_STAND = 0xE,
-	ANIM_ET_STAND_TO_PRONE = 0xF,   // no anim loaded
-	ANIM_ET_PRONE_TO_STAND = 0x10,
-	ANIM_ET_MELEEATTACK = 0x11,
-	ANIM_ET_SHELLSHOCK = 0x12,
-	NUM_ANIM_EVENTTYPES = 0x13
-} scriptAnimEventTypes_t;
 
 typedef enum
 {
@@ -2658,93 +2637,433 @@ typedef struct gitem_s
 	int giClipIndex;
 } gitem_t;
 
-typedef struct XBoneInfo_s
+struct XBoneInfo
 {
-	float bounds[2][3];
-	float offset[3];
+	vec3_t bounds[2];
+	vec3_t offset;
 	float radiusSquared;
-} XBoneInfo_t;
+};
 
-typedef struct XModelCollSurf_s
+struct XAnimToXModel
 {
-	float mins[3];
-	float maxs[3];
-	int boneIdx;
-	int contents;
-	int surfFlags;
-} XModelCollSurf_t;
+	int partBits[4];
+	byte boneIndex[128];
+};
 
-typedef struct XModelHighMipBounds_s
+struct XModelCollTri_s
 {
-	float mins[3];
-	float maxs[3];
-} XModelHighMipBounds_t;
+	vec4_t plane;
+	vec4_t svec;
+	vec4_t tvec;
+};
 
-typedef struct XModelStreamInfo_s
-{
-	XModelHighMipBounds_t *highMipBounds;
-} XModelStreamInfo_t;
-
-typedef struct XModel_s
-{
-	char numBones; // parts
-	char numRootBones;
-	u_int16_t *boneNames;
-	char *parentList; // lodInfo
-	byte unk[72];
-	XModelCollSurf_t *collSurfs; // 84
-	int numCollSurfs; // 88
-	int contents; // 92
-	XBoneInfo_t *boneInfo; // 96
-	vec3_t mins; // 100
-	vec3_t maxs;
-	short numLods; // 124
-	short collLod;
-	XModelStreamInfo_t xskins; // 128
-	int memUsage; // 132
-	const char *name; // 136
-	char flags; // 140
-	char bad; // 141
-} XModel_t;
-
-typedef struct DObjSkeletonPartMatrix_s
-{
-	float p1[4];
-	float p2[4];
-} DObjSkeletonPartMatrix_t;
-
-typedef struct DSkelPartBits_s
+struct DSkelPartBits_s
 {
 	int anim[4];
 	int control[4];
 	int skel[4];
-} DSkelPartBits_t;
+};
 
-typedef struct DObjAnimMat_s
+struct DObjAnimMat
 {
 	vec4_t quat;
 	vec3_t trans;
 	float transWeight;
-} DObjAnimMat_t;
+};
+
+struct DSkel_t
+{
+	DSkelPartBits_s partBits;
+	DObjAnimMat Mat;
+};
+
+struct XModelConfigEntry
+{
+	char filename[1024];
+	float dist;
+};
+
+struct XModelConfig
+{
+	XModelConfigEntry entries[4];
+	float mins[3];
+	float maxs[3];
+	int collLod;
+	byte flags;
+};
+
+struct XBoneHierarchy
+{
+	unsigned short *names;
+	byte parentList[1];
+};
+
+typedef struct XModelParts_s
+{
+	short numBones;
+	short numRootBones;
+	XBoneHierarchy *hierarchy;
+	short *quats;
+	float *trans;
+	byte *partClassification;
+	DSkel_t skel;
+} XModelParts;
+
+typedef struct XModelSurfs_s
+{
+	struct XSurface *surf;
+	int partBits[4];
+} XModelSurfs;
+
+typedef struct XModelLodInfo_s
+{
+	float dist;
+	const char *filename;
+	short numsurfs;
+	unsigned short *surfNames;
+	XModelSurfs_s *surfs;
+} XModelLodInfo;
+
+typedef struct XModelCollSurf_s
+{
+	XModelCollTri_s *collTris;
+	int numCollTris;
+	vec3_t mins;
+	vec3_t maxs;
+	int boneIdx;
+	int contents;
+	int surfFlags;
+} XModelCollSurf;
+
+typedef struct
+{
+	XModelParts_s *parts;
+	XModelLodInfo_s lodInfo[4];
+	XModelCollSurf_s *collSurfs;
+	int numCollSurfs;
+	int contents;
+	XBoneInfo *boneInfo;
+	vec3_t mins;
+	vec3_t maxs;
+	short numLods;
+	short collLod;
+	struct Material *xskins; // !!! Not loaded in server binary
+	int memUsage;
+	const char *name;
+	char flags;
+	bool bad;
+} XModel;
+
+struct clientControllers_t
+{
+	vec3_t angles[6];
+	vec3_t tag_origin_angles;
+	vec3_t tag_origin_offset;
+};
+
+typedef enum
+{
+	ANIM_MT_UNUSED,
+	ANIM_MT_IDLE,
+	ANIM_MT_IDLECR,
+	ANIM_MT_IDLEPRONE,
+	ANIM_MT_WALK,
+	ANIM_MT_WALKBK,
+	ANIM_MT_WALKCR,
+	ANIM_MT_WALKCRBK,
+	ANIM_MT_WALKPRONE,
+	ANIM_MT_WALKPRONEBK,
+	ANIM_MT_RUN,
+	ANIM_MT_RUNBK,
+	ANIM_MT_RUNCR,
+	ANIM_MT_RUNCRBK,
+	ANIM_MT_TURNRIGHT,
+	ANIM_MT_TURNLEFT,
+	ANIM_MT_TURNRIGHTCR,
+	ANIM_MT_TURNLEFTCR,
+	ANIM_MT_CLIMBUP,
+	ANIM_MT_CLIMBDOWN,
+	ANIM_MT_MANTLE_ROOT,
+	ANIM_MT_MANTLE_UP_57,
+	ANIM_MT_MANTLE_UP_51,
+	ANIM_MT_MANTLE_UP_45,
+	ANIM_MT_MANTLE_UP_39,
+	ANIM_MT_MANTLE_UP_33,
+	ANIM_MT_MANTLE_UP_27,
+	ANIM_MT_MANTLE_UP_21,
+	ANIM_MT_MANTLE_OVER_HIGH,
+	ANIM_MT_MANTLE_OVER_MID,
+	ANIM_MT_MANTLE_OVER_LOW,
+	ANIM_MT_FLINCH_FORWARD,
+	ANIM_MT_FLINCH_BACKWARD,
+	ANIM_MT_FLINCH_LEFT,
+	ANIM_MT_FLINCH_RIGHT,
+	ANIM_MT_STUMBLE_FORWARD,
+	ANIM_MT_STUMBLE_BACKWARD,
+	ANIM_MT_STUMBLE_WALK_FORWARD,
+	ANIM_MT_STUMBLE_WALK_BACKWARD,
+	ANIM_MT_STUMBLE_CROUCH_FORWARD,
+	ANIM_MT_STUMBLE_CROUCH_BACKWARD,
+
+	NUM_ANIM_MOVETYPES
+} scriptAnimMoveTypes_t;
+
+typedef struct animation_s
+{
+	char name[64];
+	int initialLerp;
+	float moveSpeed;
+	int duration;
+	int nameHash;
+	int flags;
+	scriptAnimMoveTypes_t movetype; // 64 bit enum?
+	int pad;
+	int noteType;
+} animation_t;
+
+typedef struct
+{
+	int index;
+	int value[2];
+} animScriptCondition_t;
+
+typedef struct
+{
+	short bodyPart[2];
+	short animIndex[2];
+	unsigned short animDuration[2];
+	snd_alias_list_t *soundAlias;
+} animScriptCommand_t;
+
+typedef enum
+{
+	ANIM_ET_PAIN,
+	ANIM_ET_DEATH,
+	ANIM_ET_FIREWEAPON,
+	ANIM_ET_JUMP,
+	ANIM_ET_JUMPBK,
+	ANIM_ET_LAND,
+	ANIM_ET_DROPWEAPON,
+	ANIM_ET_RAISEWEAPON,
+	ANIM_ET_CLIMBMOUNT,
+	ANIM_ET_CLIMBDISMOUNT,
+	ANIM_ET_RELOAD,
+	ANIM_ET_CROUCH_TO_PRONE,
+	ANIM_ET_PRONE_TO_CROUCH,
+	ANIM_ET_STAND_TO_CROUCH,
+	ANIM_ET_CROUCH_TO_STAND,
+	ANIM_ET_STAND_TO_PRONE,
+	ANIM_ET_PRONE_TO_STAND,
+	ANIM_ET_MELEEATTACK,
+	ANIM_ET_SHELLSHOCK,
+
+	NUM_ANIM_EVENTTYPES // 19
+} scriptAnimEventTypes_t;
+
+typedef enum
+{
+	ANIM_COND_PLAYERANIMTYPE,
+	ANIM_COND_WEAPONCLASS,
+	ANIM_COND_MOUNTED,
+	ANIM_COND_MOVETYPE,
+	ANIM_COND_UNDERHAND,
+	ANIM_COND_CROUCHING,
+	ANIM_COND_FIRING,
+	ANIM_COND_WEAPON_POSITION,
+	ANIM_COND_STRAFING,
+
+	NUM_ANIM_CONDITIONS // 9
+} scriptAnimConditions_t;
+
+typedef struct
+{
+	int numConditions;
+	animScriptCondition_t conditions[NUM_ANIM_CONDITIONS];
+	int numCommands;
+	animScriptCommand_t commands[MAX_ANIMSCRIPT_ANIMCOMMANDS];
+} animScriptItem_t;
+
+typedef struct
+{
+	int numItems;
+	animScriptItem_t *items[128];
+} animScript_t;
+
+struct scr_animtree_t
+{
+	struct XAnim_s *anims;
+};
+
+typedef struct animScriptData_s
+{
+	animation_s animations[MAX_MODEL_ANIMATIONS];
+	int numAnimations;
+	animScript_t scriptAnims[MAX_AISTATES][NUM_ANIM_MOVETYPES];
+	animScript_t scriptCannedAnims[MAX_AISTATES][NUM_ANIM_MOVETYPES];
+	animScript_t scriptStateChange[MAX_AISTATES][MAX_AISTATES];
+	animScript_t scriptEvents[NUM_ANIM_EVENTTYPES];
+	animScriptItem_t scriptItems[MAX_ANIMSCRIPT_ITEMS_PER_MODEL];
+	int numScriptItems;
+	scr_animtree_t animTree;
+	unsigned short torsoAnim;
+	unsigned short legsAnim;
+	unsigned short turningAnim;
+	unsigned short rootAnim;
+	snd_alias_list_t *(*soundAlias)(const char *);
+	void (*playSoundAlias)(int, snd_alias_list_t *);
+} animScriptData_t;
+
+typedef struct lerpFrame_s
+{
+	float yawAngle;
+	int yawing;
+	float pitchAngle;
+	int pitching;
+	int animationNumber;
+	animation_t *animation;
+	int animationTime;
+	vec3_t oldFramePos;
+	float animSpeedScale;
+	int oldFrameSnapshotTime;
+} lerpFrame_t;
+
+typedef struct
+{
+	uint16_t flags;
+	uint16_t children;
+} XAnimParent;
+
+typedef struct
+{
+	uint16_t numAnims;
+	uint16_t parent;
+	union
+	{
+		int parts;
+		XAnimParent *s;
+	};
+} XAnimEntry;
+
+typedef struct XAnim_s
+{
+	const char *debugName;
+	unsigned int size;
+	const char **debugAnimNames;
+	XAnimEntry entries;
+} XAnim_t;
+
+typedef struct XAnimTree_s
+{
+	XAnim_s *anims;
+	uint16_t entnum;
+	bool bAbs;
+	bool bUseGoalWeight;
+	uint16_t infoArray[1];
+} XAnimTree;
+
+typedef struct clientInfo_s
+{
+	int infoValid;
+	int nextValid;
+	int clientNum;
+	char name[32];
+	int team;
+	int oldteam;
+	int score;
+	int location;
+	int health;
+	char model[64];
+	char attachModelNames[6][64];
+	char attachTagNames[6][64];
+	lerpFrame_t legs;
+	lerpFrame_t torso;
+	float lerpMoveDir;
+	float lerpLean;
+	vec3_t playerAngles;
+	int leftHandGun;
+	int dobjDirty;
+	clientControllers_t control;
+	int clientConditions[NUM_ANIM_CONDITIONS][2];
+	XAnimTree_s *pXAnimTree;
+	int iDObjWeapon;
+	int stanceTransitionTime;
+	int turnAnimEndTime;
+	char turnAnimType;
+} clientInfo_t;
+
+struct corpseInfo_t
+{
+	XAnimTree_s *tree;
+	int entnum;
+	int time;
+	clientInfo_t ci;
+	byte falling;
+};
+
+struct DObjModel_s
+{
+	XModel *model;
+	const char *boneName;
+	qboolean ignoreCollision;
+};
 
 typedef struct DObj_s
 {
-	int *tree;
-	DSkelPartBits_t *skel;
+	XAnimTree_s *tree;
+	DSkel_t *skel;
 	int timeStamp;
-	DObjAnimMat_t *animToModel;
-	unsigned short duplicateParts; // 16
-	int locked; // probably not int
-	byte numModels; // 24
-	byte numBones; // 25
-	byte ignoreCollision; // 26
-	byte pad;
-	byte models[32]; // 28 ?
-	int modelParents[2]; // ?
-	int matOffset[2]; // ?
+	unsigned short *animToModel;
+	unsigned short duplicateParts;
+	int locked;
+	byte numModels;
+	byte numBones;
+	byte ignoreCollision;
+	XModel *models[8];
+	byte modelParents[8];
+	byte matOffset[8];
 	vec3_t mins;
 	vec3_t maxs;
-} DObj_t;
+} DObj;
+
+typedef struct scr_anim_s
+{
+	union
+	{
+		struct
+		{
+			uint16_t index;
+			uint16_t tree;
+		};
+		const char *linkPointer;
+	};
+} scr_anim_t;
+
+struct bgsAnim_t
+{
+	animScriptData_t animScriptData;
+	struct
+	{
+		scr_animtree_t tree;
+		scr_anim_t     root;
+		scr_anim_t     torso;
+		scr_anim_t     legs;
+		scr_anim_t     turning;
+	} generic_human;
+};
+
+typedef struct __attribute__((aligned(8))) bgs_s
+{
+	bgsAnim_t animData;
+	int time;
+	int latestSnapshotTime;
+	int frametime;
+	int anim_user;
+	XModel *(*GetXModel)(const char *);
+	void (*CreateDObj)(DObjModel_s *, unsigned short, XAnimTree_s *, int);
+	void (*SafeDObjFree)(int);
+	void *(*AllocXAnim)(int);
+	clientInfo_t clientinfo[64];
+} bgs_t;
 
 struct pmove_t
 {
@@ -2873,24 +3192,6 @@ typedef struct
 	unsigned short pelvis;
 } stringIndex_t;
 
-typedef struct bgs_s
-{
-	byte animScriptData[0xB3BC8u];
-	int multiplayer;
-	int root;
-	int torso;
-	int legs;
-	int turning;
-	int turnAnimEndTime;
-	int frametime;
-	float angle;
-	struct XModel *(*GetXModel)(const char *);
-	void (*CreateDObj)(struct DObjModel_s *, u_int16_t, struct XAnimTree_s *, int, int, struct clientInfo_s *);
-	u_int16_t (*AttachWeapon)(struct DObjModel_s *, u_int16_t, struct clientInfo_s *);
-	struct DObj_s *(*GetDObj)(int, int);
-	void *(*AllocXAnim)(int);
-} bgs_t;
-
 typedef struct
 {
 	char material[64];
@@ -2900,8 +3201,8 @@ typedef struct
 
 typedef struct cStaticModel_s
 {
-	u_int16_t writable;
-	XModel_t *xmodel;
+	uint16_t writable;
+	XModel *xmodel;
 	vec3_t origin;
 	vec3_t invScaledAxis[3];
 	vec3_t absmin;
@@ -2931,8 +3232,8 @@ typedef struct
 
 typedef struct cLeaf_s
 {
-	u_int16_t firstCollAabbIndex;
-	u_int16_t collAabbCount;
+	uint16_t firstCollAabbIndex;
+	uint16_t collAabbCount;
 	int brushContents;
 	int terrainContents;
 	vec3_t mins;
@@ -2944,14 +3245,14 @@ typedef struct cLeaf_s
 
 typedef struct
 {
-	u_int16_t *brushes;
+	uint16_t *brushes;
 } cLeafBrushNodeLeaf_t;
 
 typedef struct
 {
 	float dist;
 	float range;
-	u_int16_t childOffset[2];
+	uint16_t childOffset[2];
 } cLeafBrushNodeChildren_t;
 
 typedef union
@@ -2964,7 +3265,7 @@ typedef union
 typedef struct cLeafBrushNode_s
 {
 	byte axis;
-	u_int16_t leafBrushCount;
+	uint16_t leafBrushCount;
 	int contents;
 	cLeafBrushNodeData_t data;
 } cLeafBrushNode_t;
@@ -2997,8 +3298,8 @@ typedef struct CollisionAabbTree_s
 {
 	float origin[3];
 	float halfSize[3];
-	u_int16_t materialIndex;
-	u_int16_t childCount;
+	uint16_t materialIndex;
+	uint16_t childCount;
 	CollisionAabbTreeIndex_t u;
 } CollisionAabbTree_t;
 
@@ -3057,7 +3358,7 @@ typedef struct clipMap_s
 	unsigned int leafbrushNodesCount;
 	cLeafBrushNode_t *leafbrushNodes;
 	unsigned int numLeafBrushes;
-	u_int16_t *leafbrushes;
+	uint16_t *leafbrushes;
 	unsigned int numLeafSurfaces;
 	unsigned int *leafsurfaces;
 	unsigned int vertCount;
@@ -3074,7 +3375,7 @@ typedef struct clipMap_s
 	CollisionAabbTree_t *aabbTrees;
 	unsigned int numSubModels;
 	cmodel_t *cmodels;
-	u_int16_t numBrushes;
+	uint16_t numBrushes;
 	cbrush_t *brushes;
 	int numClusters;
 	int clusterBytes;
@@ -3084,7 +3385,7 @@ typedef struct clipMap_s
 	char *entityString;
 	cbrush_t *box_brush;
 	cmodel_t box_model;
-	u_int16_t dynEntCount[2];
+	uint16_t dynEntCount[2];
 	DynEntityDef *dynEntDefList[2];
 	DynEntityPose *dynEntPoseList[2];
 	DynEntityClient *dynEntClientList[2];
@@ -3187,163 +3488,6 @@ typedef struct scr_gametype_data_s
 	gameTypeScript_t list[32];
 } scr_gametype_data_t;
 
-typedef enum
-{
-	ANIM_MT_UNUSED = 0,
-	ANIM_MT_IDLE = 1,
-	ANIM_MT_IDLECR = 2,
-	ANIM_MT_IDLEPRONE = 3,
-	ANIM_MT_WALK = 4,
-	ANIM_MT_WALKBK = 5,
-	ANIM_MT_WALKCR = 6,
-	ANIM_MT_WALKCRBK = 7,
-	ANIM_MT_WALKPRONE = 8,
-	ANIM_MT_WALKPRONEBK = 9,
-	ANIM_MT_RUN = 10,
-	ANIM_MT_RUNBK = 11,
-	ANIM_MT_RUNCR = 12,
-	ANIM_MT_RUNCRBK = 13,
-	ANIM_MT_TURNRIGHT = 14,
-	ANIM_MT_TURNLEFT = 15,
-	ANIM_MT_TURNRIGHTCR = 16,
-	ANIM_MT_TURNLEFTCR = 17,
-	ANIM_MT_CLIMBUP = 18,
-	ANIM_MT_CLIMBDOWN = 19,
-	ANIM_MT_MANTLE_ROOT = 20,
-	ANIM_MT_MANTLE_UP_57 = 21,
-	ANIM_MT_MANTLE_UP_51 = 22,
-	ANIM_MT_MANTLE_UP_45 = 23,
-	ANIM_MT_MANTLE_UP_39 = 24,
-	ANIM_MT_MANTLE_UP_33 = 25,
-	ANIM_MT_MANTLE_UP_27 = 26,
-	ANIM_MT_MANTLE_UP_21 = 27,
-	ANIM_MT_MANTLE_OVER_HIGH = 28,
-	ANIM_MT_MANTLE_OVER_MID = 29,
-	ANIM_MT_MANTLE_OVER_LOW = 30,
-	ANIM_MT_FLINCH_FORWARD = 31,
-	ANIM_MT_FLINCH_BACKWARD = 32,
-	ANIM_MT_FLINCH_LEFT = 33,
-	ANIM_MT_FLINCH_RIGHT = 34,
-	ANIM_MT_STUMBLE_FORWARD = 35,
-	ANIM_MT_STUMBLE_BACKWARD = 36,
-	ANIM_MT_STUMBLE_WALK_FORWARD = 37,
-	ANIM_MT_STUMBLE_WALK_BACKWARD = 38,
-	ANIM_MT_STUMBLE_CROUCH_FORWARD = 39,
-	ANIM_MT_STUMBLE_CROUCH_BACKWARD = 40,
-	NUM_ANIM_MOVETYPES = 41
-} scriptAnimMoveTypes_t;
-
-typedef struct animation_s
-{
-	char name[64];
-	int initialLerp;
-	float moveSpeed;
-	int duration;
-	int nameHash;
-	int flags;
-	scriptAnimMoveTypes_t movetype; // 64 bit enum?
-	int pad;
-	int noteType;
-} animation_t;
-
-typedef struct lerpFrame_s
-{
-	float yawAngle;
-	int yawing;
-	float pitchAngle;
-	int pitching;
-	int animationNumber;
-	animation_t *animation;
-	int animationTime;
-	vec3_t oldFramePos;
-	float animSpeedScale;
-	int oldFrameSnapshotTime;
-} lerpFrame_t;
-
-typedef struct
-{
-	u_int16_t flags;
-	u_int16_t children;
-} XAnimParent;
-
-typedef struct
-{
-	u_int16_t numAnims;
-	u_int16_t parent;
-	union
-	{
-		int parts;
-		XAnimParent *s;
-	};
-} XAnimEntry;
-
-typedef struct XAnim_s
-{
-	const char *debugName;
-	unsigned int size;
-	const char **debugAnimNames;
-	XAnimEntry entries;
-} XAnim_t;
-
-typedef struct XAnimTree_s
-{
-	XAnim_t *anims;
-	u_int16_t entnum;
-	byte bAbs;
-	byte bUseGoalWeight;
-	u_int16_t infoArray; // XBoneInfo * ? XModelCollTri_t * ?
-} XAnimTree_t;
-
-typedef struct XModelCollTri_s
-{
-	vec4_t plane;
-	vec4_t svec;
-	vec4_t tvec;
-} XModelCollTri_t;
-
-typedef struct clientInfo_s
-{
-	int infoValid;
-	int nextValid;
-	int clientNum;
-	char name[32];
-	team_t team;
-	team_t oldteam;
-	int score;
-	int location;
-	int health;
-	char model[64];
-	char attachModelNames[6][64];
-	char attachTagNames[6][64];
-	lerpFrame_t legs;
-	lerpFrame_t torso;
-	float lerpMoveDir;
-	float lerpLean;
-	vec3_t playerAngles;
-	int leftHandGun;
-	int dobjDirty;
-	vec3_t angles[6];
-	vec3_t tag_origin_angles;
-	vec3_t tag_origin_offset;
-	unsigned int clientConditions[9][2];
-	XAnimTree_t *pXAnimTree;
-	int iDObjWeapon;
-	int stanceTransitionTime;
-	int turnAnimEndTime;
-	byte turnAnimType;
-	byte pad[3];
-} clientInfo_t;
-
-typedef struct corpseInfo_s
-{
-	int *tree;
-	int entNum;
-	int time;
-	clientInfo_t ci;
-	byte falling;
-	byte pad[3];
-} corpseInfo_t;
-
 typedef struct scr_data_s
 {
 	int levelscript;
@@ -3371,20 +3515,20 @@ typedef struct worldContents_s
 {
 	int contentsStaticModels;
 	int contentsEntities;
-	u_int16_t entities;
-	u_int16_t staticModels;
+	uint16_t entities;
+	uint16_t staticModels;
 } worldContents_t;
 
 typedef struct __attribute__((packed, aligned(4))) worldTree_s
 {
 	float dist;
-	u_int16_t axis;
+	uint16_t axis;
 	union
 	{
-		u_int16_t parent;
-		u_int16_t nextFree;
+		uint16_t parent;
+		uint16_t nextFree;
 	};
-	u_int16_t child[2];
+	uint16_t child[2];
 } worldTree_t;
 
 typedef struct worldSector_s
@@ -3397,8 +3541,8 @@ typedef struct cm_world_s
 {
 	float mins[3];
 	float maxs[3];
-	u_int16_t freeHead;
-	u_int16_t gap;
+	uint16_t freeHead;
+	uint16_t gap;
 	worldSector_t sectors[1024];
 } cm_world_t;
 
@@ -3839,7 +3983,7 @@ static const int saLoadedObjs_offset = 0x085AB164;
 #define bloc (*((int*)( bloc_offset )))
 #define sv_serverId_value (*((int*)( sv_serverId_value_offset )))
 #define msgHuff (*((huffman_t*)( msgHuff_offset )))
-#define cached_models (((XModel_t**)( cached_models_offset )))
+#define cached_models (((XModel**)( cached_models_offset )))
 #define rcon_lasttime (*((int*)( rcon_lasttime_offset )))
 #define com_frameTime (*((int*)( com_frameTime_offset )))
 #define bulletPriorityMap (*((uint8_t*)( bulletPriorityMap_offset )))
@@ -3866,7 +4010,7 @@ static const int saLoadedObjs_offset = 0x085AB164;
  static_assert((sizeof(gclient_t) == 0x28A4), "ERROR: gclient_t size is invalid!");
  static_assert((sizeof(clientState_t) == 0x5c), "ERROR: clientState_t size is invalid!");
  static_assert((sizeof(gitem_t) == 44), "ERROR: gitem_t size is invalid!");
- static_assert((sizeof(XModel_t) == 144), "ERROR: XModel_t size is invalid!");
+ static_assert((sizeof(XModel) == 144), "ERROR: XModel size is invalid!");
  static_assert((sizeof(scrStringGlob_t) == 65544), "ERROR: scrStringGlob_t size is invalid!");
  static_assert((sizeof(worldContents_s) == 12), "ERROR: worldContents_s size is invalid!");
  static_assert((sizeof(worldTree_t) == 12), "ERROR: worldTree_t size is invalid!");
