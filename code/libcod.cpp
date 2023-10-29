@@ -8,6 +8,7 @@
 #endif
 
 // Stock dvars
+dvar_t *bg_bobMax;
 dvar_t *bg_fallDamageMaxHeight;
 dvar_t *bg_fallDamageMinHeight;
 dvar_t *cl_allowDownload;
@@ -86,6 +87,7 @@ dvar_t *g_safePrecache;
 dvar_t *g_spawnMapTurrets;
 dvar_t *g_spawnMapWeapons;
 dvar_t *g_triggerMode;
+dvar_t *g_turretMissingTagTerminalError;
 dvar_t *loc_loadLocalizedMods;
 dvar_t *logErrors;
 dvar_t *logfileName;
@@ -330,6 +332,7 @@ void common_init_complete_print(const char *format, ...)
 	g_spawnMapTurrets = Dvar_RegisterBool("g_spawnMapTurrets", qtrue, DVAR_ARCHIVE);
 	g_spawnMapWeapons = Dvar_RegisterBool("g_spawnMapWeapons", qtrue, DVAR_ARCHIVE);
 	g_triggerMode = Dvar_RegisterInt("g_triggerMode", 1, 0, 2, DVAR_ARCHIVE);
+	g_turretMissingTagTerminalError = Dvar_RegisterBool("g_turretMissingTagTerminalError", qtrue, DVAR_ARCHIVE);
 	loc_loadLocalizedMods = Dvar_RegisterBool("loc_loadLocalizedMods", qfalse, DVAR_ARCHIVE);
 	logErrors = Dvar_RegisterBool("logErrors", qfalse, DVAR_ARCHIVE);
 	scr_turretDamageName = Dvar_RegisterBool("scr_turretDamageName", qfalse, DVAR_ARCHIVE);
@@ -372,6 +375,7 @@ void custom_G_ProcessIPBans(void)
 	/* This is right after G_RegisterDvars() and BG_RegisterDvars(), giving us
 	 access to variables that are not yet defined at the
 	 common_init_complete_print hook */
+	bg_bobMax = Dvar_FindVar("bg_bobMax");
 	g_knockback = Dvar_FindVar("g_knockback");
 	g_mantleBlockTimeBuffer = Dvar_FindVar("g_mantleBlockTimeBuffer");
 	g_password = Dvar_FindVar("g_password");
@@ -4655,6 +4659,53 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 	}
 }
 
+void custom_G_GetPlayerViewOrigin(gentity_t *ent, float *origin)
+{
+	float speed;
+	float cycle;
+	float hFactor;
+	float vFactor;
+	vec3_t direction;
+	gclient_t *client;
+
+	client = ent->client;
+
+	if ( (client->ps.eFlags & 0x300) != 0 )
+	{
+		if ( G_DObjGetWorldTagPos(&g_entities[client->ps.viewlocked_entNum], scr_const.tag_player, origin) )
+		{
+			return;
+		}
+		else
+		{
+			// New: g_turretMissingTagTerminalError dvar
+			if ( g_turretMissingTagTerminalError->current.boolean )
+			{
+				Com_Error(ERR_DROP, "G_GetPlayerViewOrigin: Couldn't find [tag_player] on turret");
+			}
+			else
+			{
+				Com_DPrintf("G_GetPlayerViewOrigin: Couldn't find [tag_player] on turret for client %d\n", ent - g_entities);
+				Scr_CodeCallback_Error(qfalse, qfalse, "G_GetPlayerViewOrigin", custom_va("Couldn't find [tag_player] on turret for client %d", ent - g_entities));
+			}
+		}
+	}
+
+	VectorCopy(client->ps.origin, origin);
+	origin[2] = origin[2] + client->ps.viewHeightCurrent;
+	cycle = BG_GetBobCycle(client);
+	speed = BG_GetSpeed(&client->ps, level.time);
+	vFactor = BG_GetVerticalBobFactor(&client->ps, cycle, speed, bg_bobMax->current.decimal);
+	origin[2] = origin[2] + vFactor;
+	hFactor = BG_GetHorizontalBobFactor(&client->ps, cycle, speed, bg_bobMax->current.decimal);
+	G_GetPlayerViewDirection(ent, 0, direction, 0);
+	VectorMA(origin, hFactor, direction, origin);
+	AddLeanToPosition(origin, client->ps.viewangles[1], client->ps.leanf, 16.0, 20.0);
+
+	if ( client->ps.origin[2] + 8.0 > origin[2] )
+		origin[2] = client->ps.origin[2] + 8.0;
+}
+
 int num_map_turrets;
 map_turret_t map_turrets[MAX_GENTITIES];
 void custom_G_SetEntityPlacement(gentity_t *ent)
@@ -8196,6 +8247,7 @@ public:
 		cracking_hook_function(0x0810A982, (int)custom_Fire_Lead);
 		cracking_hook_function(0x08120870, (int)custom_FireWeaponAntiLag);
 		cracking_hook_function(0x080F8E7A, (int)custom_ClientConnect);
+		cracking_hook_function(0x080F8916, (int)custom_G_GetPlayerViewOrigin);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC718, (int)Jump_ClearState);

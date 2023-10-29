@@ -2253,6 +2253,42 @@ static const Scr_SetString_t Scr_SetString = (Scr_SetString_t)0x08079D14;
 static const Scr_SetString_t Scr_SetString = (Scr_SetString_t)0x08079DE0;
 #endif
 
+typedef float (*BG_GetBobCycle_t)(gclient_t *client);
+#if COD_VERSION == COD2_1_0
+static const BG_GetBobCycle_t BG_GetBobCycle = (BG_GetBobCycle_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const BG_GetBobCycle_t BG_GetBobCycle = (BG_GetBobCycle_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const BG_GetBobCycle_t BG_GetBobCycle = (BG_GetBobCycle_t)0x080F0BDE;
+#endif
+
+typedef float (*BG_GetSpeed_t)(const playerState_t *client, int time);
+#if COD_VERSION == COD2_1_0
+static const BG_GetSpeed_t BG_GetSpeed = (BG_GetSpeed_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const BG_GetSpeed_t BG_GetSpeed = (BG_GetSpeed_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const BG_GetSpeed_t BG_GetSpeed = (BG_GetSpeed_t)0x080E9528;
+#endif
+
+typedef float QDECL (*BG_GetVerticalBobFactor_t)(const playerState_t *ps, float cycle, float speed, float maxAmp);
+#if COD_VERSION == COD2_1_0
+static const BG_GetVerticalBobFactor_t BG_GetVerticalBobFactor = (BG_GetVerticalBobFactor_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const BG_GetVerticalBobFactor_t BG_GetVerticalBobFactor = (BG_GetVerticalBobFactor_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const BG_GetVerticalBobFactor_t BG_GetVerticalBobFactor = (BG_GetVerticalBobFactor_t)0x080F0C3A;
+#endif
+
+typedef float QDECL (*BG_GetHorizontalBobFactor_t)(const struct playerState_s *ps, float cycle, float speed, float maxAmp);
+#if COD_VERSION == COD2_1_0
+static const BG_GetHorizontalBobFactor_t BG_GetHorizontalBobFactor = (BG_GetHorizontalBobFactor_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const BG_GetHorizontalBobFactor_t BG_GetHorizontalBobFactor = (BG_GetHorizontalBobFactor_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const BG_GetHorizontalBobFactor_t BG_GetHorizontalBobFactor = (BG_GetHorizontalBobFactor_t)0x080F0CFA;
+#endif
+
 typedef gitem_t * (*BG_FindItemForWeapon_t)(unsigned int weaponIndex);
 #if COD_VERSION == COD2_1_0
 static const BG_FindItemForWeapon_t BG_FindItemForWeapon = (BG_FindItemForWeapon_t)0x080DCAE6;

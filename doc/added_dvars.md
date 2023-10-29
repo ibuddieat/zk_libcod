@@ -55,6 +55,10 @@ Added dvars:
     * Min. Value: 0
     * Max. Value: 2
     * Effect: Toggle experimental fix for broken map damage and use-touch triggers. Possible values: `0`: Triggers disabled. `1`: Stock behavior, fix disabled. `2`: Fix enabled.
+  * `g_turretMissingTagTerminalError`
+    * Type: Boolean
+    * Default: True
+    * Effect: If false, the server will not halt when the `tag_player` tag cannot be found on a turret, but instead drop a debug print and a script error to `CodeCallback_Error`. Such error can occur in killcam-related edge cases.
   * `loc_loadLocalizedMods`
     * Type: Boolean
     * Default: False
