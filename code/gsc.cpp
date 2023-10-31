@@ -570,7 +570,7 @@ int stackGetParams(const char *params, ...)
 
 		default:
 			errors++;
-			Com_DPrintf("\nUnknown identifier [%s] passed to stackGetParams()\n", params[i]);
+			Com_DPrintf("\nUnknown identifier [%c] passed to stackGetParams()\n", params[i]);
 			break;
 		}
 	}
