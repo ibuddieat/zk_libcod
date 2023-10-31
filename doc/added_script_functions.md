@@ -76,6 +76,7 @@ New script code functions:
   * `loadSoundFile(<file path>, <callback function>, [<volume>], [<sound index>])`
   * `loadSpeexFile(<file path>, [<sound index>])`
   * `logPrintConsole(<message>)`
+  * `makeClientLocalizedString(<string>)`
   * `ord(<string character>)`
   * `resetTestClientNaming()`
   * `saveSpeexFile(<sound index>, <file path>)`
