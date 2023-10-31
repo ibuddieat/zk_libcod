@@ -203,6 +203,7 @@ scr_function_t scriptFunctions[] =
 	{"setconfigstring", gsc_utils_set_configstring, 0},
 	{"makelocalizedstring", gsc_utils_make_localized_string, 0},
 	{"makeclientlocalizedstring", gsc_utils_make_client_localized_string, 0},
+	{"makestring", gsc_utils_make_string, 0},
 
 	{"float", gsc_utils_float, 0},
 	{"exponent", gsc_utils_exponent, 0},
@@ -568,6 +569,17 @@ int stackGetParams(const char *params, ...)
 			break;
 		}
 
+		case 'l':
+		{
+			char **tmp = va_arg(args, char **);
+			if ( !stackGetParamLocalizedString(i, tmp) )
+			{
+				Com_DPrintf("\nstackGetParams() Param %i is not a localized string\n", i);
+				errors++;
+			}
+			break;
+		}
+
 		default:
 			errors++;
 			Com_DPrintf("\nUnknown identifier [%c] passed to stackGetParams()\n", params[i]);
@@ -645,6 +657,22 @@ int stackGetParamConstString(int param, unsigned int *value)
 		return 0;
 
 	*value = var->u.stringValue;
+
+	return 1;
+}
+
+int stackGetParamLocalizedString(int param, char **value)
+{
+	if ( param >= Scr_GetNumParam() )
+		return 0;
+
+	VariableValue *var;
+	var = &scrVmPub.top[-param];
+
+	if ( var->type != STACK_LOCALIZED_STRING )
+		return 0;
+
+	*value = SL_ConvertToString(var->u.stringValue);
 
 	return 1;
 }

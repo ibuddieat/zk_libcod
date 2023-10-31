@@ -1223,6 +1223,26 @@ void gsc_utils_make_client_localized_string()
 	stackPushString(output);
 }
 
+void gsc_utils_make_string()
+{
+	char *str;
+
+	if ( !stackGetParams("l", &str) )
+	{
+		stackError("gsc_make_string() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushString(str);
+
+	VariableValue *var;
+	int param = 0;
+
+	var = &scrVmPub.top[-param];
+	var->type = STACK_STRING;
+}
+
 void gsc_utils_float()
 {
 	if ( Scr_GetNumParam() == 0 )
