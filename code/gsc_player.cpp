@@ -41,29 +41,38 @@ void gsc_player_getcurrentoffhandslotammo(scr_entref_t ref)
 	stackPushInt(ps->ammoclip[ps->offHandIndex - 1]);
 }
 
-void gsc_player_item_pickup(scr_entref_t ref)
+void gsc_player_disableitempickup(scr_entref_t ref)
 {
 	int id = ref.entnum;
 
 	if ( id >= MAX_CLIENTS )
 	{
-		stackError("gsc_player_item_pickup() entity %i is not a player", id);
+		stackError("gsc_player_disableitempickup() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
 
-	int canPickup;
+	int old_setting = !customPlayerState[id].noPickup;
+	customPlayerState[id].noPickup = qtrue;
 
-	if ( !stackGetParams("i", &canPickup) )
+	stackPushInt(old_setting);
+}
+
+void gsc_player_enableitempickup(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
 	{
-		stackError("gsc_player_item_pickup() one or more arguments is undefined or has a wrong type");
+		stackError("gsc_player_enableitempickup() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
 
-	customPlayerState[id].noPickup = !canPickup;
+	int old_setting = !customPlayerState[id].noPickup;
+	customPlayerState[id].noPickup = qfalse;
 
-	stackPushBool(qtrue);
+	stackPushInt(old_setting);
 }
 
 void gsc_player_isbot(scr_entref_t ref)
@@ -123,21 +132,21 @@ void gsc_player_lookatkiller(scr_entref_t ref)
 	stackPushBool(qtrue);
 }
 
-void gsc_player_velocity_set(scr_entref_t ref)
+void gsc_player_setvelocity(scr_entref_t ref)
 {
 	int id = ref.entnum;
 	vec3_t velocity;
 
 	if ( !stackGetParams("v", &velocity) )
 	{
-		stackError("gsc_player_velocity_set() argument is undefined or has a wrong type");
+		stackError("gsc_player_setvelocity() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
 	if ( id >= MAX_CLIENTS )
 	{
-		stackError("gsc_player_velocity_set() entity %i is not a player", id);
+		stackError("gsc_player_setvelocity() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
@@ -148,21 +157,21 @@ void gsc_player_velocity_set(scr_entref_t ref)
 	stackPushBool(qtrue);
 }
 
-void gsc_player_velocity_add(scr_entref_t ref)
+void gsc_player_addvelocity(scr_entref_t ref)
 {
 	int id = ref.entnum;
 	vec3_t velocity;
 
 	if ( !stackGetParams("v", &velocity) )
 	{
-		stackError("gsc_player_velocity_add() argument is undefined or has a wrong type");
+		stackError("gsc_player_addvelocity() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
 	if ( id >= MAX_CLIENTS )
 	{
-		stackError("gsc_player_velocity_add() entity %i is not a player", id);
+		stackError("gsc_player_addvelocity() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
@@ -173,13 +182,13 @@ void gsc_player_velocity_add(scr_entref_t ref)
 	stackPushBool(qtrue);
 }
 
-void gsc_player_velocity_get(scr_entref_t ref)
+void gsc_player_getvelocity(scr_entref_t ref)
 {
 	int id = ref.entnum;
 
 	if ( id >= MAX_CLIENTS )
 	{
-		stackError("gsc_player_velocity_get() entity %i is not a player", id);
+		stackError("gsc_player_getvelocity() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
@@ -189,13 +198,13 @@ void gsc_player_velocity_get(scr_entref_t ref)
 	stackPushVector(ps->velocity);
 }
 
-void gsc_player_clientuserinfochanged(scr_entref_t ref)
+void gsc_player_processclientuserinfochange(scr_entref_t ref)
 {
 	int id = ref.entnum;
 
 	if ( id >= MAX_CLIENTS )
 	{
-		stackError("gsc_player_clientuserinfochanged() entity %i is not a player", id);
+		stackError("gsc_player_processclientuserinfochange() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
@@ -205,21 +214,21 @@ void gsc_player_clientuserinfochanged(scr_entref_t ref)
 	stackPushBool(qtrue);
 }
 
-void gsc_player_get_userinfo(scr_entref_t ref)
+void gsc_player_getuserinfo(scr_entref_t ref)
 {
 	int id = ref.entnum;
 	char *key;
 
 	if ( !stackGetParams("s", &key) )
 	{
-		stackError("gsc_player_get_userinfo() argument is undefined or has a wrong type");
+		stackError("gsc_player_getuserinfo() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
 	if ( id >= MAX_CLIENTS )
 	{
-		stackError("gsc_player_get_userinfo() entity %i is not a player", id);
+		stackError("gsc_player_getuserinfo() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
@@ -233,21 +242,21 @@ void gsc_player_get_userinfo(scr_entref_t ref)
 		stackPushString("");
 }
 
-void gsc_player_set_userinfo(scr_entref_t ref)
+void gsc_player_setuserinfo(scr_entref_t ref)
 {
 	int id = ref.entnum;
 	char *key, *value;
 
 	if ( !stackGetParams("ss", &key, &value) )
 	{
-		stackError("gsc_player_set_userinfo() one or more arguments is undefined or has a wrong type");
+		stackError("gsc_player_setuserinfo() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
 	if ( id >= MAX_CLIENTS )
 	{
-		stackError("gsc_player_set_userinfo() entity %i is not a player", id);
+		stackError("gsc_player_setuserinfo() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
@@ -434,34 +443,34 @@ void gsc_player_button_smoke(scr_entref_t ref)
 	stackPushBool(client->lastUsercmd.buttons & KEY_MASK_SMOKE ? qtrue : qfalse);
 }
 
-void gsc_player_stance_get(scr_entref_t ref)
+void gsc_player_getstance(scr_entref_t ref)
 {
 	int id = ref.entnum;
 
 	if ( id >= MAX_CLIENTS )
 	{
-		stackError("gsc_player_stance_get() entity %i is not a player", id);
+		stackError("gsc_player_getstance() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
 
 	playerState_t *ps = SV_GameClientNum(id);
 	if ( ps->pm_flags & PMF_CROUCH )
-		stackPushString("duck");
+		stackPushString("crouch");
 	else if ( ps->pm_flags & PMF_PRONE )
-		stackPushString("lie");
+		stackPushString("prone");
 	else
 		stackPushString("stand");
 }
 
-void gsc_player_stance_set(scr_entref_t ref)
+void gsc_player_setstance(scr_entref_t ref)
 {
 	int id = ref.entnum;
 	char *stance;
 
 	if ( !stackGetParams("s", &stance) )
 	{
-		stackError("gsc_player_stance_set() argument is undefined or has a wrong type");
+		stackError("gsc_player_setstance() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
@@ -470,7 +479,7 @@ void gsc_player_stance_set(scr_entref_t ref)
 
 	if ( entity->client == NULL )
 	{
-		stackError("gsc_player_stance_set() entity %i is not a player", id);
+		stackError("gsc_player_setstance() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
@@ -485,7 +494,7 @@ void gsc_player_stance_set(scr_entref_t ref)
 		event = EV_STANCE_FORCE_PRONE;
 	else
 	{
-		stackError("gsc_player_stance_set() invalid argument '%s'. Valid arguments are: 'stand' 'crouch' 'prone'", stance);
+		stackError("gsc_player_setstance() invalid argument '%s'. Valid arguments are: 'stand', 'crouch', 'prone'", stance);
 		stackPushUndefined();
 		return;
 	}
@@ -495,14 +504,14 @@ void gsc_player_stance_set(scr_entref_t ref)
 	stackPushBool(qtrue);
 }
 
-void gsc_player_spectatorclient_get(scr_entref_t ref)
+void gsc_player_getspectatorclient(scr_entref_t ref)
 {
 	int id = ref.entnum;
 	gentity_t *entity = &g_entities[id];
 
 	if ( entity->client == NULL )
 	{
-		stackError("gsc_player_spectatorclient_get() entity %i is not a player", id);
+		stackError("gsc_player_getspectatorclient() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
@@ -593,13 +602,13 @@ void gsc_player_setping(scr_entref_t ref)
 	stackPushBool(qtrue);
 }
 
-void gsc_player_clientcommand(scr_entref_t ref)
+void gsc_player_processclientcommand(scr_entref_t ref)
 {
 	int id = ref.entnum;
 
 	if ( id >= MAX_CLIENTS )
 	{
-		stackError("gsc_player_clientcommand() entity %i is not a player", id);
+		stackError("gsc_player_processclientcommand() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
@@ -706,21 +715,21 @@ void gsc_player_renameclient(scr_entref_t ref)
 	stackPushBool(qtrue);
 }
 
-void gsc_player_outofbandprint(scr_entref_t ref)
+void gsc_player_connectionlesspackettoclient(scr_entref_t ref)
 {
 	int id = ref.entnum;
 	char *cmd;
 
 	if ( !stackGetParams("s", &cmd) )
 	{
-		stackError("gsc_player_outofbandprint() argument is undefined or has a wrong type");
+		stackError("gsc_player_connectionlesspackettoclient() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
 	if ( id >= MAX_CLIENTS )
 	{
-		stackError("gsc_player_outofbandprint() entity %i is not a player", id);
+		stackError("gsc_player_connectionlesspackettoclient() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
@@ -731,21 +740,21 @@ void gsc_player_outofbandprint(scr_entref_t ref)
 	stackPushBool(qtrue);
 }
 
-void gsc_player_connectionlesspacket(scr_entref_t ref)
+void gsc_player_connectionlesspackettoserver(scr_entref_t ref)
 {
 	int id = ref.entnum;
 	char *cmd;
 
 	if ( !stackGetParams("s", &cmd) )
 	{
-		stackError("gsc_player_connectionlesspacket() argument is undefined or has a wrong type");
+		stackError("gsc_player_connectionlesspackettoserver() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
 	if ( id >= MAX_CLIENTS )
 	{
-		stackError("gsc_player_connectionlesspacket() entity %i is not a player", id);
+		stackError("gsc_player_connectionlesspackettoserver() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
@@ -892,28 +901,28 @@ void gsc_player_clearjumpstate(scr_entref_t ref)
 	stackPushBool(qtrue);
 }
 
-void gsc_player_setg_speed(scr_entref_t ref)
+void gsc_player_setspeed(scr_entref_t ref)
 {
 	int id = ref.entnum;
 	int speed;
 
 	if ( !stackGetParams("i", &speed) )
 	{
-		stackError("gsc_player_setg_speed() argument is undefined or has a wrong type");
+		stackError("gsc_player_setspeed() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
 	if ( id >= MAX_CLIENTS )
 	{
-		stackError("gsc_player_setg_speed() entity %i is not a player", id);
+		stackError("gsc_player_setspeed() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
 
 	if ( speed < 0 )
 	{
-		stackError("gsc_player_setg_speed() param must be equal or above zero");
+		stackError("gsc_player_setspeed() param must be equal or above zero");
 		stackPushUndefined();
 		return;
 	}
@@ -923,14 +932,14 @@ void gsc_player_setg_speed(scr_entref_t ref)
 	stackPushBool(qtrue);
 }
 
-void gsc_player_getg_speed(scr_entref_t ref)
+void gsc_player_getspeed(scr_entref_t ref)
 {
 	int id = ref.entnum;
 	gentity_t *entity = &g_entities[id];
 
 	if ( entity->client == NULL )
 	{
-		stackError("gsc_player_getg_speed() entity %i is not a player");
+		stackError("gsc_player_getspeed() entity %i is not a player");
 		stackPushUndefined();
 		return;
 	}
@@ -938,28 +947,28 @@ void gsc_player_getg_speed(scr_entref_t ref)
 	stackPushInt(entity->client->ps.speed);
 }
 
-void gsc_player_setg_gravity(scr_entref_t ref)
+void gsc_player_setgravity(scr_entref_t ref)
 {
 	int id = ref.entnum;
 	int gravity;
 
 	if ( !stackGetParams("i", &gravity) )
 	{
-		stackError("gsc_player_setg_gravity() argument is undefined or has a wrong type");
+		stackError("gsc_player_setgravity() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
 	if ( id >= MAX_CLIENTS )
 	{
-		stackError("gsc_player_setg_gravity() entity %i is not a player", id);
+		stackError("gsc_player_setgravity() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
 
 	if ( gravity < 0 )
 	{
-		stackError("gsc_player_setg_gravity() param must be equal or above zero");
+		stackError("gsc_player_setgravity() param must be equal or above zero");
 		stackPushUndefined();
 		return;
 	}
@@ -969,14 +978,14 @@ void gsc_player_setg_gravity(scr_entref_t ref)
 	stackPushBool(qtrue);
 }
 
-void gsc_player_getg_gravity(scr_entref_t ref)
+void gsc_player_getgravity(scr_entref_t ref)
 {
 	int id = ref.entnum;
 	gentity_t *entity = &g_entities[id];
 
 	if ( entity->client == NULL )
 	{
-		stackError("gsc_player_getg_gravity() entity %i is not a player");
+		stackError("gsc_player_getgravity() entity %i is not a player");
 		stackPushUndefined();
 		return;
 	}
@@ -1006,7 +1015,7 @@ void gsc_player_setfirethroughwalls(scr_entref_t ref)
 	old_setting = customPlayerState[id].fireThroughWalls;
 	customPlayerState[id].fireThroughWalls = new_setting;
 
-	stackPushFloat(old_setting);
+	stackPushInt(old_setting);
 }
 
 void gsc_player_setfirerangescale(scr_entref_t ref)
@@ -1266,14 +1275,14 @@ int BG_AnimationCheckForBad(char *anim)
 	return 0;
 }
 
-void gsc_player_set_anim(scr_entref_t ref)
+void gsc_player_setanimation(scr_entref_t ref)
 {
 	int id = ref.entnum;
 	char *animation;
 
 	if ( !stackGetParams("s", &animation) )
 	{
-		stackError("gsc_player_set_anim() argument is undefined or has a wrong type");
+		stackError("gsc_player_setanimation() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
@@ -1290,7 +1299,7 @@ void gsc_player_set_anim(scr_entref_t ref)
 
 	if ( entity->client == NULL )
 	{
-		stackError("gsc_player_set_anim() entity %i is not a player", id);
+		stackError("gsc_player_playanimation() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
@@ -1314,47 +1323,6 @@ void gsc_player_getcooktime(scr_entref_t ref)
 	playerState_t *ps = SV_GameClientNum(id);
 
 	stackPushInt(ps->grenadeTimeLeft);
-}
-
-void gsc_player_kick2()
-{
-	int id;
-	char* msg;
-	char tmp[128];
-
-	if ( !stackGetParams("is", &id, &msg) )
-	{
-		stackError("gsc_player_kick2() one or more arguments is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-
-	if ( id >= MAX_CLIENTS )
-	{
-		stackError("gsc_player_kick2() entity %i is not a player", id);
-		stackPushUndefined();
-		return;
-	}
-
-	client_t *client = &svs.clients[id];
-
-	if ( client == NULL )
-	{
-		stackPushUndefined();
-		return;
-	}
-
-	if ( client->netchan.remoteAddress.type == NA_LOOPBACK )
-	{
-		stackPushUndefined();
-		return;
-	}
-
-	strncpy(tmp, msg, sizeof(tmp));
-	tmp[sizeof(tmp) - 1] = '\0';
-	SV_DropClient(client, tmp);
-
-	stackPushBool(qtrue);
 }
 
 void gsc_player_setguid(scr_entref_t ref)
@@ -1556,39 +1524,38 @@ void gsc_player_getinactivitytime(scr_entref_t ref)
 	stackPushInt(entity->client->inactivityTime);
 }
 
-void gsc_player_set_earthquakes(scr_entref_t ref)
+void gsc_player_disableearthquakes(scr_entref_t ref)
 {
 	int id = ref.entnum;
-	char *enabled;
-
-	if ( !stackGetParams("s", &enabled) )
-	{
-		stackError("gsc_player_set_earthquakes() argument is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
 
 	if ( id >= MAX_CLIENTS )
 	{
-		stackError("gsc_player_set_earthquakes() entity %i is not a player", id);
+		stackError("gsc_player_disableearthquakes() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
 
-	if ( !I_stricmp(enabled, "on") || atoi(enabled) )
+	qboolean old_setting = !customPlayerState[id].noEarthquakes;
+	customPlayerState[id].noEarthquakes = qtrue;
+
+	stackPushInt(old_setting);
+}
+
+void gsc_player_enableearthquakes(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
 	{
-		customPlayerState[id].noEarthquakes = qfalse;
-	}
-	else if ( !I_stricmp(enabled, "off") || !I_stricmp(enabled, "0") )
-	{
-		customPlayerState[id].noEarthquakes = qtrue;
-	}
-	else
-	{
-		customPlayerState[id].noEarthquakes = !customPlayerState[id].noEarthquakes;
+		stackError("gsc_player_enableearthquakes() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
 	}
 
-	stackPushInt(!customPlayerState[id].noEarthquakes);
+	qboolean old_setting = !customPlayerState[id].noEarthquakes;
+	customPlayerState[id].noEarthquakes = qfalse;
+
+	stackPushInt(old_setting);
 }
 
 void gsc_player_earthquakeforplayer(scr_entref_t ref)
@@ -1813,7 +1780,7 @@ void gsc_player_getclienthudelemcount(scr_entref_t ref)
 	stackPushInt(count);
 }
 
-void gsc_player_runscriptanimation(scr_entref_t ref)
+void gsc_player_playscriptanimation(scr_entref_t ref)
 {
 	int id = ref.entnum;
 	int scriptAnimEventType;
@@ -1822,21 +1789,21 @@ void gsc_player_runscriptanimation(scr_entref_t ref)
 
 	if ( !stackGetParams("iii", &scriptAnimEventType, &isContinue, &force) )
 	{
-		stackError("gsc_player_runscriptanimation() argument is undefined or has a wrong type");
+		stackError("gsc_player_playscriptanimation() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
 	if ( id >= MAX_CLIENTS )
 	{
-		stackError("gsc_player_runscriptanimation() entity %i is not a player", id);
+		stackError("gsc_player_playscriptanimation() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
 
 	if ( scriptAnimEventType < 0 || scriptAnimEventType >= NUM_ANIM_EVENTTYPES )
 	{
-		stackError("gsc_player_runscriptanimation() argument is not a valid scriptAnimEventType");
+		stackError("gsc_player_playscriptanimation() argument is not a valid scriptAnimEventType");
 		stackPushUndefined();
 		return;
 	}
@@ -1846,52 +1813,50 @@ void gsc_player_runscriptanimation(scr_entref_t ref)
 	stackPushInt(BG_AnimScriptEvent(&entity->client->ps, (scriptAnimEventTypes_t)scriptAnimEventType, isContinue, force));
 }
 
-void gsc_player_silent(scr_entref_t ref)
+void gsc_player_disablesilent(scr_entref_t ref)
 {
 	int id = ref.entnum;
-	char *enabled;
-
-	if ( !stackGetParams("s", &enabled) )
-	{
-		stackError("gsc_player_silent() argument is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
 
 	if ( id >= MAX_CLIENTS )
 	{
-		stackError("gsc_player_silent() entity %i is not a player", id);
+		stackError("gsc_player_disablesilent() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
 
-	if ( !I_stricmp(enabled, "on") || atoi(enabled) )
-	{
-		customPlayerState[id].silent = qtrue;
-	}
-	else if ( !I_stricmp(enabled, "off") || !I_stricmp(enabled, "0") )
-	{
-		customPlayerState[id].silent = qfalse;
-	}
-	else
-	{
-		customPlayerState[id].silent = !customPlayerState[id].silent;
-	}
-
-	if ( customPlayerState[id].silent )
-	{
-		SV_GameSendServerCommand(id, 0, "v cg_footsteps \"0\"");
-		SV_GameSendServerCommand(id, 0, "v bg_foliagesnd_minspeed \"999\"");
-		SV_GameSendServerCommand(id, 0, "v bg_foliagesnd_maxspeed \"999\"");
-	}
-	else
+	qboolean old_setting = customPlayerState[id].silent;
+	if ( old_setting )
 	{
 		SV_GameSendServerCommand(id, 0, "v cg_footsteps \"1\"");
 		SV_GameSendServerCommand(id, 0, "v bg_foliagesnd_minspeed \"40\"");
 		SV_GameSendServerCommand(id, 0, "v bg_foliagesnd_maxspeed \"180\"");
 	}
+	customPlayerState[id].silent = qfalse;
 
-	stackPushInt(customPlayerState[id].silent);
+	stackPushInt(old_setting);
+}
+
+void gsc_player_enablesilent(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_enablesilent() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	qboolean old_setting = customPlayerState[id].silent;
+	if ( !old_setting )
+	{
+		SV_GameSendServerCommand(id, 0, "v cg_footsteps \"0\"");
+		SV_GameSendServerCommand(id, 0, "v bg_foliagesnd_minspeed \"999\"");
+		SV_GameSendServerCommand(id, 0, "v bg_foliagesnd_maxspeed \"999\"");
+	}
+	customPlayerState[id].silent = qtrue;
+
+	stackPushInt(old_setting);
 }
 
 void gsc_player_getgroundentity(scr_entref_t ref)
@@ -2563,21 +2528,21 @@ void gsc_player_playsoundfile(scr_entref_t ref)
 
 #if COMPILE_JUMP == 1
 
-void gsc_player_setjump_height(scr_entref_t ref)
+void gsc_player_setjumpheight(scr_entref_t ref)
 {
 	int id = ref.entnum;
 	float jump_height;
 
 	if ( !stackGetParams("f", &jump_height) )
 	{
-		stackError("gsc_player_setjump_height() argument is undefined or has a wrong type");
+		stackError("gsc_player_setjumpheight() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
 	if ( id >= MAX_CLIENTS )
 	{
-		stackError("gsc_player_setjump_height() entity %i is not a player", id);
+		stackError("gsc_player_setjumpheight() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
@@ -2593,21 +2558,21 @@ void gsc_player_setjump_height(scr_entref_t ref)
 	stackPushBool(qtrue);
 }
 
-void gsc_player_setjump_slowdownenable(scr_entref_t ref)
+void gsc_player_setjumpslowdownenable(scr_entref_t ref)
 {
 	int id = ref.entnum;
 	int slowdown;
 
 	if ( !stackGetParams("i", &slowdown) )
 	{
-		stackError("gsc_player_setjump_slowdownenable() argument is undefined or has a wrong type");
+		stackError("gsc_player_setjumpslowdownenable() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
 	if ( id >= MAX_CLIENTS )
 	{
-		stackError("gsc_player_setjump_slowdownenable() entity %i is not a player", id);
+		stackError("gsc_player_setjumpslowdownenable() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}

@@ -15,11 +15,11 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>connectionlessPacket( &lt;command&gt; )</H1>
+<H1>setAnimation( &lt;animation&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
-Module: Player<BR>
+Module: Animation<BR>
 </I>
 
 <BR>
@@ -27,8 +27,7 @@ Module: Player<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Sends a connectionless packet to the client. It fakes a packet from the client to the server and not the other way around!</p>
-
+<p>Forces an animation to be played on the player. Valid animation names can be found in mp\playeranim.script and animtrees\multiplayer.atr (see iw_07.iwd). Use 'none' to reset.</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -36,8 +35,7 @@ Module: Player<BR>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-A player
-</PRE>
+&lt;entity&gt;
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -46,7 +44,7 @@ A player
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-player connectionlessPacket("rcon " + getCvar("rcon_password") + " status");  
+player setAnimation("pb_crouch_run_forward");
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -55,7 +53,7 @@ player connectionlessPacket("rcon " + getCvar("rcon_password") + " status");
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;command&gt; The command message</LI>
+<LI>1 : &lt;animation&gt; The animation to play</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>

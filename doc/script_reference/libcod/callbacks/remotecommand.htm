@@ -27,11 +27,11 @@ Module: Callbacks<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Calls CodeCallback_RemoteCommand() in maps/mp/gametypes/_callbacksetup.gsc when an authenticated remote (rcon) command is received and provides the sender's source IP address (string) and the received command (list of strings). Requires <a href="../system/remotecommand.htm">remoteCommand</a> to be executed for the command to be processed properly by the game engine.</p>
+<p>Calls CodeCallback_RemoteCommand() in maps/mp/gametypes/_callbacksetup.gsc when an authenticated remote (rcon) command is received and provides the sender's source IP address (string) and the received command (list of strings). Requires <a href="../system/processremotecommand.htm">processRemoteCommand</a> to be executed for the command to be processed properly by the game engine.</p>
 </H3>
 </TR></TD></TABLE>
 <p>Note: The existance of the callback function is checked only once on server start. Functions added later are not taken into account, even after a map switch.</p>
-<p>Note: Avoid using wait statements (unless threaded) in this callback before calling <a href="../system/remotecommand.htm">remoteCommand</a>.</p>
+<p>Note: Avoid using wait statements (unless threaded) in this callback before calling <a href="../system/processremotecommand.htm">processRemoteCommand</a>.</p>
 
 <BR><BR>
 <H2>Parameters:</H2>
@@ -51,7 +51,7 @@ Module: Callbacks<BR>
 CodeCallback_RemoteCommand(from, args, messagePointer)
 {
     // Parse commands in args array for filtering or further actions
-    remoteCommand(from, messagePointer);
+    processRemoteCommand(from, messagePointer);
 }
 </PRE>
 </H3>

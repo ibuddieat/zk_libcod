@@ -27,7 +27,7 @@ Module: Callbacks<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Calls CodeCallback_PlayerCommand() in maps/mp/gametypes/_callbacksetup.gsc when a client issues a command (e.g., writing a chat message). Requires self <a href="../player/clientcommand.htm">clientCommand()</a>; to be executed for the command to be processed as usual. Valid commands are:</p>
+<p>Calls CodeCallback_PlayerCommand() in maps/mp/gametypes/_callbacksetup.gsc when a client issues a command (e.g., a chat message). Requires self <a href="../player/processclientcommand.htm">processClientCommand()</a>; to be executed for the command to be processed as usual. Valid commands are:</p>
 <UL>
 <LI>say</LI>
 <LI>say_team</LI>
@@ -53,7 +53,7 @@ Module: Callbacks<BR>
 </H3>
 </TR></TD></TABLE>
 <p>Note: The existance of the callback function is checked only once on server start. Functions added later are not taken into account, even after a map switch.</p>
-<p>Note: Avoid using wait statements (unless threaded) in this callback before calling <a href="../player/clientcommand.htm">clientCommand</a>.</p>
+<p>Note: Avoid using wait statements (unless threaded) in this callback before calling <a href="../player/processclientcommand.htm">processClientCommand</a>.</p>
 
 <BR><BR>
 <H2>Called on:</H2>

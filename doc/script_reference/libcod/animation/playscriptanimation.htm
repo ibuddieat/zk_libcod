@@ -15,11 +15,11 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>silent( &lt;mode&gt; )</H1>
+<H1>playScriptAnimation( &lt;event id&gt;, &lt;isContinue&gt;, &lt;force&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
-Module: Sound<BR>
+Module: Animation<BR>
 </I>
 
 <BR>
@@ -27,13 +27,7 @@ Module: Sound<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Enables/disables some sounds that a player emits during gameplay. Further notes:</p>
-<UL>
-<LI>Hides footstep, landing, jumping, and foliage sounds for the player so that other players cannot hear them</LI>
-<LI>Other players can still hear melee swing & miss sounds if they are close enough</LI>
-<LI>Silenced players can still hear some of their own actions that others cannot hear (e.g., landing, gear rattle)</LI>
-</UL>
-
+<p>Plays an animation on the player, based on the current player state. Returns the animation time or -1 if invalid. The animation is interrupted by other animations (e.g., when the player moves).</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -50,7 +44,8 @@ The player
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-self silent("on");
+deathAnimDuration = self playScriptAnimation(1, 0, 1);
+self [[level.callbackPlayerKilled]](eInflictor, eAttacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, psOffsetTime, deathAnimDuration);
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -59,7 +54,9 @@ self silent("on");
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;mode&gt; The mode to switch to: "on", "off", or "toggle".</LI>
+<LI>1 : &lt;event id&gt; The event id to use for the animation (e.g., 1 for death animations)</LI>
+<LI>2 : &lt;isContinue&gt; The isContinue flag</LI>
+<LI>3 : &lt;force&gt; The force flag</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>

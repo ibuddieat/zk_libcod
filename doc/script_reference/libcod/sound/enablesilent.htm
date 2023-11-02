@@ -15,11 +15,11 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>exec( &lt;command&gt; )</H1>
+<H1>enableSilent()</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
-Module: Exec<BR>
+Module: Sound<BR>
 </I>
 
 <BR>
@@ -27,8 +27,21 @@ Module: Exec<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Executes a shell command and returns the result of it.</p>
+<p>Disables some sounds that a player emits during gameplay. Further notes:</p>
+<UL>
+<LI>Hides footstep, landing, jumping, and foliage sounds for the player so that other players cannot hear them</LI>
+<LI>Other players can still hear melee swing & miss sounds if they are close enough</LI>
+<LI>Silenced players can still hear some of their own actions that others cannot hear (e.g., landing, gear rattle)</LI>
+</UL>
 
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Call this on:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+The player
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -37,17 +50,10 @@ Module: Exec<BR>
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-result = exec( "ls" );
+self enableSilent();
 </PRE>
 </H3>
 </TR></TD></TABLE>
-<BR><BR>
-<H2>Required Args:</H2>
-<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
-<TR><TD BGCOLOR="C0D4EE">
-<UL>
-<LI>1 : &lt;command&gt; command to execute</LI>
-</UL></TR></TD></TABLE>
 <BR>
 </BODY>
 </HTML>

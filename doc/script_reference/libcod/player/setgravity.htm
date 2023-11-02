@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>clientUserInfoChanged()</H1>
+<H1>setGravity( &lt;player gravity&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
@@ -27,7 +27,8 @@ Module: Player<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Processes the client's user info (can be ignored), when CodeCallback_UserInfoChanged() is available in maps\mp\gametypes\_callbacksetup.gsc. The existance of CodeCallback_UserInfoChanged is checked once on start. Important: server-start is not map-start.</p>
+<p>Set the player's individual gravity.</p>
+
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -44,10 +45,17 @@ The player
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
- self clientUserInfoChanged();
+player setGravity(400);
 </PRE>
 </H3>
 </TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;player gravity&gt; The player's new gravity (0 = default gravity) of type integer</LI>
+</UL></TR></TD></TABLE>
 <BR>
 </BODY>
 </HTML>

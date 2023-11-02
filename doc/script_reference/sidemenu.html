@@ -209,22 +209,23 @@ function expandAll()
 <div id='animation' CLASS='cmdlist'>
 <A HREF="libcod/animation/gettagangles.htm" TARGET="main" >getTagAngles</a><br>
 <A HREF="libcod/animation/gettagorigin.htm" TARGET="main" >getTagOrigin</a><br>
-<A HREF="libcod/animation/runscriptanimation.htm" TARGET="main" >runScriptAnimation</a><br>
+<A HREF="libcod/animation/playscriptanimation.htm" TARGET="main" >playScriptAnimation</a><br>
+<A HREF="libcod/animation/setanimation.htm" TARGET="main" >setAnimation</a><br>
 </div>
 <SPAN CLASS='class1'><a href="" onClick="switchMenu('bots'); return false;" title='Expand/Collapse Bots'>Bots</a><br></SPAN>
 <div id='bots' CLASS='cmdlist'>
-<A HREF="libcod/bots/adsaim.htm" TARGET="main" >adsAim</a><br>
 <A HREF="libcod/bots/fireweapon.htm" TARGET="main" >fireWeapon</a><br>
 <A HREF="libcod/bots/meleeweapon.htm" TARGET="main" >meleeWeapon</a><br>
 <A HREF="libcod/bots/reloadweapon.htm" TARGET="main" >reloadWeapon</a><br>
 <A HREF="libcod/bots/resettestclientnaming.htm" TARGET="main" >resetTestClientNaming</a><br>
+<A HREF="libcod/bots/setaim.htm" TARGET="main" >setAim</a><br>
+<A HREF="libcod/bots/setbotstance.htm" TARGET="main" >setBotStance</a><br>
 <A HREF="libcod/bots/setlean.htm" TARGET="main" >setLean</a><br>
 <A HREF="libcod/bots/setnexttestclientname.htm" TARGET="main" >setNextTestClientName</a><br>
-<A HREF="libcod/bots/setstance.htm" TARGET="main" >setStance</a><br>
 <A HREF="libcod/bots/setwalkdir.htm" TARGET="main" >setWalkDir</a><br>
 <A HREF="libcod/bots/setwalkvalues.htm" TARGET="main" >setWalkValues</a><br>
 <A HREF="libcod/bots/switchtoweaponid.htm" TARGET="main" >switchToWeaponId</a><br>
-<A HREF="libcod/bots/thrownade.htm" TARGET="main" >throwNade</a><br>
+<A HREF="libcod/bots/throwgrenade.htm" TARGET="main" >throwGrenade</a><br>
 </div>
 <SPAN CLASS='class1'><a href="" onClick="switchMenu('damage'); return false;" title='Expand/Collapse Damage'>Damage</a><br></SPAN>
 <div id='damage' CLASS='cmdlist'>
@@ -258,10 +259,10 @@ function expandAll()
 </div>
 <SPAN CLASS='class1'><a href="" onClick="switchMenu('exec'); return false;" title='Expand/Collapse Exec'>Exec</a><br></SPAN>
 <div id='exec' CLASS='cmdlist'>
-<A HREF="libcod/exec/exec.htm" TARGET="main" >exec</a><br>
-<A HREF="libcod/exec/exec_async_checkdone.htm" TARGET="main" >exec_async_checkdone</a><br>
-<A HREF="libcod/exec/exec_async_create.htm" TARGET="main" >exec_async_create</a><br>
-<A HREF="libcod/exec/exec_async_create_nosave.htm" TARGET="main" >exec_async_create_nosave</a><br>
+<A HREF="libcod/exec/execute.htm" TARGET="main" >execute</a><br>
+<A HREF="libcod/exec/execute_async_checkdone.htm" TARGET="main" >execute_async_checkdone</a><br>
+<A HREF="libcod/exec/execute_async_create.htm" TARGET="main" >execute_async_create</a><br>
+<A HREF="libcod/exec/execute_async_create_nosave.htm" TARGET="main" >execute_async_create_nosave</a><br>
 </div>
 <SPAN CLASS='class1'><a href="" onClick="switchMenu('hud'); return false;" title='Expand/Collapse Hud'>Hud</a><br></SPAN>
 <div id='hud' CLASS='cmdlist'>
@@ -318,21 +319,24 @@ function expandAll()
 <SPAN CLASS='class1'><a href="" onClick="switchMenu('player'); return false;" title='Expand/Collapse Player'>Player</a><br></SPAN>
 <div id='player' CLASS='cmdlist'>
 <A HREF="libcod/player/addvelocity.htm" TARGET="main" >addVelocity</a><br>
-<A HREF="libcod/player/clientcommand.htm" TARGET="main" >clientCommand</a><br>
-<A HREF="libcod/player/clientuserinfochanged.htm" TARGET="main" >clientUserInfoChanged</a><br>
-<A HREF="libcod/player/connectionlesspacket.htm" TARGET="main" >connectionlessPacket</a><br>
+<A HREF="libcod/player/connectionlesspackettoclient.htm" TARGET="main" >connectionlessPacketToClient</a><br>
+<A HREF="libcod/player/connectionlesspackettoserver.htm" TARGET="main" >connectionlessPacketToServer</a><br>
 <A HREF="libcod/player/disablebulletimpacts.htm" TARGET="main" >disableBulletImpacts</a><br>
+<A HREF="libcod/player/disableearthquakes.htm" TARGET="main" >disableEarthquakes</a><br>
+<A HREF="libcod/player/disableitempickup.htm" TARGET="main" >disableItemPickup</a><br>
 <A HREF="libcod/player/disabletalkericon.htm" TARGET="main" >disableTalkerIcon</a><br>
 <A HREF="libcod/player/earthquakeforplayer.htm" TARGET="main" >earthquakeForPlayer</a><br>
 <A HREF="libcod/player/enablebulletimpacts.htm" TARGET="main" >enableBulletImpacts</a><br>
+<A HREF="libcod/player/enableearthquakes.htm" TARGET="main" >enableEarthquakes</a><br>
+<A HREF="libcod/player/enableitempickup.htm" TARGET="main" >enableItemPickup</a><br>
 <A HREF="libcod/player/enabletalkericon.htm" TARGET="main" >enableTalkerIcon</a><br>
-<A HREF="libcod/player/get_userinfo.htm" TARGET="main" >get_userinfo</a><br>
+<A HREF="libcod/player/getuserinfo.htm" TARGET="main" >getUserinfo</a><br>
 <A HREF="libcod/player/getaddresstype.htm" TARGET="main" >getAddressType</a><br>
 <A HREF="libcod/player/getclientconnectstate.htm" TARGET="main" >getClientConnectState</a><br>
 <A HREF="libcod/player/getcollisionteam.htm" TARGET="main" >getCollisionTeam</a><br>
 <A HREF="libcod/player/getcooktime.htm" TARGET="main" >getCookTime</a><br>
 <A HREF="libcod/player/getentertime.htm" TARGET="main" >getEnterTime</a><br>
-<A HREF="libcod/player/getfps.htm" TARGET="main" >getFps</a><br>
+<A HREF="libcod/player/getfps.htm" TARGET="main" >getFPS</a><br>
 <A HREF="libcod/player/getgroundentity.htm" TARGET="main" >getGroundEntity</a><br>
 <A HREF="libcod/player/getip.htm" TARGET="main" >getIP</a><br>
 <A HREF="libcod/player/getinactivitytime.htm" TARGET="main" >getInActivityTime</a><br>
@@ -349,27 +353,26 @@ function expandAll()
 <A HREF="libcod/player/isbot.htm" TARGET="main" >isBot</a><br>
 <A HREF="libcod/player/ismantling.htm" TARGET="main" >isMantling</a><br>
 <A HREF="libcod/player/isonladder.htm" TARGET="main" >isOnLadder</a><br>
-<A HREF="libcod/player/itempickup.htm" TARGET="main" >itemPickup</a><br>
-<A HREF="libcod/player/kick2.htm" TARGET="main" >kick2</a><br>
 <A HREF="libcod/player/lookatkiller.htm" TARGET="main" >lookAtKiller</a><br>
-<A HREF="libcod/player/noclip.htm" TARGET="main" >noclip</a><br>
-<A HREF="libcod/player/printoutofband.htm" TARGET="main" >printOutOfBand</a><br>
+<A HREF="libcod/player/noclip.htm" TARGET="main" >noClip</a><br>
+<A HREF="libcod/player/processclientcommand.htm" TARGET="main" >processClientCommand</a><br>
+<A HREF="libcod/player/processclientuserinfochange.htm" TARGET="main" >processClientUserinfoChange</a><br>
 <A HREF="libcod/player/renameclient.htm" TARGET="main" >renameClient</a><br>
 <A HREF="libcod/player/resetnextreliabletime.htm" TARGET="main" >resetNextReliableTime</a><br>
-<A HREF="libcod/player/set_userinfo.htm" TARGET="main" >set_userinfo</a><br>
 <A HREF="libcod/player/setcollisionteam.htm" TARGET="main" >setCollisionTeam</a><br>
 <A HREF="libcod/player/setconfigstring.htm" TARGET="main" >setConfigString</a><br>
-<A HREF="libcod/player/setearthquakes.htm" TARGET="main" >setEarthquakes</a><br>
 <A HREF="libcod/player/setfirerangescale.htm" TARGET="main" >setFireRangeScale</a><br>
 <A HREF="libcod/player/setfirethroughwalls.htm" TARGET="main" >setFireThroughWalls</a><br>
-<A HREF="libcod/player/setg_gravity.htm" TARGET="main" >setg_gravity</a><br>
-<A HREF="libcod/player/setg_speed.htm" TARGET="main" >setg_speed</a><br>
+<A HREF="libcod/player/setgravity.htm" TARGET="main" >setGravity</a><br>
 <A HREF="libcod/player/setguid.htm" TARGET="main" >setGuid</a><br>
 <A HREF="libcod/player/setmeleeheightscale.htm" TARGET="main" >setMeleeHeightScale</a><br>
 <A HREF="libcod/player/setmeleerangescale.htm" TARGET="main" >setMeleeRangeScale</a><br>
 <A HREF="libcod/player/setmeleewidthscale.htm" TARGET="main" >setMeleeWidthScale</a><br>
 <A HREF="libcod/player/setping.htm" TARGET="main" >setPing</a><br>
+<A HREF="libcod/player/setspeed.htm" TARGET="main" >setSpeed</a><br>
+<A HREF="libcod/player/setstance.htm" TARGET="main" >setStance</a><br>
 <A HREF="libcod/player/setturretspreadscale.htm" TARGET="main" >setTurretSpreadScale</a><br>
+<A HREF="libcod/player/setuserinfo.htm" TARGET="main" >setUserinfo</a><br>
 <A HREF="libcod/player/setvelocity.htm" TARGET="main" >setVelocity</a><br>
 <A HREF="libcod/player/setweaponspreadscale.htm" TARGET="main" >setWeaponSpreadScale</a><br>
 <BR>
@@ -388,6 +391,8 @@ function expandAll()
 <SPAN CLASS='class1'><a href="" onClick="switchMenu('sound'); return false;" title='Expand/Collapse Sound'>Sound</a><br></SPAN>
 <div id='sound' CLASS='cmdlist'>
 <A HREF="libcod/sound/clienthasclientmuted.htm" TARGET="main" >clientHasClientMuted</a><br>
+<A HREF="libcod/sound/disablesilent.htm" TARGET="main" >disableSilent</a><br>
+<A HREF="libcod/sound/enablesilent.htm" TARGET="main" >enableSilent</a><br>
 <A HREF="libcod/sound/getremainingsoundfileduration.htm" TARGET="main" >getRemainingSoundFileDuration</a><br>
 <A HREF="libcod/sound/getsoundaliasesfromfile.htm" TARGET="main" >getSoundAliasesFromFile</a><br>
 <A HREF="libcod/sound/getsoundduration.htm" TARGET="main" >getSoundDuration</a><br>
@@ -399,21 +404,19 @@ function expandAll()
 <A HREF="libcod/sound/muteclient.htm" TARGET="main" >muteClient</a><br>
 <A HREF="libcod/sound/playsoundfile.htm" TARGET="main" >playSoundFile</a><br>
 <A HREF="libcod/sound/savespeexfile.htm" TARGET="main" >saveSpeexFile</a><br>
-<A HREF="libcod/sound/silent.htm" TARGET="main" >silent</a><br>
 <A HREF="libcod/sound/stopsoundfile.htm" TARGET="main" >stopSoundFile</a><br>
 <A HREF="libcod/sound/unmuteclient.htm" TARGET="main" >unmuteClient</a><br>
 </div>
 <SPAN CLASS='class1'><a href="" onClick="switchMenu('system'); return false;" title='Expand/Collapse System'>System</a><br></SPAN>
 <div id='system' CLASS='cmdlist'>
 <A HREF="libcod/system/chr.htm" TARGET="main" >chr</a><br>
-<A HREF="libcod/system/cmd_executestring.htm" TARGET="main" >Cmd_ExecuteString</a><br>
 <A HREF="libcod/system/error.htm" TARGET="main" >error</a><br>
+<A HREF="libcod/system/executecommand.htm" TARGET="main" >executeCommand</a><br>
 <A HREF="libcod/system/file_exists.htm" TARGET="main" >file_exists</a><br>
 <A HREF="libcod/system/file_link.htm" TARGET="main" >file_link</a><br>
 <A HREF="libcod/system/file_unlink.htm" TARGET="main" >file_unlink</a><br>
 <A HREF="libcod/system/float.htm" TARGET="main" >float</a><br>
 <A HREF="libcod/system/fromhex.htm" TARGET="main" >fromHex</a><br>
-<A HREF="libcod/system/fs_loaddir.htm" TARGET="main" >FS_LoadDir</a><br>
 <A HREF="libcod/system/getascii.htm" TARGET="main" >getAscii</a><br>
 <A HREF="libcod/system/getlasttestclientnumber.htm" TARGET="main" >getLastTestClientNumber</a><br>
 <A HREF="libcod/system/getlocaltime.htm" TARGET="main" >getLocalTime</a><br>
@@ -421,19 +424,22 @@ function expandAll()
 <A HREF="libcod/system/getsysmilliseconds.htm" TARGET="main" >getSysMilliseconds</a><br>
 <A HREF="libcod/system/getsystemtime.htm" TARGET="main" >getSystemTime</a><br>
 <A HREF="libcod/system/gettype.htm" TARGET="main" >getType</a><br>
+<A HREF="libcod/system/kick.htm" TARGET="main" >kick</a><br>
+<A HREF="libcod/system/loaddir.htm" TARGET="main" >loadDir</a><br>
 <A HREF="libcod/system/logprintconsole.htm" TARGET="main" >logPrintConsole</a><br>
 <A HREF="libcod/system/makeclientlocalizedstring.htm" TARGET="main" >makeClientLocalizedString</a><br>
 <A HREF="libcod/system/makelocalizedstring.htm" TARGET="main" >makeLocalizedString</a><br>
 <A HREF="libcod/system/makestring.htm" TARGET="main" >makeString</a><br>
 <A HREF="libcod/system/ord.htm" TARGET="main" >ord</a><br>
 <A HREF="libcod/system/printf.htm" TARGET="main" >printf</a><br>
-<A HREF="libcod/system/remotecommand.htm" TARGET="main" >remoteCommand</a><br>
-<A HREF="libcod/system/sendgameservercommand.htm" TARGET="main" >sendGameServerCommand</a><br>
+<A HREF="libcod/system/processremotecommand.htm" TARGET="main" >processRemoteCommand</a><br>
+<A HREF="libcod/system/sendcommandtoclient.htm" TARGET="main" >sendCommandToClient</a><br>
 <A HREF="libcod/system/sprintf.htm" TARGET="main" >sprintf</a><br>
 <A HREF="libcod/system/sqrt.htm" TARGET="main" >sqrt</a><br>
-<A HREF="libcod/system/sqrtInv.htm" TARGET="main" >sqrtInv</a><br>
+<A HREF="libcod/system/sqrtinv.htm" TARGET="main" >sqrtInv</a><br>
 <A HREF="libcod/system/system.htm" TARGET="main" >system</a><br>
 <A HREF="libcod/system/tohex.htm" TARGET="main" >toHex</a><br>
+<A HREF="libcod/system/toupper.htm" TARGET="main" >toUpper</a><br>
 </div>
 <SPAN CLASS='class1'><a href="" onClick="switchMenu('trace'); return false;" title='Expand/Collapse Trace'>Trace</a><br></SPAN>
 <div id='trace' CLASS='cmdlist'>

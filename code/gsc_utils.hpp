@@ -10,14 +10,15 @@ void gsc_utils_getsoundaliasesfromfile();
 void gsc_utils_getsoundduration();
 void gsc_utils_getsoundinfo();
 
-void gsc_utils_remotecommand();
-void gsc_utils_executestring();
-void gsc_utils_sendgameservercommand();
+void gsc_utils_kick();
+void gsc_utils_processremotecommand();
+void gsc_utils_executecommand();
+void gsc_utils_sendcommandtoclient();
 void gsc_utils_system();
 
 void gsc_utils_printf();
 void gsc_utils_sprintf();
-void gsc_utils_outofbandprint();
+void gsc_utils_sendpacket();
 void gsc_utils_putchar();
 void gsc_utils_logprintconsole();
 
@@ -28,7 +29,7 @@ void gsc_utils_toupper();
 void gsc_utils_file_link();
 void gsc_utils_file_unlink();
 void gsc_utils_file_exists();
-void gsc_utils_fs_loaddir();
+void gsc_utils_loaddir();
 void gsc_utils_scandir();
 void gsc_utils_fopen();
 void gsc_utils_fread();
@@ -41,13 +42,13 @@ void gsc_utils_getsystemtime();
 void gsc_utils_getserverstarttime();
 void gsc_utils_getlocaltime();
 
-void gsc_utils_g_findconfigstringindexoriginal();
-void gsc_utils_g_findconfigstringindex();
-void gsc_utils_get_configstring();
-void gsc_utils_set_configstring();
-void gsc_utils_make_localized_string();
-void gsc_utils_make_client_localized_string();
-void gsc_utils_make_string();
+void gsc_utils_findconfigstringindexoriginal();
+void gsc_utils_findconfigstringindex();
+void gsc_utils_getconfigstring();
+void gsc_utils_setconfigstring();
+void gsc_utils_makelocalizedstring();
+void gsc_utils_makeclientlocalizedstring();
+void gsc_utils_makestring();
 
 void gsc_utils_float();
 void gsc_utils_exponent();

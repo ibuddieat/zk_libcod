@@ -15,11 +15,11 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>set_userinfo( &lt;key&gt;, &lt;value&gt; )</H1>
+<H1>disableSilent()</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
-Module: Player<BR>
+Module: Sound<BR>
 </I>
 
 <BR>
@@ -27,8 +27,7 @@ Module: Player<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Sets the key and value in the player's userinfo string.</p>
-
+<p>Reenables some sounds that a player emits during gameplay. This restores footstep, landing, jumping, and foliage sounds for the player so that other players can hear them.</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -45,18 +44,10 @@ The player
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
- player set_userinfo( "name", "KILLTUBE" );
+self disableSilent();
 </PRE>
 </H3>
 </TR></TD></TABLE>
-<BR><BR>
-<H2>Required Args:</H2>
-<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
-<TR><TD BGCOLOR="C0D4EE">
-<UL>
-<LI>1 : &lt;key&gt; The key</LI>
-<LI>2 : &lt;value&gt; New value</LI>
-</UL></TR></TD></TABLE>
 <BR>
 </BODY>
 </HTML>

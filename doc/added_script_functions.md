@@ -22,8 +22,12 @@ New script code methods:
   * `<entity> setLight(<red>, <green>, <blue>, <intensity>)`
   * `<entity> spawnGrenade(<weapon>, <origin>, [<direction>], [<velocity>], [<fuseTime>])`
   * `<player> disableBulletImpacts()`
+  * `<player> disableEarthquakes()`
+  * `<player> disableSilent()`
   * `<player> earthquakeForPlayer(<scale>, <duration>, <source>, <radius>)`
   * `<player> enableBulletImpacts()`
+  * `<player> enableEarthquakes()`
+  * `<player> enableSilent()`
   * `<player> getClientHudElemCount()`
   * `<player> getCollisionTeam()`
   * `<player> getEnterTime()`
@@ -35,7 +39,7 @@ New script code methods:
   * `<player> getViewOrigin()`
   * `<player> isPlayingSoundFile()`
   * `<player> muteClient(<player id>)`
-  * `<player> noclip("on|off|toggle")`
+  * `<player> noClip("on|off|toggle")`
   * `<player> objective_player_add(<objective_number>, <state>, <position>, <iconshader>)`
   * `<player> objective_player_delete(<objective_number>)`
   * `<player> objective_player_icon(<objective_number>, <icon>)`
@@ -44,9 +48,8 @@ New script code methods:
   * `<player> playFxForPlayer(<effect id>, <position of effect>, [<forward vector>], [<up vector>])`
   * `<player> playFxOnTagForPlayer(<effect id>, <entity>, <tag name>)`
   * `<player> playSoundFile(<sound index>, [<offset>], [<source player>])`
-  * `<player> runScriptAnimation(<scriptAnimEventType>, <isContinue>, <force>)`
+  * `<player> playScriptAnimation(<scriptAnimEventType>, <isContinue>, <force>)`
   * `<player> setCollisionTeam(<team>)`
-  * `<player> setEarthquakes("on|off|toggle")`
   * `<player> setFireRangeScale(<scale>)`
   * `<player> setFireThroughWalls(<enabled>)`
   * `<player> setMeleeHeightScale(<scale>)`
@@ -55,7 +58,6 @@ New script code methods:
   * `<player> setTurretSpreadScale(<scale>)`
   * `<player> setWeaponSpreadScale(<scale>)`
   * `<player> setPing(<value>)`
-  * `<player> silent("on|off|toggle")`
   * `<player> stopSoundFile()`
   * `<player> stopUseTurret()`
   * `<player> unmuteClient(<player id>)`

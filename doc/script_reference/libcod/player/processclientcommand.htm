@@ -15,11 +15,11 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>Cmd_ExecuteString( &lt;text&gt; )</H1>
+<H1>processClientCommand()</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
-Module: Utils<BR>
+Module: Player<BR>
 </I>
 
 <BR>
@@ -27,8 +27,15 @@ Module: Utils<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Executes a text command as rcon.</p>
-
+<p>Processes the client command (e.g., a chat message) that is passed to CodeCallback_PlayerCommand(args), if present in maps\mp\gametypes\_callbacksetup.gsc. Omitting this call causes the client command to be ignored.</p>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Call this on:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+The player
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -37,17 +44,10 @@ Module: Utils<BR>
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-Cmd_ExecuteString( "say welcome to our server!" );
+self processClientCommand();
 </PRE>
 </H3>
 </TR></TD></TABLE>
-<BR><BR>
-<H2>Required Args:</H2>
-<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
-<TR><TD BGCOLOR="C0D4EE">
-<UL>
-<LI>1 : &lt;text&gt; text command to execute as rcon</LI>
-</UL></TR></TD></TABLE>
 <BR>
 </BODY>
 </HTML>

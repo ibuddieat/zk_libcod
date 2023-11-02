@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>get_userinfo( &lt;key&gt; )</H1>
+<H1>connectionlessPacketToServer( &lt;command&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
@@ -27,8 +27,8 @@ Module: Player<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Gets the value from the player's userinfo string with the key.<br />
-</p>
+<p>Creates a packet that is processed as if it would come from the client to the server. However, the client does not actually see the command or send a packet.</p>
+
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -36,7 +36,8 @@ Module: Player<BR>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-The player
+A player
+</PRE>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -45,7 +46,7 @@ The player
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
- value = self get_userinfo( "name" );
+player connectionlessPacketToServer("rcon " + getCvar("rcon_password") + " status");  
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -54,7 +55,7 @@ The player
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;key&gt; The key</LI>
+<LI>1 : &lt;command&gt; The command seemingly coming from the client</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>

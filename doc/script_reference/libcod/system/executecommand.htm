@@ -15,11 +15,11 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>clientCommand()</H1>
+<H1>executeCommand( &lt;text&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
-Module: Player<BR>
+Module: Utils<BR>
 </I>
 
 <BR>
@@ -27,27 +27,29 @@ Module: Player<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Processes the client's command (can be ignored), when CodeCallback_PlayerCommand(args) is available in maps\mp\gametypes\_callbacksetup.gsc. The existance of CodeCallback_PlayerCommand is checked once on start. Important: server-start is not map-start.</p>
+<p>Executes a text command on the server like via rcon or console input.</p>
+
 </H3>
 </TR></TD></TABLE>
-<BR><BR>
-<H2>Call this on:</H2>
-<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
-<TR><TD BGCOLOR="C0D4EE">
-<H3>
-The player
-</H3>
-</TR></TD></TABLE>
+<p>Note: The execution of map commands (map, devmap, fast_restart, map_restart, map_rotate) is not supported and can result in a server crash.</p>
+
 <BR><BR>
 <H2>Example:</H2>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
- self clientCommand();
+executeCommand("say Welcome to our server!");
 </PRE>
 </H3>
 </TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;text&gt; Text command to execute</LI>
+</UL></TR></TD></TABLE>
 <BR>
 </BODY>
 </HTML>

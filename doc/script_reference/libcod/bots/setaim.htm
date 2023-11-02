@@ -15,11 +15,11 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>FS_LoadDir( &lt;path&gt;, &lt;dir&gt; )</H1>
+<H1>setAim( &lt;bool&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
-Module: Utils<BR>
+Module: Bots<BR>
 </I>
 
 <BR>
@@ -27,8 +27,16 @@ Module: Utils<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Loads a file system directory.</p>
+<p>Order the bot to simulate a right mouse-click. Keep it set to true until the bot should zoom out again.</p>
 
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Call this on:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+&lt;entity&gt; from addTestClient()
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -37,7 +45,7 @@ Module: Utils<BR>
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-loaded = FS_LoadDir( "/home/server/", "mod" );
+bot setAim(true);
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -46,8 +54,7 @@ loaded = FS_LoadDir( "/home/server/", "mod" );
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;path&gt; path to the directory</LI>
-<LI>1 : &lt;dir&gt; directory</LI>
+<LI>1 : &lt;bool&gt; Is bot aiming. True or false</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>

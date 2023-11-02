@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>itemPickup( &lt;enabled&gt; )</H1>
+<H1>getSpeed()</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
@@ -27,8 +27,8 @@ Module: Player<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Enables/disables item pickup (including weapons).<br />
-</p>
+<p>Returns the player's individual speed (integer). Returns zero if the player uses the game's base speed (see g_speed dvar).</p>
+
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -45,17 +45,10 @@ The player
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-self itemPickup(false);
+player getSpeed();
 </PRE>
 </H3>
 </TR></TD></TABLE>
-<BR><BR>
-<H2>Required Args:</H2>
-<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
-<TR><TD BGCOLOR="C0D4EE">
-<UL>
-<LI>1 : &lt;enabled&gt; Flag stating whether item pickup is enabled</LI>
-</UL></TR></TD></TABLE>
 <BR>
 </BODY>
 </HTML>

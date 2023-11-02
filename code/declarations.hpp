@@ -4133,8 +4133,8 @@ typedef struct customEntityState_s
 
 typedef struct customPlayerState_s
 {
-	int ping;
 	qboolean overridePing;
+	int ping;
 	objective_t objectives[16];
 	float meleeHeightScale;
 	float meleeRangeScale;

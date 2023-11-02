@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>printOutOfBand( &lt;command&gt; )</H1>
+<H1>setUserinfo( &lt;key&gt;, &lt;value&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
@@ -27,7 +27,7 @@ Module: Player<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Sends a out of band print to the client</p>
+<p>Sets the key and value in the player's userinfo string.</p>
 
 </H3>
 </TR></TD></TABLE>
@@ -36,8 +36,7 @@ Module: Player<BR>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-A player
-</PRE>
+The player
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -46,7 +45,7 @@ A player
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
- player printOutOfBand("print\nHELLO PLAYER CONSOLE!!!\n");
+player setUserinfo("name", "KILLTUBE");
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -55,7 +54,8 @@ A player
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;command&gt; The command message</LI>
+<LI>1 : &lt;key&gt; The key</LI>
+<LI>2 : &lt;value&gt; New value of type string</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>

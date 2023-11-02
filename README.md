@@ -110,4 +110,5 @@ We then started to add more and more functions to our fork, and especially since
 
 **Further notes**
 - Release notes before version 10.0 were aligned with other (private) \*.ZK.\* repositories, therefore these notes do not necessarily reflect what was new in *this* repository.
+- The script API might change between major releases, documented [here](doc/changed_script_functions.md)
 - Use this extension at your own risk (see [LICENSE](LICENSE.md)). Some features are considered highly experimental and might not be stable enough for productive use.

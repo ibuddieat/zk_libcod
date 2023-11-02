@@ -4,7 +4,7 @@
 
 extern customPlayerState_t customPlayerState[MAX_CLIENTS];
 
-void gsc_bots_set_walkvalues(scr_entref_t ref)
+void gsc_bots_setwalkvalues(scr_entref_t ref)
 {
 	int id = ref.entnum;
     int fwcount;
@@ -12,7 +12,7 @@ void gsc_bots_set_walkvalues(scr_entref_t ref)
 
     if ( !stackGetParams("ii", &fwcount, &rgcount) )
     {
-        stackError("gsc_bots_set_walkvalues() arguments are undefined or have a wrong type");
+        stackError("gsc_bots_setwalkvalues() arguments are undefined or have a wrong type");
         stackPushUndefined();
         return;
     }
@@ -23,21 +23,21 @@ void gsc_bots_set_walkvalues(scr_entref_t ref)
 	stackPushBool(qtrue);
 }
 
-void gsc_bots_set_walkdir(scr_entref_t ref)
+void gsc_bots_setwalkdir(scr_entref_t ref)
 {
 	int id = ref.entnum;
 	char *dir;
 
 	if ( !stackGetParams("s", &dir) )
 	{
-		stackError("gsc_bots_set_walkdir() argument is undefined or has a wrong type");
+		stackError("gsc_bots_setwalkdir() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
 	if ( id >= MAX_CLIENTS )
 	{
-		stackError("gsc_bots_set_walkdir() entity %i is not a player", id);
+		stackError("gsc_bots_setwalkdir() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
@@ -46,7 +46,7 @@ void gsc_bots_set_walkdir(scr_entref_t ref)
 
 	if ( client->netchan.remoteAddress.type != NA_BOT )
 	{
-		stackError("gsc_bots_set_walkdir() player %i is not a bot", id);
+		stackError("gsc_bots_setwalkdir() player %i is not a bot", id);
 		stackPushUndefined();
 		return;
 	}
@@ -66,7 +66,7 @@ void gsc_bots_set_walkdir(scr_entref_t ref)
 		customPlayerState[id].botRightMove = KEY_MASK_MOVELEFT;
 	else
 	{
-		stackError("gsc_bots_set_walkdir() invalid argument '%s'. Valid arguments are: 'none' 'forward' 'back' 'right' 'left'", dir);
+		stackError("gsc_bots_setwalkdir() invalid argument '%s'. Valid arguments are: 'none' 'forward' 'back' 'right' 'left'", dir);
 		stackPushUndefined();
 		return;
 	}
@@ -74,21 +74,21 @@ void gsc_bots_set_walkdir(scr_entref_t ref)
 	stackPushBool(qtrue);
 }
 
-void gsc_bots_set_lean(scr_entref_t ref)
+void gsc_bots_setlean(scr_entref_t ref)
 {
 	int id = ref.entnum;
 	char *lean;
 
 	if ( !stackGetParams("s", &lean) )
 	{
-		stackError("gsc_bots_set_lean() argument is undefined or has a wrong type");
+		stackError("gsc_bots_setlean() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
 	if ( id >= MAX_CLIENTS )
 	{
-		stackError("gsc_bots_set_lean() entity %i is not a player", id);
+		stackError("gsc_bots_setlean() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
@@ -97,7 +97,7 @@ void gsc_bots_set_lean(scr_entref_t ref)
 
 	if ( client->netchan.remoteAddress.type != NA_BOT )
 	{
-		stackError("gsc_bots_set_lean() player %i is not a bot", id);
+		stackError("gsc_bots_setlean() player %i is not a bot", id);
 		stackPushUndefined();
 		return;
 	}
@@ -110,7 +110,7 @@ void gsc_bots_set_lean(scr_entref_t ref)
 		customPlayerState[id].botButtons |= KEY_MASK_LEANRIGHT;
 	else
 	{
-		stackError("gsc_bots_set_lean() invalid argument '%s'. Valid arguments are: 'right' 'left'", lean);
+		stackError("gsc_bots_setlean() invalid argument '%s'. Valid arguments are: 'right' 'left'", lean);
 		stackPushUndefined();
 		return;
 	}
@@ -118,21 +118,21 @@ void gsc_bots_set_lean(scr_entref_t ref)
 	stackPushBool(qtrue);
 }
 
-void gsc_bots_set_stance(scr_entref_t ref)
+void gsc_bots_setbotstance(scr_entref_t ref)
 {
 	int id = ref.entnum;
 	char *stance;
 
 	if ( !stackGetParams("s", &stance) )
 	{
-		stackError("gsc_bots_set_stance() argument is undefined or has a wrong type");
+		stackError("gsc_bots_setbotstance() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
 	if ( id >= MAX_CLIENTS )
 	{
-		stackError("gsc_bots_set_stance() entity %i is not a player", id);
+		stackError("gsc_bots_setbotstance() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
@@ -141,7 +141,7 @@ void gsc_bots_set_stance(scr_entref_t ref)
 
 	if ( client->netchan.remoteAddress.type != NA_BOT )
 	{
-		stackError("gsc_bots_set_stance() player %i is not a bot", id);
+		stackError("gsc_bots_setbotstance() player %i is not a bot", id);
 		stackPushUndefined();
 		return;
 	}
@@ -156,7 +156,7 @@ void gsc_bots_set_stance(scr_entref_t ref)
 		customPlayerState[id].botButtons |= KEY_MASK_JUMP;
 	else
 	{
-		stackError("gsc_bots_set_stance() invalid argument '%s'. Valid arguments are: 'stand' 'crouch' 'prone' 'jump'", stance);
+		stackError("gsc_bots_setbotstance() invalid argument '%s'. Valid arguments are: 'stand' 'crouch' 'prone' 'jump'", stance);
 		stackPushUndefined();
 		return;
 	}
@@ -164,21 +164,21 @@ void gsc_bots_set_stance(scr_entref_t ref)
 	stackPushBool(qtrue);
 }
 
-void gsc_bots_thrownade(scr_entref_t ref)
+void gsc_bots_throwgrenade(scr_entref_t ref)
 {
 	int id = ref.entnum;
 	int grenade;
 
 	if ( !stackGetParams("i", &grenade) )
 	{
-		stackError("gsc_bots_thrownade() argument is undefined or has a wrong type");
+		stackError("gsc_bots_throwgrenade() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
 	if ( id >= MAX_CLIENTS )
 	{
-		stackError("gsc_bots_thrownade() entity %i is not a player", id);
+		stackError("gsc_bots_throwgrenade() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
@@ -187,7 +187,7 @@ void gsc_bots_thrownade(scr_entref_t ref)
 
 	if ( client->netchan.remoteAddress.type != NA_BOT )
 	{
-		stackError("gsc_bots_thrownade() player %i is not a bot", id);
+		stackError("gsc_bots_throwgrenade() player %i is not a bot", id);
 		stackPushUndefined();
 		return;
 	}
@@ -308,21 +308,21 @@ void gsc_bots_reloadweapon(scr_entref_t ref)
 	stackPushBool(qtrue);
 }
 
-void gsc_bots_adsaim(scr_entref_t ref)
+void gsc_bots_setaim(scr_entref_t ref)
 {
 	int id = ref.entnum;
 	int ads;
 
 	if ( !stackGetParams("i", &ads) )
 	{
-		stackError("gsc_bots_adsaim() argument is undefined or has a wrong type");
+		stackError("gsc_bots_setaim() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
 	if ( id >= MAX_CLIENTS )
 	{
-		stackError("gsc_bots_adsaim() entity %i is not a player", id);
+		stackError("gsc_bots_setaim() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
@@ -331,7 +331,7 @@ void gsc_bots_adsaim(scr_entref_t ref)
 
 	if ( client->netchan.remoteAddress.type != NA_BOT )
 	{
-		stackError("gsc_bots_adsaim() player %i is not a bot", id);
+		stackError("gsc_bots_setaim() player %i is not a bot", id);
 		stackPushUndefined();
 		return;
 	}

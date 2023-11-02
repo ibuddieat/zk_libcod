@@ -15,11 +15,11 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>remoteCommand( &lt;from&gt;, &lt;messagePointer&gt; )</H1>
+<H1>execute_async_create( &lt;command&gt;, &lt;func&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
-Module: System<BR>
+Module: Exec<BR>
 </I>
 
 <BR>
@@ -27,31 +27,28 @@ Module: System<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Processes a remote command that was passed to <a href="../callbacks/remotecommand.htm">CodeCallback_RemoteCommand</a>.
+<p>Executes a shell command in another thread and returns the result of it. Requires to use <a href="execute_async_checkdone.htm">execute_async_checkdone</a> once every server frame to poll the result.</p>
+
 </H3>
 </TR></TD></TABLE>
-
-<BR><BR>
-<H2>Parameters:</H2>
-<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
-<TR><TD BGCOLOR="C0D4EE">
-<UL>
-<LI>1 : &lt;from&gt;: IP address of the sender.</LI>
-<LI>3 : &lt;messagePointer&gt;: Pointer to the internal message structure (type msg_t).</LI>
-</UL></TR></TD></TABLE>
 <BR><BR>
 <H2>Example:</H2>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-CodeCallback_RemoteCommand(from, args, messagePointer)
-{
-    remoteCommand(from, messagePointer);
-}
+execute_async_create("ls", ::resultCallback);
 </PRE>
 </H3>
 </TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;command&gt; Command to execute.</LI>
+<LI>2 : &lt;func&gt; Callback function with result array argument</LI>
+</UL></TR></TD></TABLE>
 <BR>
 </BODY>
 </HTML>

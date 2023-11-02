@@ -15,11 +15,11 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>runScriptAnimation( &lt;event id&gt;, &lt;isContinue&gt;, &lt;force&gt; )</H1>
+<H1>execute_async_create_nosave( &lt;command&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
-Module: Animation<BR>
+Module: Exec<BR>
 </I>
 
 <BR>
@@ -27,16 +27,8 @@ Module: Animation<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Runs an animation on the player, based on the current player state. Returns the animation time or -1 if invalid.</p>
+<p>Executes a shell command in another thread and does not return anything. Requires to use <a href="execute_async_checkdone.htm">execute_async_checkdone</a> once every server frame.</p>
 
-</H3>
-</TR></TD></TABLE>
-<BR><BR>
-<H2>Call this on:</H2>
-<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
-<TR><TD BGCOLOR="C0D4EE">
-<H3>
-The player
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -45,8 +37,7 @@ The player
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-deathAnimDuration = self runScriptAnimation(1, 0, 1);
-self [[level.callbackPlayerKilled]](eInflictor, eAttacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, psOffsetTime, deathAnimDuration);
+execute_async_create_nosave("ls", ::resultCallback);
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -55,9 +46,7 @@ self [[level.callbackPlayerKilled]](eInflictor, eAttacker, iDamage, sMeansOfDeat
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;event id&gt; The event id to use for the animation (e.g., 1 for death animations)</LI>
-<LI>2 : &lt;isContinue&gt; The isContinue flag</LI>
-<LI>3 : &lt;force&gt; The force flag</LI>
+<LI>1 : &lt;command&gt; Command to execute</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>

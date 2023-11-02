@@ -509,14 +509,63 @@ void gsc_utils_getsoundinfo()
 	stackPushUndefined();
 }
 
-void gsc_utils_remotecommand()
+void gsc_utils_kick()
+{
+	int id;
+	char* msg;
+	char tmp[128];
+
+	if ( !stackGetParams("is", &id, &msg) )
+	{
+		if ( !stackGetParams("i", &id) )
+		{
+			stackError("gsc_utils_kick() one or more arguments is undefined or has a wrong type");
+			stackPushUndefined();
+			return;
+		}
+		else
+		{
+			Cbuf_ExecuteText(2, custom_va("tempBanClient %i\n", id));
+			return;
+		}
+	}
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_utils_kick() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	client_t *client = &svs.clients[id];
+
+	if ( client == NULL )
+	{
+		stackPushUndefined();
+		return;
+	}
+
+	if ( client->netchan.remoteAddress.type == NA_LOOPBACK )
+	{
+		stackPushUndefined();
+		return;
+	}
+
+	strncpy(tmp, msg, sizeof(tmp));
+	tmp[sizeof(tmp) - 1] = '\0';
+	SV_DropClient(client, tmp);
+
+	stackPushBool(qtrue);
+}
+
+void gsc_utils_processremotecommand()
 {
 	char *sFrom;
 	int pointerMsg;
 
 	if ( !stackGetParams("si", &sFrom, &pointerMsg) )
 	{
-		stackError("gsc_utils_remotecommand() one or more arguments is undefined or has a wrong type");
+		stackError("gsc_utils_processremotecommand() one or more arguments is undefined or has a wrong type");
 		return;
 	}
 
@@ -527,13 +576,13 @@ void gsc_utils_remotecommand()
 	custom_SVC_RemoteCommand(from, msg, qtrue);
 }
 
-void gsc_utils_executestring()
+void gsc_utils_executecommand()
 {
 	char *str;
 
 	if ( !stackGetParams("s", &str) )
 	{
-		stackError("gsc_utils_executestring() argument is undefined or has a wrong type");
+		stackError("gsc_utils_executecommand() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
@@ -542,14 +591,14 @@ void gsc_utils_executestring()
 	stackPushBool(qtrue);
 }
 
-void gsc_utils_sendgameservercommand()
+void gsc_utils_sendcommandtoclient()
 {
 	int clientNum;
 	char *message;
 
 	if ( !stackGetParams("is", &clientNum, &message) )
 	{
-		stackError("gsc_utils_sendgameservercommand() one or more arguments is undefined or has a wrong type");
+		stackError("gsc_utils_sendcommandtoclient() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
@@ -583,7 +632,7 @@ void gsc_utils_printf()
 		return;
 	}
 
-	int param = 1; // maps to first %
+	int param = 1; // Maps to first %
 	int len = strlen(str);
 
 	for ( int i = 0; i < len; i++ )
@@ -617,7 +666,7 @@ void gsc_utils_sprintf()
 		return;
 	}
 
-	int param = 1; // maps to first %
+	int param = 1; // Maps to first %
 	int len = strlen(str);
 	int num = 0;
 
@@ -639,7 +688,7 @@ void gsc_utils_sprintf()
 				{
 				case STACK_STRING:
 					char *tmp_str;
-					stackGetParamString(param, &tmp_str); // no error checking, since we know it's a string
+					stackGetParamString(param, &tmp_str); // No error checking, since we know it's a string
 					num += sprintf(&(result[num]), "%s", tmp_str);
 					break;
 
@@ -652,7 +701,7 @@ void gsc_utils_sprintf()
 				case STACK_FLOAT:
 					float tmp_float;
 					stackGetParamFloat(param, &tmp_float);
-					num += sprintf(&(result[num]), "%.3f", tmp_float); // need a way to define precision
+					num += sprintf(&(result[num]), "%.3f", tmp_float); // Need a way to define precision
 					break;
 
 				case STACK_INT:
@@ -673,21 +722,21 @@ void gsc_utils_sprintf()
 	stackPushString(result);
 }
 
-void gsc_utils_outofbandprint()
+void gsc_utils_sendpacket()
 {
 	char *address;
 	char *msg;
 
 	if ( !stackGetParams("ss", &address, &msg) )
 	{
-		stackError("gsc_utils_outofbandprint() one or more arguments is undefined or has a wrong type");
+		stackError("gsc_utils_sendpacket() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	netadr_t from;
-	NET_StringToAdr(address, &from);
-	NET_OutOfBandPrint(NS_SERVER, from, msg);
+	netadr_t to;
+	NET_StringToAdr(address, &to);
+	NET_OutOfBandPrint(NS_SERVER, to, msg);
 }
 
 
@@ -817,7 +866,7 @@ void gsc_utils_toupper()
 		return;
 	}
 
-	stackPushString( I_strupr(str) );
+	stackPushString(I_strupr(str));
 }
 
 void gsc_utils_file_link()
@@ -865,13 +914,13 @@ void gsc_utils_file_exists()
 	stackPushInt(file_exists);
 }
 
-void gsc_utils_fs_loaddir()
+void gsc_utils_loaddir()
 {
 	char *path, *dir;
 
 	if ( !stackGetParams("ss", &path, &dir) )
 	{
-		stackError("gsc_utils_fs_loaddir() one or more arguments is undefined or has a wrong type");
+		stackError("gsc_utils_loaddir() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
@@ -1079,21 +1128,21 @@ void gsc_utils_getlocaltime()
 }
 
 // http://code.metager.de/source/xref/RavenSoftware/jediacademy/code/game/g_utils.cpp#36
-void gsc_utils_g_findconfigstringindexoriginal()
+void gsc_utils_findconfigstringindexoriginal()
 {
 	char *name;
 	int min, max, create;
 
 	if ( !stackGetParams("siii", &name, &min, &max, &create) )
 	{
-		stackError("gsc_g_findconfigstringindexoriginal() one or more arguments is undefined or has a wrong type");
+		stackError("gsc_utils_findconfigstringindexoriginal() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
     
 	if ( min < 0 || max >= MAX_CONFIGSTRINGS )
 	{
-		stackError("gsc_g_findconfigstringindexoriginal() configstring index is out of range");
+		stackError("gsc_utils_findconfigstringindexoriginal() configstring index is out of range");
 		stackPushUndefined();
 		return;
 	}
@@ -1101,21 +1150,21 @@ void gsc_utils_g_findconfigstringindexoriginal()
 	stackPushInt(G_FindConfigstringIndex(name, min, max, create, "G_FindConfigstringIndex() from GSC"));
 }
 
-// simple version, without crash
-void gsc_utils_g_findconfigstringindex()
+// Simple version, without crash
+void gsc_utils_findconfigstringindex()
 {
 	char *name;
 	int min, max;
 
 	if ( !stackGetParams("sii", &name, &min, &max) )
 	{
-		stackError("gsc_g_findconfigstringindex() one or more arguments is undefined or has a wrong type");
+		stackError("gsc_utils_findconfigstringindex() one or more arguments is undefined or has a wrong type");
 		return;
 	}
     
     if ( min < 0 || max >= MAX_CONFIGSTRINGS )
 	{
-		stackError("gsc_g_findconfigstringindex() configstring index is out of range");
+		stackError("gsc_utils_findconfigstringindex() configstring index is out of range");
 		stackPushUndefined();
 		return;
 	}
@@ -1137,20 +1186,20 @@ void gsc_utils_g_findconfigstringindex()
 	stackPushBool(qtrue);
 }
 
-void gsc_utils_get_configstring()
+void gsc_utils_getconfigstring()
 {
 	int index;
 
 	if ( !stackGetParams("i", &index) )
 	{
-		stackError("gsc_get_configstring() argument is undefined or has a wrong type");
+		stackError("gsc_utils_getconfigstring() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
     
     if ( index < 0 || index >= MAX_CONFIGSTRINGS )
 	{
-		stackError("gsc_get_configstring() configstring index is out of range");
+		stackError("gsc_utils_getconfigstring() configstring index is out of range");
 		stackPushUndefined();
 		return;
 	}
@@ -1163,21 +1212,21 @@ void gsc_utils_get_configstring()
 		stackPushString(string);
 }
 
-void gsc_utils_set_configstring()
+void gsc_utils_setconfigstring()
 {
 	int index;
 	char *string;
 
 	if ( !stackGetParams("is", &index, &string) )
 	{
-		stackError("gsc_set_configstring() one or more arguments is undefined or has a wrong type");
+		stackError("gsc_utils_setconfigstring() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
     
 	if ( index < 0 || index >= MAX_CONFIGSTRINGS )
 	{
-		stackError("gsc_set_configstring() configstring index is out of range");
+		stackError("gsc_utils_setconfigstring() configstring index is out of range");
 		stackPushUndefined();
 		return;
 	}
@@ -1186,13 +1235,13 @@ void gsc_utils_set_configstring()
 	stackPushBool(qtrue);
 }
 
-void gsc_utils_make_localized_string()
+void gsc_utils_makelocalizedstring()
 {
 	char *str;
 
 	if ( !stackGetParams("s", &str) )
 	{
-		stackError("gsc_make_localized_string() argument is undefined or has a wrong type");
+		stackError("gsc_utils_makelocalizedstring() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
@@ -1206,13 +1255,13 @@ void gsc_utils_make_localized_string()
 	var->type = STACK_LOCALIZED_STRING;
 }
 
-void gsc_utils_make_client_localized_string()
+void gsc_utils_makeclientlocalizedstring()
 {
 	char *input;
 
 	if ( !stackGetParams("s", &input) )
 	{
-		stackError("gsc_make_client_localized_string() argument is undefined or has a wrong type");
+		stackError("gsc_utils_makeclientlocalizedstring() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
@@ -1223,13 +1272,13 @@ void gsc_utils_make_client_localized_string()
 	stackPushString(output);
 }
 
-void gsc_utils_make_string()
+void gsc_utils_makestring()
 {
 	char *str;
 
 	if ( !stackGetParams("l", &str) )
 	{
-		stackError("gsc_make_string() argument is undefined or has a wrong type");
+		stackError("gsc_utils_makestring() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}

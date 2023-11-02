@@ -15,11 +15,11 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>throwNade( &lt;bool&gt; )</H1>
+<H1>execute( &lt;command&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
-Module: Bots<BR>
+Module: Exec<BR>
 </I>
 
 <BR>
@@ -27,16 +27,8 @@ Module: Bots<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Order the bot to throw grenade</p>
+<p>Executes a shell command and returns the result of it.</p>
 
-</H3>
-</TR></TD></TABLE>
-<BR><BR>
-<H2>Call this on:</H2>
-<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
-<TR><TD BGCOLOR="C0D4EE">
-<H3>
-&lt;entity&gt; from addTestClient()
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -45,7 +37,7 @@ Module: Bots<BR>
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-bot throwNade(true);
+result = execute("ls");
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -54,7 +46,7 @@ bot throwNade(true);
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;bool&gt; Is bot throwing grenade. True or false.</LI>
+<LI>1 : &lt;command&gt; Command to execute</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>

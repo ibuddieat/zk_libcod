@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>GetStance()</H1>
+<H1>getStance()</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
@@ -27,7 +27,7 @@ Module: Player<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Gets the stance of the player. It only works for the player. Possible return values are "stand", "duck", "lie" and ""</p>
+<p>Gets the stance of the player. Possible return values are "stand", "crouch", and "prone".</p>
 
 </H3>
 </TR></TD></TABLE>
@@ -45,7 +45,7 @@ The player
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-if ( level.player GetStance() == "duck") )...
+if ( level.player GetStance() == "crouch") )...
 </PRE>
 </H3>
 </TR></TD></TABLE>

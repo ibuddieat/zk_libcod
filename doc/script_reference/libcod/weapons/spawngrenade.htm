@@ -51,7 +51,7 @@ origin = self getTagOrigin("tag_weapon_right");
 dir = anglesToForward(self getPlayerAngles());
 velocity = maps\mp\_utility::vectorScale(dir, 512);
 fuseTime = 3;
-attacker spawnGrenade("frag_grenade_german_mp", origin, dir, velocity, fuseTime);
+grenade = attacker spawnGrenade("frag_grenade_german_mp", origin, dir, velocity, fuseTime);
 </PRE>
 </H3>
 </TR></TD></TABLE>

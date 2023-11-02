@@ -27,7 +27,7 @@ Module: Utils<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Returns server start time in the number of milliseconds.</p>
+<p>Returns server start time (integer) in milliseconds.</p>
 
 </H3>
 </TR></TD></TABLE>
@@ -46,7 +46,7 @@ startStartTimeInMs = getSysMilliseconds();
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="222222">
 <PRE>
-The return value breaks after about 24 days due to int overflow.
+The return value breaks after about 24 days due to an integer overflow.
 </PRE>
 </TR></TD></TABLE>
 <BR>
