@@ -52,7 +52,7 @@ CodeCallback_UserInfoChanged()
     oldname = self.name;
     newname = self get_userinfo("name");
     // Add custom logic on rename (for example)
-    self clientUserinfoChanged();
+    self processClientUserinfoChange();
 }
 </PRE>
 </H3>
