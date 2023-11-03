@@ -50,7 +50,7 @@ The player
 CodeCallback_UserInfoChanged()
 {
     oldname = self.name;
-    newname = self get_userinfo("name");
+    newname = self getUserinfo("name");
     // Add custom logic on rename (for example)
     self processClientUserinfoChange();
 }
