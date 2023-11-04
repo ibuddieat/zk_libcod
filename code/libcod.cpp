@@ -6025,7 +6025,7 @@ void custom_Bullet_Fire_Extended(const gentity_t *inflictor, gentity_t *attacker
 			}
 			else if ( customPlayerState[attacker->s.number].fireThroughWalls )
 			{
-				// Set contentmask to only hit player bodies (default: MASK_SHOT)
+				// Set contentmask to only hit player bodies
 				contentMask = CONTENTS_BODY;
 			}
 		}
