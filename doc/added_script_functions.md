@@ -49,6 +49,7 @@ New script code methods:
   * `<player> playFxOnTagForPlayer(<effect id>, <entity>, <tag name>)`
   * `<player> playSoundFile(<sound index>, [<offset>], [<source player>])`
   * `<player> playScriptAnimation(<scriptAnimEventType>, <isContinue>, <force>)`
+  * `<player> setBulletMask(<mask>)`
   * `<player> setCollisionTeam(<team>)`
   * `<player> setFireRangeScale(<scale>)`
   * `<player> setFireThroughWalls(<enabled>)`

@@ -6009,18 +6009,25 @@ void custom_Bullet_Fire_Extended(const gentity_t *inflictor, gentity_t *attacker
 		if ( wp->weapDef->armorPiercing )
 			dflags |= 2u;
 
-		contentMask = MASK_SHOT | CONTENTS_GLASS;
-
 		if ( wp->weapDef->bRifleBullet )
 			priorityMap = &riflePriorityMap;
 		else
 			priorityMap = &bulletPriorityMap;
 
-		/* New code start: Firing through walls */
-		if ( attacker->s.number < 64 && customPlayerState[attacker->s.number].fireThroughWalls )
+		contentMask = MASK_SHOT | CONTENTS_GLASS;
+
+		/* New code start: Custom bullet mask and firing through walls */
+		if ( attacker->s.number < 64 )
 		{
-			// Set contentmask to only hit player bodies (default: MASK_SHOT)
-			contentMask = CONTENTS_BODY;
+			if ( customPlayerState[attacker->s.number].overrideBulletMask )
+			{
+				contentMask = customPlayerState[attacker->s.number].bulletMask;
+			}
+			else if ( customPlayerState[attacker->s.number].fireThroughWalls )
+			{
+				// Set contentmask to only hit player bodies (default: MASK_SHOT)
+				contentMask = CONTENTS_BODY;
+			}
 		}
 		/* New code end */
 

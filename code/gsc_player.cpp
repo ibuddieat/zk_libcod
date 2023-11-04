@@ -993,6 +993,55 @@ void gsc_player_getgravity(scr_entref_t ref)
 	stackPushInt(entity->client->ps.gravity);
 }
 
+void gsc_player_setbulletmask(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_setbulletmask() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	int old_setting;
+
+	if ( Scr_GetNumParam() == 1 )
+	{
+		if ( customPlayerState[id].overrideBulletMask )
+			old_setting = customPlayerState[id].bulletMask;
+		else if ( customPlayerState[id].fireThroughWalls )
+			old_setting = CONTENTS_BODY;
+		else
+			old_setting = MASK_SHOT | CONTENTS_GLASS;
+
+		if ( Scr_GetType(0) == STACK_UNDEFINED )
+		{
+			customPlayerState[id].overrideBulletMask = qfalse;
+			customPlayerState[id].bulletMask = 0;
+		}
+		else if ( Scr_GetType(0) == STACK_INT )
+		{
+			customPlayerState[id].overrideBulletMask = qtrue;
+			customPlayerState[id].bulletMask = Scr_GetInt(0);
+		}
+		else
+		{
+			stackError("gsc_player_setbulletmask() argument has a wrong type");
+			stackPushUndefined();
+			return;
+		}
+	}
+	else
+	{
+		stackError("gsc_player_setbulletmask() needs exactly one argument");
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushInt(old_setting);
+}
+
 void gsc_player_setfirethroughwalls(scr_entref_t ref)
 {
 	int id = ref.entnum;

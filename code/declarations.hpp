@@ -4139,6 +4139,8 @@ typedef struct customPlayerState_s
 	float meleeHeightScale;
 	float meleeRangeScale;
 	float meleeWidthScale;
+	qboolean overrideBulletMask;
+	int bulletMask;
 	int fireThroughWalls;
 	float fireRangeScale;
 	qboolean noPickup;
