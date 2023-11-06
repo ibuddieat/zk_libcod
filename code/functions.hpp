@@ -1551,6 +1551,15 @@ static const BG_AnimationIndexForString_t BG_AnimationIndexForString = (BG_Anima
 static const BG_AnimationIndexForString_t BG_AnimationIndexForString = (BG_AnimationIndexForString_t)0x080D6DD0;
 #endif
 
+typedef void (*Scr_ResetTimeout_t)(void);
+#if COD_VERSION == COD2_1_0
+static const Scr_ResetTimeout_t Scr_ResetTimeout = (Scr_ResetTimeout_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Scr_ResetTimeout_t Scr_ResetTimeout = (Scr_ResetTimeout_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Scr_ResetTimeout_t Scr_ResetTimeout = (Scr_ResetTimeout_t)0x08085628;
+#endif
+
 typedef void (*Scr_PlayerConnect_t)(gentity_t *ent);
 #if COD_VERSION == COD2_1_0
 static const Scr_PlayerConnect_t Scr_PlayerConnect = (Scr_PlayerConnect_t)0x0; // Not tested

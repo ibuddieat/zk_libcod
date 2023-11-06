@@ -322,6 +322,9 @@ void gsc_utils_getsoundduration()
 						return;
 					}
 
+					// Reset infinite loop detection counter
+					Scr_ResetTimeout();
+
 					// Return seconds as float
 					stackPushFloat(atof(content));
 					return;
@@ -491,6 +494,9 @@ void gsc_utils_getsoundinfo()
 						stackPushUndefined();
 						return;
 					}
+
+					// Reset infinite loop detection counter
+					Scr_ResetTimeout();
 
 					// Return string-indexed array
 					Scr_MakeArray();
