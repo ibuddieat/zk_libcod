@@ -38,7 +38,7 @@ Module: System<BR>
 <H3>
 <PRE>
 // If self is a player:
-sendGameServerCommand(self getEntityNumber(), "h \"(" + makeClientLocalizedString("GAME_DEAD") + ")^7" + self.name + "^7: I just died.");
+sendCommandToClient(self getEntityNumber(), "h \"(" + makeClientLocalizedString("GAME_DEAD") + ")^7" + self.name + "^7: I just died.");
 </PRE>
 </H3>
 </TR></TD></TABLE>
