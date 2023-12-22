@@ -137,6 +137,7 @@ cHook *hook_scr_notify;
 cHook *hook_sys_quit;
 cHook *hook_sv_freeconfigstrings;
 cHook *hook_sv_masterheartbeat;
+cHook *hook_sv_status_f;
 cHook *hook_sv_verifyiwds_f;
 cHook *hook_touch_item_auto;
 cHook *hook_vm_notify;
@@ -3952,6 +3953,24 @@ void custom_Scr_ErrorInternal(void)
 	Com_Error(ERR_DROP, "\x15%s", scrVarPub.error_message);
 }
 
+void custom_SV_Status_f(void)
+{
+	byte logTimestampsValue;
+
+	// New: Fix: Log only one message timestamp at status info
+	Com_Printf("status:");
+	logTimestampsValue = logTimestamps->current.boolean;
+	logTimestamps->current.boolean = 0;
+
+	hook_sv_status_f->unhook();
+	void (*SV_Status_f)(void);
+	*(int *)&SV_Status_f = hook_sv_status_f->from;
+	SV_Status_f();
+	hook_sv_status_f->hook();
+
+	logTimestamps->current.boolean = logTimestampsValue;
+}
+
 void custom_RuntimeError_Debug(conChannel_t channel, const char *pos, int index, const char *message)
 {
 	int i, j;
@@ -3959,7 +3978,7 @@ void custom_RuntimeError_Debug(conChannel_t channel, const char *pos, int index,
 
 	Scr_CodeCallback_Error(qfalse, qfalse, "RuntimeError_Debug", (char *)message); // New
 
-	// New: Do not print log message timestamps in runtime error information
+	// New: Fix: Do not print log message timestamps in runtime error information
 	logTimestampsValue = logTimestamps->current.boolean;
 	logTimestamps->current.boolean = 0;
 
@@ -8183,6 +8202,8 @@ public:
 		hook_sv_freeconfigstrings->hook();
 		hook_sys_quit = new cHook(0x080D3A7A, int(custom_Sys_Quit));
 		hook_sys_quit->hook();
+		hook_sv_status_f = new cHook(0x0808C706, int(custom_SV_Status_f));
+		hook_sv_status_f->hook();
 
 		#if COMPILE_PLAYER == 1
 		hook_play_movement = new cHook(0x08090DAC, (int)custom_SV_ClientThink);
