@@ -7,6 +7,7 @@ void gsc_weapons_init();
 void gsc_weapons_free();
 int hook_findWeaponIndex(char* weapon);
 void gsc_weapons_addgrenadefusetime(scr_entref_t id);
+void gsc_weapons_issemiautoweapon();
 void gsc_weapons_getweaponmaxammo();
 void gsc_weapons_setweaponmaxammo();
 void gsc_weapons_getweaponclipsize();

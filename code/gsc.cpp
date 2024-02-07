@@ -227,6 +227,7 @@ scr_function_t scriptFunctions[] =
 	#endif
 
 	#if COMPILE_WEAPONS == 1
+	{"isSemiAutoWeapon", gsc_weapons_issemiautoweapon, 0},
 	{"getWeaponMaxAmmo", gsc_weapons_getweaponmaxammo, 0},
 	{"setWeaponMaxAmmo", gsc_weapons_setweaponmaxammo, 0},
 	{"getWeaponClipSize", gsc_weapons_getweaponclipsize, 0},

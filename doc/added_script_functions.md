@@ -77,6 +77,7 @@ New script code functions:
   * `getEntityCount([<in use>])`
   * `getSoundAliasesFromFile(<filename>)`
   * `getSoundFileDuration(<file path>)`
+  * `isSemiAutoWeapon(<weapon name>)`
   * `loadSoundFile(<file path>, <callback function>, [<volume>], [<sound index>])`
   * `loadSpeexFile(<file path>, [<sound index>])`
   * `logPrintConsole(<message>)`

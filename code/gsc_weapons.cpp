@@ -12,6 +12,33 @@ qboolean isValidWeaponId(int id)
 	return qtrue;
 }
 
+void gsc_weapons_issemiautoweapon()
+{
+	int id;
+	char *name;
+
+	if ( stackGetParams("s", &name) ) 
+	{
+		id = BG_FindWeaponIndexForName(name);
+	}
+	else if ( !stackGetParams("i", &id) ) 
+	{
+		stackError("gsc_weapons_issemiautoweapon() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( !isValidWeaponId(id) )
+	{
+		stackPushUndefined();
+		return;
+	}
+
+	WeaponDef_t *weapon = BG_WeaponDefs(id);
+
+	stackPushInt(weapon->bSemiAuto);
+}
+
 void gsc_weapons_addgrenadefusetime(scr_entref_t ref)
 {
 	int id = ref.entnum;
