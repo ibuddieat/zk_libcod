@@ -1497,6 +1497,15 @@ static const Weapon_RocketLauncher_Fire_t Weapon_RocketLauncher_Fire = (Weapon_R
 static const Weapon_RocketLauncher_Fire_t Weapon_RocketLauncher_Fire = (Weapon_RocketLauncher_Fire_t)0x0812061A;
 #endif
 
+typedef void (*FireWeaponAntiLag_t)(gentity_t *player, int time);
+#if COD_VERSION == COD2_1_0
+static const FireWeaponAntiLag_t FireWeaponAntiLag = (FireWeaponAntiLag_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const FireWeaponAntiLag_t FireWeaponAntiLag = (FireWeaponAntiLag_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const FireWeaponAntiLag_t FireWeaponAntiLag = (FireWeaponAntiLag_t)0x08120870;
+#endif
+
 typedef qboolean (*BG_IsWeaponIndexValid_t)(int index); // Guessed function name
 #if COD_VERSION == COD2_1_0
 static const BG_IsWeaponIndexValid_t BG_IsWeaponIndexValid = (BG_IsWeaponIndexValid_t)0x080E9758;
@@ -1531,6 +1540,15 @@ static const RuntimeError_t RuntimeError = (RuntimeError_t)0x08078282;
 static const RuntimeError_t RuntimeError = (RuntimeError_t)0x08078806;
 #elif COD_VERSION == COD2_1_3
 static const RuntimeError_t RuntimeError = (RuntimeError_t)0x080788D2;
+#endif
+
+typedef void (*PM_AddEvent_t)(playerState_t *ps, entity_event_t newEvent);
+#if COD_VERSION == COD2_1_0
+static const PM_AddEvent_t PM_AddEvent = (PM_AddEvent_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const PM_AddEvent_t PM_AddEvent = (PM_AddEvent_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const PM_AddEvent_t PM_AddEvent = (PM_AddEvent_t)0x080E1452;
 #endif
 
 typedef StanceState (*PM_GetEffectiveStance_t)(struct playerState_s *ps);
@@ -2044,6 +2062,15 @@ static const G_ClientStopUsingTurret_t G_ClientStopUsingTurret = (G_ClientStopUs
 static const G_ClientStopUsingTurret_t G_ClientStopUsingTurret = (G_ClientStopUsingTurret_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const G_ClientStopUsingTurret_t G_ClientStopUsingTurret = (G_ClientStopUsingTurret_t)0x0810B9A4;
+#endif
+
+typedef qboolean (*G_IsPlaying_t)(gentity_t *player);
+#if COD_VERSION == COD2_1_0
+static const G_IsPlaying_t G_IsPlaying = (G_IsPlaying_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_IsPlaying_t G_IsPlaying = (G_IsPlaying_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_IsPlaying_t G_IsPlaying = (G_IsPlaying_t)0x080F9F4E;
 #endif
 
 typedef qboolean (*G_IsTurretUsable_t)(gentity_t *turret, gentity_t *player);

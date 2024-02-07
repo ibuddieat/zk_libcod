@@ -28,6 +28,7 @@ New script code methods:
   * `<player> enableBulletImpacts()`
   * `<player> enableEarthquakes()`
   * `<player> enableSilent()`
+  * `<player> forceShot([<include client>])`
   * `<player> getClientHudElemCount()`
   * `<player> getCollisionTeam()`
   * `<player> getEnterTime()`

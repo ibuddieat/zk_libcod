@@ -19,6 +19,7 @@ dvar_t *com_logfile;
 dvar_t *com_sv_running;
 dvar_t *com_timescale;
 dvar_t *developer;
+dvar_t *g_antilag;
 dvar_t *g_knockback;
 dvar_t *g_mantleBlockTimeBuffer;
 dvar_t *g_password;
@@ -377,6 +378,7 @@ void custom_G_ProcessIPBans(void)
 	 access to variables that are not yet defined at the
 	 common_init_complete_print hook */
 	bg_bobMax = Dvar_FindVar("bg_bobMax");
+	g_antilag = Dvar_FindVar("g_antilag");
 	g_knockback = Dvar_FindVar("g_knockback");
 	g_mantleBlockTimeBuffer = Dvar_FindVar("g_mantleBlockTimeBuffer");
 	g_password = Dvar_FindVar("g_password");

@@ -8,6 +8,59 @@
 
 extern customPlayerState_t customPlayerState[MAX_CLIENTS];
 extern customStringIndex_t custom_scr_const;
+extern dvar_t *g_antilag;
+
+void gsc_player_forceshot(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_forceshot() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	gentity_t *player = &g_entities[id];
+	gclient_t *client = player->client;
+	qboolean onClientToo = qtrue;
+
+	if ( Scr_GetNumParam() > 0 )
+	{
+		if ( Scr_GetType(0) == STACK_INT )
+		{
+			onClientToo = Scr_GetInt(0);
+		}
+		else
+		{
+			stackError("gsc_player_forceshot() one or more arguments is undefined or has a wrong type");
+			stackPushUndefined();
+			return;
+		}
+	}
+
+	if ( !G_IsPlaying(player) )
+	{
+		stackPushBool(qfalse);
+		return;
+	}
+
+    if ( client->ps.weapon < 1 )
+	{
+		stackPushBool(qfalse);
+		return;
+	}
+
+	if ( !g_antilag->current.boolean )
+		FireWeaponAntiLag(player, level.time);
+	else
+		FireWeaponAntiLag(player, client->lastServerTime);
+
+	if ( onClientToo )
+		PM_AddEvent(SV_GameClientNum(id), EV_FIRE_WEAPON);
+
+	stackPushBool(qtrue);
+}
 
 void gsc_player_getweaponindexoffhand(scr_entref_t ref)
 {

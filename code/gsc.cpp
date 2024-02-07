@@ -329,6 +329,7 @@ scr_method_t scriptMethods[] =
 	#endif
 
 	#if COMPILE_PLAYER == 1
+	{"forceShot", gsc_player_forceshot, 0},
 	{"getStance", gsc_player_getstance, 0},
 	{"setStance", gsc_player_setstance, 0},
 	{"setVelocity", gsc_player_setvelocity, 0},

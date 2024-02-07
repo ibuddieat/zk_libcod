@@ -3,6 +3,7 @@
 
 #include "gsc.hpp"
 
+void gsc_player_forceshot(scr_entref_t ref);
 void gsc_player_setvelocity(scr_entref_t ref);
 void gsc_player_addvelocity(scr_entref_t ref);
 void gsc_player_getvelocity(scr_entref_t ref);
