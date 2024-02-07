@@ -158,7 +158,6 @@ scr_function_t scriptFunctions[] =
 	{"getSoundaliasesFromFile", gsc_utils_getsoundaliasesfromfile, 0},
 	{"getSoundDuration", gsc_utils_getsoundduration, 0},
 	{"getSoundInfo", gsc_utils_getsoundinfo, 0},
-	{"kick", gsc_utils_kick, 0},
 	{"processRemoteCommand", gsc_utils_processremotecommand, 0},
 	{"executeCommand", gsc_utils_executecommand, 0},
 	{"sendCommandToClient", gsc_utils_sendcommandtoclient, 0},

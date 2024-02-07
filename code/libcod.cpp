@@ -5708,6 +5708,59 @@ void custom_Scr_SightTracePassed(void)
 	Scr_AddBool(hitNum == 0);
 }
 
+void custom_GScr_KickPlayer()
+{
+	int id;
+	char* msg;
+	char tmp[128];
+
+	// New: Added 2nd parameter for kick message and some error handling
+
+	if ( !stackGetParams("is", &id, &msg) )
+	{
+		if ( !stackGetParams("i", &id) )
+		{
+			stackError("custom_GScr_KickPlayer() one or more arguments is undefined or has a wrong type");
+			stackPushUndefined();
+			return;
+		}
+		else
+		{
+			Cbuf_ExecuteText(2, custom_va("tempBanClient %i\n", id));
+			return;
+		}
+	}
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("custom_GScr_KickPlayer() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	client_t *client = &svs.clients[id];
+
+	if ( client == NULL )
+	{
+		stackError("custom_GScr_KickPlayer() entity %i is no longer connected", id);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( client->netchan.remoteAddress.type == NA_LOOPBACK )
+	{
+		stackError("custom_GScr_KickPlayer() cannot kick host");
+		stackPushUndefined();
+		return;
+	}
+
+	strncpy(tmp, msg, sizeof(tmp));
+	tmp[sizeof(tmp) - 1] = '\0';
+	SV_DropClient(client, tmp);
+
+	stackPushBool(qtrue);
+}
+
 void custom_GScr_Obituary(void)
 {
 	int args;
@@ -8343,6 +8396,7 @@ public:
 		cracking_hook_function(0x080584F0, (int)custom_CM_IsBadStaticModel);
 		cracking_hook_function(0x08113818, (int)custom_Scr_BulletTrace);
 		cracking_hook_function(0x08113B0C, (int)custom_Scr_SightTracePassed);
+		cracking_hook_function(0x08117022, (int)custom_GScr_KickPlayer);
 		cracking_hook_function(0x08113128, (int)custom_GScr_Obituary);
 		cracking_hook_function(0x081124F6, (int)custom_GScr_SetHintString);
 		cracking_hook_function(0x08092302, (int)custom_SV_MapExists);

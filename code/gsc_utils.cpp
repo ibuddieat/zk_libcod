@@ -515,55 +515,6 @@ void gsc_utils_getsoundinfo()
 	stackPushUndefined();
 }
 
-void gsc_utils_kick()
-{
-	int id;
-	char* msg;
-	char tmp[128];
-
-	if ( !stackGetParams("is", &id, &msg) )
-	{
-		if ( !stackGetParams("i", &id) )
-		{
-			stackError("gsc_utils_kick() one or more arguments is undefined or has a wrong type");
-			stackPushUndefined();
-			return;
-		}
-		else
-		{
-			Cbuf_ExecuteText(2, custom_va("tempBanClient %i\n", id));
-			return;
-		}
-	}
-
-	if ( id >= MAX_CLIENTS )
-	{
-		stackError("gsc_utils_kick() entity %i is not a player", id);
-		stackPushUndefined();
-		return;
-	}
-
-	client_t *client = &svs.clients[id];
-
-	if ( client == NULL )
-	{
-		stackPushUndefined();
-		return;
-	}
-
-	if ( client->netchan.remoteAddress.type == NA_LOOPBACK )
-	{
-		stackPushUndefined();
-		return;
-	}
-
-	strncpy(tmp, msg, sizeof(tmp));
-	tmp[sizeof(tmp) - 1] = '\0';
-	SV_DropClient(client, tmp);
-
-	stackPushBool(qtrue);
-}
-
 void gsc_utils_processremotecommand()
 {
 	char *sFrom;

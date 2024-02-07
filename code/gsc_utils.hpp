@@ -10,7 +10,6 @@ void gsc_utils_getsoundaliasesfromfile();
 void gsc_utils_getsoundduration();
 void gsc_utils_getsoundinfo();
 
-void gsc_utils_kick();
 void gsc_utils_processremotecommand();
 void gsc_utils_executecommand();
 void gsc_utils_sendcommandtoclient();
