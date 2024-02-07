@@ -58,7 +58,7 @@ New script code methods:
   * `<player> setMeleeWidthScale(<scale>)`
   * `<player> setTurretSpreadScale(<scale>)`
   * `<player> setWeaponSpreadScale(<scale>)`
-  * `<player> setPing(<value>)`
+  * `<player> setPing(<ingame value>, [<status value>])`
   * `<player> stopSoundFile()`
   * `<player> stopUseTurret()`
   * `<player> unmuteClient(<player id>)`

@@ -624,6 +624,15 @@ static const Dvar_GetInt_t Dvar_GetInt = (Dvar_GetInt_t)0x0; // Not tested
 static const Dvar_GetInt_t Dvar_GetInt = (Dvar_GetInt_t)0x080B2FFC;
 #endif
 
+typedef char * (*Dvar_GetString_t)(const char *dvarName);
+#if COD_VERSION == COD2_1_0
+static const Dvar_GetString_t Dvar_GetString = (Dvar_GetString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Dvar_GetString_t Dvar_GetString = (Dvar_GetString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Dvar_GetString_t Dvar_GetString = (Dvar_GetString_t)0x080B318A;
+#endif
+
 typedef void (*Dvar_SetBool_t)(dvar_t *dvar, byte value);
 #if COD_VERSION == COD2_1_0
 static const Dvar_SetBool_t Dvar_SetBool = (Dvar_SetBool_t)0x0; // Not tested
@@ -703,6 +712,15 @@ static const Dvar_ResetScriptInfo_t Dvar_ResetScriptInfo = (Dvar_ResetScriptInfo
 static const Dvar_ResetScriptInfo_t Dvar_ResetScriptInfo = (Dvar_ResetScriptInfo_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const Dvar_ResetScriptInfo_t Dvar_ResetScriptInfo = (Dvar_ResetScriptInfo_t)0x08093478;
+#endif
+
+typedef char * (*Dvar_InfoString_t)(unsigned short bit);
+#if COD_VERSION == COD2_1_0
+static const Dvar_InfoString_t Dvar_InfoString = (Dvar_InfoString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Dvar_InfoString_t Dvar_InfoString = (Dvar_InfoString_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Dvar_InfoString_t Dvar_InfoString = (Dvar_InfoString_t)0x08064188;
 #endif
 
 typedef void (*SV_ConnectionlessPacket_t)(netadr_t from, msg_t *msg);
@@ -1666,6 +1684,15 @@ static const G_GetSavePersist_t G_GetSavePersist = (G_GetSavePersist_t)0x0; // N
 static const G_GetSavePersist_t G_GetSavePersist = (G_GetSavePersist_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const G_GetSavePersist_t G_GetSavePersist = (G_GetSavePersist_t)0x08108DEE;
+#endif
+
+typedef int (*G_GetClientScore_t)(int clientNum);
+#if COD_VERSION == COD2_1_0
+static const G_GetClientScore_t G_GetClientScore = (G_GetClientScore_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_GetClientScore_t G_GetClientScore = (G_GetClientScore_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_GetClientScore_t G_GetClientScore = (G_GetClientScore_t)0x08108E1A;
 #endif
 
 typedef gentity_t * (*Scr_GetEntity_t)(unsigned int index);

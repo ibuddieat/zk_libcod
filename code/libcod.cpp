@@ -3055,7 +3055,6 @@ int custom_BG_PlayAnim(playerState_t *ps, int animNum, animBodyPart_t bodyPart, 
 }
 #endif
 
-#if COMPILE_RATELIMITER == 1
 // ioquake3 rate limit connectionless requests
 // https://github.com/ioquake/ioq3/blob/master/code/server/sv_main.c
 
@@ -3220,6 +3219,223 @@ bool SVC_ApplyRconLimit(netadr_t from, qboolean badRconPassword)
 	}
 	
 	return false;
+}
+
+bool SVC_ApplyStatusLimit(netadr_t from)
+{
+	// Prevent using getstatus as an amplifier
+	if ( SVC_RateLimitAddress(from, 10, 1000) )
+	{
+		if ( !SVC_callback("STATUS:ADDRESS", NET_AdrToString(from)) )
+			Com_DPrintf("SVC_Status: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
+		return true;
+	}
+
+	// Allow getstatus to be DoSed relatively easily, but prevent
+	// excess outbound bandwidth usage when being flooded inbound
+	if ( SVC_RateLimit(&outboundLeakyBucket, 10, 100) )
+	{
+		if ( !SVC_callback("STATUS:GLOBAL", NET_AdrToString(from)) )
+			Com_DPrintf("SVC_Status: rate limit exceeded, dropping request\n");
+		return true;
+	}
+
+	return false;
+}
+
+void hook_SV_GetChallenge(netadr_t from)
+{
+	// Prevent using getchallenge as an amplifier
+	if ( SVC_RateLimitAddress(from, 10, 1000) )
+	{
+		if ( !SVC_callback("CHALLENGE:ADDRESS", NET_AdrToString(from)) )
+			Com_DPrintf("SV_GetChallenge: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
+		return;
+	}
+
+	// Allow getchallenge to be DoSed relatively easily, but prevent
+	// excess outbound bandwidth usage when being flooded inbound
+	if ( SVC_RateLimit(&outboundLeakyBucket, 10, 100) )
+	{
+		if ( !SVC_callback("CHALLENGE:GLOBAL", NET_AdrToString(from)) )
+			Com_DPrintf("SV_GetChallenge: rate limit exceeded, dropping request\n");
+		return;
+	}
+
+	SV_GetChallenge(from);
+}
+
+void hook_SV_DirectConnect(netadr_t from)
+{
+	// Prevent using connect as an amplifier
+	if ( SVC_RateLimitAddress(from, 10, 1000) )
+	{
+		Com_DPrintf("SV_DirectConnect: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
+		return;
+	}
+
+	// Allow connect to be DoSed relatively easily, but prevent
+	// excess outbound bandwidth usage when being flooded inbound
+	if ( SVC_RateLimit(&outboundLeakyBucket, 10, 100) )
+	{
+		Com_DPrintf("SV_DirectConnect: rate limit exceeded, dropping request\n");
+		return;
+	}
+
+	SV_DirectConnect(from);
+}
+
+void hook_SV_AuthorizeIpPacket(netadr_t from)
+{
+	// Prevent ipAuthorize log spam DoS
+	if ( SVC_RateLimitAddress(from, 20, 1000) )
+	{
+		Com_DPrintf("SV_AuthorizeIpPacket: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
+		return;
+	}
+
+	// Allow ipAuthorize to be DoSed relatively easily, but prevent
+	// excess outbound bandwidth usage when being flooded inbound
+	if ( SVC_RateLimit(&outboundLeakyBucket, 10, 100) )
+	{
+		Com_DPrintf("SV_AuthorizeIpPacket: rate limit exceeded, dropping request\n");
+		return;
+	}
+
+	SV_AuthorizeIpPacket(from);
+}
+
+void hook_SVC_Info(netadr_t from)
+{
+	// Prevent using getinfo as an amplifier
+	if ( SVC_RateLimitAddress(from, 10, 1000) )
+	{
+		if ( !SVC_callback("INFO:ADDRESS", NET_AdrToString(from)) )
+			Com_DPrintf("SVC_Info: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
+		return;
+	}
+
+	// Allow getinfo to be DoSed relatively easily, but prevent
+	// excess outbound bandwidth usage when being flooded inbound
+	if ( SVC_RateLimit(&outboundLeakyBucket, 10, 100) )
+	{
+		if ( !SVC_callback("INFO:GLOBAL", NET_AdrToString(from)) )
+			Com_DPrintf("SVC_Info: rate limit exceeded, dropping request\n");
+		return;
+	}
+
+	SVC_Info(from);
+}
+
+void hook_SVC_Status(netadr_t from)
+{
+	if ( SVC_ApplyStatusLimit(from) )
+		return;
+	
+	SVC_Status(from);
+}
+
+void custom_SVC_Status(netadr_t from)
+{
+	LargeLocal buf;
+	char *status;
+	char infostring[BIG_INFO_STRING];
+	char keywords[MAX_INFO_STRING];
+	int statusLength;
+	int i;
+	client_t *cl;
+	int ping;
+	char player[MAX_INFO_STRING];
+	size_t playerLength;
+	char *password;
+	qboolean serverModded;
+	char *gamedir;
+	char *referencedIwdNames;
+	int count;
+	char *iwd;
+	char msg[BIG_INFO_STRING];
+
+	/* New: Rate limiting */
+	if ( SVC_ApplyStatusLimit(from) )
+		return;
+	/* New code end */
+
+	LargeLocalConstructor(&buf, MAX_MSGLEN);
+	status = (char *)LargeLocalGetBuf(&buf);
+
+	strcpy(infostring, Dvar_InfoString(DVAR_SERVERINFO | DVAR_NORESTART));
+	Info_SetValueForKey(infostring, "challenge", SV_Cmd_Argv(1));
+
+	if ( Dvar_GetBool("fs_restrict") )
+	{
+		Com_sprintf(keywords, MAX_INFO_STRING, "demo %s", Info_ValueForKey(infostring, "sv_keywords"));
+		Info_SetValueForKey(infostring, "sv_keywords", keywords);
+	}
+
+	status[0] = 0;
+	statusLength = 0;
+	for ( i = 0; i < (sv_maxclients->current).integer; i++ )
+	{
+		cl = svs.clients + i;
+		if ( CS_ZOMBIE < cl->state )
+		{
+			/* New: Custom ping value for status responses */
+			ping = cl->ping;
+			if ( customPlayerState[i].overrideStatusPing )
+				ping = customPlayerState[i].statusPing;
+			/* New code end */
+
+			if ( gameInitialized )
+				Com_sprintf(player, MAX_INFO_STRING, "%i %i \"%s\"\n", G_GetClientScore(cl - svs.clients), ping, cl->name);
+			else
+				Com_sprintf(player, MAX_INFO_STRING, "%i %i \"%s\"\n", 0, ping, cl->name);
+
+			playerLength = strlen(player);
+			if ( ( MAX_MSGLEN - 1 ) < playerLength + statusLength )
+			{
+				break;
+			}
+			strcpy(status + statusLength, player);
+			statusLength = statusLength + playerLength;
+		}
+	}
+
+	password = Dvar_GetString("g_password");
+	if ( password && *password )
+		Info_SetValueForKey(infostring, "pswrd", "1");
+	else
+		Info_SetValueForKey(infostring, "pswrd", "0");
+
+	serverModded = 0;
+	gamedir = Dvar_GetString("fs_game");
+	if ( !sv_pure->current.boolean || ( gamedir && *gamedir ) )
+	{
+		serverModded = 1;
+	}
+	else
+	{
+		referencedIwdNames = Dvar_GetString("sv_referencedIwdNames");
+		if ( *referencedIwdNames )
+		{
+			SV_Cmd_TokenizeString(referencedIwdNames);
+			count = SV_Cmd_Argc();
+			for ( i = 0; i < count; i++ )
+			{
+				iwd = SV_Cmd_Argv(i);
+				if ( !FS_iwIwd(iwd, "main") )
+				{
+					serverModded = 1;
+					break;
+				}
+			}
+		}
+	}
+
+	Info_SetValueForKey(infostring, "mod", custom_va("%i", serverModded));
+
+	Com_sprintf(msg, BIG_INFO_STRING, "statusResponse\n%s\n%s", infostring, status);
+	NET_OutOfBandPrint(NS_SERVER, from, msg);
+	LargeLocalDestructor(&buf);
 }
 
 void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
@@ -3513,113 +3729,6 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 	Com_EndRedirect();
 	LargeLocalDestructor(&buf);
 }
-
-void hook_SV_GetChallenge(netadr_t from)
-{
-	// Prevent using getchallenge as an amplifier
-	if ( SVC_RateLimitAddress(from, 10, 1000) )
-	{
-		if ( !SVC_callback("CHALLENGE:ADDRESS", NET_AdrToString(from)) )
-			Com_DPrintf("SV_GetChallenge: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
-		return;
-	}
-
-	// Allow getchallenge to be DoSed relatively easily, but prevent
-	// excess outbound bandwidth usage when being flooded inbound
-	if ( SVC_RateLimit(&outboundLeakyBucket, 10, 100) )
-	{
-		if ( !SVC_callback("CHALLENGE:GLOBAL", NET_AdrToString(from)) )
-			Com_DPrintf("SV_GetChallenge: rate limit exceeded, dropping request\n");
-		return;
-	}
-
-	SV_GetChallenge(from);
-}
-
-void hook_SV_DirectConnect(netadr_t from)
-{
-	// Prevent using connect as an amplifier
-	if ( SVC_RateLimitAddress(from, 10, 1000) )
-	{
-		Com_DPrintf("SV_DirectConnect: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
-		return;
-	}
-
-	// Allow connect to be DoSed relatively easily, but prevent
-	// excess outbound bandwidth usage when being flooded inbound
-	if ( SVC_RateLimit(&outboundLeakyBucket, 10, 100) )
-	{
-		Com_DPrintf("SV_DirectConnect: rate limit exceeded, dropping request\n");
-		return;
-	}
-
-	SV_DirectConnect(from);
-}
-
-void hook_SV_AuthorizeIpPacket(netadr_t from)
-{
-	// Prevent ipAuthorize log spam DoS
-	if ( SVC_RateLimitAddress(from, 20, 1000) )
-	{
-		Com_DPrintf("SV_AuthorizeIpPacket: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
-		return;
-	}
-
-	// Allow ipAuthorize to be DoSed relatively easily, but prevent
-	// excess outbound bandwidth usage when being flooded inbound
-	if ( SVC_RateLimit(&outboundLeakyBucket, 10, 100) )
-	{
-		Com_DPrintf("SV_AuthorizeIpPacket: rate limit exceeded, dropping request\n");
-		return;
-	}
-
-	SV_AuthorizeIpPacket(from);
-}
-
-void hook_SVC_Info(netadr_t from)
-{
-	// Prevent using getinfo as an amplifier
-	if ( SVC_RateLimitAddress(from, 10, 1000) )
-	{
-		if ( !SVC_callback("INFO:ADDRESS", NET_AdrToString(from)) )
-			Com_DPrintf("SVC_Info: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
-		return;
-	}
-
-	// Allow getinfo to be DoSed relatively easily, but prevent
-	// excess outbound bandwidth usage when being flooded inbound
-	if ( SVC_RateLimit(&outboundLeakyBucket, 10, 100) )
-	{
-		if ( !SVC_callback("INFO:GLOBAL", NET_AdrToString(from)) )
-			Com_DPrintf("SVC_Info: rate limit exceeded, dropping request\n");
-		return;
-	}
-
-	SVC_Info(from);
-}
-
-void hook_SVC_Status(netadr_t from)
-{
-	// Prevent using getstatus as an amplifier
-	if ( SVC_RateLimitAddress(from, 10, 1000) )
-	{
-		if ( !SVC_callback("STATUS:ADDRESS", NET_AdrToString(from)) )
-			Com_DPrintf("SVC_Status: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
-		return;
-	}
-
-	// Allow getstatus to be DoSed relatively easily, but prevent
-	// excess outbound bandwidth usage when being flooded inbound
-	if ( SVC_RateLimit(&outboundLeakyBucket, 10, 100) )
-	{
-		if ( !SVC_callback("STATUS:GLOBAL", NET_AdrToString(from)) )
-			Com_DPrintf("SVC_Status: rate limit exceeded, dropping request\n");
-		return;
-	}
-
-	SVC_Status(from);
-}
-#endif
 
 void manymaps_prepare(const char *mapname, int read)
 {
@@ -7608,7 +7717,8 @@ void custom_SV_ConnectionlessPacket(netadr_t from, msg_t *msg)
 		if ( !I_stricmp(c, "getstatus") )
 		{
 			SV_UpdateLastTimeMasterServerCommunicated(from);
-			hook_SVC_Status(from);
+			// New: Replaced call to original SVC_Status
+			custom_SVC_Status(from);
 		}
 		else if ( !I_stricmp(c, "getinfo") )
 		{
@@ -8046,12 +8156,10 @@ public:
 		cracking_hook_function(0x0809479A, (int)custom_SV_BotUserMove);
 		#endif
 
-		#if COMPILE_RATELIMITER == 1
 		cracking_hook_call(0x08094081, (int)hook_SVC_Info);
 		cracking_hook_call(0x0809403E, (int)hook_SVC_Status);
 		cracking_hook_call(0x080940C4, (int)hook_SV_GetChallenge);
 		cracking_hook_call(0x08094107, (int)hook_SV_DirectConnect);
-		#endif
 
 		#elif COD_VERSION == COD2_1_2
 		cracking_hook_call(0x08062301, (int)common_init_complete_print);
@@ -8126,12 +8234,10 @@ public:
 		cracking_hook_function(0x080966B2, (int)custom_SV_BotUserMove);
 		#endif
 
-		#if COMPILE_RATELIMITER == 1
 		cracking_hook_call(0x08095B8E, (int)hook_SVC_Info);
 		cracking_hook_call(0x08095ADA, (int)hook_SVC_Status);
 		cracking_hook_call(0x08095BF8, (int)hook_SV_GetChallenge);
 		cracking_hook_call(0x08095CB2, (int)hook_SV_DirectConnect);
-		#endif
 
 		#elif COD_VERSION == COD2_1_3
 		cracking_hook_call(0x080622F9, (int)common_init_complete_print);
@@ -8276,6 +8382,7 @@ public:
 		cracking_hook_function(0x08120870, (int)custom_FireWeaponAntiLag);
 		cracking_hook_function(0x080F8E7A, (int)custom_ClientConnect);
 		cracking_hook_function(0x080F8916, (int)custom_G_GetPlayerViewOrigin);
+		cracking_hook_function(0x08094C84, (int)custom_SVC_Status);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC718, (int)Jump_ClearState);
@@ -8293,13 +8400,10 @@ public:
 		cracking_hook_function(0x0809676C, (int)custom_SV_BotUserMove);
 		#endif
 
-		#if COMPILE_RATELIMITER == 1
 		cracking_hook_call(0x08095C48, (int)hook_SVC_Info);
-		cracking_hook_call(0x08095B94, (int)hook_SVC_Status);
 		cracking_hook_call(0x08095CB2, (int)hook_SV_GetChallenge);
 		cracking_hook_call(0x08095D6C, (int)hook_SV_DirectConnect);
 		cracking_hook_call(0x08095DD6, (int)hook_SV_AuthorizeIpPacket);
-		#endif
 
 		cracking_write_hex(0x0818815c, (char *)"00"); // Removes debug flag from getentbynum
 		#endif

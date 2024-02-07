@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>setPing( &lt;value&gt; )</H1>
+<H1>setPing( &lt;ingame value&gt;, &lt;status value&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
@@ -27,7 +27,7 @@ Module: Player<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Sets player's ping. Using undefined as value reenables the player's real ping.</p>
+<p>Sets player's ping. Using undefined as value reenables the player's real ping. When using only one parameter, both values (the one shown on the ingame scoreboard and the other one that is returned within server status messages) are affected.</p>
 
 </H3>
 </TR></TD></TABLE>
@@ -54,7 +54,14 @@ player setPing(42);
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;value&gt; New user's ping (integer, or undefined to reset)</LI>
+<LI>1 : &lt;ingame value&gt; New user's ping (integer, or undefined to reset) that is shown on the ingame scoreboard</LI>
+</UL></TR></TD></TABLE>
+<BR><BR>
+<H2>Optional Args</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;status value&gt; New user's ping (integer, or undefined to reset) that is returned in server status messages</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>

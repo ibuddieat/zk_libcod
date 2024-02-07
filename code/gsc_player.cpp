@@ -573,7 +573,7 @@ void gsc_player_setping(scr_entref_t ref)
 		return;
 	}
 
-	if ( Scr_GetNumParam() == 1 )
+	if ( Scr_GetNumParam() > 0 )
 	{
 		if ( Scr_GetType(0) == STACK_UNDEFINED )
 		{
@@ -587,14 +587,39 @@ void gsc_player_setping(scr_entref_t ref)
 		}
 		else
 		{
-			stackError("gsc_player_setping() argument has a wrong type");
+			stackError("gsc_player_setping() first argument has a wrong type");
 			stackPushUndefined();
 			return;
+		}
+
+		if ( Scr_GetNumParam() > 1 )
+		{
+			if ( Scr_GetType(1) == STACK_UNDEFINED )
+			{
+				customPlayerState[id].overrideStatusPing = qfalse;
+				customPlayerState[id].statusPing = 0;
+			}
+			else if ( Scr_GetType(1) == STACK_INT )
+			{
+				customPlayerState[id].overrideStatusPing = qtrue;
+				customPlayerState[id].statusPing = Scr_GetInt(1);
+	}
+	else
+	{
+				stackError("gsc_player_setping() second argument has a wrong type");
+				stackPushUndefined();
+				return;
+			}
+		}
+		else
+		{
+			customPlayerState[id].overrideStatusPing = qtrue;
+			customPlayerState[id].statusPing = Scr_GetInt(0);
 		}
 	}
 	else
 	{
-		stackError("gsc_player_setping() needs exactly one argument");
+		stackError("gsc_player_setping() needs at least one argument");
 		stackPushUndefined();
 		return;
 	}

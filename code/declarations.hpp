@@ -58,6 +58,7 @@
 #define MAX_ENT_CLUSTERS            16
 #define MAX_EVENTS                  4
 #define MAX_GENTITIES               ( 1 << GENTITYNUM_BITS )
+#define MAX_INFO_STRING             0x400
 #define MAX_ITEM_MODELS             2
 #define MAX_MODEL_ANIMATIONS        512 // animations per model
 #define MAX_MODELS                  256
@@ -3936,6 +3937,14 @@ static const int saLoadObjGlob_offset = 0x085AB160;
 static const int saLoadedObjs_offset = 0x085AB164;
 #endif
 
+#if COD_VERSION == COD2_1_0 // Not tested
+static const int gameInitialized_offset = 0x0;
+#elif COD_VERSION == COD2_1_2 // Not tested
+static const int gameInitialized_offset = 0x0;
+#elif COD_VERSION == COD2_1_3
+static const int gameInitialized_offset = 0x083E2F80;
+#endif
+
 #define g_entities ((gentity_t*)(gentities_offset))
 #define g_clients ((gclient_t*)(gclients_offset))
 #define scrVarPub (*((scrVarPub_t*)( varpub_offset )))
@@ -3992,6 +4001,7 @@ static const int saLoadedObjs_offset = 0x085AB164;
 #define g_EndPos (*((char*)( g_EndPos_offset )))
 #define saLoadObjGlob (*((snd_alias_build_s**)( saLoadObjGlob_offset )))
 #define saLoadedObjs (*((int*)( saLoadedObjs_offset ))) // Guessed variable name
+#define gameInitialized (*((int*)( gameInitialized_offset )))
 
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6
@@ -4135,6 +4145,8 @@ typedef struct customPlayerState_s
 {
 	qboolean overridePing;
 	int ping;
+	qboolean overrideStatusPing;
+	int statusPing;
 	objective_t objectives[16];
 	float meleeHeightScale;
 	float meleeRangeScale;
