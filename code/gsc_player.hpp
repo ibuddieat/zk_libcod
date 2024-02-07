@@ -3,6 +3,10 @@
 
 #include "gsc.hpp"
 
+void gsc_player_getcurrentweaponammo(scr_entref_t ref);
+void gsc_player_getcurrentweaponclipammo(scr_entref_t ref);
+void gsc_player_setcurrentweaponammo(scr_entref_t ref);
+void gsc_player_setcurrentweaponclipammo(scr_entref_t ref);
 void gsc_player_forceshot(scr_entref_t ref);
 void gsc_player_setvelocity(scr_entref_t ref);
 void gsc_player_addvelocity(scr_entref_t ref);

@@ -1452,6 +1452,51 @@ static const BG_GetWeaponDef_t BG_GetWeaponDef = (BG_GetWeaponDef_t)0x0; // Not 
 static const BG_GetWeaponDef_t BG_GetWeaponDef = (BG_GetWeaponDef_t)0x080EB9A4;
 #endif
 
+typedef int (*BG_WeaponIsClipOnly_t)(unsigned int weapon);
+#if COD_VERSION == COD2_1_0
+static const BG_WeaponIsClipOnly_t BG_WeaponIsClipOnly = (BG_WeaponIsClipOnly_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const BG_WeaponIsClipOnly_t BG_WeaponIsClipOnly = (BG_WeaponIsClipOnly_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const BG_WeaponIsClipOnly_t BG_WeaponIsClipOnly = (BG_WeaponIsClipOnly_t)0x080ED3E2;
+#endif
+
+typedef int (*BG_AmmoForWeapon_t)(unsigned int weapon);
+#if COD_VERSION == COD2_1_0
+static const BG_AmmoForWeapon_t BG_AmmoForWeapon = (BG_AmmoForWeapon_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const BG_AmmoForWeapon_t BG_AmmoForWeapon = (BG_AmmoForWeapon_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const BG_AmmoForWeapon_t BG_AmmoForWeapon = (BG_AmmoForWeapon_t)0x080ED3C8;
+#endif
+
+typedef int (*BG_ClipForWeapon_t)(unsigned int weapon);
+#if COD_VERSION == COD2_1_0
+static const BG_ClipForWeapon_t BG_ClipForWeapon = (BG_ClipForWeapon_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const BG_ClipForWeapon_t BG_ClipForWeapon = (BG_ClipForWeapon_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const BG_ClipForWeapon_t BG_ClipForWeapon = (BG_ClipForWeapon_t)0x080ED3AE;
+#endif
+
+typedef int (*BG_GetAmmoClipSize_t)(unsigned int weapon);
+#if COD_VERSION == COD2_1_0
+static const BG_GetAmmoClipSize_t BG_GetAmmoClipSize = (BG_GetAmmoClipSize_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const BG_GetAmmoClipSize_t BG_GetAmmoClipSize = (BG_GetAmmoClipSize_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const BG_GetAmmoClipSize_t BG_GetAmmoClipSize = (BG_GetAmmoClipSize_t)0x080EBA8A;
+#endif
+
+typedef int (*BG_GetAmmoTypeMax_t)(unsigned int weapon);
+#if COD_VERSION == COD2_1_0
+static const BG_GetAmmoTypeMax_t BG_GetAmmoTypeMax = (BG_GetAmmoTypeMax_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const BG_GetAmmoTypeMax_t BG_GetAmmoTypeMax = (BG_GetAmmoTypeMax_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const BG_GetAmmoTypeMax_t BG_GetAmmoTypeMax = (BG_GetAmmoTypeMax_t)0x080EBA6A;
+#endif
+
 typedef int (*BG_FindWeaponIndexForName_t)(const char *name);
 #if COD_VERSION == COD2_1_0
 static const BG_FindWeaponIndexForName_t BG_FindWeaponIndexForName = (BG_FindWeaponIndexForName_t)0x080E949C;

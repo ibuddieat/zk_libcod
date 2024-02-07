@@ -31,6 +31,8 @@ New script code methods:
   * `<player> forceShot([<include client>])`
   * `<player> getClientHudElemCount()`
   * `<player> getCollisionTeam()`
+  * `<player> getCurrentWeaponAmmo()`
+  * `<player> getCurrentWeaponClipAmmo()`
   * `<player> getEnterTime()`
   * `<player> getGroundEntity()`
   * `<player> getInactivityTime()`
@@ -52,6 +54,8 @@ New script code methods:
   * `<player> playScriptAnimation(<scriptAnimEventType>, <isContinue>, <force>)`
   * `<player> setBulletMask(<mask>)`
   * `<player> setCollisionTeam(<team>)`
+  * `<player> setCurrentWeaponAmmo(<value>)`
+  * `<player> setCurrentWeaponClipAmmo(<value>)`
   * `<player> setFireRangeScale(<scale>)`
   * `<player> setFireThroughWalls(<enabled>)`
   * `<player> setMeleeHeightScale(<scale>)`

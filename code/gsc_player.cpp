@@ -10,6 +10,200 @@ extern customPlayerState_t customPlayerState[MAX_CLIENTS];
 extern customStringIndex_t custom_scr_const;
 extern dvar_t *g_antilag;
 
+void gsc_player_getcurrentweaponammo(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_getcurrentweaponammo() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	int ammo;
+	gentity_t *player = &g_entities[id];
+
+	if ( !G_IsPlaying(player) )
+	{
+		stackPushInt(0);
+		return;
+	}
+
+	if ( !BG_WeaponIsClipOnly(player->s.weapon) )
+	{
+		ammo = player->client->ps.ammo[BG_AmmoForWeapon(player->s.weapon)];
+	}
+	else
+	{
+		ammo = player->client->ps.ammoclip[BG_ClipForWeapon(player->s.weapon)];
+	}
+
+	stackPushInt(ammo);
+}
+
+void gsc_player_getcurrentweaponclipammo(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_getcurrentweaponammo() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	int ammo;
+	gentity_t *player = &g_entities[id];
+
+	if ( !G_IsPlaying(player) )
+	{
+		stackPushInt(0);
+		return;
+	}
+
+	int clipIndex = BG_ClipForWeapon(player->s.weapon);
+	if ( !clipIndex )
+	{
+		ammo = 0;
+	}
+	else
+	{
+		ammo = player->client->ps.ammoclip[clipIndex];
+	}
+
+	stackPushInt(ammo);
+}
+
+void gsc_player_setcurrentweaponammo(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_setcurrentweaponammo() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	int ammo;
+
+	if ( !stackGetParams("i", &ammo) )
+	{
+		stackError("gsc_player_setcurrentweaponammo() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	gentity_t *player = &g_entities[id];
+	int weaponIndex = player->client->ps.weapon;
+	int clipIndex;
+	int ammoIndex;
+
+	if ( !G_IsPlaying(player) )
+	{
+		stackPushBool(qfalse);
+		return;
+	}
+
+	if ( weaponIndex < 1 )
+	{
+		stackPushBool(qfalse);
+		return;
+	}
+
+	if ( BG_WeaponIsClipOnly(weaponIndex) )
+	{
+		clipIndex = BG_ClipForWeapon(weaponIndex);
+		if ( clipIndex )
+		{
+			if ( ammo >= 0 )
+			{
+				if ( ammo > BG_GetAmmoClipSize(clipIndex) )
+					ammo = BG_GetAmmoClipSize(clipIndex);
+			}
+			else
+			{
+				ammo = 0;
+			}
+			player->client->ps.ammoclip[clipIndex] = ammo;
+		}
+	}
+	else
+	{
+		ammoIndex = BG_AmmoForWeapon(weaponIndex);
+		if ( ammoIndex )
+		{
+			if ( ammo >= 0 )
+			{
+				if ( ammo > BG_GetAmmoTypeMax(ammoIndex) )
+					ammo = BG_GetAmmoTypeMax(ammoIndex);
+			}
+			else
+			{
+				ammo = 0;
+			}
+			player->client->ps.ammo[ammoIndex] = ammo;
+		}
+	}
+
+	stackPushBool(qtrue);
+}
+
+void gsc_player_setcurrentweaponclipammo(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_setcurrentweaponclipammo() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	int ammo;
+
+	if ( !stackGetParams("i", &ammo) )
+	{
+		stackError("gsc_player_setcurrentweaponclipammo() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	gentity_t *player = &g_entities[id];
+
+	if ( !G_IsPlaying(player) )
+	{
+		stackPushBool(qfalse);
+		return;
+	}
+
+	if ( player->client->ps.weapon < 1 )
+	{
+		stackPushBool(qfalse);
+		return;
+	}
+
+	int clipIndex = BG_ClipForWeapon(player->s.weapon);
+	if ( !clipIndex )
+	{
+		stackPushBool(qfalse);
+		return;
+	}
+	else
+	{
+		if ( ammo < 0 )
+			ammo = 0;
+
+		if ( ammo > BG_GetAmmoClipSize(clipIndex) )
+			ammo = BG_GetAmmoClipSize(clipIndex);
+
+		player->client->ps.ammoclip[clipIndex] = ammo;
+	}
+
+	stackPushBool(qtrue);
+}
+
 void gsc_player_forceshot(scr_entref_t ref)
 {
 	int id = ref.entnum;
@@ -49,7 +243,7 @@ void gsc_player_forceshot(scr_entref_t ref)
 	{
 		stackPushBool(qfalse);
 		return;
-	}
+    }
 
 	if ( !g_antilag->current.boolean )
 		FireWeaponAntiLag(player, level.time);
@@ -656,9 +850,9 @@ void gsc_player_setping(scr_entref_t ref)
 			{
 				customPlayerState[id].overrideStatusPing = qtrue;
 				customPlayerState[id].statusPing = Scr_GetInt(1);
-	}
-	else
-	{
+			}
+			else
+			{
 				stackError("gsc_player_setping() second argument has a wrong type");
 				stackPushUndefined();
 				return;

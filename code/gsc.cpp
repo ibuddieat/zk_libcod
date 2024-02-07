@@ -330,6 +330,10 @@ scr_method_t scriptMethods[] =
 	#endif
 
 	#if COMPILE_PLAYER == 1
+	{"getCurrentWeaponAmmo", gsc_player_getcurrentweaponammo, 0},
+	{"getCurrentWeaponClipAmmo", gsc_player_getcurrentweaponclipammo, 0},
+	{"setCurrentWeaponAmmo", gsc_player_setcurrentweaponammo, 0},
+	{"setCurrentWeaponClipAmmo", gsc_player_setcurrentweaponclipammo, 0},
 	{"forceShot", gsc_player_forceshot, 0},
 	{"getStance", gsc_player_getstance, 0},
 	{"setStance", gsc_player_setstance, 0},
