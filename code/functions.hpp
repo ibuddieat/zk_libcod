@@ -363,7 +363,7 @@ static const Com_MakeSoundAliasesPermanent_t Com_MakeSoundAliasesPermanent = (Co
 static const Com_MakeSoundAliasesPermanent_t Com_MakeSoundAliasesPermanent = (Com_MakeSoundAliasesPermanent_t)0x080AF224;
 #endif
 
-typedef snd_alias_list_t* (*Com_FindSoundAlias_t)(const char *name);
+typedef snd_alias_list_t * (*Com_FindSoundAlias_t)(const char *name);
 #if COD_VERSION == COD2_1_0
 static const Com_FindSoundAlias_t Com_FindSoundAlias = (Com_FindSoundAlias_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
@@ -687,7 +687,7 @@ static const Dvar_RegisterInt_t Dvar_RegisterInt = (Dvar_RegisterInt_t)0x0; // N
 static const Dvar_RegisterInt_t Dvar_RegisterInt = (Dvar_RegisterInt_t)0x080B403A;
 #endif
 
-typedef dvar_t* (*Dvar_RegisterFloat_t)(const char* var_name, float var_value, float var_min, float var_max, unsigned short flags);
+typedef dvar_t * (*Dvar_RegisterFloat_t)(const char* var_name, float var_value, float var_min, float var_max, unsigned short flags);
 #if COD_VERSION == COD2_1_0
 static const Dvar_RegisterFloat_t Dvar_RegisterFloat = (Dvar_RegisterFloat_t)0x080B1C2C;
 #elif COD_VERSION == COD2_1_2

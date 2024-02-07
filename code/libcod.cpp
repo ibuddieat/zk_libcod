@@ -511,7 +511,7 @@ int hook_sv_privatePassword_strcmp(const char* str1, const char* str2)
 	return !strcmp_constant_time(str1, str2);
 }
 
-const char* custom_ClientConnect(unsigned int clientNum, unsigned int scriptPersId)
+const char * custom_ClientConnect(unsigned int clientNum, unsigned int scriptPersId)
 {
 	XAnimTree *tree;
 	clientInfo_t *ci;
@@ -1124,7 +1124,7 @@ qboolean custom_StuckInClient(gentity_t *self)
 	return qfalse;
 }
 
-gentity_t* custom_fire_grenade(gentity_t *attacker, vec3_t start, vec3_t dir, int weaponIndex, int fuseTime)
+gentity_t * custom_fire_grenade(gentity_t *attacker, vec3_t start, vec3_t dir, int weaponIndex, int fuseTime)
 {
 	hook_fire_grenade->unhook();
 	gentity_t* (*fire_grenade)(gentity_t *attacker, vec3_t start, vec3_t dir, int weaponIndex, int fuseTime);
@@ -1191,7 +1191,7 @@ int hook_isLanAddress(netadr_t adr)
 	return Sys_IsLANAddress(adr);
 }
 
-const char* hook_AuthorizeState(int arg)
+const char * hook_AuthorizeState(int arg)
 {
 	const char *s = Cmd_Argv(arg);
 
@@ -1482,7 +1482,7 @@ void custom_G_AddEvent(gentity_t * ent, int event, int eventParm)
 	ent->r.eventTime = level.time;
 }
 
-gentity_t* custom_G_TempEntity(vec3_t origin, int event)
+gentity_t * custom_G_TempEntity(vec3_t origin, int event)
 {
 	hook_g_tempentity->unhook();
 
@@ -3084,7 +3084,7 @@ static long SVC_HashForAddress(netadr_t address)
 	return hash;
 }
 
-static leakyBucket_t *SVC_BucketForAddress(netadr_t address, int burst, int period)
+static leakyBucket_t * SVC_BucketForAddress(netadr_t address, int burst, int period)
 {
 	leakyBucket_t *bucket = NULL;
 	int	i;
