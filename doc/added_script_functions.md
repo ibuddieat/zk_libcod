@@ -54,6 +54,7 @@ New script code methods:
   * `<player> playScriptAnimation(<scriptAnimEventType>, <isContinue>, <force>)`
   * `<player> setBulletMask(<mask>)`
   * `<player> setCollisionTeam(<team>)`
+  * `<player> setConfigString(<string>, <index>)`
   * `<player> setCurrentWeaponAmmo(<value>)`
   * `<player> setCurrentWeaponClipAmmo(<value>)`
   * `<player> setFireRangeScale(<scale>)`
