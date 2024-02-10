@@ -1,4 +1,4 @@
-# Security-felated features & adaptions
+# Security-related features & adaptions
 
 - Added several security fixes/exploit patches known from other Call of Duty&reg; games
 - Blocked the download of of `_svr_` (server-sided) .iwd files
