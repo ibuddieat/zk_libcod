@@ -41,6 +41,9 @@ New script code methods:
   * `<player> getServerCommandQueueSize()`
   * `<player> getViewOrigin()`
   * `<player> isPlayingSoundFile()`
+  * `<player> isReloading()`
+  * `<player> isThrowingGrenade()`
+  * `<player> isUsingBinoculars()`
   * `<player> muteClient(<player id>)`
   * `<player> noClip("on|off|toggle")`
   * `<player> objective_player_add(<objective_number>, <state>, <position>, <iconshader>)`

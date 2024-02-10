@@ -5246,7 +5246,7 @@ void custom_PlayerCmd_ClonePlayer(scr_entref_t ref)
 
 void custom_player_die(gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, meansOfDeath_t meansOfDeath, int iWeapon, const float *vDir, hitLocation_t hitLoc, int psTimeOffset)
 {
-	int type;
+	pmtype_t type;
 	gentity_t *turret;
 	gclient_t *client;
 	vec3_t origin;
@@ -5255,7 +5255,7 @@ void custom_player_die(gentity_t *self, gentity_t *inflictor, gentity_t *attacke
 	int i;
 
 	if ( Com_GetServerDObj(self->client->ps.clientNum)
-	        && self->client->ps.pm_type <= 1
+	        && self->client->ps.pm_type <= PM_NORMAL_LINKED
 	        && (self->client->ps.pm_flags & 0x400000) == 0 )
 	{
 		if ( attacker->s.eType == ET_TURRET && attacker->r.ownerNum != ENTITY_NONE )
@@ -5289,10 +5289,10 @@ void custom_player_die(gentity_t *self, gentity_t *inflictor, gentity_t *attacke
 			fire_grenade(self, origin, dir, self->client->ps.offHandIndex, self->client->ps.grenadeTimeLeft);
 		}
 
-		if ( self->client->ps.pm_type == 1 )
-			type = 7;
+		if ( self->client->ps.pm_type == PM_NORMAL_LINKED )
+			type = PM_DEAD_LINKED;
 		else
-			type = 6;
+			type = PM_DEAD;
 
 		self->client->ps.pm_type = type;
 		deathAnimDuration = BG_AnimScriptEvent(&self->client->ps, ANIM_ET_DEATH, 0, 1);
@@ -5331,7 +5331,7 @@ void custom_player_die(gentity_t *self, gentity_t *inflictor, gentity_t *attacke
 		self->r.maxs[2] = 30.0;
 		SV_LinkEntity(self);
 		self->health = 0;
-		self->handler = 11;
+		self->handler = ENT_HANDLER_CLIENT_DEAD;
 	}
 }
 

@@ -3,6 +3,9 @@
 
 #include "gsc.hpp"
 
+void gsc_player_isreloading(scr_entref_t ref);
+void gsc_player_isthrowinggrenade(scr_entref_t ref);
+void gsc_player_isusingbinoculars(scr_entref_t ref);
 void gsc_player_getcurrentweaponammo(scr_entref_t ref);
 void gsc_player_getcurrentweaponclipammo(scr_entref_t ref);
 void gsc_player_setcurrentweaponammo(scr_entref_t ref);

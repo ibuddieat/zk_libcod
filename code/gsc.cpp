@@ -50,12 +50,14 @@ const char *stackGetParamTypeAsString(int param)
 		return getParamTypeAsString(var->type);
 
 }
+
 void Scr_AddFunc(const char *value)
 {
 	IncInParam();
 	scrVmPub.top->type = STACK_FUNCTION;
 	scrVmPub.top->u.codePosValue = value;
 }
+
 void NULL_FUNC_ENTITY(scr_entref_t id) {}
 void NULL_FUNC(void) {}
 
@@ -330,6 +332,9 @@ scr_method_t scriptMethods[] =
 	#endif
 
 	#if COMPILE_PLAYER == 1
+	{"isReloading", gsc_player_isreloading, 0},
+	{"isThrowingGrenade", gsc_player_isthrowinggrenade, 0},
+	{"isUsingBinoculars", gsc_player_isusingbinoculars, 0},
 	{"getCurrentWeaponAmmo", gsc_player_getcurrentweaponammo, 0},
 	{"getCurrentWeaponClipAmmo", gsc_player_getcurrentweaponclipammo, 0},
 	{"setCurrentWeaponAmmo", gsc_player_setcurrentweaponammo, 0},

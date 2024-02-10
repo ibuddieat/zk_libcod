@@ -346,7 +346,7 @@ typedef enum
 	MOD_EXPLOSIVE
 } meansOfDeath_t;
 
-typedef enum 
+typedef enum __attribute__((__packed__)) 
 {
 	ENT_HANDLER_NULL = 0x0,
 	ENT_HANDLER_TRIGGER_MULTIPLE = 0x1,
@@ -1509,10 +1509,22 @@ typedef struct
 	int flags;
 } mantleState_t;
 
+typedef enum
+{
+	PM_NORMAL = 0x0,
+	PM_NORMAL_LINKED = 0x1,
+	PM_NOCLIP = 0x2,
+	PM_UFO = 0x3,
+	PM_SPECTATOR = 0x4,
+	PM_INTERMISSION = 0x5,
+	PM_DEAD = 0x6,
+	PM_DEAD_LINKED = 0x7,
+} pmtype_t;
+
 typedef struct playerState_s
 {
 	int commandTime;
-	int pm_type;
+	pmtype_t pm_type;
 	int bobCycle;
 	int pm_flags;
 	int pm_time;
@@ -1550,7 +1562,7 @@ typedef struct playerState_s
 	int clientNum;
 	int offHandIndex;
 	unsigned int weapon;
-	int weaponstate;
+	weaponstate_t weaponstate;
 	float fWeaponPosFrac;
 	int adsDelayTime;
 	int viewmodelIndex;
@@ -1774,7 +1786,7 @@ struct gentity_s
 	byte nopickup; // 355
 	byte model; // 356
 	byte attachIgnoreCollision; // 357
-	byte handler; // 358
+	entHandlers_t handler; // 358
 	byte team; // 359
 	uint16_t classname; // 360
 	uint16_t target;
@@ -3099,6 +3111,34 @@ struct pml_t
 	vec3_t previous_velocity;
 };
 
+typedef enum
+{
+	WEAPON_READY = 0x0,
+	WEAPON_RAISING = 0x1,
+	WEAPON_DROPPING = 0x2,
+	WEAPON_FIRING = 0x3,
+	WEAPON_RECHAMBERING = 0x4,
+	WEAPON_RELOADING = 0x5,
+	WEAPON_RELOADING_INTERUPT = 0x6,
+	WEAPON_RELOAD_START = 0x7,
+	WEAPON_RELOAD_START_INTERUPT = 0x8,
+	WEAPON_RELOAD_END = 0x9,
+	WEAPON_MELEE_INIT = 0xA,
+	WEAPON_MELEE_FIRE = 0xB,
+	WEAPON_OFFHAND_INIT = 0xC,
+	WEAPON_OFFHAND_PREPARE = 0xD,
+	WEAPON_OFFHAND_HOLD = 0xE,
+	WEAPON_OFFHAND = 0xF,
+	WEAPON_OFFHAND_END = 0x10,
+	WEAPON_BINOCULARS_INIT = 0x11,
+	WEAPON_BINOCULARS_PREPARE = 0x12,
+	WEAPON_BINOCULARS_HOLD = 0x13,
+	WEAPON_BINOCULARS_START = 0x14,
+	WEAPON_BINOCULARS_DROP = 0x15,
+	WEAPON_BINOCULARS_END = 0x16,
+	WEAPONSTATES_NUM = 0x17,
+} weaponstate_t;
+
 typedef struct
 {
 	unsigned short emptystring;
@@ -4028,6 +4068,7 @@ static const int gameInitialized_offset = 0x083E2F80;
  static_assert((sizeof(clientInfo_t) == 1208), "ERROR: clientInfo_t size is invalid!");
  static_assert((sizeof(animation_t) == 96), "ERROR: animation_t size is invalid!");
  static_assert((sizeof(scr_data_t) == 14072), "ERROR: scr_data_t size is invalid!");
+ static_assert((sizeof(entHandlers_t) == 1), "ERROR: entHandlers_t size is invalid!");
 
 #endif
 

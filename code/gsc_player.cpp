@@ -10,6 +10,65 @@ extern customPlayerState_t customPlayerState[MAX_CLIENTS];
 extern customStringIndex_t custom_scr_const;
 extern dvar_t *g_antilag;
 
+void gsc_player_isreloading(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_isreloading() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+	
+	playerState_t *ps = SV_GameClientNum(id);
+
+	if ( ps->weaponstate >= WEAPON_RECHAMBERING && ps->weaponstate <= WEAPON_RELOAD_END )
+		stackPushBool(qtrue);
+	else
+		stackPushBool(qfalse);
+
+	// Alternatively: stackPushInt(ps->weaponTime);
+}
+
+void gsc_player_isthrowinggrenade(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_isthrowinggrenade() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+	
+	playerState_t *ps = SV_GameClientNum(id);
+
+	if ( ps->weaponstate >= WEAPON_OFFHAND_INIT && ps->weaponstate <= WEAPON_OFFHAND_END )
+		stackPushBool(qtrue);
+	else
+		stackPushBool(qfalse);
+}
+
+void gsc_player_isusingbinoculars(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_isusingbinoculars() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+	
+	playerState_t *ps = SV_GameClientNum(id);
+
+	if ( ps->weaponstate >= WEAPON_BINOCULARS_INIT && ps->weaponstate <= WEAPON_BINOCULARS_END )
+		stackPushBool(qtrue);
+	else
+		stackPushBool(qfalse);
+}
+
 void gsc_player_getcurrentweaponammo(scr_entref_t ref)
 {
 	int id = ref.entnum;
