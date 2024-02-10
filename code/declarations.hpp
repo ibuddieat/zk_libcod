@@ -1733,7 +1733,7 @@ struct gclient_s
 	int lastSpawnTime;
 }; // verified
 
-struct turretInfo_s
+typedef struct turretInfo_s
 {
 	int inuse;
 	int flags;
@@ -1751,7 +1751,7 @@ struct turretInfo_s
 	char fireSndPlayer;
 	char stopSnd;
 	char stopSndPlayer;
-};
+} turretInfo_t;
 
 struct item_ent_t
 {

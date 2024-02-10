@@ -4836,6 +4836,51 @@ void custom_G_GetPlayerViewOrigin(gentity_t *ent, float *origin)
 		origin[2] = client->ps.origin[2] + 8.0;
 }
 
+void custom_G_ClientStopUsingTurret(gentity_t *self)
+{
+	turretInfo_t *info;
+	gentity_t *owner;
+
+	info = self->pTurretInfo;
+
+	/* New code start: Return if turret info has already been freed */
+	if ( !info )
+		return;
+	/* New code end */
+
+	owner = &g_entities[self->r.ownerNum];
+	info->fireSndDelay = 0;
+	self->s.loopSound = 0;
+
+	if ( info->prevStance != -1 )
+	{
+		if ( info->prevStance == 2 )
+		{
+			G_AddEvent(owner, EV_STANCE_FORCE_PRONE, 0);
+		}
+		else if ( info->prevStance == 1 )
+		{
+			G_AddEvent(owner, EV_STANCE_FORCE_CROUCH, 0);
+		}
+		else
+		{
+			G_AddEvent(owner, EV_STANCE_FORCE_STAND, 0);
+		}
+
+		info->prevStance = -1;
+	}
+
+	TeleportPlayer(owner, info->userOrigin, owner->r.currentAngles);
+	owner->client->ps.eFlags &= 0xFFFFFCFF;
+	owner->client->ps.viewlocked = PLAYERVIEWLOCK_NONE;
+	owner->client->ps.viewlocked_entNum = ENTITY_NONE;
+	owner->active = 0;
+	owner->s.otherEntityNum = 0;
+	self->active = 0;
+	self->r.ownerNum = ENTITY_NONE;
+	info->flags &= ~0x800u;
+}
+
 int num_map_turrets;
 map_turret_t map_turrets[MAX_GENTITIES];
 void custom_G_SetEntityPlacement(gentity_t *ent)
@@ -8439,6 +8484,7 @@ public:
 		cracking_hook_function(0x080F8E7A, (int)custom_ClientConnect);
 		cracking_hook_function(0x080F8916, (int)custom_G_GetPlayerViewOrigin);
 		cracking_hook_function(0x08094C84, (int)custom_SVC_Status);
+		cracking_hook_function(0x0810B9A4, (int)custom_G_ClientStopUsingTurret);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC718, (int)Jump_ClearState);

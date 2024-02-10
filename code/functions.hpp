@@ -3792,6 +3792,15 @@ static const OnSameTeam_t OnSameTeam = (OnSameTeam_t)0x0; // Not tested
 static const OnSameTeam_t OnSameTeam = (OnSameTeam_t)0x0811C0D0;
 #endif
 
+typedef void (*TeleportPlayer_t)(gentity_t *player, float *origin, float *angles);
+#if COD_VERSION == COD2_1_0
+static const TeleportPlayer_t TeleportPlayer = (TeleportPlayer_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const TeleportPlayer_t TeleportPlayer = (TeleportPlayer_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const TeleportPlayer_t TeleportPlayer = (TeleportPlayer_t)0x0810A708;
+#endif
+
 typedef int (*unzGetGlobalInfo_t)(unzFile file, unz_global_info *pglobal_info);
 #if COD_VERSION == COD2_1_0
 static const unzGetGlobalInfo_t unzGetGlobalInfo = (unzGetGlobalInfo_t)0x0; // Not tested
