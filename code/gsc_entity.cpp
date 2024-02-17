@@ -144,7 +144,7 @@ void gsc_entity_gettagorigin(scr_entref_t ref)
 
 	if ( !G_DObjGetWorldTagPos(ent, tagId, origin) )
 	{
-		stackError("gsc_entity_gettagorigin2() could not find tag \'%s\' on model \'%s\'", tagName, G_ModelName(ent->model));
+		stackError("gsc_entity_gettagorigin() could not find tag \'%s\' on model \'%s\'", tagName, G_ModelName(ent->model));
 		stackPushUndefined();
 		return;
 	}
