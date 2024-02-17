@@ -190,9 +190,11 @@ scr_function_t scriptFunctions[] =
 	{"fremove", gsc_utils_fremove, 0},
 	#endif
 
-	{"getSystemTime", gsc_utils_getsystemtime, 0},
-	{"getServerStartTime", gsc_utils_getserverstarttime, 0},
 	{"getLocalTime", gsc_utils_getlocaltime, 0},
+	{"getMicroseconds", gsc_utils_getmicroseconds, 0},
+	{"getMilliseconds", gsc_utils_getmilliseconds, 0},
+	{"getServerStartTime", gsc_utils_getserverstarttime, 0},
+	{"getSystemTime", gsc_utils_getsystemtime, 0},
 
 	{"findConfigStringIndexOriginal", gsc_utils_findconfigstringindexoriginal, 0},
 	{"findConfigStringIndex", gsc_utils_findconfigstringindex, 0},

@@ -1055,18 +1055,6 @@ void gsc_utils_fremove()
 	stackPushInt(remove(file));
 }
 
-void gsc_utils_getsystemtime()
-{
-	time_t timer;
-	stackPushInt(time(&timer));
-}
-
-static int starttime = time(NULL);
-void gsc_utils_getserverstarttime()
-{
-	stackPushInt( starttime );
-}
-
 void gsc_utils_getlocaltime()
 {
 	time_t timer;
@@ -1082,6 +1070,33 @@ void gsc_utils_getlocaltime()
 	stripped_time[strlen(timestring) - 1] = '\0';
 
 	stackPushString(stripped_time);
+}
+
+void gsc_utils_getmicroseconds()
+{
+	struct timeval tv;
+	unsigned long microseconds;
+
+	gettimeofday(&tv, NULL);
+	microseconds = 1000000 * tv.tv_sec + tv.tv_usec;
+	stackPushInt(int(microseconds) & 0x7FFFFFFF);
+}
+
+void gsc_utils_getmilliseconds()
+{
+	stackPushInt(Sys_Milliseconds() & 0x7FFFFFFF);
+}
+
+static int starttime = time(NULL);
+void gsc_utils_getserverstarttime()
+{
+	stackPushInt(starttime);
+}
+
+void gsc_utils_getsystemtime()
+{
+	time_t timer;
+	stackPushInt(time(&timer));
 }
 
 // http://code.metager.de/source/xref/RavenSoftware/jediacademy/code/game/g_utils.cpp#36

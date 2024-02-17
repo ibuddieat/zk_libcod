@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>getSysMilliseconds()</H1>
+<H1>getMicroseconds()</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
@@ -27,7 +27,7 @@ Module: Utils<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Returns server start time (integer) in milliseconds.</p>
+<p>Returns the server's start time (integer) in microseconds. Always returns a positive number. The value overflows (i.e., starts again from zero) every ~35 minutes of server uptime. Due to this high precision and therefore low interval time, this function may fit well for benchmarking/debugging tasks, but not for monitoring long-running procedures. However, keep in mind that this function will introduce some overhead on its own.</p>
 
 </H3>
 </TR></TD></TABLE>
@@ -37,18 +37,14 @@ Module: Utils<BR>
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-startStartTimeInMs = getSysMilliseconds();
+time = getMicroseconds();
+for(i = 0; i < 1000; i++)
+    bulletTrace((0, 0, 0), (0, 0, 8192), true, undefined);
+logPrintConsole("Delta: " + (getMicroseconds() - time) + "us\n");
 </PRE>
 </H3>
 </TR></TD></TABLE>
-<BR><BR>
-<H2>Notes:</H2>
-<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
-<TR><TD BGCOLOR="222222">
-<PRE>
-The return value breaks after about 24 days due to an integer overflow.
-</PRE>
-</TR></TD></TABLE>
+<BR>
 <BR>
 </BODY>
 </HTML>

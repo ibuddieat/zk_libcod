@@ -83,6 +83,8 @@ New script code functions:
   * `setWeaponFuseTime(<weapon name>, <time in ms>)`
   * `fromHex(<hex string>)`
   * `getEntityCount([<in use>])`
+  * `getMicroseconds()`
+  * `getMilliseconds()`
   * `getSoundAliasesFromFile(<filename>)`
   * `getSoundFileDuration(<file path>)`
   * `isSemiAutoWeapon(<weapon name>)`
