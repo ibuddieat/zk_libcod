@@ -5763,7 +5763,16 @@ void custom_GScr_KickPlayer()
 
 	// New: Added 2nd parameter for kick message and some error handling
 
+	if ( Scr_GetNumParam() > 1 )
+	{
 	if ( !stackGetParams("is", &id, &msg) )
+		{
+			stackError("custom_GScr_KickPlayer() one or more arguments is undefined or has a wrong type");
+			stackPushUndefined();
+			return;
+		}
+	}
+	else
 	{
 		if ( !stackGetParams("i", &id) )
 		{
