@@ -754,7 +754,7 @@ time_t sys_timeBase = 0;
 /**
  * @brief Current time in ms, using sys_timeBase as origin
  */
-uint64_t Sys_MilliSeconds64(void)
+uint64_t Sys_Milliseconds64(void)
 {
 	struct timeval tp;
 

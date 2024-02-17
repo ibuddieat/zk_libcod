@@ -630,7 +630,7 @@ void custom_SV_SpawnServer(char *server)
 	I_strncpyz(sv.gametype, sv_gametype->current.string, 64);
 
 	srand(Sys_MillisecondsRaw());
-	sv.checksumFeed = rand() ^ rand() << 16 ^ Sys_MilliSeconds();
+	sv.checksumFeed = rand() ^ rand() << 16 ^ Sys_Milliseconds();
 
 	FS_Restart(sv.checksumFeed);
 	Com_sprintf(mapname, 64, "maps/mp/%s.%s", server, GetBspExtension());
@@ -2867,13 +2867,13 @@ void custom_SV_ClientThink(client_t *cl, usercmd_t *ucmd)
 
 	customPlayerState[clientnum].frames++;
 
-	if ( Sys_MilliSeconds64() - customPlayerState[clientnum].frameTime >= 1000 )
+	if ( Sys_Milliseconds64() - customPlayerState[clientnum].frameTime >= 1000 )
 	{
 		if ( customPlayerState[clientnum].frames > 1000 )
 			customPlayerState[clientnum].frames = 1000;
 
 		customPlayerState[clientnum].fps = customPlayerState[clientnum].frames;
-		customPlayerState[clientnum].frameTime = Sys_MilliSeconds64();
+		customPlayerState[clientnum].frameTime = Sys_Milliseconds64();
 		customPlayerState[clientnum].frames = 0;
 	}
 	
@@ -3088,9 +3088,9 @@ static long SVC_HashForAddress(netadr_t address)
 static leakyBucket_t * SVC_BucketForAddress(netadr_t address, int burst, int period)
 {
 	leakyBucket_t *bucket = NULL;
-	int	i;
+	int i;
 	long hash = SVC_HashForAddress(address);
-	int now = Sys_MilliSeconds();
+	uint64_t now = Sys_Milliseconds64();
 
 	for ( bucket = bucketHashes[hash]; bucket; bucket = bucket->next )
 	{
@@ -3149,7 +3149,7 @@ bool SVC_RateLimit(leakyBucket_t *bucket, int burst, int period)
 {
 	if ( bucket != NULL )
 	{
-		int now = Sys_MilliSeconds();
+		uint64_t now = Sys_Milliseconds64();
 		int interval = now - bucket->lastTime;
 		int expired = interval / period;
 		int expiredRemainder = interval % period;

@@ -147,7 +147,7 @@ xmethod_t Scr_GetCustomMethod(const char **fname, qboolean *fdev);
 
 qboolean IsNullVector(float *vec);
 
-uint64_t Sys_MilliSeconds64(void);
+uint64_t Sys_Milliseconds64(void);
 char *custom_va(const char *format, ...);
 
 #endif

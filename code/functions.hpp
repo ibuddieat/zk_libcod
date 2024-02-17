@@ -228,13 +228,13 @@ static const Sys_LeaveCriticalSectionInternal_t Sys_LeaveCriticalSectionInternal
 static const Sys_LeaveCriticalSectionInternal_t Sys_LeaveCriticalSectionInternal = (Sys_LeaveCriticalSectionInternal_t)0x080D6864;
 #endif
 
-typedef int (*Sys_MilliSeconds_t)(void);
+typedef int (*Sys_Milliseconds_t)(void);
 #if COD_VERSION == COD2_1_0
-static const Sys_MilliSeconds_t Sys_MilliSeconds = (Sys_MilliSeconds_t)0x080D3728;
+static const Sys_Milliseconds_t Sys_Milliseconds = (Sys_Milliseconds_t)0x080D3728;
 #elif COD_VERSION == COD2_1_2
-static const Sys_MilliSeconds_t Sys_MilliSeconds = (Sys_MilliSeconds_t)0x080D5C54;
+static const Sys_Milliseconds_t Sys_Milliseconds = (Sys_Milliseconds_t)0x080D5C54;
 #elif COD_VERSION == COD2_1_3
-static const Sys_MilliSeconds_t Sys_MilliSeconds = (Sys_MilliSeconds_t)0x080D5D98;
+static const Sys_Milliseconds_t Sys_Milliseconds = (Sys_Milliseconds_t)0x080D5D98;
 #endif
 
 typedef int (*Sys_MillisecondsRaw_t)(void);
