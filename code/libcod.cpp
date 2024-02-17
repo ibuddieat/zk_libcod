@@ -4800,7 +4800,7 @@ void custom_G_GetPlayerViewOrigin(gentity_t *ent, float *origin)
 
 	client = ent->client;
 
-	if ( (client->ps.eFlags & 0x300) != 0 )
+	if ( (client->ps.eFlags & EF_USETURRET) != 0 )
 	{
 		if ( G_DObjGetWorldTagPos(&g_entities[client->ps.viewlocked_entNum], scr_const.tag_player, origin) )
 		{
@@ -4871,7 +4871,7 @@ void custom_G_ClientStopUsingTurret(gentity_t *self)
 	}
 
 	TeleportPlayer(owner, info->userOrigin, owner->r.currentAngles);
-	owner->client->ps.eFlags &= 0xFFFFFCFF;
+	owner->client->ps.eFlags &= ~EF_USETURRET;
 	owner->client->ps.viewlocked = PLAYERVIEWLOCK_NONE;
 	owner->client->ps.viewlocked_entNum = ENTITY_NONE;
 	owner->active = 0;
@@ -5765,7 +5765,7 @@ void custom_GScr_KickPlayer()
 
 	if ( Scr_GetNumParam() > 1 )
 	{
-	if ( !stackGetParams("is", &id, &msg) )
+		if ( !stackGetParams("is", &id, &msg) )
 		{
 			stackError("custom_GScr_KickPlayer() one or more arguments is undefined or has a wrong type");
 			stackPushUndefined();
