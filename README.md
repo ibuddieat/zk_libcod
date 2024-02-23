@@ -96,6 +96,7 @@ https://github.com/ibuddieat/zk_libcod (this repository)
 ### Acknowledgements
 - IzNoGoD for feedback, testing and further ideas
 - Prawy for feedback and discovery of bugs
+- Raphael for valid security concerns
 
 ### Other important references
 - \*.ZK.\* Zombie Knights (https://discord.gg/f9uS49Hhcs)

@@ -2418,7 +2418,7 @@ int custom_SV_WWWRedirectClient(client_t *cl, msg_t *msg)
 		I_strncpyz(cl->wwwDownloadURL, custom_va("%s/%s", sv_wwwBaseURL->current.string, cl->downloadName), MAX_OSPATH);
 		Com_Printf("Redirecting client \'%s\'^7 to %s\n", cl->name, cl->wwwDownloadURL);
 		cl->wwwDownloadStarted = 1;
-		MSG_WriteByte(msg, 5);
+		MSG_WriteByte(msg, svc_download);
 		MSG_WriteShort(msg, -1);
 		MSG_WriteString(msg, cl->wwwDownloadURL);
 		MSG_WriteLong(msg, size);
@@ -2434,22 +2434,36 @@ int custom_SV_WWWRedirectClient(client_t *cl, msg_t *msg)
 	return size != 0;
 }
 
+void SV_WriteDownloadErrorToClient(client_t *cl, msg_t *msg, char *errorMessage)
+{
+	MSG_WriteByte(msg, svc_download);
+	MSG_WriteShort(msg, 0); // Client is expecting block zero
+	MSG_WriteLong(msg, -1); // Illegal file size
+	MSG_WriteString(msg, errorMessage);
+
+	*cl->downloadName = 0;
+}
+
 void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 {
 	int curindex;
-	int iwdFile;
-	char svrFile;
+	char downloadNameNoExt[MAX_QPATH];
 	char errorMessage[MAX_STRINGLENGTH];
 
+	// Block download attempts if the client is already playing
+	// At this point, all relevant downloads should have been processed already
 	if ( cl->state == CS_ACTIVE )
 		return;
 
+	// Block empty filename
 	if ( !*cl->downloadName )
 		return;
 
+	// Block filenames that are shorter than .iwd
 	if ( strlen(cl->downloadName) < 4 )
 		return;
 
+	// Block filenames that do not end with .iwd
 	if ( strcmp(&cl->downloadName[strlen(cl->downloadName) - 4], ".iwd") != 0 )
 		return;
 
@@ -2458,17 +2472,12 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 		return;
 	#endif
 
+	// If set, download custom message instead of download
 	if ( strlen(sv_downloadMessage->current.string) )
 	{
 		Com_sprintf(errorMessage, sizeof(errorMessage), sv_downloadMessage->current.string);
-
-		MSG_WriteByte(msg, svc_download);
-		MSG_WriteShort(msg, 0); // Client is expecting block zero
-		MSG_WriteLong(msg, -1); // Illegal file size
-		MSG_WriteString(msg, errorMessage);
-
-		*cl->downloadName = 0;
-		return; // Download message instead of download
+		SV_WriteDownloadErrorToClient(cl, msg, errorMessage);
+		return;
 	}
 
 	#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
@@ -2476,8 +2485,9 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 	{
 		if ( !cl->wwwDl_failed )
 		{
+			// Redirect to HTTP server
 			custom_SV_WWWRedirectClient(cl, msg);
-			return; // wwwDl redirect
+			return;
 		}
 	}
 	#endif
@@ -2489,50 +2499,60 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 
 	if ( !cl->download )
 	{
-		// We open the file here
-		Com_Printf("clientDownload: %d : begining \"%s\"\n", cl - svs.clients, cl->downloadName);
-
-		iwdFile = FS_iwIwd(cl->downloadName, "main");
-		svrFile = FS_svrIwd(cl->downloadName);
-
-		if ( !sv_allowDownload->current.integer || iwdFile || svrFile || ( cl->downloadSize = FS_SV_FOpenFileRead( cl->downloadName, &cl->download ) ) <= 0 )
+		// Check if direct server downloading is enabled
+		if ( !sv_allowDownload->current.boolean )
 		{
-			// Cannot auto-download file
-			if ( iwdFile )
-			{
-				Com_Printf("clientDownload: %d : \"%s\" cannot download IW iwd files\n", cl - svs.clients, cl->downloadName);
-				Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_CANTAUTODLGAMEPAK\x15%s", cl->downloadName);
-			}
-			else if ( svrFile )
-			{
-				Com_Printf("clientDownload: %d : \"%s\" cannot download server-only iwd files\n", cl - svs.clients, cl->downloadName);
-				Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_CANTAUTODLGAMEPAK\x15%s", cl->downloadName);
-			}
-			else if ( !sv_allowDownload->current.boolean )
-			{
-				Com_Printf("clientDownload: %d : \"%s\" download disabled\n", cl - svs.clients, cl->downloadName);
+			Com_Printf("clientDownload: %d : \"%s\" download disabled\n", cl - svs.clients, cl->downloadName);
 
-				if ( sv_pure->current.boolean )
-					Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_AUTODL_SERVERDISABLED_PURE\x15%s", cl->downloadName);
-				else
-					Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_AUTODL_SERVERDISABLED\x15%s", cl->downloadName);
-			}
+			if ( sv_pure->current.boolean )
+				Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_AUTODL_SERVERDISABLED_PURE\x15%s", cl->downloadName);
 			else
-			{
-				Com_Printf("clientDownload: %d : \"%s\" file not found on server\n", cl - svs.clients, cl->downloadName);
-				Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_AUTODL_FILENOTONSERVER\x15%s", cl->downloadName);
-			}
+				Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_AUTODL_SERVERDISABLED\x15%s", cl->downloadName);
 
-			MSG_WriteByte( msg, svc_download );
-			MSG_WriteShort( msg, 0 ); // Client is expecting block zero
-			MSG_WriteLong( msg, -1 ); // Illegal file size
-			MSG_WriteString( msg, errorMessage );
-
-			*cl->downloadName = 0;
+			SV_WriteDownloadErrorToClient(cl, msg, errorMessage);
 			return;
 		}
 
-		// Init
+		// Block download of stock .iwd files from main folder
+		// FS_iwIwd expects a relative .iwd file path without file extension
+		I_strncpyz(downloadNameNoExt, cl->downloadName, strlen(cl->downloadName) - 3);
+		if ( FS_iwIwd(downloadNameNoExt, "main") )
+		{
+			Com_Printf("clientDownload: %d : \"%s\" cannot download IW iwd files\n", cl - svs.clients, cl->downloadName);
+			Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_CANTAUTODLGAMEPAK\x15%s", cl->downloadName);
+			SV_WriteDownloadErrorToClient(cl, msg, errorMessage);
+			return;
+		}
+
+		// Block download of _svr_ files
+		if ( FS_svrIwd(cl->downloadName) )
+		{
+			Com_Printf("clientDownload: %d : \"%s\" cannot download server-only iwd files\n", cl - svs.clients, cl->downloadName);
+			Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_CANTAUTODLGAMEPAK\x15%s", cl->downloadName);
+			SV_WriteDownloadErrorToClient(cl, msg, errorMessage);
+			return;
+		}
+
+		// Block directory traversal outside of valid paths
+		if ( strstr(cl->downloadName, "..") )
+		{
+			Com_Printf("clientDownload: %d blocked from accessing relative path \"%s\"\n", cl - svs.clients, cl->downloadName);
+			Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_AUTODL_FILENOTONSERVER\x15%s", cl->downloadName);
+			SV_WriteDownloadErrorToClient(cl, msg, errorMessage);
+			return;
+		}
+
+		// Check if file exists in the game paths
+		if ( ( cl->downloadSize = FS_SV_FOpenFileRead( cl->downloadName, &cl->download ) ) <= 0 )
+		{
+			Com_Printf("clientDownload: %d : \"%s\" file not found on server\n", cl - svs.clients, cl->downloadName);
+			Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_AUTODL_FILENOTONSERVER\x15%s", cl->downloadName);
+			SV_WriteDownloadErrorToClient(cl, msg, errorMessage);
+			return;
+		}
+
+		// Init download
+		Com_Printf("clientDownload: %d : beginning \"%s\"\n", cl - svs.clients, cl->downloadName);
 		cl->downloadCurrentBlock = cl->downloadClientBlock = cl->downloadXmitBlock = 0;
 		cl->downloadCount = 0;
 		cl->downloadEOF = qfalse;
@@ -2590,18 +2610,18 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 	// Send current block
 	curindex = (cl->downloadXmitBlock % MAX_DOWNLOAD_WINDOW);
 
-	MSG_WriteByte( msg, svc_download );
-	MSG_WriteShort( msg, cl->downloadXmitBlock );
+	MSG_WriteByte(msg, svc_download);
+	MSG_WriteShort(msg, cl->downloadXmitBlock);
 
 	// Block zero is special, contains file size
 	if ( cl->downloadXmitBlock == 0 )
-		MSG_WriteLong( msg, cl->downloadSize );
+		MSG_WriteLong(msg, cl->downloadSize);
 
-	MSG_WriteShort( msg, cl->downloadBlockSize[curindex] );
+	MSG_WriteShort(msg, cl->downloadBlockSize[curindex]);
 
 	// Write the block
 	if ( cl->downloadBlockSize[curindex] )
-		MSG_WriteData( msg, cl->downloadBlocks[curindex], cl->downloadBlockSize[curindex] );
+		MSG_WriteData(msg, cl->downloadBlocks[curindex], cl->downloadBlockSize[curindex]);
 
 	Com_DPrintf("clientDownload: %d : writing block %d\n", cl - svs.clients, cl->downloadXmitBlock);
 

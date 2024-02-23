@@ -543,7 +543,7 @@ static const FS_FCloseFile_t FS_FCloseFile = (FS_FCloseFile_t)0x0; // Not tested
 static const FS_FCloseFile_t FS_FCloseFile = (FS_FCloseFile_t)0x0809EE54;
 #endif
 
-typedef int (*FS_iwIwd_t)(const char *a1, const char *a2);
+typedef qboolean (*FS_iwIwd_t)(char *iwd, const char *base);
 #if COD_VERSION == COD2_1_0
 static const FS_iwIwd_t FS_iwIwd = (FS_iwIwd_t)0x08064ECC;
 #elif COD_VERSION == COD2_1_2
@@ -552,7 +552,7 @@ static const FS_iwIwd_t FS_iwIwd = (FS_iwIwd_t)0x0806532C;
 static const FS_iwIwd_t FS_iwIwd = (FS_iwIwd_t)0x08065324;
 #endif
 
-typedef char (*FS_svrIwd_t)(const char *filename); // Guessed function name
+typedef qboolean (*FS_svrIwd_t)(char *iwd); // Guessed function name
 #if COD_VERSION == COD2_1_0
 static const FS_svrIwd_t FS_svrIwd = (FS_svrIwd_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
