@@ -79,7 +79,6 @@ cd code
 ```
 
 ## References & initial fork path
-
 A big thank you to everyone involved in the development of the following projects:
 <pre>
   Code:
@@ -98,6 +97,11 @@ https://github.com/ibuddieat/zk_libcod (this repository)
 - Prawy for feedback and discovery of bugs
 - Raphael for valid security concerns
 
+### Contact & contributing
+- Discord: ibuddie
+- E-Mail: [ibuddie.at@gmail.com](mailto:ibuddie.at@gmail.com)
+- Want to contribute? Let's get in touch via one of the platforms listed above.
+
 ### Other important references
 - \*.ZK.\* Zombie Knights (https://discord.gg/f9uS49Hhcs)
 - Killtube~ (https://killtube.org/)
@@ -108,7 +112,6 @@ https://github.com/ibuddieat/zk_libcod (this repository)
 - The Speex Project (https://www.speex.org/)
 
 ### Historical background
-
 Back in late 2019, we at \*.ZK.\* (a gaming community that shaped itself within the zombie server scene, starting in 2010) ran into some rcon-related limitations with the libcod implementations available at that time. Therefore we decided to take a closer look at the inner workings of this extension (specifically, damage99's version listed above).
 Another limitation that bothered us was that, after a few months, we intended to switch our servers to another fs_game folder, but then were about to lose client-sided access to player-account-related configuration data (i.e., a config file containing the logon token for authentication purposes against our servers), due to restricted directory traversal abilities on the client side (which are, after all, a good thing). When looking for a solution we even considered to implement a hard-coded exploit that would move said config during the account migration process. However, we eventually found and used another approach, implemented in pure game code (gsc + menu files) so that it would work without libcod as well.
 We then started to add more and more functions to our fork, and especially since late 2021 we're adding (and usually also documenting) whatever feels necessary to help us implementing new features and/or mods.
