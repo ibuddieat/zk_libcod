@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>SoundFade( &lt;time&gt; )</H1>
+<H1>SoundFade( &lt;volume scale&gt;, &lt;time&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
@@ -27,7 +27,7 @@ Module: Sound<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Fades the sound out.</p>
+<p>Scales the sound volume by the given factor, for all players and channels except voice chat. If present, the scaling is linearly executed over the time provided via the second parameter, or instantly by default.</p>
 
 </H3>
 </TR></TD></TABLE>
@@ -42,11 +42,18 @@ SoundFade( 3 );
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
+<H2>Required Args</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;volume scale&gt; The factor (float) by which the sound volume should be affected.</LI>
+</UL></TR></TD></TABLE>
+<BR><BR>
 <H2>Optional Args</H2>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;time&gt; The time over which the sound will fade in seconds. If this option is not present then the music will stop immediately.</LI>
+<LI>1 : &lt;time&gt; The time in seconds (float) over which the sound will fade/scale in seconds. If this option is not present then the music will stop/scale immediately.</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>
