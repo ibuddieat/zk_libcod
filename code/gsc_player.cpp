@@ -10,6 +10,25 @@ extern customPlayerState_t customPlayerState[MAX_CLIENTS];
 extern customStringIndex_t custom_scr_const;
 extern dvar_t *g_antilag;
 
+void gsc_player_useentity(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_useentity() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	gentity_t *playerEnt = &g_entities[id];
+	gentity_t *useEnt = Scr_GetEntity(0);
+
+	Player_UseEntity(playerEnt, useEnt);
+
+	stackPushBool(qtrue);
+}
+
 void gsc_player_useturret(scr_entref_t ref)
 {
 	int id = ref.entnum;
