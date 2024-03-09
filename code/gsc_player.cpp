@@ -10,6 +10,38 @@ extern customPlayerState_t customPlayerState[MAX_CLIENTS];
 extern customStringIndex_t custom_scr_const;
 extern dvar_t *g_antilag;
 
+void gsc_player_useturret(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_useturret() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	gentity_t *playerEnt = &g_entities[id];
+	gentity_t *useEnt = Scr_GetEntity(0);
+
+	if ( useEnt->s.eType != ET_TURRET )
+	{
+		stackError("gsc_player_useturret() entity %i is not a turret", useEnt - g_entities);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( G_IsTurretUsable(useEnt, playerEnt) )
+	{
+		Player_UseEntity(playerEnt, useEnt);
+		stackPushBool(qtrue);
+	}
+	else
+	{
+		stackPushBool(qfalse);
+	}
+}
+
 void gsc_player_canuseturret(scr_entref_t ref)
 {
 	int id = ref.entnum;

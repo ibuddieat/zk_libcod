@@ -335,6 +335,7 @@ scr_method_t scriptMethods[] =
 	#endif
 
 	#if COMPILE_PLAYER == 1
+	{"useTurret", gsc_player_useturret, 0},
 	{"canUseTurret", gsc_player_canuseturret, 0},
 	{"isReloading", gsc_player_isreloading, 0},
 	{"isThrowingGrenade", gsc_player_isthrowinggrenade, 0},

@@ -3072,6 +3072,15 @@ static const Player_SetTurretDropHintString_t Player_SetTurretDropHintString = (
 static const Player_SetTurretDropHintString_t Player_SetTurretDropHintString = (Player_SetTurretDropHintString_t)0x08121B36;
 #endif
 
+typedef void (*Player_UseEntity_t)(gentity_t *playerEnt, gentity_t *useEnt);
+#if COD_VERSION == COD2_1_0
+static const Player_UseEntity_t Player_UseEntity = (Player_UseEntity_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Player_UseEntity_t Player_UseEntity = (Player_UseEntity_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Player_UseEntity_t Player_UseEntity = (Player_UseEntity_t)0x08121054;
+#endif
+
 typedef void (*DisablePbSv_t)(void);
 #if COD_VERSION == COD2_1_0
 static const DisablePbSv_t DisablePbSv = (DisablePbSv_t)0x0; // Not tested
