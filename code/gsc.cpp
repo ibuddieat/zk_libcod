@@ -321,6 +321,7 @@ scr_method_t scriptMethods[] =
 	{"getVmin", gsc_entity_getvmin, 0},
 	{"hasTag", gsc_entity_hastag, 0},
 	{"isLinkedTo", gsc_entity_islinkedto, 0},
+	{"isTurret", gsc_entity_isturret, 0},
 	{"setAlive", gsc_entity_setalive, 0},
 	{"setBounds", gsc_entity_setbounds, 0},
 	{"setClipmask", gsc_entity_setclipmask, 0},

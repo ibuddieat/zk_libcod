@@ -204,6 +204,17 @@ void gsc_entity_islinkedto(scr_entref_t ref)
 	}
 }
 
+void gsc_entity_isturret(scr_entref_t ref)
+{
+	int id = ref.entnum;
+	gentity_t *ent = &g_entities[id];
+
+	if ( ent->pTurretInfo )
+		stackPushBool(qtrue);
+	else
+		stackPushBool(qfalse);
+}
+
 void gsc_entity_getturretowner(scr_entref_t ref)
 {
 	int id = ref.entnum;
