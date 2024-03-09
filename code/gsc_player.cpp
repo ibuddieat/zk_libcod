@@ -1285,7 +1285,7 @@ void gsc_player_isusingturret(scr_entref_t ref)
 		return;
 	}
 
-	stackPushBool(entity->s.eFlags & EF_USETURRET ? qtrue : qfalse);
+	stackPushBool(entity->client->ps.eFlags & EF_USETURRET ? qtrue : qfalse);
 }
 
 void gsc_player_stopuseturret(scr_entref_t ref)
