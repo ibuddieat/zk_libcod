@@ -2118,7 +2118,7 @@ static const G_IsPlaying_t G_IsPlaying = (G_IsPlaying_t)0x0; // Not tested
 static const G_IsPlaying_t G_IsPlaying = (G_IsPlaying_t)0x080F9F4E;
 #endif
 
-typedef qboolean (*G_IsTurretUsable_t)(gentity_t *turret, gentity_t *player);
+typedef qboolean (*G_IsTurretUsable_t)(gentity_t *useEnt, gentity_t *playerEnt);
 #if COD_VERSION == COD2_1_0
 static const G_IsTurretUsable_t G_IsTurretUsable = (G_IsTurretUsable_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2

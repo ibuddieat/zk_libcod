@@ -192,7 +192,7 @@
 #define CONTENTS_TELEPORTER         0x40000
 #define CONTENTS_JUMPPAD            0x80000
 #define CONTENTS_CLUSTERPORTAL      0x100000
-#define CONTENTS_DONOTENTER         0x200000
+#define CONTENTS_DONOTENTER         0x200000 // contents of turrets, trigger_use
 #define CONTENTS_DONOTENTER_LARGE   0x400000
 #define CONTENTS_CURRENT_DOWN       0x800000 // might be named differently
 #define CONTENTS_MANTLE             0x1000000
@@ -200,7 +200,7 @@
 #define CONTENTS_CORPSE             0x4000000
 #define CONTENTS_DETAIL             0x8000000
 #define CONTENTS_STRUCTURAL         0x10000000
-#define CONTENTS_TRANSPARENT        0x20000000
+#define CONTENTS_TRANSPARENT        0x20000000 // contents of trigger_lookat
 #define CONTENTS_TRIGGER            0x40000000
 #define CONTENTS_NODROP             0x80000000
 
