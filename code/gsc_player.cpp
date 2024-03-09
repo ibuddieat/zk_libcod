@@ -415,11 +415,11 @@ void gsc_player_forceshot(scr_entref_t ref)
 		return;
 	}
 
-    if ( client->ps.weapon < 1 )
+	if ( client->ps.weapon < 1 )
 	{
 		stackPushBool(qfalse);
 		return;
-    }
+	}
 
 	if ( !g_antilag->current.boolean )
 		FireWeaponAntiLag(player, level.time);

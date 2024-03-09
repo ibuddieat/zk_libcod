@@ -5288,12 +5288,12 @@ LAB_08121ee6:
 	}
 }
 
-void custom_PlayerCmd_ClonePlayer(scr_entref_t ref)
+void custom_PlayerCmd_ClonePlayer(scr_entref_t entref)
 {
-	int id = ref.entnum;
+	int id = entref.entnum;
 
 	hook_playercmd_cloneplayer->unhook();
-	void (*PlayerCmd_ClonePlayer)(scr_entref_t ref);
+	void (*PlayerCmd_ClonePlayer)(scr_entref_t entref);
 	*(int *)&PlayerCmd_ClonePlayer = hook_playercmd_cloneplayer->from;
 
 	if ( id >= MAX_CLIENTS )
@@ -5310,7 +5310,7 @@ void custom_PlayerCmd_ClonePlayer(scr_entref_t ref)
 	}
 	else
 	{
-		PlayerCmd_ClonePlayer(ref);
+		PlayerCmd_ClonePlayer(entref);
 	}
 
 	hook_playercmd_cloneplayer->hook();
@@ -5407,7 +5407,7 @@ void custom_player_die(gentity_t *self, gentity_t *inflictor, gentity_t *attacke
 	}
 }
 
-void custom_PlayerCmd_finishPlayerDamage(scr_entref_t entRef)
+void custom_PlayerCmd_finishPlayerDamage(scr_entref_t entref)
 {
 	const char *mod;
 	const char *weaponName;
@@ -5445,18 +5445,18 @@ void custom_PlayerCmd_finishPlayerDamage(scr_entref_t entRef)
 	dir = 0;
 	point = 0;
 
-	if ( entRef.classnum )
+	if ( entref.classnum )
 	{
 		Scr_ObjectError("not an entity");
 		ent = 0;
 	}
 	else
 	{
-		ent = &g_entities[entRef.entnum];
+		ent = &g_entities[entref.entnum];
 
 		if ( !ent->client )
 		{
-			Scr_ObjectError(custom_va("entity %i is not a player", entRef.entnum));
+			Scr_ObjectError(custom_va("entity %i is not a player", entref.entnum));
 		}
 	}
 
@@ -5919,9 +5919,9 @@ LAB_081131e1:
 		ent->s.eventParm = sWeapon;
 }
 
-void custom_GScr_SetHintString(scr_entref_t ref)
+void custom_GScr_SetHintString(scr_entref_t entref)
 {
-	int id = ref.entnum;
+	int id = entref.entnum;
 	gentity_t *ent;
 	char hintString[MAX_STRINGLENGTH];
 	int index;
