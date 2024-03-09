@@ -440,6 +440,7 @@ scr_method_t scriptMethods[] =
 	{"enableBulletImpacts", gsc_player_enablebulletimpacts, 0},
 	{"disableTalkerIcon", gsc_player_disabletalkericon, 0},
 	{"enableTalkerIcon", gsc_player_enabletalkericon, 0},
+	{"processSuicide", gsc_player_processsuicide, 0},
 	#if COMPILE_CUSTOM_VOICE == 1
 	{"playSoundFile", gsc_player_playsoundfile, 0},
 	{"stopSoundFile", gsc_player_stopsoundfile, 0},

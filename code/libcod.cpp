@@ -163,6 +163,7 @@ int codecallback_notifydebug = 0;
 int codecallback_pickup = 0;
 int codecallback_playercommand = 0;
 int codecallback_remotecommand = 0;
+int codecallback_suicide = 0;
 int codecallback_userinfochanged = 0;
 int codecallback_vid_restart = 0;
 
@@ -201,6 +202,7 @@ callback_t callbacks[] =
 	{ &codecallback_pickup, "CodeCallback_Pickup"},
 	{ &codecallback_playercommand, "CodeCallback_PlayerCommand"},
 	{ &codecallback_remotecommand, "CodeCallback_RemoteCommand"},
+	{ &codecallback_suicide, "CodeCallback_Suicide"},
 	{ &codecallback_userinfochanged, "CodeCallback_UserInfoChanged"},
 	{ &codecallback_vid_restart, "CodeCallback_VidRestart"},
 
@@ -231,8 +233,8 @@ const entityHandler_t entityHandlers[] =
 	/* Script Model          */ { NULL, Reached_ScriptMover, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0 },
 	/* Grenade               */ { G_ExplodeMissile, NULL, NULL, Touch_Item_Auto, NULL, NULL, NULL, NULL, 3, 4},
 	/* Rocket                */ { G_ExplodeMissile, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 5, 6 },
-	/* Client                */ { NULL, NULL, NULL, NULL, NULL, NULL, custom_player_die, G_PlayerController, 0, 0 },
-	/* Client Spectator      */ { NULL, NULL, NULL, NULL, NULL, NULL, custom_player_die, NULL, 0, 0 },
+	/* Client                */ { NULL, NULL, NULL, NULL, NULL, NULL, player_die, G_PlayerController, 0, 0 },
+	/* Client Spectator      */ { NULL, NULL, NULL, NULL, NULL, NULL, player_die, NULL, 0, 0 },
 	/* Client Dead           */ { NULL, NULL, NULL, NULL, NULL, NULL, NULL, G_PlayerController, 0, 0 },
 	/* Player Clone          */ { BodyEnd, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0 },
 	/* Turret Init           */ { turret_think_init, NULL, NULL, NULL, turret_use, NULL, NULL, turret_controller, 0, 0},
@@ -5651,6 +5653,41 @@ void custom_PlayerCmd_finishPlayerDamage(scr_entref_t entref)
 	}
 }
 
+void custom_PlayerCmd_Suicide(scr_entref_t entref)
+{
+	gentity_s *pSelf;
+
+	if ( entref.classnum )
+	{
+		Scr_ObjectError("not an entity");
+		pSelf = 0;
+	}
+	else
+	{
+		pSelf = &g_entities[entref.entnum];
+
+		if ( !pSelf->client )
+		{
+			Scr_ObjectError(custom_va("entity %i is not a player", entref.entnum));
+		}
+	}
+
+	if ( codecallback_suicide && Scr_IsSystemActive() )
+	{	
+		short ret = Scr_ExecEntThread(pSelf, codecallback_suicide, 0);
+		Scr_FreeThread(ret);
+		return;
+	}
+	else
+	{
+		pSelf->flags &= 0xfffffffc;
+		pSelf->health = 0;
+		pSelf->client->ps.stats[STAT_HEALTH] = 0;
+
+		player_die(pSelf, pSelf, pSelf, 100000, MOD_SUICIDE, 0, 0, HITLOC_NONE, 0);
+	}
+}
+
 void custom_Scr_BulletTrace(void)
 {
 	int args;
@@ -8505,6 +8542,7 @@ public:
 		cracking_hook_function(0x080FD518, (int)custom_PlayerCmd_DeactivateReverb);
 		cracking_hook_function(0x080FD7C0, (int)custom_PlayerCmd_DeactivateChannelVolumes);
 		cracking_hook_function(0x080FB170, (int)custom_PlayerCmd_finishPlayerDamage);
+		cracking_hook_function(0x080FBBB4, (int)custom_PlayerCmd_Suicide);
 		cracking_hook_function(0x08100E54, (int)custom_Cmd_PrintEntities_f);
 		cracking_hook_function(0x08113076, (int)custom_GScr_LogPrint);
 		cracking_hook_function(0x080960E2, (int)custom_SV_PacketEvent);
@@ -8523,6 +8561,7 @@ public:
 		cracking_hook_function(0x080F8916, (int)custom_G_GetPlayerViewOrigin);
 		cracking_hook_function(0x08094C84, (int)custom_SVC_Status);
 		cracking_hook_function(0x0810B9A4, (int)custom_G_ClientStopUsingTurret);
+		cracking_hook_function(0x0810175A, (int)custom_player_die);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC718, (int)Jump_ClearState);

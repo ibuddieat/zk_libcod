@@ -2857,6 +2857,26 @@ void gsc_player_enabletalkericon(scr_entref_t ref)
 	stackPushBool(qtrue);
 }
 
+void gsc_player_processsuicide(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_processsuicide() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	gentity_t *pSelf = &g_entities[id];
+
+	pSelf->flags &= 0xfffffffc;
+	pSelf->health = 0;
+	pSelf->client->ps.stats[STAT_HEALTH] = 0;
+
+	player_die(pSelf, pSelf, pSelf, 100000, MOD_SUICIDE, 0, 0, HITLOC_NONE, 0);
+}
+
 #if COMPILE_CUSTOM_VOICE == 1
 
 extern VoicePacket_t voiceDataStore[MAX_CUSTOMSOUNDS][MAX_STOREDVOICEPACKETS];
