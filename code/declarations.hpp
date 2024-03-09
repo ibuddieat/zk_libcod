@@ -4184,6 +4184,8 @@ typedef struct customEntityState_s
 
 typedef struct customPlayerState_s
 {
+	qboolean overrideContents;
+	int contents;
 	qboolean overridePing;
 	int ping;
 	qboolean overrideStatusPing;

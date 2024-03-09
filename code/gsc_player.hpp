@@ -3,6 +3,7 @@
 
 #include "gsc.hpp"
 
+void gsc_player_overridecontents(scr_entref_t ref);
 void gsc_player_useentity(scr_entref_t ref);
 void gsc_player_useturret(scr_entref_t ref);
 void gsc_player_canuseturret(scr_entref_t ref);

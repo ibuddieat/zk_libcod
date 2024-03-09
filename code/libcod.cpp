@@ -1017,6 +1017,8 @@ void custom_SV_ClipMoveToEntity(moveclip_t *clip, svEntity_s *entity, trace_t *t
 
 void custom_G_SetClientContents(gentity_t *ent)
 {
+	int id = ent - g_entities;
+
 	if ( !g_playerCollision->current.boolean )
 		return;
 
@@ -1031,6 +1033,11 @@ void custom_G_SetClientContents(gentity_t *ent)
 			else
 			{
 				(ent->r).contents = CONTENTS_BODY;
+
+				/* New code: per-player/team collison */
+				if ( customPlayerState[id].overrideContents )
+					(ent->r).contents = customPlayerState[id].contents;
+				/* New code end */
 			}
 		}
 		else
@@ -1062,12 +1069,12 @@ qboolean custom_StuckInClient(gentity_t *self)
 		return qfalse;
 	/* New code end */
 
-	if ( ( ( ((self->client->ps).pm_flags & PMF_VIEWLOCKED) != 0 ) && ( (self->client->sess).sessionState == STATE_PLAYING ) ) && ( customPlayerState[id].collisionTeam != CUSTOM_TEAM_AXIS_ALLIES /* New condition */ || ( (self->r).contents == CONTENTS_BODY || ( (self->r).contents == CONTENTS_CORPSE ) ) ) )
+	if ( ( ( ((self->client->ps).pm_flags & PMF_VIEWLOCKED) != 0 ) && ( (self->client->sess).sessionState == STATE_PLAYING ) ) && ( customPlayerState[id].collisionTeam != CUSTOM_TEAM_AXIS_ALLIES /* New condition */ || ( ((self->r).contents & CONTENTS_BODY) != 0 || ( (self->r).contents == CONTENTS_CORPSE ) ) ) )
 	{
 		hit = g_entities;
 		for ( i = 0; i < level.maxclients; i++, hit++)
 		{
-			if ( ( ( ( ( ( (hit->r).inuse != 0 ) && ( ((hit->client->ps).pm_flags & PMF_VIEWLOCKED) != 0 ) ) && ( (hit->client->sess).sessionState == STATE_PLAYING )  ) && ( (hit != self && hit->client != NULL ) ) ) && ( 0 < hit->health && ( /* New condition */ customPlayerState[i].collisionTeam != CUSTOM_TEAM_AXIS_ALLIES || ( (hit->r).contents == CONTENTS_BODY || ( (hit->r).contents == CONTENTS_CORPSE ) ) ) ) ) &&
+			if ( ( ( ( ( ( (hit->r).inuse != 0 ) && ( ((hit->client->ps).pm_flags & PMF_VIEWLOCKED) != 0 ) ) && ( (hit->client->sess).sessionState == STATE_PLAYING )  ) && ( (hit != self && hit->client != NULL ) ) ) && ( 0 < hit->health && ( /* New condition */ customPlayerState[i].collisionTeam != CUSTOM_TEAM_AXIS_ALLIES || ( ((hit->r).contents & CONTENTS_BODY) != 0 || ( (hit->r).contents == CONTENTS_CORPSE ) ) ) ) ) &&
 			( (hit->r).absmin[0] <= (self->r).absmax[0] && ( ( ( (self->r).absmin[0] <= (hit->r).absmax[0] && ( (hit->r).absmin[1] <= (self->r).absmax[1] ) ) && ( (self->r).absmin[1] <= (hit->r).absmax[1] ) ) && ( (hit->r).absmin[2] <= (self->r).absmax[2] && ( (self->r).absmin[2] <= (hit->r).absmax[2] ) ) ) ) )
 			{
 				/* New code: per-player/team collison */

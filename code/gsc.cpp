@@ -335,6 +335,7 @@ scr_method_t scriptMethods[] =
 	#endif
 
 	#if COMPILE_PLAYER == 1
+	{"overrideContents", gsc_player_overridecontents, 0},
 	{"useEntity", gsc_player_useentity, 0},
 	{"useTurret", gsc_player_useturret, 0},
 	{"canUseTurret", gsc_player_canuseturret, 0},

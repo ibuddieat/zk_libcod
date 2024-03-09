@@ -10,6 +10,48 @@ extern customPlayerState_t customPlayerState[MAX_CLIENTS];
 extern customStringIndex_t custom_scr_const;
 extern dvar_t *g_antilag;
 
+void gsc_player_overridecontents(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_overridecontents() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	int contents = customPlayerState[id].contents;
+
+	if ( Scr_GetNumParam() > 0 )
+	{
+		if ( Scr_GetType(0) == STACK_UNDEFINED )
+		{
+			customPlayerState[id].overrideContents = qfalse;
+			customPlayerState[id].contents = 0;
+		}
+		else if ( Scr_GetType(0) == STACK_INT )
+		{
+			customPlayerState[id].overrideContents = qtrue;
+			customPlayerState[id].contents = Scr_GetInt(0);
+		}
+		else
+		{
+			stackError("gsc_player_overridecontents() first argument has a wrong type");
+			stackPushUndefined();
+			return;
+		}
+	}
+	else
+	{
+		stackError("gsc_player_overridecontents() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushInt(contents);
+}
+
 void gsc_player_useentity(scr_entref_t ref)
 {
 	int id = ref.entnum;
