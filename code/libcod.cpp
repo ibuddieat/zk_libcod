@@ -5330,9 +5330,11 @@ void custom_player_die(gentity_t *self, gentity_t *inflictor, gentity_t *attacke
 	        && self->client->ps.pm_type <= PM_NORMAL_LINKED
 	        && (self->client->ps.pm_flags & 0x400000) == 0 )
 	{
+		bgs = &level_bgs;
+
 		if ( attacker->s.eType == ET_TURRET && attacker->r.ownerNum != ENTITY_NONE )
 			attacker = &g_entities[attacker->r.ownerNum];
-
+		
 		Scr_AddEntity(attacker);
 		Scr_Notify(self, scr_const.death, 1);
 
