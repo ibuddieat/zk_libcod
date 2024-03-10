@@ -500,6 +500,12 @@ void gsc_entity_getcontents(scr_entref_t ref)
 	int id = ref.entnum;
 	gentity_t *ent = &g_entities[id];
 
+	if ( ent->client && customPlayerState[id].overrideContents )
+	{
+		stackPushInt(customPlayerState[id].contents);
+		return;
+	}
+
 	stackPushInt((ent->r).contents);
 }
 
