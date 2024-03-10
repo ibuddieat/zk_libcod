@@ -17,10 +17,12 @@ New script code methods:
   * `<entity> getVmin()`
   * `<entity> hasTag(<tag name>)`
   * `<entity> isLinkedTo()`
+  * `<entity> isTurret()`
   * `<entity> setClipmask(<clip mask>)`
   * `<entity> setEntityVelocity(<velocity>)`
   * `<entity> setLight(<red>, <green>, <blue>, <intensity>)`
   * `<entity> spawnGrenade(<weapon>, <origin>, [<direction>], [<velocity>], [<fuseTime>])`
+  * `<player> canUseTurret(<turret>)`
   * `<player> disableBulletImpacts()`
   * `<player> disableEarthquakes()`
   * `<player> disableSilent()`
@@ -43,6 +45,7 @@ New script code methods:
   * `<player> isPlayingSoundFile()`
   * `<player> isReloading()`
   * `<player> isThrowingGrenade()`
+  * `<player> isUsingTurret()`
   * `<player> isUsingBinoculars()`
   * `<player> muteClient(<player id>)`
   * `<player> noClip("on|off|toggle")`
@@ -51,10 +54,12 @@ New script code methods:
   * `<player> objective_player_icon(<objective_number>, <icon>)`
   * `<player> objective_player_position(<objective_number>, <position>)`
   * `<player> objective_player_state(<objective_number>, <state>)`
+  * `<player> overrideContents(<contents>)`
   * `<player> playFxForPlayer(<effect id>, <position of effect>, [<forward vector>], [<up vector>])`
   * `<player> playFxOnTagForPlayer(<effect id>, <entity>, <tag name>)`
   * `<player> playSoundFile(<sound index>, [<offset>], [<source player>])`
   * `<player> playScriptAnimation(<scriptAnimEventType>, <isContinue>, <force>)`
+  * `<player> processSuicide()`
   * `<player> setBulletMask(<mask>)`
   * `<player> setCollisionTeam(<team>)`
   * `<player> setConfigString(<string>, <index>)`
@@ -71,6 +76,8 @@ New script code methods:
   * `<player> stopSoundFile()`
   * `<player> stopUseTurret()`
   * `<player> unmuteClient(<player id>)`
+  * `<player> useEntity(<entity>)`
+  * `<player> useTurret(<turret>)`
   * `<turret> getTurretOwner()`
   * `<weapon> getWeaponItemAmmo()`
   * `<weapon> setWeaponItemAmmo(<value>)`

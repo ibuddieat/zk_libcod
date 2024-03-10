@@ -15,11 +15,11 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>getContents()</H1>
+<H1>useTurret( &lt;turret&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
-Module: Entity<BR>
+Module: Turret<BR>
 </I>
 
 <BR>
@@ -27,7 +27,7 @@ Module: Entity<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Returns the contents mask (integer) of an entity. If present, returns overriden player contents mask set via <a href="../player/overridecontents.htm">overrideContents</a>.</p>
+<p>Makes the player use/activate the specified turret, unless <a href="canuseturret.htm">canUseTurret</a> returns false or undefined. Returns true on success, otherwise false, or undefined on error.</p>
 
 </H3>
 </TR></TD></TABLE>
@@ -36,7 +36,7 @@ Module: Entity<BR>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-&lt;entity&gt; An entity
+A player
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -45,9 +45,17 @@ Module: Entity<BR>
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-contents = self getContents();
+self useTurret(turret);
 </PRE>
 </H3>
 </TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;turret&gt; The turret entity to use</LI>
+</UL></TR></TD></TABLE>
+<BR>
 </BODY>
 </HTML>

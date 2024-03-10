@@ -15,11 +15,11 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>getContents()</H1>
+<H1>Suicide</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
-Module: Entity<BR>
+Module: Callbacks<BR>
 </I>
 
 <BR>
@@ -27,16 +27,17 @@ Module: Entity<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Returns the contents mask (integer) of an entity. If present, returns overriden player contents mask set via <a href="../player/overridecontents.htm">overrideContents</a>.</p>
-
+<p>Calls CodeCallback_Suicide() in maps/mp/gametypes/_callbacksetup.gsc when <a href="../../stock/client/suicide.htm">suicide</a> is called on a player. Call <a href="../player/processsuicide.htm">processSuicide</a> on the player to proceed with the suicide operation.</p>
 </H3>
 </TR></TD></TABLE>
+<p>Note: The existance of the callback function is checked only once on server start. Functions added later are not taken into account, even after a map switch.</p>
+
 <BR><BR>
-<H2>Call this on:</H2>
+<H2>Called on:</H2>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-&lt;entity&gt; An entity
+The player
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -45,9 +46,14 @@ Module: Entity<BR>
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-contents = self getContents();
+CodeCallback_Suicide()
+{
+    // Room for further actions before processing the suicide
+    self processSuicide();
+}
 </PRE>
 </H3>
 </TR></TD></TABLE>
+<BR>
 </BODY>
 </HTML>
