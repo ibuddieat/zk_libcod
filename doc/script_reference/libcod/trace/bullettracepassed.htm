@@ -1,0 +1,63 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>bulletTracePassed( &lt;start&gt;, &lt;end&gt;, &lt;hit characters&gt;, &lt;ignore entity&gt;, &lt;content mask&gt; )</H1>
+<HR>
+<BODY BGCOLOR='B0C4DE'>
+<I>
+Module: Trace<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Allows script to do a point trace with MASK_SHOT. Returns true if trace complete, else returns false. Allows to use a custom content mask.</p>
+
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+success = bulletTracePassed( magicBulletOrigin.origin, eyePos, true, undefined, 41953329 /* 0x2802831 */ );
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;start&gt; The bullet start point</LI>
+<LI>2 : &lt;end&gt; The bullet end point</LI>
+<LI>3 : &lt;hit characters&gt; When set to true, this will trace for character hits</LI>
+<LI>4 : &lt;ignore entity&gt; An entity to ignore</LI>
+</UL></TR></TD></TABLE>
+<BR><BR>
+<H2>Optional Args</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;content mask&gt; A custom content mask to use instead of MASK_SHOT</LI>
+</UL></TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>

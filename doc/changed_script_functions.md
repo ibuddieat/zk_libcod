@@ -33,7 +33,7 @@ Script code functions:
   * Renamed `fs_loaddir()` to `loadDir()`
   * Renamed `g_findConfigStringIndexOriginal()` to `findConfigStringIndexOriginal()`
   * Renamed `g_findConfigStringIndex()` to `findConfigStringIndex()`
-
+  * `bulletTracePassed(<start>, <end>, <hit characters>, <ignore entity>, [<content mask>])` got one more parameter for custom content masks
 
 # Changed since release v10.0:
 

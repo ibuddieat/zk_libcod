@@ -5701,8 +5701,8 @@ void custom_Scr_BulletTrace(void)
 	trace_t trace;
 	int contentmask;
 	int passEntityNum;
-	vec3_t end;
 	vec3_t start;
+	vec3_t end;
 
 	passEntityNum = ENTITY_NONE;
 	Scr_GetVector(0, &start);
@@ -5769,6 +5769,50 @@ void custom_Scr_BulletTrace(void)
 		Scr_AddInt(0);
 		Scr_AddArrayStringIndexed(custom_scr_const.flags);
 	}
+}
+
+void custom_Scr_BulletTracePassed(void)
+{
+	int args;
+	int hitCharacters;
+	int type;
+	gentity_t *passEnt;
+	int contentmask;
+	int passEntityNum;
+	vec3_t start;
+	vec3_t end;
+
+	passEntityNum = ENTITY_NONE;
+	Scr_GetVector(0, &start);
+	Scr_GetVector(1, &end);
+	hitCharacters = Scr_GetInt(2);
+	if ( hitCharacters == 0 )
+	{
+		contentmask = MASK_SHOT ^ CONTENTS_BODY;
+	}
+	else
+	{
+		contentmask = MASK_SHOT;
+	}
+
+	/* New code: bulletTracePassed contentmask override */
+	args = Scr_GetNumParam();
+	if ( args > 4 )
+		contentmask = Scr_GetInt(4);
+	/* New code end */
+
+	type = Scr_GetType(3);
+	if ( type == STACK_OBJECT )
+	{
+		type = Scr_GetPointerType(3);
+		if ( type == STACK_ENTITY )
+		{
+			passEnt = Scr_GetEntity(3);
+			passEntityNum = (passEnt->s).number;
+		}
+	}
+
+	Scr_AddBool(G_LocationalTracePassed(start, end, passEntityNum, contentmask));
 }
 
 void custom_Scr_SightTracePassed(void)
@@ -8570,6 +8614,7 @@ public:
 		cracking_hook_function(0x0811B770, (int)custom_G_SpawnEntitiesFromString);
 		cracking_hook_function(0x080584F0, (int)custom_CM_IsBadStaticModel);
 		cracking_hook_function(0x08113818, (int)custom_Scr_BulletTrace);
+		cracking_hook_function(0x08113A4A, (int)custom_Scr_BulletTracePassed);
 		cracking_hook_function(0x08113B0C, (int)custom_Scr_SightTracePassed);
 		cracking_hook_function(0x08117022, (int)custom_GScr_KickPlayer);
 		cracking_hook_function(0x08113128, (int)custom_GScr_Obituary);

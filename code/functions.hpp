@@ -3189,6 +3189,15 @@ static const G_LocationalTrace_t G_LocationalTrace = (G_LocationalTrace_t)0x0810
 static const G_LocationalTrace_t G_LocationalTrace = (G_LocationalTrace_t)0x0810A5CC;
 #endif
 
+typedef int (*G_LocationalTracePassed_t)(const float *start, const float *end, int passEntityNum, int contentmask);
+#if COD_VERSION == COD2_1_0
+static const G_LocationalTracePassed_t G_LocationalTracePassed = (G_LocationalTracePassed_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_LocationalTracePassed_t G_LocationalTracePassed = (G_LocationalTracePassed_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_LocationalTracePassed_t G_LocationalTracePassed = (G_LocationalTracePassed_t)0x0810A622;
+#endif
+
 typedef void (*G_TraceCapsule_t)(trace_t *results, const float *start, const float *mins, const float *maxs, const float *end, int passEntityNum, int contentMask);
 #if COD_VERSION == COD2_1_0
 static const G_TraceCapsule_t G_TraceCapsule = (G_TraceCapsule_t)0x0; // Not tested
