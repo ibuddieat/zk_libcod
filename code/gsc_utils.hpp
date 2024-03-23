@@ -23,6 +23,7 @@ void gsc_utils_logprintconsole();
 
 void gsc_utils_getarraykeys();
 void gsc_utils_getascii();
+void gsc_utils_getcallstack();
 void gsc_utils_toupper();
 
 void gsc_utils_file_link();

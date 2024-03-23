@@ -84,6 +84,7 @@ New script code methods:
 
 New script code functions:
   * `chr(<number>)`
+  * `getCallStack()`
   * `getSoundDuration(<aliasname>)`
   * `getSoundInfo(<aliasname>)`
   * `getWeaponFuseTime(<weapon name>)`

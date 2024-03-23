@@ -805,6 +805,35 @@ void gsc_utils_getascii()
 	stackPushInt(str[0]);
 }
 
+extern const char * stackGetPrevCodePosFileName(const char *codePos, unsigned int index);
+extern int stackGetPrevCodePosLineNumber(const char *codePos, unsigned int index);
+void gsc_utils_getcallstack()
+{
+	int i, j;
+
+	stackPushArray();
+	stackPushString(stackGetPrevCodePosFileName(scrVmPub.function_frame->fs.pos, 0));
+	stackPushArrayLast();
+	stackPushInt(stackGetPrevCodePosLineNumber(scrVmPub.function_frame->fs.pos, 0));
+	stackPushArrayLast();
+	i = scrVmPub.function_count;
+	if ( scrVmPub.function_count )
+	{
+		while ( j = i - 1, 0 < j )
+		{
+			stackPushString(stackGetPrevCodePosFileName(scrVmPub.function_frame_start[i - 1].fs.pos, scrVmPub.function_frame_start[i - 1].fs.localId == 0));
+			stackPushArrayLast();
+			stackPushInt(stackGetPrevCodePosLineNumber(scrVmPub.function_frame_start[i - 1].fs.pos, scrVmPub.function_frame_start[i - 1].fs.localId == 0));
+			stackPushArrayLast();
+			i = j;
+		}
+		stackPushString(stackGetPrevCodePosFileName(scrVmPub.function_frame_start[0].fs.pos, 1));
+		stackPushArrayLast();
+		stackPushInt(stackGetPrevCodePosLineNumber(scrVmPub.function_frame_start[0].fs.pos, 1));
+		stackPushArrayLast();
+	}
+}
+
 void gsc_utils_toupper()
 {
 	char *str;

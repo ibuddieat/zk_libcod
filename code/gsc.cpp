@@ -174,6 +174,7 @@ scr_function_t scriptFunctions[] =
 	{"logPrintConsole", gsc_utils_logprintconsole, 0},
 	{"getArrayKeys", gsc_utils_getarraykeys, 0},
 	{"getAscii", gsc_utils_getascii, 0},
+	{"getCallStack", gsc_utils_getcallstack, 0},
 	{"toUpper", gsc_utils_toupper, 0},
 
 	#if ENABLE_UNSAFE == 1
@@ -499,6 +500,70 @@ int stackGetParamType(int param)
 	var = &scrVmPub.top[-param];
 
 	return var->type;
+}
+
+const char * stackGetPrevCodePosFileName(const char *codePos, unsigned int index)
+{
+	unsigned int pos;
+
+	if ( !codePos )
+		return "<unknown, frozen thread>";
+
+	if ( codePos == &g_EndPos )
+		return "<unknown, removed thread>";
+
+	if ( scrVarPub.programBuffer && Scr_IsInOpcodeMemory(codePos) )
+	{
+		pos = Scr_GetPrevSourcePos(codePos - 1, index);
+		if ( (int)pos < 0 )
+		{
+			return "<unknown, developer mode off>";
+		}
+		else
+		{
+			return scrParserPub.sourceBufferLookup[Scr_GetSourceBuffer(codePos - 1)].buf;
+		}
+	}
+	return "<unknown>";
+}
+
+int stackGetPrevCodePosLineNumber(const char *codePos, unsigned int index)
+{
+	unsigned int bufferIndex;
+	unsigned int pos;
+	const char *buf;
+	int lineNum = 1;
+
+	if ( !codePos )
+		return -1;
+
+	if ( codePos == &g_EndPos )
+		return -1;
+
+	if ( scrVarPub.programBuffer && Scr_IsInOpcodeMemory(codePos) )
+	{
+		pos = Scr_GetPrevSourcePos(codePos - 1, index);
+		if ( (int)pos < 0 )
+		{
+			return -1;
+		}
+		else
+		{
+			bufferIndex = Scr_GetSourceBuffer(codePos - 1);
+			buf = scrParserPub.sourceBufferLookup[bufferIndex].sourceBuf;
+
+			for ( ; pos != 0; pos-- )
+			{
+				if ( *buf == '\0' )
+				{
+					lineNum++;
+				}
+				buf++;
+			}
+			return lineNum;
+		}
+	}
+	return -1;
 }
 
 void stackError(const char *format, ...)

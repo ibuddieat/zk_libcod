@@ -1,0 +1,49 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>getCallStack()</H1>
+<HR>
+<BODY BGCOLOR='B0C4DE'>
+<I>
+Module: Debug<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Returns the current call stack, which is an array consisting of filename and line number pairs. The first two elements describe the call to getCallStack() itself.</p>
+
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+stack = getCallStack();
+logPrintConsole("Call stack:\n");
+for(i = 0; i < stack.size - 1; i += 2)
+    logPrintConsole("> Line " + stack[i + 1] + " in " + stack[i] + "\n");
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>
