@@ -2199,6 +2199,24 @@ static const SV_ClientThink_t SV_ClientThink = (SV_ClientThink_t)0x08090D18;
 static const SV_ClientThink_t SV_ClientThink = (SV_ClientThink_t)0x08090DAC;
 #endif
 
+typedef int (*SV_GetArchivedClientInfo_t)(int clientNum, int *pArchiveTime, playerState_t *ps, clientState_t *cs);
+#if COD_VERSION == COD2_1_0
+static const SV_GetArchivedClientInfo_t SV_GetArchivedClientInfo = (SV_GetArchivedClientInfo_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_GetArchivedClientInfo_t SV_GetArchivedClientInfo = (SV_GetArchivedClientInfo_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_GetArchivedClientInfo_t SV_GetArchivedClientInfo = (SV_GetArchivedClientInfo_t)0x0809a0b6;
+#endif
+
+typedef qboolean (*G_ClientCanSpectateTeam_t)(gclient_s *client, int team);
+#if COD_VERSION == COD2_1_0
+static const G_ClientCanSpectateTeam_t G_ClientCanSpectateTeam = (G_ClientCanSpectateTeam_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_ClientCanSpectateTeam_t G_ClientCanSpectateTeam = (G_ClientCanSpectateTeam_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_ClientCanSpectateTeam_t G_ClientCanSpectateTeam = (G_ClientCanSpectateTeam_t)0x080f6dd0;
+#endif
+
 typedef void (*SV_Heartbeat_f_t)(void);
 #if COD_VERSION == COD2_1_0
 static const SV_Heartbeat_f_t SV_Heartbeat_f = (SV_Heartbeat_f_t)0x0; // Not tested

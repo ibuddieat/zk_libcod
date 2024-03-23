@@ -2,6 +2,8 @@
 
 #if COMPILE_ENTITY == 1
 
+extern customPlayerState_t customPlayerState[MAX_CLIENTS];
+
 void gsc_entity_setalive(scr_entref_t ref)
 {
 	int id = ref.entnum;
