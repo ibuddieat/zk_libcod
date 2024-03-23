@@ -7689,7 +7689,7 @@ void custom_Cmd_PrintEntities_f(void)
 		G_PrintEntities();
 }
 
-int custom_Cmd_FollowCycle_f(gentity_s *ent, int dir)
+int custom_Cmd_FollowCycle_f(gentity_t *ent, int dir)
 {
 	clientState_t cstate;
 	playerState_s pstate;
@@ -7726,7 +7726,8 @@ int custom_Cmd_FollowCycle_f(gentity_s *ent, int dir)
 		        && G_ClientCanSpectateTeam(ent->client, (team_t)cstate.team) )
 		{
 			client_t *client = &svs.clients[clientNum];
-			if(client->bot && !g_spectateBots->current.boolean)
+
+			if ( client->bot && !g_spectateBots->current.boolean )
 				continue;
 			
 			ent->client->spectatorClient = clientNum;

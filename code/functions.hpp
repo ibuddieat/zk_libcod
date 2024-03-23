@@ -2208,7 +2208,7 @@ static const SV_GetArchivedClientInfo_t SV_GetArchivedClientInfo = (SV_GetArchiv
 static const SV_GetArchivedClientInfo_t SV_GetArchivedClientInfo = (SV_GetArchivedClientInfo_t)0x0809a0b6;
 #endif
 
-typedef qboolean (*G_ClientCanSpectateTeam_t)(gclient_s *client, int team);
+typedef qboolean (*G_ClientCanSpectateTeam_t)(gclient_t *client, int team);
 #if COD_VERSION == COD2_1_0
 static const G_ClientCanSpectateTeam_t G_ClientCanSpectateTeam = (G_ClientCanSpectateTeam_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2
