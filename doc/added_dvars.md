@@ -49,6 +49,10 @@ Added dvars:
     * Type: Boolean
     * Default: True
     * Effect: If false, weapons loaded from map files are neither precached nor spawned. Instead, the list of loaded weapons is sent to the `CodeCallback_MapWeaponsLoad` script callback function.
+  * `g_spectateBots`
+    * Type: Boolean
+    * Default: True
+    * Effect: Toggle the ability to spectate bots.
   * `g_triggerMode`
     * Type: Integer
     * Default: 1
