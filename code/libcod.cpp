@@ -89,6 +89,7 @@ dvar_t *g_spawnMapTurrets;
 dvar_t *g_spawnMapWeapons;
 dvar_t *g_triggerMode;
 dvar_t *g_turretMissingTagTerminalError;
+dvar_t *g_spectateBots;
 dvar_t *loc_loadLocalizedMods;
 dvar_t *logErrors;
 dvar_t *logfileName;
@@ -337,6 +338,7 @@ void common_init_complete_print(const char *format, ...)
 	g_spawnMapWeapons = Dvar_RegisterBool("g_spawnMapWeapons", qtrue, DVAR_ARCHIVE);
 	g_triggerMode = Dvar_RegisterInt("g_triggerMode", 1, 0, 2, DVAR_ARCHIVE);
 	g_turretMissingTagTerminalError = Dvar_RegisterBool("g_turretMissingTagTerminalError", qtrue, DVAR_ARCHIVE);
+	g_spectateBots = Dvar_RegisterBool("g_spectateBots", qtrue, DVAR_ARCHIVE);
 	loc_loadLocalizedMods = Dvar_RegisterBool("loc_loadLocalizedMods", qfalse, DVAR_ARCHIVE);
 	logErrors = Dvar_RegisterBool("logErrors", qfalse, DVAR_ARCHIVE);
 	scr_turretDamageName = Dvar_RegisterBool("scr_turretDamageName", qfalse, DVAR_ARCHIVE);
@@ -7687,6 +7689,56 @@ void custom_Cmd_PrintEntities_f(void)
 		G_PrintEntities();
 }
 
+int custom_Cmd_FollowCycle_f(gentity_s *ent, int dir)
+{
+	clientState_t cstate;
+	playerState_s pstate;
+	int startClientNum;
+	int clientNum;
+
+	if ( dir != 1 && dir != -1 )
+		Com_Error(ERR_DROP, "Cmd_FollowCycle_f: bad dir %i", dir);
+
+	if ( ent->client->sess.sessionState != STATE_SPECTATOR )
+		return 0;
+
+	if ( ent->client->sess.forceSpectatorClient >= 0 )
+		return 0;
+
+	clientNum = ent->client->spectatorClient;
+
+	if ( clientNum < 0 )
+		clientNum = 0;
+
+	startClientNum = clientNum;
+
+	do
+	{
+		clientNum += dir;
+
+		if ( clientNum >= level.maxclients )
+			clientNum = 0;
+
+		if ( clientNum < 0 )
+			clientNum = level.maxclients - 1;
+
+		if ( SV_GetArchivedClientInfo(clientNum, &ent->client->sess.archiveTime, &pstate, &cstate)
+		        && G_ClientCanSpectateTeam(ent->client, (team_t)cstate.team) )
+		{
+			client_t *client = &svs.clients[clientNum];
+			if(client->bot && !g_spectateBots->current.boolean)
+				continue;
+			
+			ent->client->spectatorClient = clientNum;
+			ent->client->sess.sessionState = STATE_SPECTATOR;
+			return 1;
+		}
+	}
+	while ( clientNum != startClientNum );
+
+	return 0;
+}
+
 void custom_GScr_LogPrint(void)
 {
 	unsigned int len;
@@ -8544,6 +8596,7 @@ public:
 		cracking_hook_function(0x080FB170, (int)custom_PlayerCmd_finishPlayerDamage);
 		cracking_hook_function(0x080FBBB4, (int)custom_PlayerCmd_Suicide);
 		cracking_hook_function(0x08100E54, (int)custom_Cmd_PrintEntities_f);
+		cracking_hook_function(0x080ff4ac, (int)custom_Cmd_FollowCycle_f);
 		cracking_hook_function(0x08113076, (int)custom_GScr_LogPrint);
 		cracking_hook_function(0x080960E2, (int)custom_SV_PacketEvent);
 		cracking_hook_function(0x08094530, (int)custom_SV_CanReplaceServerCommand);
