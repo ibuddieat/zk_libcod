@@ -1312,43 +1312,6 @@ void gsc_player_stopuseturret(scr_entref_t ref)
 
 }
 
-void gsc_player_getjumpslowdowntimer(scr_entref_t ref)
-{
-	int id = ref.entnum;
-
-	if ( id >= MAX_CLIENTS )
-	{
-		stackError("gsc_player_getjumpslowdowntimer() entity %i is not a player", id);
-		stackPushUndefined();
-		return;
-	}
-
-	playerState_t *ps = SV_GameClientNum(id);
-
-	stackPushInt(ps->pm_time);
-}
-
-void gsc_player_clearjumpstate(scr_entref_t ref)
-{
-	int id = ref.entnum;
-
-	if ( id >= MAX_CLIENTS )
-	{
-		stackError("gsc_player_clearjumpstate() entity %i is not a player", id);
-		stackPushUndefined();
-		return;
-	}
-
-	playerState_t *ps = SV_GameClientNum(id);
-
-	ps->pm_flags &= ~( PMF_JUMPING | PMF_SLIDING );
-	ps->pm_time = 0;
-	ps->jumpTime = 0;
-	ps->jumpOriginZ = 0;
-
-	stackPushBool(qtrue);
-}
-
 void gsc_player_setspeed(scr_entref_t ref)
 {
 	int id = ref.entnum;
@@ -3044,6 +3007,43 @@ void gsc_player_playsoundfile(scr_entref_t ref)
 #endif
 
 #if COMPILE_JUMP == 1
+
+void gsc_player_clearjumpstate(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_clearjumpstate() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	playerState_t *ps = SV_GameClientNum(id);
+
+	ps->pm_flags &= ~( PMF_JUMPING | PMF_SLIDING );
+	ps->pm_time = 0;
+	ps->jumpTime = 0;
+	ps->jumpOriginZ = 0;
+
+	stackPushBool(qtrue);
+}
+
+void gsc_player_getjumpslowdowntimer(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_getjumpslowdowntimer() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	playerState_t *ps = SV_GameClientNum(id);
+
+	stackPushInt(ps->pm_time);
+}
 
 void gsc_player_setjumpheight(scr_entref_t ref)
 {

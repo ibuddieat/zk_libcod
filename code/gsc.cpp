@@ -397,8 +397,6 @@ scr_method_t scriptMethods[] =
 	{"setMeleeWidthScale", gsc_player_setmeleewidthscale, 0},
 	{"setAnimation", gsc_player_setanimation, 0},
 	{"playScriptAnimation", gsc_player_playscriptanimation, 0},
-	{"getJumpSlowdownTimer", gsc_player_getjumpslowdowntimer, 0},
-	{"clearJumpState", gsc_player_clearjumpstate, 0},
 	{"getCookTime", gsc_player_getcooktime, 0},
 	{"setGuid", gsc_player_setguid, 0},
 	{"clientHasClientMuted", gsc_player_clienthasclientmuted, 0},
@@ -449,6 +447,8 @@ scr_method_t scriptMethods[] =
 	{"isPlayingSoundFile", gsc_player_isplayingsoundfile, 0},
 	#endif
 	#if COMPILE_JUMP == 1
+	{"clearJumpState", gsc_player_clearjumpstate, 0},
+	{"getJumpSlowdownTimer", gsc_player_getjumpslowdowntimer, 0},
 	{"setJumpHeight", gsc_player_setjumpheight, 0},
 	{"setJumpSlowdownEnable", gsc_player_setjumpslowdownenable, 0},
 	#endif
