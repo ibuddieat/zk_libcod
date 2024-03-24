@@ -62,7 +62,7 @@ Added dvars:
   * `g_turretMissingTagTerminalError`
     * Type: Boolean
     * Default: True
-    * Effect: If false, the server will not halt when the `tag_player` tag cannot be found on a turret, but instead drop a debug print and a script error to `CodeCallback_Error`. Such error can occur in killcam-related edge cases.
+    * Effect: If false, the server will not halt when the `tag_player` tag cannot be found on a turret, but instead yield a script error to `CodeCallback_Error`, if that callback is enabled. Such error can occur in killcam-related edge cases, e.g., when a turret is removed while the player is alive and in killcam.
   * `loc_loadLocalizedMods`
     * Type: Boolean
     * Default: False

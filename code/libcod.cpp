@@ -4841,14 +4841,9 @@ void custom_G_GetPlayerViewOrigin(gentity_t *ent, float *origin)
 		{
 			// New: g_turretMissingTagTerminalError dvar
 			if ( g_turretMissingTagTerminalError->current.boolean )
-			{
 				Com_Error(ERR_DROP, "G_GetPlayerViewOrigin: Couldn't find [tag_player] on turret");
-			}
 			else
-			{
-				Com_DPrintf("G_GetPlayerViewOrigin: Couldn't find [tag_player] on turret for client %d\n", ent - g_entities);
-				Scr_CodeCallback_Error(qfalse, qfalse, "G_GetPlayerViewOrigin", custom_va("Couldn't find [tag_player] on turret for client %d", ent - g_entities));
-			}
+				Scr_CodeCallback_Error(qfalse, qfalse, "G_GetPlayerViewOrigin", custom_va("Turret removed for client %d while alive and in killcam", ent - g_entities));
 		}
 	}
 
@@ -4874,7 +4869,8 @@ void custom_G_ClientStopUsingTurret(gentity_t *self)
 
 	info = self->pTurretInfo;
 
-	/* New code start: Return if turret info has already been freed */
+	/* New code start: Return if turret info has already been freed, see
+	 g_turretMissingTagTerminalError dvar docs for when this can happen. */
 	if ( !info )
 		return;
 	/* New code end */
@@ -5657,7 +5653,7 @@ void custom_PlayerCmd_finishPlayerDamage(scr_entref_t entref)
 
 void custom_PlayerCmd_Suicide(scr_entref_t entref)
 {
-	gentity_s *pSelf;
+	gentity_t *pSelf;
 
 	if ( entref.classnum )
 	{
