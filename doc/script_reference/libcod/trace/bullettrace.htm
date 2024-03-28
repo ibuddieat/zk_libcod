@@ -27,7 +27,7 @@ Module: Trace<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Allows script to do a point trace with MASK_SHOT content mask (by default). Returns hit position, hit entity, hit surface normal, and hit surface flags. Allows to use a custom content mask.</p>
+<p>Allows script to do a point trace with MASK_SHOT content mask (by default). Returns distance fraction, hit position, hit entity, hit surface normal vector, hit surface type, and hit surface flags. Allows to use a custom content mask.</p>
 
 </H3>
 </TR></TD></TABLE>
@@ -38,6 +38,14 @@ Module: Trace<BR>
 <H3>
 <PRE>
 trace = bulletTrace( magicBulletOrigin.origin, eyePos, true, undefined, 41953329 /* 0x2802831 */ );
+/*
+trace["fraction"] // float between including 0.0 and 1.0, stating how much of the trace distance was passed
+trace["position"] // end position, if no hit
+trace["entity"] // undefined, if no hit
+trace["normal"] // normalized bullet direction, if no hit
+trace["surfacetype"] // "none", if no hit
+trace["flags"] // 0, if no hit
+*/
 </PRE>
 </H3>
 </TR></TD></TABLE>

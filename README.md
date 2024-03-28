@@ -8,7 +8,7 @@
 
 ## ⭐ What's new?
 > [!NOTE]
-> These are changes in comparison to its [parent repository](doc/history.md).
+> These are changes in comparison to the [parent repository](doc/history.md).
 - 🔢 [Added dvars](doc/added_dvars.md)
 - 🔀 [Added script callback functions](doc/added_script_callback_functions.md)
 - 🔣 [Added script code functions](doc/added_script_functions.md)
