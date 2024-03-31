@@ -3792,6 +3792,15 @@ static const FX_FreeSystem_t FX_FreeSystem = (FX_FreeSystem_t)0x0; // Not tested
 static const FX_FreeSystem_t FX_FreeSystem = (FX_FreeSystem_t)0x081318E0;
 #endif
 
+typedef float (*FX_GetEffectLength_t)(EffectTemplate *effect);
+#if COD_VERSION == COD2_1_0
+static const FX_GetEffectLength_t FX_GetEffectLength = (FX_GetEffectLength_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const FX_GetEffectLength_t FX_GetEffectLength = (FX_GetEffectLength_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const FX_GetEffectLength_t FX_GetEffectLength = (FX_GetEffectLength_t)0x0813198C;
+#endif
+
 typedef void (*FX_InitSystem_t)(byte rendererExists);
 #if COD_VERSION == COD2_1_0
 static const FX_InitSystem_t FX_InitSystem = (FX_InitSystem_t)0x0; // Not tested
@@ -3799,6 +3808,15 @@ static const FX_InitSystem_t FX_InitSystem = (FX_InitSystem_t)0x0; // Not tested
 static const FX_InitSystem_t FX_InitSystem = (FX_InitSystem_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const FX_InitSystem_t FX_InitSystem = (FX_InitSystem_t)0x081318C6;
+#endif
+
+typedef EffectTemplate * (*FX_RegisterEffect_t)(const char *filepath);
+#if COD_VERSION == COD2_1_0
+static const FX_RegisterEffect_t FX_RegisterEffect = (FX_RegisterEffect_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const FX_RegisterEffect_t FX_RegisterEffect = (FX_RegisterEffect_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const FX_RegisterEffect_t FX_RegisterEffect = (FX_RegisterEffect_t)0x0812C38A;
 #endif
 
 typedef void * (*Hunk_AllocInternal_t)(int size);

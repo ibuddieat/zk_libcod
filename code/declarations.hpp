@@ -2303,7 +2303,7 @@ struct snd_alias_build_s
 	byte error;
 	byte keep;
 	byte pad0;
-	int pSameSoundFile; // SoundFile* ?
+	int pSameSoundFile; // SoundFile * ?
 	snd_alias_build_s *pNext;
 };
 
@@ -2334,6 +2334,20 @@ struct snd_alias_list_t
 	snd_alias_t *head;
 	int count;
 	snd_alias_list_t *pHashNext;
+};
+
+struct EffectPrimitive
+{
+	struct EffectTemplate *fx;
+	int *primTemp; // PrimitiveTemplate *
+	int *boltFrame; // FxBoltFramePtr
+};
+
+struct EffectTemplate
+{
+	const char *EffectName;
+	int mPrimitiveCount;
+	EffectPrimitive mPrimitives[32];
 };
 
 typedef const char FxEffectDef_t;
