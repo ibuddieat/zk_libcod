@@ -381,8 +381,8 @@ typedef struct entityHandler_s
 	void (*pain)(gentity_t *, gentity_t *, int, const float *, meansOfDeath_t, const float *, hitLocation_t);
 	void (*die)(gentity_t *, gentity_t *, gentity_t *, int, meansOfDeath_t, const int, const float *, hitLocation_t, int);
 	void (*controller)(gentity_t *, gentity_t *);
-	int methodOfDeath;
-	int splashMethodOfDeath;
+	meansOfDeath_t methodOfDeath;
+	meansOfDeath_t splashMethodOfDeath;
 } entityHandler_t;
 
 enum svc_ops_e
