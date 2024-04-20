@@ -76,7 +76,6 @@ dvar_t *g_corpseHit;
 dvar_t *g_debugCallbacks;
 dvar_t *g_debugEvents;
 dvar_t *g_debugStaticModels;
-dvar_t *g_dumpVoiceData;
 dvar_t *g_logPickup;
 dvar_t *g_mantleBlockEnable;
 dvar_t *g_playerCollision;
@@ -277,7 +276,6 @@ void custom_Com_InitDvars(void)
 	com_sv_running = Dvar_FindVar("sv_running");
 }
 
-FILE *voiceDataDumpFile;
 void common_init_complete_print(const char *format, ...)
 {
 	/* We are in Com_Init_Try_Block_Function, after executing Com_InitDvars()
@@ -326,7 +324,6 @@ void common_init_complete_print(const char *format, ...)
 	g_debugCallbacks = Dvar_RegisterBool("g_debugCallbacks", qfalse, DVAR_ARCHIVE);
 	g_debugEvents = Dvar_RegisterBool("g_debugEvents", qfalse, DVAR_ARCHIVE);
 	g_debugStaticModels = Dvar_RegisterBool("g_debugStaticModels", qfalse, DVAR_ARCHIVE);
-	g_dumpVoiceData = Dvar_RegisterBool("g_dumpVoiceData", qfalse, DVAR_ARCHIVE);
 	g_logPickup = Dvar_RegisterBool("g_logPickup", qtrue, DVAR_ARCHIVE);
 	g_mantleBlockEnable = Dvar_RegisterBool("g_mantleBlockEnable", qfalse, DVAR_ARCHIVE);
 	g_playerCollision = Dvar_RegisterBool("g_playerCollision", qtrue, DVAR_ARCHIVE);
@@ -364,16 +361,6 @@ void common_init_complete_print(const char *format, ...)
 	 G_RegisterDvars, example:
 	g_gravity = Dvar_RegisterFloat("g_gravity", 800.0, 1.0, 3.402823e+38, DVAR_CHANGEABLE_RESET);
 	*/
-
-	// Voice data dumping
-	if ( g_dumpVoiceData->current.boolean )
-	{
-		voiceDataDumpFile = fopen("voiceData.spx", "ab");	
-		if ( !voiceDataDumpFile )
-		{
-			Com_Printf("Warning: Could not open file voiceData.spx\n");
-		}
-	}
 }
 
 void custom_G_ProcessIPBans(void)
@@ -6603,36 +6590,6 @@ void custom_FireWeaponAntiLag(gentity_t *player, int time)
 	}
 }
 
-void custom_SV_QueueVoicePacket(int talkerNum, int clientNum, VoicePacket_t *voicePacket)
-{
-	/* New code start: voice chat dump */
-	if ( voiceDataDumpFile && g_dumpVoiceData->current.boolean )
-	{
-		char voiceLogData[(256*4)+1];
-		char voiceLogEntry[(256*4)+64]; // {"talker": "64", "client": "64", "data": ""}\n
-
-		char *pos = voiceLogData;
-		for ( int i = 0; i < voicePacket->dataLen; i++ )
-		{
-			pos += sprintf(pos, "\\x%02hhX", voicePacket->data[i]);
-		}
-
-		snprintf(voiceLogEntry, sizeof(voiceLogEntry), "{\"talker\": \"%02i\", \"client\": \"%02i\", \"data\": \"%s\"}\n", talkerNum, clientNum, voiceLogData);
-		fwrite(&voiceLogEntry, strlen(voiceLogEntry), 1, voiceDataDumpFile);
-		fflush(voiceDataDumpFile);
-	}
-	/* New code end */
-
-	client_t *client = svs.clients;
-	if ( client[clientNum].unsentVoiceData < MAX_VOICEPACKETS )
-	{
-		client[clientNum].voicedata[client[clientNum].unsentVoiceData].dataLen = voicePacket->dataLen;
-		memcpy(client[clientNum].voicedata[client[clientNum].unsentVoiceData].data, voicePacket->data, voicePacket->dataLen);
-		client[clientNum].voicedata[client[clientNum].unsentVoiceData].talkerNum = (char)talkerNum;
-		client[clientNum].unsentVoiceData++;
-	}
-}
-
 char openLogfileName[MAX_OSPATH];
 void openLogfile(qboolean reopen)
 {
@@ -8620,7 +8577,6 @@ public:
 		cracking_hook_function(0x08120A70, (int)custom_FireWeaponMelee);
 		cracking_hook_function(0x08120484, (int)custom_Bullet_Fire);
 		cracking_hook_function(0x0811FE90, (int)custom_Bullet_Fire_Extended);
-		cracking_hook_function(0x0809C21C, (int)custom_SV_QueueVoicePacket);
 		cracking_hook_function(0x08121BC6, (int)custom_Player_UpdateCursorHints);
 		cracking_hook_function(0x08060C20, (int)custom_Com_PrintMessage);
 		cracking_hook_function(0x08109F5C, (int)custom_G_RunFrameForEntity);
@@ -8689,10 +8645,6 @@ public:
 	~cCallOfDuty2Pro()
 	{
 		gsc_weapons_free();
-		if ( voiceDataDumpFile )
-		{
-			fclose(voiceDataDumpFile);
-		}
 		printf("> [PLUGIN UNLOADED]\n");
 	}
 };
