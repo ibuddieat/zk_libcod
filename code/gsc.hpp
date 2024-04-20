@@ -128,7 +128,7 @@ int strcmp_constant_time(const char *s1, const char *s2);
 #endif
 
 int stackGetParamType(int param);
-const char *stackGetParamTypeAsString(int param);
+const char * stackGetParamTypeAsString(int param);
 
 int stackGetParams(const char *params, ...);
 void stackError(const char *format, ...);
@@ -148,6 +148,6 @@ xmethod_t Scr_GetCustomMethod(const char **fname, qboolean *fdev);
 qboolean IsNullVector(float *vec);
 
 uint64_t Sys_Milliseconds64(void);
-char *custom_va(const char *format, ...);
+char * custom_va(const char *format, ...);
 
 #endif

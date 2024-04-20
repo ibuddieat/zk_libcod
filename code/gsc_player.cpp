@@ -511,7 +511,7 @@ void gsc_player_isbot(scr_entref_t ref)
 
 	client_t *client = &svs.clients[id];
 
-	stackPushBool(client->bot);
+	stackPushBool(client->bIsTestClient);
 }
 
 void gsc_player_lookatkiller(scr_entref_t ref)
@@ -1866,7 +1866,7 @@ void gsc_player_muteclient(scr_entref_t ref)
 	}
 
 	client_t *client = &svs.clients[id];
-	client->mutedClients[id2] = 1;
+	client->muteList[id2] = 1;
 
 	stackPushBool(qtrue);
 }
@@ -1898,7 +1898,7 @@ void gsc_player_unmuteclient(scr_entref_t ref)
 	}
 
 	client_t *client = &svs.clients[id];
-	client->mutedClients[id2] = 0;
+	client->muteList[id2] = 0;
 
 	stackPushBool(qtrue);
 }
@@ -2287,9 +2287,9 @@ void gsc_player_disablesilent(scr_entref_t ref)
 	qboolean old_setting = customPlayerState[id].silent;
 	if ( old_setting )
 	{
-		SV_GameSendServerCommand(id, 0, "v cg_footsteps \"1\"");
-		SV_GameSendServerCommand(id, 0, "v bg_foliagesnd_minspeed \"40\"");
-		SV_GameSendServerCommand(id, 0, "v bg_foliagesnd_maxspeed \"180\"");
+		SV_GameSendServerCommand(id, SV_CMD_CAN_IGNORE, "v cg_footsteps \"1\"");
+		SV_GameSendServerCommand(id, SV_CMD_CAN_IGNORE, "v bg_foliagesnd_minspeed \"40\"");
+		SV_GameSendServerCommand(id, SV_CMD_CAN_IGNORE, "v bg_foliagesnd_maxspeed \"180\"");
 	}
 	customPlayerState[id].silent = qfalse;
 
@@ -2310,9 +2310,9 @@ void gsc_player_enablesilent(scr_entref_t ref)
 	qboolean old_setting = customPlayerState[id].silent;
 	if ( !old_setting )
 	{
-		SV_GameSendServerCommand(id, 0, "v cg_footsteps \"0\"");
-		SV_GameSendServerCommand(id, 0, "v bg_foliagesnd_minspeed \"999\"");
-		SV_GameSendServerCommand(id, 0, "v bg_foliagesnd_maxspeed \"999\"");
+		SV_GameSendServerCommand(id, SV_CMD_CAN_IGNORE, "v cg_footsteps \"0\"");
+		SV_GameSendServerCommand(id, SV_CMD_CAN_IGNORE, "v bg_foliagesnd_minspeed \"999\"");
+		SV_GameSendServerCommand(id, SV_CMD_CAN_IGNORE, "v bg_foliagesnd_maxspeed \"999\"");
 	}
 	customPlayerState[id].silent = qtrue;
 

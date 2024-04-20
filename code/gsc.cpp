@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <sys/time.h>
 
-const char *getParamTypeAsString(int type)
+const char * getParamTypeAsString(int type)
 {
 	switch ( type )
 	{
@@ -36,7 +36,7 @@ const char *getParamTypeAsString(int type)
 	}
 }
 
-const char *stackGetParamTypeAsString(int param)
+const char * stackGetParamTypeAsString(int param)
 {
 	if ( param >= Scr_GetNumParam() )
 		return "UNDEFINED";

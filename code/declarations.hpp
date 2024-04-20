@@ -67,10 +67,11 @@
 #elif COD_VERSION == COD2_1_3
 #define MAX_MSGLEN                  0x20000
 #endif
+#define MAX_LARGE_MSGLEN            0x20000 // for voice chat and snapshot
 #define MAX_NETNAME                 16
 #define MAX_OSPATH                  256
 #define MAX_QPATH                   64
-#define MAX_RELIABLE_COMMANDS		128
+#define MAX_RELIABLE_COMMANDS       128
 #define MAX_SNAPSHOT_ENTITIES       1024
 #define MAX_STRINGLENGTH            1024
 #define MAX_TOTAL_ENT_LEAFS         128
@@ -403,6 +404,12 @@ enum clc_ops_e
 	clc_moveNoDelta,
 	clc_clientCommand,
 	clc_EOF
+};
+
+enum svscmd_type
+{
+	SV_CMD_CAN_IGNORE = 0x0,
+	SV_CMD_RELIABLE = 0x1,
 };
 
 typedef enum
@@ -1112,7 +1119,7 @@ typedef enum
 	EV_FIRE_WEAPON_MG42,
 	EV_FIRE_QUADBARREL_1,
 	EV_FIRE_QUADBARREL_2,
-	EV_BULLET_TRACER,
+	EV_BULLET_TRACER, // Unknown at client
 	EV_SOUND_ALIAS,
 	EV_SOUND_ALIAS_AS_MASTER,   // 180
 	EV_BULLET_HIT_SMALL,
@@ -1127,7 +1134,7 @@ typedef enum
 	EV_ROCKET_EXPLODE_NOMARKS,  // 190
 	EV_CUSTOM_EXPLODE,
 	EV_CUSTOM_EXPLODE_NOMARKS,
-	EV_BULLET,
+	EV_BULLET, // Unknown at client
 	EV_PLAY_FX,
 	EV_PLAY_FX_ON_TAG,
 	EV_EARTHQUAKE,
@@ -1256,7 +1263,31 @@ typedef struct usercmd_s
 	char rightmove;
 } usercmd_t;
 
-typedef void netProfileInfo_t;
+struct netProfilePacket_t
+{
+	int iTime;
+	int iSize;
+	int bFragment;
+};
+
+struct netProfileStream_t
+{
+	netProfilePacket_t packets[60];
+	int iCurrPacket;
+	int iBytesPerSecond;
+	int iLastBPSCalcTime;
+	int iCountedPackets;
+	int iCountedFragments;
+	int iFragmentPercentage;
+	int iLargestPacket;
+	int iSmallestPacket;
+};
+
+typedef struct netProfileInfo_s
+{
+	netProfileStream_t send;
+	netProfileStream_t recieve;
+} netProfileInfo_t;
 
 typedef struct
 {
@@ -1273,7 +1304,7 @@ typedef struct
 	int unsentFragmentStart;
 	int unsentLength;
 	byte unsentBuffer[MAX_MSGLEN];
-	netProfileInfo_t *netProfile;
+	netProfileInfo_t *pProf;
 } netchan_t;
 
 typedef struct
@@ -1282,22 +1313,6 @@ typedef struct
 	int cmdTime;
 	int cmdType;
 } reliableCommands_t;
-
-typedef struct
-{
-	netadr_t adr;
-	int challenge;
-	int time;
-	int pingTime;
-	int firstTime;
-	int firstPing;
-	qboolean connected;
-	int guid;
-#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
-	char pbguid[64];
-	int ipAuthorize;
-#endif
-} challenge_t; // verified for 1.0, guessed for 1.2 and 1.3
 
 typedef enum
 {
@@ -1879,10 +1894,10 @@ typedef struct
 typedef struct client_s
 {
 	clientConnectState_t state;
-	qboolean delayed;
-	const char *delayDropMsg;
+	qboolean sendAsActive;
+	const char *dropReason;
 	char userinfo[1024];
-	reliableCommands_t reliableCommands[128];
+	reliableCommands_t reliableCommandInfo[MAX_RELIABLE_COMMANDS];
 	int reliableSequence;
 	int reliableAcknowledge;
 	int reliableSent;
@@ -1906,11 +1921,11 @@ typedef struct client_s
 	qboolean downloadEOF;
 	int downloadSendTime;
 #if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
-	char wwwDownloadURL[MAX_OSPATH];
-	qboolean wwwDownload;
-	qboolean wwwDownloadStarted;
-	qboolean wwwDlAck;
-	qboolean wwwDl_failed;
+	char downloadURL[MAX_OSPATH];
+	qboolean wwwOk;
+	qboolean downloadingWWW;
+	qboolean clientDownloadingWWW;
+	qboolean wwwFallback;
 #endif
 	int deltaMessage;
 	int nextReliableTime;
@@ -1927,14 +1942,15 @@ typedef struct client_s
 	netchan_t netchan;
 	int guid;
 	unsigned short clscriptid;
-	int bot;
+	int bIsTestClient;
 	int serverId;
-	VoicePacket_t voicedata[MAX_VOICEPACKETS];
-	int unsentVoiceData;
-	byte mutedClients[MAX_CLIENTS];
-	byte hasVoip;
+	VoicePacket_t voicePackets[MAX_VOICEPACKETS];
+	int voicePacketCount;
+	byte muteList[MAX_CLIENTS];
+	byte sendVoice;
 #if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
-	char pbguid[64];
+	char PBguid[33];
+	char clientPBguid[33];
 #endif
 } client_t;
 
@@ -1978,6 +1994,28 @@ typedef struct cachedClient_s
 
 typedef struct
 {
+	netadr_t adr;
+	int challenge;
+	int time;
+	int pingTime;
+	int firstTime;
+	int firstPing;
+	qboolean connected;
+	int guid;
+#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
+	char PBguid[33];
+	char clientPBguid[33];
+#endif
+} challenge_t;
+
+typedef struct 
+{
+	int guid;
+	int time;
+} tempban_t;
+
+typedef struct
+{
 	qboolean initialized;
 	int time;
 	int snapFlagServerBit;
@@ -1988,7 +2026,7 @@ typedef struct
 	int nextSnapshotClients;
 	entityState_t *snapshotEntities;
 	clientState_t *snapshotClients;
-	int archivedSnapshotEnabled;
+	int archiveEnabled;
 	int nextArchivedSnapshotFrames;
 	archivedSnapshot_t *archivedSnapshotFrames;
 	byte *archivedSnapshotBuffer;
@@ -2004,8 +2042,10 @@ typedef struct
 	challenge_t challenges[1024];
 	netadr_t redirectAddress;
 	netadr_t authorizeAddress;
-	char netProfilingBuf[1504]; // shouldn't that be at most [252]? else we run into sv_offset
-} serverStatic_t; // verified
+	int sv_lastTimeMasterServerCommunicated;
+	netProfileInfo_t *pOOBProf;
+	tempban_t tempBans[16];
+} serverStatic_t;
 
 typedef struct
 {

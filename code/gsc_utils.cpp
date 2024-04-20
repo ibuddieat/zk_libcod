@@ -560,7 +560,7 @@ void gsc_utils_sendcommandtoclient()
 		return;
 	}
 
-	SV_GameSendServerCommand(clientNum, 0, message);
+	SV_GameSendServerCommand(clientNum, SV_CMD_CAN_IGNORE, message);
 	stackPushBool(qtrue);
 }
 

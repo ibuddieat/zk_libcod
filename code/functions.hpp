@@ -804,7 +804,7 @@ static const NET_Sleep_t NET_Sleep = (NET_Sleep_t)0x0; // Not tested
 static const NET_Sleep_t NET_Sleep = (NET_Sleep_t)0x080d5CC4;
 #endif
 
-typedef void (*SV_GameSendServerCommand_t)(int clientnum, int svscmd_type, const char *text);
+typedef void (*SV_GameSendServerCommand_t)(int clientnum, svscmd_type type, const char *text);
 #if COD_VERSION == COD2_1_0
 static const SV_GameSendServerCommand_t SV_GameSendServerCommand = (SV_GameSendServerCommand_t)0x0808FE96;
 #elif COD_VERSION == COD2_1_2
@@ -2874,7 +2874,7 @@ static const VecToAngles_t VecToAngles = (VecToAngles_t)0x0; // Not tested
 static const VecToAngles_t VecToAngles = (VecToAngles_t)0x080A4FE2;
 #endif
 
-typedef double (*Vec3DistanceSq_t)(vec3_t *v1, vec3_t *v2);
+typedef double (*Vec3DistanceSq_t)(float *v1, float *v2);
 #if COD_VERSION == COD2_1_0
 static const Vec3DistanceSq_t Vec3DistanceSq = (Vec3DistanceSq_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2

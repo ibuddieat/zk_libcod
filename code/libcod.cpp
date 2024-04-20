@@ -687,7 +687,7 @@ void custom_SV_SpawnServer(char *server)
 		}
 
 		/* New: sv_botReconnectMode dvar */
-		if ( cl->bot )
+		if ( cl->bIsTestClient )
 		{
 			if ( sv_botReconnectMode->current.integer == 1 )
 			{
@@ -1247,7 +1247,7 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 		customPlayerState[i].talkerIcons[drop - svs.clients] = 0;
 	/* New code end */
 
-	drop->delayDropMsg = 0;
+	drop->dropReason = NULL;
 	I_strncpyz(name, drop->name, sizeof(name));
 	SV_FreeClient(drop);
 
@@ -1292,18 +1292,18 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 	if ( showIngameMessage )
 	{
 		if ( !translatedReason )
-			SV_SendServerCommand(0, 0, "e \"\x15%s^7 %s%s\"", name, "", reason);
+			SV_SendServerCommand(0, SV_CMD_CAN_IGNORE, "e \"\x15%s^7 %s%s\"", name, "", reason);
 		else
-			SV_SendServerCommand(0, 0, "e \"\x15%s^7 %s%s\"", name, "\x14", reason);
+			SV_SendServerCommand(0, SV_CMD_CAN_IGNORE, "e \"\x15%s^7 %s%s\"", name, "\x14", reason);
 	}
 
 	Com_Printf("%i:%s %s\n", drop - svs.clients, name, reason);
 
-	SV_SendServerCommand(0, 1, "J %d", drop - svs.clients);
+	SV_SendServerCommand(0, SV_CMD_RELIABLE, "J %d", drop - svs.clients);
 	if ( !translatedReason )
-		SV_SendServerCommand(drop, 1, "w \"%s^7 %s\" PB", name, reason);
+		SV_SendServerCommand(drop, SV_CMD_RELIABLE, "w \"%s^7 %s\" PB", name, reason);
 	else
-		SV_SendServerCommand(drop, 1, "w \"%s\"", reason);
+		SV_SendServerCommand(drop, SV_CMD_RELIABLE, "w \"%s\"", reason);
 
 	/* If this was the last client on the server, send a heartbeat to the
 	 master so it is known the server is empty send a heartbeat now so the
@@ -1357,11 +1357,11 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 			if ( !COM_BitCheck(entity->client->ps.weapons, bg_item->giTag) )
 			{
 				if ( ( BG_WeaponDefs(bg_item->giTag)->weapSlot + ~WEAPSLOT_NONE ) < 2 )
-					SV_GameSendServerCommand(entity - g_entities, 0, custom_va("%c \"GAME_CANT_GET_PRIMARY_WEAP_MESSAGE\"", 0x66));
+					SV_GameSendServerCommand(entity - g_entities, SV_CMD_CAN_IGNORE, custom_va("%c \"GAME_CANT_GET_PRIMARY_WEAP_MESSAGE\"", 0x66));
 			}
 			else
 			{
-				SV_GameSendServerCommand(entity - g_entities, 0, custom_va("%c \"GAME_PICKUP_CANTCARRYMOREAMMO\x14%s\"", 0x66, BG_WeaponDefs(bg_item->giTag)->szDisplayName));
+				SV_GameSendServerCommand(entity - g_entities, SV_CMD_CAN_IGNORE, custom_va("%c \"GAME_PICKUP_CANTCARRYMOREAMMO\x14%s\"", 0x66, BG_WeaponDefs(bg_item->giTag)->szDisplayName));
 			}
 		}
 	}
@@ -1791,7 +1791,7 @@ void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t 
 							
 							if ( maxDistance > 0 )
 							{
-								double distance = Vec3DistanceSq(&client->gentity->r.currentOrigin, &origin);
+								double distance = Vec3DistanceSq(client->gentity->r.currentOrigin, origin);
 								if ( (int)distance > ( maxDistance * maxDistance ) )
 									*toF = EV_NONE;
 							}
@@ -2300,11 +2300,11 @@ void custom_SV_WriteSnapshotToClient(client_t *client, msg_t *msg)
 		snapFlags = svs.snapFlagServerBit | 1;
 
 	if ( client->state == CS_ACTIVE )
-		client->delayed = 1;
+		client->sendAsActive = 1;
 	else if ( client->state != CS_ZOMBIE )
-		client->delayed = 0;
+		client->sendAsActive = 0;
 
-	if ( client->delayed == 0 )
+	if ( client->sendAsActive == 0 )
 		snapFlags = snapFlags | 2;
 
 	MSG_WriteByte(msg, snapFlags);
@@ -2413,18 +2413,18 @@ int custom_SV_WWWRedirectClient(client_t *cl, msg_t *msg)
 	else
 	{
 		FS_FCloseFile(fp);
-		I_strncpyz(cl->wwwDownloadURL, custom_va("%s/%s", sv_wwwBaseURL->current.string, cl->downloadName), MAX_OSPATH);
-		Com_Printf("Redirecting client \'%s\'^7 to %s\n", cl->name, cl->wwwDownloadURL);
-		cl->wwwDownloadStarted = 1;
+		I_strncpyz(cl->downloadURL, custom_va("%s/%s", sv_wwwBaseURL->current.string, cl->downloadName), MAX_OSPATH);
+		Com_Printf("Redirecting client \'%s\'^7 to %s\n", cl->name, cl->downloadURL);
+		cl->downloadingWWW = 1;
 		MSG_WriteByte(msg, svc_download);
 		MSG_WriteShort(msg, -1);
-		MSG_WriteString(msg, cl->wwwDownloadURL);
+		MSG_WriteString(msg, cl->downloadURL);
 		MSG_WriteLong(msg, size);
 		MSG_WriteLong(msg, sv_wwwDlDisconnected->current.boolean != 0);
 
 		/* New code start */
 		if ( sv_wwwDlDisconnectedMessages->current.integer == 2 )
-			SV_SendServerCommand(0, 0, "f \"%s^7 downloads %s\"", cl->name, cl->downloadName);
+			SV_SendServerCommand(0, SV_CMD_CAN_IGNORE, "f \"%s^7 downloads %s\"", cl->name, cl->downloadName);
 		/* New code end */
 
 		cl->downloadName[0] = '\0';
@@ -2466,7 +2466,7 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 		return;
 
 	#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
-	if ( cl->wwwDlAck )
+	if ( cl->clientDownloadingWWW )
 		return;
 	#endif
 
@@ -2479,9 +2479,9 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 	}
 
 	#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
-	if ( sv_wwwDownload->current.boolean && cl->wwwDownload )
+	if ( sv_wwwDownload->current.boolean && cl->wwwOk )
 	{
-		if ( !cl->wwwDl_failed )
+		if ( !cl->wwwFallback )
 		{
 			// Redirect to HTTP server
 			custom_SV_WWWRedirectClient(cl, msg);
@@ -3452,7 +3452,6 @@ void custom_SVC_Status(netadr_t from)
 	}
 
 	Info_SetValueForKey(infostring, "mod", custom_va("%i", serverModded));
-
 	Com_sprintf(msg, BIG_INFO_STRING, "statusResponse\n%s\n%s", infostring, status);
 	NET_OutOfBandPrint(NS_SERVER, from, msg);
 	LargeLocalDestructor(&buf);
@@ -4230,7 +4229,8 @@ VoicePacket_t voiceDataStore[MAX_CUSTOMSOUNDS][MAX_STOREDVOICEPACKETS];
 #endif
 void custom_G_RunFrame(int levelTime)
 {
-	int i;
+	int i, j;
+	client_t *client = svs.clients;
 	
 	hook_g_runframe->unhook();
 	void (*G_RunFrame)(int levelTime);
@@ -4261,9 +4261,7 @@ void custom_G_RunFrame(int levelTime)
 	}
 	scr_notify_index = 0;
 
-	client_t *client = svs.clients;
-	int id;
-	int j;
+	// Process voice data tweaks
 	gclient_t *gclient = level.clients;
 	int durationSinceLastTalk;
 	VoicePacket_t fakeVoicePacket;
@@ -4272,14 +4270,13 @@ void custom_G_RunFrame(int levelTime)
 
 	for ( i = 0; i < sv_maxclients->current.integer; i++, client++ )
 	{
-		id = client - svs.clients;
 		if ( client->state < CS_CONNECTED )
 			continue;
 
 		// Client talker icon trigger mechanism
 		for ( j = 0; j < sv_maxclients->current.integer; j++ )
 		{
-			if ( customPlayerState[id].talkerIcons[j] )
+			if ( customPlayerState[i].talkerIcons[j] )
 			{
 				// No fake voice data if the player is actually talking
 				gclient = level.clients + j;
@@ -4288,11 +4285,11 @@ void custom_G_RunFrame(int levelTime)
 					continue;
 #if COMPILE_CUSTOM_VOICE == 1
 				// No fake voice data if the player is streaming sound already
-				if ( customPlayerState[id].currentSoundIndex && customPlayerState[id].currentSoundTalker == j )
+				if ( customPlayerState[i].currentSoundIndex && customPlayerState[i].currentSoundTalker == j )
 					continue;
 #endif
 				fakeVoicePacket.talkerNum = j;
-				SV_QueueVoicePacket(j, id, &fakeVoicePacket);
+				SV_QueueVoicePacket(j, i, &fakeVoicePacket);
 			}
 		}
 	}
@@ -4338,29 +4335,28 @@ void custom_G_RunFrame(int levelTime)
 		client = svs.clients;
 		for ( i = 0; i < sv_maxclients->current.integer; i++, client++ )
 		{
-			id = client - svs.clients;
 			if ( client->state < CS_CONNECTED )
 				continue;
 
-			if ( customPlayerState[id].currentSoundIndex )
+			if ( customPlayerState[i].currentSoundIndex )
 			{
-				customPlayerState[id].pendingVoiceDataFrames += MAX_VOICEPACKETSPERFRAME; // 51.2 packets per second @ 20 server fps
+				customPlayerState[i].pendingVoiceDataFrames += MAX_VOICEPACKETSPERFRAME; // 51.2 packets per second @ 20 server fps
 				VoicePacket_t *voicePacket;
 
-				for ( ; customPlayerState[id].pendingVoiceDataFrames > 1.0 && customPlayerState[id].sentVoiceDataIndex < MAX_STOREDVOICEPACKETS; customPlayerState[id].sentVoiceDataIndex++, customPlayerState[id].pendingVoiceDataFrames -= 1.0 )
+				for ( ; customPlayerState[i].pendingVoiceDataFrames > 1.0 && customPlayerState[i].sentVoiceDataIndex < MAX_STOREDVOICEPACKETS; customPlayerState[i].sentVoiceDataIndex++, customPlayerState[i].pendingVoiceDataFrames -= 1.0 )
 				{
-					voicePacket = &voiceDataStore[customPlayerState[id].currentSoundIndex - 1][customPlayerState[id].sentVoiceDataIndex];
-					if ( svs.clients[customPlayerState[id].currentSoundTalker].state < CS_CONNECTED || !voicePacket->dataLen )
+					voicePacket = &voiceDataStore[customPlayerState[i].currentSoundIndex - 1][customPlayerState[i].sentVoiceDataIndex];
+					if ( svs.clients[customPlayerState[i].currentSoundTalker].state < CS_CONNECTED || !voicePacket->dataLen )
 					{
-						customPlayerState[id].pendingVoiceDataFrames = 0.0;
-						customPlayerState[id].currentSoundTalker = 0;
-						customPlayerState[id].currentSoundIndex = 0;
-						customPlayerState[id].sentVoiceDataIndex = 0;
-						Scr_Notify(&g_entities[id], custom_scr_const.sound_file_done, 0);
+						customPlayerState[i].pendingVoiceDataFrames = 0.0;
+						customPlayerState[i].currentSoundTalker = 0;
+						customPlayerState[i].currentSoundIndex = 0;
+						customPlayerState[i].sentVoiceDataIndex = 0;
+						Scr_Notify(&g_entities[i], custom_scr_const.sound_file_done, 0);
 						break;
 					}
-					voicePacket->talkerNum = customPlayerState[id].currentSoundTalker;
-					SV_QueueVoicePacket(voicePacket->talkerNum, id, voicePacket);
+					voicePacket->talkerNum = customPlayerState[i].currentSoundTalker;
+					SV_QueueVoicePacket(voicePacket->talkerNum, i, voicePacket);
 				}
 			}
 		}
@@ -4397,17 +4393,17 @@ void custom_SV_ArchiveSnapshot(void)
 	svEntity_t *svEnt;
 	gentity_t *gent;
 
-	LargeLocalConstructor(&buf, MAX_MSGLEN);
+	LargeLocalConstructor(&buf, MAX_LARGE_MSGLEN);
 	data = LargeLocalGetBuf(&buf);
 	if ( sv.state == SS_GAME )
 	{
-		if ( !svs.archivedSnapshotEnabled )
+		if ( !svs.archiveEnabled )
 		{
 			LargeLocalDestructor(&buf);
 		}
 		else
 		{
-			MSG_Init(&msg, data, MAX_MSGLEN);
+			MSG_Init(&msg, data, MAX_LARGE_MSGLEN);
 			n = svs.nextCachedSnapshotFrames - 512;
 			if ( n < 0 )
 			{
@@ -4416,7 +4412,8 @@ void custom_SV_ArchiveSnapshot(void)
 			i = svs.nextCachedSnapshotFrames;
 			do {
 				m = i - 1;
-				if ( m < n ) goto LAB_0809b5f4;
+				if ( m < n )
+					goto LAB_0809b5f4;
 				cachedFrameIndex = m;
 				if ( m < 0 )
 					cachedFrameIndex = i + 0x1fe;
@@ -5219,7 +5216,7 @@ LAB_08121ee6:
 								(client->ps).cursorHintString = cursorHintString;
 
 								/* New code start: sv_botUseTriggerUse dvar */
-								if ( cl->bot && sv_botUseTriggerUse->current.boolean )
+								if ( cl->bIsTestClient && sv_botUseTriggerUse->current.boolean )
 								{
 									Scr_AddEntity(ent);
 									Scr_Notify(player, custom_scr_const.bot_trigger, 1);
@@ -6936,7 +6933,7 @@ void G_RunGravityModelNoBounce(gentity_t *ent) // G_RunItem as base
 	else 
 	{
 		BG_EvaluateTrajectory(&(ent->s).pos, level.time + 50, origin);
-		if ( Vec3DistanceSq(&(ent->r).currentOrigin, &origin) < 0.1 )
+		if ( Vec3DistanceSq((ent->r).currentOrigin, origin) < 0.1 )
 		{
 			origin[2] = origin[2] - 1.0;
 		}
@@ -7012,7 +7009,7 @@ void custom_G_RunFrameForEntity(gentity_t *ent)
 		{
 			if ( ( ent->flags & 0x800 ) == 0 )
 			{
-				(ent->s).eFlags = (ent->s).eFlags & 0xffffffdf;
+				(ent->s).eFlags = (ent->s).eFlags & 0xFFFFFFDF;
 			}
 			else
 			{
@@ -7060,6 +7057,7 @@ void custom_G_RunFrameForEntity(gentity_t *ent)
 				{
 					G_RunCorpse(ent);
 				}
+				/* New code: Entity gravity */
 				else if ( customEntityState[(ent->s).number].gravityType )
 				{
 					vec3_t oldOrigin;
@@ -7072,6 +7070,7 @@ void custom_G_RunFrameForEntity(gentity_t *ent)
 					VectorSubtract((ent->r).currentOrigin, oldOrigin, customEntityState[(ent->s).number].velocity);
 					VectorScale(customEntityState[(ent->s).number].velocity, 20.0, customEntityState[(ent->s).number].velocity);
 				}
+				/* New code end */
 				else if ( ent->physicsObject == 0 )
 				{
 					if ( (ent->s).eType == ET_SCRIPTMOVER )
@@ -7627,7 +7626,7 @@ void custom_PlayerCmd_DeactivateReverb(scr_entref_t entref)
 	{
 		Scr_Error("priority must be \'snd_enveffectsprio_level\' or \'snd_enveffectsprio_shellshock\'\n");
 	}
-	SV_GameSendServerCommand(entref.entnum, 1, custom_va("%c %i %g", 68, priority, fadetime)); // New: Fixed command that is broken in stock
+	SV_GameSendServerCommand(entref.entnum, SV_CMD_RELIABLE, custom_va("%c %i %g", 68, priority, fadetime)); // New: Fixed command that is broken in stock
 }
 
 void custom_PlayerCmd_DeactivateChannelVolumes(scr_entref_t entref)
@@ -7677,7 +7676,7 @@ void custom_PlayerCmd_DeactivateChannelVolumes(scr_entref_t entref)
 	{
 		Scr_Error("priority must be \'snd_channelvolprio_holdbreath\', \'snd_channelvolprio_pain\', or \'snd_channelvolprio_shellshock\'\n");
 	}
-	SV_GameSendServerCommand(entref.entnum, 1, custom_va("%c %i %g", 70, priority, fadetime)); // New: Fixed command that is broken in stock
+	SV_GameSendServerCommand(entref.entnum, SV_CMD_RELIABLE, custom_va("%c %i %g", 70, priority, fadetime)); // New: Fixed command that is broken in stock
 }
 
 void custom_Cmd_PrintEntities_f(void)
@@ -7724,7 +7723,7 @@ int custom_Cmd_FollowCycle_f(gentity_t *ent, int dir)
 		{
 			client_t *client = &svs.clients[clientNum];
 
-			if ( client->bot && !g_spectateBots->current.boolean )
+			if ( client->bIsTestClient && !g_spectateBots->current.boolean )
 				continue;
 			
 			ent->client->spectatorClient = clientNum;
@@ -8009,7 +8008,7 @@ void custom_SV_PacketEvent(netadr_t from, msg_t *msg)
 		cl = svs.clients;
 		for ( i = 0; i < sv_maxclients->current.integer; i++, cl++ )
 		{
-			if ( cl->state != CS_FREE && NET_CompareBaseAdr(from, (cl->netchan).remoteAddress) && (cl->netchan).qport == (qport & 0xffff) )
+			if ( cl->state != CS_FREE && NET_CompareBaseAdr(from, (cl->netchan).remoteAddress) && (cl->netchan).qport == (qport & 0xFFFF) )
 			{
 				if ( (cl->netchan).remoteAddress.port != from.port )
 				{
