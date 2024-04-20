@@ -12,7 +12,7 @@ options="-I. -m32 -fPIC -Wall"
 
 mysql_variant=0
 
-if [ "$1" != "clean" ]; then
+if [ "$1" != "clean" ] && [ "$1" != "nomysql" ]; then
 	read -rsp $'\nChoose Your MySQL variant:\n
 	0. MySQL disabled. (default)\n
 	1. Default MySQL variant: A classic MySQL implementation
@@ -53,7 +53,12 @@ if [ "$1" == "clean" ]; then
 	rm bin -rf
 	exit 1
 else
-	if [ "$1" == "nospeex" ]; then
+	if [ "$1" == "nomysql" ] || [ "$2" == "nomysql" ] || [ "$3" == "nomysql" ]; then
+		mysql_link=""
+		mysql_variant=0
+	fi
+
+	if [ "$1" == "nospeex" ] || [ "$2" == "nospeex" ] || [ "$3" == "nospeex" ]; then
 		speex_link=""
 		sed -i "/#define COMPILE_CUSTOM_VOICE 1/c\#define COMPILE_CUSTOM_VOICE 0" config.hpp
 	else
@@ -61,7 +66,7 @@ else
 		sed -i "/#define COMPILE_CUSTOM_VOICE 0/c\#define COMPILE_CUSTOM_VOICE 1" config.hpp
 	fi
 
-	if [ "$1" == "debug" ] || [ "$2" == "debug" ]; then
+	if [ "$1" == "debug" ] || [ "$2" == "debug" ] || [ "$3" == "debug" ]; then
 		debug="-g -ggdb -O0"
 	else
 		debug=""
