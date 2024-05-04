@@ -94,12 +94,12 @@ void gsc_player_setbulletvelocity(scr_entref_t ref)
 		return;
 	}
 
-	old_velocity = customPlayerState[id].droppingBulletDrag;
+	old_velocity = customPlayerState[id].droppingBulletVelocity;
 	if ( new_velocity < 0 )
 	{
 		new_velocity = 0.0;
 	}
-	customPlayerState[id].droppingBulletDrag = new_velocity;
+	customPlayerState[id].droppingBulletVelocity = new_velocity;
 
 	stackPushFloat(old_velocity);
 }

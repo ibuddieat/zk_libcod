@@ -2367,8 +2367,8 @@ void custom_SV_SendClientGameState(client_t *client)
 	customPlayerState[id].fireRangeScale = 1.0;
 	customPlayerState[id].turretSpreadScale = 1.0;
 	customPlayerState[id].weaponSpreadScale = 1.0;
-	customPlayerState[id].droppingBulletDrag = 0.01;
-	customPlayerState[id].droppingBulletVelocity = 8192.0;
+	customPlayerState[id].droppingBulletDrag = 0.01; // 20% drag per second @ 20 server FPS
+	customPlayerState[id].droppingBulletVelocity = 31500.0; // About 800 m/s
 	/* New code end */
 	
 	MSG_Init(&msg, data, MAX_MSGLEN);
