@@ -41,6 +41,8 @@ New script code methods:
   * `<player> getGroundEntity()`
   * `<player> getInactivityTime()`
   * `<player> getPlayerstateFlags()`
+  * `<player> getProtocol()`
+  * `<player> getProtocolString()`
   * `<player> getRemainingSoundFileDuration()`
   * `<player> getServerCommandQueueSize()`
   * `<player> getViewOrigin()`

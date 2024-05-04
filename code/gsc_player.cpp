@@ -10,6 +10,34 @@ extern customPlayerState_t customPlayerState[MAX_CLIENTS];
 extern customStringIndex_t custom_scr_const;
 extern dvar_t *g_antilag;
 
+void gsc_player_getprotocol(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_getprotocol() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushInt(customPlayerState[id].protocolVersion);
+}
+
+void gsc_player_getprotocolstring(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_getprotocolstring() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushString(getShortVersionFromProtocol(customPlayerState[id].protocolVersion));
+}
+
 void gsc_player_enablebulletdrop(scr_entref_t ref)
 {
 	int id = ref.entnum;
@@ -1109,10 +1137,15 @@ void gsc_player_getip(scr_entref_t ref)
 	}
 
 	client_t *client = &svs.clients[id];
-	char tmp[16];
-	snprintf(tmp, sizeof(tmp), "%d.%d.%d.%d", client->netchan.remoteAddress.ip[0], client->netchan.remoteAddress.ip[1], client->netchan.remoteAddress.ip[2], client->netchan.remoteAddress.ip[3]);
+	char ip[16];
+	char localIP[16] = "127.0.0.1";
 
-	stackPushString(tmp);
+	snprintf(ip, sizeof(ip), "%d.%d.%d.%d", client->netchan.remoteAddress.ip[0], client->netchan.remoteAddress.ip[1], client->netchan.remoteAddress.ip[2], client->netchan.remoteAddress.ip[3]);
+
+	if ( strcmp(localIP, ip) == 0 && strlen(customPlayerState[id].preProxyIP) )
+		snprintf(ip, sizeof(ip), "%s", customPlayerState[id].preProxyIP);
+
+	stackPushString(ip);
 }
 
 void gsc_player_getping(scr_entref_t ref)

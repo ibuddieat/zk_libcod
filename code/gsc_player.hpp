@@ -3,6 +3,8 @@
 
 #include "gsc.hpp"
 
+void gsc_player_getprotocol(scr_entref_t ref);
+void gsc_player_getprotocolstring(scr_entref_t ref);
 void gsc_player_enablebulletdrop(scr_entref_t ref);
 void gsc_player_disablebulletdrop(scr_entref_t ref);
 void gsc_player_setbulletdrag(scr_entref_t ref);

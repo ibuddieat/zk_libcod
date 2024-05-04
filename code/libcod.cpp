@@ -38,19 +38,28 @@ dvar_t *player_meleeHeight;
 dvar_t *player_meleeRange;
 dvar_t *player_meleeWidth;
 dvar_t *rcon_password;
+dvar_t *showpackets;
+dvar_t *sv_allowAnonymous;
 dvar_t *sv_allowDownload;
 dvar_t *sv_cheats;
 dvar_t *sv_disableClientConsole;
 dvar_t *sv_floodProtect;
 dvar_t *sv_fps;
 dvar_t *sv_gametype;
+dvar_t *sv_hostname;
 dvar_t *sv_iwdNames;
 dvar_t *sv_iwds;
+dvar_t *sv_mapname;
 dvar_t *sv_maxclients;
+dvar_t *sv_maxPing;
 dvar_t *sv_maxRate;
+dvar_t *sv_minPing;
 dvar_t *sv_packet_info;
 dvar_t *sv_padPackets;
+dvar_t *sv_privateClients;
+dvar_t *sv_privatePassword;
 dvar_t *sv_pure;
+dvar_t *sv_reconnectlimit;
 dvar_t *sv_referencedIwdNames;
 dvar_t *sv_referencedIwds;
 dvar_t *sv_serverid;
@@ -104,14 +113,17 @@ dvar_t *sv_botUseTriggerUse;
 dvar_t *sv_cracked;
 dvar_t *sv_disconnectMessages;
 dvar_t *sv_downloadMessage;
+dvar_t *sv_kickGamestateLimitedClients;
 dvar_t *sv_kickMessages;
 dvar_t *sv_limitLocalRcon;
 dvar_t *sv_logHeartbeats;
 dvar_t *sv_logRcon;
 dvar_t *sv_minimizeSysteminfo;
 dvar_t *sv_noauthorize;
+dvar_t *sv_reservedConfigstringBufferSize;
 dvar_t *sv_timeoutMessages;
 dvar_t *sv_verifyIwds;
+dvar_t *sv_version;
 #if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
 dvar_t *sv_wwwDlDisconnectedMessages;
 #endif
@@ -257,9 +269,12 @@ void custom_Com_InitDvars(void)
 	logfileName = Dvar_RegisterString("logfileName", "console_mp_server.log", DVAR_ARCHIVE);
 	logfileRotate = Dvar_RegisterInt("logfileRotate", 0, 0, 1000, DVAR_ARCHIVE);
 	logTimestamps = Dvar_RegisterBool("logTimestamps", qfalse, DVAR_ARCHIVE);
+	sv_reservedConfigstringBufferSize = Dvar_RegisterInt("sv_reservedConfigstringBufferSize", 256, 0, 8192, DVAR_ARCHIVE);
+	sv_version = Dvar_RegisterString("sv_version", "1.3", DVAR_ARCHIVE);
 
 	/* Register stock dvars here with different settings, scheme:
 	dvar_t *dvar = Dvar_Register<Type>(var_name, default value, [min. value, max. value,] flags); */
+	Dvar_RegisterInt("protocol", 118, 115, 118, DVAR_CHANGEABLE_RESET | DVAR_ROM | DVAR_SERVERINFO);
 
 	/* Force server memory setting for clients to be able to counter 
 	 Hunk_AllocateTempMemory failures */
@@ -290,17 +305,26 @@ void common_init_complete_print(const char *format, ...)
 	developer = Dvar_FindVar("developer");
 	nextmap = Dvar_FindVar("nextmap");
 	rcon_password = Dvar_FindVar("rcon_password");
+	showpackets = Dvar_FindVar("showpackets");
+	sv_allowAnonymous = Dvar_FindVar("sv_allowAnonymous");
 	sv_allowDownload = Dvar_FindVar("sv_allowDownload");
 	sv_cheats = Dvar_FindVar("sv_cheats");
 	sv_floodProtect = Dvar_FindVar("sv_floodProtect");
 	sv_fps = Dvar_FindVar("sv_fps");
 	sv_gametype = Dvar_FindVar("g_gametype");
+	sv_hostname = Dvar_FindVar("sv_hostname");
 	sv_iwdNames = Dvar_FindVar("sv_iwdNames");
 	sv_iwds = Dvar_FindVar("sv_iwds");
+	sv_mapname = Dvar_FindVar("mapname");
 	sv_maxclients = Dvar_FindVar("sv_maxclients");
+	sv_maxPing = Dvar_FindVar("sv_maxPing");
+	sv_minPing = Dvar_FindVar("sv_minPing");
 	sv_packet_info = Dvar_FindVar("sv_packet_info");
 	sv_padPackets = Dvar_FindVar("sv_padPackets");
+	sv_privateClients = Dvar_FindVar("sv_privateClients");
+	sv_privatePassword = Dvar_FindVar("sv_privatePassword");
 	sv_pure = Dvar_FindVar("sv_pure");
+	sv_reconnectlimit = Dvar_FindVar("sv_reconnectlimit");
 	sv_referencedIwdNames = Dvar_FindVar("sv_referencedIwdNames");
 	sv_referencedIwds = Dvar_FindVar("sv_referencedIwds");
 	sv_serverid = Dvar_FindVar("sv_serverid");
@@ -350,6 +374,7 @@ void common_init_complete_print(const char *format, ...)
 	sv_cracked = Dvar_RegisterBool("sv_cracked", qfalse, DVAR_ARCHIVE);
 	sv_disconnectMessages = Dvar_RegisterBool("sv_disconnectMessages", qtrue, DVAR_ARCHIVE);
 	sv_downloadMessage = Dvar_RegisterString("sv_downloadMessage", "", DVAR_ARCHIVE);
+	sv_kickGamestateLimitedClients = Dvar_RegisterBool("sv_kickGamestateLimitedClients", qtrue, DVAR_ARCHIVE);
 	sv_kickMessages = Dvar_RegisterBool("sv_kickMessages", qtrue, DVAR_ARCHIVE);
 	sv_limitLocalRcon = Dvar_RegisterBool("sv_limitLocalRcon", qtrue, DVAR_ARCHIVE);
 	sv_logHeartbeats = Dvar_RegisterBool("sv_logHeartbeats", qtrue, DVAR_ARCHIVE);
@@ -419,6 +444,30 @@ void custom_GScr_LoadConsts(void)
 	*(int *)&GScr_LoadConsts = hook_gscr_loadconsts->from;
 	GScr_LoadConsts();
 	hook_gscr_loadconsts->hook();
+}
+
+void custom_Dvar_SetFromStringFromSource(dvar_t *dvar, const char *string, DvarSetSource source)
+{
+	char buf[MAX_STRINGLENGTH];
+	DvarValue newValue;
+
+	/* New: sv_version dvar value sanitization */
+	if ( sv_version && dvar == sv_version )
+		string = getShortVersionFromProtocol(getProtocolFromShortVersion(string));
+	/* New code end */
+
+	Sys_EnterCriticalSectionInternal(CRITSECT_DVAR);
+	I_strncpyz(buf, string, sizeof(buf));
+	newValue = Dvar_StringToValue(dvar->type, dvar->domain, buf);
+	if ( dvar->type == DVAR_TYPE_ENUM && newValue.integer == DVAR_INVALID_ENUM_INDEX )
+	{
+		Com_Printf("'%s' is not a valid value for dvar '%s'\n", buf, dvar->name);
+		Dvar_PrintDomain(dvar->type, dvar->domain);
+		newValue = dvar->reset;
+	}
+
+	Dvar_SetVariant(dvar, newValue, source);
+	Sys_LeaveCriticalSectionInternal(CRITSECT_DVAR);
 }
 
 int hitchFrameTime = 0;
@@ -503,12 +552,6 @@ const char * custom_FS_LoadedIwdNames(void)
 	return info;
 }
 
-int hook_sv_privatePassword_strcmp(const char* str1, const char* str2)
-{
-	// New: Time-constant string comparison for sv_privatePassword dvar
-	return !strcmp_constant_time(str1, str2);
-}
-
 const char * custom_ClientConnect(unsigned int clientNum, unsigned int scriptPersId)
 {
 	XAnimTree *tree;
@@ -549,6 +592,15 @@ const char * custom_ClientConnect(unsigned int clientNum, unsigned int scriptPer
 			// New: Time-constant string comparison for g_password dvar
 	        || strcmp_constant_time(g_password->current.string, password) )
 	{
+		/* New code start: Save original client IP if provided by proxy */
+		char preProxyIP[16];
+	
+		memset(&customPlayerState[clientNum].preProxyIP, 0, 16);
+		strncpy(preProxyIP, Info_ValueForKey(userinfo, "ip"), sizeof(customPlayerState[clientNum].preProxyIP) - 1);
+		if ( strlen(preProxyIP) != 0 )
+			strncpy(customPlayerState[clientNum].preProxyIP, preProxyIP, sizeof(customPlayerState[clientNum].preProxyIP) - 1);
+		/* New code end */
+
 		Scr_PlayerConnect(ent);
 		CalculateRanks();
 		return 0;
@@ -859,6 +911,253 @@ void custom_Sys_Quit(void)
 	*(int *)&Sys_Quit = hook_sys_quit->from;
 	Sys_Quit();
 	hook_sys_quit->hook();
+}
+
+void custom_SV_DirectConnect(netadr_t from)
+{
+	char userinfo[MAX_INFO_STRING];
+	int i;
+	client_t *cl, *newcl;
+	gentity_t *ent;
+	int clientNum;
+	int version;
+	int qport;
+	int challenge;
+	const char *PbAuthAddress;
+	const char *PbAuthResult;
+	const char *password;
+	int startIndex;
+	const char *denied;
+	int count;
+	int guid;
+	char PBguid[33];
+	char clientPBguid[33];
+
+	/* New code start: Rate-limiting */
+	if ( SVC_ApplyConnectLimit(from) )
+		return;
+	/* New code end */
+
+	memset(PBguid, 0, sizeof(PBguid));
+	memset(clientPBguid, 0, sizeof(clientPBguid));
+
+	Com_DPrintf("SV_DirectConnect()\n");
+
+	I_strncpyz(userinfo, SV_Cmd_Argv(1), sizeof(userinfo));
+	version = atoi(Info_ValueForKey(userinfo, "protocol"));
+
+	if ( version < 115 || version > 118)
+	{
+		NET_OutOfBandPrint(NS_SERVER, from, custom_va("error\nEXE_SERVER_IS_DIFFERENT_VER\x15%s\n", "1.3"));
+		Com_DPrintf("    rejected connect from protocol version %i (should be between %i and %i)\n", version, 115, 118);
+		return;
+	}
+
+	challenge = atoi(Info_ValueForKey(userinfo, "challenge"));
+	qport = atoi(Info_ValueForKey(userinfo, "qport"));
+
+	for ( i = 0, cl = svs.clients; i < sv_maxclients->current.integer; i++, cl++ )
+	{
+		if ( NET_CompareBaseAdr(from, cl->netchan.remoteAddress)
+		        && ( cl->netchan.qport == qport
+		             || from.port == cl->netchan.remoteAddress.port ) )
+		{
+			if ( ( svs.time - cl->lastConnectTime )
+			        < ( sv_reconnectlimit->current.integer * 1000 ) )
+			{
+				Com_DPrintf("%s:reconnect rejected : too soon\n", NET_AdrToString(from));
+				return;
+			}
+			break;
+		}
+	}
+
+	guid = 0;
+
+	if ( !NET_IsLocalAddress(from) )
+	{
+		int ping;
+
+		for ( i = 0 ; i < MAX_CHALLENGES ; i++ )
+		{
+			if ( NET_CompareAdr(from, svs.challenges[i].adr) )
+			{
+				if ( challenge == svs.challenges[i].challenge )
+				{
+					guid = svs.challenges[i].guid;
+					I_strncpyz(PBguid, svs.challenges[i].PBguid, sizeof(PBguid));
+					I_strncpyz(clientPBguid, svs.challenges[i].clientPBguid, sizeof(clientPBguid));
+					break;
+				}
+			}
+		}
+		if ( i == MAX_CHALLENGES )
+		{
+			NET_OutOfBandPrint(NS_SERVER, from, "error\nEXE_BAD_CHALLENGE");
+			return;
+		}
+
+		if ( svs.challenges[i].firstPing == 0 )
+		{
+			ping = svs.time - svs.challenges[i].pingTime;
+			svs.challenges[i].firstPing = ping;
+		}
+		else
+		{
+			ping = svs.challenges[i].firstPing;
+		}
+
+		Com_Printf("Client %i connecting with %i challenge ping from %s\n", i, ping, NET_AdrToString(from));
+		svs.challenges[i].connected = qtrue;
+
+		if ( !Sys_IsLANAddress(from) )
+		{
+			if ( sv_minPing->current.integer && ping < sv_minPing->current.integer )
+			{
+				NET_OutOfBandPrint(NS_SERVER, from, "error\nEXE_ERR_HIGH_PING_ONLY");
+				Com_DPrintf("Client %i rejected on a too low ping\n", i);
+				return;
+			}
+
+			if ( sv_maxPing->current.integer && ping > sv_maxPing->current.integer )
+			{
+				NET_OutOfBandPrint(NS_SERVER, from, "error\nEXE_ERR_LOW_PING_ONLY");
+				Com_DPrintf("Client %i rejected on a too high ping: %i\n", i, ping);
+				return;
+			}
+		}
+	}
+
+	if ( !NET_IsLocalAddress(from) )
+	{
+		PbAuthAddress = NET_AdrToString(from);
+	}
+	else
+	{
+		PbAuthAddress = "localhost";
+	}
+	PbAuthResult = PbAuthClient(PbAuthAddress, atoi(Info_ValueForKey(userinfo, "cl_punkbuster")), PBguid);
+	if ( !PbAuthResult )
+	{
+		for ( i = 0, cl = svs.clients; i < sv_maxclients->current.integer; i++, cl++ )
+		{
+			if ( cl->state == CS_FREE )
+			{
+				continue;
+			}
+			if ( NET_CompareBaseAdr(from, cl->netchan.remoteAddress)
+					&& ( cl->netchan.qport == qport
+						|| from.port == cl->netchan.remoteAddress.port ) )
+			{
+				Com_Printf("%s:reconnect\n", NET_AdrToString(from));
+
+				if ( cl->state > CS_ZOMBIE )
+					SV_FreeClient(cl);
+
+				newcl = cl;
+				goto LAB_0808ec36;
+			}
+		}
+
+		password = Info_ValueForKey(userinfo, "password");
+
+		// New: Time-constant string comparison for sv_privatePassword dvar
+		if ( !strcmp_constant_time(password, sv_privatePassword->current.string) )
+		{
+			startIndex = 0;
+		}
+		else
+		{
+			startIndex = sv_privateClients->current.integer;
+		}
+
+		newcl = NULL;
+		for ( i = startIndex; i < sv_maxclients->current.integer ; i++ )
+		{
+			cl = &svs.clients[i];
+			if ( cl->state == CS_FREE )
+			{
+				newcl = cl;
+				break;
+			}
+		}
+
+		if ( !newcl )
+		{
+			NET_OutOfBandPrint(NS_SERVER, from, "error\nEXE_SERVERISFULL");
+			Com_DPrintf("Rejected a connection.\n");
+			return;
+		}
+
+		cl->reliableAcknowledge = 0;
+		cl->reliableSequence = 0;
+LAB_0808ec36:
+		memset(newcl, 0, sizeof(client_t));
+		clientNum = newcl - svs.clients;
+		ent = SV_GentityNum(clientNum);
+		newcl->gentity = ent;
+		newcl->clscriptid = Scr_AllocArray();
+		newcl->challenge = challenge;
+
+		/* New code start: Save client protocol version */
+		customPlayerState[clientNum].protocolVersion = version;
+		Com_Printf("Connecting player #%i runs on version %s\n", clientNum, getShortVersionFromProtocol(version));
+		/* New code end */
+
+		if ( guid == 0 )
+		{
+			Com_Printf("Connecting player #%i has a zero GUID\n", clientNum);
+		}
+		newcl->guid = guid;
+		Netchan_Setup(NS_SERVER, &newcl->netchan, from, qport);
+		newcl->voicePacketCount = 0;
+		newcl->sendVoice = 1;
+		I_strncpyz(newcl->userinfo, userinfo, sizeof(newcl->userinfo));
+		denied = ClientConnect(clientNum, newcl->clscriptid);
+		if ( !denied )
+		{
+			Com_Printf("Going from CS_FREE to CS_CONNECTED for %s (num %i guid %i)\n", newcl->name, clientNum, newcl->guid);
+
+			newcl->state = CS_CONNECTED;
+			newcl->nextSnapshotTime = svs.time;
+			newcl->lastPacketTime = svs.time;
+			newcl->lastConnectTime = svs.time;
+
+			SV_UserinfoChanged(newcl);
+
+			svs.challenges[i].firstPing = 0;
+
+			NET_OutOfBandPrint(NS_SERVER, from, "connectResponse");
+
+			newcl->gamestateMessageNum = -1;
+			count = 0;
+			for ( i = 0, cl = svs.clients; i < sv_maxclients->current.integer; i++, cl++ )
+			{
+				if ( svs.clients[i].state >= CS_CONNECTED )
+				{
+					count++;
+				}
+			}
+			if ( count == 1 || count == sv_maxclients->current.integer )
+			{
+				SV_Heartbeat_f();
+			}
+		}
+		else
+		{
+			NET_OutOfBandPrint(NS_SERVER, from, custom_va("error\n%s", denied));
+			Com_DPrintf("Game rejected a connection: %s.\n", denied);
+			SV_FreeClientScriptId(newcl);
+			return;
+		}
+	}
+	else
+	{
+		if ( !I_strnicmp(PbAuthResult, "error\n", 6) )
+		{
+			NET_OutOfBandPrint(NS_SERVER, from, PbAuthResult);
+		}
+	}
 }
 
 qboolean logHeartbeat = qtrue;
@@ -2337,15 +2636,100 @@ void custom_SV_WriteSnapshotToClient(client_t *client, msg_t *msg)
 		MSG_WriteByte(msg, 0);
 }
 
+qboolean custom_Netchan_TransmitNextFragment(netchan_t *chan)
+{
+	msg_t send;
+	byte send_buf[MAX_PACKETLEN];
+	int fragmentLength;
+	int status;
+	int temp = (int)chan - 0x6E6C4;
+	client_t *client = (client_t *)temp;
+	int id = client - svs.clients;
+
+	NetProf_PrepProfiling(&chan->pProf);
+	MSG_Init(&send, send_buf, sizeof(send_buf));
+	MSG_WriteLong(&send, chan->outgoingSequence | FRAGMENT_BIT);
+
+	if ( chan->sock == NS_CLIENT )
+	{
+		MSG_WriteShort(&send, chan->qport);
+	}
+
+	fragmentLength = FRAGMENT_SIZE;
+
+	if ( chan->unsentFragmentStart  + fragmentLength > chan->unsentLength )
+	{
+		fragmentLength = chan->unsentLength - chan->unsentFragmentStart;
+	}
+
+	/* New code start: Multi version support */
+	if ( customPlayerState[id].protocolVersion < 118 )
+		MSG_WriteShort(&send, chan->unsentFragmentStart);
+	else
+		MSG_WriteLong(&send, chan->unsentFragmentStart);
+	/* New code end */
+
+	MSG_WriteShort(&send, fragmentLength);
+	MSG_WriteData(&send, chan->unsentBuffer + chan->unsentFragmentStart, fragmentLength);
+
+	status = NET_SendPacket(chan->sock, send.cursize, send.data, chan->remoteAddress);
+	NetProf_SendProfile(chan, send.cursize, 1);
+
+	if ( showpackets->current.boolean )
+	{
+		Com_Printf("%s send %4i : s=%i fragment=%i,%i\n"
+		            , netsrcString[chan->sock]
+		            , send.cursize
+		            , chan->outgoingSequence
+		            , chan->unsentFragmentStart, fragmentLength);
+	}
+
+	chan->unsentFragmentStart += fragmentLength;
+
+	if ( chan->unsentFragmentStart == chan->unsentLength && fragmentLength != FRAGMENT_SIZE )
+	{
+		chan->outgoingSequence++;
+		chan->unsentFragments = qfalse;
+	}
+
+	return status > 0;
+}
+
+void custom_SV_ClientEnterWorld(client_t *client, usercmd_t *cmd)
+{
+	gentity_s *ent;
+	int clientNum;
+
+	Com_DPrintf("Going from CS_PRIMED to CS_ACTIVE for %s\n", client->name);
+	client->state = CS_ACTIVE;
+	clientNum = client - svs.clients;
+	ent = SV_GentityNum(clientNum);
+	ent->s.number = clientNum;
+	client->gentity = ent;
+	client->deltaMessage = -1;
+	client->nextSnapshotTime = svs.time;
+	client->lastUsercmd = *cmd;
+	ClientBegin(client - svs.clients);
+
+	/* New code start: Multi version support */
+	if ( customPlayerState[clientNum].resourceLimitedState > LIMITED_GAMESTATE && sv_kickGamestateLimitedClients->current.boolean )
+		SV_DelayDropClient(client, "This map-mod combination requires game version 1.3");
+	/* New code end */
+}
+
 void custom_SV_SendClientGameState(client_t *client)
 {
-	int				start;
-	entityState_t	*base, nullstate;
-	msg_t			msg;
-	byte			*data;
-	LargeLocal		buf;
-	int				id = client - svs.clients;
-	
+	int start;
+	entityState_t *base, nullstate;
+	msg_t msg;
+	byte *data;
+	LargeLocal buf;
+	int id = client - svs.clients;
+	int protocolVersion;
+	char preProxyIP[16];
+	int currentConfigstringSize = 0;
+	int clientGamestateDataCount = 1;
+
 	LargeLocalConstructor(&buf, MAX_MSGLEN);
 	data = LargeLocalGetBuf(&buf);
 	while ( client->state != CS_FREE && client->netchan.unsentFragments )
@@ -2358,7 +2742,13 @@ void custom_SV_SendClientGameState(client_t *client)
 	client->pureAuthentic = 0;
 	client->gamestateMessageNum = client->netchan.outgoingSequence;
 	
-	/* New code start */
+	/* New code start: libcod client state */
+
+	// Save relevant data before clearing custom player state
+	protocolVersion = customPlayerState[id].protocolVersion;
+	memcpy(&preProxyIP, &customPlayerState[id].preProxyIP, 16);
+
+	// Reset custom player state to default values
 	memset(&customPlayerState[id], 0, sizeof(customPlayerState_t));
 	customPlayerState[id].collisionTeam = CUSTOM_TEAM_AXIS_ALLIES;
 	customPlayerState[id].meleeHeightScale = 1.0;
@@ -2369,6 +2759,10 @@ void custom_SV_SendClientGameState(client_t *client)
 	customPlayerState[id].weaponSpreadScale = 1.0;
 	customPlayerState[id].droppingBulletDrag = 0.01; // 20% drag per second @ 20 server FPS
 	customPlayerState[id].droppingBulletVelocity = 31500.0; // About 800 m/s
+
+	// Restore previously saved values
+	customPlayerState[id].protocolVersion = protocolVersion;
+	memcpy(&customPlayerState[id].preProxyIP, &preProxyIP, 16);
 	/* New code end */
 	
 	MSG_Init(&msg, data, MAX_MSGLEN);
@@ -2376,15 +2770,8 @@ void custom_SV_SendClientGameState(client_t *client)
 	SV_UpdateServerCommandsToClient(client, &msg);
 	MSG_WriteByte(&msg, svc_gamestate);
 	MSG_WriteLong(&msg, client->reliableSequence);
-	for ( start = 0; start < MAX_CONFIGSTRINGS; start++ )
-	{
-		if ( sv.configstrings[start][0] )
-		{
-			MSG_WriteByte(&msg, svc_configstring);
-			MSG_WriteShort(&msg, start);
-			MSG_WriteBigString(&msg, sv.configstrings[start]);
-		}
-	}
+
+	// New: Moved configstring loading after entity baseline
 	memset(&nullstate, 0, sizeof(nullstate));
 	for ( start = 0; start < MAX_GENTITIES; start++ )
 	{
@@ -2394,6 +2781,58 @@ void custom_SV_SendClientGameState(client_t *client)
 		MSG_WriteByte(&msg, svc_baseline);
 		custom_MSG_WriteDeltaEntity(&msg, &nullstate, base, qtrue, id, start);
 	}
+
+	for ( start = 0; start < MAX_CONFIGSTRINGS; start++ )
+	{
+		if ( sv.configstrings[start][0] )
+		{
+			
+			// Older protocol versions: Sending overflowing config strings
+			// afterwards via reliable server commands is constrained by
+			// another client-sided limit, in addition to the gamestate
+			// (message size) limit: 16k bytes for all configstrings together.
+			//
+			// Still, we can let the client connect without loading all
+			// resources, but that will at least cause some precached shaders
+			// not to be loaded. The order that decides which type of resource
+			// (shader, string, model, etc.) could be set on the server side,
+			// if needed.
+			//
+			// Furthermore, we should reserve some buffer for configstrings
+			// that are allocated at runtime (e.g., those populated by
+			// playFxOnTag or when playing sounds). For this we use the
+			// sv_reservedConfigstringBufferSize dvar. Its value needs to be
+			// set higher in case clients with older game versions tend to run
+			// into "MAX_GAMESTATE_CHARS exceeded" errors.
+
+			/* New code start: Multi version support */
+			currentConfigstringSize = strlen(sv.configstrings[start]);
+			if ( protocolVersion < 118 )
+			{
+				if ( ( msg.cursize + currentConfigstringSize + 3 + 10 ) > 0x4000 )
+				{
+					Com_Printf("Client %i ran into gamestate limit at configstring %i\n", id, start);
+					customPlayerState[id].resourceLimitedState = LIMITED_GAMESTATE;
+					break;
+				}
+
+				if ( ( clientGamestateDataCount + currentConfigstringSize + 1 ) > ( 16000 - sv_reservedConfigstringBufferSize->current.integer ) )
+				{
+					Com_Printf("Client %i ran into configstring limit at configstring %i\n", id, start);
+					customPlayerState[id].resourceLimitedState = LIMITED_CONFIGSTRING;
+					break;
+				}
+			}
+			/* New code end */
+
+			MSG_WriteByte(&msg, svc_configstring);
+			MSG_WriteShort(&msg, start);
+			MSG_WriteBigString(&msg, sv.configstrings[start]);
+
+			clientGamestateDataCount += strlen(sv.configstrings[start]) + 1; // New code
+		}
+	}
+
 	MSG_WriteByte(&msg, svc_EOF);
 	MSG_WriteLong(&msg, id);
 	MSG_WriteLong(&msg, sv.checksumFeed);
@@ -2401,10 +2840,51 @@ void custom_SV_SendClientGameState(client_t *client)
 	
 	Com_DPrintf("Sending %i bytes in gamestate to client: %i\n", msg.cursize, id);
 	
-	customPlayerState[id].gamestateSize = int(msg.cursize); // New code
+	customPlayerState[id].gamestateSize = msg.cursize; // New code
 	
 	SV_SendMessageToClient(&msg, client);
 	LargeLocalDestructor(&buf);
+
+	/* New code start: Gamestate splitting for multi version support */
+	if ( start != MAX_CONFIGSTRINGS && customPlayerState[id].resourceLimitedState == LIMITED_GAMESTATE )
+	{
+		// Reliable commands are limited to MAX_STRINGLENGTH
+		char cmd[MAX_STRINGLENGTH];
+
+		Com_DPrintf("Queueing remaining configstrings for client: %i, beginning at %i\n", id, start);
+		for ( ; start < MAX_CONFIGSTRINGS; start++ )
+		{
+			if ( sv.configstrings[start][0] )
+			{
+				currentConfigstringSize = strlen(sv.configstrings[start]);
+				if ( ( clientGamestateDataCount + currentConfigstringSize + 1 ) > ( 16000 - sv_reservedConfigstringBufferSize->current.integer ) )
+				{
+					Com_Printf("Aborting configstring queue at %i as client %i ran into configstring limit\n", start, id);
+					customPlayerState[id].resourceLimitedState = LIMITED_CONFIGSTRING;
+					return;
+				}
+
+				if ( client->reliableSequence - client->reliableAcknowledge == MAX_RELIABLE_COMMANDS )
+				{
+					// This could potentially be delayed further, to avoid
+					// filling up the command queue at once.
+					Com_Printf("Aborting configstring queue at %i as client %i command queue is full\n", start, id);
+					customPlayerState[id].resourceLimitedState = LIMITED_CONFIGSTRING;
+					return;
+				}
+
+				Com_sprintf(cmd, MAX_STRINGLENGTH, "d %i %s", start, sv.configstrings[start]);
+				SV_AddServerCommand(client, SV_CMD_RELIABLE, cmd);
+
+				clientGamestateDataCount += strlen(sv.configstrings[start]) + 1;
+
+				// Update gamestate size: Size of byte + size of byte + length of configstring
+				customPlayerState[id].gamestateSize += (3 + strlen(sv.configstrings[start]));
+			}
+		}
+		Com_DPrintf("Sending another %i bytes in gamestate as reliable commands to client: %i\n", customPlayerState[id].gamestateSize - msg.cursize, id);
+	}
+	/* New code end */
 }
 
 int custom_SV_WWWRedirectClient(client_t *cl, msg_t *msg)
@@ -3222,6 +3702,26 @@ bool SVC_callback(const char *str, const char *ip)
 	return false;
 }
 
+bool SVC_ApplyConnectLimit(netadr_t from)
+{
+	// Prevent using connect as an amplifier
+	if ( SVC_RateLimitAddress(from, 10, 1000) )
+	{
+		Com_DPrintf("SV_DirectConnect: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
+		return true;
+	}
+
+	// Allow connect to be DoSed relatively easily, but prevent
+	// excess outbound bandwidth usage when being flooded inbound
+	if ( SVC_RateLimit(&outboundLeakyBucket, 10, 100) )
+	{
+		Com_DPrintf("SV_DirectConnect: rate limit exceeded, dropping request\n");
+		return true;
+	}
+
+	return false;
+}
+
 bool SVC_ApplyRconLimit(netadr_t from, qboolean badRconPassword)
 {
 	// Prevent using rcon as an amplifier and make dictionary attacks impractical
@@ -3292,26 +3792,6 @@ void hook_SV_GetChallenge(netadr_t from)
 	SV_GetChallenge(from);
 }
 
-void hook_SV_DirectConnect(netadr_t from)
-{
-	// Prevent using connect as an amplifier
-	if ( SVC_RateLimitAddress(from, 10, 1000) )
-	{
-		Com_DPrintf("SV_DirectConnect: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
-		return;
-	}
-
-	// Allow connect to be DoSed relatively easily, but prevent
-	// excess outbound bandwidth usage when being flooded inbound
-	if ( SVC_RateLimit(&outboundLeakyBucket, 10, 100) )
-	{
-		Com_DPrintf("SV_DirectConnect: rate limit exceeded, dropping request\n");
-		return;
-	}
-
-	SV_DirectConnect(from);
-}
-
 void hook_SV_AuthorizeIpPacket(netadr_t from)
 {
 	// Prevent ipAuthorize log spam DoS
@@ -3332,14 +3812,14 @@ void hook_SV_AuthorizeIpPacket(netadr_t from)
 	SV_AuthorizeIpPacket(from);
 }
 
-void hook_SVC_Info(netadr_t from)
+bool SVC_ApplyInfoLimit(netadr_t from)
 {
 	// Prevent using getinfo as an amplifier
 	if ( SVC_RateLimitAddress(from, 10, 1000) )
 	{
 		if ( !SVC_callback("INFO:ADDRESS", NET_AdrToString(from)) )
 			Com_DPrintf("SVC_Info: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
-		return;
+		return true;
 	}
 
 	// Allow getinfo to be DoSed relatively easily, but prevent
@@ -3348,18 +3828,115 @@ void hook_SVC_Info(netadr_t from)
 	{
 		if ( !SVC_callback("INFO:GLOBAL", NET_AdrToString(from)) )
 			Com_DPrintf("SVC_Info: rate limit exceeded, dropping request\n");
-		return;
+		return true;
 	}
 
-	SVC_Info(from);
+	return false;
 }
 
-void hook_SVC_Status(netadr_t from)
+void custom_SVC_Info(netadr_t from)
 {
-	if ( SVC_ApplyStatusLimit(from) )
+	int i, count;
+	char infostring[MAX_INFO_STRING];
+	char infosend[MAX_INFO_STRING];
+	const char *gamedir;
+	const char *password;
+	int friendlyfire;
+	int killcam;
+	int serverModded;
+	const char *referencedIwdNames;
+	char *iwd;
+
+	/* New: Rate limiting */
+	if ( SVC_ApplyInfoLimit(from) )
 		return;
-	
-	SVC_Status(from);
+	/* New code end */
+
+	count = 0;
+
+	for ( i = sv_privateClients->current.integer ; i < sv_maxclients->current.integer ; i++ )
+	{
+		if ( svs.clients[i].state >= CS_CONNECTED )
+		{
+			count++;
+		}
+	}
+
+	infostring[0] = 0;
+
+	Info_SetValueForKey(infostring, "challenge", Cmd_Argv(1));
+
+	// New: Configurable version response
+	Info_SetValueForKey(infostring, "protocol", custom_va("%i", getProtocolFromShortVersion(sv_version->current.string)));
+
+	Info_SetValueForKey(infostring, "hostname", sv_hostname->current.string);
+	Info_SetValueForKey(infostring, "mapname", sv_mapname->current.string);
+	Info_SetValueForKey(infostring, "clients", custom_va("%i", count));
+	Info_SetValueForKey(infostring, "sv_maxclients", custom_va("%i", sv_maxclients->current.integer - sv_privateClients->current.integer));
+	Info_SetValueForKey(infostring, "gametype", Dvar_GetString("g_gametype"));
+	Info_SetValueForKey(infostring, "pure", custom_va("%i", sv_pure->current.boolean));
+	if ( sv_minPing->current.integer )
+	{
+		Info_SetValueForKey(infostring, "minPing", custom_va("%i", sv_minPing->current.integer));
+	}
+	if ( sv_maxPing->current.integer )
+	{
+		Info_SetValueForKey(infostring, "maxPing", custom_va("%i", sv_maxPing->current.integer));
+	}
+	gamedir = Dvar_GetString( "fs_game" );
+	if ( *gamedir )
+	{
+		Info_SetValueForKey( infostring, "game", gamedir );
+	}
+	Info_SetValueForKey( infostring, "sv_allowAnonymous", custom_va("%i", sv_allowAnonymous->current.boolean));
+	if ( sv_disableClientConsole->current.boolean )
+	{
+		Info_SetValueForKey( infostring, "con_disabled", custom_va("%i", sv_disableClientConsole->current.boolean));
+	}
+	password = Dvar_GetString("g_password");
+	if ( password && *password )
+		Info_SetValueForKey(infostring, "pswrd", "1");
+
+	friendlyfire = Dvar_GetInt("scr_friendlyfire");
+	if ( friendlyfire )
+		Info_SetValueForKey(infostring, "ff", custom_va("%i", friendlyfire));
+
+	killcam = Dvar_GetInt("scr_killcam");
+	if ( killcam )
+		Info_SetValueForKey(infostring, "kc", custom_va("%i", killcam));
+
+	Info_SetValueForKey(infostring, "hw", custom_va("%i", 1));
+	serverModded = 0;
+	if ( !sv_pure->current.boolean || ( gamedir && *gamedir ) )
+	{
+		serverModded = 1;
+	}
+	else
+	{
+		referencedIwdNames = Dvar_GetString("sv_referencedIwdNames");
+		if ( *referencedIwdNames )
+		{
+			SV_Cmd_TokenizeString(referencedIwdNames);
+			count = SV_Cmd_Argc();
+
+			for ( i = 0; i < count; ++i )
+			{
+				iwd = (char *)SV_Cmd_Argv(i);
+
+				if ( !FS_iwIwd(iwd, "main") )
+				{
+					serverModded = 1;
+					break;
+				}
+			}
+		}
+	}
+
+	Info_SetValueForKey(infostring, "mod", custom_va("%i", serverModded));
+	Info_SetValueForKey(infostring, "voice", custom_va("%i", sv_voice->current.boolean));
+	I_strncpyz(infosend, "infoResponse\n", MAX_INFO_STRING);
+	I_strncat(infosend, MAX_INFO_STRING, infostring);
+	NET_OutOfBandPrint(NS_SERVER, from, infosend);
 }
 
 void custom_SVC_Status(netadr_t from)
@@ -3389,6 +3966,11 @@ void custom_SVC_Status(netadr_t from)
 
 	LargeLocalConstructor(&buf, MAX_MSGLEN);
 	status = (char *)LargeLocalGetBuf(&buf);
+	
+	/* New code start: Configurable version response */
+	Dvar_SetIntByName("protocol", getProtocolFromShortVersion(sv_version->current.string));
+	Dvar_SetStringByName("shortversion", sv_version->current.string);
+	/* New code end */
 
 	strcpy(infostring, Dvar_InfoString(DVAR_SERVERINFO | DVAR_NORESTART));
 	Info_SetValueForKey(infostring, "challenge", SV_Cmd_Argv(1));
@@ -3760,6 +4342,8 @@ void manymaps_prepare(const char *mapname, int read)
 {
 	char map_check[MAX_OSPATH];
 	char library_path[MAX_OSPATH];
+	const char *stock_maps[] = {"mp_breakout", "mp_brecourt", "mp_burgundy", "mp_carentan", "mp_dawnville", "mp_decoy", "mp_downtown", "mp_farmhouse", "mp_leningrad", "mp_matmata", "mp_railyard", "mp_toujane", "mp_trainstation", "mp_rhine", "mp_harbor"};
+	int map_num;
 	
 	dvar_t *fs_homepath = Dvar_FindVar("fs_homepath");
 	dvar_t *fs_game = Dvar_FindVar("fs_game");
@@ -3772,15 +4356,16 @@ void manymaps_prepare(const char *mapname, int read)
 
 	Com_sprintf(map_check, MAX_OSPATH, "%s/%s.iwd", library_path, mapname);
 
-	#if COD_VERSION == COD2_1_0
-	const char *stock_maps[] = { "mp_breakout", "mp_brecourt", "mp_burgundy", "mp_carentan", "mp_dawnville", "mp_decoy", "mp_downtown", "mp_farmhouse", "mp_leningrad", "mp_matmata", "mp_railyard", "mp_toujane", "mp_trainstation" };
-	#else
-	const char *stock_maps[] = { "mp_breakout", "mp_brecourt", "mp_burgundy", "mp_carentan", "mp_dawnville", "mp_decoy", "mp_downtown", "mp_farmhouse", "mp_leningrad", "mp_matmata", "mp_railyard", "mp_toujane", "mp_trainstation", "mp_rhine", "mp_harbor" };
-	#endif
+	// Version 1.0 does not have mp_rhine and mp_harbor
+	// But they could be added as standalone .iwd files
+	map_num = int(sizeof(stock_maps) / sizeof(stock_maps[0]));
+	if ( getProtocolFromShortVersion(sv_version->current.string) < 117 )
+		map_num -= 2;
 
-	bool map_found = false, from_stock_map = false;
+	bool map_found = false;
+	bool from_stock_map = false;
 
-	for ( int i = 0; i < int( sizeof(stock_maps) / sizeof(stock_maps[0]) ); i++ )
+	for ( int i = 0; i < map_num; i++ )
 	{
 		if ( strcmp(map->current.string, stock_maps[i]) == 0 )
 		{
@@ -3789,13 +4374,15 @@ void manymaps_prepare(const char *mapname, int read)
 		}
 	}
 
-	for ( int i = 0; i < int( sizeof(stock_maps) / sizeof(stock_maps[0]) ); i++ )
+	for ( int i = 0; i < map_num; i++ )
 	{
 		if ( strcmp(mapname, stock_maps[i]) == 0 )
 		{
 			map_found = true;
 
-			if ( from_stock_map ) // When changing from stock map to stock map do not trigger manymap
+			// When changing from stock map to stock map, do not trigger
+			// manymaps
+			if ( from_stock_map )
 				return;
 			else
 				break;
@@ -3803,7 +4390,6 @@ void manymaps_prepare(const char *mapname, int read)
 	}
 
 	int map_exists = access(map_check, F_OK) != -1;
-
 	if ( !map_exists && !map_found )
 		return;
 
@@ -3811,7 +4397,6 @@ void manymaps_prepare(const char *mapname, int read)
 	struct dirent *dir_ent;
 
 	dir = opendir(library_path);
-
 	if ( !dir )
 		return;
 
@@ -3845,7 +4430,9 @@ void manymaps_prepare(const char *mapname, int read)
 			int link_success = symlink(src, dst) == 0;
 			printf("manymaps> NEW LINK: src=%s dst=%s result of link: %s\n", src, dst, link_success?"success":"failed");
 
-			if ( link_success && read == -1 ) // FS_AddIwdFilesForGameDirectory_t is needed when empty.iwd is missing (then .d3dbsp isn't referenced anywhere)
+			// FS_AddIwdFilesForGameDirectory_t is needed when empty000.iwd is
+			// missing as then .d3dbsp is not referenced anywhere
+			if ( link_success && read == -1 )
 				FS_AddIwdFilesForGameDirectory(fs_homepath->current.string, fs_game->current.string);
 		}
 	}
@@ -6781,7 +7368,7 @@ gentity_t * custom_Bullet_Drop_Create_Visual(int clientNum, droppingBullet_t *bu
 	ent->s.eType = ET_GENERAL;
 	ent->freeAfterEvent = 1;
 	ent->eventTime = level.time + 50;
-	G_SetModel(ent, G_ModelName(bullet->visualBulletModelIndex)); // "xmodel/weapon_temp_panzershreck_rocket"
+	G_SetModel(ent, G_ModelName(bullet->visualBulletModelIndex));
 	G_DObjUpdate(ent);
 
 	G_SetOrigin(ent, start);
@@ -6866,7 +7453,6 @@ void custom_Bullet_Fire(gentity_t *inflictor, float spread, weaponParms *wp, con
 			bullet.drag = customPlayerState[id].droppingBulletDrag;
 
 			// Get next bullet position
-			// Units per second; 31500 would be about 800m/s; could be added as a weaponDef field
 			distance = customPlayerState[id].droppingBulletVelocity / (float)sv_fps->current.integer;
 			if ( distance > 8192.0 ) // Clamp to common stock value
 				distance = 8192.0;
@@ -8358,7 +8944,8 @@ void custom_SV_ConnectionlessPacket(netadr_t from, msg_t *msg)
 		else if ( !I_stricmp(c, "getinfo") )
 		{
 			SV_UpdateLastTimeMasterServerCommunicated(from);
-			hook_SVC_Info(from);
+			// New: Replaced call to original SVC_Info
+			custom_SVC_Info(from);
 		}
 		else if ( !I_stricmp(c, "getchallenge") )
 		{
@@ -8375,7 +8962,8 @@ void custom_SV_ConnectionlessPacket(netadr_t from, msg_t *msg)
 			{
 				PbPassConnectString("localhost", msg->data);
 			}
-			hook_SV_DirectConnect(from);
+			// New: Replaced call to original SV_DirectConnect
+			custom_SV_DirectConnect(from);
 		}
 		else if ( !I_stricmp(c, "ipAuthorize") )
 		{
@@ -8791,8 +9379,6 @@ public:
 		cracking_hook_function(0x0809479A, (int)custom_SV_BotUserMove);
 		#endif
 
-		cracking_hook_call(0x08094081, (int)hook_SVC_Info);
-		cracking_hook_call(0x0809403E, (int)hook_SVC_Status);
 		cracking_hook_call(0x080940C4, (int)hook_SV_GetChallenge);
 		cracking_hook_call(0x08094107, (int)hook_SV_DirectConnect);
 
@@ -8869,8 +9455,6 @@ public:
 		cracking_hook_function(0x080966B2, (int)custom_SV_BotUserMove);
 		#endif
 
-		cracking_hook_call(0x08095B8E, (int)hook_SVC_Info);
-		cracking_hook_call(0x08095ADA, (int)hook_SVC_Status);
 		cracking_hook_call(0x08095BF8, (int)hook_SV_GetChallenge);
 		cracking_hook_call(0x08095CB2, (int)hook_SV_DirectConnect);
 
@@ -8889,7 +9473,6 @@ public:
 		cracking_hook_call(0x08062644, (int)hitch_warning_print);
 		cracking_hook_call(0x0808EE0A, (int)invalid_password);
 		cracking_hook_call(0x080AD1FE, (int)hook_Com_MakeSoundAliasesPermanent);
-		cracking_hook_call(0x0808EB3E, (int)hook_sv_privatePassword_strcmp);
 
 		hook_gametype_scripts = new cHook(0x08110286, (int)custom_GScr_LoadGameTypeScript);
 		hook_gametype_scripts->hook();
@@ -9023,6 +9606,11 @@ public:
 		cracking_hook_function(0x08094C84, (int)custom_SVC_Status);
 		cracking_hook_function(0x0810B9A4, (int)custom_G_ClientStopUsingTurret);
 		cracking_hook_function(0x0810175A, (int)custom_player_die);
+		cracking_hook_function(0x0808E2AA, (int)custom_SV_DirectConnect);
+		cracking_hook_function(0x0806BA4C, (int)custom_Netchan_TransmitNextFragment);
+		cracking_hook_function(0x0808F628, (int)custom_SV_ClientEnterWorld);
+		cracking_hook_function(0x0809537C, (int)custom_SVC_Info);
+		cracking_hook_function(0x080B4ADA, (int)custom_Dvar_SetFromStringFromSource);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC718, (int)Jump_ClearState);
@@ -9040,9 +9628,7 @@ public:
 		cracking_hook_function(0x0809676C, (int)custom_SV_BotUserMove);
 		#endif
 
-		cracking_hook_call(0x08095C48, (int)hook_SVC_Info);
 		cracking_hook_call(0x08095CB2, (int)hook_SV_GetChallenge);
-		cracking_hook_call(0x08095D6C, (int)hook_SV_DirectConnect);
 		cracking_hook_call(0x08095DD6, (int)hook_SV_AuthorizeIpPacket);
 
 		cracking_write_hex(0x0818815c, (char *)"00"); // Removes debug flag from getentbynum

@@ -40,6 +40,8 @@
 #define ENTFIELD_MASK               0xC000
 #define FLOAT_INT_BITS              13
 #define FLOAT_INT_BIAS              ( 1 << ( FLOAT_INT_BITS - 1 ) ) // 0x1000
+#define FRAGMENT_BIT                ( 1 << 31 )
+#define FRAGMENT_SIZE               ( MAX_PACKETLEN - 100 )
 #define FRAMETIME                   50
 #define GENTITYNUM_BITS             10
 #define PACKET_BACKUP               32
@@ -70,6 +72,7 @@
 #define MAX_LARGE_MSGLEN            0x20000 // for voice chat and snapshot
 #define MAX_NETNAME                 16
 #define MAX_OSPATH                  256
+#define MAX_PACKETLEN               1400
 #define MAX_QPATH                   64
 #define MAX_RELIABLE_COMMANDS       128
 #define MAX_SNAPSHOT_ENTITIES       1024
@@ -97,6 +100,7 @@
 #define DVAR_CHANGEABLE_RESET   (1 << 12)       // 0x1000
 #define DVAR_EXTERNAL           (1 << 14)       // 0x4000
 #define DVAR_AUTOEXEC           (1 << 15)       // 0x8000
+#define DVAR_INVALID_ENUM_INDEX -1337
 
 #define HASH_STAT_HEAD    0x8000
 #define HASH_NEXT_MASK    0x3FFF
@@ -502,6 +506,14 @@ typedef vec_t vec2_t[2];
 typedef vec_t vec3_t[3];
 typedef vec_t vec4_t[4];
 typedef vec_t vec5_t[5];
+
+enum DvarSetSource
+{
+	DVAR_SOURCE_INTERNAL = 0x0,
+	DVAR_SOURCE_EXTERNAL = 0x1,
+	DVAR_SOURCE_SCRIPT = 0x2,
+	DVAR_SOURCE_DEVGUI = 0x3,
+};
 
 enum DvarType : char
 {
@@ -4039,6 +4051,14 @@ static const int gameInitialized_offset = 0x0;
 static const int gameInitialized_offset = 0x083E2F80;
 #endif
 
+#if COD_VERSION == COD2_1_0 // Not tested
+static const int netsrcString_offset = 0x0;
+#elif COD_VERSION == COD2_1_2 // Not tested
+static const int netsrcString_offset = 0x0;
+#elif COD_VERSION == COD2_1_3
+static const int netsrcString_offset = 0x0817D904;
+#endif
+
 #define g_entities ((gentity_t*)(gentities_offset))
 #define g_clients ((gclient_t*)(gclients_offset))
 #define scrVarPub (*((scrVarPub_t*)( varpub_offset )))
@@ -4096,6 +4116,7 @@ static const int gameInitialized_offset = 0x083E2F80;
 #define saLoadObjGlob (*((snd_alias_build_s**)( saLoadObjGlob_offset )))
 #define saLoadedObjs (*((int*)( saLoadedObjs_offset ))) // Guessed variable name
 #define gameInitialized (*((int*)( gameInitialized_offset )))
+#define netsrcString (*((char**)( netsrcString_offset )))
 
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6
@@ -4224,6 +4245,13 @@ typedef enum
 	CUSTOM_TEAM_ALL
 } customTeam_t;
 
+typedef enum
+{
+	LIMITED_NONE,			// All good, no limits hit
+	LIMITED_GAMESTATE,		// Gamestate limit hit, but recovered with reliable commands
+	LIMITED_CONFIGSTRING	// Configstring data limit hit, client resources incomplete
+} resourceLimitedState_t;
+
 typedef struct customEntityState_s
 {
 	// Note: Some stock fields are still reused for new stuff where archiving is required
@@ -4249,7 +4277,7 @@ typedef struct
 	qboolean inUse;
 	gentity_t *lastHitEnt;
 	vec3_t position;
-	int time;
+	int startTime;
 	int timeOffset;
 	float velocity;
 	gentity_t *visualBullet;
@@ -4319,6 +4347,9 @@ typedef struct customPlayerState_s
 	qboolean droppingBulletVisuals;
 	int droppingBulletVisualModelIndex;
 	int droppingBulletVisualTime;
+	int protocolVersion;
+	resourceLimitedState_t resourceLimitedState;
+	char preProxyIP[16];
 } customPlayerState_t;
 
 typedef struct callback_s

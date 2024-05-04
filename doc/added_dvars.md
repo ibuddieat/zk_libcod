@@ -114,6 +114,10 @@ Added dvars:
     * Type: Boolean
     * Default: False
     * Effect: Toggle whether bots should be notified when triggers of type trigger_use or trigger_use_touch are nearby (i.e., when the hint string appears). Once available, the bot entity will be notified with a "bot_trigger" notify where the trigger entity is the first and only argument.
+  * `sv_kickGamestateLimitedClients`
+    * Type: Boolean
+    * Default: True
+    * Effect: Kick clients that do not support enough gamestate data for the current mod to function properly (usually only affecting players on versions 1.0 or 1.2). If set to false, the players can connect, but will most probably have some shaders displayed incorrectly (in an optimal case).
   * `sv_kickMessages`
     * Type: Boolean
     * Default: True
@@ -145,6 +149,12 @@ Added dvars:
         * and the jump_... dvars if jump.cpp is compiled.
       * If set to 2 or greater, also overrides jump-related dvars set in jump.cpp.
       * If set to 3, also overrides download-related dvars set in libcod.cpp. Note that sending these dvars this way is too late to auto-enable downloading right on a client's first connect. Instead, a reconnect is necessary for the client then, if downloading wasn't enabled already in the first place.
+  * `sv_reservedConfigstringBufferSize`
+    * Type: Integer
+    * Default: 256
+    * Min. Value: 0
+    * Max. Value: 8192
+    * Effect: For map-mod combinations that might exceed the available gamestate data on older game versions (1.0 and 1.2), reserve some buffer for configstrings that are allocated at runtime (e.g., those populated by playFxOnTag or when playing sounds). Its value needs to be set higher in case clients with older game versions tend to run into "MAX_GAMESTATE_CHARS exceeded" errors.
   * `sv_timeoutMessages`
     * Type: Boolean
     * Default: True
@@ -153,6 +163,10 @@ Added dvars:
     * Type: Boolean
     * Default: True
     * Effect: Toggle IWD file verification triggered by cp client commands.
+  * `sv_version`
+    * Type: String
+    * Default: "1.3"
+    * Effect: Controls the server's game version.
   * `sv_wwwDlDisconnectedMessages`
     * Type: Integer
     * Default: 1

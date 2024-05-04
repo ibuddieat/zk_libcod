@@ -336,6 +336,8 @@ scr_method_t scriptMethods[] =
 	#endif
 
 	#if COMPILE_PLAYER == 1
+	{"getProtocol", gsc_player_getprotocol, 0},
+	{"getProtocolString", gsc_player_getprotocolstring, 0},
 	{"enableBulletDrop", gsc_player_enablebulletdrop, 0},
 	{"disableBulletDrop", gsc_player_disablebulletdrop, 0},
 	{"setBulletDrag", gsc_player_setbulletdrag, 0},
@@ -845,4 +847,24 @@ uint64_t Sys_Milliseconds64(void)
 	}
 
 	return (tp.tv_sec - sys_timeBase) * 1000 + tp.tv_usec / 1000;
+}
+
+int getProtocolFromShortVersion(const char *shortVersion)
+{
+	if ( strcmp(shortVersion, "1.0") == 0 )
+		return 115; // 0x73
+	else if ( strcmp(shortVersion, "1.2") == 0 )
+		return 117; // 0x75
+	else
+		return 118; // 0x76, 1.3
+}
+
+const char * getShortVersionFromProtocol(int protocol)
+{
+	switch ( protocol )
+	{
+		case 115: return "1.0"; // 0x73
+		case 117: return "1.2"; // 0x75
+		default: return "1.3"; // 0x76, 118
+	}
 }
