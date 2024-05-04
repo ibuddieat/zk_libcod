@@ -4236,6 +4236,30 @@ typedef struct customEntityState_s
 	qboolean convertedTrigger;
 } customEntityState_t;
 
+#define MAX_DROPPING_BULLETS 20 // Per player
+
+typedef struct
+{
+	const gentity_t *attacker;
+	vec3_t direction;
+	double distance;
+	float dmgScale;
+	float drag;
+	gentity_t *inflictor;
+	qboolean inUse;
+	gentity_t *lastHitEnt;
+	vec3_t position;
+	int time;
+	int timeOffset;
+	float velocity;
+	gentity_t *visualBullet;
+	int visualBulletModelIndex;
+	int visualTime;
+	const gentity_t *weaponEnt;
+	weaponParms wp;
+	float zVelocity;
+} droppingBullet_t;
+
 typedef struct customPlayerState_s
 {
 	qboolean overrideContents;
@@ -4287,6 +4311,14 @@ typedef struct customPlayerState_s
 	qboolean overrideJumpSlowdown;
 	int jumpSlowdown;
 	#endif
+	int droppingBulletsCount;
+	droppingBullet_t droppingBullets[MAX_DROPPING_BULLETS];
+	qboolean droppingBulletsEnabled;
+	float droppingBulletDrag;
+	float droppingBulletVelocity;
+	qboolean droppingBulletVisuals;
+	int droppingBulletVisualModelIndex;
+	int droppingBulletVisualTime;
 } customPlayerState_t;
 
 typedef struct callback_s
@@ -4302,6 +4334,7 @@ typedef struct
 	unsigned short axis_allies;
 	unsigned short bot_trigger;
 	unsigned short bounce;
+	unsigned short bullet;
 	unsigned short flags;
 	unsigned short land;
 	#if COMPILE_CUSTOM_VOICE == 1

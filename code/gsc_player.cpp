@@ -10,6 +10,158 @@ extern customPlayerState_t customPlayerState[MAX_CLIENTS];
 extern customStringIndex_t custom_scr_const;
 extern dvar_t *g_antilag;
 
+void gsc_player_enablebulletdrop(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_enablebulletdrop() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	customPlayerState[id].droppingBulletsEnabled = qtrue;
+
+	stackPushBool(qtrue);
+}
+
+void gsc_player_disablebulletdrop(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_enablebulletdrop() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	customPlayerState[id].droppingBulletsEnabled = qfalse;
+
+	stackPushBool(qtrue);
+}
+
+void gsc_player_setbulletdrag(scr_entref_t ref)
+{
+	int id = ref.entnum;
+	float old_drag, new_drag;
+
+	if ( !stackGetParams("f", &new_drag) )
+	{
+		stackError("gsc_player_setbulletdrag() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_setbulletdrag() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	old_drag = customPlayerState[id].droppingBulletDrag;
+	if ( new_drag < 0 )
+	{
+		new_drag = 0.0;
+	}
+	else if ( new_drag > 1.0 )
+	{
+		new_drag = 1.0;
+	}
+	customPlayerState[id].droppingBulletDrag = new_drag;
+
+	stackPushFloat(old_drag);
+}
+
+void gsc_player_setbulletvelocity(scr_entref_t ref)
+{
+	int id = ref.entnum;
+	float old_velocity, new_velocity;
+
+	if ( !stackGetParams("f", &new_velocity) )
+	{
+		stackError("gsc_player_setbulletvelocity() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_setbulletvelocity() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	old_velocity = customPlayerState[id].droppingBulletDrag;
+	if ( new_velocity < 0 )
+	{
+		new_velocity = 0.0;
+	}
+	customPlayerState[id].droppingBulletDrag = new_velocity;
+
+	stackPushFloat(old_velocity);
+}
+
+void gsc_player_setbulletmodel(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_setbulletmodel() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	const char *model;
+
+	if ( Scr_GetNumParam() > 0 )
+	{
+		if ( Scr_GetType(0) == STACK_UNDEFINED )
+		{
+			customPlayerState[id].droppingBulletVisuals = qfalse;
+		}
+		else if ( Scr_GetType(0) == STACK_STRING )
+		{
+			model = Scr_GetString(0);
+			customPlayerState[id].droppingBulletVisualModelIndex = G_ModelIndex(model);
+			customPlayerState[id].droppingBulletVisuals = qtrue;
+		}
+		else
+		{
+			stackError("gsc_player_setbulletmodel() first argument has a wrong type");
+			stackPushUndefined();
+			return;
+		}
+
+		if ( Scr_GetNumParam() > 1 )
+		{
+			if ( Scr_GetType(1) == STACK_INT )
+			{
+				customPlayerState[id].droppingBulletVisualTime = Scr_GetInt(1);
+			}
+			else
+			{
+				stackError("gsc_player_setbulletmodel() second argument has a wrong type");
+				stackPushUndefined();
+				return;
+			}
+		}
+		else if ( customPlayerState[id].droppingBulletVisualTime == 0 )
+			customPlayerState[id].droppingBulletVisualTime = 1000;
+	}
+	else
+	{
+		stackError("gsc_player_setbulletmodel() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushBool(qtrue);
+}
+
 void gsc_player_overridecontents(scr_entref_t ref)
 {
 	int id = ref.entnum;

@@ -3,6 +3,11 @@
 
 #include "gsc.hpp"
 
+void gsc_player_enablebulletdrop(scr_entref_t ref);
+void gsc_player_disablebulletdrop(scr_entref_t ref);
+void gsc_player_setbulletdrag(scr_entref_t ref);
+void gsc_player_setbulletvelocity(scr_entref_t ref);
+void gsc_player_setbulletmodel(scr_entref_t ref);
 void gsc_player_overridecontents(scr_entref_t ref);
 void gsc_player_useentity(scr_entref_t ref);
 void gsc_player_useturret(scr_entref_t ref);

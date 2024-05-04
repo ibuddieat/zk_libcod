@@ -1,4 +1,15 @@
 Added dvars:
+
+  * `g_bulletDrop`
+    * Type: Boolean
+    * Default: False
+    * Effect: Toggle bullet gravity system. Some new script methods then allow to enable and use it on a per-player basis, with custom bullet velocity, drag and models.
+  * `g_bulletDropMaxTime`
+    * Type: Integer
+    * Default: 10000
+    * Min. Value: 50
+    * Max. Value: 60000
+    * Effect: Defines the time in milliseconds how long gravity-enabled bullets are allowed to travel.
   * `g_corpseHit`
     * Type: Boolean
     * Default: True

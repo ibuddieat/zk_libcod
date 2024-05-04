@@ -336,6 +336,11 @@ scr_method_t scriptMethods[] =
 	#endif
 
 	#if COMPILE_PLAYER == 1
+	{"enableBulletDrop", gsc_player_enablebulletdrop, 0},
+	{"disableBulletDrop", gsc_player_disablebulletdrop, 0},
+	{"setBulletDrag", gsc_player_setbulletdrag, 0},
+	{"setBulletVelocity", gsc_player_setbulletvelocity, 0},
+	{"setBulletModel", gsc_player_setbulletmodel, 0},
 	{"overrideContents", gsc_player_overridecontents, 0},
 	{"useEntity", gsc_player_useentity, 0},
 	{"useTurret", gsc_player_useturret, 0},

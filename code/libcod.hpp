@@ -1,3 +1,11 @@
+void custom_Bullet_Fire_ApplyDropDrag(droppingBullet_t *bullet);
+void custom_Bullet_Drop_Free(int clientNum, droppingBullet_t *bullet);
+void custom_Bullet_Fire_Drop_Think(int clientNum, droppingBullet_t *bullet);
+void custom_Bullet_Fire_Drop_Think_AntiLag(int clientNum, droppingBullet_t *bullet);
+void custom_Bullet_Drop_Nextpos(float *end, droppingBullet_t *bullet);
+void custom_Bullet_Drop_Update_Visual(droppingBullet_t *bullet, float *end);
+void custom_Bullet_Drop_Finalize_Visual(droppingBullet_t *bullet);
+qboolean custom_Bullet_Fire_Drop(droppingBullet_t *bullet, const gentity_t *inflictor, gentity_t *attacker, float *start, float *end, float dmgScale, const weaponParms *wp, const gentity_t *weaponEnt);
 void custom_G_CheckHitTriggerDamage(gentity_t *pActivator, float *vStart, float *vEnd, int iDamage, meansOfDeath_t iMOD);
 void custom_player_die(gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, meansOfDeath_t meansOfDeath, int iWeapon, const float *vDir, hitLocation_t hitLoc, int psTimeOffset);
 qboolean custom_SV_MapExists(const char *name);

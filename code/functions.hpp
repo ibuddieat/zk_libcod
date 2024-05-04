@@ -2055,6 +2055,15 @@ static const G_SetEntityPlacement_t G_SetEntityPlacement = (G_SetEntityPlacement
 static const G_SetEntityPlacement_t G_SetEntityPlacement = (G_SetEntityPlacement_t)0x0811A7B0;
 #endif
 
+typedef void (*G_SetModel_t)(gentity_t *ent, const char *modelName);
+#if COD_VERSION == COD2_1_0
+static const G_SetModel_t G_SetModel = (G_SetModel_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_SetModel_t G_SetModel = (G_SetModel_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_SetModel_t G_SetModel = (G_SetModel_t)0x0811D87A;
+#endif
+
 typedef char (*G_EntLinkToWithOffset_t)(gentity_t *ent, gentity_t *parent, unsigned int tagId, vec3_t *originOffset, vec3_t *anglesOffset);
 #if COD_VERSION == COD2_1_0
 static const G_EntLinkToWithOffset_t G_EntLinkToWithOffset = (G_EntLinkToWithOffset_t)0x0; // Not tested
@@ -2170,6 +2179,15 @@ static const G_DObjCalcPose_t G_DObjCalcPose = (G_DObjCalcPose_t)0x0; // Not tes
 static const G_DObjCalcPose_t G_DObjCalcPose = (G_DObjCalcPose_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const G_DObjCalcPose_t G_DObjCalcPose = (G_DObjCalcPose_t)0x0811E3C0;
+#endif
+
+typedef void (*G_DObjUpdate_t)(gentity_t *ent);
+#if COD_VERSION == COD2_1_0
+static const G_DObjUpdate_t G_DObjUpdate = (G_DObjUpdate_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const G_DObjUpdate_t G_DObjUpdate = (G_DObjUpdate_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const G_DObjUpdate_t G_DObjUpdate = (G_DObjUpdate_t)0x0811D69E;
 #endif
 
 typedef playerState_t * (*SV_GameClientNum_t)(int num);
@@ -2874,6 +2892,15 @@ static const VecToAngles_t VecToAngles = (VecToAngles_t)0x0; // Not tested
 static const VecToAngles_t VecToAngles = (VecToAngles_t)0x080A4FE2;
 #endif
 
+typedef double (*Vec3Distance_t)(float *v1, float *v2);
+#if COD_VERSION == COD2_1_0
+static const Vec3Distance_t Vec3Distance = (Vec3Distance_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const Vec3Distance_t Vec3Distance = (Vec3Distance_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const Vec3Distance_t Vec3Distance = (Vec3Distance_t)0x080A40EA;
+#endif
+
 typedef double (*Vec3DistanceSq_t)(float *v1, float *v2);
 #if COD_VERSION == COD2_1_0
 static const Vec3DistanceSq_t Vec3DistanceSq = (Vec3DistanceSq_t)0x0; // Not tested
@@ -3036,7 +3063,7 @@ static const Bullet_CalcDamageRange_t Bullet_CalcDamageRange = (Bullet_CalcDamag
 static const Bullet_CalcDamageRange_t Bullet_CalcDamageRange = (Bullet_CalcDamageRange_t)0x0811FB7C;
 #endif
 
-typedef void (*Bullet_Endpos_t)(float spread, float *end, weaponParms *wp, float distance);
+typedef void (*Bullet_Endpos_t)(float spread, float *end, const weaponParms *wp, float distance);
 #if COD_VERSION == COD2_1_0
 static const Bullet_Endpos_t Bullet_Endpos = (Bullet_Endpos_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_2

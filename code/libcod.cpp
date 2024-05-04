@@ -72,6 +72,8 @@ dvar_t *con_coloredPrints;
 #endif
 dvar_t *fs_callbacks;
 dvar_t *fs_library;
+dvar_t *g_bulletDrop;
+dvar_t *g_bulletDropMaxTime;
 dvar_t *g_corpseHit;
 dvar_t *g_debugCallbacks;
 dvar_t *g_debugEvents;
@@ -320,6 +322,8 @@ void common_init_complete_print(const char *format, ...)
 	#endif
 	fs_callbacks = Dvar_RegisterString("fs_callbacks", "", DVAR_ARCHIVE);
 	fs_library = Dvar_RegisterString("fs_library", "", DVAR_ARCHIVE);
+	g_bulletDrop = Dvar_RegisterBool("g_bulletDrop", qfalse, DVAR_ARCHIVE);
+	g_bulletDropMaxTime = Dvar_RegisterInt("g_bulletDropMaxTime", 10000, 50, 60000, DVAR_ARCHIVE);
 	g_corpseHit = Dvar_RegisterBool("g_corpseHit", qfalse, DVAR_ARCHIVE);
 	g_debugCallbacks = Dvar_RegisterBool("g_debugCallbacks", qfalse, DVAR_ARCHIVE);
 	g_debugEvents = Dvar_RegisterBool("g_debugEvents", qfalse, DVAR_ARCHIVE);
@@ -400,6 +404,7 @@ void custom_GScr_LoadConsts(void)
 	custom_scr_const.axis_allies = GScr_AllocString("axis_allies");
 	custom_scr_const.bot_trigger = GScr_AllocString("bot_trigger");
 	custom_scr_const.bounce = GScr_AllocString("bounce");
+	custom_scr_const.bullet = GScr_AllocString("bullet");
 	custom_scr_const.flags = GScr_AllocString("flags");
 	custom_scr_const.land = GScr_AllocString("land");
 	#if COMPILE_CUSTOM_VOICE == 1
@@ -2362,6 +2367,8 @@ void custom_SV_SendClientGameState(client_t *client)
 	customPlayerState[id].fireRangeScale = 1.0;
 	customPlayerState[id].turretSpreadScale = 1.0;
 	customPlayerState[id].weaponSpreadScale = 1.0;
+	customPlayerState[id].droppingBulletDrag = 0.01;
+	customPlayerState[id].droppingBulletVelocity = 8192.0;
 	/* New code end */
 	
 	MSG_Init(&msg, data, MAX_MSGLEN);
@@ -4362,6 +4369,39 @@ void custom_G_RunFrame(int levelTime)
 		}
 	}
 #endif
+
+	// Process bullet drop
+	if ( g_bulletDrop->current.boolean )
+	{
+		for ( i = 0, client = svs.clients; i < sv_maxclients->current.integer; i++, client++ )
+		{
+			if ( client->state < CS_CONNECTED || customPlayerState[i].droppingBulletsCount < 1 )
+				continue;
+
+			for ( j = 0; j < MAX_DROPPING_BULLETS; j++ )
+			{
+				droppingBullet_t *bullet = &customPlayerState[i].droppingBullets[j];
+				if ( bullet->inUse )
+				{
+					// Enforce max. bullet lifetime
+					if ( ( level.time - bullet->startTime ) > g_bulletDropMaxTime->current.integer )
+					{
+						if( bullet->visualBullet )
+							custom_Bullet_Drop_Finalize_Visual(bullet, qtrue);
+
+						custom_Bullet_Drop_Free(i, bullet);
+						continue;
+					}
+
+					// Process bullet travel
+					if ( g_antilag->current.boolean )
+						custom_Bullet_Fire_Drop_Think_AntiLag(i, bullet);
+					else
+						custom_Bullet_Fire_Drop_Think(i, bullet);
+				}
+			}
+		}
+	}
 
 	G_RunFrame(levelTime);
 	hook_g_runframe->hook();
@@ -6400,15 +6440,11 @@ void custom_Bullet_Fire_Extended(const gentity_t *inflictor, gentity_t *attacker
 				if ( !noBulletImpacts )
 				{
 					// Recreate bullet hit effect that would otherwise be missing with a player-only mask
-					trace_t effectTrace;
 					gentity_t *hitEffect;
-					vec3_t effectOrigin;
 
-					G_LocationalTrace(&effectTrace, start, end, inflictor->s.number, contentMask, priorityMap);
-					Vec3Lerp(start, end, effectTrace.fraction, effectOrigin);
-					hitEffect = G_TempEntity(effectOrigin, event);
-					hitEffect->s.eventParm = DirToByte(effectTrace.normal) & 0xFF;
-					hitEffect->s.surfType = (effectTrace.surfaceFlags >> 20) & 0x1F;
+					hitEffect = G_TempEntity(origin, event);
+					hitEffect->s.eventParm = DirToByte(trace.normal) & 0xFF;
+					hitEffect->s.surfType = (trace.surfaceFlags >> 20) & 0x1F;
 				}
 			}
 			else if ( !noBulletImpacts )
@@ -6418,7 +6454,7 @@ void custom_Bullet_Fire_Extended(const gentity_t *inflictor, gentity_t *attacker
 				tempEnt->s.eventParm = DirToByte(trace.normal);
 				tempEnt->s.scale = DirToByte(dir);
 
-				if ( self->s.eType == ET_PLAYER_CORPSE && g_corpseHit->current.boolean )
+				if ( self->s.eType == ET_PLAYER_CORPSE && g_corpseHit->current.boolean ) // New: g_corpseHit dvar
 					surfaceType = 7;
 				else
 					surfaceType = (trace.surfaceFlags & 0x1F00000) >> 20;
@@ -6469,7 +6505,174 @@ void custom_Bullet_Fire_Extended(const gentity_t *inflictor, gentity_t *attacker
 	}
 }
 
-void custom_Bullet_Fire_Spread(gentity_t *source, gentity_t *inflictor, weaponParms *wp, int offset, float spread) // Guessed function name
+qboolean custom_Bullet_Fire_Drop(droppingBullet_t *bullet, const gentity_t *inflictor, gentity_t *attacker, float *start, float *end, float dmgScale, const weaponParms *wp, const gentity_t *weaponEnt)
+{
+	int surfaceType;
+	int event;
+	float dot;
+	vec3_t dir;
+	vec3_t origin;
+	meansOfDeath_t meansOfDeath;
+	int dflags;
+	int damage;
+	float dist;
+	vec3_t temp;
+	gentity_t *self;
+	gentity_t *tempEnt;
+	trace_t trace;
+	int contentMask;
+	uint8_t *priorityMap;
+	qboolean noBulletImpacts;
+	float scaleSquared;
+	float dirScale;
+
+	dflags = 0;
+
+	if ( wp->weapDef->bRifleBullet )
+	{
+		meansOfDeath = MOD_RIFLE_BULLET;
+		dflags = 32;
+	}
+	else
+	{
+		meansOfDeath = MOD_PISTOL_BULLET;
+	}
+
+	if ( wp->weapDef->armorPiercing )
+		dflags |= 2u;
+
+	if ( wp->weapDef->bRifleBullet )
+		priorityMap = &riflePriorityMap;
+	else
+		priorityMap = &bulletPriorityMap;
+
+	contentMask = MASK_SHOT | CONTENTS_GLASS;
+
+	if ( bullet->lastHitEnt )
+		G_LocationalTrace(&trace, start, end, bullet->lastHitEnt->s.number, contentMask, priorityMap);
+	else
+		G_LocationalTrace(&trace, start, end, inflictor->s.number, contentMask, priorityMap);
+	Vec3Lerp(start, end, trace.fraction, origin);
+	custom_G_CheckHitTriggerDamage(attacker, start, origin, wp->weapDef->damage, meansOfDeath);
+	self = &g_entities[trace.entityNum];
+	VectorSubtract(end, start, dir);
+	Vec3Normalize(dir);
+
+	// Update bullet trajectory values
+	bullet->distance += Vec3Distance(bullet->position, origin);
+	VectorCopy(origin, bullet->position);
+	VectorCopy(dir, bullet->direction);
+	bullet->dmgScale = dmgScale;
+
+	// Apply (linear) bullet drag
+	bullet->velocity *= 1.0 - ((1.0 - bullet->drag) * trace.fraction);
+
+	dot = DotProduct(dir, trace.normal) * -2.0;
+	VectorMA(dir, dot, trace.normal, dir);
+
+	// Bullet holes
+	if ( (trace.surfaceFlags & SURF_SKY) == 0 && !self->client && trace.fraction < 1.0 )
+	{
+		if ( wp->weapDef->weapClass == WEAPCLASS_SPREAD )
+		{
+			event = EV_BULLET_HIT_SMALL;
+		}
+		else if ( wp->weapDef->bRifleBullet )
+		{
+			event = EV_SHOTGUN_HIT;
+		}
+		else
+		{
+			event = EV_BULLET_HIT_LARGE;
+		}
+
+		if ( wp->weapDef->bRifleBullet )
+			event = EV_SHOTGUN_HIT;
+		else
+			event = EV_BULLET_HIT_LARGE;
+
+		if ( attacker->s.number < 64 )
+			noBulletImpacts = customPlayerState[attacker->s.number].noBulletImpacts;
+		else
+			noBulletImpacts = qfalse;
+
+		if ( attacker->s.number < 64 && customPlayerState[attacker->s.number].fireThroughWalls )
+		{
+			if ( !noBulletImpacts )
+			{
+				// Recreate bullet hit effect that would otherwise be missing with a player-only mask
+				gentity_t *hitEffect;
+
+				hitEffect = G_TempEntity(origin, event);
+				hitEffect->s.eventParm = DirToByte(trace.normal) & 0xFF;
+				hitEffect->s.surfType = (trace.surfaceFlags >> 20) & 0x1F;
+			}
+		}
+		else if ( !noBulletImpacts )
+		{
+			tempEnt = G_TempEntity(origin, event);
+			tempEnt->s.eventParm = DirToByte(trace.normal);
+			tempEnt->s.scale = DirToByte(dir);
+
+			if ( self->s.eType == ET_PLAYER_CORPSE && g_corpseHit->current.boolean ) // New: g_corpseHit dvar
+				surfaceType = 7;
+			else
+				surfaceType = (trace.surfaceFlags & 0x1F00000) >> 20;
+
+			tempEnt->s.surfType = surfaceType;
+			tempEnt->s.otherEntityNum = weaponEnt->s.number;
+		}
+	}
+
+	// If glass was hit, keep the bullet alive
+	if ( (trace.contents & CONTENTS_GLASS) != 0 )
+	{
+		VectorSubtract(end, start, dir);
+		Vec3Normalize(dir);
+		scaleSquared = DotProduct(trace.normal, dir);
+
+		if ( -scaleSquared < 0.125 )
+			dirScale = 0.0;
+		else
+			dirScale = 0.25 / -scaleSquared;
+
+		VectorMA(origin, dirScale, dir, bullet->position);
+		return qfalse;
+	}
+	else if ( self->takedamage )
+	{
+		// An entity that can take damage was hit
+		if ( self != attacker )
+		{
+			VectorSubtract(start, origin, temp);
+			dist = VectorLength(temp);
+			damage = (int)((float)Bullet_CalcDamageRange(wp, dist) * dmgScale);
+
+			// Player could execute some sort of team kill if they switch team while the bullet travels
+			G_Damage(self, attacker, attacker, wp->forward, origin, damage, dflags, meansOfDeath, (hitLocation_t)trace.partGroup, bullet->timeOffset);
+
+			// Save that entity reference so we can ignore it for subsequent traces
+			bullet->lastHitEnt = self;
+
+			if ( self->client )
+			{
+				if ( (dflags & 0x20) != 0 && ( Dvar_GetInt("scr_friendlyfire") || !OnSameTeam(self, attacker) ) )
+				{
+					bullet->dmgScale = dmgScale * 0.5;
+					return qfalse;
+				}
+			}
+		}
+	}
+
+	// Bullet did not hit anything
+	if ( trace.fraction == 1.0 && trace.entityNum == ENTITY_NONE )
+		return qfalse;
+
+	return qtrue;
+}
+
+void custom_Bullet_Fire_Spread(const gentity_t *source, gentity_t *inflictor, const weaponParms *wp, int offset, float spread) // Guessed function name
 {
 	int i;
 	vec3_t start, end;
@@ -6487,10 +6690,156 @@ void custom_Bullet_Fire_Spread(gentity_t *source, gentity_t *inflictor, weaponPa
 	}
 }
 
-void custom_Bullet_Fire(gentity_t *inflictor, float spread, weaponParms *wp, gentity_t *source, int offset)
+void custom_Bullet_Fire_Drop_Think(int clientNum, droppingBullet_t *bullet)
+{
+	vec3_t end;
+
+	custom_Bullet_Drop_Nextpos(end, bullet);
+	if ( custom_Bullet_Fire_Drop(bullet, bullet->attacker, bullet->inflictor, bullet->position, end, bullet->dmgScale, &bullet->wp, bullet->attacker) )
+	{
+		if( bullet->visualBullet )
+			custom_Bullet_Drop_Finalize_Visual(bullet, qfalse);
+
+		custom_Bullet_Drop_Free(clientNum, bullet);
+	}
+	else
+	{
+		if( bullet->visualBullet )
+			custom_Bullet_Drop_Update_Visual(bullet, end);
+	}
+}
+
+void custom_Bullet_Fire_Drop_Think_AntiLag(int clientNum, droppingBullet_t *bullet)
 {
 	antilagClientStore antilagStore;
 	vec3_t end;
+
+	G_AntiLagRewindClientPos(level.time - bullet->timeOffset, &antilagStore);
+	custom_Bullet_Drop_Nextpos(end, bullet);
+	if ( custom_Bullet_Fire_Drop(bullet, bullet->attacker, bullet->inflictor, bullet->position, end, bullet->dmgScale, &bullet->wp, bullet->attacker) )
+	{
+		if( bullet->visualBullet )
+			custom_Bullet_Drop_Finalize_Visual(bullet, qfalse);
+
+		custom_Bullet_Drop_Free(clientNum, bullet);
+	}
+	else
+	{
+		if( bullet->visualBullet )
+			custom_Bullet_Drop_Update_Visual(bullet, end);
+	}
+	G_AntiLag_RestoreClientPos(&antilagStore);
+}
+
+void custom_Bullet_Drop_Firstpos(float spread, float *end, const weaponParms *wp, float distance, droppingBullet_t *bullet)
+{
+	float timeDelta;
+	float zDelta;
+
+	Bullet_Endpos(spread, end, wp, distance);
+	timeDelta = 1.0 / (float)sv_fps->current.integer;
+	zDelta = 0.5 * (386.08858267717 * (timeDelta * timeDelta));
+	// Do we want drag in gravity direction too?
+	// A terminal falling velocity could be implemented here too
+	//zDelta *= (1.0 - bullet->drag);
+	bullet->zVelocity = bullet->zVelocity - (386.08858267717 * timeDelta);
+	end[2] += zDelta;
+}
+
+void custom_Bullet_Drop_Nextpos(float *end, droppingBullet_t *bullet)
+{
+	float timeDelta;
+	float zDelta;
+
+	VectorMA(bullet->position, bullet->velocity, bullet->direction, end);
+	timeDelta = 1.0 / (float)sv_fps->current.integer;
+	zDelta = (bullet->zVelocity * timeDelta) + (0.5 * (386.08858267717 * (timeDelta * timeDelta)));
+	// Do we want drag in gravity direction too?
+	// A terminal falling velocity could be implemented here too
+	//zDelta *= (1.0 - bullet->drag);
+	bullet->zVelocity = bullet->zVelocity - (386.08858267717 * timeDelta);
+	end[2] += zDelta;
+}
+
+void custom_Bullet_Drop_Free(int clientNum, droppingBullet_t *bullet)
+{
+	customPlayerState[clientNum].droppingBulletsCount--;
+	Com_DPrintf("Bullet_Drop_Free: Done after %.2fs and %f units of distance, %d bullets still active\n", (float)(level.time - bullet->startTime)/1000, bullet->distance, customPlayerState[clientNum].droppingBulletsCount);
+	memset(bullet, 0, sizeof(droppingBullet_t));
+}
+
+gentity_t * custom_Bullet_Drop_Create_Visual(int clientNum, droppingBullet_t *bullet, float *start, float *end)
+{
+	gentity_t *ent;
+	vec3_t dir;
+	vec3_t angles;
+
+	ent = G_Spawn();
+	Scr_SetString(&ent->classname, custom_scr_const.bullet);
+	ent->r.contents = 0;
+	ent->clipmask = 0;
+	ent->s.eType = ET_GENERAL;
+	ent->freeAfterEvent = 1;
+	ent->eventTime = level.time + 50;
+	G_SetModel(ent, G_ModelName(bullet->visualBulletModelIndex)); // "xmodel/weapon_temp_panzershreck_rocket"
+	G_DObjUpdate(ent);
+
+	G_SetOrigin(ent, start);
+	VectorSubtract(end, (ent->r).currentOrigin, dir);
+	VecToAngles(dir, angles);
+	G_SetAngle(ent, angles);
+
+	(ent->s).pos.trType = TR_LINEAR;
+	(ent->s).pos.trDuration = 50;
+	(ent->s).pos.trTime = level.time - 50;
+	VectorCopy((ent->r).currentOrigin, (ent->s).pos.trBase);
+	VectorScale(dir, 20.0, ent->s.pos.trDelta);
+	SV_LinkEntity(ent);
+
+	return ent;
+}
+
+void custom_Bullet_Drop_Update_Visual(droppingBullet_t *bullet, float *end)
+{
+	gentity_t *ent = bullet->visualBullet;
+	vec3_t angles;
+
+	ent->eventTime += 50;
+
+	VectorCopy(bullet->position, (ent->r).currentOrigin);
+	VecToAngles(bullet->direction, angles);
+	G_SetAngle(ent, angles);
+
+	(ent->s).pos.trType = TR_LINEAR;
+	(ent->s).pos.trDuration = 50;
+	(ent->s).pos.trTime = level.time - 50;
+	VectorCopy((ent->r).currentOrigin, (ent->s).pos.trBase);
+	VectorScale(bullet->direction, 20.0, ent->s.pos.trDelta);
+}
+
+void custom_Bullet_Drop_Finalize_Visual(droppingBullet_t *bullet, qboolean remove)
+{
+	gentity_t *ent = bullet->visualBullet;
+	vec3_t angles;
+
+	G_SetOrigin(ent, bullet->position); // Sets TR_STATIONARY
+	VecToAngles(bullet->direction, angles);
+	G_SetAngle(ent, angles);
+
+	// Keep bullet visuals visible for while after final hit?
+	if ( bullet->visualTime > 0 && !remove )
+		bullet->visualBullet->eventTime = level.time + bullet->visualTime;
+	else
+		G_FreeEntity(bullet->visualBullet);
+}
+
+void custom_Bullet_Fire(gentity_t *inflictor, float spread, weaponParms *wp, const gentity_t *source, int offset)
+{
+	antilagClientStore antilagStore;
+	float distance;
+	vec3_t end;
+	int i;
+	int id;
 
 	G_AntiLagRewindClientPos(offset, &antilagStore);
 	if ( wp->weapDef->weapClass == WEAPCLASS_SPREAD )
@@ -6499,13 +6848,75 @@ void custom_Bullet_Fire(gentity_t *inflictor, float spread, weaponParms *wp, gen
 	}
 	else
 	{
-		/* New code start: per-player min. fire distance */
-		int id = inflictor->client->ps.clientNum;
-		float distance = 8192.0 * customPlayerState[id].fireRangeScale;
-		/* New code end */
+		id = inflictor->client->ps.clientNum;
 
-		Bullet_Endpos(spread, end, wp, distance);
-		custom_Bullet_Fire_Extended(source, inflictor, wp->muzzleTrace, end, 1.0, 0, wp, source, offset);
+		/* New code start: bullet drop */
+		if ( g_bulletDrop->current.boolean && customPlayerState[id].droppingBulletsEnabled )
+		{
+			if ( customPlayerState[id].droppingBulletsCount >= MAX_DROPPING_BULLETS )
+			{
+				Com_DPrintf("Bullet_Fire: Too many bullets still on their way for player %d, bullet aborted\n", id);
+				return;
+			}
+
+			droppingBullet_t bullet;
+			memset(&bullet, 0, sizeof(droppingBullet_t));
+
+			// Factor applied on velocity, each frame; could be added as a weaponDef field
+			bullet.drag = customPlayerState[id].droppingBulletDrag;
+
+			// Get next bullet position
+			// Units per second; 31500 would be about 800m/s; could be added as a weaponDef field
+			distance = customPlayerState[id].droppingBulletVelocity / (float)sv_fps->current.integer;
+			if ( distance > 8192.0 ) // Clamp to common stock value
+				distance = 8192.0;
+			custom_Bullet_Drop_Firstpos(spread, end, wp, distance, &bullet);
+
+			// Visualize bullet trajectory
+			bullet.visualBullet = NULL;
+			if ( customPlayerState[id].droppingBulletVisuals )
+			{
+				bullet.visualBulletModelIndex = customPlayerState[id].droppingBulletVisualModelIndex;
+				bullet.visualBullet = custom_Bullet_Drop_Create_Visual(id, &bullet, wp->muzzleTrace, end);
+				bullet.visualTime = customPlayerState[id].droppingBulletVisualTime;
+			}
+
+			// If bullet did not hit an obstacle, queue it for next server frame
+			if ( !custom_Bullet_Fire_Drop(&bullet, source, inflictor, wp->muzzleTrace, end, 1.0, wp, source) )
+			{
+				for ( i = 0; i < MAX_DROPPING_BULLETS; i++ )
+				{
+					if ( !customPlayerState[id].droppingBullets[i].inUse )
+					{
+						bullet.attacker = source;
+						bullet.distance = distance;
+						bullet.inflictor = inflictor;
+						bullet.inUse = qtrue;
+						bullet.startTime = level.time;
+						bullet.timeOffset = level.time - offset;
+						bullet.velocity = distance;
+						bullet.weaponEnt = source;
+						memcpy(&bullet.wp, wp, sizeof(weaponParms));
+						memcpy(&customPlayerState[id].droppingBullets[i], &bullet, sizeof(droppingBullet_t));
+						customPlayerState[id].droppingBulletsCount++;
+						break;
+					}
+				}
+			} else {
+				if ( bullet.visualBullet )
+					custom_Bullet_Drop_Finalize_Visual(&bullet, qfalse);
+			}
+		}
+		/* New code end */
+		else
+		{
+			/* New code start: per-player min. fire distance */
+			distance = 8192.0 * customPlayerState[id].fireRangeScale;
+			/* New code end */
+
+			Bullet_Endpos(spread, end, wp, distance);
+			custom_Bullet_Fire_Extended(source, inflictor, wp->muzzleTrace, end, 1.0, 0, wp, source, offset);
+		}
 	}
 	G_AntiLag_RestoreClientPos(&antilagStore);
 }
