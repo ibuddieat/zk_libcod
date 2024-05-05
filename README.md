@@ -3,7 +3,7 @@
 **This extension ...**
 - provides interoperability between the Call of Duty&reg; 2 server and other software components and/or advanced game modifications (so-called "mods"),
 - intends to improve the overall game experience and security as the extended software (Call of Duty&reg; 2) is not maintained anymore since more than a decade,
-- has its focus on the Linux variant of Call of Duty&reg; 2 Multiplayer in version 1.3, other versions are not fully supported (unless the respective offsets/structs are added),
+- has its focus on the Linux variant of Call of Duty&reg; 2 Multiplayer and can be used with the original game binary,
 - and was implemented for non-profit and educational purposes.
 
 ## ⭐ What's new?
@@ -18,7 +18,7 @@
   - Added support for map commands in custom rcon callback
   - Allow to show head icons to both teams (via `axis_allies`)
   - Excluded clients with wrong password from scoreboard
-  - Patched `Com_PrintMessage` so that strings that begin with a caret are printed properly
+  - Patched `Com_PrintMessage` so that strings that begin with a caret are printed properly in console
 - 🗒 Improvements in documentation and code
   - Added a crash logger that saves debugging information (locally)
   - Added documentation for all new functions and some where documentation was missing
