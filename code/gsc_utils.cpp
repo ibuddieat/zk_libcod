@@ -1499,13 +1499,7 @@ void gsc_utils_vectorscale()
 
 void gsc_utils_getlasttestclientnumber()
 {
-#if COD_VERSION == COD2_1_0
-	int offset = 0x083DF9EC;
-#elif COD_VERSION == COD2_1_2
-	int offset = 0x083E1E8C;
-#elif COD_VERSION == COD2_1_3
 	int offset = 0x083E2F0C;
-#endif
 
 	stackPushInt(*(int *)offset);
 }

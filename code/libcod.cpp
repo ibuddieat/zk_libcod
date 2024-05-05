@@ -69,12 +69,10 @@ dvar_t *sv_timeout;
 dvar_t *sv_voice;
 dvar_t *sv_voiceQuality;
 dvar_t *sv_zombietime;
-#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
 dvar_t *cl_wwwDownload;
 dvar_t *sv_wwwBaseURL;
 dvar_t *sv_wwwDlDisconnected;
 dvar_t *sv_wwwDownload;
-#endif
 
 // Custom dvars
 #if COMPILE_UTILS == 1
@@ -130,9 +128,7 @@ dvar_t *sv_reservedConfigstringBufferSize;
 dvar_t *sv_timeoutMessages;
 dvar_t *sv_verifyIwds;
 dvar_t *sv_version;
-#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
 dvar_t *sv_wwwDlDisconnectedMessages;
-#endif
 
 cHook *hook_add_opcode;
 cHook *hook_bg_playanim;
@@ -345,12 +341,10 @@ void common_init_complete_print(const char *format, ...)
 	sv_voice = Dvar_FindVar("sv_voice");
 	sv_voiceQuality = Dvar_FindVar("sv_voiceQuality");
 	sv_zombietime = Dvar_FindVar("sv_zombietime");
-	#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
-	cl_wwwDownload = Dvar_RegisterBool("cl_wwwDownload", qtrue, DVAR_ARCHIVE | DVAR_SYSTEMINFO); // Force-enable wwwDownload for clients
+	cl_wwwDownload = Dvar_RegisterBool("cl_wwwDownload", qtrue, DVAR_ARCHIVE | DVAR_SYSTEMINFO); // Force-enable wwwDownload for clients that support it
 	sv_wwwBaseURL = Dvar_FindVar("sv_wwwBaseURL");
 	sv_wwwDlDisconnected = Dvar_FindVar("sv_wwwDlDisconnected");
 	sv_wwwDownload = Dvar_FindVar("sv_wwwDownload");
-	#endif
 
 	// Register custom dvars
 	#if COMPILE_UTILS == 1
@@ -394,9 +388,7 @@ void common_init_complete_print(const char *format, ...)
 	sv_noauthorize = Dvar_RegisterBool("sv_noauthorize", qfalse, DVAR_ARCHIVE);
 	sv_timeoutMessages = Dvar_RegisterBool("sv_timeoutMessages", qtrue, DVAR_ARCHIVE);
 	sv_verifyIwds = Dvar_RegisterBool("sv_verifyIwds", qtrue, DVAR_ARCHIVE);
-	#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
 	sv_wwwDlDisconnectedMessages = Dvar_RegisterInt("sv_wwwDlDisconnectedMessages", 1, 0, 2, DVAR_ARCHIVE);
-	#endif
 
 	/* Register (thus override) dvars that would otherwise be defined later in
 	 G_RegisterDvars, example:
@@ -1175,13 +1167,7 @@ LAB_0808ec36:
 qboolean logHeartbeat = qtrue;
 void custom_SV_MasterHeartbeat(const char *hbname)
 {
-	#if COD_VERSION == COD2_1_0
-	int sending_heartbeat_string_offset = 0x0; // Not tested
-	#elif COD_VERSION == COD2_1_2
-	int sending_heartbeat_string_offset = 0x0; // Not tested
-	#elif COD_VERSION == COD2_1_3
 	int sending_heartbeat_string_offset = 0x0814BBC0;
-	#endif
 
 	if ( logHeartbeat && !sv_logHeartbeats->current.boolean )
 	{
@@ -2964,10 +2950,9 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 	if ( strcmp(&cl->downloadName[strlen(cl->downloadName) - 4], ".iwd") != 0 )
 		return;
 
-	#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
+	// WWW download has been acknowledged
 	if ( cl->clientDownloadingWWW )
 		return;
-	#endif
 
 	// If set, download custom message instead of download
 	if ( strlen(sv_downloadMessage->current.string) )
@@ -2977,7 +2962,6 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 		return;
 	}
 
-	#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
 	if ( sv_wwwDownload->current.boolean && cl->wwwOk )
 	{
 		if ( !cl->wwwFallback )
@@ -2987,7 +2971,6 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 			return;
 		}
 	}
-	#endif
 
 	// Hardcode client variables to make max download speed for everyone
 	cl->state = CS_CONNECTED;
@@ -4740,33 +4723,22 @@ void Scr_CodeCallback_Error(qboolean terminal, qboolean emit, const char *intern
 
 void custom_Com_Error(errorParm_t code, const char *format, ...)
 {
+	va_list va;
+
 	Sys_EnterCriticalSectionInternal(CRITSECT_COM_ERROR);
-	
-	#if COD_VERSION == COD2_1_0 // Not tested
-	int va_string_156 = 0x0;
-	int unk1 = 0x0;
-	#elif COD_VERSION == COD2_1_2 // Not tested
-	int va_string_156 = 0x0;
-	int unk1 = 0x0;
-	#elif COD_VERSION == COD2_1_3
-	int va_string_156 = 0x081A2280;
-	int unk1 = 0x081A327F;
-	#endif
-	
+
 	if ( com_errorEntered )
 	{
-		Sys_Error("recursive error after: %s", (char *)va_string_156);
+		Sys_Error("recursive error after: %s", &com_errorMessage);
 	}
 	com_errorEntered = 1;
-	
-	va_list va;
+
 	va_start(va, format);
-	Q_vsnprintf((char *)va_string_156, 0x1000, format, va);
+	Q_vsnprintf(&com_errorMessage, 0x1000, format, va);
 	va_end(va);
-	
-	Scr_CodeCallback_Error(scrVmPub.terminal_error, qtrue, "Com_Error", (char *)va_string_156);
-	
-	*(byte *)unk1 = 0;
+	memset((void *)((int)&com_errorMessage + 4095), 0, 1);
+
+	Scr_CodeCallback_Error(scrVmPub.terminal_error, qtrue, "Com_Error", &com_errorMessage); // New
 	
 	if ( code != ERR_DROP )
 	{
@@ -4881,7 +4853,7 @@ void custom_RuntimeError(const char *pos, int index, const char *message, const 
 			Com_Printf("%s\n", message);
 			if ( !scrVmPub.terminal_error )
 			{
-				Scr_CodeCallback_Error(qfalse, qfalse, "RuntimeError", (char *)message);
+				Scr_CodeCallback_Error(qfalse, qfalse, "RuntimeError", (char *)message); // New
 				return;
 			}
 		}
@@ -9416,179 +9388,23 @@ class cCallOfDuty2Pro
 public:
 	cCallOfDuty2Pro()
 	{
-		// Don't inherit lib of parent
+		// Do not inherit lib of parent
 		unsetenv("LD_PRELOAD");
 
 		// Crash handlers for debugging
 		signal(SIGSEGV, ServerCrash);
 		signal(SIGABRT, ServerCrash);
-		
+
 		// Otherwise the printf()'s are printed at crash/end on older os/compiler versions
 		setbuf(stdout, NULL);
 
-		#if COD_VERSION == COD2_1_0
-		printf("> [LIBCOD] Compiled for: CoD2 1.0\n");
-		#elif COD_VERSION == COD2_1_2
-		printf("> [LIBCOD] Compiled for: CoD2 1.2\n");
-		#elif COD_VERSION == COD2_1_3
-		printf("> [LIBCOD] Compiled for: CoD2 1.3\n");
-		#endif
-
+		printf("> [LIBCOD] Compiled for Call of Duty 2\n");
 		printf("> [LIBCOD] Compiled %s %s using GCC %s\n", __DATE__, __TIME__, __VERSION__);
 
 		// Allow to write in executable memory
 		mprotect((void *)0x08048000, 0x135000, PROT_READ | PROT_WRITE | PROT_EXEC);
 
-		#if COD_VERSION == COD2_1_0
-		cracking_hook_call(0x08061FE7, (int)common_init_complete_print);
-		cracking_hook_call(0x08091D0C, (int)hook_sv_spawnserver);
-		cracking_hook_call(0x0808F281, (int)hook_ClientCommand);
-		cracking_hook_call(0x0808C8C0, (int)hook_AuthorizeState);
-		cracking_hook_call(0x0808BFCA, (int)hook_isLanAddress);
-		cracking_hook_call(0x0808AD00, (int)hook_findMap);
-		cracking_hook_call(0x0808F134, (int)hook_ClientUserinfoChanged);
-		cracking_hook_call(0x0807059F, (int)Scr_GetCustomFunction);
-		cracking_hook_call(0x080707C3, (int)Scr_GetCustomMethod);
-		cracking_hook_call(0x080E9524, (int)hook_findWeaponIndex);
-
-		#if COMPILE_PLAYER == 1
-		cracking_hook_call(0x0808E18F, (int)hook_gamestate_info);
-		#endif
-
-		cracking_hook_call(0x08081CFE, (int)hook_RuntimeError_in_VM_Execute);
-
-		hook_gametype_scripts = new cHook(0x0810DDEE, (int)custom_GScr_LoadGameTypeScript);
-		hook_gametype_scripts->hook();
-		hook_developer_prints = new cHook(0x08060B7C, (int)custom_Com_DPrintf);
-		#if COMPILE_UTILS == 1
-		hook_console_print = new cHook(0x0, int(hook_Sys_Print)); // Not tested
-		hook_console_print->hook();
-		#endif
-
-		hook_init_opcode = new cHook(0x08076B9C, (int)custom_Scr_InitOpcodeLookup);
-		hook_init_opcode->hook();
-		hook_add_opcode = new cHook(0x08076D92, (int)custom_AddOpcodePos);
-		hook_add_opcode->hook();
-
-		hook_fire_grenade = new cHook(0x0810C1F6, (int)custom_fire_grenade);
-		hook_fire_grenade->hook();
-		hook_touch_item_auto = new cHook(0x081037F0, int(custom_Touch_Item_Auto));
-		hook_touch_item_auto->hook();
-		hook_sv_verifyiwds_f = new cHook(0x0808EC66, int(custom_SV_VerifyIwds_f));
-		hook_sv_verifyiwds_f->hook();
-
-		#if COMPILE_PLAYER == 1
-		hook_play_movement = new cHook(0x0808F488, (int)custom_SV_ClientThink);
-		hook_play_movement->hook();
-		hook_clientendframe = new cHook(0x080F4DBE, (int)custom_ClientEndFrame);
-		hook_clientendframe->hook();
-		hook_bg_playanim = new cHook(0x080D69B2, (int)custom_BG_PlayAnim);
-		hook_bg_playanim->hook();
-		#endif
-
-		cracking_hook_function(0x080E97F0, (int)custom_BG_IsWeaponValid);
-		cracking_hook_function(0x0808E544, (int)custom_SV_WriteDownloadToClient);
-		cracking_hook_function(0x080B59CE, (int)custom_va);
-		cracking_hook_function(0x0808EEEC, (int)custom_SV_ResetPureClient_f);
-		cracking_hook_function(0x0809443E, (int)custom_SV_CalcPings);
-		cracking_hook_function(0x080945AC, (int)custom_SV_CheckTimeouts);
-		cracking_hook_function(0x080F474A, (int)custom_StuckInClient);
-		cracking_hook_function(0x080F2F2E, (int)custom_G_SetClientContents);
-
-		#if COMPILE_JUMP == 1
-		cracking_hook_function(0x080D9FF4, (int)Jump_ClearState);
-		cracking_hook_function(0x080DA1A6, (int)Jump_ReduceFriction);
-		cracking_hook_function(0x080DA238, (int)Jump_ClampVelocity);
-		cracking_hook_function(0x080DA0A4, (int)Jump_IsPlayerAboveMax);
-		cracking_hook_function(0x080DA016, (int)Jump_GetStepHeight);
-		cracking_hook_function(0x080DA584, (int)Jump_Check);
-		cracking_hook_function(0x080DA0F4, (int)Jump_ApplySlowdown);
-		cracking_hook_function(0x080DA0CA, (int)Jump_ActivateSlowdown);
-		cracking_hook_function(0x080D9EE8, (int)Jump_RegisterDvars);
-		#endif
-
-		#if COMPILE_BOTS == 1
-		cracking_hook_function(0x0809479A, (int)custom_SV_BotUserMove);
-		#endif
-
-		cracking_hook_call(0x08094107, (int)hook_SV_DirectConnect);
-
-		#elif COD_VERSION == COD2_1_2
-		cracking_hook_call(0x08062301, (int)common_init_complete_print);
-		cracking_hook_call(0x08093572, (int)hook_sv_spawnserver);
-		cracking_hook_call(0x08090B0C, (int)hook_ClientCommand);
-		cracking_hook_call(0x0808DA52, (int)hook_AuthorizeState);
-		cracking_hook_call(0x0808D22E, (int)hook_isLanAddress);
-		cracking_hook_call(0x0808BCFC, (int)hook_findMap);
-		cracking_hook_call(0x080909BE, (int)hook_ClientUserinfoChanged);
-		cracking_hook_call(0x08070B1B, (int)Scr_GetCustomFunction);
-		cracking_hook_call(0x08070D3F, (int)Scr_GetCustomMethod);
-		cracking_hook_call(0x0808227A, (int)hook_RuntimeError_in_VM_Execute);
-		cracking_hook_call(0x0808FCBE, (int)hook_bad_printf);
-		cracking_hook_call(0x080EBB14, (int)hook_findWeaponIndex);
-
-		#if COMPILE_PLAYER == 1
-		cracking_hook_call(0x0808F533, (int)hook_gamestate_info);
-		#endif
-
-		hook_gametype_scripts = new cHook(0x0811012A, (int)custom_GScr_LoadGameTypeScript);
-		hook_gametype_scripts->hook();
-
-		hook_developer_prints = new cHook(0x08060E42, (int)custom_Com_DPrintf);
-		#if COMPILE_UTILS == 1
-		hook_console_print = new cHook(0x0, int(hook_Sys_Print)); // Not tested
-		hook_console_print->hook();
-		#endif
-
-		hook_init_opcode = new cHook(0x08077110, (int)custom_Scr_InitOpcodeLookup);
-		hook_init_opcode->hook();
-		hook_add_opcode = new cHook(0x08077306, (int)custom_AddOpcodePos);
-		hook_add_opcode->hook();
-
-		hook_fire_grenade = new cHook(0x0810E532, (int)custom_fire_grenade);
-		hook_fire_grenade->hook();
-		hook_touch_item_auto = new cHook(0x08105B24, int(custom_Touch_Item_Auto));
-		hook_touch_item_auto->hook();
-		hook_sv_verifyiwds_f = new cHook(0x080904A0, int(custom_SV_VerifyIwds_f));
-		hook_sv_verifyiwds_f->hook();
-
-		#if COMPILE_PLAYER == 1
-		hook_play_movement = new cHook(0x08090D18, (int)custom_SV_ClientThink);
-		hook_play_movement->hook();
-		hook_clientendframe = new cHook(0x080F73D2, (int)custom_ClientEndFrame);
-		hook_clientendframe->hook();
-		hook_bg_playanim = new cHook(0x080D8F92, (int)custom_BG_PlayAnim);
-		hook_bg_playanim->hook();
-		#endif
-
-		cracking_hook_function(0x080EBDE0, (int)custom_BG_IsWeaponValid);
-		cracking_hook_function(0x0808FD2E, (int)custom_SV_WriteDownloadToClient);
-		cracking_hook_function(0x080B7E62, (int)custom_va);
-		cracking_hook_function(0x08090726, (int)custom_SV_ResetPureClient_f);
-		cracking_hook_function(0x0809630E, (int)custom_SV_CalcPings);
-		cracking_hook_function(0x080964C4, (int)custom_SV_CheckTimeouts);
-		cracking_hook_function(0x080F6D5A, (int)custom_StuckInClient);
-		cracking_hook_function(0x080F553E, (int)custom_G_SetClientContents);
-
-		#if COMPILE_JUMP == 1
-		cracking_hook_function(0x080DC5D4, (int)Jump_ClearState);
-		cracking_hook_function(0x080DC786, (int)Jump_ReduceFriction);
-		cracking_hook_function(0x080DC818, (int)Jump_ClampVelocity);
-		cracking_hook_function(0x080DC684, (int)Jump_IsPlayerAboveMax);
-		cracking_hook_function(0x080DC5F6, (int)Jump_GetStepHeight);
-		cracking_hook_function(0x080DCB64, (int)Jump_Check);
-		cracking_hook_function(0x080DC6D4, (int)Jump_ApplySlowdown);
-		cracking_hook_function(0x080DC6AA, (int)Jump_ActivateSlowdown);
-		cracking_hook_function(0x080DC4C8, (int)Jump_RegisterDvars);
-		#endif
-
-		#if COMPILE_BOTS == 1
-		cracking_hook_function(0x080966B2, (int)custom_SV_BotUserMove);
-		#endif
-
-		cracking_hook_call(0x08095CB2, (int)hook_SV_DirectConnect);
-
-		#elif COD_VERSION == COD2_1_3
+		// Begin of hooking block
 		cracking_hook_call(0x080622F9, (int)common_init_complete_print);
 		cracking_hook_call(0x08090BA0, (int)hook_ClientCommand);
 		cracking_hook_call(0x0808DB12, (int)hook_AuthorizeState);
@@ -9761,25 +9577,23 @@ public:
 
 		cracking_hook_call(0x08095DD6, (int)hook_SV_AuthorizeIpPacket);
 
-		cracking_write_hex(0x0818815C, (char *)"00"); // Removes debug flag from getentbynum
+		cracking_write_hex(0x0818815C, (char *)"00"); // Removes debug mode restriction from getentbynum
 		cracking_write_hex(0x0815B2A0, (char *)"00"); // Disables warning: "Non-localized %s string is not allowed to have letters in it. Must be changed over to a localized string: \"%s\"\n"
-		#endif
+		// End of hooking block
 
 		gsc_weapons_init();
-		printf("> [PLUGIN LOADED]\n");
+		printf("> [LIBCOD] Finished loading extension\n");
 	}
 
 	~cCallOfDuty2Pro()
 	{
 		gsc_weapons_free();
-		printf("> [PLUGIN UNLOADED]\n");
+		printf("> [LIBCOD] Unloaded extension\n");
 	}
 };
 
 cCallOfDuty2Pro *pro;
 
-// lol, single again: because it got loaded two times now
-// Both now: able to load with wrapper AND directly
 // IMPORTANT: file needs "lib" infront of name, otherwise it wont be loaded
 // Will be called when LD_PRELOAD is referencing this .so
 

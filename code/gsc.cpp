@@ -63,10 +63,6 @@ void NULL_FUNC(void) {}
 
 scr_function_t scriptFunctions[] =
 {
-	#if COD_VERSION == COD2_1_0
-	{"endParty", NULL_FUNC, 0}, // cod2 1.2
-	#endif
-
 	#if COMPILE_BOTS == 1
 	{"setNextTestClientName", gsc_bots_setnexttestclientname, 0},
 	{"resetTestClientNaming", gsc_bots_resettestclientnaming, 0},

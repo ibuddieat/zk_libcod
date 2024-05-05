@@ -64,11 +64,7 @@
 #define MAX_ITEM_MODELS             2
 #define MAX_MODEL_ANIMATIONS        512 // animations per model
 #define MAX_MODELS                  256
-#if COD_VERSION == COD2_1_0 || COD_VERSION == COD2_1_2
-#define MAX_MSGLEN                  0x4000
-#elif COD_VERSION == COD2_1_3
 #define MAX_MSGLEN                  0x20000
-#endif
 #define MAX_LARGE_MSGLEN            0x20000 // for voice chat and snapshot
 #define MAX_NETNAME                 16
 #define MAX_OSPATH                  256
@@ -1932,13 +1928,11 @@ typedef struct client_s
 	int downloadBlockSize[MAX_DOWNLOAD_WINDOW];
 	qboolean downloadEOF;
 	int downloadSendTime;
-#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
 	char downloadURL[MAX_OSPATH];
 	qboolean wwwOk;
 	qboolean downloadingWWW;
 	qboolean clientDownloadingWWW;
 	qboolean wwwFallback;
-#endif
 	int deltaMessage;
 	int nextReliableTime;
 	int lastPacketTime;
@@ -1960,10 +1954,8 @@ typedef struct client_s
 	int voicePacketCount;
 	byte muteList[MAX_CLIENTS];
 	byte sendVoice;
-#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
 	char PBguid[33];
 	char clientPBguid[33];
-#endif
 } client_t;
 
 typedef struct
@@ -2014,10 +2006,8 @@ typedef struct
 	int firstPing;
 	qboolean connected;
 	int guid;
-#if COD_VERSION == COD2_1_2 || COD_VERSION == COD2_1_3
 	char PBguid[33];
 	char clientPBguid[33];
-#endif
 } challenge_t;
 
 typedef struct 
@@ -3653,419 +3643,65 @@ typedef struct cm_world_s
 	worldSector_t sectors[1024];
 } cm_world_t;
 
-#if COD_VERSION == COD2_1_0
-static const int gentities_offset = 0x08665480;
-#elif COD_VERSION == COD2_1_2
-static const int gentities_offset = 0x08679380;
-#elif COD_VERSION == COD2_1_3
 static const int gentities_offset = 0x08716400;
-#endif
-
-#if COD_VERSION == COD2_1_0
-static const int gclients_offset = 0x086F1480;
-#elif COD_VERSION == COD2_1_2
-static const int gclients_offset = 0x08705480;
-#elif COD_VERSION == COD2_1_3
 static const int gclients_offset = 0x087A2500;
-#endif
-
-#if COD_VERSION == COD2_1_0
-static const int varpub_offset = 0x08394000;
-#elif COD_VERSION == COD2_1_2
-static const int varpub_offset = 0x08396480;
-#elif COD_VERSION == COD2_1_3
 static const int varpub_offset = 0x08397500;
-#endif
-
-#if COD_VERSION == COD2_1_0
-static const int varglob_offset = 0x08294000;
-#elif COD_VERSION == COD2_1_2
-static const int varglob_offset = 0x08296480;
-#elif COD_VERSION == COD2_1_3
 static const int varglob_offset = 0x08297500;
-#endif
-
-#if COD_VERSION == COD2_1_0
-static const int stringglob_offset = 0x0; // Not tested
-#elif COD_VERSION == COD2_1_2
-static const int stringglob_offset = 0x0; // Not tested
-#elif COD_VERSION == COD2_1_3
 static const int stringglob_offset = 0x08287400;
-#endif
-
-#if COD_VERSION == COD2_1_0
-static const int vmpub_offset = 0x083D7600;
-#elif COD_VERSION == COD2_1_2
-static const int vmpub_offset = 0x083D7A00;
-#elif COD_VERSION == COD2_1_3
 static const int vmpub_offset = 0x083D8A80;
-#endif
-
-#if COD_VERSION == COD2_1_0
-static const int compilepub_offset = 0x0; // Not tested
-#elif COD_VERSION == COD2_1_2
-static const int compilepub_offset = 0x0; // Not tested
-#elif COD_VERSION == COD2_1_3
 static const int compilepub_offset = 0x08205C80;
-#endif
-
-#if COD_VERSION == COD2_1_0
-static const int vmglob_offset = 0x0; // Not tested
-#elif COD_VERSION == COD2_1_2
-static const int vmglob_offset = 0x0; // Not tested
-#elif COD_VERSION == COD2_1_3
 static const int vmglob_offset = 0x083DCE80;
-#endif
-
-#if COD_VERSION == COD2_1_0
-static const int g_script_error_offset = 0x0; // Not tested
-#elif COD_VERSION == COD2_1_2
-static const int g_script_error_offset = 0x0; // Not tested
-#elif COD_VERSION == COD2_1_3
 static const int g_script_error_offset = 0x083D7620;
-#endif
-
-#if COD_VERSION == COD2_1_0
-static const int g_script_error_level_offset = 0x0; // Not tested
-#elif COD_VERSION == COD2_1_2
-static const int g_script_error_level_offset = 0x0; // Not tested
-#elif COD_VERSION == COD2_1_3
 static const int g_script_error_level_offset = 0x083D8A3C;
-#endif
-
-#if COD_VERSION == COD2_1_0
-static const int sv_offset = 0x0842BC80;
-#elif COD_VERSION == COD2_1_2
-static const int sv_offset = 0x0843F180;
-#elif COD_VERSION == COD2_1_3
 static const int sv_offset = 0x08440200;
-#endif
-
-#if COD_VERSION == COD2_1_0
-static const int svs_offset = 0x0841FB00;
-#elif COD_VERSION == COD2_1_2
-static const int svs_offset = 0x08422000;
-#elif COD_VERSION == COD2_1_3
 static const int svs_offset = 0x08423080;
-#endif
-
-#if COD_VERSION == COD2_1_0
-static const int level_offset = 0x0859B400;
-#elif COD_VERSION == COD2_1_2
-static const int level_offset = 0x085AF300;
-#elif COD_VERSION == COD2_1_3
 static const int level_offset = 0x0864C380;
-#endif
-
-#if COD_VERSION == COD2_1_0
-static const int const_offset = 0x087A22A0;
-#elif COD_VERSION == COD2_1_2
-static const int const_offset = 0x087B61A0;
-#elif COD_VERSION == COD2_1_3
 static const int const_offset = 0x08853220;
-#endif
-
-#if COD_VERSION == COD2_1_0
-static const int bgs_offset = 0x0855A4E0;
-#elif COD_VERSION == COD2_1_2
-static const int bgs_offset = 0x0856E3A0;
-#elif COD_VERSION == COD2_1_3
 static const int bgs_offset = 0x0860B420;
-#endif
-
-#if COD_VERSION == COD2_1_0
-static const int level_bgs_offset = 0x0; // Not tested
-#elif COD_VERSION == COD2_1_2
-static const int level_bgs_offset = 0x0; // Not tested
-#elif COD_VERSION == COD2_1_3
 static const int level_bgs_offset = 0x0864F9C0;
-#endif
-
-#if COD_VERSION == COD2_1_0
-static const int cm_offset = 0x08185BE0;
-#elif COD_VERSION == COD2_1_2
-static const int cm_offset = 0x08187D40;
-#elif COD_VERSION == COD2_1_3
 static const int cm_offset = 0x08188DC0;
-#endif
-
-#if COD_VERSION == COD2_1_0
-static const int bspglob_offset = 0x08185BC8;
-#elif COD_VERSION == COD2_1_2
-static const int bspglob_offset = 0x08187D28;
-#elif COD_VERSION == COD2_1_3
 static const int bspglob_offset = 0x08188DA8;
-#endif
-
-#if COD_VERSION == COD2_1_0
-static const int playerStateFields_offset = 0x0; // Not tested
-#elif COD_VERSION == COD2_1_2
-static const int playerStateFields_offset = 0x0; // Not tested
-#elif COD_VERSION == COD2_1_3
 static const int playerStateFields_offset = 0x08142520;
-#endif
-
-#if COD_VERSION == COD2_1_0
-static const int entityStateFields_offset = 0x0; // Not tested
-#elif COD_VERSION == COD2_1_2
-static const int entityStateFields_offset = 0x0; // Not tested
-#elif COD_VERSION == COD2_1_3
 static const int entityStateFields_offset = 0x081417a0;
-#endif
-
-#if COD_VERSION == COD2_1_0
-static const int objectiveFields_offset = 0x0; // Not tested
-#elif COD_VERSION == COD2_1_2
-static const int objectiveFields_offset = 0x0; // Not tested
-#elif COD_VERSION == COD2_1_3
 static const int objectiveFields_offset = 0x08142a20;
-#endif
-
-#if COD_VERSION == COD2_1_0
-static const int clientStateFields_offset = 0x0; // Not tested
-#elif COD_VERSION == COD2_1_2
-static const int clientStateFields_offset = 0x0; // Not tested
-#elif COD_VERSION == COD2_1_3
 static const int clientStateFields_offset = 0x08141F60;
-#endif
-
-#if COD_VERSION == COD2_1_0
-static const int archivedEntityFields_offset = 0x0; // Not tested
-#elif COD_VERSION == COD2_1_2
-static const int archivedEntityFields_offset = 0x0; // Not tested
-#elif COD_VERSION == COD2_1_3
 static const int archivedEntityFields_offset = 0x08141AE0;
-#endif
-
-#if COD_VERSION == COD2_1_0
-static const int bg_itemlist_offset = 0x0; // Not tested
-#elif COD_VERSION == COD2_1_2
-static const int bg_itemlist_offset = 0x0; // Not tested
-#elif COD_VERSION == COD2_1_3
 static const int bg_itemlist_offset = 0x081850C0;
-#endif
-
-#if COD_VERSION == COD2_1_0
-static const int testclient_connect_string_offset = 0x0;  // Not tested
-#elif COD_VERSION == COD2_1_2
-static const int testclient_connect_string_offset = 0x0;  // Not tested
-#elif COD_VERSION == COD2_1_3
 static const int testclient_connect_string_offset = 0x0814ab20;
-#endif
-
-#if COD_VERSION == COD2_1_0
-static const int g_hudelems_offset = 0x0;  // Not tested
-#elif COD_VERSION == COD2_1_2
-static const int g_hudelems_offset = 0x0;  // Not tested
-#elif COD_VERSION == COD2_1_3
 static const int g_hudelems_offset = 0x08628F80;
-#endif
-
-#if COD_VERSION == COD2_1_0  // Not tested
-static const int spawns_offset = 0x0;
-#elif COD_VERSION == COD2_1_2  // Not tested
-static const int spawns_offset = 0x0;
-#elif COD_VERSION == COD2_1_3
 static const int spawns_offset = 0x08188A00;
-#endif
-
-#if COD_VERSION == COD2_1_0  // Not tested
-static const int entity_event_names_offset = 0x0;
-#elif COD_VERSION == COD2_1_2  // Not tested
-static const int entity_event_names_offset = 0x0;
-#elif COD_VERSION == COD2_1_3
 static const int entity_event_names_offset = 0x08184DA0;
-#endif
-
-#if COD_VERSION == COD2_1_0 // Not tested
-static const int logfile_offset = 0x0;
-static const int rd_buffer_offset = 0x0;
-static const int rd_buffersize_offset = 0x0;
-static const int rd_flush_offset = 0x0;
-static const int opening_qconsole_offset = 0x0;
-#elif COD_VERSION == COD2_1_2 // Not tested
-static const int logfile_offset = 0x0;
-static const int rd_buffer_offset = 0x0;
-static const int rd_buffersize_offset = 0x0;
-static const int rd_flush_offset = 0x0;
-static const int opening_qconsole_offset = 0x0;
-#elif COD_VERSION == COD2_1_3
 static const int logfile_offset = 0x081A2268;
 static const int rd_buffer_offset = 0x081A4F90;
 static const int rd_buffersize_offset = 0x081A4F94;
 static const int rd_flush_offset = 0x081A4F98;
 static const int opening_qconsole_offset = 0x081A4F9C;
-#endif
-
-#if COD_VERSION == COD2_1_0 // Not tested
-static const int com_errorEntered_offset = 0x0;
-static const int com_fixedConsolePosition_offset = 0x0;
-static const int com_errorType_offset = 0x0;
-#elif COD_VERSION == COD2_1_2 // Not tested
-static const int com_errorEntered_offset = 0x0;
-static const int com_fixedConsolePosition_offset = 0x0;
-static const int com_errorType_offset = 0x0;
-#elif COD_VERSION == COD2_1_3
 static const int com_errorEntered_offset = 0x081A21C0;
+static const int com_errorMessage_offset = 0x081A2280;
 static const int com_fixedConsolePosition_offset = 0x081A21C4;
 static const int com_errorType_offset = 0x081A2264;
-#endif
-
-#if COD_VERSION == COD2_1_0 // Not tested
-static const int legacyHacks_offset = 0x0;
-#elif COD_VERSION == COD2_1_2 // Not tested
-static const int legacyHacks_offset = 0x0;
-#elif COD_VERSION == COD2_1_3
 static const int legacyHacks_offset = 0x0817D838;
-#endif
-
-#if COD_VERSION == COD2_1_0 // Not tested
-static const int vec3_origin_offset = 0x0;
-#elif COD_VERSION == COD2_1_2 // Not tested
-static const int vec3_origin_offset = 0x0;
-#elif COD_VERSION == COD2_1_3
 static const int vec3_origin_offset = 0x0814CFC8;
-#endif
-
-#if COD_VERSION == COD2_1_0 // Not tested
-static const int g_scr_data_offset = 0x0;
-#elif COD_VERSION == COD2_1_2 // Not tested
-static const int g_scr_data_offset = 0x0;
-#elif COD_VERSION == COD2_1_3
 static const int g_scr_data_offset = 0x0884D700;
-#endif
-
-#if COD_VERSION == COD2_1_0 // Not tested
-static const int actorLocationalMins_offset = 0x0;
-static const int actorLocationalMaxs_offset = 0x0;
-#elif COD_VERSION == COD2_1_2 // Not tested
-static const int actorLocationalMins_offset = 0x0;
-static const int actorLocationalMaxs_offset = 0x0;
-#elif COD_VERSION == COD2_1_3
 static const int actorLocationalMins_offset = 0x0817DB88;
 static const int actorLocationalMaxs_offset = 0x0817DB94;
-#endif
-
-#if COD_VERSION == COD2_1_0 // Not tested
-static const int cm_world_offset = 0x0;
-#elif COD_VERSION == COD2_1_2 // Not tested
-static const int cm_world_offset = 0x0;
-#elif COD_VERSION == COD2_1_3
 static const int cm_world_offset = 0x08189000;
-#endif
-
-#if COD_VERSION == COD2_1_0 // Not tested
-static const int bloc_offset = 0x0;
-#elif COD_VERSION == COD2_1_2 // Not tested
-static const int bloc_offset = 0x0;
-#elif COD_VERSION == COD2_1_3
 static const int bloc_offset = 0x081E9544;
-#endif
-
-#if COD_VERSION == COD2_1_0 // Not tested
-static const int sv_serverId_value_offset = 0x0;
-#elif COD_VERSION == COD2_1_2 // Not tested
-static const int sv_serverId_value_offset = 0x0;
-#elif COD_VERSION == COD2_1_3
 static const int sv_serverId_value_offset = 0x08423008;
-#endif
-
-#if COD_VERSION == COD2_1_0 // Not tested
-static const int msgHuff_offset = 0x0;
-#elif COD_VERSION == COD2_1_2 // Not tested
-static const int msgHuff_offset = 0x0;
-#elif COD_VERSION == COD2_1_3
 static const int msgHuff_offset = 0x081E9C60;
-#endif
-
-#if COD_VERSION == COD2_1_0 // Not tested
-static const int cached_models_offset = 0x0;
-#elif COD_VERSION == COD2_1_2 // Not tested
-static const int cached_models_offset = 0x0;
-#elif COD_VERSION == COD2_1_3
 static const int cached_models_offset = 0x08852E20;
-#endif
-
-#if COD_VERSION == COD2_1_0 // Not tested
-static const int rcon_lasttime_offset = 0x0;
-#elif COD_VERSION == COD2_1_2 // Not tested
-static const int rcon_lasttime_offset = 0x0;
-#elif COD_VERSION == COD2_1_3
 static const int rcon_lasttime_offset = 0x0849FBF4;
-#endif
-
-#if COD_VERSION == COD2_1_0 // Not tested
-static const int com_frameTime_offset = 0x0;
-#elif COD_VERSION == COD2_1_2 // Not tested
-static const int com_frameTime_offset = 0x0;
-#elif COD_VERSION == COD2_1_3
 static const int com_frameTime_offset = 0x081A21B8;
-#endif
-
-#if COD_VERSION == COD2_1_0 // Not tested
-static const int bulletPriorityMap_offset = 0x0;
-static const int riflePriorityMap_offset = 0x0;
-#elif COD_VERSION == COD2_1_2 // Not tested
-static const int bulletPriorityMap_offset = 0x0;
-static const int riflePriorityMap_offset = 0x0;
-#elif COD_VERSION == COD2_1_3
 static const int bulletPriorityMap_offset = 0x08187C0C;
 static const int riflePriorityMap_offset = 0x08187C1F;
-#endif
-
-#if COD_VERSION == COD2_1_0 // Not tested
-static const int fs_searchpaths_offset = 0x0;
-#elif COD_VERSION == COD2_1_2 // Not tested
-static const int fs_searchpaths_offset = 0x0;
-#elif COD_VERSION == COD2_1_3
 static const int fs_searchpaths_offset = 0x0849FD68;
-#endif
-
-#if COD_VERSION == COD2_1_0 // Not tested
-static const int g_EndPos_offset = 0x0;
-static const int scrParserPub_offset = 0x0;
-#elif COD_VERSION == COD2_1_2 // Not tested
-static const int g_EndPos_offset = 0x0;
-static const int scrParserPub_offset = 0x0;
-#elif COD_VERSION == COD2_1_3
 static const int g_EndPos_offset = 0x083D7600;
 static const int scrParserPub_offset = 0x08287334;
-#endif
-
-#if COD_VERSION == COD2_1_0 // Not tested
-static const int saLoadObjGlob_offset = 0x0;
-static const int saLoadedObjs_offset = 0x0;
-#elif COD_VERSION == COD2_1_2 // Not tested
-static const int saLoadObjGlob_offset = 0x0;
-static const int saLoadedObjs_offset = 0x0;
-#elif COD_VERSION == COD2_1_3
 static const int saLoadObjGlob_offset = 0x085AB160;
 static const int saLoadedObjs_offset = 0x085AB164;
-#endif
-
-#if COD_VERSION == COD2_1_0 // Not tested
-static const int gameInitialized_offset = 0x0;
-#elif COD_VERSION == COD2_1_2 // Not tested
-static const int gameInitialized_offset = 0x0;
-#elif COD_VERSION == COD2_1_3
 static const int gameInitialized_offset = 0x083E2F80;
-#endif
-
-#if COD_VERSION == COD2_1_0 // Not tested
-static const int netsrcString_offset = 0x0;
-#elif COD_VERSION == COD2_1_2 // Not tested
-static const int netsrcString_offset = 0x0;
-#elif COD_VERSION == COD2_1_3
 static const int netsrcString_offset = 0x0817D904;
-#endif
-
-#if COD_VERSION == COD2_1_0 // Not tested
-static const int sv_masterAddress_offset = 0x0;
-#elif COD_VERSION == COD2_1_2 // Not tested
-static const int sv_masterAddress_offset = 0x0;
-#elif COD_VERSION == COD2_1_3
 static const int sv_masterAddress_offset = 0x0849FBE0;
-#endif
 
 #define g_entities ((gentity_t*)(gentities_offset))
 #define g_clients ((gclient_t*)(gclients_offset))
@@ -4102,6 +3738,7 @@ static const int sv_masterAddress_offset = 0x0849FBE0;
 #define rd_flush (*((void(**)(char*))( rd_flush_offset )))
 #define opening_qconsole (*((int*)( opening_qconsole_offset )))
 #define com_errorEntered (*((int*)( com_errorEntered_offset )))
+#define com_errorMessage (*((char*)( com_errorMessage_offset )))
 #define com_fixedConsolePosition (*((int*)( com_fixedConsolePosition_offset )))
 #define com_errorType (*((int*)( com_errorType_offset )))
 #define testclient_connect_string (*((char*)( testclient_connect_string_offset )))
@@ -4130,16 +3767,7 @@ static const int sv_masterAddress_offset = 0x0849FBE0;
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6
 
-#if COD_VERSION == COD2_1_0
-
- static_assert((sizeof(client_t) == 0x78F14), "ERROR: client_t size is invalid!");
-#elif COD_VERSION == COD2_1_2
- static_assert((sizeof(client_t) == 0x79064), "ERROR: client_t size is invalid!");
-#elif COD_VERSION == COD2_1_3
  static_assert((sizeof(client_t) == 0xB1064), "ERROR: client_t size is invalid!");
- 
-#endif
- 
  static_assert((sizeof(gentity_t) == 560), "ERROR: gentity_t size is invalid!");
  static_assert((sizeof(gclient_t) == 0x28A4), "ERROR: gclient_t size is invalid!");
  static_assert((sizeof(clientState_t) == 0x5c), "ERROR: clientState_t size is invalid!");

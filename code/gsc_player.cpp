@@ -1872,32 +1872,11 @@ void gsc_player_setweaponspreadscale(scr_entref_t ref)
 int BG_AnimationCheckForBad(char *anim)
 {
 	int i, v6, v8;
-
-	#if COD_VERSION == COD2_1_0
-	int globalScriptData = 0x855A4E4;
-	#elif COD_VERSION == COD2_1_2
-	int globalScriptData = 0x856E3A4;
-	#elif COD_VERSION == COD2_1_3
 	int globalScriptData = 0x860B424;
-	#endif
-
 	int (*ConverteStr)(int a1);
-	#if COD_VERSION == COD2_1_0
-	*(int *)&ConverteStr = 0x80D45C4;
-	#elif COD_VERSION == COD2_1_2
-	*(int *)&ConverteStr = 0x80D6B9C;
-	#elif COD_VERSION == COD2_1_3
 	*(int *)&ConverteStr = 0x80D6CE0;
-	#endif
-
 	signed int (*SACh)(char *a1, char *a2);
-	#if COD_VERSION == COD2_1_0
-	*(int *)&SACh = 0x80B5620;
-	#elif COD_VERSION == COD2_1_2
-	*(int *)&SACh = 0x80B7AB4;
-	#elif COD_VERSION == COD2_1_3
 	*(int *)&SACh = 0x80B7BF8;
-	#endif
 
 	v6 = ConverteStr((int)anim);
 	v8 = 0;

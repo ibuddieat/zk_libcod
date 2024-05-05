@@ -4,6 +4,8 @@
 # ./doit.sh debug
 # ./doit.sh nospeex
 # ./doit.sh nospeex debug
+# ./doit.sh nomysql
+# ./doit.sh nomysql nospeex debug
 
 cc="g++"
 options="-I. -m32 -fPIC -Wall"
@@ -19,7 +21,7 @@ if [ "$1" != "clean" ] && [ "$1" != "nomysql" ]; then
 	made by kungfooman and IzNoGoD. Multiple connections, multiple threads,
 	good for servers that use remote MySQL sessions, IRC stuff, and etc.\n
 	2. VoroN\'s MySQL variant (his own MySQL implementation). Native
-	callbacks, native arguments, single connection, single thread,	good
+	callbacks, native arguments, single connection, single thread, good
 	for local MySQL session, less cpu usage, less memory usage.\n
 	Press a key to continue...\n' -n1 key
 
@@ -72,7 +74,6 @@ else
 		debug=""
 	fi
 	set -- "cod2_1_3"
-	constants="-D COD_VERSION=COD2_1_3"
 fi
 
 if [ -f extra/functions.hpp ]; then
