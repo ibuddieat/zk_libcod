@@ -100,6 +100,22 @@ Added dvars:
     * Type: Boolean
     * Default: True
     * Effect: Toggle output of "Game session no longer available" game messages.
+  * `sv_authorizePort`
+    * Type: Integer
+    * Default: 20700
+    * Min. Value: 0
+    * Max. Value: 65535
+    * Effect: Port to use for communication to the authorize server (for player GUID calculation).
+  * `sv_authorizeServer`
+    * Type: String
+    * Default: "cod2master.activision.com"
+    * Effect: Hostname of the authorize server (for player GUID calculation) to communicate to.
+  * `sv_authorizeTimeout`
+    * Type: Integer
+    * Default: 3000
+    * Min. Value: 0
+    * Max. Value: 1200000
+    * Effect: The original authorize server timeout is 20 minutes. We default it to a few seconds to not have the game go dead once the authorize server goes offline (again). The timeout is defined in milliseconds.
   * `sv_botKickMessages`
     * Type: Boolean
     * Default: True
@@ -134,6 +150,16 @@ Added dvars:
     * Type: Boolean
     * Default: True
     * Effect: Toggle logging of successful rcon commands.
+  * `sv_masterPort`
+    * Type: Integer
+    * Default: 20710
+    * Min. Value: 0
+    * Max. Value: 65535
+    * Effect: Port to use for communication to the master server (for the ingame server browser).
+  * `sv_masterServer`
+    * Type: String
+    * Default: "cod2master.activision.com"
+    * Effect: Hostname of the master server (for the ingame server browser) to communicate to.
   * `sv_minimizeSysteminfo`
     * Type: Integer
     * Default: 0
@@ -174,4 +200,4 @@ Added dvars:
     * Max. Value: 2
     * Effect: Toggle output of download-disconnected game messages. A value of `2` prints the relative path to the file requested by the connecting player.
 
-Note: All default values of the dvars listed above are defined to preserve the stock behavior of the game.
+Note: Unless stated otherwise, all default values of the dvars listed above are defined to preserve the stock behavior of the game.

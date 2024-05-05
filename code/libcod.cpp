@@ -31,6 +31,7 @@ dvar_t *jump_stepSize;
 dvar_t *jump_slowdownEnable;
 dvar_t *jump_ladderPushVel;
 dvar_t *jump_spreadAdd;
+dvar_t *net_lanauthorize;
 dvar_t *nextmap;
 dvar_t *player_dmgtimer_maxTime;
 dvar_t *player_dmgtimer_timePerPoint;
@@ -107,6 +108,9 @@ dvar_t *logfileRotate;
 dvar_t *logTimestamps;
 dvar_t *scr_turretDamageName;
 dvar_t *sv_allowRcon;
+dvar_t *sv_authorizePort;
+dvar_t *sv_authorizeServer;
+dvar_t *sv_authorizeTimeout;
 dvar_t *sv_botKickMessages;
 dvar_t *sv_botReconnectMode;
 dvar_t *sv_botUseTriggerUse;
@@ -118,6 +122,8 @@ dvar_t *sv_kickMessages;
 dvar_t *sv_limitLocalRcon;
 dvar_t *sv_logHeartbeats;
 dvar_t *sv_logRcon;
+dvar_t *sv_masterPort;
+dvar_t *sv_masterServer;
 dvar_t *sv_minimizeSysteminfo;
 dvar_t *sv_noauthorize;
 dvar_t *sv_reservedConfigstringBufferSize;
@@ -270,6 +276,11 @@ void custom_Com_InitDvars(void)
 	logfileRotate = Dvar_RegisterInt("logfileRotate", 0, 0, 1000, DVAR_ARCHIVE);
 	logTimestamps = Dvar_RegisterBool("logTimestamps", qfalse, DVAR_ARCHIVE);
 	sv_reservedConfigstringBufferSize = Dvar_RegisterInt("sv_reservedConfigstringBufferSize", 256, 0, 8192, DVAR_ARCHIVE);
+	sv_authorizePort = Dvar_RegisterInt("sv_authorizePort", 20700, 0, 65535, DVAR_ARCHIVE);
+	sv_authorizeServer = Dvar_RegisterString("sv_authorizeServer", "cod2master.activision.com", DVAR_ARCHIVE);
+	sv_authorizeTimeout = Dvar_RegisterInt("sv_authorizeTimeout", 3000, 0, 1200000, DVAR_ARCHIVE);
+	sv_masterPort = Dvar_RegisterInt("sv_masterPort", 20710, 0, 65535, DVAR_ARCHIVE);
+	sv_masterServer = Dvar_RegisterString("sv_masterServer", "cod2master.activision.com", DVAR_ARCHIVE);
 	sv_version = Dvar_RegisterString("sv_version", "1.3", DVAR_ARCHIVE);
 
 	/* Register stock dvars here with different settings, scheme:
@@ -303,6 +314,7 @@ void common_init_complete_print(const char *format, ...)
 	// Get references to stock dvars
 	cl_allowDownload = Dvar_RegisterBool("cl_allowDownload", qtrue, DVAR_ARCHIVE | DVAR_SYSTEMINFO); // Force-enable download for clients
 	developer = Dvar_FindVar("developer");
+	net_lanauthorize = Dvar_FindVar("net_lanauthorize");
 	nextmap = Dvar_FindVar("nextmap");
 	rcon_password = Dvar_FindVar("rcon_password");
 	showpackets = Dvar_FindVar("showpackets");
@@ -3139,7 +3151,7 @@ qboolean custom_BG_IsWeaponValid(playerState_t *ps, unsigned int index)
 	return qtrue;
 }
 
-char *custom_va(const char *format, ...)
+char * custom_va(const char *format, ...)
 {
 	struct va_info_t *info;
 	int index;
@@ -3154,6 +3166,8 @@ char *custom_va(const char *format, ...)
 	va_end(va);
 
 	info->va_string[index][1023] = 0;
+
+	// New: Removed call to Com_Error with "Attempted to overrun string in call to va()"
 
 	return info->va_string[index];
 }
@@ -3770,14 +3784,14 @@ bool SVC_ApplyStatusLimit(netadr_t from)
 	return false;
 }
 
-void hook_SV_GetChallenge(netadr_t from)
+bool SVC_ApplyChallengeLimit(netadr_t from)
 {
 	// Prevent using getchallenge as an amplifier
 	if ( SVC_RateLimitAddress(from, 10, 1000) )
 	{
 		if ( !SVC_callback("CHALLENGE:ADDRESS", NET_AdrToString(from)) )
 			Com_DPrintf("SV_GetChallenge: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
-		return;
+		return true;
 	}
 
 	// Allow getchallenge to be DoSed relatively easily, but prevent
@@ -3786,10 +3800,10 @@ void hook_SV_GetChallenge(netadr_t from)
 	{
 		if ( !SVC_callback("CHALLENGE:GLOBAL", NET_AdrToString(from)) )
 			Com_DPrintf("SV_GetChallenge: rate limit exceeded, dropping request\n");
-		return;
+		return true;
 	}
 
-	SV_GetChallenge(from);
+	return false;
 }
 
 void hook_SV_AuthorizeIpPacket(netadr_t from)
@@ -4336,6 +4350,123 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 	}
 	Com_EndRedirect();
 	LargeLocalDestructor(&buf);
+}
+
+netadr_t * custom_SV_MasterAddress(void)
+{
+	if ( sv_masterAddress.type == NA_BOT )
+	{
+		Com_Printf("Resolving %s\n", sv_masterServer->current.string);
+		if ( !NET_StringToAdr((char *)sv_masterServer->current.string, &sv_masterAddress) )
+		{
+			Com_Printf("Couldn\'t resolve address: cod2master.activision.com\n");
+		}
+		else
+		{
+			if ( !strstr(":", sv_masterServer->current.string) )
+			{
+				sv_masterAddress.port = BigShort(sv_masterPort->current.integer);
+			}
+			Com_Printf("%s resolved to %i.%i.%i.%i:%i\n",
+						sv_masterServer->current.string,
+						sv_masterAddress.ip[0],
+						sv_masterAddress.ip[1],
+						sv_masterAddress.ip[2],
+						sv_masterAddress.ip[3],
+						BigShort(sv_masterAddress.port));
+		}
+	}
+	return &sv_masterAddress;
+}
+
+void custom_SV_GetChallenge(netadr_t from)
+{
+	int i;
+	int oldest;
+	int oldestTime;
+	challenge_t *challenge;
+
+	/* New: Rate limiting */
+	if ( SVC_ApplyChallengeLimit(from) )
+		return;
+	/* New code end */
+
+	oldest = 0;
+	oldestTime = 0x7FFFFFFF;
+	challenge = &svs.challenges[0];
+	for ( i = 0; i < MAX_CHALLENGES; i++, challenge++ )
+	{
+		if ( !challenge->connected && NET_CompareAdr(from, challenge->adr) )
+		{
+			break;
+		}
+		if ( challenge->time < oldestTime )
+		{
+			oldestTime = challenge->time;
+			oldest = i;
+		}
+	}
+
+	if ( i == MAX_CHALLENGES )
+	{
+		challenge = &svs.challenges[oldest];
+
+		challenge->challenge = ( ( rand() << 16 ) ^ rand() ) ^ svs.time;
+		challenge->adr = from;
+		challenge->firstTime = svs.time;
+		challenge->firstPing = 0;
+		challenge->time = svs.time;
+		challenge->connected = qfalse;
+		i = oldest;
+	}
+
+	if ( !net_lanauthorize->current.boolean && Sys_IsLANAddress(from) )
+	{
+		challenge->pingTime = svs.time;
+		NET_OutOfBandPrint(NS_SERVER, from, custom_va("challengeResponse %i", challenge->challenge));
+		return;
+	}
+
+	if ( !svs.authorizeAddress.ip[0] && svs.authorizeAddress.type != NA_BAD )
+	{
+		Com_Printf("Resolving %s\n", sv_authorizeServer->current.string);
+		if ( !NET_StringToAdr((char *)sv_authorizeServer->current.string, &svs.authorizeAddress))
+		{
+			Com_Printf("Couldn't resolve address\n");
+			return;
+		}
+		svs.authorizeAddress.port = BigShort(sv_authorizePort->current.integer);
+		Com_Printf("%s resolved to %i.%i.%i.%i:%i\n",
+					sv_authorizeServer->current.string,
+					svs.authorizeAddress.ip[0],
+					svs.authorizeAddress.ip[1],
+					svs.authorizeAddress.ip[2],
+					svs.authorizeAddress.ip[3],
+					BigShort(svs.authorizeAddress.port));
+	}
+
+	// New: The original authorize server timeout is 20 minutes. This is way
+	// too long, so we default it to a few seconds to not have the game go dead
+	// once the authorize server goes offline (again). Timeout in milliseconds.
+	if ( sv_authorizeTimeout->current.integer < svs.time - svs.sv_lastTimeMasterServerCommunicated && 7000 < svs.time - challenge->firstTime )
+	{
+		if ( !NET_CompareAdr(from, *custom_SV_MasterAddress()) )
+		{
+			Com_DPrintf("authorize server timed out\n");
+			challenge->pingTime = svs.time;
+			NET_OutOfBandPrint(NS_SERVER, challenge->adr, custom_va("challengeResponse %i", challenge->challenge));
+			return;
+		}
+	}
+
+	const char *clientPBguid = NULL;
+    if ( SV_Cmd_Argc() == 3 )
+	{
+		clientPBguid = SV_Cmd_Argv(2);
+		I_strncpyz(svs.challenges[i].clientPBguid, clientPBguid, sizeof(svs.challenges[i].clientPBguid));
+	}
+
+	SV_AuthorizeRequest(from, svs.challenges[i].challenge, clientPBguid);
 }
 
 void manymaps_prepare(const char *mapname, int read)
@@ -8950,7 +9081,8 @@ void custom_SV_ConnectionlessPacket(netadr_t from, msg_t *msg)
 		else if ( !I_stricmp(c, "getchallenge") )
 		{
 			SV_UpdateLastTimeMasterServerCommunicated(from);
-			hook_SV_GetChallenge(from);
+			// New: Replaced call to original SV_GetChallenge
+			custom_SV_GetChallenge(from);
 		}
 		else if ( !I_stricmp(c, "connect") )
 		{
@@ -9379,7 +9511,6 @@ public:
 		cracking_hook_function(0x0809479A, (int)custom_SV_BotUserMove);
 		#endif
 
-		cracking_hook_call(0x080940C4, (int)hook_SV_GetChallenge);
 		cracking_hook_call(0x08094107, (int)hook_SV_DirectConnect);
 
 		#elif COD_VERSION == COD2_1_2
@@ -9455,7 +9586,6 @@ public:
 		cracking_hook_function(0x080966B2, (int)custom_SV_BotUserMove);
 		#endif
 
-		cracking_hook_call(0x08095BF8, (int)hook_SV_GetChallenge);
 		cracking_hook_call(0x08095CB2, (int)hook_SV_DirectConnect);
 
 		#elif COD_VERSION == COD2_1_3
@@ -9611,6 +9741,7 @@ public:
 		cracking_hook_function(0x0808F628, (int)custom_SV_ClientEnterWorld);
 		cracking_hook_function(0x0809537C, (int)custom_SVC_Info);
 		cracking_hook_function(0x080B4ADA, (int)custom_Dvar_SetFromStringFromSource);
+		cracking_hook_function(0x08096E0C, (int)custom_SV_MasterAddress);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC718, (int)Jump_ClearState);
@@ -9628,10 +9759,10 @@ public:
 		cracking_hook_function(0x0809676C, (int)custom_SV_BotUserMove);
 		#endif
 
-		cracking_hook_call(0x08095CB2, (int)hook_SV_GetChallenge);
 		cracking_hook_call(0x08095DD6, (int)hook_SV_AuthorizeIpPacket);
 
-		cracking_write_hex(0x0818815c, (char *)"00"); // Removes debug flag from getentbynum
+		cracking_write_hex(0x0818815C, (char *)"00"); // Removes debug flag from getentbynum
+		cracking_write_hex(0x0815B2A0, (char *)"00"); // Disables warning: "Non-localized %s string is not allowed to have letters in it. Must be changed over to a localized string: \"%s\"\n"
 		#endif
 
 		gsc_weapons_init();

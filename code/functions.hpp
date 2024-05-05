@@ -3243,6 +3243,15 @@ static const SV_AuthorizeIpPacket_t SV_AuthorizeIpPacket = (SV_AuthorizeIpPacket
 static const SV_AuthorizeIpPacket_t SV_AuthorizeIpPacket = (SV_AuthorizeIpPacket_t)0x0808DA2A;
 #endif
 
+typedef void (*SV_AuthorizeRequest_t)(netadr_t adr, int challenge, const char *clientPBguid);
+#if COD_VERSION == COD2_1_0
+static const SV_AuthorizeRequest_t SV_AuthorizeRequest = (SV_AuthorizeRequest_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const SV_AuthorizeRequest_t SV_AuthorizeRequest = (SV_AuthorizeRequest_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const SV_AuthorizeRequest_t SV_AuthorizeRequest = (SV_AuthorizeRequest_t)0x0808CFC6;
+#endif
+
 typedef void (*SV_VoicePacket_t)(netadr_t from, msg_t *msg);
 #if COD_VERSION == COD2_1_0
 static const SV_VoicePacket_t SV_VoicePacket = (SV_VoicePacket_t)0x0; // Not tested
@@ -3943,6 +3952,15 @@ static const get_bit_t get_bit = (get_bit_t)0x0; // Not tested
 static const get_bit_t get_bit = (get_bit_t)0x0; // Not tested
 #elif COD_VERSION == COD2_1_3
 static const get_bit_t get_bit = (get_bit_t)0x0806627A;
+#endif
+
+typedef short (*BigShort_t)(short l);
+#if COD_VERSION == COD2_1_0
+static const BigShort_t BigShort = (BigShort_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_2
+static const BigShort_t BigShort = (BigShort_t)0x0; // Not tested
+#elif COD_VERSION == COD2_1_3
+static const BigShort_t BigShort = (BigShort_t)0x080B7572;
 #endif
 
 typedef void (*CalculateRanks_t)(void);

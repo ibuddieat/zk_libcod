@@ -4059,6 +4059,14 @@ static const int netsrcString_offset = 0x0;
 static const int netsrcString_offset = 0x0817D904;
 #endif
 
+#if COD_VERSION == COD2_1_0 // Not tested
+static const int sv_masterAddress_offset = 0x0;
+#elif COD_VERSION == COD2_1_2 // Not tested
+static const int sv_masterAddress_offset = 0x0;
+#elif COD_VERSION == COD2_1_3
+static const int sv_masterAddress_offset = 0x0849FBE0;
+#endif
+
 #define g_entities ((gentity_t*)(gentities_offset))
 #define g_clients ((gclient_t*)(gclients_offset))
 #define scrVarPub (*((scrVarPub_t*)( varpub_offset )))
@@ -4117,6 +4125,7 @@ static const int netsrcString_offset = 0x0817D904;
 #define saLoadedObjs (*((int*)( saLoadedObjs_offset ))) // Guessed variable name
 #define gameInitialized (*((int*)( gameInitialized_offset )))
 #define netsrcString (*((char**)( netsrcString_offset )))
+#define sv_masterAddress (*((netadr_t*)( sv_masterAddress_offset )))
 
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6
