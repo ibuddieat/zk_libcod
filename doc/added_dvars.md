@@ -115,7 +115,7 @@ Added dvars:
     * Default: 3000
     * Min. Value: 0
     * Max. Value: 1200000
-    * Effect: The original authorize server timeout is 20 minutes. We default it to a few seconds to not have the game go dead once the authorize server goes offline (again). The timeout is defined in milliseconds.
+    * Effect: The original authorize server timeout is 20 minutes. We default it to a few seconds to not have the game go dead once the authorize server goes offline (again). Setting this timeout too low will make players with a valid CD key connect with a zero GUID. The timeout is defined in milliseconds.
   * `sv_botKickMessages`
     * Type: Boolean
     * Default: True

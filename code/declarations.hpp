@@ -465,7 +465,7 @@ typedef enum
 typedef enum
 {
 	NA_BOT = 0,
-	NA_BAD = 0,
+	NA_BAD = 1,
 	NA_LOOPBACK = 2,
 	NA_BROADCAST = 3,
 	NA_IP = 4,
@@ -3662,12 +3662,12 @@ static const int level_bgs_offset = 0x0864F9C0;
 static const int cm_offset = 0x08188DC0;
 static const int bspglob_offset = 0x08188DA8;
 static const int playerStateFields_offset = 0x08142520;
-static const int entityStateFields_offset = 0x081417a0;
-static const int objectiveFields_offset = 0x08142a20;
+static const int entityStateFields_offset = 0x081417A0;
+static const int objectiveFields_offset = 0x08142A20;
 static const int clientStateFields_offset = 0x08141F60;
 static const int archivedEntityFields_offset = 0x08141AE0;
 static const int bg_itemlist_offset = 0x081850C0;
-static const int testclient_connect_string_offset = 0x0814ab20;
+static const int testclient_connect_string_offset = 0x0814AB20;
 static const int g_hudelems_offset = 0x08628F80;
 static const int spawns_offset = 0x08188A00;
 static const int entity_event_names_offset = 0x08184DA0;

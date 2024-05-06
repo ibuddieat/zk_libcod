@@ -75,7 +75,7 @@ static const Sys_EnterCriticalSectionInternal_t Sys_EnterCriticalSectionInternal
 typedef void * (*Sys_GetValue_t)(int key);
 static const Sys_GetValue_t Sys_GetValue = (Sys_GetValue_t)0x080D6BC0;
 
-typedef int (*Sys_IsLANAddress_t)(netadr_t adr);
+typedef qboolean (*Sys_IsLANAddress_t)(netadr_t adr);
 static const Sys_IsLANAddress_t Sys_IsLANAddress = (Sys_IsLANAddress_t)0x080D5638;
 
 typedef void (*Sys_LeaveCriticalSectionInternal_t)(int section);
@@ -384,7 +384,7 @@ static const SVC_Status_t SVC_Status = (SVC_Status_t)0x08094C84;
 typedef const char * (*NET_AdrToString_t)(netadr_t a);
 static const NET_AdrToString_t NET_AdrToString = (NET_AdrToString_t)0x0806B1D4;
 
-typedef qboolean (*NET_StringToAdr_t)(char *s, netadr_t *a);
+typedef qboolean (*NET_StringToAdr_t)(const char *s, netadr_t *a);
 static const NET_StringToAdr_t NET_StringToAdr = (NET_StringToAdr_t)0x0806CD98;
 
 typedef qboolean (*NET_CompareAdr_t)(netadr_t a, netadr_t b);

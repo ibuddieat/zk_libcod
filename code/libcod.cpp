@@ -461,6 +461,7 @@ void custom_Dvar_SetFromStringFromSource(dvar_t *dvar, const char *string, DvarS
 	/* New code end */
 
 	Sys_EnterCriticalSectionInternal(CRITSECT_DVAR);
+
 	I_strncpyz(buf, string, sizeof(buf));
 	newValue = Dvar_StringToValue(dvar->type, dvar->domain, buf);
 	if ( dvar->type == DVAR_TYPE_ENUM && newValue.integer == DVAR_INVALID_ENUM_INDEX )
@@ -471,6 +472,7 @@ void custom_Dvar_SetFromStringFromSource(dvar_t *dvar, const char *string, DvarS
 	}
 
 	Dvar_SetVariant(dvar, newValue, source);
+
 	Sys_LeaveCriticalSectionInternal(CRITSECT_DVAR);
 }
 
@@ -4340,9 +4342,9 @@ netadr_t * custom_SV_MasterAddress(void)
 	if ( sv_masterAddress.type == NA_BOT )
 	{
 		Com_Printf("Resolving %s\n", sv_masterServer->current.string);
-		if ( !NET_StringToAdr((char *)sv_masterServer->current.string, &sv_masterAddress) )
+		if ( !NET_StringToAdr(sv_masterServer->current.string, &sv_masterAddress) )
 		{
-			Com_Printf("Couldn\'t resolve address: cod2master.activision.com\n");
+			Com_Printf("Couldn't resolve address: %s\n", sv_masterServer->current.string);
 		}
 		else
 		{
@@ -4368,6 +4370,7 @@ void custom_SV_GetChallenge(netadr_t from)
 	int oldest;
 	int oldestTime;
 	challenge_t *challenge;
+	netadr_t *master;
 
 	/* New: Rate limiting */
 	if ( SVC_ApplyChallengeLimit(from) )
@@ -4413,7 +4416,7 @@ void custom_SV_GetChallenge(netadr_t from)
 	if ( !svs.authorizeAddress.ip[0] && svs.authorizeAddress.type != NA_BAD )
 	{
 		Com_Printf("Resolving %s\n", sv_authorizeServer->current.string);
-		if ( !NET_StringToAdr((char *)sv_authorizeServer->current.string, &svs.authorizeAddress))
+		if ( !NET_StringToAdr(sv_authorizeServer->current.string, &svs.authorizeAddress))
 		{
 			Com_Printf("Couldn't resolve address\n");
 			return;
@@ -4431,9 +4434,10 @@ void custom_SV_GetChallenge(netadr_t from)
 	// New: The original authorize server timeout is 20 minutes. This is way
 	// too long, so we default it to a few seconds to not have the game go dead
 	// once the authorize server goes offline (again). Timeout in milliseconds.
-	if ( sv_authorizeTimeout->current.integer < svs.time - svs.sv_lastTimeMasterServerCommunicated && 7000 < svs.time - challenge->firstTime )
+	if ( ( sv_authorizeTimeout->current.integer < svs.time - svs.sv_lastTimeMasterServerCommunicated ) && ( sv_authorizeTimeout->current.integer < svs.time - challenge->firstTime ) )
 	{
-		if ( !NET_CompareAdr(from, *custom_SV_MasterAddress()) )
+		master = custom_SV_MasterAddress();
+		if ( !NET_CompareAdr(from, *master) )
 		{
 			Com_DPrintf("authorize server timed out\n");
 			challenge->pingTime = svs.time;
@@ -4443,7 +4447,7 @@ void custom_SV_GetChallenge(netadr_t from)
 	}
 
 	const char *clientPBguid = NULL;
-    if ( SV_Cmd_Argc() == 3 )
+	if ( SV_Cmd_Argc() == 3 )
 	{
 		clientPBguid = SV_Cmd_Argv(2);
 		I_strncpyz(svs.challenges[i].clientPBguid, clientPBguid, sizeof(svs.challenges[i].clientPBguid));
