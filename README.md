@@ -28,7 +28,7 @@
   - Tried to align some coding styles 💩
 
 > [!NOTE]
-> The extension requires the server binary for 1.3 to be used as basis, but supports all three major game versions (check out the `sv_version` dvar), including the ability to let players from all those versions to connect to the same server.
+> The extension requires the [server binary for 1.3](cod2_lnxded) to be used as basis, but supports all three major game versions (check out the `sv_version` dvar), including the ability to let players from all those versions to connect to the same server.
 
 > [!IMPORTANT]
 > - Use this extension at your own risk (see [LICENSE](LICENSE.md)). Some features are considered highly experimental and might not be stable enough for productive use.
