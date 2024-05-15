@@ -3884,9 +3884,9 @@ typedef enum
 
 typedef enum
 {
-	LIMITED_NONE,			// All good, no limits hit
-	LIMITED_GAMESTATE,		// Gamestate limit hit, but recovered with reliable commands
-	LIMITED_CONFIGSTRING	// Configstring data limit hit, client resources incomplete
+	LIMITED_NONE,           // All good, no limits hit
+	LIMITED_GAMESTATE,      // Gamestate limit hit, but recovered with reliable commands
+	LIMITED_CONFIGSTRING    // Configstring data limit hit, client resources incomplete
 } resourceLimitedState_t;
 
 typedef struct customEntityState_s

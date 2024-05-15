@@ -51,11 +51,11 @@ Added dvars:
   * `g_spawnMapTurrets`
     * Type: Boolean
     * Default: True
-    * Effect: If false, turrets loaded from map files are neither precached nor spawned. Instead, the list of loaded turrets is sent to the `CodeCallback_MapTurretsLoad` script callback function.
+    * Effect: If false, turrets loaded from map files are neither precached nor spawned. Instead, the list of turrets to load is sent to the `CodeCallback_MapTurretsLoad` script callback function.
   * `g_spawnMapWeapons`
     * Type: Boolean
     * Default: True
-    * Effect: If false, weapons loaded from map files are neither precached nor spawned. Instead, the list of loaded weapons is sent to the `CodeCallback_MapWeaponsLoad` script callback function.
+    * Effect: If false, weapons loaded from map files are neither precached nor spawned. Instead, the list of weapons to load is sent to the `CodeCallback_MapWeaponsLoad` script callback function.
   * `g_spectateBots`
     * Type: Boolean
     * Default: True
@@ -95,7 +95,7 @@ Added dvars:
   * `scr_turretDamageName`
     * Type: Boolean
     * Default: False
-    * Effect: If true, turret weapon names are passed to Callback_PlayerDamage when using a turret, instead of the player's current weapon slot's weapon. Also fixes the game issue where grenade (and other) kills are shown as turret kills while the player is using a turret.
+    * Effect: If true, turret weapon names are passed to `Callback_PlayerDamage` when using a turret, instead of the player's current weapon slot's weapon. Also fixes the game issue where grenade (and other) kills are shown as turret kills while the player is using a turret.
   * `sv_disconnectMessages`
     * Type: Boolean
     * Default: True
@@ -166,7 +166,7 @@ Added dvars:
     * Min. Value: 0
     * Max. Value: 3
     * Effect:
-      * If set to 1, removes some dvars from systeminfo config string so that more .iwd files can be used in a mod without having clients running into "iwd sum/name mismatch errors". Instead, the cod info flag will be set on them so that they are still synchronized with the clients on connect. However, further changes during runtime are not synchronized until gamestate is resent (e.g., during a map switch). Therefore, when using this functionality, it is advised to synchronize these dvars with the clients via script whenever their value changes. Dvars that still stay in the systeminfo config string, unless configured otherwise, are:
+      * If set to 1, removes some dvars from the systeminfo config string so that more .iwd files can be used in a mod without having clients running into "iwd sum/name mismatch errors". Instead, the cod info flag will be set on them so that they are still synchronized with the clients on connect. However, further changes during runtime are not synchronized until gamestate is resent (e.g., during a map switch). Therefore, when using this functionality, it is advised to synchronize these dvars with the clients via script whenever their value changes. Dvars that still stay in the systeminfo config string, unless configured otherwise, are:
         * cl_allowDownload
         * cl_wwwDownload
         * com_hunkMegs
@@ -174,7 +174,7 @@ Added dvars:
         * sv_serverid
         * and the jump_... dvars if jump.cpp is compiled.
       * If set to 2 or greater, also overrides jump-related dvars set in jump.cpp.
-      * If set to 3, also overrides download-related dvars set in libcod.cpp. Note that sending these dvars this way is too late to auto-enable downloading right on a client's first connect. Instead, a reconnect is necessary for the client then, if downloading wasn't enabled already in the first place.
+      * If set to 3, also overrides download-related dvars set in libcod.cpp. Note that sending these dvars this way is too late to auto-enable downloading right on a client's first connect. Instead, a reconnect is necessary for the client then, if downloading was not enabled already in the first place.
   * `sv_reservedConfigstringBufferSize`
     * Type: Integer
     * Default: 256
@@ -192,7 +192,7 @@ Added dvars:
   * `sv_version`
     * Type: String
     * Default: "1.3"
-    * Effect: Controls the server's game version.
+    * Effect: Controls the server's game version as announced to the master server and returned in server info and status requests. Also, when using version 1.0, the maps `mp_rhine` and `mp_harbor` are not available via manymaps unless added as standalone maps (like other custom maps).
   * `sv_wwwDlDisconnectedMessages`
     * Type: Integer
     * Default: 1

@@ -4,10 +4,8 @@ New script code methods:
   * `<entity> addGrenadeFuseTime(<time>)`
   * `<entity> disableBounce()`
   * `<entity> disableGravity()`
-  * `<entity> disableTalkerIcon(<player>)`
   * `<entity> enableBounce([<parallelBounce>], [<perpendicularBounce>])`
   * `<entity> enableGravity([<model collide>])`
-  * `<entity> enableTalkerIcon(<player>)`
   * `<entity> getClipmask()`
   * `<entity> getContents()`
   * `<entity> getEntityVelocity()`
@@ -27,11 +25,13 @@ New script code methods:
   * `<player> disableBulletImpacts()`
   * `<player> disableEarthquakes()`
   * `<player> disableSilent()`
+  * `<player> disableTalkerIcon(<player>)`
   * `<player> earthquakeForPlayer(<scale>, <duration>, <source>, <radius>)`
   * `<player> enableBulletDrop()`
   * `<player> enableBulletImpacts()`
   * `<player> enableEarthquakes()`
   * `<player> enableSilent()`
+  * `<player> enableTalkerIcon(<player>)`
   * `<player> forceShot([<include client>])`
   * `<player> getClientHudElemCount()`
   * `<player> getCollisionTeam()`
