@@ -561,8 +561,8 @@ static const Weapon_RocketLauncher_Fire_t Weapon_RocketLauncher_Fire = (Weapon_R
 typedef void (*FireWeaponAntiLag_t)(gentity_t *player, int time);
 static const FireWeaponAntiLag_t FireWeaponAntiLag = (FireWeaponAntiLag_t)0x08120870;
 
-typedef qboolean (*BG_IsWeaponIndexValid_t)(int index); // Guessed function name
-static const BG_IsWeaponIndexValid_t BG_IsWeaponIndexValid = (BG_IsWeaponIndexValid_t)0x080EBE8C;
+typedef qboolean (*BG_ValidateWeaponNumber_t)(int index);
+static const BG_ValidateWeaponNumber_t BG_ValidateWeaponNumber = (BG_ValidateWeaponNumber_t)0x080EBE8C;
 
 typedef qboolean (*COM_BitCheck_t)(unsigned int array[], int bitNum);
 static const COM_BitCheck_t COM_BitCheck = (COM_BitCheck_t)0x080DC5A8;
@@ -621,8 +621,8 @@ static const Scr_GetType_t Scr_GetType = (Scr_GetType_t)0x08084FF0;
 typedef int (*Scr_GetPointerType_t)(unsigned int param);
 static const Scr_GetPointerType_t Scr_GetPointerType = (Scr_GetPointerType_t)0x08085098;
 
-typedef gentity_t * (*G_GetEntity_t)(unsigned int index); // Guessed function name
-static const G_GetEntity_t G_GetEntity = (G_GetEntity_t)0x081104D2;
+typedef gentity_t * (*GetEntity_t)(unsigned int index);
+static const GetEntity_t GetEntity = (GetEntity_t)0x081104D2;
 
 typedef int (*G_GetSavePersist_t)(void);
 static const G_GetSavePersist_t G_GetSavePersist = (G_GetSavePersist_t)0x08108DEE;
@@ -729,8 +729,8 @@ static const G_SetAngle_t G_SetAngle = (G_SetAngle_t)0x0811F426;
 typedef void (*G_ParseEntityField_t)(const char *key, const char *value, gentity_t *ent);
 static const G_ParseEntityField_t G_ParseEntityField = (G_ParseEntityField_t)0x0811A610;
 
-typedef void (*G_SetEntityPlacement_t)(gentity_t *ent); // Guessed function name
-static const G_SetEntityPlacement_t G_SetEntityPlacement = (G_SetEntityPlacement_t)0x0811A7B0;
+typedef void (*G_ParseEntityFields_t)(gentity_t *ent);
+static const G_ParseEntityFields_t G_ParseEntityFields = (G_ParseEntityFields_t)0x0811A7B0;
 
 typedef void (*G_SetModel_t)(gentity_t *ent, const char *modelName);
 static const G_SetModel_t G_SetModel = (G_SetModel_t)0x0811D87A;
@@ -863,9 +863,6 @@ static const BG_FindItemForWeapon_t BG_FindItemForWeapon = (BG_FindItemForWeapon
 
 typedef int (*BG_CanItemBeGrabbed_t)(entityState_t *ent, playerState_t *ps, int touch);
 static const BG_CanItemBeGrabbed_t BG_CanItemBeGrabbed = (BG_CanItemBeGrabbed_t)0x080DF39E;
-
-typedef int (*BG_GetItemHintString_t)(gclient_t *client, gentity_t *ent); // Guessed function name
-static const BG_GetItemHintString_t BG_GetItemHintString = (BG_GetItemHintString_t)0x08121AAA;
 
 typedef XModel * (*SV_XModelGet_t)(const char *name);
 static const SV_XModelGet_t SV_XModelGet = (SV_XModelGet_t)0x08091E48;
@@ -1002,8 +999,8 @@ static const SV_ChangeMaxClients_t SV_ChangeMaxClients = (SV_ChangeMaxClients_t)
 typedef void (*SV_Startup_t)(void);
 static const SV_Startup_t SV_Startup = (SV_Startup_t)0x08092DFA;
 
-typedef void (*Scr_PlayFxError_t)(const char *error, int index); // Guessed function name
-static const Scr_PlayFxError_t Scr_PlayFxError = (Scr_PlayFxError_t)0x08115034;
+typedef void (*Scr_FxParamError_t)(const char *error, int index);
+static const Scr_FxParamError_t Scr_FxParamError = (Scr_FxParamError_t)0x08115034;
 
 typedef const char * (*SEH_StringEd_GetString_t)(const char *pszReference);
 static const SEH_StringEd_GetString_t SEH_StringEd_GetString = (SEH_StringEd_GetString_t)0x081384cc;
@@ -1092,11 +1089,14 @@ static const SV_VoicePacket_t SV_VoicePacket = (SV_VoicePacket_t)0x08094B56;
 typedef void (*SV_QueueVoicePacket_t)(int talkerNum, int clientNum, VoicePacket_t *voicePacket);
 static const SV_QueueVoicePacket_t SV_QueueVoicePacket = (SV_QueueVoicePacket_t)0x0809C21C;
 
+typedef int (*Player_GetItemCursorHint_t)(gclient_t *client, gentity_t *ent);
+static const Player_GetItemCursorHint_t Player_GetItemCursorHint = (Player_GetItemCursorHint_t)0x08121AAA;
+
 typedef int (*Player_GetUseList_t)(gentity_t *player, useList_t *useList);
 static const Player_GetUseList_t Player_GetUseList = (Player_GetUseList_t)0x08121494;
 
-typedef void (*Player_SetTurretDropHintString_t)(gentity_t *player); // Guessed function name
-static const Player_SetTurretDropHintString_t Player_SetTurretDropHintString = (Player_SetTurretDropHintString_t)0x08121B36;
+typedef void (*Player_SetTurretDropHint_t)(gentity_t *player);
+static const Player_SetTurretDropHint_t Player_SetTurretDropHint = (Player_SetTurretDropHint_t)0x08121B36;
 
 typedef void (*Player_UseEntity_t)(gentity_t *playerEnt, gentity_t *useEnt);
 static const Player_UseEntity_t Player_UseEntity = (Player_UseEntity_t)0x08121054;
@@ -1179,11 +1179,11 @@ static const G_RunClient_t G_RunClient = (G_RunClient_t)0x080F66C8;
 typedef void (*G_MissileLandAngles_t)(gentity_t *ent, trace_t *trace, float *angle, qboolean endPos);
 static const G_MissileLandAngles_t G_MissileLandAngles = (G_MissileLandAngles_t)0x0810CF4C;
 
-typedef void (*G_StartSolidTrace_t)(trace_t *results, float *start, float *end, int passentitynum, int contentmask); // Guessed function name
-static const G_StartSolidTrace_t G_StartSolidTrace = (G_StartSolidTrace_t)0x0810DD2C;
+typedef void (*G_MissileTrace_t)(trace_t *results, float *start, float *end, int passentitynum, int contentmask);
+static const G_MissileTrace_t G_MissileTrace = (G_MissileTrace_t)0x0810DD2C;
 
-typedef void (*G_StartSolidTraceNoContents_t)(trace_t *results, int passentitynum, gentity_t *ent, float *origin); // Guessed function name
-static const G_StartSolidTraceNoContents_t G_StartSolidTraceNoContents = (G_StartSolidTraceNoContents_t)0x0810DDA6;
+typedef void (*Missile_TraceNoContents_t)(trace_t *results, int passentitynum, gentity_t *ent, float *origin);
+static const Missile_TraceNoContents_t Missile_TraceNoContents = (Missile_TraceNoContents_t)0x0810DDA6;
 
 typedef void (*BG_EvaluateTrajectory_t)(const trajectory_t *tr, int atTime, float *result);
 static const BG_EvaluateTrajectory_t BG_EvaluateTrajectory = (BG_EvaluateTrajectory_t)0x080DF5D4;

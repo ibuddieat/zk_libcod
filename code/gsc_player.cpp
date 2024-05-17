@@ -706,7 +706,7 @@ void gsc_player_lookatkiller(scr_entref_t ref)
 		return;
 	}
 
-	gentity_t *self_entity = G_GetEntity(id);
+	gentity_t *self_entity = GetEntity(id);
 	if ( !self_entity )
 	{
 		stackError("gsc_player_lookatkiller() self_entity state is invalid");
@@ -714,7 +714,7 @@ void gsc_player_lookatkiller(scr_entref_t ref)
 		return;
 	}
 
-	gentity_t *inflictor_entity = G_GetEntity(inflictor);
+	gentity_t *inflictor_entity = GetEntity(inflictor);
 	if ( !inflictor_entity )
 	{
 		stackError("gsc_player_lookatkiller() inflictor_entity state is invalid");
@@ -722,7 +722,7 @@ void gsc_player_lookatkiller(scr_entref_t ref)
 		return;
 	}
 
-	gentity_t *attacker_entity = G_GetEntity(attacker);
+	gentity_t *attacker_entity = GetEntity(attacker);
 	if ( !attacker_entity )
 	{
 		stackError("gsc_player_lookatkiller() attacker_entity state is invalid");
@@ -2291,7 +2291,7 @@ void gsc_player_playfxforplayer(scr_entref_t ref)
 		length = VectorLength(forward_vec);
 		if ( length == 0.0 )
 		{
-			Scr_PlayFxError("playFx called with (0 0 0) forward direction", index);
+			Scr_FxParamError("playFx called with (0 0 0) forward direction", index);
 		}
 		VectorScale(forward_vec, 1.0 / length, forward_vec);
 
@@ -2304,7 +2304,7 @@ void gsc_player_playfxforplayer(scr_entref_t ref)
 			length = VectorLength(up_vec);
 			if ( length == 0.0 )
 			{
-				Scr_PlayFxError("playFx called with (0 0 0) up direction", index);
+				Scr_FxParamError("playFx called with (0 0 0) up direction", index);
 			}
 			VectorScale(up_vec, 1.0 / length, up_vec);
 			VectorCross(up_vec, forward_vec, cross);
@@ -2312,7 +2312,7 @@ void gsc_player_playfxforplayer(scr_entref_t ref)
 			length = VectorLength(cross);
 			if ( length < 0.001 )
 			{
-				Scr_PlayFxError("playFx called an up direction 0 or 180 degrees from forward", index);
+				Scr_FxParamError("playFx called an up direction 0 or 180 degrees from forward", index);
 			}
 			else if ( length < 0.999 )
 			{

@@ -3118,7 +3118,7 @@ qboolean custom_BG_IsWeaponValid(playerState_t *ps, unsigned int index)
 {
 	WeaponDef_t *weaponDef;
 
-	if ( !BG_IsWeaponIndexValid(index) )
+	if ( !BG_ValidateWeaponNumber(index) )
 		return qfalse;
 
 	if ( !COM_BitCheck(ps->weapons, index) ) // Player has weapon?
@@ -5628,7 +5628,7 @@ void custom_G_ClientStopUsingTurret(gentity_t *self)
 
 int num_map_turrets;
 map_turret_t map_turrets[MAX_GENTITIES];
-void custom_G_SetEntityPlacement(gentity_t *ent)
+void custom_G_ParseEntityFields(gentity_t *ent)
 {
 	/* New code start: map weapons callback */
 	if ( codecallback_map_turrets_load )
@@ -5706,7 +5706,7 @@ void custom_G_CallSpawn(void)
 		if ( !strncmp(classname, "weapon_", 7) && !g_spawnMapWeapons->current.boolean )
 		{
 			ent = G_Spawn();
-			custom_G_SetEntityPlacement(ent);
+			custom_G_ParseEntityFields(ent);
 			if ( codecallback_map_weapons_load )
 			{
 				strncpy(map_weapons[num_map_weapons].classname, classname, sizeof(map_weapons[num_map_weapons].classname));
@@ -5724,7 +5724,7 @@ void custom_G_CallSpawn(void)
 		if ( ( !strncmp(classname, "misc_mg42", 9) || !strncmp(classname, "misc_turret", 11) ) && !g_spawnMapTurrets->current.boolean )
 		{
 			ent = G_Spawn();
-			custom_G_SetEntityPlacement(ent);
+			custom_G_ParseEntityFields(ent);
 			if ( codecallback_map_turrets_load )
 			{
 				strncpy(map_turrets[num_map_turrets].classname, classname, sizeof(map_turrets[num_map_turrets].classname));
@@ -5747,18 +5747,18 @@ void custom_G_CallSpawn(void)
 					if ( i[1] == (int *)G_FreeEntity ) 
 						return; 
 					ent = G_Spawn();
-					G_SetEntityPlacement(ent);
+					G_ParseEntityFields(ent);
 					((void (*)(gentity_t *))i[1])(ent);
 					return;
 				}
 			}
 			ent = G_Spawn();
-			G_SetEntityPlacement(ent);
+			G_ParseEntityFields(ent);
 		}
 		else
 		{
 			ent = G_Spawn();
-			G_SetEntityPlacement(ent);
+			G_ParseEntityFields(ent);
 			G_SpawnItem(ent, item);
 		}
 	}
@@ -5933,7 +5933,7 @@ void custom_Player_UpdateCursorHints(gentity_t *player)
 					temp = (ent->s).eType;
 					if ( temp == ET_ITEM )
 					{
-						temp = BG_GetItemHintString(player->client, ent);
+						temp = Player_GetItemCursorHint(player->client, ent);
 						if ( temp != 0 )
 							goto LAB_08121ee6;
 					}
@@ -6001,7 +6001,7 @@ LAB_08121ee6:
 		}
 		else if ( ( (client->ps).eFlags & EF_USETURRET ) != 0 )
 		{
-			Player_SetTurretDropHintString(player);
+			Player_SetTurretDropHint(player);
 		}
 	}
 }
@@ -6725,7 +6725,7 @@ void custom_GScr_SetHintString(scr_entref_t entref)
 	char hintString[MAX_STRINGLENGTH];
 	int index;
 
-	ent = G_GetEntity(id);
+	ent = GetEntity(id);
 	if ( ( ent->classname != custom_scr_const.trigger_radius ) && ( ent->classname != scr_const.trigger_use ) && ( ent->classname != scr_const.trigger_use_touch ) )
 	{
 		Scr_Error("The setHintString command only works on trigger_radius, trigger_use or trigger_use_touch entities.\n");
@@ -6927,7 +6927,7 @@ void G_UpdateSingleObjective(objective_t *from, objective_t *to)
 	from->icon = to->icon;
 }
 
-void custom_G_UpdateObjectives(void)
+void custom_G_UpdateObjectiveToClients(void)
 {
 	int i, j;
 	gclient_t *client;
@@ -7366,7 +7366,7 @@ qboolean custom_Bullet_Fire_Drop(droppingBullet_t *bullet, const gentity_t *infl
 	return qtrue;
 }
 
-void custom_Bullet_Fire_Spread(const gentity_t *source, gentity_t *inflictor, const weaponParms *wp, int offset, float spread) // Guessed function name
+void custom_Bullet_Fire_Spread(const gentity_t *source, gentity_t *inflictor, const weaponParms *wp, int offset, float spread)
 {
 	int i;
 	vec3_t start, end;
@@ -7945,7 +7945,7 @@ void G_RunGravityModelWithBounce(gentity_t *ent) // G_RunMissile as base
 	{
 		VectorCopy((ent->r).currentOrigin, origin);
 		origin[2] = origin[2] - 1.5;
-		G_StartSolidTrace(&trace, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask);
+		G_MissileTrace(&trace, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask);
 		if ( trace.fraction == 1.0 )
 		{
 			(ent->s).pos.trType = TR_GRAVITY;
@@ -7961,19 +7961,19 @@ void G_RunGravityModelWithBounce(gentity_t *ent) // G_RunMissile as base
 		absDeltaZ *= -1;
 	if ( ( absDeltaZ <= 30.0 ) || SV_PointContents(&(ent->r).currentOrigin, -1, CONTENTS_WATER) )
 	{
-		G_StartSolidTrace(&trace, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask);
+		G_MissileTrace(&trace, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask);
 	}
 	else
 	{
-		G_StartSolidTrace(&trace, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask | CONTENTS_WATER);
+		G_MissileTrace(&trace, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask | CONTENTS_WATER);
 	}
 	if ( ( trace.surfaceFlags & 0x1F00000 ) == SURF_WATER )
 	{
-		G_StartSolidTrace(&trace, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask);
+		G_MissileTrace(&trace, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask);
 	}
 	if ( ( g_entities[trace.entityNum].flags & EF_TAGCONNECT ) != 0 )
 	{
-		G_StartSolidTraceNoContents(&trace, trace.entityNum, ent, origin);
+		Missile_TraceNoContents(&trace, trace.entityNum, ent, origin);
 	}
 	Vec3Lerp((ent->r).currentOrigin, origin, trace.fraction, lerpOrigin);
 	VectorCopy(lerpOrigin, (ent->r).currentOrigin);
@@ -7981,7 +7981,7 @@ void G_RunGravityModelWithBounce(gentity_t *ent) // G_RunMissile as base
 	{
 		VectorCopy((ent->r).currentOrigin, origin);
 		origin[2] = origin[2] - 1.5;
-		G_StartSolidTrace(&trace2, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask);
+		G_MissileTrace(&trace2, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask);
 		if ( ( trace2.fraction != 1.0 ) && ( trace2.entityNum == ENTITY_WORLD ) )
 		{
 			trace.fraction = trace2.fraction;
@@ -9516,7 +9516,7 @@ public:
 		cracking_hook_function(0x08113128, (int)custom_GScr_Obituary);
 		cracking_hook_function(0x081124F6, (int)custom_GScr_SetHintString);
 		cracking_hook_function(0x08092302, (int)custom_SV_MapExists);
-		cracking_hook_function(0x08109CE0, (int)custom_G_UpdateObjectives); // Guessed function name
+		cracking_hook_function(0x08109CE0, (int)custom_G_UpdateObjectiveToClients);
 		cracking_hook_function(0x08120A70, (int)custom_FireWeaponMelee);
 		cracking_hook_function(0x08120484, (int)custom_Bullet_Fire);
 		cracking_hook_function(0x0811FE90, (int)custom_Bullet_Fire_Extended);
