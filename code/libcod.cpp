@@ -171,6 +171,7 @@ int codecallback_playerkilled = 0;
 // Custom callbacks
 int codecallback_client_spam = 0;
 int codecallback_dprintf = 0;
+int codecallback_entityevent = 0;
 int codecallback_error = 0;
 int codecallback_fire_grenade = 0;
 int codecallback_hitchwarning = 0;
@@ -210,6 +211,7 @@ callback_t callbacks[] =
 
 	{ &codecallback_client_spam, "CodeCallback_CLSpam"},
 	{ &codecallback_dprintf, "CodeCallback_DPrintf"},
+	{ &codecallback_entityevent, "CodeCallback_EntityEvent"},
 	{ &codecallback_error, "CodeCallback_Error"},
 	{ &codecallback_fire_grenade, "CodeCallback_FireGrenade"},
 	{ &codecallback_hitchwarning, "CodeCallback_HitchWarning"},
@@ -1768,7 +1770,7 @@ void custom_BG_AddPredictableEventToPlayerstate(int event, int eventParm, player
 	}
 }
 
-void custom_G_AddEvent(gentity_t * ent, int event, int eventParm)
+void custom_G_AddEvent(gentity_t *ent, int event, int eventParm)
 {
 	if ( ent->client )
 	{
@@ -1788,6 +1790,16 @@ void custom_G_AddEvent(gentity_t * ent, int event, int eventParm)
 	}
 	ent->eventTime = level.time;
 	ent->r.eventTime = level.time;
+
+	/* New code start: CodeCallback_EntityEvent */
+	if ( codecallback_entityevent && Scr_IsSystemActive() )
+	{
+		stackPushInt(eventParm);
+		stackPushInt(event);
+		short ret = Scr_ExecEntThread(ent, codecallback_entityevent, 2);
+		Scr_FreeThread(ret);
+	}
+	/* New code end */
 }
 
 gentity_t * custom_G_TempEntity(vec3_t origin, int event)
@@ -3190,6 +3202,7 @@ void custom_SV_ResetPureClient_f(client_t *cl)
 {
 	cl->pureAuthentic = 0;
 
+	/* New code start: CodeCallback_VidRestart */
 	if ( codecallback_vid_restart && Scr_IsSystemActive() )
 	{	
 		if ( cl->gentity == NULL )
@@ -3198,6 +3211,7 @@ void custom_SV_ResetPureClient_f(client_t *cl)
 		short ret = Scr_ExecEntThread(cl->gentity, codecallback_vid_restart, 0);
 		Scr_FreeThread(ret);
 	}
+	/* New code end */
 }
 
 // Adds bot pings and removes spam on 1.2 and 1.3
@@ -6400,12 +6414,14 @@ void custom_PlayerCmd_Suicide(scr_entref_t entref)
 		}
 	}
 
+	/* New code start: CodeCallback_Suicide */
 	if ( codecallback_suicide && Scr_IsSystemActive() )
 	{	
 		short ret = Scr_ExecEntThread(pSelf, codecallback_suicide, 0);
 		Scr_FreeThread(ret);
 		return;
 	}
+	/* New code end */
 	else
 	{
 		pSelf->flags &= 0xfffffffc;

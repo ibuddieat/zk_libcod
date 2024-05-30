@@ -1,4 +1,5 @@
 Added script callback functions:
+  * `CodeCallback_EntityEvent`
   * `CodeCallback_Error`
   * `CodeCallback_HitchWarning`
   * `CodeCallback_MapTurretsLoad`
