@@ -1363,7 +1363,7 @@ void gsc_utils_roundto()
 	float val;
 	float precision;
 
-	if ( !stackGetParams("ff",  &val) )
+	if ( !stackGetParams("ff",  &val, &precision) )
 	{
 		stackError("gsc_utils_roundto() argument is undefined or has a wrong type");
 		stackPushUndefined();
