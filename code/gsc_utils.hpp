@@ -53,7 +53,7 @@ void gsc_utils_makeclientlocalizedstring();
 void gsc_utils_makestring();
 
 void gsc_utils_float();
-void gsc_utils_exponent();
+void gsc_utils_pow();
 void gsc_utils_round();
 void gsc_utils_sqrt();
 void gsc_utils_sqrtinv();

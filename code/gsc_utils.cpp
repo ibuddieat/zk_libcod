@@ -1329,19 +1329,19 @@ void gsc_utils_float()
 	}
 }
 
-void gsc_utils_exponent()
+void gsc_utils_pow()
 {
 	float basis;
 	float exponent;
 
 	if ( !stackGetParams("ff", &basis, &exponent) )
 	{
-		stackError("gsc_utils_exponent() one or more arguments is undefined or has a wrong type");
+		stackError("gsc_utils_pow() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	stackPushFloat( pow(basis, exponent) );
+	stackPushFloat(pow(basis, exponent));
 }
 
 void gsc_utils_round()

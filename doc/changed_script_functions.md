@@ -1,3 +1,8 @@
+# Changed with or since release v12.0:
+
+Script code functions:
+  * Renamed `exponent()` to `pow()`
+
 # Changed with or since release v11.0:
 
 Script code methods:
