@@ -27,7 +27,7 @@ Module: Callbacks<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Calls CodeCallback_EntityEvent() in maps/mp/gametypes/_callbacksetup.gsc for each entity event (e.g., player footsteps, grenade bouncing, etc.).</p>
+<p>Calls CodeCallback_EntityEvent() in maps/mp/gametypes/_callbacksetup.gsc for each entity event (e.g., rocket explosions, grenade bouncing, etc.).</p>
 </H3>
 </TR></TD></TABLE>
 <p>Note: The existance of the callback function is checked only once on server start. Functions added later are not taken into account, even after a map switch.</p>
@@ -45,7 +45,7 @@ The targeted entity
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;event&gt; The entity event (integer). A list of possible events can be found at entity_event_t in: [<a href="https://github.com/ibuddieat/zk_libcod/code/declarations.hpp" target="_blank">link</a>]</LI>
+<LI>1 : &lt;event&gt; The entity event (integer). A list of possible events can be found at entity_event_t in: [<a href="https://github.com/ibuddieat/zk_libcod/blob/dev/code/declarations.hpp" target="_blank">link</a>]</LI>
 <LI>2 : &lt;parameter&gt; An optional event parameter (integer)</LI>
 </UL></TR></TD></TABLE>
 <BR><BR>
