@@ -99,6 +99,7 @@ dvar_t *g_spawnMapWeapons;
 dvar_t *g_triggerMode;
 dvar_t *g_turretMissingTagTerminalError;
 dvar_t *g_spectateBots;
+dvar_t *libcod;
 dvar_t *loc_loadLocalizedMods;
 dvar_t *logErrors;
 dvar_t *logfileName;
@@ -268,6 +269,7 @@ customPlayerState_t customPlayerState[MAX_CLIENTS];
 void custom_Com_InitDvars(void)
 {
 	// Register custom dvars required early on server start
+	libcod = Dvar_RegisterBool("libcod", qtrue, DVAR_ROM);
 	logfileName = Dvar_RegisterString("logfileName", "console_mp_server.log", DVAR_ARCHIVE);
 	logfileRotate = Dvar_RegisterInt("logfileRotate", 0, 0, 1000, DVAR_ARCHIVE);
 	logTimestamps = Dvar_RegisterBool("logTimestamps", qfalse, DVAR_ARCHIVE);
