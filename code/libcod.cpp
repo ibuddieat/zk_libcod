@@ -116,6 +116,7 @@ dvar_t *sv_botUseTriggerUse;
 dvar_t *sv_cracked;
 dvar_t *sv_disconnectMessages;
 dvar_t *sv_downloadMessage;
+dvar_t *sv_downloadMessageAtMap;
 dvar_t *sv_kickGamestateLimitedClients;
 dvar_t *sv_kickMessages;
 dvar_t *sv_limitLocalRcon;
@@ -382,6 +383,7 @@ void common_init_complete_print(const char *format, ...)
 	sv_cracked = Dvar_RegisterBool("sv_cracked", qfalse, DVAR_ARCHIVE);
 	sv_disconnectMessages = Dvar_RegisterBool("sv_disconnectMessages", qtrue, DVAR_ARCHIVE);
 	sv_downloadMessage = Dvar_RegisterString("sv_downloadMessage", "", DVAR_ARCHIVE);
+	sv_downloadMessageAtMap = Dvar_RegisterBool("sv_downloadMessageAtMap", qtrue, DVAR_ARCHIVE);
 	sv_kickGamestateLimitedClients = Dvar_RegisterBool("sv_kickGamestateLimitedClients", qtrue, DVAR_ARCHIVE);
 	sv_kickMessages = Dvar_RegisterBool("sv_kickMessages", qtrue, DVAR_ARCHIVE);
 	sv_limitLocalRcon = Dvar_RegisterBool("sv_limitLocalRcon", qtrue, DVAR_ARCHIVE);
@@ -2961,9 +2963,17 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 	// If set, download custom message instead of download
 	if ( strlen(sv_downloadMessage->current.string) )
 	{
-		Com_sprintf(errorMessage, sizeof(errorMessage), sv_downloadMessage->current.string);
-		SV_WriteDownloadErrorToClient(cl, msg, errorMessage);
-		return;
+		if ( ( strstr(cl->downloadName, "mp_") || strstr(cl->downloadName, "empty") ) && !sv_downloadMessageAtMap->current.boolean )
+		{
+			// We might not want to push a custom message if the client is
+			// about to load smaller files such as those provided via manymaps
+		}
+		else
+		{
+			Com_sprintf(errorMessage, sizeof(errorMessage), sv_downloadMessage->current.string);
+			SV_WriteDownloadErrorToClient(cl, msg, errorMessage);
+			return;
+		}
 	}
 
 	if ( sv_wwwDownload->current.boolean && cl->wwwOk )

@@ -134,6 +134,10 @@ Added dvars:
     * Type: Boolean
     * Default: False
     * Effect: Toggle whether bots should be notified when triggers of type trigger_use or trigger_use_touch are nearby (i.e., when the hint string appears). Once available, the bot entity will be notified with a "bot_trigger" notify where the trigger entity is the first and only argument.
+  * `sv_downloadMessageAtMap`
+    * Type: Boolean
+    * Default: True
+    * Effect: Define whether the `sv_downloadMessage` should also apply for map file downloads, i.e., such that contain `mp_` or `empty` in the file path.
   * `sv_kickGamestateLimitedClients`
     * Type: Boolean
     * Default: True
