@@ -110,6 +110,7 @@ New script code functions:
   * `makeString(<localized string>)`
   * `ord(<string character>)`
   * `resetTestClientNaming()`
+  * `roundTo(<value>, <precision>)`
   * `saveSpeexFile(<sound index>, <file path>)`
   * `setNextTestClientName(<name>)`
   * `toHex(<number>)`

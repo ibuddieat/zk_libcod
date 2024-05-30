@@ -55,6 +55,7 @@ void gsc_utils_makestring();
 void gsc_utils_float();
 void gsc_utils_pow();
 void gsc_utils_round();
+void gsc_utils_roundto()
 void gsc_utils_sqrt();
 void gsc_utils_sqrtinv();
 void gsc_utils_vectorscale();

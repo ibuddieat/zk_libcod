@@ -204,6 +204,7 @@ scr_function_t scriptFunctions[] =
 	{"float", gsc_utils_float, 0},
 	{"pow", gsc_utils_pow, 0},
 	{"round", gsc_utils_round, 0},
+	{"roundTo", gsc_utils_roundto, 0},
 	{"sqrt", gsc_utils_sqrt, 0},
 	{"sqrtInv", gsc_utils_sqrtinv, 0},
 	{"vectorScale", gsc_utils_vectorscale, 0},

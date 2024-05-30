@@ -1355,7 +1355,22 @@ void gsc_utils_round()
 		return;
 	}
 
-	stackPushFloat( roundf(val * 100) / 100 );
+	stackPushFloat(roundf(val * 100) / 100);
+}
+
+void gsc_utils_roundto()
+{
+	float val;
+	float precision;
+
+	if ( !stackGetParams("ff",  &val) )
+	{
+		stackError("gsc_utils_roundto() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushFloat(roundf(val * precision) / precision);
 }
 
 void gsc_utils_sqrt()
@@ -1384,11 +1399,11 @@ void gsc_utils_sqrtinv()
 	}
 
 	// http://www.beyond3d.com/content/articles/8/
-	float xhalf = 0.5f*x;
+	float xhalf = 0.5f * x;
 	int i = *(int*)&x;
-	i = 0x5f3759df - (i>>1);
+	i = 0x5F3759DF - (i >> 1);
 	x = *(float*)&i;
-	x = x*(1.5f - xhalf*x*x);
+	x = x * (1.5f - xhalf * x * x);
 
 	stackPushFloat(x);
 }
