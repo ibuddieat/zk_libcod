@@ -8976,7 +8976,8 @@ void custom_SV_ExecuteClientMessage(client_t *cl, msg_t *msg)
 	}
 
 	if ( (cl->serverId == sv_serverId_value || cl->downloadName[0])
-		|| (!cl->downloadName[0] && strstr(cl->lastClientCommandString, "nextdl")) )
+		|| (!cl->downloadName[0] && strstr(cl->lastClientCommandString, "nextdl"))
+		|| cl->clientDownloadingWWW )
 	{
 		do {
 			c = MSG_ReadBits(&decompressMsg, 3);
