@@ -8975,7 +8975,8 @@ void custom_SV_ExecuteClientMessage(client_t *cl, msg_t *msg)
 		return;
 	}
 
-	if ( cl->serverId == sv_serverId_value || cl->downloadName[0] )
+	if ( (cl->serverId == sv_serverId_value || cl->downloadName[0])
+		|| (!cl->downloadName[0] && strstr(cl->lastClientCommandString, "nextdl")) )
 	{
 		do {
 			c = MSG_ReadBits(&decompressMsg, 3);
@@ -9012,15 +9013,7 @@ void custom_SV_ExecuteClientMessage(client_t *cl, msg_t *msg)
 		} while ( cl->state != CS_ZOMBIE );
 		LargeLocalDestructor(&buf);
 	}
-	else if ( (cl->serverId & 0xF0) == (sv_serverId_value & 0xF0) )
-	{
-		if ( cl->state == CS_PRIMED )
-		{
-			SV_ClientEnterWorld(cl, &cl->lastUsercmd);
-		}
-		LargeLocalDestructor(&buf);
-	}
-	else
+	else if ( (cl->serverId & 0xF0) != (sv_serverId_value & 0xF0) )
 	{
 		if ( cl->gamestateMessageNum < cl->messageAcknowledge )
 		{
