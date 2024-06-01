@@ -9014,7 +9014,15 @@ void custom_SV_ExecuteClientMessage(client_t *cl, msg_t *msg)
 		} while ( cl->state != CS_ZOMBIE );
 		LargeLocalDestructor(&buf);
 	}
-	else if ( (cl->serverId & 0xF0) != (sv_serverId_value & 0xF0) )
+	else if ( (cl->serverId & 0xF0) == (sv_serverId_value & 0xF0) )
+	{
+		if ( cl->state == CS_PRIMED )
+		{
+			SV_ClientEnterWorld(cl, &cl->lastUsercmd);
+		}
+		LargeLocalDestructor(&buf);
+	}
+	else
 	{
 		if ( cl->gamestateMessageNum < cl->messageAcknowledge )
 		{
