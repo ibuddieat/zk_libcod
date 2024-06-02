@@ -1544,6 +1544,20 @@ void gsc_utils_bullethiteffect()
 	stackPushBool(qtrue);
 }
 
+void gsc_utils_getsurfacename()
+{
+	int index;
+
+	if ( !stackGetParams("i", &index) )
+	{
+		stackError("gsc_utils_getsurfacename() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushString(Com_SurfaceTypeToName(index));
+}
+
 void gsc_utils_gettype()
 {
 	if ( Scr_GetNumParam() == 0 )

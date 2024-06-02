@@ -67,6 +67,7 @@ void gsc_utils_tohex();
 
 void gsc_utils_getlasttestclientnumber();
 void gsc_utils_bullethiteffect();
+void gsc_utils_getsurfacename();
 void gsc_utils_gettype();
 
 void gsc_utils_error();

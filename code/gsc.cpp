@@ -216,6 +216,7 @@ scr_function_t scriptFunctions[] =
 
 	{"getLastTestClientNumber", gsc_utils_getlasttestclientnumber, 0},
 	{"bulletHitEffect", gsc_utils_bullethiteffect, 0},
+	{"getSurfaceName", gsc_utils_getsurfacename, 0},
 	{"getType", gsc_utils_gettype, 0},
 
 	{"error", gsc_utils_error, 0},
