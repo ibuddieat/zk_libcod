@@ -1472,10 +1472,10 @@ void hook_ClientCommand(int clientNum)
 	{
 		char tmp[MAX_STRINGLENGTH];
 		SV_Cmd_ArgvBuffer(i, tmp, sizeof(tmp));
-		if( i == 1 && tmp[0] >= 20 && tmp[0] <= 22 )
+		if ( i == 1 && tmp[0] >= 20 && tmp[0] <= 22 )
 		{
 			char *part = strtok(tmp + 1, " ");
-			while( part != NULL )
+			while ( part != NULL )
 			{
 				stackPushString(part);
 				stackPushArrayLast();
@@ -8975,8 +8975,12 @@ void custom_SV_ExecuteClientMessage(client_t *cl, msg_t *msg)
 		return;
 	}
 
-	if ( (cl->serverId == sv_serverId_value || cl->downloadName[0])
-		|| (!cl->downloadName[0] && strstr(cl->lastClientCommandString, "nextdl"))
+	// New: Fix for clients getting stuck in the file download process if the
+	// server executes a map load while downloading is still in progress, with
+	// sv_wwwDlDisconnected disabled
+	// https://github.com/ioquake/ioq3/blob/1fc83e4845b53a9b259f5980468c8db15fce8de7/code/server/sv_client.c#L1941
+	if ( ( cl->serverId == sv_serverId_value || cl->downloadName[0] )
+		|| ( !cl->downloadName[0] && strstr(cl->lastClientCommandString, "nextdl") )
 		|| cl->clientDownloadingWWW )
 	{
 		do {
