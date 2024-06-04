@@ -3702,6 +3702,8 @@ static const int saLoadedObjs_offset = 0x085AB164;
 static const int gameInitialized_offset = 0x083E2F80;
 static const int netsrcString_offset = 0x0817D904;
 static const int sv_masterAddress_offset = 0x0849FBE0;
+static const int bg_iNumWeapons_offset = 0x08627080;
+static const int bg_weaponDefs_offset = 0x086270A0;
 
 #define g_entities ((gentity_t*)(gentities_offset))
 #define g_clients ((gclient_t*)(gclients_offset))
@@ -3763,6 +3765,8 @@ static const int sv_masterAddress_offset = 0x0849FBE0;
 #define gameInitialized (*((int*)( gameInitialized_offset )))
 #define netsrcString (*((char**)( netsrcString_offset )))
 #define sv_masterAddress (*((netadr_t*)( sv_masterAddress_offset )))
+#define bg_iNumWeapons (*((int*)( bg_iNumWeapons_offset )))
+#define bg_weaponDefs (*((WeaponDef_t**)( bg_weaponDefs_offset )))
 
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6
