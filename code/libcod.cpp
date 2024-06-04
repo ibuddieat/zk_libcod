@@ -4574,7 +4574,7 @@ void manymaps_prepare(const char *mapname, int read)
 			int link_success = symlink(src, dst) == 0;
 			printf("manymaps> NEW LINK: src=%s dst=%s result of link: %s\n", src, dst, link_success?"success":"failed");
 
-			// FS_AddIwdFilesForGameDirectory_t is needed when empty000.iwd is
+			// FS_AddIwdFilesForGameDirectory() is needed when 000empty.iwd is
 			// missing as then .d3dbsp is not referenced anywhere
 			if ( link_success && read == -1 )
 				FS_AddIwdFilesForGameDirectory(fs_homepath->current.string, fs_game->current.string);
