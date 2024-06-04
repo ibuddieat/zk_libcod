@@ -6,7 +6,7 @@ qboolean isValidWeaponId(int id)
 {
 	int weps = BG_GetNumWeapons();
 
-	if ( id >= weps || id <= 0 || weps == 0 )
+	if ( id > weps || id <= 0 || weps == 0 )
 		return qfalse;
 
 	return qtrue;
@@ -766,7 +766,7 @@ void gsc_weapons_getloadedweapons()
 
 	stackPushArray();
 
-	for ( int i = 0; i < numweapons; i++ )
+	for ( int i = 1; i < ( numweapons + 1 ); i++ ) // Skip "none"
 	{
 		WeaponDef_t *weapon = BG_WeaponDefs(i);
 
