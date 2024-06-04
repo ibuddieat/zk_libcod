@@ -766,7 +766,7 @@ void gsc_weapons_getloadedweapons()
 
 	stackPushArray();
 
-	for ( int i = 1; i < ( numweapons + 1 ); i++ ) // Skip "none"
+	for ( int i = 0; i < ( numweapons + 1 ); i++ ) // First is "none"
 	{
 		WeaponDef_t *weapon = BG_WeaponDefs(i);
 
