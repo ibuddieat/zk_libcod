@@ -956,6 +956,14 @@ void custom_SV_DirectConnect(netadr_t from)
 	Com_DPrintf("SV_DirectConnect()\n");
 
 	I_strncpyz(userinfo, SV_Cmd_Argv(1), sizeof(userinfo));
+
+	/* Some comments on stock connect variables:
+	 - The "challenge" and "qport" variables are not present at bots
+	 - The "name" client dvar can be set to an empty string without any issues
+	   the client side, so we do not require it to have a value here
+	 - The "protocol" value is validated below
+	*/
+
 	version = atoi(Info_ValueForKey(userinfo, "protocol"));
 
 	if ( version < 115 || version > 118)
