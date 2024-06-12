@@ -319,6 +319,7 @@ void common_init_complete_print(const char *format, ...)
 	nextmap = Dvar_FindVar("nextmap");
 	rcon_password = Dvar_FindVar("rcon_password");
 	showpackets = Dvar_FindVar("showpackets");
+	sv_disableClientConsole = Dvar_FindVar("sv_disableClientConsole");
 	sv_allowAnonymous = Dvar_FindVar("sv_allowAnonymous");
 	sv_allowDownload = Dvar_FindVar("sv_allowDownload");
 	sv_cheats = Dvar_FindVar("sv_cheats");
@@ -819,7 +820,6 @@ void custom_SV_SpawnServer(char *server)
 		bg_fallDamageMinHeight = Dvar_FindVar("bg_fallDamageMinHeight");
 		com_timescale = Dvar_FindVar("timescale");
 		g_synchronousClients = Dvar_FindVar("g_synchronousClients");
-		sv_disableClientConsole = Dvar_FindVar("sv_disableClientConsole");
 
 		// Remove SYSTEMINFO flag
 		bg_fallDamageMaxHeight->flags &= ~DVAR_SYSTEMINFO;
