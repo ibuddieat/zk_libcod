@@ -2192,6 +2192,31 @@ typedef struct
 	char gametype[MAX_QPATH];
 } server_t; // verified
 
+typedef enum weapAnimNumber_t
+{
+	WEAP_IDLE = 0x0,
+	WEAP_FORCE_IDLE = 0x1,
+	WEAP_ATTACK = 0x2,
+	WEAP_ATTACK_LASTSHOT = 0x3,
+	WEAP_RECHAMBER = 0x4,
+	WEAP_ADS_ATTACK = 0x5,
+	WEAP_ADS_ATTACK_LASTSHOT = 0x6,
+	WEAP_ADS_RECHAMBER = 0x7,
+	WEAP_MELEE_ATTACK = 0x8,
+	WEAP_DROP = 0x9,
+	WEAP_RAISE = 0xA,
+	WEAP_RELOAD = 0xB,
+	WEAP_RELOAD_EMPTY = 0xC,
+	WEAP_RELOAD_START = 0xD,
+	WEAP_RELOAD_END = 0xE,
+	WEAP_ALTSWITCH = 0xF,
+	WEAP_ALTRAISE = 0x10, // Guessed name
+	WEAP_EMPTY_DROP = 0x11,
+	WEAP_EMPTY_RAISE = 0x12,
+	WEAP_HOLD_FIRE = 0x13,
+	MAX_WP_ANIMATIONS = 0x14,
+} weapAnimNumber_t;
+
 typedef enum weapType_t
 {
 	WEAPTYPE_BULLET = 0x0,
