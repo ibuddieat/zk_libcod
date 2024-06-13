@@ -946,7 +946,7 @@ void custom_SV_DirectConnect(netadr_t from)
 	char clientPBguid[33];
 
 	/* New code start: Rate-limiting */
-	if ( SVC_ApplyConnectLimit(from) )
+	if ( !from.type == NA_BOT && SVC_ApplyConnectLimit(from) )
 		return;
 	/* New code end */
 
