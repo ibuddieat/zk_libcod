@@ -960,13 +960,13 @@ void custom_SV_DirectConnect(netadr_t from)
 	/* Some comments on stock connect variables:
 	 - The "challenge" and "qport" variables are not present at bots
 	 - The "name" client dvar can be set to an empty string without any issues
-	   the client side, so we do not require it to have a value here
+	   on the client side, so we do not require it to have a value here
 	 - The "protocol" value is validated below
 	*/
 
 	version = atoi(Info_ValueForKey(userinfo, "protocol"));
 
-	if ( version < 115 || version > 118)
+	if ( version < 115 || version > 118 )
 	{
 		NET_OutOfBandPrint(NS_SERVER, from, custom_va("error\nEXE_SERVER_IS_DIFFERENT_VER\x15%s\n", "1.3"));
 		Com_DPrintf("    rejected connect from protocol version %i (should be between %i and %i)\n", version, 115, 118);
@@ -1539,7 +1539,7 @@ void invalid_password(client_t *client)
 	SV_FreeClientScriptId(client);
 
 	// New: Remove rejected client from scoreboard
-	// Note: This does not cover rejection by pbsv.m_AuthClient (Punkbuster)
+	// Note: This does not cover rejection by pbsv.m_AuthClient (PunkBuster)
 	gclient_t *gclient = &level.clients[client - svs.clients];
 
 	gclient->sess.connected = CON_DISCONNECTED;
