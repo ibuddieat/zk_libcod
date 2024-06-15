@@ -8,6 +8,7 @@ Added script callback functions:
   * `CodeCallback_NotifyDebug`
   * `CodeCallback_Pickup`
   * `CodeCallback_Suicide`
+  * `CodeCallback_WeaponChange`
   * `CodeCallback_AdsButton`
   * `CodeCallback_CrouchButton`
   * `CodeCallback_FragButton`

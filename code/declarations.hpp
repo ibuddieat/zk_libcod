@@ -4016,6 +4016,7 @@ typedef struct customPlayerState_s
 	int protocolVersion;
 	resourceLimitedState_t resourceLimitedState;
 	char preProxyIP[16];
+	unsigned int weapon;
 } customPlayerState_t;
 
 typedef struct callback_s

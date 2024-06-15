@@ -149,6 +149,7 @@ cHook *hook_gscr_loadconsts;
 cHook *hook_init_opcode;
 cHook *hook_play_movement;
 cHook *hook_playercmd_cloneplayer;
+cHook *hook_pm_beginweaponchange;
 cHook *hook_scr_execentthread;
 cHook *hook_scr_execthread;
 cHook *hook_scr_loadgametype;
@@ -185,6 +186,7 @@ int codecallback_remotecommand = 0;
 int codecallback_suicide = 0;
 int codecallback_userinfochanged = 0;
 int codecallback_vid_restart = 0;
+int codecallback_weapon_change = 0;
 
 int codecallback_adsbutton = 0;
 int codecallback_attackbutton = 0;
@@ -225,6 +227,7 @@ callback_t callbacks[] =
 	{ &codecallback_suicide, "CodeCallback_Suicide"},
 	{ &codecallback_userinfochanged, "CodeCallback_UserInfoChanged"},
 	{ &codecallback_vid_restart, "CodeCallback_VidRestart"},
+	{ &codecallback_weapon_change, "CodeCallback_WeaponChange"},
 
 	{ &codecallback_adsbutton, "CodeCallback_AdsButton"},
 	{ &codecallback_attackbutton, "CodeCallback_AttackButton"},
@@ -6440,6 +6443,29 @@ void custom_PlayerCmd_Suicide(scr_entref_t entref)
 	}
 }
 
+void custom_PM_BeginWeaponChange(playerState_t *ps, unsigned int newweapon)
+{
+	hook_pm_beginweaponchange->unhook();
+	void (*PM_BeginWeaponChange)(playerState_t *ps, unsigned int newweapon);
+	*(int *)&PM_BeginWeaponChange = hook_pm_beginweaponchange->from;
+
+	/* New code start: CodeCallback_WeaponChange */
+	
+	if ( codecallback_weapon_change && newweapon != customPlayerState[ps->clientNum].weapon && Scr_IsSystemActive() )
+	{
+		stackPushInt(newweapon);
+		short ret = Scr_ExecEntThread(&g_entities[ps->clientNum], codecallback_weapon_change, 1);
+		Scr_FreeThread(ret);
+	}
+	customPlayerState[ps->clientNum].weapon = newweapon;
+	/* New code end */
+
+	PM_BeginWeaponChange(ps, newweapon);
+
+	hook_pm_beginweaponchange->hook();
+
+}
+
 void custom_Scr_BulletTrace(void)
 {
 	int args;
@@ -9502,6 +9528,8 @@ public:
 		hook_scr_notify->hook();
 		hook_playercmd_cloneplayer = new cHook(0x080FCC76, (int)custom_PlayerCmd_ClonePlayer);
 		hook_playercmd_cloneplayer->hook();
+		hook_pm_beginweaponchange = new cHook(0x080EDC30, (int)custom_PM_BeginWeaponChange);
+		hook_pm_beginweaponchange->hook();
 		hook_com_initdvars = new cHook(0x08061D90, (int)custom_Com_InitDvars);
 		hook_com_initdvars->hook();
 		hook_sv_verifyiwds_f = new cHook(0x08090534, int(custom_SV_VerifyIwds_f));
