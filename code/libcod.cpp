@@ -7158,7 +7158,7 @@ void custom_Bullet_Fire_Extended(const gentity_t *inflictor, gentity_t *attacker
 		else
 			priorityMap = &bulletPriorityMap;
 
-		contentMask = MASK_SHOT | CONTENTS_GLASS;
+		contentMask = MASK_SHOT;
 
 		/* New code start: Custom bullet mask and firing through walls */
 		if ( attacker->s.number < 64 )
@@ -7321,7 +7321,7 @@ qboolean custom_Bullet_Fire_Drop(droppingBullet_t *bullet, const gentity_t *infl
 	else
 		priorityMap = &bulletPriorityMap;
 
-	contentMask = MASK_SHOT | CONTENTS_GLASS;
+	contentMask = MASK_SHOT;
 
 	if ( bullet->lastHitEnt )
 		G_LocationalTrace(&trace, start, end, bullet->lastHitEnt->s.number, contentMask, priorityMap);

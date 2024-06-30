@@ -1609,7 +1609,7 @@ void gsc_player_setbulletmask(scr_entref_t ref)
 		else if ( customPlayerState[id].fireThroughWalls )
 			old_setting = CONTENTS_BODY;
 		else
-			old_setting = MASK_SHOT | CONTENTS_GLASS;
+			old_setting = MASK_SHOT;
 
 		if ( Scr_GetType(0) == STACK_UNDEFINED )
 		{
