@@ -7946,7 +7946,7 @@ void custom_G_FreeEntity(gentity_t *ent)
 	hook_g_freeentity->hook();
 }
 
-qboolean G_BounceGrenade(gentity_t *ent, trace_t *trace) // G_BounceMissile as base
+qboolean G_BounceGravityModel(gentity_t *ent, trace_t *trace) // G_BounceMissile as base
 {
 	int contents;
 	double length;
@@ -8086,7 +8086,7 @@ void G_RunGravityModelWithBounce(gentity_t *ent) // G_RunMissile as base
 	SV_LinkEntity(ent);
 	if ( trace.fraction != 1.0 )
 	{
-		bounce = G_BounceGrenade(ent, &trace);
+		bounce = G_BounceGravityModel(ent, &trace);
 		if ( bounce && trace.startsolid == 0)
 		{
 			Scr_AddEntity(&g_entities[trace.entityNum]);
