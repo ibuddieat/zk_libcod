@@ -363,7 +363,7 @@ void common_init_complete_print(const char *format, ...)
 	fs_library = Dvar_RegisterString("fs_library", "", DVAR_ARCHIVE);
 	g_bulletDrop = Dvar_RegisterBool("g_bulletDrop", qfalse, DVAR_ARCHIVE);
 	g_bulletDropMaxTime = Dvar_RegisterInt("g_bulletDropMaxTime", 10000, 50, 60000, DVAR_ARCHIVE);
-	g_corpseHit = Dvar_RegisterBool("g_corpseHit", qfalse, DVAR_ARCHIVE);
+	g_corpseHit = Dvar_RegisterBool("g_corpseHit", qtrue, DVAR_ARCHIVE);
 	g_debugCallbacks = Dvar_RegisterBool("g_debugCallbacks", qfalse, DVAR_ARCHIVE);
 	g_debugEvents = Dvar_RegisterBool("g_debugEvents", qfalse, DVAR_ARCHIVE);
 	g_debugStaticModels = Dvar_RegisterBool("g_debugStaticModels", qfalse, DVAR_ARCHIVE);
