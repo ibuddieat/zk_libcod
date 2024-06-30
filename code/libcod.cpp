@@ -543,6 +543,7 @@ const char * custom_FS_LoadedIwdChecksums(void)
 			I_strncat(info, BIG_INFO_STRING, src);
 		}
 	}
+
 	return info;
 }
 
@@ -565,6 +566,26 @@ const char * custom_FS_LoadedIwdNames(void)
 			I_strncat(info, BIG_INFO_STRING, search->iwd->iwdBasename);
 		}
 	}
+
+	return info;
+}
+
+const char * custom_FS_ReferencedIwdChecksums()
+{
+	searchpath_t *search;
+	static char info[BIG_INFO_STRING];
+
+	info[0] = '\0';
+
+	for ( search = fs_searchpaths ; search != (searchpath_t *)0x0 ; search = search->next )
+	{
+		if ( !search->iwd )
+			continue;
+
+		if ( search->iwd->referenced || I_strnicmp(search->iwd->iwdGamename, "main", 4) )
+			I_strncat(info, sizeof(info), custom_va("%i ", search->iwd->checksum));
+	}
+
 	return info;
 }
 
@@ -811,7 +832,7 @@ void custom_SV_SpawnServer(char *server)
 		Dvar_SetString(sv_iwdNames, "");
 	}
 
-	Dvar_SetString(sv_referencedIwds, FS_ReferencedIwdChecksums());
+	Dvar_SetString(sv_referencedIwds, custom_FS_ReferencedIwdChecksums());
 	Dvar_SetString(sv_referencedIwdNames, FS_ReferencedIwdNames());
 
 	/* New code start: sv_minimizeSysteminfo dvar */
@@ -6450,7 +6471,6 @@ void custom_PM_BeginWeaponChange(playerState_t *ps, unsigned int newweapon)
 	*(int *)&PM_BeginWeaponChange = hook_pm_beginweaponchange->from;
 
 	/* New code start: CodeCallback_WeaponChange */
-	
 	if ( codecallback_weapon_change && newweapon != customPlayerState[ps->clientNum].weapon && Scr_IsSystemActive() )
 	{
 		stackPushInt(newweapon);
@@ -6463,7 +6483,6 @@ void custom_PM_BeginWeaponChange(playerState_t *ps, unsigned int newweapon)
 	PM_BeginWeaponChange(ps, newweapon);
 
 	hook_pm_beginweaponchange->hook();
-
 }
 
 void custom_Scr_BulletTrace(void)
