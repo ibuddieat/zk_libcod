@@ -368,7 +368,7 @@ void common_init_complete_print(const char *format, ...)
 	g_debugEvents = Dvar_RegisterBool("g_debugEvents", qfalse, DVAR_ARCHIVE);
 	g_debugStaticModels = Dvar_RegisterBool("g_debugStaticModels", qfalse, DVAR_ARCHIVE);
 	g_logPickup = Dvar_RegisterBool("g_logPickup", qtrue, DVAR_ARCHIVE);
-	g_mantleBlockEnable = Dvar_RegisterBool("g_mantleBlockEnable", qfalse, DVAR_ARCHIVE);
+	g_mantleBlockEnable = Dvar_RegisterBool("g_mantleBlockEnable", qtrue, DVAR_ARCHIVE);
 	g_playerCollision = Dvar_RegisterBool("g_playerCollision", qtrue, DVAR_ARCHIVE);
 	g_playerCollisionEjectDamageAllowed = Dvar_RegisterBool("g_playerCollisionEjectDamageAllowed", qfalse, DVAR_ARCHIVE);
 	g_playerCollisionEjectDuration = Dvar_RegisterInt("g_playerCollisionEjectDuration", 300, 50, 1000, DVAR_ARCHIVE);
