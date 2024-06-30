@@ -7,9 +7,10 @@
 - and was implemented for non-profit and educational purposes.
 
 ## ⭐ What's new?
-> [!NOTE]
-> These are changes in comparison to the [parent repository](doc/history.md).
-- 🔢 [Added dvars](doc/added_dvars.md)
+
+The extension requires the [server binary for version 1.3](cod2_lnxded) to be used as basis and **supports all three major game versions** (check out the `sv_version` dvar), including the ability to let players from all those versions to connect to the same server. The following list documents changes in comparison to the [parent repository](doc/history.md):
+
+- 🔢 [Added dvars](doc/added_dvars.md) (see example [libcod.cfg](doc/libcod.cfg))
 - 🔀 [Added script callback functions](doc/added_script_callback_functions.md)
 - 🔣 [Added script code functions](doc/added_script_functions.md)
 - 🏗 [Changed script code functions](doc/changed_script_functions.md)
@@ -26,9 +27,6 @@
     - See the updated [script docs](https://www.ibuddie.at/libcod/index.html)
   - Fixed some minor bugs
   - Tried to align some coding styles 💩
-
-> [!NOTE]
-> The extension requires the [server binary for 1.3](cod2_lnxded) to be used as basis, but supports all three major game versions (check out the `sv_version` dvar), including the ability to let players from all those versions to connect to the same server.
 
 > [!IMPORTANT]
 > - Use this extension at your own risk (see [LICENSE](LICENSE.md)). Some features are considered highly experimental and might not be stable enough for productive use.
