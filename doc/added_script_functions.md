@@ -14,6 +14,7 @@ New script code methods:
   * `<entity> getVmax()`
   * `<entity> getVmin()`
   * `<entity> hasTag(<tag name>)`
+  * `<entity> isGravityEnabled()`
   * `<entity> isLinkedTo()`
   * `<entity> isTurret()`
   * `<entity> setClipmask(<clip mask>)`

@@ -18,6 +18,7 @@ void gsc_entity_getturretowner(scr_entref_t ref);
 void gsc_entity_getvmax(scr_entref_t ref);
 void gsc_entity_getvmin(scr_entref_t ref);
 void gsc_entity_hastag(scr_entref_t ref);
+void gsc_entity_isgravityenabled(scr_entref_t ref);
 void gsc_entity_islinkedto(scr_entref_t ref);
 void gsc_entity_isturret(scr_entref_t ref);
 void gsc_entity_setalive(scr_entref_t ref);

@@ -379,6 +379,16 @@ void gsc_entity_disablegravity(scr_entref_t ref)
 	}
 }
 
+void gsc_entity_isgravityenabled(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( customEntityState[id].gravityType )
+		stackPushBool(qtrue);
+	else
+		stackPushBool(qfalse);
+}
+
 void gsc_entity_addentityvelocity(scr_entref_t ref)
 {
 	int id = ref.entnum;
