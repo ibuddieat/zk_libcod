@@ -67,6 +67,26 @@ void gsc_weapons_addgrenadefusetime(scr_entref_t ref)
     stackPushUndefined();
 }
 
+void gsc_weapons_getgrenadefusetime(scr_entref_t ref)
+{
+	int id = ref.entnum;
+    gentity_t *ent = &g_entities[id];
+
+    if ( ent->handler != ENT_HANDLER_GRENADE )
+    {
+        stackError("gsc_weapons_getgrenadefusetime() entity is not a grenade");
+    }
+    else
+    {
+		float remainingFuseTime = ent->nextthink - level.time;
+
+		if ( remainingFuseTime < 0.0 )
+        	stackPushFloat(0.0);
+		else
+			stackPushFloat(remainingFuseTime / 1000.0);
+    }
+}
+
 void gsc_weapons_getweaponmaxammo()
 {
 	int id;

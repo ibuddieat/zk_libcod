@@ -9,6 +9,7 @@ New script code methods:
   * `<entity> getClipmask()`
   * `<entity> getContents()`
   * `<entity> getEntityVelocity()`
+  * `<entity> getGrenadeFuseTime()`
   * `<entity> getMaxEntityVelocity()`
   * `<entity> getTagAngles(<tag name>)`
   * `<entity> getTagOrigin(<tag name>)`

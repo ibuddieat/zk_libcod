@@ -464,6 +464,7 @@ scr_method_t scriptMethods[] =
 
 	#if COMPILE_WEAPONS == 1
 	{"addGrenadeFuseTime", gsc_weapons_addgrenadefusetime, 0},
+	{"getGrenadeFuseTime", gsc_weapons_getgrenadefusetime, 0},
 	{"getWeaponItemAmmo", gsc_weapons_getweaponitemammo, 0},
 	{"setWeaponItemAmmo", gsc_weapons_setweaponitemammo, 0},
 	{"spawnGrenade", gsc_weapons_spawngrenade, 0},
