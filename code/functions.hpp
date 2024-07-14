@@ -1035,6 +1035,9 @@ static const Vec3Lerp_t Vec3Lerp = (Vec3Lerp_t)0x080E129E;
 typedef vec_t (*Vec2Normalize_t)(vec2_t v);
 static const Vec2Normalize_t Vec2Normalize = (Vec2Normalize_t)0x080A44C2;
 
+typedef const char * (*vtos_t)(const vec3_t v);
+static const vtos_t vtos = (vtos_t)0x080F42DA;
+
 typedef void (*SP_worldspawn_t)(void);
 static const SP_worldspawn_t SP_worldspawn = (SP_worldspawn_t)0x0811B56A;
 
