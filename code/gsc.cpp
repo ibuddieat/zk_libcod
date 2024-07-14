@@ -313,6 +313,7 @@ scr_method_t scriptMethods[] =
 	{"getClipmask", gsc_entity_getclipmask, 0},
 	{"getContents", gsc_entity_getcontents, 0},
 	{"getEntityVelocity", gsc_entity_getentityvelocity, 0},
+	{"getMaxEntityVelocity", gsc_entity_getmaxentityvelocity, 0},
 	{"getTagAngles", gsc_entity_gettagangles, 0},
 	{"getTagOrigin", gsc_entity_gettagorigin, 0},
 	{"getTurretOwner", gsc_entity_getturretowner, 0},
@@ -326,6 +327,7 @@ scr_method_t scriptMethods[] =
 	{"setBounds", gsc_entity_setbounds, 0},
 	{"setClipmask", gsc_entity_setclipmask, 0},
 	{"setEntityVelocity", gsc_entity_setentityvelocity, 0},
+	{"setMaxEntityVelocity", gsc_entity_setmaxentityvelocity, 0},
 	{"setLight", gsc_entity_setlight, 0},
 	#endif
 
@@ -823,6 +825,21 @@ int stackGetParamObject(int param, unsigned int *value)
 qboolean IsNullVector(float *vec)
 {
 	return vec[0] == 0.0 && vec[1] == 0.0 && vec[2] == 0.0;
+}
+
+void VectorClampLength(float *vec, double max)
+{
+	double length;
+	double factor;
+	
+	length = VectorLength(vec);
+	if ( length > max )
+	{
+		factor = length / max;
+		vec[0] /= factor;
+		vec[1] /= factor;
+		vec[2] /= factor;
+	}
 }
 
 /**

@@ -7970,6 +7970,8 @@ qboolean G_BounceGravityModel(gentity_t *ent, trace_t *trace) // G_BounceMissile
 		if ( 0.0 < length && ( dot <= 0.0 ) )
 		{
 			VectorScale((ent->s).pos.trDelta, ( customEntityState[(ent->s).number].perpendicularBounce - customEntityState[(ent->s).number].parallelBounce ) * ( dot / -length ) + customEntityState[(ent->s).number].parallelBounce, (ent->s).pos.trDelta);
+			if ( customEntityState[(ent->s).number].maxVelocity > 0.0 )
+				VectorClampLength((ent->s).pos.trDelta, customEntityState[(ent->s).number].maxVelocity);
 		}
 
 		if ( 0.7 < trace->normal[2] && VectorLength((ent->s).pos.trDelta) < 20.0 )
@@ -8020,6 +8022,7 @@ void G_RunGravityModelWithBounce(gentity_t *ent) // G_RunMissile as base
 	trace_t trace2;
 	trace_t trace;
 	vec3_t origin;
+	vec3_t maxLerpVector;
 	qboolean bounce;
 
 	if ( ( (ent->s).pos.trType == TR_STATIONARY ) && ( (ent->s).groundEntityNum != ENTITY_WORLD ) )
@@ -8037,6 +8040,14 @@ void G_RunGravityModelWithBounce(gentity_t *ent) // G_RunMissile as base
 		}
 	}
 	BG_EvaluateTrajectory(&(ent->s).pos, level.time + 50, origin);
+
+	if ( customEntityState[(ent->s).number].maxVelocity > 0.0 )
+	{
+		VectorSubtract(origin, (ent->r).currentOrigin, maxLerpVector);
+		VectorClampLength(maxLerpVector, customEntityState[(ent->s).number].maxVelocity / sv_fps->current.integer);
+		VectorAdd((ent->r).currentOrigin, maxLerpVector, origin);
+	}
+
 	absDeltaZ = (ent->s).pos.trDelta[2];
 	if ( absDeltaZ < 0 )
 		absDeltaZ *= -1;
@@ -8102,6 +8113,7 @@ void G_RunGravityModelNoBounce(gentity_t *ent) // G_RunItem as base
 	vec3_t lerpOrigin;
 	trace_t trace;
 	vec3_t origin;
+	vec3_t maxLerpVector;
 
 	if ( ( ( ( (ent->s).groundEntityNum == ENTITY_NONE ) || ( level.gentities[(ent->s).groundEntityNum].s.pos.trType != TR_STATIONARY ) ) && ( (ent->s).pos.trType != TR_GRAVITY ) ) &&
 	( ( ( ent->spawnflags ^ 1) & 1) != 0 ) )
@@ -8118,6 +8130,14 @@ void G_RunGravityModelNoBounce(gentity_t *ent) // G_RunItem as base
 	else 
 	{
 		BG_EvaluateTrajectory(&(ent->s).pos, level.time + 50, origin);
+
+		if ( customEntityState[(ent->s).number].maxVelocity > 0.0 )
+		{
+			VectorSubtract(origin, (ent->r).currentOrigin, maxLerpVector);
+			VectorClampLength(maxLerpVector, customEntityState[(ent->s).number].maxVelocity / sv_fps->current.integer);
+			VectorAdd((ent->r).currentOrigin, maxLerpVector, origin);
+		}
+
 		if ( Vec3DistanceSq((ent->r).currentOrigin, origin) < 0.1 )
 		{
 			origin[2] = origin[2] - 1.0;
@@ -8127,10 +8147,11 @@ void G_RunGravityModelNoBounce(gentity_t *ent) // G_RunItem as base
 			SV_Trace(&trace, (ent->r).currentOrigin, (ent->r).mins, (ent->r).maxs, origin, (ent->s).number, ent->clipmask, 1, NULL, 1);
 		else
 			SV_Trace(&trace, (ent->r).currentOrigin, (ent->r).mins, (ent->r).maxs, origin, (ent->s).number, ent->clipmask, 0, NULL, 1);
+
 		if ( trace.fraction < 1.0 )
 		{
 			Vec3Lerp((ent->r).currentOrigin, origin, trace.fraction, lerpOrigin);
-			if (( ( trace.startsolid == 0 ) && ( trace.fraction < 0.01 ) ) && ( trace.normal[2] < 0.5 ) )
+			if ( ( trace.startsolid == 0 && ( trace.fraction < 0.01 ) ) && ( trace.normal[2] < 0.5 ) )
 			{
 				VectorSubtract(origin, (ent->r).currentOrigin, subOrigin);
 				VectorMA(origin, 1 - DotProduct(subOrigin, trace.normal), trace.normal, origin);
@@ -8153,7 +8174,7 @@ void G_RunGravityModelNoBounce(gentity_t *ent) // G_RunItem as base
 			VectorCopy(origin, (ent->r).currentOrigin);
 		}
 		SV_LinkEntity(ent);
-		if ( ( (ent->r).inuse != 0 ) && ( trace.fraction < 0.01 ) )
+		if ( (ent->r).inuse != 0 && ( trace.fraction < 0.01 ) )
 		{
 			if ( trace.normal[2] > 0.0 )
 			{

@@ -146,6 +146,7 @@ xfunction_t Scr_GetCustomFunction(const char **fname, qboolean *fdev);
 xmethod_t Scr_GetCustomMethod(const char **fname, qboolean *fdev);
 
 qboolean IsNullVector(float *vec);
+void VectorClampLength(float *vec, double max);
 
 uint64_t Sys_Milliseconds64(void);
 

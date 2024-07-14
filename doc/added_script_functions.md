@@ -9,6 +9,7 @@ New script code methods:
   * `<entity> getClipmask()`
   * `<entity> getContents()`
   * `<entity> getEntityVelocity()`
+  * `<entity> getMaxEntityVelocity()`
   * `<entity> getTagAngles(<tag name>)`
   * `<entity> getTagOrigin(<tag name>)`
   * `<entity> getVmax()`
@@ -19,6 +20,7 @@ New script code methods:
   * `<entity> isTurret()`
   * `<entity> setClipmask(<clip mask>)`
   * `<entity> setEntityVelocity(<velocity>)`
+  * `<entity> setMaxEntityVelocity(<velocity>)`
   * `<entity> setLight(<red>, <green>, <blue>, <intensity>)`
   * `<entity> spawnGrenade(<weapon>, <origin>, [<direction>], [<velocity>], [<fuseTime>])`
   * `<player> canUseTurret(<turret>)`

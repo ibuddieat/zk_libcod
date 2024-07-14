@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>enableGravity( &lt;collide models&gt;, &lt;with rotation&gt; )</H1>
+<H1>setMaxEntityVelocity( &lt;velocity&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
@@ -27,7 +27,7 @@ Module: Entity<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Enables gravity similar to <a href="../../stock/motion/movegravity.htm">movegravity</a>, but continuously and with collision. The initial maximum entity velocity is 8192 units per second (see <a href="../entity/setmaxentityvelocity.htm">setMaxEntityVelocity</a>). A script notify with string 'land' is emit for the entity when landing, with the surface type as first and the ground entity as second parameter. Returns true on success or undefined if the entity is not a script_model.</p>
+<p>Set the entity's maximum velocity in units per second. Requires the use of <a href="../entity/enablegravity.htm">enableGravity</a> prior to the use of this method. Returns true on success, false if gravity is not enabled and undefined if the entity is not a script_model.</p>
 
 </H3>
 </TR></TD></TABLE>
@@ -45,20 +45,16 @@ script_model
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-// If self is a player:
-e = spawn("script_model", self.origin + (0, 0, 256));
-e setModel("xmodel/prop_bear_detail_sitting"); // Needs to be precached
-e enableGravity();
+e setMaxEntityVelocity(200);
 </PRE>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
-<H2>Optional Args</H2>
+<H2>Required Args:</H2>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;collide models&gt; Flag stating whether to also collide with other script_models. Default: True</LI>
-<LI>2 : &lt;with rotation&gt; Flag stating whether to also apply rotation to the target entity's angles. Default: True</LI>
+<LI>1 : &lt;velocity&gt; The entity's maximum velocity (float) in units per second</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>

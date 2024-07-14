@@ -249,7 +249,7 @@ void gsc_entity_enablebounce(scr_entref_t ref)
 
 	if ( ent->classname == scr_const.script_model )
 	{
-		if ( customEntityState[(ent->s).number].gravityType )
+		if ( customEntityState[id].gravityType )
 		{
 			float parallelBounce = 0.5; // default from frag_grenade_german_mp
 			float perpendicularBounce = 0.25; // default from frag_grenade_german_mp
@@ -261,9 +261,9 @@ void gsc_entity_enablebounce(scr_entref_t ref)
 					perpendicularBounce = Scr_GetFloat(1);
 			}
 
-			customEntityState[(ent->s).number].gravityType = GRAVITY_BOUNCE;
-			customEntityState[(ent->s).number].parallelBounce = parallelBounce;
-			customEntityState[(ent->s).number].perpendicularBounce = perpendicularBounce;
+			customEntityState[id].gravityType = GRAVITY_BOUNCE;
+			customEntityState[id].parallelBounce = parallelBounce;
+			customEntityState[id].perpendicularBounce = perpendicularBounce;
 			(ent->s).eFlags |= EF_BOUNCE;
 
 			stackPushBool(qtrue);
@@ -287,9 +287,9 @@ void gsc_entity_disablebounce(scr_entref_t ref)
 
 	if ( ent->classname == scr_const.script_model )
 	{
-		if ( customEntityState[(ent->s).number].gravityType )
+		if ( customEntityState[id].gravityType )
 		{
-			customEntityState[(ent->s).number].gravityType = GRAVITY_NO_BOUNCE;
+			customEntityState[id].gravityType = GRAVITY_NO_BOUNCE;
 			(ent->s).eFlags &= ~EF_BOUNCE;
 
 			stackPushBool(qtrue);
@@ -326,12 +326,13 @@ void gsc_entity_enablegravity(scr_entref_t ref)
 			angledGravity = qfalse;
 		}
 
-		customEntityState[(ent->s).number].gravityType = GRAVITY_NO_BOUNCE;
-		customEntityState[(ent->s).number].collideModels = collideModels;
-		customEntityState[(ent->s).number].angledGravity = angledGravity;
+		customEntityState[id].gravityType = GRAVITY_NO_BOUNCE;
+		customEntityState[id].collideModels = collideModels;
+		customEntityState[id].angledGravity = angledGravity;
+		customEntityState[id].maxVelocity = 8192.0;
 		ent->clipmask = 0x2812891;
 		ent->physicsObject = 1;
-		if ( customEntityState[(ent->s).number].angledGravity )
+		if ( customEntityState[id].angledGravity )
 		{
 			(ent->s).apos.trType = TR_LINEAR;
 			(ent->s).apos.trTime = level.time;
@@ -354,10 +355,10 @@ void gsc_entity_disablegravity(scr_entref_t ref)
 
 	if ( ent->classname == scr_const.script_model )
 	{
-		if ( customEntityState[(ent->s).number].gravityType )
+		if ( customEntityState[id].gravityType )
 		{
-			customEntityState[(ent->s).number].gravityType = GRAVITY_NONE;
-			customEntityState[(ent->s).number].collideModels = qfalse;
+			customEntityState[id].gravityType = GRAVITY_NONE;
+			customEntityState[id].collideModels = qfalse;
 			(ent->s).eFlags &= ~EF_BOUNCE;
 			ent->clipmask = 0;
 			ent->physicsObject = 0;
@@ -396,7 +397,7 @@ void gsc_entity_addentityvelocity(scr_entref_t ref)
 
 	if ( ent->classname == scr_const.script_model )
 	{
-		if ( customEntityState[(ent->s).number].gravityType )
+		if ( customEntityState[id].gravityType )
 		{
 			vec3_t velocity;
 
@@ -404,8 +405,8 @@ void gsc_entity_addentityvelocity(scr_entref_t ref)
 			(ent->s).pos.trType = TR_GRAVITY;
 			(ent->s).pos.trTime = level.time;
 			VectorCopy((ent->r).currentOrigin, (ent->s).pos.trBase);
-			VectorAdd(customEntityState[(ent->s).number].velocity, velocity, (ent->s).pos.trDelta);
-			if ( customEntityState[(ent->s).number].angledGravity )
+			VectorAdd(customEntityState[id].velocity, velocity, (ent->s).pos.trDelta);
+			if ( customEntityState[id].angledGravity )
 			{
 				(ent->s).apos.trType = TR_LINEAR;
 				(ent->s).apos.trTime = level.time;
@@ -435,7 +436,7 @@ void gsc_entity_setentityvelocity(scr_entref_t ref)
 
 	if ( ent->classname == scr_const.script_model )
 	{
-		if ( customEntityState[(ent->s).number].gravityType )
+		if ( customEntityState[id].gravityType )
 		{
 			vec3_t velocity;
 
@@ -444,7 +445,7 @@ void gsc_entity_setentityvelocity(scr_entref_t ref)
 			(ent->s).pos.trTime = level.time;
 			VectorCopy((ent->r).currentOrigin, (ent->s).pos.trBase);
 			VectorCopy(velocity, (ent->s).pos.trDelta);
-			if ( customEntityState[(ent->s).number].angledGravity )
+			if ( customEntityState[id].angledGravity )
 			{
 				(ent->s).apos.trType = TR_LINEAR;
 				(ent->s).apos.trTime = level.time;
@@ -474,9 +475,9 @@ void gsc_entity_getentityvelocity(scr_entref_t ref)
 
 	if ( ent->classname == scr_const.script_model )
 	{
-		if ( customEntityState[(ent->s).number].gravityType )
+		if ( customEntityState[id].gravityType )
 		{
-			stackPushVector(customEntityState[(ent->s).number].velocity); // (ent->s).pos.trDelta returns only the added velocity
+			stackPushVector(customEntityState[id].velocity); // (ent->s).pos.trDelta returns only the added velocity
 		}
 		else
 		{
@@ -486,6 +487,56 @@ void gsc_entity_getentityvelocity(scr_entref_t ref)
 	else
 	{
 		stackError("gsc_entity_getentityvelocity() entity is not a script_model");
+		stackPushUndefined();
+	}
+}
+
+void gsc_entity_setmaxentityvelocity(scr_entref_t ref)
+{
+	int id = ref.entnum;
+	gentity_t *ent = &g_entities[id];
+
+	if ( ent->classname == scr_const.script_model )
+	{
+		if ( customEntityState[id].gravityType )
+		{
+			customEntityState[id].maxVelocity = Scr_GetFloat(0);
+			if ( customEntityState[id].maxVelocity < 0.0 )
+				customEntityState[id].maxVelocity = 0.0;
+
+			stackPushBool(qtrue);
+		}
+		else
+		{
+			stackPushBool(qfalse);
+		}
+	}
+	else
+	{
+		stackError("gsc_entity_setmaxentityvelocity() entity is not a script_model");
+		stackPushUndefined();
+	}
+}
+
+void gsc_entity_getmaxentityvelocity(scr_entref_t ref)
+{
+	int id = ref.entnum;
+	gentity_t *ent = &g_entities[id];
+
+	if ( ent->classname == scr_const.script_model )
+	{
+		if ( customEntityState[id].gravityType )
+		{
+			stackPushFloat(customEntityState[id].maxVelocity);
+		}
+		else
+		{
+			stackPushUndefined();
+		}
+	}
+	else
+	{
+		stackError("gsc_entity_getmaxentityvelocity() entity is not a script_model");
 		stackPushUndefined();
 	}
 }
