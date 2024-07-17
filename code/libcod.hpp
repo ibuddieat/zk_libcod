@@ -1,3 +1,4 @@
+void manymaps_cleanup(void);
 bool SVC_ApplyConnectLimit(netadr_t from);
 void custom_Bullet_Fire_ApplyDropDrag(droppingBullet_t *bullet);
 void custom_Bullet_Drop_Free(int clientNum, droppingBullet_t *bullet);

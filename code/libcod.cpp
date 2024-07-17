@@ -19,6 +19,8 @@ dvar_t *com_logfile;
 dvar_t *com_sv_running;
 dvar_t *com_timescale;
 dvar_t *developer;
+dvar_t *fs_game;
+dvar_t *fs_homepath;
 dvar_t *g_antilag;
 dvar_t *g_knockback;
 dvar_t *g_mantleBlockTimeBuffer;
@@ -139,6 +141,7 @@ cHook *hook_com_initdvars;
 cHook *hook_console_print;
 cHook *hook_developer_prints;
 cHook *hook_fire_grenade;
+cHook *hook_fs_registerdvars;
 cHook *hook_g_freeentity;
 cHook *hook_g_initgentity;
 cHook *hook_g_processipbans;
@@ -404,6 +407,23 @@ void common_init_complete_print(const char *format, ...)
 	 G_RegisterDvars, example:
 	g_gravity = Dvar_RegisterFloat("g_gravity", 800.0, 1.0, 3.402823e+38, DVAR_CHANGEABLE_RESET);
 	*/
+}
+
+qboolean custom_FS_RegisterDvars(void)
+{
+	int ret;
+
+	hook_fs_registerdvars->unhook();
+	qboolean (*FS_RegisterDvars)(void);
+	*(int *)&FS_RegisterDvars = hook_fs_registerdvars->from;
+	ret = FS_RegisterDvars();
+	hook_fs_registerdvars->hook();
+
+	// Get references to file system dvars
+	fs_game = Dvar_FindVar("fs_game");
+	fs_homepath = Dvar_FindVar("fs_homepath");
+
+	return ret;
 }
 
 void custom_G_ProcessIPBans(void)
@@ -940,6 +960,9 @@ void custom_Sys_Quit(void)
 	// Free stuff that is meant to be cleared on server (not map) quit
 	if ( customSoundAliasInfo )
 		Z_FreeInternal(customSoundAliasInfo);
+
+	// Remove existing links to map library
+	manymaps_cleanup();
 
 	// Continue exit routines
 	hook_sys_quit->unhook();
@@ -3940,15 +3963,15 @@ void custom_SVC_Info(netadr_t from)
 	{
 		Info_SetValueForKey(infostring, "maxPing", custom_va("%i", sv_maxPing->current.integer));
 	}
-	gamedir = Dvar_GetString( "fs_game" );
+	gamedir = Dvar_GetString("fs_game");
 	if ( *gamedir )
 	{
-		Info_SetValueForKey( infostring, "game", gamedir );
+		Info_SetValueForKey(infostring, "game", gamedir);
 	}
 	Info_SetValueForKey( infostring, "sv_allowAnonymous", custom_va("%i", sv_allowAnonymous->current.boolean));
 	if ( sv_disableClientConsole->current.boolean )
 	{
-		Info_SetValueForKey( infostring, "con_disabled", custom_va("%i", sv_disableClientConsole->current.boolean));
+		Info_SetValueForKey(infostring, "con_disabled", custom_va("%i", sv_disableClientConsole->current.boolean));
 	}
 	password = Dvar_GetString("g_password");
 	if ( password && *password )
@@ -4514,21 +4537,63 @@ void custom_SV_GetChallenge(netadr_t from)
 	SV_AuthorizeRequest(from, svs.challenges[i].challenge, clientPBguid);
 }
 
+void manymaps_get_library_path(char *library_path, size_t library_path_size)
+{
+	if ( strlen(fs_library->current.string) )
+		strncpy(library_path, fs_library->current.string, library_path_size);
+	else
+		snprintf(library_path, library_path_size, "%s/%s/Library", fs_homepath->current.string, fs_game->current.string);
+}
+
+void manymaps_cleanup(void)
+{
+	DIR *dir;
+	struct dirent *dir_ent;
+	char library_path[MAX_OSPATH];
+
+	manymaps_get_library_path(library_path, MAX_OSPATH);
+
+	dir = opendir(library_path);
+	if ( !dir )
+		return;
+
+	// Walk through all files in the library folder
+	while ( ( dir_ent = readdir(dir) ) != NULL )
+	{
+		// Skip directory references
+		if ( strcmp(dir_ent->d_name, ".") == 0 || strcmp(dir_ent->d_name, "..") == 0 )
+			continue;
+
+		// Check if a file with same name exists in the current fs_game folder
+		char fileDelete[MAX_OSPATH];
+		Com_sprintf(fileDelete, MAX_OSPATH, "%s/%s/%s", fs_homepath->current.string, fs_game->current.string, dir_ent->d_name);
+		if ( access(fileDelete, F_OK) != -1 )
+		{
+			// Skip file if we cannot determine if it is a symbolic link
+			struct stat lstat_buf;
+			if ( lstat(fileDelete, &lstat_buf) )
+				continue;
+
+			// Only delete symbolic links
+			if ( !S_ISLNK(lstat_buf.st_mode) )
+				continue;
+
+			int unlink_success = unlink(fileDelete) == 0;
+			printf("> [LIBCOD] Manymaps: Removing old link %s: %s\n", fileDelete, unlink_success ? "success" : "failed");
+		}
+	}
+
+	closedir(dir);
+}
+
 void manymaps_prepare(const char *mapname, int read)
 {
 	char map_check[MAX_OSPATH];
 	char library_path[MAX_OSPATH];
 	const char *stock_maps[] = {"mp_breakout", "mp_brecourt", "mp_burgundy", "mp_carentan", "mp_dawnville", "mp_decoy", "mp_downtown", "mp_farmhouse", "mp_leningrad", "mp_matmata", "mp_railyard", "mp_toujane", "mp_trainstation", "mp_rhine", "mp_harbor"};
 	int map_num;
-	
-	dvar_t *fs_homepath = Dvar_FindVar("fs_homepath");
-	dvar_t *fs_game = Dvar_FindVar("fs_game");
-	dvar_t *map = Dvar_FindVar("mapname");
 
-	if ( strlen(fs_library->current.string) )
-		strncpy(library_path, fs_library->current.string, sizeof(library_path));
-	else
-		snprintf(library_path, sizeof(library_path), "%s/%s/Library", fs_homepath->current.string, fs_game->current.string);
+	manymaps_get_library_path(library_path, MAX_OSPATH);
 
 	Com_sprintf(map_check, MAX_OSPATH, "%s/%s.iwd", library_path, mapname);
 
@@ -4543,7 +4608,7 @@ void manymaps_prepare(const char *mapname, int read)
 
 	for ( int i = 0; i < map_num; i++ )
 	{
-		if ( strcmp(map->current.string, stock_maps[i]) == 0 )
+		if ( strcmp(sv_mapname->current.string, stock_maps[i]) == 0 )
 		{
 			from_stock_map = true;
 			break;
@@ -4569,30 +4634,10 @@ void manymaps_prepare(const char *mapname, int read)
 	if ( !map_exists && !map_found )
 		return;
 
-	DIR *dir;
-	struct dirent *dir_ent;
+	// Remove existing links to map library
+	manymaps_cleanup();
 
-	dir = opendir(library_path);
-	if ( !dir )
-		return;
-
-	while ( ( dir_ent = readdir(dir) ) != NULL )
-	{
-		if ( strcmp(dir_ent->d_name, ".") == 0 || strcmp(dir_ent->d_name, "..") == 0 )
-			continue;
-
-		char fileDelete[MAX_OSPATH];
-		Com_sprintf(fileDelete, MAX_OSPATH, "%s/%s/%s", fs_homepath->current.string, fs_game->current.string, dir_ent->d_name);
-
-		if ( access(fileDelete, F_OK) != -1 )
-		{
-			int unlink_success = unlink(fileDelete) == 0;
-			printf("manymaps> REMOVED OLD LINK: %s result of unlink: %s\n", fileDelete, unlink_success?"success":"failed");
-		}
-	}
-
-	closedir(dir);
-
+	// Create new link to map library
 	if ( map_exists )
 	{
 		char src[MAX_OSPATH];
@@ -4604,7 +4649,7 @@ void manymaps_prepare(const char *mapname, int read)
 		if ( access(src, F_OK) != -1 )
 		{
 			int link_success = symlink(src, dst) == 0;
-			printf("manymaps> NEW LINK: src=%s dst=%s result of link: %s\n", src, dst, link_success?"success":"failed");
+			printf("> [LIBCOD] Manymaps: New link from %s to %s: %s\n", src, dst, link_success ? "success" : "failed");
 
 			// FS_AddIwdFilesForGameDirectory() is needed when 000empty.iwd is
 			// missing as then .d3dbsp is not referenced anywhere
@@ -6849,14 +6894,8 @@ qboolean custom_SV_MapExists(const char *name)
 	{
 		char map_check[MAX_OSPATH];
 		char library_path[MAX_OSPATH];
-		
-		dvar_t *fs_homepath = Dvar_FindVar("fs_homepath");
-		dvar_t *fs_game = Dvar_FindVar("fs_game");
 
-		if ( strlen(fs_library->current.string) )
-			strncpy(library_path, fs_library->current.string, sizeof(library_path));
-		else
-			snprintf(library_path, sizeof(library_path), "%s/%s/Library", fs_homepath->current.string, fs_game->current.string);
+		manymaps_get_library_path(library_path, MAX_OSPATH);
 
 		Com_sprintf(map_check, MAX_OSPATH, "%s/%s.iwd", library_path, name);
 
@@ -7797,8 +7836,6 @@ void openLogfile(qboolean reopen)
 	{
 		char logfilePath[512];
 		char newLogfilePath[512];
-		dvar_t *fs_homepath = Dvar_FindVar("fs_homepath");
-		dvar_t *fs_game = Dvar_FindVar("fs_game");
 		int maxFileIndex = logfileRotate->current.integer;
 		int fileIndex = maxFileIndex;
 
@@ -9588,6 +9625,8 @@ public:
 		hook_sys_quit->hook();
 		hook_sv_status_f = new cHook(0x0808C706, int(custom_SV_Status_f));
 		hook_sv_status_f->hook();
+		hook_fs_registerdvars = new cHook(0x080A2C3C, (int)custom_FS_RegisterDvars);
+		hook_fs_registerdvars->hook();
 
 		#if COMPILE_PLAYER == 1
 		hook_play_movement = new cHook(0x08090DAC, (int)custom_SV_ClientThink);
