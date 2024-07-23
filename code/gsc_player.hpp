@@ -2,6 +2,7 @@
 #define _GSC_PLAYER_HPP_
 
 #include "gsc.hpp"
+#include "libcod.hpp"
 
 void gsc_player_getprotocol(scr_entref_t ref);
 void gsc_player_getprotocolstring(scr_entref_t ref);

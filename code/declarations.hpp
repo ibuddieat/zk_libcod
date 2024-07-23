@@ -98,6 +98,11 @@
 #define DVAR_AUTOEXEC           (1 << 15)       // 0x8000
 #define DVAR_INVALID_ENUM_INDEX -1337
 
+// These are the only configstrings that the system reserves, all the
+// other ones are strictly for servergame to clientgame communication
+#define CS_SERVERINFO   0   // An info string with all the serverinfo cvars
+#define CS_SYSTEMINFO   1   // An info string for server system to client system configuration (timescale, etc.)
+
 #define HASH_STAT_HEAD    0x8000
 #define HASH_NEXT_MASK    0x3FFF
 #define HASH_STAT_MASK    0xC000
@@ -1248,17 +1253,6 @@ typedef struct moveclip_s
 	int passOwnerNum;
 	int contentmask;
 } moveclip_t;
-
-typedef struct leakyBucket_s leakyBucket_t;
-struct leakyBucket_s
-{
-	netadrtype_t type;
-	unsigned char adr[4];
-	uint64_t lastTime;
-	signed char	burst;
-	long hash;
-	leakyBucket_t *prev, *next;
-};
 
 typedef struct usercmd_s
 {
@@ -3729,6 +3723,7 @@ static const int netsrcString_offset = 0x0817D904;
 static const int sv_masterAddress_offset = 0x0849FBE0;
 static const int bg_iNumWeapons_offset = 0x08627080;
 static const int bg_weaponDefs_offset = 0x086270A0;
+static const int dvar_modifiedFlags_offset = 0x085ABE04;
 
 #define g_entities ((gentity_t*)(gentities_offset))
 #define g_clients ((gclient_t*)(gclients_offset))
@@ -3792,6 +3787,7 @@ static const int bg_weaponDefs_offset = 0x086270A0;
 #define sv_masterAddress (*((netadr_t*)( sv_masterAddress_offset )))
 #define bg_iNumWeapons (*((int*)( bg_iNumWeapons_offset )))
 #define bg_weaponDefs (*((WeaponDef_t**)( bg_weaponDefs_offset )))
+#define dvar_modifiedFlags (*((int*)( dvar_modifiedFlags_offset )))
 
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6
@@ -4043,3 +4039,39 @@ typedef struct
 	unsigned short title;
 	unsigned short trigger_radius;
 } customStringIndex_t;
+
+typedef enum {
+	OUTBOUND_BUCKET_MAIN = 0x0,
+	OUTBOUND_BUCKET_PROXY1 = 0x1,
+	OUTBOUND_BUCKET_PROXY2 = 0x2,
+	OUTBOUND_BUCKET_MAX = 0x3
+} outboundLeakyBucketIndex_t;
+
+typedef struct leakyBucket_s leakyBucket_t;
+struct leakyBucket_s
+{
+	netadrtype_t type;
+	unsigned char adr[4];
+	uint64_t lastTime;
+	signed char	burst;
+	long hash;
+	leakyBucket_t *prev, *next;
+};
+
+typedef struct
+{
+	outboundLeakyBucketIndex_t bucket;
+	qboolean enabled;
+	netadr_t listenAdr;
+	netadr_t forwardAdr;
+	pthread_mutex_t lock;
+	pthread_t mainThread;
+	pthread_t *masterServerThread;
+	int numClients;
+	int parentVersion;
+	const char *parentVersionString;
+	int socket;
+	qboolean started;
+	int version;
+	const char *versionString;
+} Proxy_t;

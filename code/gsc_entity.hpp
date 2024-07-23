@@ -1,8 +1,8 @@
 #ifndef _GSC_ENTITY_HPP_
 #define _GSC_ENTITY_HPP_
 
-/* gsc functions */
 #include "gsc.hpp"
+#include "utils.hpp"
 
 void gsc_entity_addentityvelocity(scr_entref_t ref);
 void gsc_entity_disablebounce(scr_entref_t ref);

@@ -1138,11 +1138,9 @@ void gsc_player_getip(scr_entref_t ref)
 
 	client_t *client = &svs.clients[id];
 	char ip[16];
-	char localIP[16] = "127.0.0.1";
 
 	snprintf(ip, sizeof(ip), "%d.%d.%d.%d", client->netchan.remoteAddress.ip[0], client->netchan.remoteAddress.ip[1], client->netchan.remoteAddress.ip[2], client->netchan.remoteAddress.ip[3]);
-
-	if ( strcmp(localIP, ip) == 0 && strlen(customPlayerState[id].preProxyIP) )
+	if ( IsLocalIPAddress(client->netchan.remoteAddress.ip) && strlen(customPlayerState[id].preProxyIP) )
 		snprintf(ip, sizeof(ip), "%s", customPlayerState[id].preProxyIP);
 
 	stackPushString(ip);

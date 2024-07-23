@@ -1,5 +1,8 @@
 #include "gsc.hpp"
 #include "libcod.hpp"
+#include "proxy/proxy.h"
+#include "ratelimiter.hpp"
+#include "utils.hpp"
 
 #include <signal.h>
 
@@ -33,7 +36,9 @@ dvar_t *jump_stepSize;
 dvar_t *jump_slowdownEnable;
 dvar_t *jump_ladderPushVel;
 dvar_t *jump_spreadAdd;
+dvar_t *net_ip;
 dvar_t *net_lanauthorize;
+dvar_t *net_port;
 dvar_t *nextmap;
 dvar_t *player_dmgtimer_maxTime;
 dvar_t *player_dmgtimer_timePerPoint;
@@ -275,6 +280,10 @@ const entityHandler_t entityHandlers[] =
 customEntityState_t customEntityState[MAX_GENTITIES];
 customPlayerState_t customPlayerState[MAX_CLIENTS];
 
+char altSystemInfo[BIG_INFO_STRING];
+char altIwds[MAX_STRINGLENGTH];
+char altReferencedIwds[MAX_STRINGLENGTH];
+
 void custom_Com_InitDvars(void)
 {
 	// Register custom dvars required early on server start
@@ -288,7 +297,7 @@ void custom_Com_InitDvars(void)
 	sv_authorizeTimeout = Dvar_RegisterInt("sv_authorizeTimeout", 3000, 0, 1200000, DVAR_ARCHIVE);
 	sv_masterPort = Dvar_RegisterInt("sv_masterPort", 20710, 0, 65535, DVAR_ARCHIVE);
 	sv_masterServer = Dvar_RegisterString("sv_masterServer", "cod2master.activision.com", DVAR_ARCHIVE);
-	sv_version = Dvar_RegisterString("sv_version", "1.3", DVAR_ARCHIVE);
+	sv_version = Dvar_RegisterString("sv_version", "1.3", DVAR_ARCHIVE | DVAR_LATCH | DVAR_CHANGEABLE_RESET);
 
 	/* Register stock dvars here with different settings, scheme:
 	dvar_t *dvar = Dvar_Register<Type>(var_name, default value, [min. value, max. value,] flags); */
@@ -321,7 +330,9 @@ void common_init_complete_print(const char *format, ...)
 	// Get references to stock dvars
 	cl_allowDownload = Dvar_RegisterBool("cl_allowDownload", qtrue, DVAR_ARCHIVE | DVAR_SYSTEMINFO); // Force-enable download for clients
 	developer = Dvar_FindVar("developer");
+	net_ip = Dvar_FindVar("net_ip");
 	net_lanauthorize = Dvar_FindVar("net_lanauthorize");
+	net_port = Dvar_FindVar("net_port");
 	nextmap = Dvar_FindVar("nextmap");
 	rcon_password = Dvar_FindVar("rcon_password");
 	showpackets = Dvar_FindVar("showpackets");
@@ -517,98 +528,6 @@ void hitch_warning_print(const char *message, int frameTime)
 
 void hook_bad_printf(const char *format, ...) {}
 
-void hook_sv_spawnserver(const char *format, ...)
-{
-	Com_Printf("------ Server Initialization ------\n");
-	
-	// Do stuff after sv has been spawned here
-
-	hook_developer_prints->hook();
-}
-
-qboolean IsNeededIwd(searchpath_t *search)
-{
-	// Include all non-localized files
-	if ( search->localized == 0 )
-		return qtrue;
-
-	// Exclude localized files from main folder
-	// iwdFilename: Absolute path to .iwd file, including suffix
-	// iwdBasename: .iwd file name without suffix
-	// iwdGamename: folder name (main and/or fs_game)
-	if ( !strncmp(search->iwd->iwdGamename, "main", 4) )
-		return qfalse;
-
-	// If configured, include localized mod files
-	if ( loc_loadLocalizedMods->current.boolean )
-		return qtrue;
-	else
-		return qfalse;
-}
-
-const char * custom_FS_LoadedIwdChecksums(void)
-{
-	char *src;
-	searchpath_t *search;
-	static char info[BIG_INFO_STRING];
-
-	info[0] = '\0';
-
-	for ( search = fs_searchpaths; search != (searchpath_t *)0x0; search = search->next )
-	{
-		// New: Replaced "search->localized == 0" with "IsNeededIwd(search)"
-		if ( ( search->iwd != NULL ) && IsNeededIwd(search) )
-		{
-			src = custom_va("%i ", search->iwd->checksum);
-			I_strncat(info, BIG_INFO_STRING, src);
-		}
-	}
-
-	return info;
-}
-
-const char * custom_FS_LoadedIwdNames(void)
-{
-	searchpath_t *search;
-	static char info[BIG_INFO_STRING];
-
-	info[0] = '\0';
-
-	for ( search = fs_searchpaths; search != (searchpath_t *)0x0; search = search->next )
-	{
-		// New: Replaced "search->localized == 0" with "IsNeededIwd(search)"
-		if ( ( search->iwd != NULL ) && IsNeededIwd(search) )
-		{
-			if ( info[0] != '\0' )
-			{
-				I_strncat(info, BIG_INFO_STRING, " ");
-			}
-			I_strncat(info, BIG_INFO_STRING, search->iwd->iwdBasename);
-		}
-	}
-
-	return info;
-}
-
-const char * custom_FS_ReferencedIwdChecksums()
-{
-	searchpath_t *search;
-	static char info[BIG_INFO_STRING];
-
-	info[0] = '\0';
-
-	for ( search = fs_searchpaths ; search != (searchpath_t *)0x0 ; search = search->next )
-	{
-		if ( !search->iwd )
-			continue;
-
-		if ( search->iwd->referenced || I_strnicmp(search->iwd->iwdGamename, "main", 4) )
-			I_strncat(info, sizeof(info), custom_va("%i ", search->iwd->checksum));
-	}
-
-	return info;
-}
-
 const char * custom_ClientConnect(unsigned int clientNum, unsigned int scriptPersId)
 {
 	XAnimTree *tree;
@@ -652,10 +571,10 @@ const char * custom_ClientConnect(unsigned int clientNum, unsigned int scriptPer
 		/* New code start: Save original client IP if provided by proxy */
 		char preProxyIP[16];
 	
-		memset(&customPlayerState[clientNum].preProxyIP, 0, 16);
-		strncpy(preProxyIP, Info_ValueForKey(userinfo, "ip"), sizeof(customPlayerState[clientNum].preProxyIP) - 1);
+		memset(&customPlayerState[clientNum].preProxyIP, 0, sizeof(customPlayerState[0].preProxyIP));
+		I_strncpyz(preProxyIP, Info_ValueForKey(userinfo, "ip"), sizeof(customPlayerState[0].preProxyIP));
 		if ( strlen(preProxyIP) != 0 )
-			strncpy(customPlayerState[clientNum].preProxyIP, preProxyIP, sizeof(customPlayerState[clientNum].preProxyIP) - 1);
+			I_strncpyz(customPlayerState[clientNum].preProxyIP, preProxyIP, sizeof(customPlayerState[0].preProxyIP));
 		/* New code end */
 
 		Scr_PlayerConnect(ent);
@@ -671,14 +590,164 @@ const char * custom_ClientConnect(unsigned int clientNum, unsigned int scriptPer
 	return 0;
 }
 
+qboolean IsNeededIwd(searchpath_t *search)
+{
+	// Include all non-localized files
+	if ( search->localized == 0 )
+		return qtrue;
+
+	// Exclude localized files from main folder
+	// iwdFilename: Absolute path to .iwd file, including suffix
+	// iwdBasename: .iwd file name without suffix
+	// iwdGamename: folder name (main and/or fs_game)
+	if ( !strncmp(search->iwd->iwdGamename, "main", 4) )
+		return qfalse;
+
+	// If configured, include localized mod files
+	if ( loc_loadLocalizedMods->current.boolean )
+		return qtrue;
+	else
+		return qfalse;
+}
+
+int GetIW15Checksum(qboolean flipped)
+{
+	int checksum;
+
+	if ( !strncmp(sv_version->current.string, "1.2", 3) )
+	{
+		checksum = 2103914635;
+		if ( flipped )
+			checksum = 181429573;
+	}
+	else
+	{
+		checksum = 181429573; // Fine for 1.0 and 1.3
+		if ( flipped )
+			checksum = 2103914635;
+	}
+
+	return checksum;
+}
+
+const char * custom_FS_LoadedIwdChecksums(qboolean flipped)
+{
+	static char info[BIG_INFO_STRING];
+	searchpath_t *search;
+	int checksum;
+
+	info[0] = '\0';
+
+	for ( search = fs_searchpaths; search != (searchpath_t *)0x0; search = search->next )
+	{
+		// New: Replaced "search->localized == 0" with "IsNeededIwd(search)"
+		if ( search->iwd != NULL && IsNeededIwd(search) )
+		{
+			checksum = search->iwd->checksum;
+
+			/* New code start: Multi-version support without iwd_15.iwd file
+			 error on game version 1.2 */
+			if ( !strncmp(search->iwd->iwdBasename, "iw_15", 5) )
+				checksum = GetIW15Checksum(flipped);
+			/* New code end */
+
+			I_strncat(info, sizeof(info), custom_va("%i ", checksum));
+		}
+	}
+
+	return info;
+}
+
+const char * custom_FS_LoadedIwdNames(void)
+{
+	static char info[BIG_INFO_STRING];
+	searchpath_t *search;
+
+	info[0] = '\0';
+
+	for ( search = fs_searchpaths; search != (searchpath_t *)0x0; search = search->next )
+	{
+		// New: Replaced "search->localized == 0" with "IsNeededIwd(search)"
+		if ( search->iwd != NULL && IsNeededIwd(search) )
+		{
+			if ( info[0] != '\0' )
+			{
+				I_strncat(info, BIG_INFO_STRING, " ");
+			}
+			I_strncat(info, sizeof(info), search->iwd->iwdBasename);
+		}
+	}
+
+	return info;
+}
+
+const char * custom_FS_ReferencedIwdChecksums(qboolean flipped)
+{
+	searchpath_t *search;
+	static char info[BIG_INFO_STRING];
+	int checksum;
+
+	info[0] = '\0';
+
+	for ( search = fs_searchpaths ; search != (searchpath_t *)0x0 ; search = search->next )
+	{
+		if ( search->iwd != NULL && ( search->iwd->referenced || I_strnicmp(search->iwd->iwdGamename, "main", 4) ) )
+		{
+			checksum = search->iwd->checksum;
+
+			/* New code start: Multi-version support without iwd_15.iwd file
+			 error on game version 1.2 */
+			if ( !strncmp(search->iwd->iwdBasename, "iw_15", 5) )
+				checksum = GetIW15Checksum(flipped);
+			/* New code end */
+
+			I_strncat(info, sizeof(info), custom_va("%i ", checksum));
+		}
+	}
+
+	return info;
+}
+
+void custom_SV_SaveSystemInfo()
+{
+	char info[BIG_INFO_STRING];
+	char tempIwds[MAX_STRINGLENGTH];
+	char tempReferencedIwds[MAX_STRINGLENGTH];
+
+	I_strncpyz(info, Dvar_InfoString_Big(DVAR_SYSTEMINFO), sizeof(info));
+
+	/* New code start: Alternative config string for clients connecting via
+	 a different game version than what is set via the sv_version dvar */
+	I_strncpyz(tempIwds, sv_iwds->current.string, sizeof(tempIwds));
+	Dvar_SetString(sv_iwds, altIwds);
+	I_strncpyz(tempReferencedIwds, sv_referencedIwds->current.string, sizeof(tempReferencedIwds));
+	Dvar_SetString(sv_referencedIwds, altReferencedIwds);
+	I_strncpyz(altSystemInfo, Dvar_InfoString_Big(DVAR_SYSTEMINFO), sizeof(altSystemInfo));
+	Dvar_SetString(sv_iwds, tempIwds);
+	Dvar_SetString(sv_referencedIwds, tempReferencedIwds);
+
+	// We (re)register the dvar here so that any latched value is applied
+	sv_version = Dvar_RegisterString("sv_version", "1.3", DVAR_ARCHIVE | DVAR_LATCH | DVAR_CHANGEABLE_RESET);
+	/* New code end */
+
+	dvar_modifiedFlags &= ~DVAR_SYSTEMINFO;
+	SV_SetConfigstring(CS_SYSTEMINFO, info);
+
+	SV_SetConfigstring(CS_SERVERINFO, Dvar_InfoString(DVAR_SERVERINFO | DVAR_NORESTART));
+	dvar_modifiedFlags &= ~(DVAR_SERVERINFO | DVAR_NORESTART);
+
+	SV_SetConfig(142, 96, 256);
+	dvar_modifiedFlags &= ~DVAR_CODINFO;
+}
+
 void custom_SV_SpawnServer(char *server)
 {
 	char mapname[64];
 	int persist;
 	client_t *cl;
-	const char* dropreason;
-	const char* iwdChecksums;
-	const char* iwdNames;
+	const char *dropreason;
+	const char *iwdChecksums;
+	const char *iwdNames;
 	int checksum;
 	int index;
 	int i;
@@ -837,11 +906,13 @@ void custom_SV_SpawnServer(char *server)
 
 	if ( sv_pure->current.boolean )
 	{
-		iwdChecksums = custom_FS_LoadedIwdChecksums();
+		iwdChecksums = custom_FS_LoadedIwdChecksums(qfalse);
 		Dvar_SetString(sv_iwds, iwdChecksums);
 
 		if ( !*iwdChecksums )
 			Com_Printf("WARNING: sv_pure set but no IWD files loaded\n");
+
+		I_strncpyz(altIwds, custom_FS_LoadedIwdChecksums(qtrue), sizeof(altIwds)); // New
 
 		iwdNames = custom_FS_LoadedIwdNames();
 		Dvar_SetString(sv_iwdNames, iwdNames);
@@ -852,7 +923,8 @@ void custom_SV_SpawnServer(char *server)
 		Dvar_SetString(sv_iwdNames, "");
 	}
 
-	Dvar_SetString(sv_referencedIwds, custom_FS_ReferencedIwdChecksums());
+	Dvar_SetString(sv_referencedIwds, custom_FS_ReferencedIwdChecksums(qfalse));
+	I_strncpyz(altReferencedIwds, custom_FS_ReferencedIwdChecksums(qtrue), sizeof(altReferencedIwds)); // New
 	Dvar_SetString(sv_referencedIwdNames, FS_ReferencedIwdNames());
 
 	/* New code start: sv_minimizeSysteminfo dvar */
@@ -911,10 +983,13 @@ void custom_SV_SpawnServer(char *server)
 	}
 	/* New code end */
 
-	SV_SaveSystemInfo();
+	custom_SV_SaveSystemInfo();
 
 	sv.state = SS_GAME;
 	SV_Heartbeat_f();
+
+	SV_SetupProxies(); // New
+
 	Com_Printf("-----------------------------------\n");
 
 	if ( Dvar_GetBool("sv_punkbuster") == 0 )
@@ -964,6 +1039,9 @@ void custom_Sys_Quit(void)
 	// Remove existing links to map library
 	manymaps_cleanup();
 
+	// Any proxy threads to cleanup?
+	SV_ShutdownProxies();
+
 	// Continue exit routines
 	hook_sys_quit->unhook();
 	void (*Sys_Quit)(void);
@@ -993,7 +1071,7 @@ void custom_SV_DirectConnect(netadr_t from)
 	char clientPBguid[33];
 
 	/* New code start: Rate-limiting */
-	if ( !from.type == NA_BOT && SVC_ApplyConnectLimit(from) )
+	if ( !from.type == NA_BOT && SVC_ApplyConnectLimit(from, OUTBOUND_BUCKET_MAIN) )
 		return;
 	/* New code end */
 
@@ -2800,6 +2878,7 @@ void custom_SV_SendClientGameState(client_t *client)
 	char preProxyIP[16];
 	int currentConfigstringSize = 0;
 	int clientGamestateDataCount = 1;
+	char *configstring;
 
 	LargeLocalConstructor(&buf, MAX_MSGLEN);
 	data = LargeLocalGetBuf(&buf);
@@ -2835,7 +2914,14 @@ void custom_SV_SendClientGameState(client_t *client)
 	customPlayerState[id].protocolVersion = protocolVersion;
 	memcpy(&customPlayerState[id].preProxyIP, &preProxyIP, 16);
 	/* New code end */
-	
+
+	// New: End here for bots
+	if ( client->bIsTestClient )
+	{
+		LargeLocalDestructor(&buf);
+		return;
+	}
+
 	MSG_Init(&msg, data, MAX_MSGLEN);
 	MSG_WriteLong(&msg, client->lastClientCommand);
 	SV_UpdateServerCommandsToClient(client, &msg);
@@ -2857,7 +2943,19 @@ void custom_SV_SendClientGameState(client_t *client)
 	{
 		if ( sv.configstrings[start][0] )
 		{
-			
+			configstring = sv.configstrings[start];
+
+			/* New code start: Multi version support */
+
+			// Fix iw_15.iwd checksum mismatch for version 1.2
+			if ( start == CS_SYSTEMINFO )
+			{
+				if ( protocolVersion == 117 && getProtocolFromShortVersion(sv_version->current.string) != 117 )
+					configstring = altSystemInfo;
+				else if ( protocolVersion != 117 && getProtocolFromShortVersion(sv_version->current.string) == 117 )
+					configstring = altSystemInfo;
+			}
+
 			// Older protocol versions: Sending overflowing config strings
 			// afterwards via reliable server commands is constrained by
 			// another client-sided limit, in addition to the gamestate
@@ -2875,9 +2973,7 @@ void custom_SV_SendClientGameState(client_t *client)
 			// sv_reservedConfigstringBufferSize dvar. Its value needs to be
 			// set higher in case clients with older game versions tend to run
 			// into "MAX_GAMESTATE_CHARS exceeded" errors.
-
-			/* New code start: Multi version support */
-			currentConfigstringSize = strlen(sv.configstrings[start]);
+			currentConfigstringSize = strlen(configstring);
 			if ( protocolVersion < 118 )
 			{
 				if ( ( msg.cursize + currentConfigstringSize + 3 + 10 ) > 0x4000 )
@@ -2898,9 +2994,9 @@ void custom_SV_SendClientGameState(client_t *client)
 
 			MSG_WriteByte(&msg, svc_configstring);
 			MSG_WriteShort(&msg, start);
-			MSG_WriteBigString(&msg, sv.configstrings[start]);
+			MSG_WriteBigString(&msg, configstring);
 
-			clientGamestateDataCount += strlen(sv.configstrings[start]) + 1; // New code
+			clientGamestateDataCount += strlen(configstring) + 1; // New code
 		}
 	}
 
@@ -2927,6 +3023,10 @@ void custom_SV_SendClientGameState(client_t *client)
 		{
 			if ( sv.configstrings[start][0] )
 			{
+				// We do not apply the iw_15.iwd checksum mismatch fix here
+				// (again, see above) as we assume that the entity baseline
+				// will not consume all the available gamestate space
+
 				currentConfigstringSize = strlen(sv.configstrings[start]);
 				if ( ( clientGamestateDataCount + currentConfigstringSize + 1 ) > ( 16000 - sv_reservedConfigstringBufferSize->current.integer ) )
 				{
@@ -3642,132 +3742,7 @@ int custom_BG_PlayAnim(playerState_t *ps, int animNum, animBodyPart_t bodyPart, 
 }
 #endif
 
-// ioquake3 rate limit connectionless requests
-// https://github.com/ioquake/ioq3/blob/master/code/server/sv_main.c
-
-// This is deliberately quite large to make it more of an effort to DoS
-#define MAX_BUCKETS	16384
-#define MAX_HASHES 1024
-
-static leakyBucket_t buckets[MAX_BUCKETS];
-static leakyBucket_t* bucketHashes[MAX_HASHES];
-leakyBucket_t outboundLeakyBucket;
-
-static long SVC_HashForAddress(netadr_t address)
-{
-	unsigned char *ip = address.ip;
-	int	i;
-	long hash = 0;
-
-	for ( i = 0; i < 4; i++ )
-	{
-		hash += (long)( ip[i] ) * ( i + 119 );
-	}
-
-	hash = ( hash ^ ( hash >> 10 ) ^ ( hash >> 20 ) );
-	hash &= ( MAX_HASHES - 1 );
-
-	return hash;
-}
-
-static leakyBucket_t * SVC_BucketForAddress(netadr_t address, int burst, int period)
-{
-	leakyBucket_t *bucket = NULL;
-	int i;
-	long hash = SVC_HashForAddress(address);
-	uint64_t now = Sys_Milliseconds64();
-
-	for ( bucket = bucketHashes[hash]; bucket; bucket = bucket->next )
-	{
-		if ( memcmp(bucket->adr, address.ip, 4) == 0 )
-			return bucket;
-	}
-
-	for ( i = 0; i < MAX_BUCKETS; i++ )
-	{
-		int interval;
-
-		bucket = &buckets[i];
-		interval = now - bucket->lastTime;
-
-		// Reclaim expired buckets
-		if ( bucket->lastTime > 0 && ( interval > ( burst * period ) ||
-									   interval < 0 ) )
-		{
-			if ( bucket->prev != NULL )
-				bucket->prev->next = bucket->next;
-			else
-				bucketHashes[bucket->hash] = bucket->next;
-
-			if ( bucket->next != NULL )
-				bucket->next->prev = bucket->prev;
-
-			memset(bucket, 0, sizeof(leakyBucket_t));
-		}
-
-		if ( bucket->type == 0 )
-		{
-			bucket->type = address.type;
-			memcpy(bucket->adr, address.ip, 4);
-
-			bucket->lastTime = now;
-			bucket->burst = 0;
-			bucket->hash = hash;
-
-			// Add to the head of the relevant hash chain
-			bucket->next = bucketHashes[hash];
-			if ( bucketHashes[hash] != NULL )
-				bucketHashes[hash]->prev = bucket;
-
-			bucket->prev = NULL;
-			bucketHashes[hash] = bucket;
-
-			return bucket;
-		}
-	}
-
-	// Couldn't allocate a bucket for this address
-	return NULL;
-}
-
-bool SVC_RateLimit(leakyBucket_t *bucket, int burst, int period)
-{
-	if ( bucket != NULL )
-	{
-		uint64_t now = Sys_Milliseconds64();
-		int interval = now - bucket->lastTime;
-		int expired = interval / period;
-		int expiredRemainder = interval % period;
-
-		if ( expired > bucket->burst || interval < 0 )
-		{
-			bucket->burst = 0;
-			bucket->lastTime = now;
-		}
-		else
-		{
-			bucket->burst -= expired;
-			bucket->lastTime = now - expiredRemainder;
-		}
-
-		if ( bucket->burst < burst )
-		{
-			bucket->burst++;
-			return false;
-		}
-	}
-
-	return true;
-}
-
-bool SVC_RateLimitAddress(netadr_t from, int burst, int period)
-{
-	leakyBucket_t *bucket = SVC_BucketForAddress(from, burst, period);
-
-	return SVC_RateLimit(bucket, burst, period);
-}
-
-bool SVC_callback(const char *str, const char *ip)
+bool SVC_SpamCallback(const char *str, const char *ip)
 {	
 	if ( codecallback_client_spam && Scr_IsSystemActive() )
 	{
@@ -3782,136 +3757,14 @@ bool SVC_callback(const char *str, const char *ip)
 	return false;
 }
 
-bool SVC_ApplyConnectLimit(netadr_t from)
+void custom_SV_AuthorizeIpPacket(netadr_t from)
 {
-	// Prevent using connect as an amplifier
-	if ( SVC_RateLimitAddress(from, 10, 1000) )
-	{
-		Com_DPrintf("SV_DirectConnect: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
-		return true;
-	}
-
-	// Allow connect to be DoSed relatively easily, but prevent
-	// excess outbound bandwidth usage when being flooded inbound
-	if ( SVC_RateLimit(&outboundLeakyBucket, 10, 100) )
-	{
-		Com_DPrintf("SV_DirectConnect: rate limit exceeded, dropping request\n");
-		return true;
-	}
-
-	return false;
-}
-
-bool SVC_ApplyRconLimit(netadr_t from, qboolean badRconPassword)
-{
-	// Prevent using rcon as an amplifier and make dictionary attacks impractical
-	if ( SVC_RateLimitAddress(from, 10, 1000) )
-	{
-		if ( !SVC_callback("RCON:ADDRESS", NET_AdrToString(from)) )
-			Com_DPrintf("SVC_RemoteCommand: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
-		return true;
-	}
-
-	if ( badRconPassword )
-	{
-		static leakyBucket_t bucket;
-
-		// Make DoS via rcon impractical
-		if ( SVC_RateLimit(&bucket, 10, 1000) )
-		{
-			if ( !SVC_callback("RCON:GLOBAL", NET_AdrToString(from)) )
-				Com_DPrintf("SVC_RemoteCommand: rate limit exceeded, dropping request\n");
-			return true;
-		}
-	}
-	
-	return false;
-}
-
-bool SVC_ApplyStatusLimit(netadr_t from)
-{
-	// Prevent using getstatus as an amplifier
-	if ( SVC_RateLimitAddress(from, 10, 1000) )
-	{
-		if ( !SVC_callback("STATUS:ADDRESS", NET_AdrToString(from)) )
-			Com_DPrintf("SVC_Status: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
-		return true;
-	}
-
-	// Allow getstatus to be DoSed relatively easily, but prevent
-	// excess outbound bandwidth usage when being flooded inbound
-	if ( SVC_RateLimit(&outboundLeakyBucket, 10, 100) )
-	{
-		if ( !SVC_callback("STATUS:GLOBAL", NET_AdrToString(from)) )
-			Com_DPrintf("SVC_Status: rate limit exceeded, dropping request\n");
-		return true;
-	}
-
-	return false;
-}
-
-bool SVC_ApplyChallengeLimit(netadr_t from)
-{
-	// Prevent using getchallenge as an amplifier
-	if ( SVC_RateLimitAddress(from, 10, 1000) )
-	{
-		if ( !SVC_callback("CHALLENGE:ADDRESS", NET_AdrToString(from)) )
-			Com_DPrintf("SV_GetChallenge: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
-		return true;
-	}
-
-	// Allow getchallenge to be DoSed relatively easily, but prevent
-	// excess outbound bandwidth usage when being flooded inbound
-	if ( SVC_RateLimit(&outboundLeakyBucket, 10, 100) )
-	{
-		if ( !SVC_callback("CHALLENGE:GLOBAL", NET_AdrToString(from)) )
-			Com_DPrintf("SV_GetChallenge: rate limit exceeded, dropping request\n");
-		return true;
-	}
-
-	return false;
-}
-
-void hook_SV_AuthorizeIpPacket(netadr_t from)
-{
-	// Prevent ipAuthorize log spam DoS
-	if ( SVC_RateLimitAddress(from, 20, 1000) )
-	{
-		Com_DPrintf("SV_AuthorizeIpPacket: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
+    /* New: Rate limiting */
+	if ( SVC_ApplyAuthorizeIpPacketLimit(from, OUTBOUND_BUCKET_MAIN) )
 		return;
-	}
-
-	// Allow ipAuthorize to be DoSed relatively easily, but prevent
-	// excess outbound bandwidth usage when being flooded inbound
-	if ( SVC_RateLimit(&outboundLeakyBucket, 10, 100) )
-	{
-		Com_DPrintf("SV_AuthorizeIpPacket: rate limit exceeded, dropping request\n");
-		return;
-	}
+	/* New code end */
 
 	SV_AuthorizeIpPacket(from);
-}
-
-bool SVC_ApplyInfoLimit(netadr_t from)
-{
-	// Prevent using getinfo as an amplifier
-	if ( SVC_RateLimitAddress(from, 10, 1000) )
-	{
-		if ( !SVC_callback("INFO:ADDRESS", NET_AdrToString(from)) )
-			Com_DPrintf("SVC_Info: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
-		return true;
-	}
-
-	// Allow getinfo to be DoSed relatively easily, but prevent
-	// excess outbound bandwidth usage when being flooded inbound
-	if ( SVC_RateLimit(&outboundLeakyBucket, 10, 100) )
-	{
-		if ( !SVC_callback("INFO:GLOBAL", NET_AdrToString(from)) )
-			Com_DPrintf("SVC_Info: rate limit exceeded, dropping request\n");
-		return true;
-	}
-
-	return false;
 }
 
 void custom_SVC_Info(netadr_t from)
@@ -3928,7 +3781,7 @@ void custom_SVC_Info(netadr_t from)
 	char *iwd;
 
 	/* New: Rate limiting */
-	if ( SVC_ApplyInfoLimit(from) )
+	if ( SVC_ApplyInfoLimit(from, OUTBOUND_BUCKET_MAIN) )
 		return;
 	/* New code end */
 
@@ -4040,7 +3893,7 @@ void custom_SVC_Status(netadr_t from)
 	char msg[BIG_INFO_STRING];
 
 	/* New: Rate limiting */
-	if ( SVC_ApplyStatusLimit(from) )
+	if ( SVC_ApplyStatusLimit(from, OUTBOUND_BUCKET_MAIN) )
 		return;
 	/* New code end */
 
@@ -4164,22 +4017,7 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 	qboolean badRconPassword = !strlen(rcon_password->current.string) || !strcmp_constant_time(password, rcon_password->current.string);
 
 	/* New: Rate limiting and sv_limitLocalRcon dvar */
-	if ( !sv_limitLocalRcon->current.boolean )
-	{
-		unsigned char *ip = from.ip;
-	
-		if ( !( ip[0] == 10 ||                                      // 10.0.0.0 – 10.255.255.255
-			  ( ip[0] == 172 && ( ip[1] >= 16 && ip[1] <= 31 ) ) || // 172.16.0.0 – 172.31.255.255
-			  ( ip[0] == 192 && ip[1] == 168 ) ) )                  // 192.168.0.0 – 192.168.255.255
-		{
-			if ( SVC_ApplyRconLimit(from, badRconPassword) )
-			{
-				LargeLocalDestructor(&buf);
-				return;
-			}
-		}
-	}
-	else
+	if ( sv_limitLocalRcon->current.boolean || !IsLocalIPAddress(from.ip) )
 	{
 		if ( SVC_ApplyRconLimit(from, badRconPassword) )
 		{
@@ -4454,7 +4292,7 @@ void custom_SV_GetChallenge(netadr_t from)
 	netadr_t *master;
 
 	/* New: Rate limiting */
-	if ( SVC_ApplyChallengeLimit(from) )
+	if ( SVC_ApplyChallengeLimit(from, OUTBOUND_BUCKET_MAIN) )
 		return;
 	/* New code end */
 
@@ -9221,7 +9059,7 @@ void custom_SV_ConnectionlessPacket(netadr_t from, msg_t *msg)
 		else if ( !I_stricmp(c, "ipAuthorize") )
 		{
 			SV_UpdateLastTimeMasterServerCommunicated(from);
-			hook_SV_AuthorizeIpPacket(from);
+			custom_SV_AuthorizeIpPacket(from);
 		}
 		else if ( !I_stricmp(c, "rcon") )
 		{
@@ -9727,8 +9565,6 @@ public:
 		#if COMPILE_BOTS == 1
 		cracking_hook_function(0x0809676C, (int)custom_SV_BotUserMove);
 		#endif
-
-		cracking_hook_call(0x08095DD6, (int)hook_SV_AuthorizeIpPacket);
 
 		cracking_write_hex(0x0818815C, (char *)"00"); // Removes debug mode restriction from getentbynum
 		cracking_write_hex(0x0815B2A0, (char *)"00"); // Disables warning: "Non-localized %s string is not allowed to have letters in it. Must be changed over to a localized string: \"%s\"\n"

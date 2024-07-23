@@ -1,8 +1,6 @@
 #include "gsc.hpp"
 #include "libcod.hpp"
-
-#include <stdint.h>
-#include <sys/time.h>
+#include "utils.hpp"
 
 const char * getParamTypeAsString(int type)
 {
@@ -44,7 +42,7 @@ const char * stackGetParamTypeAsString(int param)
 	VariableValue *var;
 	var = &scrVmPub.top[-param];
 
-	if ( var->type == 1 ) // pointer to object
+	if ( var->type == 1 ) // Pointer to object
 		return getParamTypeAsString(Scr_GetPointerType(param));
 	else
 		return getParamTypeAsString(var->type);
@@ -821,67 +819,4 @@ int stackGetParamObject(int param, unsigned int *value)
 	*value = var->u.pointerValue;
 
 	return 1;
-}
-
-qboolean IsNullVector(float *vec)
-{
-	return vec[0] == 0.0 && vec[1] == 0.0 && vec[2] == 0.0;
-}
-
-void VectorClampLength(float *vec, double max)
-{
-	double length;
-	double factor;
-	
-	length = VectorLength(vec);
-	if ( length > max )
-	{
-		factor = length / max;
-		vec[0] /= factor;
-		vec[1] /= factor;
-		vec[2] /= factor;
-	}
-}
-
-/**
- * @brief Base time in seconds
- */
-time_t sys_timeBase = 0;
-
-/**
- * @brief Current time in ms, using sys_timeBase as origin
- */
-uint64_t Sys_Milliseconds64(void)
-{
-	struct timeval tp;
-
-	gettimeofday(&tp, NULL);
-
-	if ( !sys_timeBase )
-	{
-		sys_timeBase = tp.tv_sec;
-		return tp.tv_usec / 1000;
-	}
-
-	return (tp.tv_sec - sys_timeBase) * 1000 + tp.tv_usec / 1000;
-}
-
-int getProtocolFromShortVersion(const char *shortVersion)
-{
-	if ( strcmp(shortVersion, "1.0") == 0 )
-		return 115; // 0x73
-	else if ( strcmp(shortVersion, "1.2") == 0 )
-		return 117; // 0x75
-	else
-		return 118; // 0x76, 1.3
-}
-
-const char * getShortVersionFromProtocol(int protocol)
-{
-	switch ( protocol )
-	{
-		case 115: return "1.0"; // 0x73
-		case 117: return "1.2"; // 0x75
-		default: return "1.3"; // 0x76, 118
-	}
 }

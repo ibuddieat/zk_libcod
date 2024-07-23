@@ -1,11 +1,6 @@
 #ifndef _GSC_HPP_
 #define _GSC_HPP_
 
-#define COD2_1_0 210
-#define COD2_1_2 212
-#define COD2_1_3 213
-
-/* default stuff */
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -19,12 +14,12 @@
 #include <execinfo.h> // stacktrace
 #include <stddef.h> // offsetof
 #include <ctype.h> // toupper
-#include <time.h>  // getsystemtime
 #include <sys/time.h> // milliseconds
 #include <sys/stat.h> // fsize
+#include <time.h>  // getsystemtime
 
 #include "config.hpp"
-#include "declarations.hpp" // voron tak reshil :)
+#include "declarations.hpp"
 #include "cracking.hpp"
 #include "functions.hpp"
 
@@ -119,14 +114,6 @@ void Scr_AddFunc(const char *value);
 #define stackPushObject Scr_AddObject
 #define stackPushFunc Scr_AddFunc
 
-#ifndef Q_vsnprintf
-int Q_vsnprintf(char *s0, size_t size, const char *fmt, va_list args);
-#endif
-
-#ifndef strcmp_constant_time
-int strcmp_constant_time(const char *s1, const char *s2);
-#endif
-
 int stackGetParamType(int param);
 const char * stackGetParamTypeAsString(int param);
 
@@ -144,15 +131,5 @@ int stackGetParamObject(int param, unsigned int *value);
 
 xfunction_t Scr_GetCustomFunction(const char **fname, qboolean *fdev);
 xmethod_t Scr_GetCustomMethod(const char **fname, qboolean *fdev);
-
-qboolean IsNullVector(float *vec);
-void VectorClampLength(float *vec, double max);
-
-uint64_t Sys_Milliseconds64(void);
-
-int getProtocolFromShortVersion(const char *shortVersion);
-const char * getShortVersionFromProtocol(int protocol);
-
-char * custom_va(const char *format, ...);
 
 #endif

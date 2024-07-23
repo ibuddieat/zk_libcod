@@ -141,7 +141,7 @@ Added dvars:
   * `sv_kickGamestateLimitedClients`
     * Type: Boolean
     * Default: True
-    * Effect: Kick clients that do not support enough gamestate data for the current mod to function properly (usually only affecting players on versions 1.0 or 1.2). If set to false, the players can connect, but will most probably have some shaders displayed incorrectly (in an optimal case).
+    * Effect: Kick clients that do not support enough gamestate data for the current mod to function properly (usually only affecting players on game versions 1.0 or 1.2). If set to false, the players can connect, but will most probably have some shaders displayed incorrectly (in an optimal case).
   * `sv_kickMessages`
     * Type: Boolean
     * Default: True
@@ -183,6 +183,46 @@ Added dvars:
         * and the jump_... dvars if jump.cpp is compiled.
       * If set to 2 or greater, also overrides jump-related dvars set in jump.cpp.
       * If set to 3, also overrides download-related dvars set in libcod.cpp. Note that sending these dvars this way is too late to auto-enable downloading right on a client's first connect. Instead, a reconnect is necessary for the client then, if downloading was not enabled already in the first place.
+  * `sv_proxiesVisibleForTrackers`
+    * Type: Boolean
+    * Default: False
+    * Effect: Toggle whether game info requests coming from known trackers should be answered by proxied ports (see the sv_proxyEnable dvars).
+  * `sv_proxyAddress_1_0`
+    * Type: String
+    * Default: "0.0.0.0:28960"
+    * Effect: Hostname and port the proxy socket for game version 1.0 should listen to (see sv_proxyEnable_1_0 dvar).
+  * `sv_proxyAddress_1_2`
+    * Type: String
+    * Default: "0.0.0.0:28961"
+    * Effect: Hostname and port the proxy socket for game version 1.2 should listen to (see sv_proxyEnable_1_2 dvar).
+  * `sv_proxyAddress_1_3`
+    * Type: String
+    * Default: "0.0.0.0:28962"
+    * Effect: Hostname and port the proxy socket for game version 1.3 should listen to (see sv_proxyEnable_1_3 dvar).
+  * `sv_proxyEnable_1_0`
+    * Type: Boolean
+    * Default: False
+    * Effect: Allows to open another (proxy) port that is advertised to the master server to show up as game version 1.0 in the ingame server browser. Has no effect if sv_version is already set to "1.0".
+  * `sv_proxyEnable_1_2`
+    * Type: Boolean
+    * Default: False
+    * Effect: Allows to open another (proxy) port that is advertised to the master server to show up as game version 1.2 in the ingame server browser. Has no effect if sv_version is already set to "1.2".
+  * `sv_proxyEnable_1_3`
+    * Type: Boolean
+    * Default: False
+    * Effect: Allows to open another (proxy) port that is advertised to the master server to show up as game version 1.3 in the ingame server browser. Has no effect if sv_version is already set to "1.3".
+  * `sv_proxyForwardAddress_1_0`
+    * Type: String
+    * Default: "&lt;net_ip&gt;:&lt;net_port&gt;"
+    * Effect: Destination hostname and port the proxy socket for game version 1.0 should forward packets to (see sv_proxyAddress_1_0 dvar).
+  * `sv_proxyForwardAddress_1_2`
+    * Type: String
+    * Default: "&lt;net_ip&gt;:&lt;net_port&gt;"
+    * Effect: Destination hostname and port the proxy socket for game version 1.2 should forward packets to (see sv_proxyAddress_1_2 dvar).
+  * `sv_proxyForwardAddress_1_3`
+    * Type: String
+    * Default: "&lt;net_ip&gt;:&lt;net_port&gt;"
+    * Effect: Destination hostname and port the proxy socket for game version 1.3 should forward packets to (see sv_proxyAddress_1_3 dvar).
   * `sv_reservedConfigstringBufferSize`
     * Type: Integer
     * Default: 256
@@ -200,7 +240,7 @@ Added dvars:
   * `sv_version`
     * Type: String
     * Default: "1.3"
-    * Effect: Controls the server's game version as announced to the master server and returned in server info and status requests. Also, when using version 1.0, the maps `mp_rhine` and `mp_harbor` are not available via manymaps unless added as standalone maps (like other custom maps).
+    * Effect: Controls the server's game version as announced to the master server and returned in server info and status requests. Also, when using version 1.0, the maps `mp_rhine` and `mp_harbor` are not available via manymaps unless added as standalone maps (like other custom maps). Requires a map reload after being changed. Recommended to be kept on "1.3" if the sv_proxy dvars are used to start proxies.
   * `sv_wwwDlDisconnectedMessages`
     * Type: Integer
     * Default: 1

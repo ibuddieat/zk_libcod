@@ -1,8 +1,8 @@
 #ifndef _GSC_UTILS_HPP_
 #define _GSC_UTILS_HPP_
 
-/* gsc functions */
 #include "gsc.hpp"
+#include "libcod.hpp"
 
 void Sys_AnsiColorPrint(const char *msg);
 

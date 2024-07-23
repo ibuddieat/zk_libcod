@@ -1,5 +1,6 @@
+char * custom_va(const char *format, ...);
 void manymaps_cleanup(void);
-bool SVC_ApplyConnectLimit(netadr_t from);
+bool SVC_SpamCallback(const char *str, const char *ip);
 void custom_Bullet_Fire_ApplyDropDrag(droppingBullet_t *bullet);
 void custom_Bullet_Drop_Free(int clientNum, droppingBullet_t *bullet);
 void custom_Bullet_Fire_Drop_Think(int clientNum, droppingBullet_t *bullet);

@@ -78,6 +78,9 @@ static const Sys_GetValue_t Sys_GetValue = (Sys_GetValue_t)0x080D6BC0;
 typedef qboolean (*Sys_IsLANAddress_t)(netadr_t adr);
 static const Sys_IsLANAddress_t Sys_IsLANAddress = (Sys_IsLANAddress_t)0x080D5638;
 
+typedef qboolean (*Sys_StringToSockaddr_t)(const char *s, struct sockaddr_in *sadr);
+static const Sys_StringToSockaddr_t Sys_StringToSockaddr = (Sys_StringToSockaddr_t)0x080D5254;
+
 typedef void (*Sys_LeaveCriticalSectionInternal_t)(int section);
 static const Sys_LeaveCriticalSectionInternal_t Sys_LeaveCriticalSectionInternal = (Sys_LeaveCriticalSectionInternal_t)0x080D6864;
 
@@ -249,6 +252,9 @@ static const Dvar_ResetScriptInfo_t Dvar_ResetScriptInfo = (Dvar_ResetScriptInfo
 typedef char * (*Dvar_InfoString_t)(unsigned short bit);
 static const Dvar_InfoString_t Dvar_InfoString = (Dvar_InfoString_t)0x08064188;
 
+typedef char * (*Dvar_InfoString_Big_t)(unsigned short bit);
+static const Dvar_InfoString_Big_t Dvar_InfoString_Big = (Dvar_InfoString_Big_t)0x080641EA;
+
 typedef DvarValue (*Dvar_StringToValue_t)(const DvarType type, const DvarLimits domain, const char *string);
 static const Dvar_StringToValue_t Dvar_StringToValue = (Dvar_StringToValue_t)0x080B1E18;
 
@@ -272,6 +278,12 @@ static const SV_VerifyIwds_f_t SV_VerifyIwds_f = (SV_VerifyIwds_f_t)0x08090534;
 
 typedef void (*SV_UserMove_t)(client_t *cl, msg_t *msg, qboolean delta);
 static const SV_UserMove_t SV_UserMove = (SV_UserMove_t)0x08090E34;
+
+typedef void (*NetadrToSockadr_t)(netadr_t *a, struct sockaddr_in *s);
+static const NetadrToSockadr_t NetadrToSockadr = (NetadrToSockadr_t)0x080D5160;
+
+typedef void (*SockadrToNetadr_t)(struct sockaddr_in *s, netadr_t *a);
+static const SockadrToNetadr_t SockadrToNetadr = (SockadrToNetadr_t)0x080D51DE;
 
 typedef int (*NET_CompareBaseAdr_t)(netadr_t a,netadr_t b);
 static const NET_CompareBaseAdr_t NET_CompareBaseAdr = (NET_CompareBaseAdr_t)0x0806C424;
@@ -332,6 +344,9 @@ static const SV_ClientCommand_t SV_ClientCommand = (SV_ClientCommand_t)0x08090BA
 
 typedef void (*SV_SendClientGameState_t)(client_t *cl);
 static const SV_SendClientGameState_t SV_SendClientGameState = (SV_SendClientGameState_t)0x0808F302;
+
+typedef netadr_t * (*SV_MasterAddress_t)(void);
+static const SV_MasterAddress_t SV_MasterAddress = (SV_MasterAddress_t)0x08096E0C;
 
 typedef void (*SV_UpdateLastTimeMasterServerCommunicated_t)(netadr_t from);
 static const SV_UpdateLastTimeMasterServerCommunicated_t SV_UpdateLastTimeMasterServerCommunicated = (SV_UpdateLastTimeMasterServerCommunicated_t)0x0808CF40;
@@ -404,6 +419,9 @@ static const SV_GetConfigstringConst_t SV_GetConfigstringConst = (SV_GetConfigst
 
 typedef void (*SV_FreeConfigstrings_t)(void);
 static const SV_FreeConfigstrings_t SV_FreeConfigstrings = (SV_FreeConfigstrings_t)0x080932B6;
+
+typedef void (*SV_SetConfig_t)(int start, int max, unsigned short bit);
+static const SV_SetConfig_t SV_SetConfig = (SV_SetConfig_t)0x0806412C;
 
 typedef void (*SV_SetConfigstring_t)(int index, const char *val);
 static const SV_SetConfigstring_t SV_SetConfigstring = (SV_SetConfigstring_t)0x08092780;

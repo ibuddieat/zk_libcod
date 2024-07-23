@@ -44,6 +44,7 @@ The extension requires the [server binary for version 1.3](cod2_lnxded) to be us
 ### 🔗 Other important references
 - [\*.ZK.\* Zombie Knights](https://discord.gg/f9uS49Hhcs)
 - [Call of Duty Extended](https://github.com/xtnded/codextended)
+- [CoD2 Proxy Server](https://github.com/filthyfreak/CoD2_Proxy_Server)
 - [CoD4x Server](https://github.com/callofduty4x/CoD4x_Server)
 - [Enemy-Territory](https://github.com/id-Software/Enemy-Territory)
 - [Ghidra](https://github.com/NationalSecurityAgency/ghidra)

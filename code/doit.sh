@@ -9,12 +9,9 @@
 
 cc="g++"
 options="-I. -m32 -fPIC -Wall"
-# -g -ggdb -O0 // debug build without optimization
-# -Wno-write-strings // not full warnings
-
 mysql_variant=0
 
-if [ "$1" != "clean" ] && [ "$1" != "nomysql" ]; then
+if [ "$1" != "clean" ] && [ "$1" != "nomysql" ] && [ "$2" != "nomysql" ] && [ "$3" != "nomysql" ]; then
 	read -rsp $'\nChoose Your MySQL variant:\n
 	0. MySQL disabled. (default)\n
 	1. Default MySQL variant: A classic MySQL implementation
@@ -73,7 +70,7 @@ else
 	else
 		debug=""
 	fi
-	set -- "cod2_1_3"
+	set -- "cod2"
 fi
 
 if [ -f extra/functions.hpp ]; then
@@ -164,11 +161,20 @@ fi
 echo "##### COMPILE $1 LIBCOD.CPP #####"
 $cc $debug $options $constants -c libcod.cpp -o objects_$1/libcod.opp
 
+echo "##### COMPILE $1 PROXY.C #####"
+$cc $debug $options $constants -c proxy/proxy.c -o objects_"$1"/proxy.opp
+
 echo "##### COMPILE $1 QVSNPRINTF.C #####"
 $cc $debug $options $constants -c lib/qvsnprintf.c -o objects_"$1"/qvsnprintf.opp
 
+echo "##### COMPILE $1 RATELIMITER.CPP #####"
+$cc $debug $options $constants -c ratelimiter.cpp -o objects_"$1"/ratelimiter.opp
+
 echo "##### COMPILE $1 STRCMP_CONSTANT_TIME.C #####"
 $cc $debug $options $constants -c lib/strcmp_constant_time.c -o objects_"$1"/strcmp_constant_time.opp
+
+echo "##### COMPILE $1 UTILS.CPP #####"
+$cc $debug $options $constants -c utils.cpp -o objects_"$1"/utils.opp
 
 if [ -d extra ]; then
 	echo "##### COMPILE $1 EXTRAS #####"
