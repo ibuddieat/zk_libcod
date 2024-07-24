@@ -7,16 +7,15 @@
 
 #include "proxy.h"
 
+#include <arpa/inet.h>
+#include <errno.h>
+#include <netdb.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <pthread.h>
-#include <signal.h>
-#include <errno.h>
-#include <netdb.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 #define TIMEOUT_SECONDS 240
 #define MAX_BUFFER_SIZE 65536
@@ -24,6 +23,7 @@
 char HEARTBEAT_MESSAGE[] = "\xFF\xFF\xFF\xFFheartbeat COD-2";
 char HEARTBEAT_STOP_MESSAGE[] = "\xFF\xFF\xFF\xFFheartbeat flatline";
 char AUTHORIZE_MESSAGE[] = "\xFF\xFF\xFF\xFFgetIpAuthorize";
+char DISCONNECT_MESSAGE[] = "\xFF\xFF\xFF\xFF""error\nEXE_DISCONNECTED_FROM_SERVER";
 
 dvar_t *sv_proxiesVisibleForTrackers;
 dvar_t *sv_proxyAddress_1_0;
@@ -46,23 +46,11 @@ extern dvar_t *sv_masterPort;
 extern dvar_t *sv_masterServer;
 extern dvar_t *sv_version;
 
-typedef struct
-{
-	int s_client;
-	pthread_t thread;
-} ThreadInfo;
-
-typedef struct
-{
-	int activeClient;
-	struct sockaddr_in addr;
-	Proxy_t *proxy;
-	int *s_client;
-	int src_port;
-} ListenThreadArgs;
+extern leakyBucket_t outboundLeakyBuckets[OUTBOUND_BUCKET_MAX];
 
 // Max. two proxies, in addition to the main server port
-Proxy_t proxies[2];
+#define MAX_PROXIES 2
+Proxy_t proxies[MAX_PROXIES];
 
 // Flag stating whether a proxy has been started, so that we know that they do
 // not have to be started again and that they need to be freed on server quit
@@ -121,6 +109,63 @@ void ToLowerCase(char *str)
 	}
 }
 
+const char * InfoValueForKey(const char *s, const char *key, Proxy_t *proxy)
+{
+	char pkey[8192];
+	static char value[MAX_PROXIES][2][8192]; // Use two buffers so that
+	// comparisons that call the function twice work without stomping on each
+	// other's buffers - for each thread
+	static int valueindex = 0; 
+	int proxyindex = proxy - &proxies[0];
+	char *o;
+
+	if ( !s || !key )
+	{
+		return "";
+	}
+
+	if ( strlen( s ) >= 8192 )
+	{
+		Com_Error(ERR_FATAL, "InfoValueForKey: oversize infostring" );
+	}
+
+	while ( *s && *s != '\\' )
+		s++;
+
+	if ( *s == '\\' )
+		s++;
+
+	while ( 1 )
+	{
+		o = pkey;
+		while ( *s != '\\' )
+		{
+			if ( !*s )
+				return "";
+			*o++ = *s++;
+		}
+		*o = 0;
+		s++;
+
+		o = value[proxyindex][valueindex];
+
+		while ( *s != '\\' && *s )
+		{
+			*o++ = *s++;
+		}
+		*o = 0;
+
+		if ( !I_stricmp(key, pkey) )
+			return value[proxyindex][valueindex];
+
+		if ( !*s )
+			break;
+		s++;
+	}
+
+	return "";
+}
+
 void ReplaceProtocolString(char *buffer, Proxy_t *proxy)
 {
 	const char *proxyProtocolString = custom_va("\\protocol\\%d", proxy->version);
@@ -141,7 +186,7 @@ void ReplaceShortversionString(char *buffer, Proxy_t *proxy)
 
 void SV_ResetProxiesInformation()
 {
-	memset(&proxies, 0, sizeof(Proxy_t) * 2);
+	memset(&proxies, 0, sizeof(Proxy_t) * MAX_PROXIES);
 }
 
 void SV_ConfigureProxy(Proxy_t *proxy, const char *versionString, const char *address, const char *forwardAddress, int parentVersion)
@@ -174,19 +219,28 @@ void SV_ShutdownProxies()
 		int i;
 		Proxy_t *proxy;
 
-		for ( i = 0; i < 2; i++ )
+		for ( i = 0; i < MAX_PROXIES; i++ )
 		{
 			proxy = &proxies[i];
 			if ( proxy->enabled && proxy->started )
 			{
 				printf("> [LIBCOD] Proxy: Shutting down proxy for version %s on port %d\n", proxy->versionString, BigShort(proxy->listenAdr.port));
 
+				// Stop thread for announcements to master server
 				if ( proxy->masterServerThread )
 					pthread_cancel(*proxy->masterServerThread);
 
+				// Tell the master server that we've gone offline. Should fix
+				// a potential issue where this server might not show up in the
+				// ingame browser list after being restarted
+				if ( proxy->masterSockAdr )
+					sendto(proxy->socket, HEARTBEAT_STOP_MESSAGE, strlen(HEARTBEAT_MESSAGE), 0, (struct sockaddr *)proxy->masterSockAdr, sizeof(struct sockaddr_in));
+
+				// Stop main proxy thread that accepts new clients
 				if ( proxy->mainThread )
 					pthread_cancel(proxy->mainThread);
 
+				// Cleanup main socket
 				if ( proxy->socket )
 					close(proxy->socket);
 			}
@@ -242,7 +296,7 @@ void SV_SetupProxies()
 	int i;
 	Proxy_t *proxy;
 
-	for ( i = 0; i < 2; i++ )
+	for ( i = 0; i < MAX_PROXIES; i++ )
 	{
 		proxy = &proxies[i];
 		if ( proxy->enabled )
@@ -303,7 +357,7 @@ void * SV_StartProxy(void *threadArgs)
 
 	Com_Printf("Proxy server listening on port %d for version %s\n", BigShort(proxy->listenAdr.port), proxy->versionString);
 
-	ThreadInfo clientThreadInfo[65536];
+	ProxyClientThreadInfo clientThreadInfo[65536];
 	memset(clientThreadInfo, -1, sizeof(clientThreadInfo));
 
 	while ( 1 )
@@ -351,14 +405,22 @@ void * SV_StartProxy(void *threadArgs)
 				continue;
 
 			// Prevent IP spoofing via userinfo IP client dvar
-			if ( strstr(lowerCaseBuffer + 11, "\\ip\\") )
+			if ( strlen(InfoValueForKey(lowerCaseBuffer + 11, "ip", proxy)) )
 			{
-				// The ip string was found, but it could also be that:
-				// - The player's provided g_password equals "ip"
-				// - The player's name equals "ip"
-				// A thread-safe variant of Info_ValueForKey would ease a fix.
-				// Affected clients stay in the "Awaiting challenge..." screen
 				Com_Printf("Proxy: Potential IP spoofing attempt from %s\n", inet_ntoa(addr.sin_addr));
+
+				// Prevent excess outbound bandwidth usage when being flooded inbound
+				if ( SVC_RateLimit(&outboundLeakyBuckets[proxy->bucket], 10, 100) )
+				{
+					// In theory clients stay in the "Awaiting challenge..."
+					// screen, but the disconnect messages that make it through
+					// every now and then will still cause a normal disconnect
+					Com_DPrintf("Proxy: IP spoofing disconnect rate limit exceeded, dropping response\n");
+					continue;
+				}
+
+				// Cause disconnect on the client side
+				sendto(listenerSocket, DISCONNECT_MESSAGE, sizeof(DISCONNECT_MESSAGE), 0, (struct sockaddr *)&addr, sizeof(addr));
 				continue;
 			}
 
@@ -428,7 +490,7 @@ void * SV_StartProxy(void *threadArgs)
 				tv.tv_usec = 0;
 				setsockopt(s_client, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
 
-				ThreadInfo t_info;
+				ProxyClientThreadInfo t_info;
 				t_info.s_client = s_client;
 				clientThreadInfo[clientIndex] = t_info;
 				proxy->numClients++;
@@ -438,7 +500,7 @@ void * SV_StartProxy(void *threadArgs)
 
 				sendto(s_client, buffer, bytes_received, 0, (struct sockaddr *)&forwarderAddr, sizeof(forwarderAddr));
 
-				ListenThreadArgs *args = (ListenThreadArgs *)malloc(sizeof(ListenThreadArgs));
+				ProxyClientThreadArgs *args = (ProxyClientThreadArgs *)malloc(sizeof(ProxyClientThreadArgs));
 				args->addr = addr;
 				args->s_client = &(clientThreadInfo[clientIndex].s_client);
 				args->src_port = ntohs(addr.sin_port);
@@ -483,6 +545,7 @@ void * SV_ProxyMasterServerLoop(void *threadArgs)
 	Sys_StringToSockaddr(sv_masterServer->current.string, &masterSockAdr);
 	masterSockAdr.sin_family = AF_INET;
 	masterSockAdr.sin_port = htons(sv_masterPort->current.integer);
+	proxy->masterSockAdr = &masterSockAdr;
 
 	Sys_StringToSockaddr(sv_authorizeServer->current.string, &authorizeSockAdr);
 	authorizeSockAdr.sin_family = AF_INET;
@@ -515,7 +578,7 @@ void * SV_ProxyMasterServerLoop(void *threadArgs)
 
 void * SV_ProxyClientThread(void *threadArgs)
 {
-	ListenThreadArgs *args = (ListenThreadArgs *)threadArgs;
+	ProxyClientThreadArgs *args = (ProxyClientThreadArgs *)threadArgs;
 	Proxy_t *proxy = args->proxy;
 	char client_ip[INET_ADDRSTRLEN];
 

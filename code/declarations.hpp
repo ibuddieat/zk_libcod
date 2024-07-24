@@ -1,6 +1,7 @@
 #ifndef _DECLARATIONS_HPP_
 #define _DECLARATIONS_HPP_
 
+#include <arpa/inet.h>
 #include <setjmp.h>
 
 #define QDECL __attribute__((cdecl))
@@ -4067,6 +4068,7 @@ typedef struct
 	pthread_mutex_t lock;
 	pthread_t mainThread;
 	pthread_t *masterServerThread;
+	struct sockaddr_in *masterSockAdr;
 	int numClients;
 	int parentVersion;
 	const char *parentVersionString;
@@ -4075,3 +4077,18 @@ typedef struct
 	int version;
 	const char *versionString;
 } Proxy_t;
+
+typedef struct
+{
+	int s_client;
+	pthread_t thread;
+} ProxyClientThreadInfo;
+
+typedef struct
+{
+	int activeClient;
+	struct sockaddr_in addr;
+	Proxy_t *proxy;
+	int *s_client;
+	int src_port;
+} ProxyClientThreadArgs;
