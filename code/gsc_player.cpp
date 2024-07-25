@@ -3019,13 +3019,13 @@ void gsc_player_sethiddenfromscroreboard(scr_entref_t ref)
 	stackPushBool(qtrue);
 }
 
-void gsc_player_gethiddenfromscroreboard(scr_entref_t ref)
+void gsc_player_ishiddenfromscroreboard(scr_entref_t ref)
 {
 	int id = ref.entnum;
 
 	if ( id >= MAX_CLIENTS )
 	{
-		stackError("gsc_player_gethiddenfromscroreboard() entity %i is not a player", id);
+		stackError("gsc_player_ishiddenfromscroreboard() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}

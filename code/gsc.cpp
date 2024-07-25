@@ -447,7 +447,7 @@ scr_method_t scriptMethods[] =
 	{"enableTalkerIcon", gsc_player_enabletalkericon, 0},
 	{"processSuicide", gsc_player_processsuicide, 0},
 	{"setHiddenFromScoreboard", gsc_player_sethiddenfromscroreboard, 0},
-	{"getHiddenFromScoreboard", gsc_player_gethiddenfromscroreboard, 0},
+	{"isHiddenFromScoreboard", gsc_player_ishiddenfromscroreboard, 0},
 	#if COMPILE_CUSTOM_VOICE == 1
 	{"playSoundFile", gsc_player_playsoundfile, 0},
 	{"stopSoundFile", gsc_player_stopsoundfile, 0},
