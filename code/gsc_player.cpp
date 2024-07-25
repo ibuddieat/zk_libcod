@@ -3002,6 +3002,37 @@ void gsc_player_processsuicide(scr_entref_t ref)
 	player_die(pSelf, pSelf, pSelf, 100000, MOD_SUICIDE, 0, 0, HITLOC_NONE, 0);
 }
 
+void gsc_player_sethiddenfromscroreboard(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_sethiddenfromscroreboard() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	qboolean hidden = Scr_GetInt(0);
+	customPlayerState[id].hiddenFromScoreboard = hidden;
+
+	stackPushBool(qtrue);
+}
+
+void gsc_player_gethiddenfromscroreboard(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_gethiddenfromscroreboard() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushBool(customPlayerState[id].hiddenFromScoreboard);
+}
+
 #if COMPILE_CUSTOM_VOICE == 1
 
 extern VoicePacket_t voiceDataStore[MAX_CUSTOMSOUNDS][MAX_STOREDVOICEPACKETS];

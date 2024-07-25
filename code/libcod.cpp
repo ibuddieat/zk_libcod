@@ -1671,6 +1671,78 @@ void invalid_password(client_t *client)
 	CalculateRanks();
 }
 
+void custom_DeathmatchScoreboardMessage(gentity_t *ent)
+{
+	int ping;
+	int clientNum;
+	int numSorted;
+	gclient_t *client;
+	int len;
+	int i;
+	int stringlength;
+	char string[1400];
+	char entry[1024];
+	int visiblePlayers; // New: Used for ability to hide players in scoreboard
+
+	string[0] = 0;
+	stringlength = 0;
+	visiblePlayers = 0;
+
+	numSorted = level.numConnectedClients;
+
+	if ( level.numConnectedClients > MAX_CLIENTS )
+		numSorted = MAX_CLIENTS;
+
+	for ( i = 0; i < numSorted; ++i )
+	{
+		clientNum = level.sortedClients[i];
+		client = &level.clients[clientNum];
+
+		/* New code: Ability to hide players in scoreboard */
+		if ( customPlayerState[clientNum].hiddenFromScoreboard )
+			continue;
+		/* New code end */
+
+		if ( client->sess.connected == CON_CONNECTING )
+		{
+			Com_sprintf(
+			    entry,
+			    0x400u,
+			    " %i %i %i %i %i",
+			    level.sortedClients[i],
+			    client->sess.score,
+			    -1,
+			    client->sess.deaths,
+			    client->sess.statusIcon);
+		}
+		else
+		{
+			ping = SV_GetClientPing(clientNum);
+
+			Com_sprintf(
+			    entry,
+			    0x400u,
+			    " %i %i %i %i %i",
+			    level.sortedClients[i],
+			    client->sess.score,
+			    ping,
+			    client->sess.deaths,
+			    client->sess.statusIcon);
+		}
+
+		len = strlen(entry);
+
+		if ( stringlength + len > 1024 )
+			break;
+
+		strcpy(&string[stringlength], entry);
+		stringlength += len;
+		visiblePlayers++;
+	}
+
+	SV_GameSendServerCommand(ent - g_entities, SV_CMD_RELIABLE, custom_va("b %i %i %i%s", visiblePlayers, level.teamScores[1], level.teamScores[2], string));
+}
+
 void custom_SV_DropClient(client_t *drop, const char *reason)
 {
 	int i;
@@ -9549,6 +9621,7 @@ public:
 		cracking_hook_function(0x0809537C, (int)custom_SVC_Info);
 		cracking_hook_function(0x080B4ADA, (int)custom_Dvar_SetFromStringFromSource);
 		cracking_hook_function(0x08096E0C, (int)custom_SV_MasterAddress);
+		cracking_hook_function(0x080FDF08, (int)custom_DeathmatchScoreboardMessage);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC718, (int)Jump_ClearState);

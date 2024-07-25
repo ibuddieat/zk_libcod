@@ -4015,6 +4015,7 @@ typedef struct customPlayerState_s
 	resourceLimitedState_t resourceLimitedState;
 	char preProxyIP[16];
 	unsigned int weapon;
+	qboolean hiddenFromScoreboard;
 } customPlayerState_t;
 
 typedef struct callback_s

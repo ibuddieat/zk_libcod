@@ -50,6 +50,7 @@ New script code methods:
   * `<player> getRemainingSoundFileDuration()`
   * `<player> getServerCommandQueueSize()`
   * `<player> getViewOrigin()`
+  * `<player> isHiddenFromScoreboard()`
   * `<player> isPlayingSoundFile()`
   * `<player> isReloading()`
   * `<player> isThrowingGrenade()`
@@ -78,6 +79,7 @@ New script code methods:
   * `<player> setCurrentWeaponClipAmmo(<value>)`
   * `<player> setFireRangeScale(<scale>)`
   * `<player> setFireThroughWalls(<enabled>)`
+  * `<player> setHiddenFromScoreboard(<enabled>)`
   * `<player> setMeleeHeightScale(<scale>)`
   * `<player> setMeleeRangeScale(<scale>)`
   * `<player> setMeleeWidthScale(<scale>)`

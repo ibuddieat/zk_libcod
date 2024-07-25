@@ -1383,6 +1383,9 @@ static const OnSameTeam_t OnSameTeam = (OnSameTeam_t)0x0811C0D0;
 typedef void (*TeleportPlayer_t)(gentity_t *player, float *origin, float *angles);
 static const TeleportPlayer_t TeleportPlayer = (TeleportPlayer_t)0x0810A708;
 
+typedef int (*SV_GetClientPing_t)(int clientNum);
+static const SV_GetClientPing_t SV_GetClientPing = (SV_GetClientPing_t)0x08092456;
+
 typedef int (*unzGetGlobalInfo_t)(unzFile file, unz_global_info *pglobal_info);
 static const unzGetGlobalInfo_t unzGetGlobalInfo = (unzGetGlobalInfo_t)0x080D22A1;
 
