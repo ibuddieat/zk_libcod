@@ -9131,6 +9131,7 @@ void custom_SV_ConnectionlessPacket(netadr_t from, msg_t *msg)
 		else if ( !I_stricmp(c, "ipAuthorize") )
 		{
 			SV_UpdateLastTimeMasterServerCommunicated(from);
+			// New: Replaced call to original SV_AuthorizeIpPacket
 			custom_SV_AuthorizeIpPacket(from);
 		}
 		else if ( !I_stricmp(c, "rcon") )
