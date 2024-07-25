@@ -39,9 +39,9 @@ dvar_t *sv_proxyForwardAddress_1_3;
 extern dvar_t *fs_game;
 extern dvar_t *net_ip;
 extern dvar_t *net_port;
-extern dvar_t *sv_logHeartbeats;
 extern dvar_t *sv_authorizePort;
 extern dvar_t *sv_authorizeServer;
+extern dvar_t *sv_logHeartbeats;
 extern dvar_t *sv_masterPort;
 extern dvar_t *sv_masterServer;
 extern dvar_t *sv_version;
@@ -234,7 +234,7 @@ void SV_ShutdownProxies()
 				// a potential issue where this server might not show up in the
 				// ingame browser list after being restarted
 				if ( proxy->masterSockAdr )
-					sendto(proxy->socket, HEARTBEAT_STOP_MESSAGE, strlen(HEARTBEAT_MESSAGE), 0, (struct sockaddr *)proxy->masterSockAdr, sizeof(struct sockaddr_in));
+					sendto(proxy->socket, HEARTBEAT_STOP_MESSAGE, strlen(HEARTBEAT_STOP_MESSAGE), 0, (struct sockaddr *)proxy->masterSockAdr, sizeof(struct sockaddr_in));
 
 				// Stop main proxy thread that accepts new clients
 				if ( proxy->mainThread )
