@@ -448,6 +448,8 @@ scr_method_t scriptMethods[] =
 	{"processSuicide", gsc_player_processsuicide, 0},
 	{"setHiddenFromScoreboard", gsc_player_sethiddenfromscroreboard, 0},
 	{"isHiddenFromScoreboard", gsc_player_ishiddenfromscroreboard, 0},
+	{"setAllowSpectators", gsc_player_setallowspectators, 0},
+	{"isAllowingSpectators", gsc_player_isallowingspectators, 0},
 	#if COMPILE_CUSTOM_VOICE == 1
 	{"playSoundFile", gsc_player_playsoundfile, 0},
 	{"stopSoundFile", gsc_player_stopsoundfile, 0},

@@ -8879,6 +8879,9 @@ int custom_Cmd_FollowCycle_f(gentity_t *ent, int dir)
 			if ( client->bIsTestClient && !g_spectateBots->current.boolean )
 				continue;
 			
+			if ( customPlayerState[clientNum].notAllowingSpectators )
+				continue;
+
 			ent->client->spectatorClient = clientNum;
 			ent->client->sess.sessionState = STATE_SPECTATOR;
 			return 1;

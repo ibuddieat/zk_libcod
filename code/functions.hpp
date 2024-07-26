@@ -963,6 +963,9 @@ static const G_GetClientState_t G_GetClientState = (G_GetClientState_t)0x08108E7
 typedef qboolean (*GetFollowPlayerState_t)(int clientNum, playerState_t *ps);
 static const GetFollowPlayerState_t GetFollowPlayerState = (GetFollowPlayerState_t)0x080F6DEA;
 
+typedef void (*StopFollowing_t)(gentity_t *player);
+static const StopFollowing_t StopFollowing = (StopFollowing_t)0x080FF252;
+
 typedef svEntity_t * (*SV_SvEntityForGentity_t)(gentity_t *gEnt);
 static const SV_SvEntityForGentity_t SV_SvEntityForGentity = (SV_SvEntityForGentity_t)0x08091734;
 

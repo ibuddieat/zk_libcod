@@ -9,6 +9,7 @@
 extern customPlayerState_t customPlayerState[MAX_CLIENTS];
 extern customStringIndex_t custom_scr_const;
 extern dvar_t *g_antilag;
+extern dvar_t *sv_maxclients;
 
 void gsc_player_getprotocol(scr_entref_t ref)
 {
@@ -3031,6 +3032,52 @@ void gsc_player_ishiddenfromscroreboard(scr_entref_t ref)
 	}
 
 	stackPushBool(customPlayerState[id].hiddenFromScoreboard);
+}
+
+void gsc_player_setallowspectators(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_setallowspectators() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	qboolean allowed;
+	gentity_t *player;
+	int i;
+	
+	allowed = Scr_GetInt(0);
+	customPlayerState[id].notAllowingSpectators = !allowed;
+
+	// Stop spectating for players that already spectate the target
+	for ( i = 0; i < sv_maxclients->current.integer; i++ )
+	{
+		if ( i == id )
+			continue;
+		
+		player = &g_entities[i];
+		if ( player->client->spectatorClient == id )
+			StopFollowing(player);
+	}
+
+	stackPushBool(qtrue);
+}
+
+void gsc_player_isallowingspectators(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_isallowingspectators() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushBool(!customPlayerState[id].notAllowingSpectators);
 }
 
 #if COMPILE_CUSTOM_VOICE == 1

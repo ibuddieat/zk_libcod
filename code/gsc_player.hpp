@@ -121,6 +121,8 @@ void gsc_player_enabletalkericon(scr_entref_t ref);
 void gsc_player_processsuicide(scr_entref_t ref);
 void gsc_player_sethiddenfromscroreboard(scr_entref_t ref);
 void gsc_player_ishiddenfromscroreboard(scr_entref_t ref);
+void gsc_player_setallowspectators(scr_entref_t ref);
+void gsc_player_isallowingspectators(scr_entref_t ref);
 #if COMPILE_CUSTOM_VOICE == 1
 void gsc_player_playsoundfile(scr_entref_t ref);
 void gsc_player_stopsoundfile(scr_entref_t ref);

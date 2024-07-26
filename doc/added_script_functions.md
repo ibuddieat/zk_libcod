@@ -24,6 +24,7 @@ New script code methods:
   * `<entity> setMaxEntityVelocity(<velocity>)`
   * `<entity> setLight(<red>, <green>, <blue>, <intensity>)`
   * `<entity> spawnGrenade(<weapon>, <origin>, [<direction>], [<velocity>], [<fuseTime>])`
+  * `<player> isAllowingSpectators()`
   * `<player> canUseTurret(<turret>)`
   * `<player> disableBulletDrop()`
   * `<player> disableBulletImpacts()`
@@ -69,6 +70,7 @@ New script code methods:
   * `<player> playSoundFile(<sound index>, [<offset>], [<source player>])`
   * `<player> playScriptAnimation(<scriptAnimEventType>, <isContinue>, <force>)`
   * `<player> processSuicide()`
+  * `<player> setAllowSpectators(<allow>)`
   * `<player> setBulletDrag(<value>)`
   * `<player> setBulletMask(<mask>)`
   * `<player> setBulletModel(<model>, [<time>])`
