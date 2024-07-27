@@ -1,0 +1,24 @@
+name: "Build & Test"
+
+on:
+  push:
+    branches: [ "dev" ]
+  pull_request:
+    branches: [ "dev" ]
+
+jobs:
+  ubuntu-mysql1-nospeex:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+    - name: "Install Dependencies"
+      run: |
+        sudo dpkg --add-architecture i386
+        sudo apt-get update
+        sudo apt-get install gcc-multilib g++-multilib libstdc++5:i386 libmysqlclient-dev:i386
+    - name: "Build"
+      run: |
+        cd code
+        ./doit.sh mysql1 nospeex
+    - name: "Test"
+      run: if ! OUTPUT=$({ LD_PRELOAD=./code/bin/libcod2.so ./cod2_lnxded 1>&2; } 2>&1) && echo $OUTPUT | grep 'Unloaded extension' > /dev/null; then (exit 0); else (exit 1); fi
