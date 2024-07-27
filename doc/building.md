@@ -1,8 +1,7 @@
 ## Build environment and supported platforms
-- gcc (Ubuntu 11.3.0-1ubuntu1~22.04) 11.3.0 (with Speex)
+- gcc (Ubuntu 12.3.0-1ubuntu1~22.04) 12.3.0 (with Speex)
 - gcc (Debian 10.2.1-6) 10.2.1
 - gcc (Ubuntu 9.4.0-1ubuntu1~20.04.1) 9.4.0
-- gcc (Ubuntu 7.5.0-3ubuntu1~18.04) 7.5.0 (with Speex)
 > [!NOTE]
 > This list is not exhaustive and newer versions might work as well.
 
@@ -55,11 +54,11 @@ cd code
 # Alternative: Debug build with Speex
 ./doit.sh debug
 ```
-On success, this creates `libcod2_1_3.so` in `./code/bin`.
+On success, this creates `libcod2.so` in `./code/bin`.
 
 ## Running your server with libcod
 - Short version:
-  - `LD_PRELOAD=./bin/libcod2_1_3.so ./cod2_lnxded +set fs_game ...` etc.
+  - `LD_PRELOAD=./bin/libcod2.so ./cod2_lnxded +set fs_game ...` etc.
 - The details will not be documented here, please refer to:
   - [Libcod discussion threads at Killtube~](https://killtube.org/forumdisplay.php?44-libcod)
   - [Running a cod2 server within docker, with libcod](https://github.com/rutkowski-tomasz/cod2-docker)
