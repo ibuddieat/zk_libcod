@@ -1,26 +1,40 @@
 #!/bin/bash
 
+# Examples:
 # ./doit.sh clean
 # ./doit.sh debug
 # ./doit.sh nospeex
 # ./doit.sh nospeex debug
 # ./doit.sh nomysql
 # ./doit.sh nomysql nospeex debug
+# ./doit.sh mysql1 nospeex debug
+# ./doit.sh mysql2
 
+# Exit on compiler error, with non-zero exit code
+set -e
+
+# Compiler options
 cc="g++"
 options="-I. -m32 -fPIC -Wall"
-mysql_variant=0
 
+# Integrate MySQL? Which variant?
+mysql_variant=0
 if [ "$1" != "clean" ] && [ "$1" != "nomysql" ] && [ "$2" != "nomysql" ] && [ "$3" != "nomysql" ]; then
-	read -rsp $'\nChoose Your MySQL variant:\n
-	0. MySQL disabled. (default)\n
-	1. Default MySQL variant: A classic MySQL implementation
-	made by kungfooman and IzNoGoD. Multiple connections, multiple threads,
-	good for servers that use remote MySQL sessions, IRC stuff, and etc.\n
-	2. VoroN\'s MySQL variant (his own MySQL implementation). Native
-	callbacks, native arguments, single connection, single thread, good
-	for local MySQL session, less cpu usage, less memory usage.\n
-	Press a key to continue...\n' -n1 key
+	if [ "$1" == "mysql1" ] || [ "$2" == "mysql1" ] || [ "$3" == "mysql1" ]; then
+		key='1'
+	elif [ "$1" == "mysql2" ] || [ "$2" == "mysql2" ] || [ "$3" == "mysql2" ]; then
+		key='2'
+	else
+		read -rsp $'\nChoose Your MySQL variant:\n
+		0. MySQL disabled. (default)\n
+		1. Default MySQL variant: A classic MySQL implementation
+		made by kungfooman and IzNoGoD. Multiple connections, multiple threads,
+		good for servers that use remote MySQL sessions, IRC stuff, and etc.\n
+		2. VoroN\'s MySQL variant (his own MySQL implementation). Native
+		callbacks, native arguments, single connection, single thread, good
+		for local MySQL session, less cpu usage, less memory usage.\n
+		Press a key to continue...\n' -n1 key
+	fi
 
 	if [ "$key" = '1' ]; then
 		mysql_variant=1

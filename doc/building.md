@@ -58,7 +58,7 @@ On success, this creates `libcod2.so` in `./code/bin`.
 
 ## Running your server with libcod
 - Short version:
-  - `LD_PRELOAD=./bin/libcod2.so ./cod2_lnxded +set fs_game ...` etc.
+  - `LD_PRELOAD=./code/bin/libcod2.so ./cod2_lnxded +set fs_game ...` etc.
 - The details will not be documented here, please refer to:
   - [Libcod discussion threads at Killtube~](https://killtube.org/forumdisplay.php?44-libcod)
   - [Running a cod2 server within docker, with libcod](https://github.com/rutkowski-tomasz/cod2-docker)
