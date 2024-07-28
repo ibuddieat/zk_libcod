@@ -110,6 +110,7 @@ void gsc_player_objective_player_icon(scr_entref_t ref);
 void gsc_player_objective_player_position(scr_entref_t ref);
 void gsc_player_objective_player_state(scr_entref_t ref);
 void gsc_player_getvieworigin(scr_entref_t ref);
+void gsc_player_setoriginandangles(scr_entref_t ref);
 void gsc_player_getservercommandqueuesize(scr_entref_t ref);
 void gsc_player_setconfigstring(scr_entref_t ref);
 void gsc_player_getcollisionteam(scr_entref_t ref);

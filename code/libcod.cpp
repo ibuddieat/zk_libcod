@@ -5562,7 +5562,7 @@ void custom_G_GetPlayerViewOrigin(gentity_t *ent, float *origin)
 
 	client = ent->client;
 
-	if ( (client->ps.eFlags & EF_USETURRET) != 0 )
+	if ( (client->ps.eFlags & EF_TURRET_STAND) != 0 )
 	{
 		if ( G_DObjGetWorldTagPos(&g_entities[client->ps.viewlocked_entNum], scr_const.tag_player, origin) )
 		{
@@ -5610,13 +5610,13 @@ void custom_G_ClientStopUsingTurret(gentity_t *self)
 	info->fireSndDelay = 0;
 	self->s.loopSound = 0;
 
-	if ( info->prevStance != -1 )
+	if ( info->prevStance != ~WEAPSTANCE_STAND )
 	{
-		if ( info->prevStance == 2 )
+		if ( info->prevStance == WEAPSTANCE_PRONE )
 		{
 			G_AddEvent(owner, EV_STANCE_FORCE_PRONE, 0);
 		}
-		else if ( info->prevStance == 1 )
+		else if ( info->prevStance == WEAPSTANCE_DUCK )
 		{
 			G_AddEvent(owner, EV_STANCE_FORCE_CROUCH, 0);
 		}
@@ -5625,11 +5625,11 @@ void custom_G_ClientStopUsingTurret(gentity_t *self)
 			G_AddEvent(owner, EV_STANCE_FORCE_STAND, 0);
 		}
 
-		info->prevStance = -1;
+		info->prevStance = (weapStance_t)~WEAPSTANCE_STAND;
 	}
 
 	TeleportPlayer(owner, info->userOrigin, owner->r.currentAngles);
-	owner->client->ps.eFlags &= ~EF_USETURRET;
+	owner->client->ps.eFlags &= ~EF_TURRET_STAND;
 	owner->client->ps.viewlocked = PLAYERVIEWLOCK_NONE;
 	owner->client->ps.viewlocked_entNum = ENTITY_NONE;
 	owner->active = 0;
@@ -6012,7 +6012,7 @@ LAB_08121ee6:
 				}
 			}
 		}
-		else if ( ( (client->ps).eFlags & EF_USETURRET ) != 0 )
+		else if ( ( (client->ps).eFlags & EF_TURRET_STAND ) != 0 )
 		{
 			Player_SetTurretDropHint(player);
 		}
@@ -6073,7 +6073,7 @@ void custom_player_die(gentity_t *self, gentity_t *inflictor, gentity_t *attacke
 		{
 			if ( attacker->client )
 			{
-				if ( (attacker->client->ps.eFlags & EF_USETURRET) != 0 )
+				if ( (attacker->client->ps.eFlags & EF_TURRET_STAND) != 0 )
 				{
 					turret = &g_entities[attacker->s.otherEntityNum];
 
@@ -7006,7 +7006,7 @@ void custom_G_DamageClient(gentity_t *self, gentity_t *inflictor, gentity_t *att
 		if ( inflictor )
 		{
 			/* New code start: scr_turretDamageName dvar */
-			if ( scr_turretDamageName->current.boolean && inflictor->s.eFlags & EF_USETURRET )
+			if ( scr_turretDamageName->current.boolean && inflictor->s.eFlags & EF_TURRET_STAND )
 			{
 				gentity_t *turret = &level.gentities[inflictor->client->ps.viewlocked_entNum];
 
@@ -7040,7 +7040,7 @@ void custom_FireWeaponMelee(gentity_t *player)
 	int id;
 	float range, width, height;
 
-	if ( (player->client->ps.eFlags & EF_USETURRET) == 0 || player->active == 0 )
+	if ( (player->client->ps.eFlags & EF_TURRET_STAND) == 0 || player->active == 0 )
 	{
 		id = player->client->ps.clientNum;
 		wp.weapDef = BG_GetWeaponDef(player->s.weapon);
@@ -7683,7 +7683,7 @@ void custom_FireWeaponAntiLag(gentity_t *player, int time)
 	float currentAimSpreadScale;
 	weaponParms wp;
 
-	if ( ((player->client->ps).eFlags & EF_USETURRET) == 0 || player->active == 0 )
+	if ( ((player->client->ps).eFlags & EF_TURRET_STAND) == 0 || player->active == 0 )
 	{
 		wp.weapDef = BG_GetWeaponDef((player->s).weapon);
 		G_CalcMuzzlePoints(player, &wp);

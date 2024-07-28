@@ -152,21 +152,29 @@
 
 // playerState_t->eFlags
 // entityState_t->eFlags
-#define EF_CROUCHING    0x4
-#define EF_PRONE        0x8
-#define EF_FIRING       0x20
-#define EF_USETURRET    0x300
-#define EF_MANTLE       0x4000
-#define EF_TAGCONNECT   0x8000
-#define EF_DEAD         0x20000
-#define EF_AIMDOWNSIGHT 0x40000
-#define EF_VOTED        0x100000
-#define EF_TALK         0x200000
-#define EF_TAUNT        0x400000
-#define EF_BOUNCE       0x1000000
+//
+// Only those with a comment are currently in use and verified usage-wise. For
+// reference, see Enemy-Territory:
+// https://github.com/id-Software/Enemy-Territory/blob/40342a9e3690cb5b627a433d4d5cbf30e3c57698/src/game/bg_public.h#L649
+//
+#define EF_TELEPORT_BIT 0x2         // Toggled every time the origin abruptly changes
+#define EF_CROUCHING    0x4         //
+#define EF_PRONE        0x8         //
+#define EF_TURRET_PRONE 0x100		// See EF_TURRET_STAND
+#define EF_TURRET_DUCK  0x200		// See EF_TURRET_STAND
+#define EF_TURRET_STAND 0x300       // Set on players that use a turret
+#define EF_MANTLE       0x4000      //
+#define EF_TAGCONNECT   0x8000      // Connected to another entity via tag
+#define EF_DEAD         0x20000     //
+#define EF_AIMDOWNSIGHT 0x40000     //
+#define EF_VOTED        0x100000    //
+#define EF_TALK         0x200000    //
+#define EF_TAUNT        0x400000    //
+#define EF_BOUNCE       0x1000000   // Missile/grenade/gravity-enabled entity bounce
 
 #define PMF_PRONE           0x1
-#define PMF_CROUCH          0x2 // PMF_DUCKED
+#define PMF_CROUCH          0x2
+#define PMF_DUCKED          PMF_CROUCH
 #define PMF_MANTLE          0x4
 #define PMF_FRAG            0x10
 #define PMF_LADDER          0x20
@@ -174,7 +182,7 @@
 #define PMF_SLIDING         0x200
 #define PMF_MELEE           0x2000
 #define PMF_JUMPING         0x80000
-#define PMF_VIEWLOCKED      0x800000 // Guessed name
+#define PMF_VIEWLOCKED      0x800000    // Guessed name
 #define PMF_SPECTATING      0x1000000
 #define PMF_DISABLEWEAPON   0x4000000
 
@@ -274,8 +282,8 @@ typedef struct game_client_field_s
 	const char *name;
 	int ofs;
 	int type;
-	void (*setter)(gclient_s *, const game_client_field_s *);
-	void (*getter)(gclient_s *, const game_client_field_s *);
+	void (*setter)(gclient_t *, const game_client_field_s *);
+	void (*getter)(gclient_t *, const game_client_field_s *);
 } game_client_field_t;
 
 typedef enum
@@ -1751,6 +1759,14 @@ struct gclient_s
 	int lastSpawnTime;
 }; // verified
 
+typedef enum weapStance_t
+{
+	WEAPSTANCE_STAND = 0x0,
+	WEAPSTANCE_DUCK = 0x1,
+	WEAPSTANCE_PRONE = 0x2,
+	WEAPSTANCE_NUM = 0x3
+} weapStance_t;
+
 typedef struct turretInfo_s
 {
 	int inuse;
@@ -1759,8 +1775,8 @@ typedef struct turretInfo_s
 	vec2_t arcmin;
 	vec2_t arcmax;
 	float dropPitch;
-	int stance;
-	int prevStance;
+	weapStance_t stance;
+	weapStance_t prevStance;
 	int fireSndDelay;
 	vec3_t userOrigin;
 	float playerSpread;
@@ -1824,8 +1840,8 @@ struct gentity_s
 {
 	entityState_t s;
 	entityShared_t r;
-	struct gclient_s *client; // 344
-	turretInfo_s *pTurretInfo; // 348
+	gclient_t *client; // 344
+	turretInfo_t *pTurretInfo; // 348
 	byte physicsObject; // 352
 	byte takedamage; // 353
 	byte active; // 354
@@ -2078,12 +2094,12 @@ struct com_parse_mark_t
 
 typedef struct
 {
-	struct gclient_s *clients;
-	struct gentity_s *gentities;
+	gclient_t *clients;
+	gentity_t *gentities;
 	int gentitySize;
 	int num_entities;
-	struct gentity_s *firstFreeEnt;
-	struct gentity_s *lastFreeEnt;
+	gentity_t *firstFreeEnt;
+	gentity_t *lastFreeEnt;
 	fileHandle_t logFile;
 	int initializing;
 	int clientIsSpawning;
@@ -2251,14 +2267,6 @@ typedef enum OffhandClass_t
 	OFFHAND_CLASS_SMOKE_GRENADE = 0x2,
 	OFFHAND_CLASS_COUNT = 0x3
 } OffhandClass_t;
-
-typedef enum weapStance_t
-{
-	WEAPSTANCE_STAND = 0x0,
-	WEAPSTANCE_DUCK = 0x1,
-	WEAPSTANCE_PRONE = 0x2,
-	WEAPSTANCE_NUM = 0x3
-} weapStance_t;
 
 typedef enum weapOverlayReticle_t
 {
@@ -3182,7 +3190,7 @@ typedef struct __attribute__((aligned(8))) bgs_s
 	clientInfo_t clientinfo[64];
 } bgs_t;
 
-struct pmove_t
+typedef struct
 {
 	playerState_t *ps;
 	usercmd_t cmd;
@@ -3194,10 +3202,11 @@ struct pmove_t
 	vec3_t maxs;
 	float xyspeed;
 	int proneChange;
-	byte mantleStarted; // 229
+	byte handler;
+	byte mantleStarted;
 	vec3_t mantleEndPos;
 	int mantleDuration;
-};
+} pmove_t;
 
 struct pml_t
 {

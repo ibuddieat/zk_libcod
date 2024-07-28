@@ -279,6 +279,9 @@ static const SV_VerifyIwds_f_t SV_VerifyIwds_f = (SV_VerifyIwds_f_t)0x08090534;
 typedef void (*SV_UserMove_t)(client_t *cl, msg_t *msg, qboolean delta);
 static const SV_UserMove_t SV_UserMove = (SV_UserMove_t)0x08090E34;
 
+typedef void (*Pmove_t)(pmove_t *pm);
+static const Pmove_t Pmove = (Pmove_t)0x080E9464;
+
 typedef void (*NetadrToSockadr_t)(netadr_t *a, struct sockaddr_in *s);
 static const NetadrToSockadr_t NetadrToSockadr = (NetadrToSockadr_t)0x080D5160;
 
@@ -744,6 +747,9 @@ static const G_SetOrigin_t G_SetOrigin = (G_SetOrigin_t)0x0811F3C6;
 typedef void (*G_SetAngle_t)(gentity_t *ent, const float *angle);
 static const G_SetAngle_t G_SetAngle = (G_SetAngle_t)0x0811F426;
 
+typedef void (*SetClientViewAngle_t)(gentity_t *ent, const float *angle);
+static const SetClientViewAngle_t SetClientViewAngle = (SetClientViewAngle_t)0x080F85D8;
+
 typedef void (*G_ParseEntityField_t)(const char *key, const char *value, gentity_t *ent);
 static const G_ParseEntityField_t G_ParseEntityField = (G_ParseEntityField_t)0x0811A610;
 
@@ -755,6 +761,9 @@ static const G_SetModel_t G_SetModel = (G_SetModel_t)0x0811D87A;
 
 typedef char (*G_EntLinkToWithOffset_t)(gentity_t *ent, gentity_t *parent, unsigned int tagId, vec3_t *originOffset, vec3_t *anglesOffset);
 static const G_EntLinkToWithOffset_t G_EntLinkToWithOffset = (G_EntLinkToWithOffset_t)0x0811DD4A;
+
+typedef void (*G_EntUnlink_t)(gentity_t *ent);
+static const G_EntUnlink_t G_EntUnlink = (G_EntUnlink_t)0x0811DDB8;
 
 typedef void (*G_GeneralLink_t)(gentity_t *ent);
 static const G_GeneralLink_t G_GeneralLink = (G_GeneralLink_t)0x0811E316;

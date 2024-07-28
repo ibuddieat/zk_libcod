@@ -1469,7 +1469,7 @@ void gsc_player_isusingturret(scr_entref_t ref)
 		return;
 	}
 
-	stackPushBool(entity->client->ps.eFlags & EF_USETURRET ? qtrue : qfalse);
+	stackPushBool(entity->client->ps.eFlags & EF_TURRET_STAND ? qtrue : qfalse);
 }
 
 void gsc_player_stopuseturret(scr_entref_t ref)
@@ -1484,7 +1484,7 @@ void gsc_player_stopuseturret(scr_entref_t ref)
 		return;
 	}
 
-	if ( entity->client->ps.pm_flags & PMF_VIEWLOCKED && entity->client->ps.eFlags & EF_USETURRET )
+	if ( entity->client->ps.pm_flags & PMF_VIEWLOCKED && entity->client->ps.eFlags & EF_TURRET_STAND )
 	{
 		G_ClientStopUsingTurret(&level.gentities[entity->client->ps.viewlocked_entNum]);
 		stackPushBool(qtrue);
@@ -2788,6 +2788,92 @@ void gsc_player_getvieworigin(scr_entref_t ref)
 	G_GetPlayerViewOrigin(ent, viewOrigin);
 
 	stackPushVector(viewOrigin);
+}
+
+void gsc_player_setoriginandangles(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_setoriginandangles() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	vec3_t origin;
+	vec3_t angles;
+
+	if ( !stackGetParams("vv", &origin, &angles) )
+	{
+		stackError("gsc_player_setoriginandangles() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	gentity_t *ent = &g_entities[id];
+
+    // Stop using MGs
+    if ( ent->client->ps.pm_flags & PMF_VIEWLOCKED && ent->client->ps.eFlags & EF_TURRET_STAND )
+        G_ClientStopUsingTurret(&g_entities[ent->client->ps.viewlocked_entNum]);
+
+    G_EntUnlink(ent);
+
+    // Unlink client from linkTo() stuffs
+    if ( ent->r.linked )
+    {
+        SV_UnlinkEntity(ent);
+    }
+
+    // Clear flags
+    ent->client->ps.pm_flags &= (PMF_DUCKED | PMF_PRONE); // Keep stance
+    ent->client->ps.eFlags ^= EF_TELEPORT_BIT;            // Toggle the teleport bit so the client knows to not lerp
+
+    // Set times
+    ent->client->ps.pm_time = 0;
+    ent->client->ps.jumpTime = 0; // Reset wallspeed effects
+
+    // Set origin
+    VectorCopy(origin, ent->client->ps.origin);
+    G_SetOrigin(ent, origin);
+
+    // Reset velocity
+    ent->client->ps.velocity[0] = 0;
+    ent->client->ps.velocity[1] = 0;
+    ent->client->ps.velocity[2] = 0;
+
+    // Pretend we are not proning so that prone angle is ok after having called
+	// SetClientViewAngle (otherwise it gets a correction)
+    int flags = ent->client->ps.pm_flags;
+    ent->client->ps.pm_flags &= ~PMF_PRONE;
+    ent->client->sess.cmd.serverTime = level.time; // If this is not set then errordecay takes place
+
+    SetClientViewAngle(ent, angles);
+
+    // Create a pmove object and execute to bypass the errordecay thing
+    pmove_t pm;
+    memset(&pm, 0, sizeof(pm));
+    pm.ps = &ent->client->ps;
+    memcpy(&pm.cmd, &ent->client->sess.cmd, sizeof(pm.cmd));
+    pm.cmd.forwardmove = 0;
+    pm.cmd.rightmove = 0;
+    pm.cmd.serverTime = level.time - 50;
+
+    ent->client->sess.oldcmd.serverTime = level.time - 100;
+    pm.oldcmd = ent->client->sess.oldcmd;
+    pm.tracemask = 0x2810011;
+    pm.handler = 1;
+    Pmove(&pm);
+
+    // Reset velocity
+    ent->client->ps.velocity[0] = 0;
+    ent->client->ps.velocity[1] = 0;
+    ent->client->ps.velocity[2] = 0;
+
+    // Restore prone if any
+    ent->client->ps.pm_flags = flags;
+
+    SV_LinkEntity(ent);
 }
 
 void gsc_player_getservercommandqueuesize(scr_entref_t ref)

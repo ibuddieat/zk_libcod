@@ -437,6 +437,7 @@ scr_method_t scriptMethods[] =
 	{"objective_player_position", gsc_player_objective_player_position, 0},
 	{"objective_player_state", gsc_player_objective_player_state, 0},
 	{"getViewOrigin", gsc_player_getvieworigin, 0},
+	{"setOriginAndAngles", gsc_player_setoriginandangles, 0},
 	{"getServerCommandQueueSize", gsc_player_getservercommandqueuesize, 0},
 	{"setConfigstring", gsc_player_setconfigstring, 0},
 	{"getCollisionTeam", gsc_player_getcollisionteam, 0},
