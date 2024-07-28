@@ -2843,7 +2843,7 @@ void gsc_player_setoriginandangles(scr_entref_t ref)
     ent->client->ps.velocity[2] = 0;
 
     // Pretend we are not proning so that prone angle is ok after having called
-	// SetClientViewAngle (otherwise it gets a correction)
+    // SetClientViewAngle (otherwise it gets a correction)
     int flags = ent->client->ps.pm_flags;
     ent->client->ps.pm_flags &= ~PMF_PRONE;
     ent->client->sess.cmd.serverTime = level.time; // If this is not set then errordecay takes place

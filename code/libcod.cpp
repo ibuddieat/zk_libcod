@@ -9227,7 +9227,7 @@ void custom_SV_PacketEvent(netadr_t from, msg_t *msg)
 
 int custom_SV_CanReplaceServerCommand(client_t *client, const char *command)
 {
-	// New: Exploit fix, see https://github.com/XLabsProject/iw4x-client/commit/338c65689bd363a65e2025f56661bde910317d5b
+	// New: Exploit fix, taken over from IW4x
 	return -1;
 }
 

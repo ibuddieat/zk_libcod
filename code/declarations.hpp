@@ -160,8 +160,8 @@
 #define EF_TELEPORT_BIT 0x2         // Toggled every time the origin abruptly changes
 #define EF_CROUCHING    0x4         //
 #define EF_PRONE        0x8         //
-#define EF_TURRET_PRONE 0x100		// See EF_TURRET_STAND
-#define EF_TURRET_DUCK  0x200		// See EF_TURRET_STAND
+#define EF_TURRET_PRONE 0x100       // See EF_TURRET_STAND
+#define EF_TURRET_DUCK  0x200       // See EF_TURRET_STAND
 #define EF_TURRET_STAND 0x300       // Set on players that use a turret
 #define EF_MANTLE       0x4000      //
 #define EF_TAGCONNECT   0x8000      // Connected to another entity via tag
