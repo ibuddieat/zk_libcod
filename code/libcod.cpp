@@ -1626,14 +1626,6 @@ void hook_ClientCommand(int clientNum)
 	Scr_FreeThread(ret);
 }
 
-int hook_isLanAddress(netadr_t adr)
-{
-	if ( sv_noauthorize->current.boolean )
-		return 1;
-
-	return Sys_IsLANAddress(adr);
-}
-
 const char * hook_AuthorizeState(int arg)
 {
 	const char *s = Cmd_Argv(arg);
@@ -4397,7 +4389,8 @@ void custom_SV_GetChallenge(netadr_t from)
 		i = oldest;
 	}
 
-	if ( !net_lanauthorize->current.boolean && Sys_IsLANAddress(from) )
+	// New: sv_noauthorize dvar
+	if ( sv_noauthorize->current.boolean || ( !net_lanauthorize->current.boolean && Sys_IsLANAddress(from) ) )
 	{
 		challenge->pingTime = svs.time;
 		NET_OutOfBandPrint(NS_SERVER, from, custom_va("challengeResponse %i", challenge->challenge));
@@ -9471,7 +9464,6 @@ public:
 		cracking_hook_call(0x080622F9, (int)common_init_complete_print);
 		cracking_hook_call(0x08090BA0, (int)hook_ClientCommand);
 		cracking_hook_call(0x0808DB12, (int)hook_AuthorizeState);
-		cracking_hook_call(0x0808D2FA, (int)hook_isLanAddress);
 		cracking_hook_call(0x0808BDC8, (int)hook_findMap);
 		cracking_hook_call(0x08090A52, (int)hook_ClientUserinfoChanged);
 		cracking_hook_call(0x08070BE7, (int)Scr_GetCustomFunction);
