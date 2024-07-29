@@ -17,7 +17,7 @@ Added dvars:
   * `g_debugCallbacks`
     * Type: Boolean
     * Default: False
-    * Effect: Toggle debug logging of callback function assignments on server start and callback function calls at runtime.
+    * Effect: Toggle debug logging of script callback function assignments on server start and script callback function calls at runtime.
   * `g_debugEvents`
     * Type: Boolean
     * Default: False
@@ -43,7 +43,7 @@ Added dvars:
   * `g_resetSlide`
     * Type: Boolean
     * Default: False
-    * Effect: Potential fix for slide-like player movement after receiving damage from falling not being reset.
+    * Effect: Fix for slide-like player movement after receiving damage from falling not being reset.
   * `g_safePrecache`
     * Type: Boolean
     * Default: False
@@ -59,7 +59,7 @@ Added dvars:
   * `g_spectateBots`
     * Type: Boolean
     * Default: True
-    * Effect: Toggle the ability to spectate bots.
+    * Effect: Toggle the ability to spectate bots. Alternatively or in addition, the `setAllowSpectators` script method can be used on a per-player basis.
   * `g_triggerMode`
     * Type: Integer
     * Default: 1
@@ -69,7 +69,7 @@ Added dvars:
   * `g_turretMissingTagTerminalError`
     * Type: Boolean
     * Default: True
-    * Effect: If false, the server will not halt when the `tag_player` tag cannot be found on a turret, but instead yield a script error to `CodeCallback_Error`, if that callback is enabled. Such error can occur in killcam-related edge cases, e.g., when a turret is removed while the player is alive and in killcam.
+    * Effect: If false, the server will not halt when the `tag_player` tag cannot be found on a turret, but instead yield a script error to `CodeCallback_Error`, if that script callback function is enabled. Such error can occur in killcam-related edge cases, e.g., when a turret is removed while the player is alive and in killcam.
   * `libcod`
     * Type: Boolean
     * Default: True
@@ -100,10 +100,6 @@ Added dvars:
     * Type: Boolean
     * Default: False
     * Effect: If true, turret weapon names are passed to `Callback_PlayerDamage` when using a turret, instead of the player's current weapon slot's weapon. Also fixes the game issue where grenade (and other) kills are shown as turret kills while the player is using a turret.
-  * `sv_disconnectMessages`
-    * Type: Boolean
-    * Default: True
-    * Effect: Toggle output of "Game session no longer available" game messages.
   * `sv_authorizePort`
     * Type: Integer
     * Default: 20700
@@ -119,7 +115,7 @@ Added dvars:
     * Default: 3000
     * Min. Value: 0
     * Max. Value: 1200000
-    * Effect: The original authorize server timeout is 20 minutes. We default it to a few seconds to not have the game go dead once the authorize server goes offline (again). Setting this timeout too low will make players with a valid CD key connect with a zero GUID. The timeout is defined in milliseconds.
+    * Effect: The original authorize server timeout is 20 minutes. We default it to a few seconds to not have the game go dead once the authorize server goes offline (again). Setting this timeout too low will make players with a valid CD key connect with a zero GUID too. The timeout is defined in milliseconds.
   * `sv_botKickMessages`
     * Type: Boolean
     * Default: True
@@ -134,10 +130,14 @@ Added dvars:
     * Type: Boolean
     * Default: False
     * Effect: Toggle whether bots should be notified when triggers of type trigger_use or trigger_use_touch are nearby (i.e., when the hint string appears). Once available, the bot entity will be notified with a "bot_trigger" notify where the trigger entity is the first and only argument.
+  * `sv_disconnectMessages`
+    * Type: Boolean
+    * Default: True
+    * Effect: Toggle output of "Game session no longer available" game messages.
   * `sv_downloadMessageAtMap`
     * Type: Boolean
     * Default: True
-    * Effect: Define whether the `sv_downloadMessage` should also apply for map file downloads, i.e., such that contain `mp_` or `empty` in the file path.
+    * Effect: Define whether the `sv_downloadMessage` dvar should also apply for map file downloads, i.e., such that contain `mp_` or `empty` in the file path.
   * `sv_kickGamestateLimitedClients`
     * Type: Boolean
     * Default: True
@@ -233,10 +233,6 @@ Added dvars:
     * Type: Boolean
     * Default: True
     * Effect: Toggle output of player timeout game messages.
-  * `sv_verifyIwds`
-    * Type: Boolean
-    * Default: True
-    * Effect: Toggle IWD file verification triggered by cp client commands.
   * `sv_version`
     * Type: String
     * Default: "1.3"
@@ -248,4 +244,51 @@ Added dvars:
     * Max. Value: 2
     * Effect: Toggle output of download-disconnected game messages. A value of `2` prints the relative path to the file requested by the connecting player.
 
-Note: Unless stated otherwise, all default values of the dvars listed above are defined to preserve the stock behavior of the game.
+Other dvars (e.g., from legacy versions of libcod or other repositories):
+
+  * `con_coloredPrints`
+    * Type: Boolean
+    * Default: False
+    * Effect: If true, strings containing color codes (e.g., ^1 for red) are drawn in color in server console.
+  * `fs_callbacks`
+    * Type: String
+    * Default: ""
+    * Effect: Defines the relative path to the .gsc file (without file suffix) containing script callback methods/functions. If set to an empty string (as by default), the server uses `maps/mp/gametypes/_callbacksetup`.
+  * `fs_library`
+    * Type: String
+    * Default: ""
+    * Effect: Defines the relative path to the manymaps library - a folder, that is supposed to contain map .iwd files. If set to an empty string (as by default), the server uses `&lt;fs_homepath&gt;:&lt;fs_game&gt;/Library`. This is an optional feature, the library folder does not have to exist for a server to operate correctly.
+  * `g_mantleBlockEnable`
+    * Type: Boolean
+    * Default: True
+    * Effect: If false, the invisible barrier that is created while a player is mantling/climbing over an obstacle, is not created.
+  * `g_playerCollision`
+    * Type: Boolean
+    * Default: True
+    * Effect: If false, player contents are no longer updated on each server frame, therefore allowing custom entity contents to be set after player spawn without having them overriden. Applies globally for all players on the server. Alternatively, the `overrideContents` and `setCollisionTeam` script methods can be used on a per-player or per-team basis, respectively.
+  * `g_playerEject`
+    * Type: Boolean
+    * Default: True
+    * Effect: If false, players that are close to each other (potentially causing hitbox overlaps) are no longer automatically moved away from each other.
+  * `sv_allowRcon`
+    * Type: Boolean
+    * Default: True
+    * Effect: If false, rcon commands are ignored.
+  * `sv_cracked`
+    * Type: Boolean
+    * Default: False
+    * Effect: If true, players without a valid CD key are allowed to join the server (with a zero GUID).
+  * `sv_downloadMessage`
+    * Type: String
+    * Default: ""
+    * Effect: If set to a non-empty string, players that attempt to download a file on connect are disconnected from the server, with the specified message displayed after disconnect. Related dvar: `sv_downloadMessageAtMap`.
+  * `sv_noauthorize`
+    * Type: Boolean
+    * Default: False
+    * Effect: If true, the server will not go through the authorization process for connecting players, thus yielding a zero GUID for those players. Recommended to be enabled in case the master server returns incorrect GUIDs.
+  * `sv_verifyIwds`
+    * Type: Boolean
+    * Default: True
+    * Effect: Toggle IWD file verification triggered by cp client commands.
+
+Note: Unless stated otherwise, all default values are defined to preserve the stock behavior of the game.
