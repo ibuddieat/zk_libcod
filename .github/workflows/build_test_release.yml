@@ -3,7 +3,6 @@ name: "Build, Test & Release"
 # Runs once a new tag is pushed
 on:
   push:
-    branches: [ "dev" ]
     tags: [ "v*.*" ]
 
 jobs:

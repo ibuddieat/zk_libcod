@@ -3,15 +3,15 @@ name: "Build & Test"
 on:
   push:
     branches: [ "dev" ]
-    paths-ignore: [ "**.md", "**.yml" ]
+    paths-ignore: [ "**.htm", "**.html", "**.md", "**.yml" ]
   pull_request:
     branches: [ "dev" ]
 
 jobs:
   ubuntu-mysql1-nospeex:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04 # https://github.com/actions/runner-images
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v4 # https://github.com/actions/checkout
     - name: "Install Dependencies"
       run: |
         sudo dpkg --add-architecture i386
