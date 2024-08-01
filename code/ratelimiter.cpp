@@ -120,13 +120,13 @@ bool SVC_RateLimit(leakyBucket_t *bucket, int burst, int period)
 	return true;
 }
 
-extern Proxy_t proxies[2];
+extern proxy_t proxies[2];
 bool IsProxySource(netadr_t from)
 {
 	// Requests directed to the proxy ports will pass through this twice, once
 	// when talking to the proxy, and once again when the proxy talks to the
-	// main server port/socket
-
+	// main server port/socket.
+	//
 	// Also, here a remark on the OUTBOUND_BUCKET_MAIN checks before calling
 	// SVC_SpamCallback: Do not call script callbacks from the proxy threads
 	// (or any other threads other than the main game loop thread), as they're
@@ -134,9 +134,9 @@ bool IsProxySource(netadr_t from)
 	//
 	// As a result, CodeCallback_CLSpam in _callbacksetup.gsc is not called
 	// when the proxy ports are attacked, but rate-limiting still applies,
-	// and rcon is protected
+	// and rcon is protected.
 
-	Proxy_t *proxy = &proxies[0];
+	proxy_t *proxy = &proxies[0];
 	for ( int i = 0; i < 2; i++, proxy++ ) {
 		if ( proxy->started && !memcmp(from.ip, proxy->listenAdr.ip, 4) )
 			return qtrue;

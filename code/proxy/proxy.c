@@ -50,7 +50,7 @@ extern leakyBucket_t outboundLeakyBuckets[OUTBOUND_BUCKET_MAX];
 
 // Max. two proxies, in addition to the main server port
 #define MAX_PROXIES 2
-Proxy_t proxies[MAX_PROXIES];
+proxy_t proxies[MAX_PROXIES];
 
 // Flag stating whether a proxy has been started, so that we know that they do
 // not have to be started again and that they need to be freed on server quit
@@ -109,7 +109,7 @@ void ToLowerCase(char *str)
 	}
 }
 
-const char * InfoValueForKey(const char *s, const char *key, Proxy_t *proxy)
+const char * InfoValueForKey(const char *s, const char *key, proxy_t *proxy)
 {
 	char pkey[8192];
 	static char value[MAX_PROXIES][2][8192]; // Use two buffers so that
@@ -166,7 +166,7 @@ const char * InfoValueForKey(const char *s, const char *key, Proxy_t *proxy)
 	return "";
 }
 
-void ReplaceProtocolString(char *buffer, Proxy_t *proxy)
+void ReplaceProtocolString(char *buffer, proxy_t *proxy)
 {
 	const char *proxyProtocolString = custom_va("\\protocol\\%d", proxy->version);
 	const char *parentProtocolString = custom_va("\\protocol\\%d", proxy->parentVersion);
@@ -175,7 +175,7 @@ void ReplaceProtocolString(char *buffer, Proxy_t *proxy)
 		memcpy(offset, proxyProtocolString, 13);
 }
 
-void ReplaceShortversionString(char *buffer, Proxy_t *proxy)
+void ReplaceShortversionString(char *buffer, proxy_t *proxy)
 {
 	const char *proxyShortversionString = custom_va("\\shortversion\\%s", proxy->versionString);
 	const char *parentShortversionString = custom_va("\\shortversion\\%s", proxy->parentVersionString);
@@ -186,10 +186,10 @@ void ReplaceShortversionString(char *buffer, Proxy_t *proxy)
 
 void SV_ResetProxiesInformation()
 {
-	memset(&proxies, 0, sizeof(Proxy_t) * MAX_PROXIES);
+	memset(&proxies, 0, sizeof(proxy_t) * MAX_PROXIES);
 }
 
-void SV_ConfigureProxy(Proxy_t *proxy, const char *versionString, const char *address, const char *forwardAddress, int parentVersion)
+void SV_ConfigureProxy(proxy_t *proxy, const char *versionString, const char *address, const char *forwardAddress, int parentVersion)
 {
 	int index = (proxy - &proxies[0]) + 1;
 
@@ -217,7 +217,7 @@ void SV_ShutdownProxies()
 	if ( initialized )
 	{
 		int i;
-		Proxy_t *proxy;
+		proxy_t *proxy;
 
 		for ( i = 0; i < MAX_PROXIES; i++ )
 		{
@@ -294,7 +294,7 @@ void SV_SetupProxies()
 	}
 
 	int i;
-	Proxy_t *proxy;
+	proxy_t *proxy;
 
 	for ( i = 0; i < MAX_PROXIES; i++ )
 	{
@@ -319,7 +319,7 @@ void SV_SetupProxies()
 
 void * SV_StartProxy(void *threadArgs)
 {
-	Proxy_t *proxy = (Proxy_t *)threadArgs;
+	proxy_t *proxy = (proxy_t *)threadArgs;
 	struct sockaddr_in listenerAddr;
 	struct sockaddr_in forwarderAddr;
 	int listenerSocket;
@@ -357,7 +357,7 @@ void * SV_StartProxy(void *threadArgs)
 
 	Com_Printf("Proxy server listening on port %d for version %s\n", BigShort(proxy->listenAdr.port), proxy->versionString);
 
-	ProxyClientThreadInfo clientThreadInfo[65536];
+	proxyClientThreadInfo clientThreadInfo[65536];
 	memset(clientThreadInfo, -1, sizeof(clientThreadInfo));
 
 	while ( 1 )
@@ -490,7 +490,7 @@ void * SV_StartProxy(void *threadArgs)
 				tv.tv_usec = 0;
 				setsockopt(s_client, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
 
-				ProxyClientThreadInfo t_info;
+				proxyClientThreadInfo t_info;
 				t_info.s_client = s_client;
 				clientThreadInfo[clientIndex] = t_info;
 				proxy->numClients++;
@@ -500,7 +500,7 @@ void * SV_StartProxy(void *threadArgs)
 
 				sendto(s_client, buffer, bytes_received, 0, (struct sockaddr *)&forwarderAddr, sizeof(forwarderAddr));
 
-				ProxyClientThreadArgs *args = (ProxyClientThreadArgs *)malloc(sizeof(ProxyClientThreadArgs));
+				proxyClientThreadArgs *args = (proxyClientThreadArgs *)malloc(sizeof(proxyClientThreadArgs));
 				args->addr = addr;
 				args->s_client = &(clientThreadInfo[clientIndex].s_client);
 				args->src_port = ntohs(addr.sin_port);
@@ -537,7 +537,7 @@ void * SV_StartProxy(void *threadArgs)
 
 void * SV_ProxyMasterServerLoop(void *threadArgs)
 {
-	Proxy_t *proxy = (Proxy_t *)threadArgs;
+	proxy_t *proxy = (proxy_t *)threadArgs;
 	netadr_t authorizeAdr;
 	struct sockaddr_in masterSockAdr;
 	struct sockaddr_in authorizeSockAdr;
@@ -578,8 +578,8 @@ void * SV_ProxyMasterServerLoop(void *threadArgs)
 
 void * SV_ProxyClientThread(void *threadArgs)
 {
-	ProxyClientThreadArgs *args = (ProxyClientThreadArgs *)threadArgs;
-	Proxy_t *proxy = args->proxy;
+	proxyClientThreadArgs *args = (proxyClientThreadArgs *)threadArgs;
+	proxy_t *proxy = args->proxy;
 	char client_ip[INET_ADDRSTRLEN];
 
 	while ( 1 )

@@ -3938,7 +3938,6 @@ typedef struct customEntityState_s
 } customEntityState_t;
 
 #define MAX_DROPPING_BULLETS 20 // Per player
-
 typedef struct
 {
 	const gentity_t *attacker;
@@ -4087,19 +4086,19 @@ typedef struct
 	qboolean started;
 	int version;
 	const char *versionString;
-} Proxy_t;
+} proxy_t;
 
 typedef struct
 {
 	int s_client;
 	pthread_t thread;
-} ProxyClientThreadInfo;
+} proxyClientThreadInfo;
 
 typedef struct
 {
 	int activeClient;
 	struct sockaddr_in addr;
-	Proxy_t *proxy;
+	proxy_t *proxy;
 	int *s_client;
 	int src_port;
-} ProxyClientThreadArgs;
+} proxyClientThreadArgs;

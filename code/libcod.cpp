@@ -854,7 +854,7 @@ void custom_SV_SpawnServer(char *server)
 		FX_CreateDefaultEffect();
 	}
 
-	for( i = 0; i < 3; ++i )
+	for ( i = 0; i < 3; ++i )
 	{
 		svs.time += 100;
 		SV_RunFrame();
@@ -862,7 +862,7 @@ void custom_SV_SpawnServer(char *server)
 
 	SV_CreateBaseline();
 
-	for( i = 0, cl = svs.clients; i < sv_maxclients->current.integer; ++i, ++cl )
+	for ( i = 0, cl = svs.clients; i < sv_maxclients->current.integer; ++i, ++cl )
 	{
 		if ( cl->state < CS_CONNECTED )
 		{
@@ -1423,7 +1423,7 @@ void custom_SV_ClipMoveToEntity(moveclip_t *clip, svEntity_s *entity, trace_t *t
 	if ( ( ( (touch->r).contents & clip->contentmask) != 0 ) &&
 	( clip->passEntityNum == ENTITY_NONE || ( ( touchNum != clip->passEntityNum && (touch->r).ownerNum != clip->passEntityNum ) && ( (touch->r).ownerNum != clip->passOwnerNum ) ) ) )
 	{
-		/* New code: per-player/team collison */
+		/* New code start: per-player/team collison */
 		if ( SkipCollision(touch, &g_entities[clip->passEntityNum]) )
 			return;
 		/* New code end */
@@ -1453,8 +1453,10 @@ void custom_G_SetClientContents(gentity_t *ent)
 {
 	int id = ent - g_entities;
 
+	/* New code start: g_playerCollision dvar */
 	if ( !g_playerCollision->current.boolean )
 		return;
+	/* New code end */
 
 	if ( ent->client->noclip == 0 )
 	{
@@ -1468,7 +1470,7 @@ void custom_G_SetClientContents(gentity_t *ent)
 			{
 				(ent->r).contents = CONTENTS_BODY;
 
-				/* New code: per-player/team collison */
+				/* New code start: per-player/team collison */
 				if ( customPlayerState[id].overrideContents )
 					(ent->r).contents = customPlayerState[id].contents;
 				/* New code end */
@@ -1498,7 +1500,7 @@ qboolean custom_StuckInClient(gentity_t *self)
 	int i;
 	int id = self - g_entities;
 
-	/* New code: g_playerEject dvar */
+	/* New code start: g_playerEject dvar */
 	if ( !g_playerEject->current.boolean )
 		return qfalse;
 	/* New code end */
@@ -1511,7 +1513,7 @@ qboolean custom_StuckInClient(gentity_t *self)
 			if ( ( ( ( ( ( (hit->r).inuse != 0 ) && ( ((hit->client->ps).pm_flags & PMF_VIEWLOCKED) != 0 ) ) && ( (hit->client->sess).sessionState == STATE_PLAYING )  ) && ( (hit != self && hit->client != NULL ) ) ) && ( 0 < hit->health && ( /* New condition */ customPlayerState[i].collisionTeam != CUSTOM_TEAM_AXIS_ALLIES || ( ((hit->r).contents & CONTENTS_BODY) != 0 || ( (hit->r).contents == CONTENTS_CORPSE ) ) ) ) ) &&
 			( (hit->r).absmin[0] <= (self->r).absmax[0] && ( ( ( (self->r).absmin[0] <= (hit->r).absmax[0] && ( (hit->r).absmin[1] <= (self->r).absmax[1] ) ) && ( (self->r).absmin[1] <= (hit->r).absmax[1] ) ) && ( (hit->r).absmin[2] <= (self->r).absmax[2] && ( (self->r).absmin[2] <= (hit->r).absmax[2] ) ) ) ) )
 			{
-				/* New code: per-player/team collison */
+				/* New code start: per-player/team collison */
 				if ( SkipCollision(self, hit) )
 					continue;
 				/* New code end */
@@ -1690,7 +1692,7 @@ void custom_DeathmatchScoreboardMessage(gentity_t *ent)
 		clientNum = level.sortedClients[i];
 		client = &level.clients[clientNum];
 
-		/* New code: Ability to hide players in scoreboard */
+		/* New code start: Ability to hide players in scoreboard */
 		if ( customPlayerState[clientNum].hiddenFromScoreboard )
 			continue;
 		/* New code end */
@@ -1741,7 +1743,7 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 	challenge_t *challenge;
 	qboolean isBot = qfalse;
 	const char *translatedReason;
-	qboolean showIngameMessage = qtrue;
+	qboolean showIngameMessage = qtrue; // New
 	char name[32];
 	
 	Com_DPrintf("SV_DropClient for %s\n", drop->name);
@@ -1749,7 +1751,7 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 	if ( drop->state == CS_ZOMBIE )
 		return;	// Already dropped
 
-	/* New code: libcod cleanup */
+	/* New code start: libcod cleanup */
 	for ( i = 0 ; i < sv_maxclients->current.integer; i++ )
 		customPlayerState[i].talkerIcons[drop - svs.clients] = 0;
 	/* New code end */
@@ -1877,6 +1879,7 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 		I_strncpyz(name, (entity->client->sess.state).name, sizeof(name));
 		I_CleanStr(name);
 		
+		// New: g_logPickup dvar
 		if ( g_logPickup->current.boolean )
 		{
 			if ( bg_item->giType == IT_WEAPON )
@@ -1889,12 +1892,14 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 		type = bg_item->giType;
 		if ( type == IT_AMMO )
 		{
+			/* New code start: CodeCallback_Pickup */
 			if ( codecallback_pickup && Scr_IsSystemActive() )
 			{
 				stackPushString("ammo");
 				short ret = Scr_ExecEntThread(entity, codecallback_pickup, 1);
 				Scr_FreeThread(ret);
 			}
+			/* New code end */
 			else
 			{
 				respawn = Pickup_Ammo(item, entity);
@@ -1905,6 +1910,7 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 			if ( type != IT_WEAPON )
 				return;
 
+			/* New code start: CodeCallback_Pickup */
 			if ( codecallback_pickup && Scr_IsSystemActive() )
 			{
 				stackPushVector(item->r.currentAngles);
@@ -1916,6 +1922,7 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 				short ret = Scr_ExecEntThread(entity, codecallback_pickup, 6);
 				Scr_FreeThread(ret);
 			}
+			/* New code end */
 			else
 			{
 				respawn = Pickup_Weapon(item, entity, &event, touch);
@@ -1926,12 +1933,14 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 			if ( type != IT_HEALTH )
 				return;
 			
+			/* New code start: CodeCallback_Pickup */
 			if ( codecallback_pickup && Scr_IsSystemActive() )
 			{
 				stackPushString("health");
 				short ret = Scr_ExecEntThread(entity, codecallback_pickup, 1);
 				Scr_FreeThread(ret);
 			}
+			/* New code end */
 			else
 			{
 				respawn = Pickup_Health(item, entity);
@@ -2122,7 +2131,7 @@ void custom_MSG_WriteDeltaField(msg_t *buf, byte *from, byte *to, netField_t *fi
 				absbits -= abs3bits;
 				absto >>= abs3bits;
 			}
-			while( absbits )
+			while ( absbits )
 			{
 				MSG_WriteByte(buf, absto);
 				absto >>= 8;
@@ -2259,7 +2268,7 @@ void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t 
 				}
 				/* New code end */
 
-				/* New code: per-player/team collison */
+				/* New code start: per-player/team collison */
 				if ( i == 31 ) // solid
 				{
 					if ( clientNum != -1 && entNum >= 0 && entNum < MAX_CLIENTS )
@@ -2443,7 +2452,7 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 						absbits -= abs3bits;
 						absto >>= abs3bits;
 					}
-					while( absbits )
+					while ( absbits )
 					{
 						MSG_WriteByte(msg, absto);
 						absto >>= 8;
@@ -3368,7 +3377,8 @@ qboolean custom_BG_IsWeaponValid(playerState_t *ps, unsigned int index)
 		return qfalse;
 
 	weaponDef = BG_GetWeaponDef(index);
-	/* New code: Fixed potential NULL-pointer crash */
+
+	/* New code start: Fixed potential NULL-pointer crash */
 	if ( !weaponDef )
 		return 0;
 	/* New code end */
@@ -3655,7 +3665,7 @@ void custom_SV_ClientThink(client_t *cl, usercmd_t *ucmd)
 
 	if ( ucmd->buttons & KEY_MASK_RELOAD && !(customPlayerState[clientnum].previousButtons & KEY_MASK_RELOAD) )
 	{
-		if( codecallback_reloadbutton )
+		if ( codecallback_reloadbutton )
 		{
 			short ret = Scr_ExecEntThread(cl->gentity, codecallback_reloadbutton, 0);
 			Scr_FreeThread(ret);
@@ -4585,7 +4595,7 @@ void custom_Scr_InitOpcodeLookup()
 	vars->developer = 1;
 	GE_Scr_InitOpcodeLookup();
 	
-	if( !developer->current.integer )
+	if ( !developer->current.integer )
 		vars->developer = 0;
 	
 	hook_init_opcode->hook();
@@ -4603,7 +4613,7 @@ void custom_AddOpcodePos(int a1, int a2)
 	vars->developer = 1;
 	AddOpcodePos(a1, a2);
 	
-	if( !developer->current.integer )
+	if ( !developer->current.integer )
 		vars->developer = 0;
 	
 	hook_add_opcode->hook();
@@ -5086,7 +5096,7 @@ void custom_G_RunFrame(int levelTime)
 					// Enforce max. bullet lifetime
 					if ( ( level.time - bullet->startTime ) > g_bulletDropMaxTime->current.integer )
 					{
-						if( bullet->visualBullet )
+						if ( bullet->visualBullet )
 							custom_Bullet_Drop_Finalize_Visual(bullet, qtrue);
 
 						custom_Bullet_Drop_Free(i, bullet);
@@ -5594,7 +5604,7 @@ void custom_G_ClientStopUsingTurret(gentity_t *self)
 	info = self->pTurretInfo;
 
 	/* New code start: Return if turret info has already been freed, see
-	 g_turretMissingTagTerminalError dvar docs for when this can happen. */
+	 g_turretMissingTagTerminalError dvar docs for when this can happen */
 	if ( !info )
 		return;
 	/* New code end */
@@ -5639,7 +5649,8 @@ void custom_G_ParseEntityFields(gentity_t *ent)
 	/* New code start: map weapons callback */
 	if ( codecallback_map_turrets_load )
 	{
-		// Default turret arcs to -1 so we can identify these as undefined in script
+		// Default turret arcs to -1 so we can identify these as undefined in
+		// script
 		map_turrets[num_map_turrets].toparc = -1;
 		map_turrets[num_map_turrets].bottomarc = -1;
 		map_turrets[num_map_turrets].leftarc = -1;
@@ -5793,7 +5804,7 @@ void custom_G_SpawnEntitiesFromString(void)
 	}
 	/* New code end */
 	
-	while( G_ParseSpawnVars(&level.spawnVars) )
+	while ( G_ParseSpawnVars(&level.spawnVars) )
 		custom_G_CallSpawn();
 }
 
@@ -5813,7 +5824,7 @@ void custom_Scr_LoadGameType(void)
 		else
 		{
 			stackPushArray();
-			for( int i = 0; i < num_map_weapons; i++ )
+			for ( int i = 0; i < num_map_weapons; i++ )
 			{
 				stackPushString(map_weapons[i].classname);
 				stackPushArrayLast();
@@ -5841,7 +5852,7 @@ void custom_Scr_LoadGameType(void)
 		else
 		{
 			stackPushArray();
-			for( int i = 0; i < num_map_turrets; i++ )
+			for ( int i = 0; i < num_map_turrets; i++ )
 			{
 				stackPushString(map_turrets[i].classname);
 				stackPushArrayLast();
@@ -6460,7 +6471,7 @@ void custom_Scr_BulletTrace(void)
 		contentmask = MASK_SHOT;
 	}
 
-	/* New code: bulletTrace contentmask override */
+	/* New code start: bulletTrace contentmask override */
 	args = Scr_GetNumParam();
 	if ( args > 4 )
 		contentmask = Scr_GetInt(4);
@@ -6538,7 +6549,7 @@ void custom_Scr_BulletTracePassed(void)
 		contentmask = MASK_SHOT;
 	}
 
-	/* New code: bulletTracePassed contentmask override */
+	/* New code start: bulletTracePassed contentmask override */
 	args = Scr_GetNumParam();
 	if ( args > 4 )
 		contentmask = Scr_GetInt(4);
@@ -6585,7 +6596,7 @@ void custom_Scr_SightTracePassed(void)
 		contentmask = MASK_OPAQUE_AI;
 	}
 
-	/* New code: sightTracePassed contentmask override */
+	/* New code start: sightTracePassed contentmask override */
 	args = Scr_GetNumParam();
 	if ( args > 4 )
 		contentmask = Scr_GetInt(4);
@@ -7414,14 +7425,14 @@ void custom_Bullet_Fire_Drop_Think(int clientNum, droppingBullet_t *bullet)
 	custom_Bullet_Drop_Nextpos(end, bullet);
 	if ( custom_Bullet_Fire_Drop(bullet, bullet->attacker, bullet->inflictor, bullet->position, end, bullet->dmgScale, &bullet->wp, bullet->attacker) )
 	{
-		if( bullet->visualBullet )
+		if ( bullet->visualBullet )
 			custom_Bullet_Drop_Finalize_Visual(bullet, qfalse);
 
 		custom_Bullet_Drop_Free(clientNum, bullet);
 	}
 	else
 	{
-		if( bullet->visualBullet )
+		if ( bullet->visualBullet )
 			custom_Bullet_Drop_Update_Visual(bullet, end);
 	}
 }
@@ -7435,14 +7446,14 @@ void custom_Bullet_Fire_Drop_Think_AntiLag(int clientNum, droppingBullet_t *bull
 	custom_Bullet_Drop_Nextpos(end, bullet);
 	if ( custom_Bullet_Fire_Drop(bullet, bullet->attacker, bullet->inflictor, bullet->position, end, bullet->dmgScale, &bullet->wp, bullet->attacker) )
 	{
-		if( bullet->visualBullet )
+		if ( bullet->visualBullet )
 			custom_Bullet_Drop_Finalize_Visual(bullet, qfalse);
 
 		custom_Bullet_Drop_Free(clientNum, bullet);
 	}
 	else
 	{
-		if( bullet->visualBullet )
+		if ( bullet->visualBullet )
 			custom_Bullet_Drop_Update_Visual(bullet, end);
 	}
 	G_AntiLag_RestoreClientPos(&antilagStore);
@@ -7735,7 +7746,7 @@ void openLogfile(qboolean reopen)
 		FS_FCloseFile(logfile);
 	}
 
-	if( logfileRotate->current.integer > 0 )
+	if ( logfileRotate->current.integer > 0 )
 	{
 		char logfilePath[512];
 		char newLogfilePath[512];
@@ -7743,7 +7754,7 @@ void openLogfile(qboolean reopen)
 		int fileIndex = maxFileIndex;
 
 		// Check existance of older log files
-		while( fileIndex > 0 )
+		while ( fileIndex > 0 )
 		{
 			snprintf(logfilePath, sizeof(logfilePath), "%s/%s/%s.%d", fs_homepath->current.string, fs_game->current.string, logfileName->current.string, fileIndex);
 			if ( access(logfilePath, F_OK) != -1 )
@@ -8203,7 +8214,7 @@ void custom_G_RunFrameForEntity(gentity_t *ent)
 				{
 					G_RunCorpse(ent);
 				}
-				/* New code: Entity gravity */
+				/* New code start: Entity gravity */
 				else if ( customEntityState[(ent->s).number].gravityType )
 				{
 					vec3_t oldOrigin;
@@ -8624,7 +8635,7 @@ int custom_CM_AreaEntities(const float *mins, const float *maxs, int *entityList
 	 0xFFFFFFFF	G_RadiusDamage
 	*/
 
-	/* New code: g_triggerMode dvar */
+	/* New code start: g_triggerMode dvar */
 	if ( g_triggerMode->current.integer == 0 && ( contentmask == 0x400000 || contentmask == 0x405c0008 ) )
 	{
 		return 0;
@@ -8772,7 +8783,9 @@ void custom_PlayerCmd_DeactivateReverb(scr_entref_t entref)
 	{
 		Scr_Error("priority must be \'snd_enveffectsprio_level\' or \'snd_enveffectsprio_shellshock\'\n");
 	}
-	SV_GameSendServerCommand(entref.entnum, SV_CMD_RELIABLE, custom_va("%c %i %g", 68, priority, fadetime)); // New: Fixed command that is broken in stock
+
+	// New: Fixed command that is broken in original code
+	SV_GameSendServerCommand(entref.entnum, SV_CMD_RELIABLE, custom_va("%c %i %g", 68, priority, fadetime));
 }
 
 void custom_PlayerCmd_DeactivateChannelVolumes(scr_entref_t entref)
@@ -8822,12 +8835,16 @@ void custom_PlayerCmd_DeactivateChannelVolumes(scr_entref_t entref)
 	{
 		Scr_Error("priority must be \'snd_channelvolprio_holdbreath\', \'snd_channelvolprio_pain\', or \'snd_channelvolprio_shellshock\'\n");
 	}
-	SV_GameSendServerCommand(entref.entnum, SV_CMD_RELIABLE, custom_va("%c %i %g", 70, priority, fadetime)); // New: Fixed command that is broken in stock
+
+	// New: Fixed command that is broken in original code
+	SV_GameSendServerCommand(entref.entnum, SV_CMD_RELIABLE, custom_va("%c %i %g", 70, priority, fadetime));
 }
 
 void custom_Cmd_PrintEntities_f(void)
 {
-	if ( sv_cheats->current.boolean ) // New: Omit request if cheats are disabled as this could lag servers with low IOPS
+	// New: Omit request if cheats are disabled as this could lag servers with
+	// low IOPS
+	if ( sv_cheats->current.boolean )
 		G_PrintEntities();
 }
 
@@ -8869,11 +8886,15 @@ int custom_Cmd_FollowCycle_f(gentity_t *ent, int dir)
 		{
 			client_t *client = &svs.clients[clientNum];
 
+			/* New code start: g_spectateBots dvar */
 			if ( client->bIsTestClient && !g_spectateBots->current.boolean )
 				continue;
+			/* New code end */
 			
+			/* New code start: setAllowSpectators */
 			if ( customPlayerState[clientNum].notAllowingSpectators )
 				continue;
+			/* New code end */
 
 			ent->client->spectatorClient = clientNum;
 			ent->client->sess.sessionState = STATE_SPECTATOR;
@@ -8910,7 +8931,8 @@ void custom_GScr_LogPrint(void)
 		iStringLen += len;
 	}
 
-	G_LogPrintf("%s", string); // New: Fixed potential format string crash
+	// New: Fixed potential format string crash
+	G_LogPrintf("%s", string);
 }
 
 void custom_Huff_offsetReceive(node_t *node, int *ch, byte *fin, int readsize, int *offset)
