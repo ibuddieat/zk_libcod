@@ -496,12 +496,12 @@ void custom_Dvar_SetFromStringFromSource(dvar_t *dvar, const char *string, DvarS
 	char buf[MAX_STRINGLENGTH];
 	DvarValue newValue;
 
+	Sys_EnterCriticalSectionInternal(CRITSECT_DVAR);
+
 	/* New: sv_version dvar value sanitization */
 	if ( sv_version && dvar == sv_version )
 		string = getShortVersionFromProtocol(getProtocolFromShortVersion(string));
 	/* New code end */
-
-	Sys_EnterCriticalSectionInternal(CRITSECT_DVAR);
 
 	I_strncpyz(buf, string, sizeof(buf));
 	newValue = Dvar_StringToValue(dvar->type, dvar->domain, buf);
