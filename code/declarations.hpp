@@ -186,6 +186,7 @@
 #define PMF_SPECTATING      0x1000000
 #define PMF_DISABLEWEAPON   0x4000000
 
+#define CONTENTS_NONE               0x0
 #define CONTENTS_SOLID              0x1
 #define CONTENTS_FOLIAGE            0x2
 #define CONTENTS_NONCOLLIDING       0x4
@@ -1262,6 +1263,13 @@ typedef struct moveclip_s
 	int passOwnerNum;
 	int contentmask;
 } moveclip_t;
+
+typedef struct pmoveHandler_s
+{
+	void (*trace)(trace_t *, const float *, const float *, const float *, const float *, int, int);
+	int (*isEntWalkable)(const float *, int, int);
+	void (*playerEvent)(int, int);
+} pmoveHandler_t;
 
 typedef struct usercmd_s
 {
@@ -3935,7 +3943,15 @@ typedef struct customEntityState_s
 	float parallelBounce;
 	float perpendicularBounce;
 	qboolean convertedTrigger;
+	qboolean notSolidBrushModel; // If true, not solid for at least one player
+	int clientMask[2];
 } customEntityState_t;
+
+typedef struct savedBrushModelContents_s
+{
+	int num;
+	int contents;
+} savedBrushModelContents_t;
 
 #define MAX_DROPPING_BULLETS 20 // Per player
 typedef struct

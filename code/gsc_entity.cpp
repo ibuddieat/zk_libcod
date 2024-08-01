@@ -2,6 +2,7 @@
 
 #if COMPILE_ENTITY == 1
 
+extern customEntityState_t customEntityState[MAX_GENTITIES];
 extern customPlayerState_t customPlayerState[MAX_CLIENTS];
 
 void gsc_entity_setalive(scr_entref_t ref)
@@ -41,6 +42,53 @@ void gsc_entity_setbounds(scr_entref_t ref)
 
 	VectorCopy(mins, entity->r.mins);
 	VectorCopy(maxs, entity->r.maxs);
+
+	stackPushBool(qtrue);
+}
+
+void gsc_entity_notsolidforplayer(scr_entref_t ref)
+{
+	int id = ref.entnum;
+	gentity_t *entity = &g_entities[id];
+
+	if ( !(entity->r).bmodel )
+	{
+		stackError("gsc_entity_notsolidforplayer() entity %i does not have brush models", id);
+		stackPushUndefined();
+		return;
+	}
+
+	gentity_t *player = Scr_GetEntity(0);
+	int id2 = player->s.number;
+	if ( id2 >= MAX_CLIENTS )
+		Scr_ParamError(0, custom_va("entity %i is not a player", id2));
+
+	customEntityState[id].clientMask[id2 >> 5] |= 1 << (id2 & 0x1F);
+	customEntityState[id].notSolidBrushModel = qtrue;
+
+	stackPushBool(qtrue);
+}
+
+void gsc_entity_solidforplayer(scr_entref_t ref)
+{
+	int id = ref.entnum;
+	gentity_t *entity = &g_entities[id];
+
+	if ( !(entity->r).bmodel )
+	{
+		stackError("gsc_entity_notsolidforplayer() entity %i does not have brush models", id);
+		stackPushUndefined();
+		return;
+	}
+
+	gentity_t *player = Scr_GetEntity(0);
+	int id2 = player->s.number;
+	if ( id2 >= MAX_CLIENTS )
+		Scr_ParamError(0, custom_va("entity %i is not a player", id2));
+
+	customEntityState[id].clientMask[id2 >> 5] &= ~(1 << (id2 & 0x1F));
+	if ( !customEntityState[id].clientMask[0] && !customEntityState[id].clientMask[1] )
+		customEntityState[id].notSolidBrushModel = qfalse;
 
 	stackPushBool(qtrue);
 }
@@ -239,8 +287,6 @@ void gsc_entity_getturretowner(scr_entref_t ref)
 		stackPushUndefined();
 	}
 }
-
-extern customEntityState_t customEntityState[MAX_GENTITIES];
 
 void gsc_entity_enablebounce(scr_entref_t ref)
 {

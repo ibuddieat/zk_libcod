@@ -321,12 +321,14 @@ scr_method_t scriptMethods[] =
 	{"isGravityEnabled", gsc_entity_isgravityenabled, 0},
 	{"isLinkedTo", gsc_entity_islinkedto, 0},
 	{"isTurret", gsc_entity_isturret, 0},
+	{"notSolidForPlayer", gsc_entity_notsolidforplayer, 0},
 	{"setAlive", gsc_entity_setalive, 0},
 	{"setBounds", gsc_entity_setbounds, 0},
 	{"setClipmask", gsc_entity_setclipmask, 0},
 	{"setEntityVelocity", gsc_entity_setentityvelocity, 0},
 	{"setMaxEntityVelocity", gsc_entity_setmaxentityvelocity, 0},
 	{"setLight", gsc_entity_setlight, 0},
+	{"solidForPlayer", gsc_entity_solidforplayer, 0},
 	#endif
 
 	#if COMPILE_MYSQL_VORON == 1

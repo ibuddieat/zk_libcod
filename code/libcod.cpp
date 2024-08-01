@@ -277,6 +277,12 @@ const entityHandler_t entityHandlers[] =
 	/* Player Mantling Block */ { G_FreeEntity, NULL, NULL, NULL, NULL, NULL, NULL, NULL, MOD_UNKNOWN, MOD_UNKNOWN },
 };
 
+const pmoveHandler_t pmoveHandlers[] =
+{
+	{ CG_TraceCapsule, CG_PointContents, NULL },
+	{ G_TraceCapsule, SV_PointContents, G_PlayerEvent },
+};
+
 customEntityState_t customEntityState[MAX_GENTITIES];
 customPlayerState_t customPlayerState[MAX_CLIENTS];
 
@@ -2209,10 +2215,23 @@ void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t 
 
 			/* New code start: Apply data for custom entity field usage
 			 Here in the optimization loop we apply the changes to entity
-			 fields where necessary, so that lc is updated accordingly
-			*/
+			 fields where necessary, so that lc is updated accordingly */
 			if ( numFields == 0x3b )
 			{
+				/* New code start: (not)SolidForPlayer */
+				if ( i == 13 ) // eFlags
+				{
+					if ( clientNum != -1 && entNum >= 0 )
+					{
+						if ( customEntityState[entNum].notSolidBrushModel )
+						{
+							if ( customEntityState[entNum].clientMask[clientNum >> 5] & (1 << (clientNum & 0x1F)) )
+								*toF |= 0x1;
+						}
+					}
+				}
+				/* New code end */
+
 				/* New code start: Custom headIconTeam */
 				// entityStateFields: iHeadIconTeam
 				if ( i == 46 )
@@ -2986,6 +3005,9 @@ void custom_SV_SendClientGameState(client_t *client)
 	// Restore previously saved values
 	customPlayerState[id].protocolVersion = protocolVersion;
 	memcpy(&customPlayerState[id].preProxyIP, &preProxyIP, 16);
+
+	// Update entity-related stuff
+	ClearNotSolidForPlayerFlags(id);
 	/* New code end */
 
 	// New: End here for bots
@@ -5781,6 +5803,87 @@ void custom_G_CallSpawn(void)
 	}
 }
 
+void ClearAllNotSolidForPlayerFlags(void)
+{
+	for ( int i = 72; i < MAX_GENTITIES; i++ )
+	{
+		customEntityState[i].notSolidBrushModel = qfalse;
+		customEntityState[i].clientMask[0] = 0;
+		customEntityState[i].clientMask[1] = 0;
+	}
+}
+
+void ClearNotSolidForPlayerFlags(int clientNum)
+{
+	gentity_t *ent;
+	int id;
+
+	// Skip reserved entity slots: Players, player clones
+	for ( int i = 72; i < level.num_entities; i++ )
+	{
+		ent = &g_entities[i];
+		id = ent - g_entities;
+
+		if ( ent->r.bmodel )
+		{
+			customEntityState[id].clientMask[clientNum >> 5] &= ~(1 << (clientNum & 0x1F));
+			if ( !customEntityState[id].clientMask[0] && !customEntityState[id].clientMask[1] )
+				customEntityState[id].notSolidBrushModel = qfalse;
+		}
+	}
+}
+
+savedBrushModelContents_t savedBrushModelContents[MAX_GENTITIES];
+int savedBrushModelContentsCount = 0;
+void SaveBrushModelContents(void)
+{
+	gentity_t *ent;
+
+	savedBrushModelContentsCount = 0;
+
+	// Skip reserved entity slots: Players, player clones
+	for ( int i = 72; i < level.num_entities; i++ )
+	{
+		ent = &g_entities[i];
+		if ( ent->r.bmodel )
+		{
+			savedBrushModelContents[savedBrushModelContentsCount].num = i;
+			savedBrushModelContents[savedBrushModelContentsCount].contents = ent->r.contents;
+			savedBrushModelContentsCount++;
+		}
+	}
+}
+
+void UpdateSavedBrushModelContents(int num, int contents)
+{
+	for ( int i = 0; i < savedBrushModelContentsCount; i++ )
+	{
+		savedBrushModelContents_t *ref = &savedBrushModelContents[i];
+		gentity_t *ent = &g_entities[ref->num];
+
+		if ( num == ent - g_entities )
+		{
+			savedBrushModelContents[i].contents = contents;
+			return;
+		}
+	}
+}
+
+void custom_ScrCmd_SetContents(scr_entref_t entref)
+{
+	gentity_t *ent;
+	int contents;
+
+	ent = GetEntity(entref.entnum);
+	contents = Scr_GetInt(0);
+	Scr_AddInt((ent->r).contents);
+	(ent->r).contents = contents;
+	SV_LinkEntity(ent);
+
+	// New: Update saved brush model contents list
+	UpdateSavedBrushModelContents(entref.entnum, contents);
+}
+
 void custom_G_SpawnEntitiesFromString(void)
 {
 	if ( !G_ParseSpawnVars(&level.spawnVars) ) 
@@ -5806,6 +5909,13 @@ void custom_G_SpawnEntitiesFromString(void)
 	
 	while ( G_ParseSpawnVars(&level.spawnVars) )
 		custom_G_CallSpawn();
+
+	/* New: Collect list of brush model entities after map load so that we do
+	 not have to loop through all entities multiple times per player and
+	 server frame when modifying the entity contents in player movement
+	 trace calls */
+	ClearAllNotSolidForPlayerFlags();
+	SaveBrushModelContents();
 }
 
 void custom_Scr_LoadGameType(void)
@@ -9461,6 +9571,49 @@ void custom_ClientScr_GetHeadIconTeam(gclient_t *pSelf, const game_client_field_
 	Scr_AddConstString(str);
 }
 
+void SetupBrushModelContents(int clientNum)
+{
+	for ( int i = 0; i < savedBrushModelContentsCount; i++ )
+	{
+		savedBrushModelContents_t *ref = &savedBrushModelContents[i];
+		gentity_t *ent = &g_entities[ref->num];
+
+		if ( customEntityState[ref->num].notSolidBrushModel )
+		{
+			if ( customEntityState[ref->num].clientMask[clientNum >> 5] & (1 << (clientNum & 0x1F)) )
+				ent->r.contents = CONTENTS_NONE;
+		}
+	}
+}
+
+void RestoreBrushModelContents()
+{
+	for ( int i = 0; i < savedBrushModelContentsCount; i++ )
+	{
+		savedBrushModelContents_t *ref = &savedBrushModelContents[i];
+		gentity_t *ent = &g_entities[ref->num];
+
+		ent->r.contents = ref->contents;
+	}
+}
+
+void custom_PM_playerTrace(pmove_t *pmove, trace_t *results, const float *start, const float *mins, const float *maxs, const float *end, int passEntityNum, int contentMask)
+{
+	// New: (not)SolidForPlayer
+	SetupBrushModelContents(passEntityNum);
+
+	(*pmoveHandlers[pmove->handler].trace)(results, start, mins, maxs, end, passEntityNum, contentMask);
+	if ( (results->startsolid != 0) && ((results->contents & CONTENTS_BODY) != 0) )
+	{
+		PM_AddTouchEnt(pmove, results->entityNum);
+		pmove->tracemask = pmove->tracemask & ~CONTENTS_BODY;
+		(*pmoveHandlers[pmove->handler].trace)(results, start, mins, maxs, end, passEntityNum, contentMask & ~CONTENTS_BODY);
+	}
+
+	// New: (not)SolidForPlayer
+	RestoreBrushModelContents();
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -9640,6 +9793,8 @@ public:
 		cracking_hook_function(0x080B4ADA, (int)custom_Dvar_SetFromStringFromSource);
 		cracking_hook_function(0x08096E0C, (int)custom_SV_MasterAddress);
 		cracking_hook_function(0x080FDF08, (int)custom_DeathmatchScoreboardMessage);
+		cracking_hook_function(0x080E1360, (int)custom_PM_playerTrace);
+		cracking_hook_function(0x0811220C, (int)custom_ScrCmd_SetContents);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC718, (int)Jump_ClearState);

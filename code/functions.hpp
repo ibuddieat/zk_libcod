@@ -597,6 +597,9 @@ static const RuntimeError_t RuntimeError = (RuntimeError_t)0x080788D2;
 typedef void (*PM_AddEvent_t)(playerState_t *ps, entity_event_t newEvent);
 static const PM_AddEvent_t PM_AddEvent = (PM_AddEvent_t)0x080E1452;
 
+typedef void (*PM_AddTouchEnt_t)(pmove_t *pm, int entityNum);
+static const PM_AddTouchEnt_t PM_AddTouchEnt = (PM_AddTouchEnt_t)0x080E1474;
+
 typedef StanceState (*PM_GetEffectiveStance_t)(struct playerState_s *ps);
 static const PM_GetEffectiveStance_t PM_GetEffectiveStance = (PM_GetEffectiveStance_t)0x080E1532;
 
@@ -770,6 +773,9 @@ static const G_GeneralLink_t G_GeneralLink = (G_GeneralLink_t)0x0811E316;
 
 typedef void (*G_SpawnItem_t)(gentity_t *ent, gitem_t *item);
 static const G_SpawnItem_t G_SpawnItem = (G_SpawnItem_t)0x08107342;
+
+typedef void (*G_PlayerEvent_t)(int clientNum, int event);
+static const G_PlayerEvent_t G_PlayerEvent = (G_PlayerEvent_t)0x080F7B38;
 
 typedef void (*G_AddEvent_t)(gentity_t *ent, int event, int eventParm);
 static const G_AddEvent_t G_AddEvent = (G_AddEvent_t)0x0811F232;
@@ -1170,6 +1176,9 @@ static const G_LocationalTrace_t G_LocationalTrace = (G_LocationalTrace_t)0x0810
 typedef int (*G_LocationalTracePassed_t)(const float *start, const float *end, int passEntityNum, int contentmask);
 static const G_LocationalTracePassed_t G_LocationalTracePassed = (G_LocationalTracePassed_t)0x0810A622;
 
+typedef void (*CG_TraceCapsule_t)(trace_t *results, const float *start, const float *mins, const float *maxs, const float *end ,int passEntityNum, int contentMask);
+static const CG_TraceCapsule_t CG_TraceCapsule = (CG_TraceCapsule_t)0x080F3CFE;
+
 typedef void (*G_TraceCapsule_t)(trace_t *results, const float *start, const float *mins, const float *maxs, const float *end, int passEntityNum, int contentMask);
 static const G_TraceCapsule_t G_TraceCapsule = (G_TraceCapsule_t)0x0810A528;
 
@@ -1181,6 +1190,9 @@ static const G_SightTrace_t G_SightTrace = (G_SightTrace_t)0x0810A672;
 
 typedef float (*SV_FX_GetVisibility_t)(const float *start, const float *end);
 static const SV_FX_GetVisibility_t SV_FX_GetVisibility = (SV_FX_GetVisibility_t)0x08090AFA;
+
+typedef int (*CG_PointContents_t)(const float *p, int passEntityNum, int contentmask);
+static const CG_PointContents_t CG_PointContents = (CG_PointContents_t)0x080F3DC0;
 
 typedef int (*SV_PointContents_t)(const float *p, int passEntityNum, int contentmask);
 static const SV_PointContents_t SV_PointContents = (SV_PointContents_t)0x0809E368;

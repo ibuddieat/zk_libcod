@@ -19,10 +19,12 @@ New script code methods:
   * `<entity> isGravityEnabled()`
   * `<entity> isLinkedTo()`
   * `<entity> isTurret()`
+  * `<entity> notSolidForPlayer(<player>)`
   * `<entity> setClipmask(<clip mask>)`
   * `<entity> setEntityVelocity(<velocity>)`
   * `<entity> setMaxEntityVelocity(<velocity>)`
   * `<entity> setLight(<red>, <green>, <blue>, <intensity>)`
+  * `<entity> solidForPlayer(<player>)`
   * `<entity> spawnGrenade(<weapon>, <origin>, [<direction>], [<velocity>], [<fuseTime>])`
   * `<player> isAllowingSpectators()`
   * `<player> canUseTurret(<turret>)`
