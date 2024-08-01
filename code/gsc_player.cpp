@@ -3138,15 +3138,18 @@ void gsc_player_setallowspectators(scr_entref_t ref)
 	allowed = Scr_GetInt(0);
 	customPlayerState[id].notAllowingSpectators = !allowed;
 
-	// Stop spectating for players that already spectate the target
-	for ( i = 0; i < sv_maxclients->current.integer; i++ )
+	if ( !allowed )
 	{
-		if ( i == id )
-			continue;
-		
-		player = &g_entities[i];
-		if ( player->client->spectatorClient == id )
-			StopFollowing(player);
+		// Stop spectating for players that already spectate the target
+		for ( i = 0; i < sv_maxclients->current.integer; i++ )
+		{
+			if ( i == id )
+				continue;
+			
+			player = &g_entities[i];
+			if ( player->client->spectatorClient == id )
+				StopFollowing(player);
+		}
 	}
 
 	stackPushBool(qtrue);
