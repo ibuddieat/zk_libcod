@@ -1182,7 +1182,7 @@ static const G_SightTrace_t G_SightTrace = (G_SightTrace_t)0x0810A672;
 typedef float (*SV_FX_GetVisibility_t)(const float *start, const float *end);
 static const SV_FX_GetVisibility_t SV_FX_GetVisibility = (SV_FX_GetVisibility_t)0x08090AFA;
 
-typedef int (*SV_PointContents_t)(const vec3_t *p, int passEntityNum, int contentmask);
+typedef int (*SV_PointContents_t)(const float *p, int passEntityNum, int contentmask);
 static const SV_PointContents_t SV_PointContents = (SV_PointContents_t)0x0809E368;
 
 typedef void (*AngleVectors_t)(const vec3_t *angles, vec3_t *forward, vec3_t *right, vec3_t *up);

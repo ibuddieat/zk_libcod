@@ -7907,7 +7907,7 @@ qboolean G_BounceGravityModel(gentity_t *ent, trace_t *trace) // G_BounceMissile
 	vec3_t velocity;
 	float dot;
 
-	contents = SV_PointContents(&(ent->r).currentOrigin, -1, CONTENTS_WATER);
+	contents = SV_PointContents((ent->r).currentOrigin, -1, CONTENTS_WATER);
 	BG_EvaluateTrajectoryDelta(&(ent->s).pos, 50 + (int)((float)(level.time - level.previousTime) * trace->fraction) + level.previousTime, velocity);
 	dot = DotProduct(velocity, trace->normal);
 	VectorMA(velocity, dot * -2.0, trace->normal, (ent->s).pos.trDelta);
@@ -8002,7 +8002,7 @@ void G_RunGravityModelWithBounce(gentity_t *ent) // G_RunMissile as base
 	absDeltaZ = (ent->s).pos.trDelta[2];
 	if ( absDeltaZ < 0 )
 		absDeltaZ *= -1;
-	if ( ( absDeltaZ <= 30.0 ) || SV_PointContents(&(ent->r).currentOrigin, -1, CONTENTS_WATER) )
+	if ( ( absDeltaZ <= 30.0 ) || SV_PointContents((ent->r).currentOrigin, -1, CONTENTS_WATER) )
 	{
 		G_MissileTrace(&trace, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask);
 	}
