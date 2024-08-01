@@ -1,4 +1,4 @@
-# libcod
+# ${\textsf{\color{red}lib\color{green}cod\color{blue}2}\ }$
 
 **This extension ...**
 - provides interoperability between the Call of Duty&reg; 2 server and other software components and/or advanced game modifications (so-called "mods"),
@@ -29,8 +29,7 @@ The extension requires the [server binary for version 1.3](cod2_lnxded) to be us
   - Tried to align some coding styles 💩
 
 > [!IMPORTANT]
-> - Use this extension at your own risk (see [LICENSE](LICENSE.md)). Some features are considered highly experimental and might not be stable enough for productive use.
-> - The script API might change between major releases, documented [here](doc/changed_script_functions.md).
+> The script API might change between major releases, as documented [here](doc/changed_script_functions.md).
 
 ## 💡 Knowledge base
 - [Build and use](doc/building.md)
@@ -56,3 +55,6 @@ The extension requires the [server binary for version 1.3](cod2_lnxded) to be us
 - Discord: ibuddie
 - E-Mail: [ibuddie.at@gmail.com](mailto:ibuddie.at@gmail.com)
 - Want to contribute? Let's get in touch via one of the platforms listed above, or just submit a pull request.
+
+> [!WARNING]
+> Use this extension at your own risk (see [LICENSE](LICENSE.md)). Some features are considered highly experimental and might not be stable enough for productive use.

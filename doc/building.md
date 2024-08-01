@@ -8,8 +8,8 @@
 ### Requirements / Dependencies
 - gcc and g++ (with multilib on 64-bit x86 operating systems)
 - libstdc++5
-- MySQL client (if required by functionality)
-- Speex 1.1.9 (can be disabled in [config.hpp](code/config.hpp))
+- MySQL client (optional, see `nomysql` below)
+- Speex 1.1.9 (optional, see `nospeex` below)
 
 **Base requirements installation (for 64-bit Ubuntu 22.04 LTS)**
 ```
@@ -32,7 +32,8 @@ sudo apt install libmariadb-dev-compat:i386
 ```
 sudo apt install ffmpeg
 ```
-If not installed, `getSoundDuration(<aliasname>)` always returns undefined.
+> [!NOTE]
+> If not installed, `getSoundDuration(<aliasname>)` always returns undefined.
 
 **Custom sound file docs (for 64-bit Ubuntu 22.04 LTS)**
 - [Speex installation](doc/install_speex.md)
@@ -45,11 +46,14 @@ If not installed, `getSoundDuration(<aliasname>)` always returns undefined.
 # Move into  the code directory
 cd code
 
-# Normal build
+# Default interactive build
 ./doit.sh
 
 # Alternative: Without Speex
 ./doit.sh nospeex
+
+# Alternative: Without MySQL and Speex
+./doit.sh nomysql nospeex
 
 # Alternative: Debug build with Speex
 ./doit.sh debug

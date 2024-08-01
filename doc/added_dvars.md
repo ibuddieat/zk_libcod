@@ -291,4 +291,5 @@ Other dvars (e.g., from legacy versions of libcod or other repositories):
     * Default: True
     * Effect: Toggle IWD file verification triggered by cp client commands.
 
-Note: Unless stated otherwise, all default values are defined to preserve the stock behavior of the game.
+> [!NOTE]
+> Unless stated otherwise, all default values are defined to preserve the stock behavior of the game.
