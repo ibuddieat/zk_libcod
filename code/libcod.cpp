@@ -87,6 +87,7 @@ dvar_t *con_coloredPrints;
 #endif
 dvar_t *fs_callbacks;
 dvar_t *fs_library;
+dvar_t *g_brushModelCollisionTweaks;
 dvar_t *g_bulletDrop;
 dvar_t *g_bulletDropMaxTime;
 dvar_t *g_corpseHit;
@@ -103,9 +104,9 @@ dvar_t *g_resetSlide;
 dvar_t *g_safePrecache;
 dvar_t *g_spawnMapTurrets;
 dvar_t *g_spawnMapWeapons;
+dvar_t *g_spectateBots;
 dvar_t *g_triggerMode;
 dvar_t *g_turretMissingTagTerminalError;
-dvar_t *g_spectateBots;
 dvar_t *libcod;
 dvar_t *loc_loadLocalizedMods;
 dvar_t *logErrors;
@@ -381,6 +382,7 @@ void common_init_complete_print(const char *format, ...)
 	#endif
 	fs_callbacks = Dvar_RegisterString("fs_callbacks", "", DVAR_ARCHIVE);
 	fs_library = Dvar_RegisterString("fs_library", "", DVAR_ARCHIVE);
+	g_brushModelCollisionTweaks = Dvar_RegisterBool("g_brushModelCollisionTweaks", qfalse, DVAR_ARCHIVE);
 	g_bulletDrop = Dvar_RegisterBool("g_bulletDrop", qfalse, DVAR_ARCHIVE);
 	g_bulletDropMaxTime = Dvar_RegisterInt("g_bulletDropMaxTime", 10000, 50, 60000, DVAR_ARCHIVE);
 	g_corpseHit = Dvar_RegisterBool("g_corpseHit", qtrue, DVAR_ARCHIVE);
@@ -9599,8 +9601,11 @@ void RestoreBrushModelContents()
 
 void custom_PM_playerTrace(pmove_t *pmove, trace_t *results, const float *start, const float *mins, const float *maxs, const float *end, int passEntityNum, int contentMask)
 {
-	// New: (not)SolidForPlayer
-	SetupBrushModelContents(passEntityNum);
+	/* New code start: (not)SolidForPlayer */
+	qboolean updateBrushModelContents = g_brushModelCollisionTweaks->current.boolean;
+	if ( updateBrushModelContents )
+		SetupBrushModelContents(passEntityNum);
+	/* New code end */
 
 	(*pmoveHandlers[pmove->handler].trace)(results, start, mins, maxs, end, passEntityNum, contentMask);
 	if ( (results->startsolid != 0) && ((results->contents & CONTENTS_BODY) != 0) )
@@ -9611,7 +9616,8 @@ void custom_PM_playerTrace(pmove_t *pmove, trace_t *results, const float *start,
 	}
 
 	// New: (not)SolidForPlayer
-	RestoreBrushModelContents();
+	if ( updateBrushModelContents )
+		RestoreBrushModelContents();
 }
 
 class cCallOfDuty2Pro
