@@ -1,3 +1,6 @@
+> [!NOTE]
+> Unless stated otherwise, all default values are defined to preserve the stock behavior of the game.
+
 Added dvars:
 
   * `g_brushModelCollisionTweaks`
@@ -142,6 +145,10 @@ Added dvars:
     * Type: Boolean
     * Default: True
     * Effect: Define whether the `sv_downloadMessage` dvar should also apply for map file downloads, i.e., such that contain `mp_` or `empty` in the file path.
+  * `sv_downloadMessageForLegacyClients`
+    * Type: String
+    * Default: ""
+    * Effect: If set to a non-empty string, players on game version 1.0 that attempt to download a file on connect are disconnected from the server, with the specified message displayed after disconnect. Related dvars: `sv_downloadMessage`, `sv_downloadMessageAtMap`.
   * `sv_kickGamestateLimitedClients`
     * Type: Boolean
     * Default: True
@@ -285,7 +292,7 @@ Other dvars (e.g., from legacy versions of libcod or other repositories):
   * `sv_downloadMessage`
     * Type: String
     * Default: ""
-    * Effect: If set to a non-empty string, players that attempt to download a file on connect are disconnected from the server, with the specified message displayed after disconnect. Related dvar: `sv_downloadMessageAtMap`.
+    * Effect: If set to a non-empty string, players that attempt to download a file on connect are disconnected from the server, with the specified message displayed after disconnect. Applies to all game versions. Related dvar: `sv_downloadMessageAtMap`.
   * `sv_noauthorize`
     * Type: Boolean
     * Default: False
@@ -294,6 +301,3 @@ Other dvars (e.g., from legacy versions of libcod or other repositories):
     * Type: Boolean
     * Default: True
     * Effect: Toggle IWD file verification triggered by cp client commands.
-
-> [!NOTE]
-> Unless stated otherwise, all default values are defined to preserve the stock behavior of the game.

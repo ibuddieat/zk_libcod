@@ -125,6 +125,7 @@ dvar_t *sv_cracked;
 dvar_t *sv_disconnectMessages;
 dvar_t *sv_downloadMessage;
 dvar_t *sv_downloadMessageAtMap;
+dvar_t *sv_downloadMessageForLegacyClients;
 dvar_t *sv_kickGamestateLimitedClients;
 dvar_t *sv_kickMessages;
 dvar_t *sv_limitLocalRcon;
@@ -412,6 +413,7 @@ void common_init_complete_print(const char *format, ...)
 	sv_disconnectMessages = Dvar_RegisterBool("sv_disconnectMessages", qtrue, DVAR_ARCHIVE);
 	sv_downloadMessage = Dvar_RegisterString("sv_downloadMessage", "", DVAR_ARCHIVE);
 	sv_downloadMessageAtMap = Dvar_RegisterBool("sv_downloadMessageAtMap", qtrue, DVAR_ARCHIVE);
+	sv_downloadMessageForLegacyClients = Dvar_RegisterString("sv_downloadMessageForLegacyClients", "", DVAR_ARCHIVE);
 	sv_kickGamestateLimitedClients = Dvar_RegisterBool("sv_kickGamestateLimitedClients", qtrue, DVAR_ARCHIVE);
 	sv_kickMessages = Dvar_RegisterBool("sv_kickMessages", qtrue, DVAR_ARCHIVE);
 	sv_limitLocalRcon = Dvar_RegisterBool("sv_limitLocalRcon", qtrue, DVAR_ARCHIVE);
@@ -3228,7 +3230,8 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 	if ( cl->clientDownloadingWWW )
 		return;
 
-	// If set, download custom message instead of download
+	// If set, download custom message instead of download. Applies for every
+	// client
 	if ( strlen(sv_downloadMessage->current.string) )
 	{
 		if ( ( strstr(cl->downloadName, "mp_") || strstr(cl->downloadName, "empty") ) && !sv_downloadMessageAtMap->current.boolean )
@@ -3239,6 +3242,23 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 		else
 		{
 			Com_sprintf(errorMessage, sizeof(errorMessage), sv_downloadMessage->current.string);
+			SV_WriteDownloadErrorToClient(cl, msg, errorMessage);
+			return;
+		}
+	}
+
+	// If set, download custom message instead of download. Here for clients on
+	// version 1.0 that do not support HTTP download
+	if ( strlen(sv_downloadMessageForLegacyClients->current.string) && customPlayerState[cl - svs.clients].protocolVersion == 115 )
+	{
+		if ( ( strstr(cl->downloadName, "mp_") || strstr(cl->downloadName, "empty") ) && !sv_downloadMessageAtMap->current.boolean )
+		{
+			// We might not want to push a custom message if the client is
+			// about to load smaller files such as those provided via manymaps
+		}
+		else
+		{
+			Com_sprintf(errorMessage, sizeof(errorMessage), sv_downloadMessageForLegacyClients->current.string);
 			SV_WriteDownloadErrorToClient(cl, msg, errorMessage);
 			return;
 		}
