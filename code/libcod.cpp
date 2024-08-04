@@ -736,6 +736,10 @@ void custom_SV_SaveSystemInfo()
 
 	// We (re)register the dvar here so that any latched value is applied
 	sv_version = Dvar_RegisterString("sv_version", "1.3", DVAR_ARCHIVE | DVAR_LATCH | DVAR_CHANGEABLE_RESET);
+
+	// Update related dvars accordingly
+	Dvar_SetIntByName("protocol", getProtocolFromShortVersion(sv_version->current.string));
+	Dvar_SetStringByName("shortversion", sv_version->current.string);
 	/* New code end */
 
 	dvar_modifiedFlags &= ~DVAR_SYSTEMINFO;
@@ -3997,11 +4001,6 @@ void custom_SVC_Status(netadr_t from)
 
 	LargeLocalConstructor(&buf, MAX_MSGLEN);
 	status = (char *)LargeLocalGetBuf(&buf);
-	
-	/* New code start: Configurable version response */
-	Dvar_SetIntByName("protocol", getProtocolFromShortVersion(sv_version->current.string));
-	Dvar_SetStringByName("shortversion", sv_version->current.string);
-	/* New code end */
 
 	strcpy(infostring, Dvar_InfoString(DVAR_SERVERINFO | DVAR_NORESTART));
 	Info_SetValueForKey(infostring, "challenge", SV_Cmd_Argv(1));
