@@ -160,6 +160,7 @@ cHook *hook_init_opcode;
 cHook *hook_play_movement;
 cHook *hook_playercmd_cloneplayer;
 cHook *hook_pm_beginweaponchange;
+cHook *hook_pmove;
 cHook *hook_scr_execentthread;
 cHook *hook_scr_execthread;
 cHook *hook_scr_loadgametype;
@@ -277,12 +278,6 @@ const entityHandler_t entityHandlers[] =
 	/* Item                  */ { NULL, NULL, NULL, Touch_Item_Auto, NULL, NULL, NULL, NULL, MOD_UNKNOWN, MOD_UNKNOWN },
 	/* Trigger Use           */ { NULL, NULL, NULL, NULL, use_trigger_use, NULL, NULL, NULL, MOD_UNKNOWN, MOD_UNKNOWN },
 	/* Player Mantling Block */ { G_FreeEntity, NULL, NULL, NULL, NULL, NULL, NULL, NULL, MOD_UNKNOWN, MOD_UNKNOWN },
-};
-
-const pmoveHandler_t pmoveHandlers[] =
-{
-	{ CG_TraceCapsule, CG_PointContents, NULL },
-	{ G_TraceCapsule, SV_PointContents, G_PlayerEvent },
 };
 
 customEntityState_t customEntityState[MAX_GENTITIES];
@@ -9618,21 +9613,21 @@ void RestoreBrushModelContents()
 	}
 }
 
-void custom_PM_playerTrace(pmove_t *pmove, trace_t *results, const float *start, const float *mins, const float *maxs, const float *end, int passEntityNum, int contentMask)
+void custom_Pmove(pmove_t *pm)
 {
 	/* New code start: (not)SolidForPlayer */
+	int id = pm->ps->clientNum;
 	qboolean updateBrushModelContents = g_brushModelCollisionTweaks->current.boolean;
+
 	if ( updateBrushModelContents )
-		SetupBrushModelContents(passEntityNum);
+		SetupBrushModelContents(id);
 	/* New code end */
 
-	(*pmoveHandlers[pmove->handler].trace)(results, start, mins, maxs, end, passEntityNum, contentMask);
-	if ( (results->startsolid != 0) && ((results->contents & CONTENTS_BODY) != 0) )
-	{
-		PM_AddTouchEnt(pmove, results->entityNum);
-		pmove->tracemask = pmove->tracemask & ~CONTENTS_BODY;
-		(*pmoveHandlers[pmove->handler].trace)(results, start, mins, maxs, end, passEntityNum, contentMask & ~CONTENTS_BODY);
-	}
+	hook_pmove->unhook();
+	void (*Pmove)(pmove_t *pm);
+	*(int *)&Pmove = hook_pmove->from;
+	Pmove(pm);
+	hook_pmove->hook();
 
 	// New: (not)SolidForPlayer
 	if ( updateBrushModelContents )
@@ -9733,6 +9728,8 @@ public:
 		hook_sv_status_f->hook();
 		hook_fs_registerdvars = new cHook(0x080A2C3C, (int)custom_FS_RegisterDvars);
 		hook_fs_registerdvars->hook();
+		hook_pmove = new cHook(0x080E9464, (int)custom_Pmove);
+		hook_pmove->hook();
 
 		#if COMPILE_PLAYER == 1
 		hook_play_movement = new cHook(0x08090DAC, (int)custom_SV_ClientThink);
@@ -9818,7 +9815,6 @@ public:
 		cracking_hook_function(0x080B4ADA, (int)custom_Dvar_SetFromStringFromSource);
 		cracking_hook_function(0x08096E0C, (int)custom_SV_MasterAddress);
 		cracking_hook_function(0x080FDF08, (int)custom_DeathmatchScoreboardMessage);
-		cracking_hook_function(0x080E1360, (int)custom_PM_playerTrace);
 		cracking_hook_function(0x0811220C, (int)custom_ScrCmd_SetContents);
 
 		#if COMPILE_JUMP == 1
