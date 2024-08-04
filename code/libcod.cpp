@@ -3631,34 +3631,6 @@ void hook_RuntimeError_in_VM_Execute(const char *pos, int error_index, const cha
 
 #if COMPILE_PLAYER == 1
 
-void hook_gamestate_info(const char *format, ...)
-{
-	char s[MAX_STRINGLENGTH];
-	va_list va;
-
-	va_start(va, format);
-	Q_vsnprintf(s, sizeof(s), format, va);
-	va_end(va);
-
-	Com_DPrintf("%s", s);
-		
-	char *tok;
-	int gamestateSize = 0;
-	int clientNum = 0;
-	tok = strtok(s, " ");
-
-	for ( int i = 0; tok != NULL; i++ )
-	{
-		if ( i == 1 )
-			gamestateSize = atoi(tok);
-		if ( i == 7 )
-			clientNum = atoi(tok);
-		tok = strtok(NULL, " ");
-	}
-
-	customPlayerState[clientNum].gamestateSize = gamestateSize;
-}
-
 void custom_SV_ClientThink(client_t *cl, usercmd_t *ucmd)
 {
 	hook_play_movement->unhook();
