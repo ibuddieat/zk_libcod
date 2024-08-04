@@ -5107,7 +5107,8 @@ void custom_G_RunFrame(int levelTime)
 						customPlayerState[i].currentSoundTalker = 0;
 						customPlayerState[i].currentSoundIndex = 0;
 						customPlayerState[i].sentVoiceDataIndex = 0;
-						Scr_Notify(&g_entities[i], custom_scr_const.sound_file_done, 0);
+						if ( Scr_IsSystemActive() )
+							Scr_Notify(&g_entities[i], custom_scr_const.sound_file_done, 0);
 						break;
 					}
 					voicePacket->talkerNum = customPlayerState[i].currentSoundTalker;
@@ -6093,7 +6094,7 @@ LAB_08121ee6:
 								(client->ps).cursorHintString = cursorHintString;
 
 								/* New code start: sv_botUseTriggerUse dvar */
-								if ( cl->bIsTestClient && sv_botUseTriggerUse->current.boolean )
+								if ( cl->bIsTestClient && sv_botUseTriggerUse->current.boolean && Scr_IsSystemActive() )
 								{
 									Scr_AddEntity(ent);
 									Scr_Notify(player, custom_scr_const.bot_trigger, 1);
@@ -6109,7 +6110,7 @@ LAB_08121ee6:
 							}
 
 							/* New code start: hintString support for trigger_radius */
-							if ( customEntityState[(ent->s).number].convertedTrigger )
+							if ( customEntityState[(ent->s).number].convertedTrigger && Scr_IsSystemActive() )
 							{
 								Scr_AddEntity(player);
 								Scr_Notify(ent, scr_const.trigger, 1);
@@ -8053,9 +8054,12 @@ qboolean G_BounceGravityModel(gentity_t *ent, trace_t *trace) // G_BounceMissile
 
 		if ( 0.7 < trace->normal[2] && VectorLength((ent->s).pos.trDelta) < 20.0 )
 		{
-			Scr_AddEntity(&g_entities[trace->entityNum]);
-			Scr_AddString(Com_SurfaceTypeToName((int)(trace->surfaceFlags & 0x1F00000U) >> 0x14));
-			Scr_Notify(ent, custom_scr_const.land, 2);
+			if ( Scr_IsSystemActive() )
+			{
+				Scr_AddEntity(&g_entities[trace->entityNum]);
+				Scr_AddString(Com_SurfaceTypeToName((int)(trace->surfaceFlags & 0x1F00000U) >> 0x14));
+				Scr_Notify(ent, custom_scr_const.land, 2);
+			}
 			G_SetOrigin(ent, (ent->r).currentOrigin);
 			G_MissileLandAngles(ent, trace, angle, 1);
 			G_SetAngle(ent, angle);
@@ -8175,7 +8179,7 @@ void G_RunGravityModelWithBounce(gentity_t *ent) // G_RunMissile as base
 	if ( trace.fraction != 1.0 )
 	{
 		bounce = G_BounceGravityModel(ent, &trace);
-		if ( bounce && trace.startsolid == 0)
+		if ( bounce && trace.startsolid == 0 && Scr_IsSystemActive() )
 		{
 			Scr_AddEntity(&g_entities[trace.entityNum]);
 			Scr_AddString(Com_SurfaceTypeToName((int)(trace.surfaceFlags & 0x1F00000U) >> 0x14));
@@ -8270,7 +8274,7 @@ void G_RunGravityModelNoBounce(gentity_t *ent) // G_RunItem as base
 					G_SetAngle(ent, angles);
 				}
 				G_SetOrigin(ent, lerpOrigin);
-				if ( (ent->s).groundEntityNum != trace.entityNum )
+				if ( (ent->s).groundEntityNum != trace.entityNum && Scr_IsSystemActive() )
 				{
 					Scr_AddEntity(&g_entities[trace.entityNum]);
 					Scr_AddString(Com_SurfaceTypeToName((int)(trace.surfaceFlags & 0x1F00000U) >> 0x14));
