@@ -184,6 +184,23 @@ void ReplaceShortversionString(char *buffer, proxy_t *proxy)
 		memcpy(offset, proxyShortversionString, 17);
 }
 
+qboolean Sys_IsProxyAddress(netadr_t from)
+{
+	if ( initialized )
+	{
+		int i;
+		proxy_t *proxy;
+
+		for ( i = 0; i < MAX_PROXIES; i++ )
+		{
+			proxy = &proxies[i];
+			if ( proxy->enabled && proxy->started && NET_CompareBaseAdr(from, proxy->listenAdr) )
+					return qtrue;
+		}
+	}
+	return qfalse;
+}
+
 void SV_ResetProxiesInformation()
 {
 	memset(&proxies, 0, sizeof(proxy_t) * MAX_PROXIES);
