@@ -3801,7 +3801,7 @@ static const int dvar_modifiedFlags_offset = 0x085ABE04;
 #define saLoadObjGlob (*((snd_alias_build_s**)( saLoadObjGlob_offset )))
 #define saLoadedObjs (*((int*)( saLoadedObjs_offset ))) // Guessed name
 #define gameInitialized (*((int*)( gameInitialized_offset )))
-#define netsrcString (*((char**)( netsrcString_offset )))
+#define netsrcString (((char**)( netsrcString_offset )))
 #define sv_masterAddress (*((netadr_t*)( sv_masterAddress_offset )))
 #define bg_iNumWeapons (*((int*)( bg_iNumWeapons_offset )))
 #define bg_weaponDefs (*((WeaponDef_t**)( bg_weaponDefs_offset )))
