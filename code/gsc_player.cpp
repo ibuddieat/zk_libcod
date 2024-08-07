@@ -2546,7 +2546,7 @@ void gsc_player_objective_player_add(scr_entref_t ref)
 	int args;
 	int objective_number;
 	objective_t *obj;
-	ushort index;
+	unsigned short index;
 	objectiveState_t state;
 
 	args = Scr_GetNumParam();
@@ -2725,7 +2725,7 @@ void gsc_player_objective_player_state(scr_entref_t ref)
 
 	int objective_number;
 	objective_t *obj;
-	ushort index;
+	unsigned short index;
 	objectiveState_t state;
 
 	objective_number = Scr_GetInt(0);
@@ -2962,7 +2962,7 @@ void gsc_player_setcollisionteam(scr_entref_t ref)
 		return;
 	}
 
-	short team = Scr_GetConstString(0);
+	unsigned short team = Scr_GetConstString(0);
 	if ( team == scr_const.none )
 	{
 		customPlayerState[id].collisionTeam = CUSTOM_TEAM_NONE;
