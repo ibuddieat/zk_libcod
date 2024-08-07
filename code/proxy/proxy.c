@@ -404,6 +404,7 @@ void * SV_StartProxy(void *threadArgs)
 
 		int activeClient = 1;
 		char client_ip[INET_ADDRSTRLEN];
+
 		inet_ntop(AF_INET, &addr.sin_addr, client_ip, sizeof(client_ip));
 		SockadrToNetadr(&addr, &adr);
 		strncpy(lowerCaseBuffer, buffer, MAX_BUFFER_SIZE);
@@ -422,14 +423,14 @@ void * SV_StartProxy(void *threadArgs)
 				continue;
 
 			// Prevent IP spoofing via userinfo IP client dvar
-			if ( strlen(InfoValueForKey(lowerCaseBuffer + 11, "ip", proxy)) )
+			if ( strlen(InfoValueForKey(lowerCaseBuffer + 11, "ip", proxy)) || strlen(InfoValueForKey(lowerCaseBuffer + 11, "port", proxy)) )
 			{
 				Com_Printf("Proxy: Potential IP spoofing attempt from %s\n", inet_ntoa(addr.sin_addr));
 
 				// Prevent excess outbound bandwidth usage when being flooded inbound
 				if ( SVC_RateLimit(&outboundLeakyBuckets[proxy->bucket], 10, 100) )
 				{
-					// In theory clients stay in the "Awaiting challenge..."
+					// In theory, clients stay in the "Awaiting challenge..."
 					// screen, but the disconnect messages that make it through
 					// every now and then will still cause a normal disconnect
 					Com_DPrintf("Proxy: IP spoofing disconnect rate limit exceeded, dropping response\n");
@@ -441,27 +442,29 @@ void * SV_StartProxy(void *threadArgs)
 				continue;
 			}
 
-			// Insert public client IP into userinfo string so that the getIP()
-			// script function can return that IP although the server only sees
-			// the proxy as peer
+			// Prepare insertion of public client address into userinfo string
+			// so that the getIP() script function can return that IP although
+			// the server only sees the proxy as peer, and status requests will
+			// yield the external IP:Port combinations
 			char ip_insertion[] = "\\ip\\";
+			char port_insertion[] = "\\port\\";
+			char client_port[6];
+			snprintf(client_port, sizeof(client_port), "%d", ntohs(addr.sin_port));
 			size_t current_len = strlen(buffer);
+			size_t added_len = strlen(ip_insertion) + strlen(client_ip) + strlen(port_insertion) + strlen(client_port);
 
-			if ( current_len + strlen(ip_insertion) + strlen(client_ip) + 1 < MAX_BUFFER_SIZE )
+			// Buffer size validation
+			if ( current_len + added_len + 1 >= sizeof(buffer) )
 			{
-				size_t insert_position = current_len - 1;
-
-				memmove(buffer + insert_position + strlen(ip_insertion), buffer + insert_position, current_len - insert_position);
-				memcpy(buffer + insert_position, ip_insertion, strlen(ip_insertion));
-				memcpy(buffer + insert_position + strlen(ip_insertion), client_ip, strlen(client_ip));
-				memcpy(buffer + insert_position + strlen(ip_insertion) + strlen(client_ip), "\"", 1);
-				bytes_received = bytes_received + strlen(ip_insertion) + strlen(client_ip) + 1;
-			}
-			else
-			{
-				Com_Printf("Proxy: Not enough space in userinfo string for IP address from client %s\n", inet_ntoa(addr.sin_addr));
+				Com_Printf("Proxy: Not enough space in userinfo string for address from client %s\n", inet_ntoa(addr.sin_addr));
 				continue;
 			}
+
+			// Insert data, starting at the closing quote
+			size_t insert_position = current_len - 1;
+			snprintf(buffer + insert_position, added_len + 2, "%s%s%s%s\"", ip_insertion, client_ip, port_insertion, client_port);
+			buffer[insert_position + added_len + 2] = '\0';
+			bytes_received = bytes_received + added_len;
 		}
 		else if ( memcmp(lowerCaseBuffer, "\xFF\xFF\xFF\xFFgetchallenge", 16) == 0 )
 		{

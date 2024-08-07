@@ -4038,6 +4038,7 @@ typedef struct customPlayerState_s
 	int protocolVersion;
 	resourceLimitedState_t resourceLimitedState;
 	char preProxyIP[16];
+	int preProxyPort;
 	unsigned int weapon;
 	qboolean hiddenFromScoreboard;
 	qboolean notAllowingSpectators;

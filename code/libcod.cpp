@@ -168,7 +168,6 @@ cHook *hook_scr_notify;
 cHook *hook_sys_quit;
 cHook *hook_sv_freeconfigstrings;
 cHook *hook_sv_masterheartbeat;
-cHook *hook_sv_status_f;
 cHook *hook_sv_verifyiwds_f;
 cHook *hook_touch_item_auto;
 cHook *hook_vm_notify;
@@ -579,7 +578,10 @@ const char * custom_ClientConnect(unsigned int clientNum, unsigned int scriptPer
 		memset(&customPlayerState[clientNum].preProxyIP, 0, sizeof(customPlayerState[0].preProxyIP));
 		I_strncpyz(preProxyIP, Info_ValueForKey(userinfo, "ip"), sizeof(customPlayerState[0].preProxyIP));
 		if ( strlen(preProxyIP) != 0 )
+		{
 			I_strncpyz(customPlayerState[clientNum].preProxyIP, preProxyIP, sizeof(customPlayerState[0].preProxyIP));
+			customPlayerState[clientNum].preProxyPort = atoi(Info_ValueForKey(userinfo, "port"));
+		}
 		/* New code end */
 
 		Scr_PlayerConnect(ent);
@@ -2971,6 +2973,7 @@ void custom_SV_SendClientGameState(client_t *client)
 	int id = client - svs.clients;
 	int protocolVersion;
 	char preProxyIP[16];
+	int preProxyPort;
 	int currentConfigstringSize = 0;
 	int clientGamestateDataCount = 1;
 	char *configstring;
@@ -2992,6 +2995,7 @@ void custom_SV_SendClientGameState(client_t *client)
 	// Save relevant data before clearing custom player state
 	protocolVersion = customPlayerState[id].protocolVersion;
 	memcpy(&preProxyIP, &customPlayerState[id].preProxyIP, 16);
+	preProxyPort = customPlayerState[id].preProxyPort;
 
 	// Reset custom player state to default values
 	memset(&customPlayerState[id], 0, sizeof(customPlayerState_t));
@@ -3008,6 +3012,7 @@ void custom_SV_SendClientGameState(client_t *client)
 	// Restore previously saved values
 	customPlayerState[id].protocolVersion = protocolVersion;
 	memcpy(&customPlayerState[id].preProxyIP, &preProxyIP, 16);
+	customPlayerState[id].preProxyPort = preProxyPort;
 
 	// Update entity-related stuff
 	ClearNotSolidForPlayerFlags(id);
@@ -4810,20 +4815,85 @@ void custom_Scr_ErrorInternal(void)
 
 void custom_SV_Status_f(void)
 {
-	byte logTimestampsValue;
+	int i, j, l;
+	client_t *cl;
+	int ping;
 
-	// New: Fix: Log only one message timestamp at status info
-	Com_Printf("status:");
-	logTimestampsValue = logTimestamps->current.boolean;
+	/* New code start: Log only one message timestamp at status info */
+	byte logTimestampsValue = logTimestamps->current.boolean;
+
+	Com_Printf("status:"); // This message still has a timestamp
 	logTimestamps->current.boolean = 0;
+	/* New code end */
 
-	hook_sv_status_f->unhook();
-	void (*SV_Status_f)(void);
-	*(int *)&SV_Status_f = hook_sv_status_f->from;
-	SV_Status_f();
-	hook_sv_status_f->hook();
+	if ( !com_sv_running->current.boolean )
+	{
+		Com_Printf("Server is not running.\n");
+		return;
+	}
 
-	logTimestamps->current.boolean = logTimestampsValue;
+	Com_Printf("map: %s\n", sv_mapname->current.string);
+	Com_Printf("num score ping guid   name            lastmsg address               qport rate\n");
+	Com_Printf("--- ----- ---- ------ --------------- ------- --------------------- ----- -----\n");
+
+	for ( i = 0, cl = svs.clients; i < sv_maxclients->current.integer; i++, cl++ )
+	{
+		if ( !cl->state )
+		{
+			continue;
+		}
+		Com_Printf("%3i ", i);
+		Com_Printf("%5i ", G_GetClientScore(cl - svs.clients));
+
+		if ( cl->state == CS_CONNECTED )
+		{
+			Com_Printf("CNCT ");
+		}
+		else if ( cl->state == CS_ZOMBIE )
+		{
+			Com_Printf("ZMBI ");
+		}
+		else
+		{
+			ping = cl->ping < 9999 ? cl->ping : 9999;
+			Com_Printf("%4i ", ping);
+		}
+
+		Com_Printf("%6i ", cl->guid);
+		Com_Printf("%s^7", cl->name);
+		l = 16 - I_DrawStrlen(cl->name);
+		for ( j = 0; j < l; j++ )
+			Com_Printf(" ");
+
+		Com_Printf("%7i ", svs.time - cl->lastPacketTime);
+
+		/* New code start: Print external client IP in case of proxying */
+		if ( strlen(customPlayerState[i].preProxyIP) )
+		{
+			char s[INET_ADDRSTRLEN + 8] = {0};
+			snprintf(s, sizeof(s), "%s:%i", customPlayerState[i].preProxyIP, customPlayerState[i].preProxyPort);
+			Com_Printf("%s", s);
+			l = 22 - strlen(s);
+		}
+		else
+		/* New code end */
+		{
+			const char *s = NET_AdrToString(cl->netchan.remoteAddress);
+			Com_Printf("%s", s);
+			l = 22 - strlen(s);
+		}
+		for ( j = 0; j < l; j++ )
+			Com_Printf(" ");
+
+		Com_Printf("%5i", cl->netchan.qport);
+
+		Com_Printf(" %5i", cl->rate);
+
+		Com_Printf("\n");
+	}
+	Com_Printf("\n");
+
+	logTimestamps->current.boolean = logTimestampsValue; // New
 }
 
 void custom_RuntimeError_Debug(conChannel_t channel, const char *pos, int index, const char *message)
@@ -9700,8 +9770,6 @@ public:
 		hook_sv_freeconfigstrings->hook();
 		hook_sys_quit = new cHook(0x080D3A7A, int(custom_Sys_Quit));
 		hook_sys_quit->hook();
-		hook_sv_status_f = new cHook(0x0808C706, int(custom_SV_Status_f));
-		hook_sv_status_f->hook();
 		hook_fs_registerdvars = new cHook(0x080A2C3C, (int)custom_FS_RegisterDvars);
 		hook_fs_registerdvars->hook();
 		hook_pmove = new cHook(0x080E9464, (int)custom_Pmove);
@@ -9792,6 +9860,7 @@ public:
 		cracking_hook_function(0x08096E0C, (int)custom_SV_MasterAddress);
 		cracking_hook_function(0x080FDF08, (int)custom_DeathmatchScoreboardMessage);
 		cracking_hook_function(0x0811220C, (int)custom_ScrCmd_SetContents);
+		cracking_hook_function(0x0808C706, (int)custom_SV_Status_f);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC718, (int)Jump_ClearState);

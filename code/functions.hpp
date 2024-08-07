@@ -834,6 +834,9 @@ static const G_LogPrintf_t G_LogPrintf = (G_LogPrintf_t)0x08109992;
 typedef void (*I_CleanStr_t)(char *str);
 static const I_CleanStr_t I_CleanStr = (I_CleanStr_t)0x080B7E54;
 
+typedef int (*I_DrawStrlen_t)(const char *str);
+static const I_DrawStrlen_t I_DrawStrlen = (I_DrawStrlen_t)0x080B7DEC;
+
 typedef void (*I_strncpyz_t)(char *dest, const char *src, int destsize);
 static const I_strncpyz_t I_strncpyz = (I_strncpyz_t)0x080B7AB6;
 
