@@ -3141,7 +3141,9 @@ void custom_SV_SendClientGameState(client_t *client)
 					return;
 				}
 
-				if ( client->reliableSequence - client->reliableAcknowledge == MAX_RELIABLE_COMMANDS )
+				// Leave one command free to avoid "Out of range 
+				// reliableAcknowledge message" spam
+				if ( client->reliableSequence - client->reliableAcknowledge == ( MAX_RELIABLE_COMMANDS - 1 ) )
 				{
 					// This could potentially be delayed further, to avoid
 					// filling up the command queue at once.
