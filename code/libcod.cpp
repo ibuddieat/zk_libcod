@@ -2959,7 +2959,10 @@ void custom_SV_ClientEnterWorld(client_t *client, usercmd_t *cmd)
 
 	/* New code start: Multi version support */
 	if ( customPlayerState[clientNum].resourceLimitedState > LIMITED_GAMESTATE && sv_kickGamestateLimitedClients->current.boolean )
+	{
+		Com_Printf("WARNING: Kicking client %i due to insufficient gamestate on map %s\n", clientNum, sv_mapname->current.string);
 		SV_DelayDropClient(client, "This map-mod combination requires game version 1.3");
+	}
 	/* New code end */
 }
 
