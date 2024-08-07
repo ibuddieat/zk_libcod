@@ -213,15 +213,15 @@ Added dvars:
   * `sv_proxyEnable_1_0`
     * Type: Boolean
     * Default: False
-    * Effect: Allows to open another (proxy) port that is advertised to the master server to show up as game version 1.0 in the ingame server browser. Has no effect if sv_version is already set to "1.0". If enabled, the proxy is started on map (re)load, and shuts down (only) on server quit.
+    * Effect: Allows to open another (proxy) port that is advertised to the master server to show up as game version 1.0 in the ingame server browser. Has no effect if sv_version is already set to "1.0". If enabled, the proxy is started on map (re)load, and shuts down (only) on server quit. Rcon commands are ignored on proxy ports. Clients connecting via the proxy always have a zero GUID, and player ping restrictions are not enforced on that port.
   * `sv_proxyEnable_1_2`
     * Type: Boolean
     * Default: False
-    * Effect: Allows to open another (proxy) port that is advertised to the master server to show up as game version 1.2 in the ingame server browser. Has no effect if sv_version is already set to "1.2". If enabled, the proxy is started on map (re)load, and shuts down (only) on server quit.
+    * Effect: Allows to open another (proxy) port that is advertised to the master server to show up as game version 1.2 in the ingame server browser. Has no effect if sv_version is already set to "1.2". If enabled, the proxy is started on map (re)load, and shuts down (only) on server quit. Rcon commands are ignored on proxy ports. Clients connecting via the proxy always have a zero GUID, and player ping restrictions are not enforced on that port.
   * `sv_proxyEnable_1_3`
     * Type: Boolean
     * Default: False
-    * Effect: Allows to open another (proxy) port that is advertised to the master server to show up as game version 1.3 in the ingame server browser. Has no effect if sv_version is already set to "1.3". If enabled, the proxy is started on map (re)load, and shuts down (only) on server quit.
+    * Effect: Allows to open another (proxy) port that is advertised to the master server to show up as game version 1.3 in the ingame server browser. Has no effect if sv_version is already set to "1.3". If enabled, the proxy is started on map (re)load, and shuts down (only) on server quit. Rcon commands are ignored on proxy ports. Clients connecting via the proxy always have a zero GUID, and player ping restrictions are not enforced on that port.
   * `sv_proxyForwardAddress_1_0`
     * Type: String
     * Default: "&lt;net_ip&gt;:&lt;net_port&gt;"
