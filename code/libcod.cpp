@@ -1304,6 +1304,14 @@ LAB_0808ec36:
 			NET_OutOfBandPrint(NS_SERVER, from, custom_va("error\n%s", denied));
 			Com_DPrintf("Game rejected a connection: %s.\n", denied);
 			SV_FreeClientScriptId(newcl);
+
+			/* New code start: Remove rejected client from scoreboard. This
+			 does not cover rejection by pbsv.m_AuthClient (PunkBuster) */
+			gclient_t *gclient = &level.clients[newcl - svs.clients];
+
+			gclient->sess.connected = CON_DISCONNECTED;
+			CalculateRanks();
+			/* New code end */
 			return;
 		}
 	}
@@ -1662,18 +1670,6 @@ void hook_ClientUserinfoChanged(int clientNum)
 
 	short ret = Scr_ExecEntThread(&g_entities[clientNum], codecallback_userinfochanged, 0);
 	Scr_FreeThread(ret);
-}
-
-void invalid_password(client_t *client)
-{
-	SV_FreeClientScriptId(client);
-
-	// New: Remove rejected client from scoreboard
-	// Note: This does not cover rejection by pbsv.m_AuthClient (PunkBuster)
-	gclient_t *gclient = &level.clients[client - svs.clients];
-
-	gclient->sess.connected = CON_DISCONNECTED;
-	CalculateRanks();
 }
 
 void custom_DeathmatchScoreboardMessage(gentity_t *ent)
@@ -9718,7 +9714,6 @@ public:
 		cracking_hook_call(0x0808FD52, (int)hook_bad_printf);
 		cracking_hook_call(0x080EBC58, (int)hook_findWeaponIndex);
 		cracking_hook_call(0x08062644, (int)hitch_warning_print);
-		cracking_hook_call(0x0808EE0A, (int)invalid_password);
 		cracking_hook_call(0x080AD1FE, (int)hook_Com_MakeSoundAliasesPermanent);
 
 		hook_gametype_scripts = new cHook(0x08110286, (int)custom_GScr_LoadGameTypeScript);
