@@ -87,6 +87,7 @@ dvar_t *con_coloredPrints;
 #endif
 dvar_t *fs_callbacks;
 dvar_t *fs_library;
+dvar_t *fs_mapScriptDirectories;
 dvar_t *g_brushModelCollisionTweaks;
 dvar_t *g_bulletDrop;
 dvar_t *g_bulletDropMaxTime;
@@ -377,6 +378,7 @@ void common_init_complete_print(const char *format, ...)
 	#endif
 	fs_callbacks = Dvar_RegisterString("fs_callbacks", "", DVAR_ARCHIVE);
 	fs_library = Dvar_RegisterString("fs_library", "", DVAR_ARCHIVE);
+	fs_mapScriptDirectories = Dvar_RegisterInt("fs_mapScriptDirectories", 0, 0, 2, DVAR_ARCHIVE);
 	g_brushModelCollisionTweaks = Dvar_RegisterBool("g_brushModelCollisionTweaks", qfalse, DVAR_ARCHIVE);
 	g_bulletDrop = Dvar_RegisterBool("g_bulletDrop", qfalse, DVAR_ARCHIVE);
 	g_bulletDropMaxTime = Dvar_RegisterInt("g_bulletDropMaxTime", 10000, 50, 60000, DVAR_ARCHIVE);
@@ -4597,6 +4599,36 @@ int hook_findMap(const char *qpath, void **buffer)
 		return read;
 	else
 		return FS_ReadFile(qpath, buffer);
+}
+
+void custom_GScr_LoadLevelScript()
+{
+	dvar_t *sv_mapname;
+	char s[128]; // New: Original size was 64 chars
+
+	sv_mapname = Dvar_RegisterString("mapname", "", DVAR_SERVERINFO | DVAR_ROM | DVAR_CHANGEABLE_RESET);
+
+	/* New code start: Logic for fs_mapScriptDirectories dvar */
+	switch ( fs_mapScriptDirectories->current.integer )
+	{
+	case 1:
+		Com_sprintf(s, sizeof(s), "maps/mp/%s/%s", sv_mapname->current.string, sv_mapname->current.string);
+		g_scr_data.levelscript = Scr_GetFunctionHandle(s, "main", 0);
+		break;
+	case 2:
+		Com_sprintf(s, sizeof(s), "maps/mp/%s/%s", sv_mapname->current.string, sv_mapname->current.string);
+		g_scr_data.levelscript = Scr_GetFunctionHandle(s, "main", 0);
+		if ( !g_scr_data.levelscript )
+		{
+			Com_sprintf(s, sizeof(s), "maps/mp/%s", sv_mapname->current.string);
+			g_scr_data.levelscript = Scr_GetFunctionHandle(s, "main", 0);
+		}
+		break;
+	default:
+		/* New code end */
+		Com_sprintf(s, sizeof(s), "maps/mp/%s", sv_mapname->current.string);
+		g_scr_data.levelscript = Scr_GetFunctionHandle(s, "main", 0);
+	}
 }
 
 void custom_Scr_InitOpcodeLookup()
@@ -9868,6 +9900,7 @@ public:
 		cracking_hook_function(0x080FDF08, (int)custom_DeathmatchScoreboardMessage);
 		cracking_hook_function(0x0811220C, (int)custom_ScrCmd_SetContents);
 		cracking_hook_function(0x0808C706, (int)custom_SV_Status_f);
+		cracking_hook_function(0x0811037A, (int)custom_GScr_LoadLevelScript);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC718, (int)Jump_ClearState);

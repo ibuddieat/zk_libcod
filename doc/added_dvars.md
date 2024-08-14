@@ -1,8 +1,16 @@
 > [!NOTE]
-> Unless stated otherwise, all default values are defined to preserve the stock behavior of the game.
+> * Unless stated otherwise, all default values are defined to preserve the stock behavior of the game.
+> * Text in square brackets like `[dvar]` refers to the value of the respective dvar.
+> * Stock script functions/methods start in uppercase here, whereas libcod script functions/methods start in lowercase.
 
 Added dvars:
 
+  * `fs_mapScriptDirectories`
+    * Type: Integer
+    * Default: 0
+    * Min. Value: 0
+    * Max. Value: 2
+    * Effect: `0`: The map script's `main` function is searched in `maps\mp\[mapname].gsc`. `1`: The map script's `main` function is searched in `maps\mp\[mapname]\[mapname].gsc` instead. `2`: The map script's `main` function is first searched in `maps\mp\[mapname]\[mapname].gsc` and reverts to stock behavior if not found.
   * `g_brushModelCollisionTweaks`
     * Type: Boolean
     * Default: False
@@ -46,7 +54,7 @@ Added dvars:
     * Default: 300
     * Min. Value: 50
     * Max. Value: 1000
-    * Effect: Defines the time in milliseconds how long players that are too close to each other will be moved away from each other with the speed defined via the g_playerCollisionEjectSpeed dvar.
+    * Effect: Defines the time in milliseconds how long players that are too close to each other will be moved away from each other with the speed defined via the `g_playerCollisionEjectSpeed` dvar.
   * `g_resetSlide`
     * Type: Boolean
     * Default: False
@@ -54,7 +62,7 @@ Added dvars:
   * `g_safePrecache`
     * Type: Boolean
     * Default: False
-    * Effect: If true, exceeding the limits of loadFx or precacheModel will generate console log warnings instead of stopping the server. Excess effects will be replaced by (= displayed as) `fx/misc/missing_fx.efx` and excess models as `xmodel/default_static_model`. These default assets are loaded automatically (and therefore occupy one config string each) if the dvar is set to true.
+    * Effect: If true, exceeding the limits of `LoadFx` or `PrecacheModel` will generate console log warnings instead of stopping the server. Excess effects will be replaced by (= displayed as) `fx/misc/missing_fx.efx` and excess models as `xmodel/default_static_model`. These default assets are loaded automatically (and therefore occupy one config string each) if the dvar is set to true.
   * `g_spawnMapTurrets`
     * Type: Boolean
     * Default: True
@@ -84,7 +92,7 @@ Added dvars:
   * `loc_loadLocalizedMods`
     * Type: Boolean
     * Default: False
-    * Effect: If true, localized .iwd files (such that follow the "localized_&lt;language&gt;_&lt;text&gt;.iwd" pattern) in the fs_game folder (unless it is "main") will be downloaded by clients too.
+    * Effect: If true, localized .iwd files (such that follow the "localized_&lt;language&gt;_&lt;text&gt;.iwd" pattern) in the `fs_game` folder (unless it is "main") will be downloaded by clients too.
   * `logErrors`
     * Type: Boolean
     * Default: False
@@ -92,13 +100,13 @@ Added dvars:
   * `logfileName`
     * Type: String
     * Default: "console_mp_server.log"
-    * Effect: Controls the console log file name. Should be set before the stock "logfile" dvar is set to a value greater than zero.
+    * Effect: Controls the console log file name. Should be set before the stock `logfile` dvar is set to a value greater than zero.
   * `logfileRotate`
     * Type: Integer
     * Default: 0
     * Min. Value: 0
     * Max. Value: 1000
-    * Effect: Defines how many console log files are preserved on a server restart. Naming scheme: &lt;logfileName dvar value&gt;.&lt;incrementing integer&gt;
+    * Effect: Defines how many console log files are preserved on a server restart. Naming scheme: `[logfileName].#` where `#` is an incrementing integer.
   * `logTimestamps`
     * Type: Boolean
     * Default: False
@@ -132,7 +140,7 @@ Added dvars:
     * Default: 0
     * Min. Value: 0
     * Max. Value: 2
-    * Effect: 0: Stock behavior, bots stay in connecting state after map switch and get kicked after sv_timeout. 1: Bots get kicked right on map switch. 2: Bots properly reconnect on map switch, using the same slot each.
+    * Effect: 0: Stock behavior, bots stay in connecting state after map switch and get kicked after `[sv_timeout]` seconds. 1: Bots get kicked right on map switch. 2: Bots properly reconnect on map switch, using the same slot each.
   * `sv_botUseTriggerUse`
     * Type: Boolean
     * Default: False
@@ -201,15 +209,15 @@ Added dvars:
   * `sv_proxyAddress_1_0`
     * Type: String
     * Default: "0.0.0.0:28960"
-    * Effect: Hostname and port the proxy socket for game version 1.0 should listen to (see sv_proxyEnable_1_0 dvar).
+    * Effect: Hostname and port the proxy socket for game version 1.0 should listen to (see `sv_proxyEnable_1_0` dvar).
   * `sv_proxyAddress_1_2`
     * Type: String
     * Default: "0.0.0.0:28961"
-    * Effect: Hostname and port the proxy socket for game version 1.2 should listen to (see sv_proxyEnable_1_2 dvar).
+    * Effect: Hostname and port the proxy socket for game version 1.2 should listen to (see `sv_proxyEnable_1_2` dvar).
   * `sv_proxyAddress_1_3`
     * Type: String
     * Default: "0.0.0.0:28962"
-    * Effect: Hostname and port the proxy socket for game version 1.3 should listen to (see sv_proxyEnable_1_3 dvar).
+    * Effect: Hostname and port the proxy socket for game version 1.3 should listen to (see `sv_proxyEnable_1_3` dvar).
   * `sv_proxyEnable_1_0`
     * Type: Boolean
     * Default: False
@@ -224,16 +232,16 @@ Added dvars:
     * Effect: Allows to open another (proxy) port that is advertised to the master server to show up as game version 1.3 in the ingame server browser. Has no effect if sv_version is already set to "1.3". If enabled, the proxy is started on map (re)load, and shuts down (only) on server quit. Rcon commands are ignored on proxy ports. Clients connecting via the proxy always have a zero GUID, and player ping restrictions are not enforced on that port.
   * `sv_proxyForwardAddress_1_0`
     * Type: String
-    * Default: "&lt;net_ip&gt;:&lt;net_port&gt;"
-    * Effect: Destination hostname and port the proxy socket for game version 1.0 should forward packets to (see sv_proxyAddress_1_0 dvar).
+    * Default: "`[net_ip]:[net_port]`"
+    * Effect: Destination hostname and port the proxy socket for game version 1.0 should forward packets to (see `sv_proxyAddress_1_0` dvar).
   * `sv_proxyForwardAddress_1_2`
     * Type: String
-    * Default: "&lt;net_ip&gt;:&lt;net_port&gt;"
-    * Effect: Destination hostname and port the proxy socket for game version 1.2 should forward packets to (see sv_proxyAddress_1_2 dvar).
+    * Default: "`[net_ip]:[net_port]`"
+    * Effect: Destination hostname and port the proxy socket for game version 1.2 should forward packets to (see `sv_proxyAddress_1_2` dvar).
   * `sv_proxyForwardAddress_1_3`
     * Type: String
-    * Default: "&lt;net_ip&gt;:&lt;net_port&gt;"
-    * Effect: Destination hostname and port the proxy socket for game version 1.3 should forward packets to (see sv_proxyAddress_1_3 dvar).
+    * Default: "`[net_ip]:[net_port]`"
+    * Effect: Destination hostname and port the proxy socket for game version 1.3 should forward packets to (see `sv_proxyAddress_1_3` dvar).
   * `sv_reservedConfigstringBufferSize`
     * Type: Integer
     * Default: 256
@@ -268,7 +276,7 @@ Other dvars (e.g., from legacy versions of libcod or other repositories):
   * `fs_library`
     * Type: String
     * Default: ""
-    * Effect: Defines the relative path to the manymaps library - a folder, that is supposed to contain map .iwd files. If set to an empty string (as by default), the server uses `&lt;fs_homepath&gt;:&lt;fs_game&gt;/Library`. This is an optional feature, the library folder does not have to exist for a server to operate correctly.
+    * Effect: Defines the relative path to the manymaps library - a folder, that is supposed to contain map .iwd files. If set to an empty string (as by default), the server uses `[fs_homepath]/[fs_game]/Library`. This is an optional feature, the library folder does not have to exist for a server to operate correctly.
   * `g_mantleBlockEnable`
     * Type: Boolean
     * Default: True
