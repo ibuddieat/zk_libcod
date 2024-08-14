@@ -9681,6 +9681,12 @@ void custom_Pmove(pmove_t *pm)
 		RestoreBrushModelContents();
 }
 
+void hook_SetExpFog_density_typo(const char *string)
+{
+	// New: Exchanged "distance" with "density"
+	Scr_Error("setExpFog: density must be greater than 0 and less than 1");
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -9715,6 +9721,7 @@ public:
 		cracking_hook_call(0x080EBC58, (int)hook_findWeaponIndex);
 		cracking_hook_call(0x08062644, (int)hitch_warning_print);
 		cracking_hook_call(0x080AD1FE, (int)hook_Com_MakeSoundAliasesPermanent);
+		cracking_hook_call(0x0811599A, (int)hook_SetExpFog_density_typo);
 
 		hook_gametype_scripts = new cHook(0x08110286, (int)custom_GScr_LoadGameTypeScript);
 		hook_gametype_scripts->hook();
