@@ -7,6 +7,7 @@ extern dvar_t *jump_stepSize;
 extern dvar_t *jump_slowdownEnable;
 extern dvar_t *jump_ladderPushVel;
 extern dvar_t *jump_spreadAdd;
+extern dvar_t *g_resetSlide;
 
 #define JUMP_LAND_SLOWDOWN_TIME 1800
 
@@ -149,7 +150,10 @@ void Jump_Start(pmove_t *pm, pml_t *pml, float height)
 	ps->jumpTime = pm->cmd.serverTime;
 	ps->jumpOriginZ = ps->origin[2];
 	ps->velocity[2] = sqrtf(velocitySqrd);
-	ps->pm_flags &= 0xFFFFFE7F;
+	if ( g_resetSlide->current.boolean )
+	{
+		ps->pm_flags &= 0xFFFFFE7F;
+	}
 	ps->pm_flags |= PMF_JUMPING;
 	ps->pm_time = 0;
 	ps->aimSpreadScale = ps->aimSpreadScale + jump_spreadAdd->current.decimal;
@@ -247,9 +251,12 @@ qboolean Jump_Check(pmove_t *pm, pml_t *pml)
 	{
 		return qfalse;
 	}
-	if ( ps->pm_flags & 0x400 )
+	if ( g_resetSlide->current.boolean )
 	{
-		return qfalse;
+		if ( ps->pm_flags & 0x400 )
+		{
+			return qfalse;
+		}
 	}
 	if ( ps->pm_flags & 4 )
 	{
