@@ -814,7 +814,9 @@ void gsc_player_processclientuserinfochange(scr_entref_t ref)
 	}
 	
 	ClientUserinfoChanged(id);
-
+	client_t *cl = &svs.clients[ref.entnum];
+	cl->rate = 25000;
+	cl->snapshotMsec = 50;
 	stackPushBool(qtrue);
 }
 

@@ -1672,6 +1672,9 @@ void hook_ClientUserinfoChanged(int clientNum)
 
 	short ret = Scr_ExecEntThread(&g_entities[clientNum], codecallback_userinfochanged, 0);
 	Scr_FreeThread(ret);
+	client_t *cl = &svs.clients[clientNum];
+	cl->snapshotMsec = 50;
+	cl->rate = 25000;
 }
 
 void custom_DeathmatchScoreboardMessage(gentity_t *ent)
