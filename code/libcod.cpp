@@ -102,6 +102,8 @@ dvar_t *g_playerCollisionEjectDamageAllowed;
 dvar_t *g_playerCollisionEjectDuration;
 dvar_t *g_playerEject;
 dvar_t *g_resetSlide;
+dvar_t *g_forceSnaps;
+dvar_t *g_forceRate;
 dvar_t *g_safePrecache;
 dvar_t *g_spawnMapTurrets;
 dvar_t *g_spawnMapWeapons;
@@ -393,6 +395,8 @@ void common_init_complete_print(const char *format, ...)
 	g_playerCollisionEjectDuration = Dvar_RegisterInt("g_playerCollisionEjectDuration", 300, 50, 1000, DVAR_ARCHIVE);
 	g_playerEject = Dvar_RegisterBool("g_playerEject", qtrue, DVAR_ARCHIVE);
 	g_resetSlide = Dvar_RegisterBool("g_resetSlide", qfalse, DVAR_ARCHIVE);
+	g_forceSnaps = Dvar_RegisterInt("g_forceSnaps", 0, 0, 30, DVAR_ARCHIVE);
+	g_forceRate = Dvar_RegisterInt("g_forceRate", 0, 0, 25000, DVAR_ARCHIVE);
 	g_spawnMapTurrets = Dvar_RegisterBool("g_spawnMapTurrets", qtrue, DVAR_ARCHIVE);
 	g_spawnMapWeapons = Dvar_RegisterBool("g_spawnMapWeapons", qtrue, DVAR_ARCHIVE);
 	g_triggerMode = Dvar_RegisterInt("g_triggerMode", 1, 0, 2, DVAR_ARCHIVE);
@@ -1673,8 +1677,14 @@ void hook_ClientUserinfoChanged(int clientNum)
 	short ret = Scr_ExecEntThread(&g_entities[clientNum], codecallback_userinfochanged, 0);
 	Scr_FreeThread(ret);
 	client_t *cl = &svs.clients[clientNum];
-	cl->snapshotMsec = 50;
-	cl->rate = 25000;
+	if( g_forceSnaps->current.integer > 0 )
+	{
+		cl->snapshotMsec = 1000 / g_forceSnaps->current.integer;
+	}
+	if( g_forceRate->current.integer > 0 )
+	{
+		cl->rate = g_forceRate->current.integer;
+	}
 }
 
 void custom_DeathmatchScoreboardMessage(gentity_t *ent)
