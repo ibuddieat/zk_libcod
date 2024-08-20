@@ -66,17 +66,23 @@ if [ "$1" == "clean" ]; then
 	rm bin -rf
 	exit 1
 else
-	if [ "$1" == "nomysql" ] || [ "$2" == "nomysql" ] || [ "$3" == "nomysql" ]; then
+	if [ "$1" == "nomysql" ] || [ "$2" == "nomysql" ] || [ "$3" == "nomysql" ] || [ "$4" == "nomysql" ]; then
 		mysql_link=""
 		mysql_variant=0
 	fi
 
-	if [ "$1" == "nospeex" ] || [ "$2" == "nospeex" ] || [ "$3" == "nospeex" ]; then
+	if [ "$1" == "nospeex" ] || [ "$2" == "nospeex" ] || [ "$3" == "nospeex" ] || [ "$4" == "nospeex" ]; then
 		speex_link=""
 		sed -i "/#define COMPILE_CUSTOM_VOICE 1/c\#define COMPILE_CUSTOM_VOICE 0" config.hpp
 	else
 		speex_link="-lspeex"
 		sed -i "/#define COMPILE_CUSTOM_VOICE 0/c\#define COMPILE_CUSTOM_VOICE 1" config.hpp
+	fi
+
+	if [ "$1" == "unsafe" ] || [ "$2" == "unsafe" ] || [ "$3" == "unsafe" ] || [ "$4" == "unsafe" ]; then
+		sed -i "/#define ENABLE_UNSAFE 0/c\#define ENABLE_UNSAFE 1" config.hpp
+	else
+		sed -i "/#define ENABLE_UNSAFE 1/c\#define ENABLE_UNSAFE 0" config.hpp
 	fi
 
 	if [ "$1" == "debug" ] || [ "$2" == "debug" ] || [ "$3" == "debug" ]; then

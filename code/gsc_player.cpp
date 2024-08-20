@@ -10,6 +10,8 @@ extern customPlayerState_t customPlayerState[MAX_CLIENTS];
 extern customStringIndex_t custom_scr_const;
 extern dvar_t *g_antilag;
 extern dvar_t *sv_maxclients;
+extern dvar_t *g_forceSnaps;
+extern dvar_t *g_forceRate;
 
 void gsc_player_getprotocol(scr_entref_t ref)
 {
@@ -815,6 +817,16 @@ void gsc_player_processclientuserinfochange(scr_entref_t ref)
 	
 	ClientUserinfoChanged(id);
 
+	client_t *cl = &svs.clients[ref.entnum];
+	if( g_forceSnaps->current.integer > 0 )
+	{
+		cl->snapshotMsec = 1000 / g_forceSnaps->current.integer;
+	}
+	if( g_forceRate->current.integer > 0 )
+	{
+		cl->rate = g_forceRate->current.integer;
+	}
+	
 	stackPushBool(qtrue);
 }
 
