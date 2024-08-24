@@ -2,11 +2,14 @@
 
 #if COMPILE_JUMP == 1
 
+// Stock dvars
 extern dvar_t *jump_height;
 extern dvar_t *jump_stepSize;
 extern dvar_t *jump_slowdownEnable;
 extern dvar_t *jump_ladderPushVel;
 extern dvar_t *jump_spreadAdd;
+
+// Custom dvars
 extern dvar_t *g_resetSlide;
 
 #define JUMP_LAND_SLOWDOWN_TIME 1800
@@ -36,42 +39,9 @@ bool getJumpSlowdownEnable(playerState_t* ps)
 	return jump_slowdownEnable->current.boolean;
 }
 
-float Jump_CalcHeight(playerState_t* ps)
+double Jump_GetLandFactor(playerState_t *ps)
 {
-	float val;
-	float newdiv;
-	float jumpHeight = getJumpHeight(ps); // jump_height->current.decimal;
-
-	val = jumpHeight;
-	val = ( val + val ) * ps->gravity;
-
-	if ( ps->pm_flags & PMF_JUMPING && ps->pm_time <= JUMP_LAND_SLOWDOWN_TIME )
-	{
-		if( getJumpSlowdownEnable(ps) ) // jump_slowdownEnable->current.boolean)
-		{
-
-			if( ps->pm_time > 1699 )
-			{
-				newdiv = 2.5;
-			}
-			else
-			{
-				newdiv = ps->pm_time * (float)1.5 * (float)0.00058823527 + (float)1.0;
-			}
-		}
-		else
-		{
-			newdiv = 1.0;
-		}
-		val = val / newdiv;
-	}
-
-	return val;
-}
-
-double Jump_GetLandFactor(playerState_s *ps)
-{
-	if ( !getJumpSlowdownEnable(ps)) // jump_slowdownEnable->current.boolean
+	if ( !getJumpSlowdownEnable(ps) ) // Original: jump_slowdownEnable->current.boolean
 	{
 		return 1.0;
 	}
@@ -82,56 +52,11 @@ double Jump_GetLandFactor(playerState_s *ps)
 	return 2.5;
 }
 
-void Jump_AddSurfaceEvent(playerState_s *ps, pml_t *pml)
-{
-	int surfType;
-
-	if ( ps->pm_flags & PMF_LADDER )
-	{
-		BG_AddPredictableEventToPlayerstate(76, 0x15u, ps);
-	}
-	else
-	{
-		surfType = PM_GroundSurfaceType(pml);
-		if ( surfType )
-		{
-			BG_AddPredictableEventToPlayerstate(76, surfType, ps);
-		}
-	}
-}
-
-void Jump_PushOffLadder(playerState_s *ps, pml_t *pml)
-{
-	vec3_t flatForward;
-	vec3_t pushOffDir;
-	float dot;
-
-	ps->velocity[2] = ps->velocity[2] * 0.75;
-	flatForward[0] = pml->forward[0];
-	flatForward[1] = pml->forward[1];
-	flatForward[2] = 0.0;
-	Vec3Normalize(flatForward);
-	dot = DotProduct(ps->vLadderVec, pml->forward);
-	if ( dot >= 0.0 )
-	{
-		VectorCopy(flatForward, pushOffDir);
-	}
-	else
-	{
-		dot = DotProduct(ps->vLadderVec, flatForward);
-		VectorMA(flatForward, -2.0 * dot, ps->vLadderVec, pushOffDir);
-		Vec3Normalize(pushOffDir);
-	}
-	ps->velocity[0] = jump_ladderPushVel->current.decimal * pushOffDir[0];
-	ps->velocity[1] = jump_ladderPushVel->current.decimal * pushOffDir[1];
-	ps->pm_flags &= 0xFFFFFFDF;
-}
-
 void Jump_Start(pmove_t *pm, pml_t *pml, float height)
 {
 	float factor;
 	float velocitySqrd;
-	playerState_s *ps;
+	playerState_t *ps;
 
 	ps = pm->ps;
 	velocitySqrd = (float)(height * 2.0) * (float)ps->gravity;
@@ -146,16 +71,16 @@ void Jump_Start(pmove_t *pm, pml_t *pml, float height)
 	pml->groundPlane = 0;
 	pml->almostGroundPlane = 0;
 	pml->walking = 0;
-	ps->groundEntityNum = 1023;
+	ps->groundEntityNum = ENTITY_NONE;
 	ps->jumpTime = pm->cmd.serverTime;
 	ps->jumpOriginZ = ps->origin[2];
-	ps->velocity[2] = sqrtf(velocitySqrd);
-	if ( g_resetSlide->current.boolean )
+	if ( g_resetSlide->current.boolean ) // New
 	{
 		ps->pm_flags &= 0xFFFFFE7F;
 	}
 	ps->pm_flags |= PMF_JUMPING;
 	ps->pm_time = 0;
+	ps->velocity[2] = sqrtf(velocitySqrd);
 	ps->aimSpreadScale = ps->aimSpreadScale + jump_spreadAdd->current.decimal;
 	if ( ps->aimSpreadScale > 255.0 )
 	{
@@ -163,24 +88,20 @@ void Jump_Start(pmove_t *pm, pml_t *pml, float height)
 	}
 }
 
-void Jump_ClearState(playerState_s *ps)
-{
-	ps->pm_flags &= ~PMF_JUMPING;
-	ps->jumpOriginZ = 0.0;
-}
-
-double Jump_ReduceFriction(playerState_s *ps)
+double Jump_ReduceFriction(playerState_t *ps)
 {
 	float control;
 
+	/* New code start: Jump tweaks */
 	if ( ps->pm_time > JUMP_LAND_SLOWDOWN_TIME )
 	{
 		Jump_ClearState(ps);
 		control = 1.0;
 	}
+	/* New code end */
 	else
 	{
-		control = Jump_GetLandFactor(ps);
+		control = Jump_GetLandFactor(ps); // New: Uses per-player jump slowdown
 	}
 	return control;
 }
@@ -190,15 +111,13 @@ void Jump_ClampVelocity(playerState_t* ps, vec3_t vec)
 	float comp;
 	float newZVelocity;
 
-	if ( ps->origin[2] - vec[2] > 0 )
+	if ( ps->origin[2] - vec[2] > 0.0 )
 	{
-		float jumpHeight = getJumpHeight(ps); // jump_height->current.decimal;
+		float jumpHeight = getJumpHeight(ps); // Original: jump_height->current.decimal;
 		comp = ps->jumpOriginZ + jumpHeight - ps->origin[2];
-
 		if ( comp >= (float)0.1 )
 		{
 			newZVelocity = sqrtf((comp + comp) * (float)ps->gravity);
-
 			if ( ps->velocity[2] > newZVelocity )
 			{
 				ps->velocity[2] = newZVelocity;
@@ -206,15 +125,14 @@ void Jump_ClampVelocity(playerState_t* ps, vec3_t vec)
 		}
 		else
 		{
-			ps->velocity[2] = 0;
-			return;
+			ps->velocity[2] = 0.0;
 		}
 	}
 }
 
 qboolean Jump_IsPlayerAboveMax(playerState_t* ps)
 {
-	float jumpHeight = getJumpHeight(ps); // jump_height->current.decimal;
+	float jumpHeight = getJumpHeight(ps); // Original: jump_height->current.decimal;
 
 	if ( ps->origin[2] >= ps->jumpOriginZ + jumpHeight )
 		return qtrue;
@@ -224,13 +142,12 @@ qboolean Jump_IsPlayerAboveMax(playerState_t* ps)
 
 qboolean Jump_GetStepHeight(playerState_t* ps, const vec3_t vec1, float* val2)
 {
-	float jumpHeight = getJumpHeight(ps); // jump_height->current.decimal;
+	float jumpHeight = getJumpHeight(ps); // Original: jump_height->current.decimal;
 
 	if ( vec1[2] > ps->jumpOriginZ + jumpHeight )
 		return qfalse;
 
 	*val2 = jump_stepSize->current.decimal;
-
 	if ( vec1[2] + jump_stepSize->current.decimal > ps->jumpOriginZ + jumpHeight )
 		*val2 = ps->jumpOriginZ + jumpHeight - vec1[2];
 
@@ -239,19 +156,17 @@ qboolean Jump_GetStepHeight(playerState_t* ps, const vec3_t vec1, float* val2)
 
 qboolean Jump_Check(pmove_t *pm, pml_t *pml)
 {
-	playerState_s *ps;
+	playerState_t *ps = pm->ps;
 
-	ps = pm->ps;
-
-	if ( ps->pm_flags & 0x1000 )
-	{
-		return qfalse;
-	}
 	if ( pm->cmd.serverTime - ps->jumpTime < 500 )
 	{
 		return qfalse;
 	}
-	if ( g_resetSlide->current.boolean )
+	if ( ps->pm_flags & 0x1000 )
+	{
+		return qfalse;
+	}
+	if ( g_resetSlide->current.boolean ) // New
 	{
 		if ( ps->pm_flags & 0x400 )
 		{
@@ -266,7 +181,7 @@ qboolean Jump_Check(pmove_t *pm, pml_t *pml)
 	{
 		return qfalse;
 	}
-	if ( PM_GetEffectiveStance(ps) && ps->groundEntityNum != 1023 )
+	if ( PM_GetEffectiveStance(ps) && ps->groundEntityNum != ENTITY_NONE ) // New: Added ground entity check
 	{
 		return qfalse;
 	}
@@ -279,7 +194,7 @@ qboolean Jump_Check(pmove_t *pm, pml_t *pml)
 		pm->cmd.buttons &= 0xFFFFFBFF;
 		return qfalse;
 	}
-	Jump_Start(pm, pml, getJumpHeight(ps)); // jump_height->current.decimal
+	Jump_Start(pm, pml, getJumpHeight(ps)); // Original: jump_height->current.decimal
 	Jump_AddSurfaceEvent(ps, pml);
 	if ( ps->pm_flags & PMF_LADDER )
 	{
@@ -296,7 +211,7 @@ qboolean Jump_Check(pmove_t *pm, pml_t *pml)
 	return qtrue;
 }
 
-void Jump_ApplySlowdown(playerState_s *ps)
+void Jump_ApplySlowdown(playerState_t *ps)
 {
 	float scale;
 
@@ -322,18 +237,9 @@ void Jump_ApplySlowdown(playerState_s *ps)
 		Jump_ClearState(ps);
 		scale = 0.64999998;
 	}
-	if ( getJumpSlowdownEnable(ps) ) // jump_slowdownEnable->current.boolean
+	if ( getJumpSlowdownEnable(ps) ) // Original: jump_slowdownEnable->current.boolean
 	{
 		VectorScale(ps->velocity, scale, ps->velocity);
-	}
-}
-
-void Jump_ActivateSlowdown(playerState_s *ps)
-{
-	if ( !ps->pm_time )
-	{
-		ps->pm_flags |= PMF_JUMPING;
-		ps->pm_time = JUMP_LAND_SLOWDOWN_TIME;
 	}
 }
 

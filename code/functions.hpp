@@ -933,7 +933,7 @@ static const DObjSkelExists_t DObjSkelExists = (DObjSkelExists_t)0x080BA97A;
 typedef int (*SV_DObjGetBoneIndex_t)(gentity_t *ent, uint boneIndex);
 static const SV_DObjGetBoneIndex_t SV_DObjGetBoneIndex = (SV_DObjGetBoneIndex_t)0x080921AC;
 
-typedef void (*BG_AddPredictableEventToPlayerstate_t)(int newEvent, unsigned int eventParm, playerState_s *ps);
+typedef void (*BG_AddPredictableEventToPlayerstate_t)(int newEvent, unsigned int eventParm, playerState_t *ps);
 static const BG_AddPredictableEventToPlayerstate_t BG_AddPredictableEventToPlayerstate = (BG_AddPredictableEventToPlayerstate_t)0x080DFC78;
 
 typedef void (*Scr_Notify_t)(gentity_t *ent, unsigned short constString, unsigned int numArgs);
@@ -1436,5 +1436,17 @@ static const unzReadCurrentFile_t unzReadCurrentFile = (unzReadCurrentFile_t)0x0
 
 typedef int (*unzCloseCurrentFile_t)(unzFile file);
 static const unzCloseCurrentFile_t unzCloseCurrentFile = (unzCloseCurrentFile_t)0x080D3506;
+
+typedef void (*Jump_ActivateSlowdown_t)(playerState_t *ps);
+static const Jump_ActivateSlowdown_t Jump_ActivateSlowdown = (Jump_ActivateSlowdown_t)0x080dC7EE;
+
+typedef void (*Jump_AddSurfaceEvent_t)(playerState_t *ps, pml_t *pml);
+static const Jump_AddSurfaceEvent_t Jump_AddSurfaceEvent = (Jump_AddSurfaceEvent_t)0x080DCC52;
+
+typedef void (*Jump_ClearState_t)(playerState_t *ps);
+static const Jump_ClearState_t Jump_ClearState = (Jump_ClearState_t)0x080dC718;
+
+typedef void (*Jump_PushOffLadder_t)(playerState_t *ps, pml_t *pml);
+static const Jump_PushOffLadder_t Jump_PushOffLadder = (Jump_PushOffLadder_t)0x080DCB48;
 
 #endif
