@@ -94,7 +94,7 @@ Added dvars:
     * Default: 1
     * Min. Value: 0
     * Max. Value: 2
-    * Effect: Toggle experimental fix for broken map damage and use-touch triggers. Possible values: `0`: Triggers disabled. `1`: Stock behavior, fix disabled. `2`: Fix enabled.
+    * Effect: Toggle experimental fix for broken map damage triggers. Possible values: `0`: Triggers disabled. `1`: Stock behavior, fix disabled. `2`: Fix enabled.
   * `g_turretMissingTagTerminalError`
     * Type: Boolean
     * Default: True

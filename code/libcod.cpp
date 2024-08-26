@@ -8911,7 +8911,8 @@ int TriggerDamageEntities(int *entityList)
 	int i;
 	int count = 0;
 
-	for ( i = 0; i < MAX_GENTITIES; i++ )
+	// Skip reserved entity slots: Players, player clones
+	for ( i = 72; i < level.num_entities; i++ )
 	{
 		if ( g_entities[i].classname == scr_const.trigger_damage )
 		{
@@ -8927,7 +8928,8 @@ int TriggerTouchEntities(const float *mins, const float *maxs, int *entityList)
 	int i;
 	int count = 0;
 
-	for ( i = 0; i < MAX_GENTITIES; i++ )
+	// Skip reserved entity slots: Players, player clones
+	for ( i = 72; i < level.num_entities; i++ )
 	{
 		if ( entityHandlers[g_entities[i].handler].touch || SV_EntityContact(mins, maxs, &g_entities[i]) )
 		{
@@ -8959,7 +8961,7 @@ int custom_CM_AreaEntities(const float *mins, const float *maxs, int *entityList
 	*/
 
 	/* New code start: g_triggerMode dvar */
-	if ( g_triggerMode->current.integer == 0 && ( contentmask == 0x400000 || contentmask == 0x405c0008 ) )
+	if ( g_triggerMode->current.integer == 0 && ( contentmask == 0x400000 || contentmask == 0x405C0008 ) )
 	{
 		return 0;
 	}
@@ -8967,10 +8969,12 @@ int custom_CM_AreaEntities(const float *mins, const float *maxs, int *entityList
 	{
 		return TriggerDamageEntities(entityList);
 	}
-	else if ( g_triggerMode->current.integer == 2 && contentmask == 0x405c0008 )
-	{
-		return TriggerTouchEntities(mins, maxs, entityList);
-	}
+	// Currently disabled for touch triggers as it can activate trigger_hurt
+	// entities in unwanted situations:
+	//else if ( g_triggerMode->current.integer == 2 && contentmask == 0x405C0008 )
+	//{
+	//	return TriggerTouchEntities(mins, maxs, entityList);
+	//}
 	/* New code end */
 
 	ae.mins = mins;
