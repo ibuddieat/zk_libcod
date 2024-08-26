@@ -1757,10 +1757,7 @@ const char * hook_AuthorizeState(int arg)
 
 void custom_ClientUserinfoChanged(int clientNum)
 {
-	if ( !Scr_IsSystemActive() || sv.state != SS_GAME )
-		return;
-
-	if ( codecallback_userinfochanged )
+	if ( Scr_IsSystemActive() && sv.state == SS_GAME && codecallback_userinfochanged )
 	{	
 		short ret;
 		client_t *cl = &svs.clients[clientNum];
