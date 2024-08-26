@@ -301,6 +301,9 @@ char altReferencedIwds[MAX_STRINGLENGTH];
 // crit_sections list are hooked away
 pthread_mutex_t crit_sections[CRITSECT_COUNT];
 
+// Global flag set before entering SV_Trace for player movement traces, so that
+// we can apply additional content masks in the entity tracing process
+qboolean playerMovementTrace = qfalse;
 
 // Flag used for g_reservedModels logic so that we can apply model precache
 // limits on maps
@@ -1503,7 +1506,7 @@ qboolean SkipCollision(gentity_t *client1, gentity_t *client2)
 	return qfalse;
 }
 
-void custom_SV_ClipMoveToEntity(moveclip_t *clip, svEntity_s *entity, trace_t *trace)
+void custom_SV_ClipMoveToEntity(moveclip_t *clip, svEntity_t *entity, trace_t *trace)
 {
 	int touchNum;
 	gentity_t *touch;
@@ -1515,32 +1518,54 @@ void custom_SV_ClipMoveToEntity(moveclip_t *clip, svEntity_s *entity, trace_t *t
 
 	touchNum = entity - sv.svEntities;
 	touch = SV_GentityNum(touchNum);
-	if ( ( ( (touch->r).contents & clip->contentmask) != 0 ) &&
-	( clip->passEntityNum == ENTITY_NONE || ( ( touchNum != clip->passEntityNum && (touch->r).ownerNum != clip->passEntityNum ) && ( (touch->r).ownerNum != clip->passOwnerNum ) ) ) )
+
+	// Check if contents to collide with are present
+	if ( (touch->r.contents & clip->contentmask) == 0 )
+		return;
+
+	// Ignore specific entities
+	if ( touchNum != ENTITY_NONE )
 	{
-		/* New code start: per-player/team collison */
-		if ( SkipCollision(touch, &g_entities[clip->passEntityNum]) )
+		// The specified pass entity
+		if ( touchNum == clip->passEntityNum )
+			return;
+
+		// Own missiles/grenades
+		if ( touch->r.ownerNum == clip->passEntityNum )
+			return;
+
+		// Other missiles/grenades from owner
+		if ( touch->r.ownerNum == clip->passOwnerNum )
+			return;
+		
+		/* New code start: (not)SolidForPlayer */
+		if ( playerMovementTrace && customEntityState[touchNum].clientMask[clip->passEntityNum >> 5] & (1 << (clip->passEntityNum & 0x1F)) )
 			return;
 		/* New code end */
+	}
 
-		VectorAdd((touch->r).absmin, clip->mins, mins);
-		VectorAdd((touch->r).absmax, clip->maxs, maxs);
+	/* New code start: per-player/team collison */
+	if ( SkipCollision(touch, &g_entities[clip->passEntityNum]) )
+		return;
+	/* New code end */
 
-		if ( !CM_TraceBox(&clip->extents, mins, maxs, trace->fraction) )
-		{
-			clipHandle = SV_ClipHandleForEntity(touch);
-			angles = (touch->r).currentAngles;
-			if ( (touch->r).bmodel == 0 )
-			{
-				angles = vec3_origin;
-			}
-			fraction = trace->fraction;
-			CM_TransformedBoxTrace(trace, (clip->extents).start, (clip->extents).end, clip->mins, clip->maxs, clipHandle, clip->contentmask, (touch->r).currentOrigin, angles);
-			if ( trace->fraction < fraction )
-			{
-				trace->entityNum = (touch->s).number;
-			}
-		}
+	VectorAdd((touch->r).absmin, clip->mins, mins);
+	VectorAdd((touch->r).absmax, clip->maxs, maxs);
+
+	if ( CM_TraceBox(&clip->extents, mins, maxs, trace->fraction) )
+		return;
+
+	clipHandle = SV_ClipHandleForEntity(touch);
+	angles = touch->r.currentAngles;
+	if ( !touch->r.bmodel )
+	{
+		angles = vec3_origin;
+	}
+	fraction = trace->fraction;
+	CM_TransformedBoxTrace(trace, clip->extents.start, clip->extents.end, clip->mins, clip->maxs, clipHandle, clip->contentmask, touch->r.currentOrigin, angles);
+	if ( trace->fraction < fraction )
+	{
+		trace->entityNum = touch->s.number;
 	}
 }
 
@@ -2361,7 +2386,7 @@ void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t 
 			if ( numFields == 0x3b )
 			{
 				/* New code start: (not)SolidForPlayer */
-				if ( i == 13 ) // eFlags
+				if ( g_brushModelCollisionTweaks->current.boolean && i == 13 ) // eFlags
 				{
 					if ( clientNum != -1 && entNum >= 0 )
 					{
@@ -6066,57 +6091,6 @@ void ClearNotSolidForPlayerFlags(int clientNum)
 	}
 }
 
-savedBrushModelContents_t savedBrushModelContents[MAX_GENTITIES];
-int savedBrushModelContentsCount = 0;
-void SaveBrushModelContents(void)
-{
-	gentity_t *ent;
-
-	savedBrushModelContentsCount = 0;
-
-	// Skip reserved entity slots: Players, player clones
-	for ( int i = 72; i < level.num_entities; i++ )
-	{
-		ent = &g_entities[i];
-		if ( ent->r.bmodel )
-		{
-			savedBrushModelContents[savedBrushModelContentsCount].num = i;
-			savedBrushModelContents[savedBrushModelContentsCount].contents = ent->r.contents;
-			savedBrushModelContentsCount++;
-		}
-	}
-}
-
-void UpdateSavedBrushModelContents(int num, int contents)
-{
-	for ( int i = 0; i < savedBrushModelContentsCount; i++ )
-	{
-		savedBrushModelContents_t *ref = &savedBrushModelContents[i];
-		gentity_t *ent = &g_entities[ref->num];
-
-		if ( num == ent - g_entities )
-		{
-			savedBrushModelContents[i].contents = contents;
-			return;
-		}
-	}
-}
-
-void custom_ScrCmd_SetContents(scr_entref_t entref)
-{
-	gentity_t *ent;
-	int contents;
-
-	ent = GetEntity(entref.entnum);
-	contents = Scr_GetInt(0);
-	Scr_AddInt((ent->r).contents);
-	(ent->r).contents = contents;
-	SV_LinkEntity(ent);
-
-	// New: Update saved brush model contents list
-	UpdateSavedBrushModelContents(entref.entnum, contents);
-}
-
 void custom_G_SpawnEntitiesFromString(void)
 {
 	if ( !G_ParseSpawnVars(&level.spawnVars) ) 
@@ -6139,16 +6113,12 @@ void custom_G_SpawnEntitiesFromString(void)
 		memset(&map_turrets, 0, sizeof(map_turrets));
 	}
 	/* New code end */
-	
+
 	while ( G_ParseSpawnVars(&level.spawnVars) )
 		custom_G_CallSpawn();
 
-	/* New: Collect list of brush model entities after map load so that we do
-	 not have to loop through all entities multiple times per player and
-	 server frame when modifying the entity contents in player movement
-	 trace calls */
+	// New: (not)SolidForPlayer cleanup on map load
 	ClearAllNotSolidForPlayerFlags();
-	SaveBrushModelContents();
 }
 
 void custom_Scr_LoadGameType(void)
@@ -9545,40 +9515,13 @@ void custom_ClientScr_GetHeadIconTeam(gclient_t *pSelf, const game_client_field_
 	Scr_AddConstString(str);
 }
 
-void SetupBrushModelContents(int clientNum)
-{
-	for ( int i = 0; i < savedBrushModelContentsCount; i++ )
-	{
-		savedBrushModelContents_t *ref = &savedBrushModelContents[i];
-		gentity_t *ent = &g_entities[ref->num];
-
-		if ( customEntityState[ref->num].notSolidBrushModel )
-		{
-			if ( customEntityState[ref->num].clientMask[clientNum >> 5] & (1 << (clientNum & 0x1F)) )
-				ent->r.contents = CONTENTS_NONE;
-		}
-	}
-}
-
-void RestoreBrushModelContents()
-{
-	for ( int i = 0; i < savedBrushModelContentsCount; i++ )
-	{
-		savedBrushModelContents_t *ref = &savedBrushModelContents[i];
-		gentity_t *ent = &g_entities[ref->num];
-
-		ent->r.contents = ref->contents;
-	}
-}
-
 void custom_Pmove(pmove_t *pm)
 {
 	/* New code start: (not)SolidForPlayer */
-	int id = pm->ps->clientNum;
 	qboolean updateBrushModelContents = g_brushModelCollisionTweaks->current.boolean;
 
 	if ( updateBrushModelContents )
-		SetupBrushModelContents(id);
+		playerMovementTrace = qtrue;
 	/* New code end */
 
 	hook_pmove->unhook();
@@ -9589,7 +9532,7 @@ void custom_Pmove(pmove_t *pm)
 
 	// New: (not)SolidForPlayer
 	if ( updateBrushModelContents )
-		RestoreBrushModelContents();
+		playerMovementTrace = qfalse;
 }
 
 void hook_SetExpFog_density_typo(const char *string)
@@ -9787,7 +9730,6 @@ public:
 		cracking_hook_function(0x080B4ADA, (int)custom_Dvar_SetFromStringFromSource);
 		cracking_hook_function(0x08096E0C, (int)custom_SV_MasterAddress);
 		cracking_hook_function(0x080FDF08, (int)custom_DeathmatchScoreboardMessage);
-		cracking_hook_function(0x0811220C, (int)custom_ScrCmd_SetContents);
 		cracking_hook_function(0x0808C706, (int)custom_SV_Status_f);
 		cracking_hook_function(0x0811037A, (int)custom_GScr_LoadLevelScript);
 		cracking_hook_function(0x080F8C5E, (int)custom_ClientUserinfoChanged);

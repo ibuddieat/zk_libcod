@@ -14,7 +14,7 @@ Added dvars:
   * `g_brushModelCollisionTweaks`
     * Type: Boolean
     * Default: False
-    * Effect: If false, the `notSolidForPlayer` and `solidForPlayer` script methods have no effect. Disabled by default to avoid a performance impact in situations with a high number of brush models and many players with a high client-sided FPS setting.
+    * Effect: If false, the `notSolidForPlayer` and `solidForPlayer` script methods have no effect.
   * `g_bulletDrop`
     * Type: Boolean
     * Default: False
