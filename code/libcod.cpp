@@ -258,6 +258,7 @@ callback_t callbacks[] =
 	{ &codecallback_usebutton, "CodeCallback_UseButton"},
 };
 
+// Stock entity handlers
 const entityHandler_t entityHandlers[] =
 {
 	/* Null                  */ { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, MOD_UNKNOWN, MOD_UNKNOWN },
@@ -282,9 +283,16 @@ const entityHandler_t entityHandlers[] =
 	/* Player Mantling Block */ { G_FreeEntity, NULL, NULL, NULL, NULL, NULL, NULL, NULL, MOD_UNKNOWN, MOD_UNKNOWN },
 };
 
+// Additional entity/player attributes used for various new script functions
+// and methods. The respective attributes are set to default in:
+// - custom_G_InitGentity
+// - custom_SV_SendClientGameState
 customEntityState_t customEntityState[MAX_GENTITIES];
 customPlayerState_t customPlayerState[MAX_CLIENTS];
 
+// Information about loaded .iwd files, sent to clients that use game version
+// 1.2 while the server runs on version 1.0 or 1.3. Applied the other way
+// around if the server runs on version 1.2
 char altSystemInfo[BIG_INFO_STRING];
 char altIwds[MAX_STRINGLENGTH];
 char altReferencedIwds[MAX_STRINGLENGTH];
@@ -297,6 +305,12 @@ pthread_mutex_t crit_sections[CRITSECT_COUNT];
 // Flag used for g_reservedModels logic so that we can apply model precache
 // limits on maps
 qboolean precaching = qfalse;
+
+// Storage for map weapon and turret info collection for custom callbacks
+int num_map_weapons;
+map_weapon_t map_weapons[MAX_GENTITIES];
+int num_map_turrets;
+map_turret_t map_turrets[MAX_GENTITIES];
 
 void custom_Com_InitDvars(void)
 {
@@ -3482,7 +3496,7 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 		if ( !cl->downloadBlocks[curindex] )
 			cl->downloadBlocks[curindex] = (unsigned char *)Z_MallocInternal(MAX_DOWNLOAD_BLKSIZE);
 
-		cl->downloadBlockSize[curindex] = FS_Read( cl->downloadBlocks[curindex], MAX_DOWNLOAD_BLKSIZE, cl->download );
+		cl->downloadBlockSize[curindex] = FS_Read(cl->downloadBlocks[curindex], MAX_DOWNLOAD_BLKSIZE, cl->download);
 
 		if ( cl->downloadBlockSize[curindex] < 0 )
 		{
@@ -3940,9 +3954,9 @@ int custom_ClientEndFrame(gentity_t *ent)
 		// Experimental slide bug fix
 		if ( g_resetSlide->current.boolean )
 		{
-			if ( ( (ent->client->ps).pm_flags & PMF_SLIDING ) != 0 && (ent->client->ps).pm_time == 0 )
+			if ( (ent->client->ps.pm_flags & PMF_SLIDING) != 0 && ent->client->ps.pm_time == 0 )
 			{
-				(ent->client->ps).pm_flags = (ent->client->ps).pm_flags & ~PMF_SLIDING;
+				ent->client->ps.pm_flags &= ~PMF_SLIDING;
 			}
 		}
 	}
@@ -5887,8 +5901,6 @@ void custom_G_ClientStopUsingTurret(gentity_t *self)
 	info->flags &= ~0x800u;
 }
 
-int num_map_turrets;
-map_turret_t map_turrets[MAX_GENTITIES];
 void custom_G_ParseEntityFields(gentity_t *ent)
 {
 	/* New code start: map weapons callback */
@@ -5948,8 +5960,6 @@ void custom_G_ParseEntityFields(gentity_t *ent)
 	G_SetAngle(ent, ent->r.currentAngles);
 }
 
-int num_map_weapons;
-map_weapon_t map_weapons[MAX_GENTITIES];
 void custom_G_CallSpawn(void)
 {
 	const char *classname;
@@ -6863,7 +6873,7 @@ void custom_Scr_BulletTrace(void)
 	{
 		Scr_AddVector(trace.normal);
 		Scr_AddArrayStringIndexed(scr_const.normal);
-		Scr_AddString(Com_SurfaceTypeToName((int)(trace.surfaceFlags & 0x1f00000U) >> 0x14));
+		Scr_AddString(Com_SurfaceTypeToName((int)(trace.surfaceFlags & 0x1F00000U) >> 0x14));
 		Scr_AddArrayStringIndexed(scr_const.surfacetype);
 		Scr_AddInt(trace.surfaceFlags);
 		Scr_AddArrayStringIndexed(custom_scr_const.flags);
@@ -9644,7 +9654,7 @@ public:
 
 		hook_developer_prints = new cHook(0x08060E3A, (int)custom_Com_DPrintf);
 		#if COMPILE_UTILS == 1
-		hook_console_print = new cHook(0x080d4AE0, int(hook_Sys_Print));
+		hook_console_print = new cHook(0x080D4AE0, int(hook_Sys_Print));
 		hook_console_print->hook();
 		#endif
 
