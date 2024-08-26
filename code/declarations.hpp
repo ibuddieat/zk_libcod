@@ -1680,9 +1680,9 @@ typedef struct clientState_s
 	int clientIndex;
 	team_t team;
 	int modelIndex;
-	char name[32];
 	int attachModelIndex[6];
 	int attachTagIndex[6];
+	char name[32];
 } clientState_t;
 
 typedef struct
