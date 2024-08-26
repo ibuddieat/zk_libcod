@@ -329,6 +329,7 @@ scr_method_t scriptMethods[] =
 	{"setMaxEntityVelocity", gsc_entity_setmaxentityvelocity, 0},
 	{"setLight", gsc_entity_setlight, 0},
 	{"solidForPlayer", gsc_entity_solidforplayer, 0},
+	{"hideFromPlayer", gsc_entity_hidefromplayer, 0},
 	#endif
 
 	#if COMPILE_MYSQL_VORON == 1

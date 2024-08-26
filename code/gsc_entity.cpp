@@ -46,6 +46,32 @@ void gsc_entity_setbounds(scr_entref_t ref)
 	stackPushBool(qtrue);
 }
 
+void gsc_entity_hidefromplayer(scr_entref_t ref)
+{
+	gentity_t *player = Scr_GetEntity(0);
+	gentity_t *object = &g_entities[ref.entnum];
+
+	if(player->s.number < MAX_CLIENTS)
+	{
+		object->r.clientMask[player->s.number >> 5] |= (1 << (player->s.number & 0x1F));
+		if(object->r.clientMask[0] == -1 && object->r.clientMask[1] == -1)
+		{
+			object->flags |= 0x800u; //object fully hidden from everyone
+		}
+		else
+		{
+			object->flags &= ~0x800u; //object visible to some
+		}
+	}
+	else
+	{
+		stackError("gsc_entity_hidefromplayer() not called on a player");
+		stackPushUndefined();
+		return;
+	}
+	stackPushBool(qtrue);
+}
+
 void gsc_entity_notsolidforplayer(scr_entref_t ref)
 {
 	int id = ref.entnum;

@@ -30,5 +30,6 @@ void gsc_entity_setmaxentityvelocity(scr_entref_t ref);
 void gsc_entity_setlight(scr_entref_t ref);
 void gsc_entity_notsolidforplayer(scr_entref_t ref);
 void gsc_entity_solidforplayer(scr_entref_t ref);
+void gsc_entity_hidefromplayer(scr_entref_t ref);
 
 #endif
