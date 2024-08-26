@@ -4,7 +4,6 @@
 #include <speex/speex.h>
 #include <pthread.h>
 
-extern pthread_mutex_t loadSoundFileResultLock;
 extern loadSoundFileResult_t loadSoundFileResults[MAX_THREAD_RESULTS_BUFFER];
 extern int loadSoundFileResultsIndex;
 
@@ -1699,7 +1698,7 @@ void *encode_async(void *newtask)
 
 	if ( Scr_IsSystemActive() )
 	{
-		pthread_mutex_lock(&loadSoundFileResultLock);
+		Sys_EnterCriticalSection(CRITSECT_LOAD_SOUND_FILE);
 		if ( loadSoundFileResultsIndex < MAX_THREAD_RESULTS_BUFFER )
 		{
 			loadSoundFileResults[loadSoundFileResultsIndex].result = result;
@@ -1710,7 +1709,7 @@ void *encode_async(void *newtask)
 		/* No message on error excess here since that might introduce another
 		   concurrency issue. Instead, we warn in the main thread if the buffer
 		   is full */
-		pthread_mutex_unlock(&loadSoundFileResultLock);
+		Sys_LeaveCriticalSection(CRITSECT_LOAD_SOUND_FILE);
 	}
 
 	if ( task->next != NULL )

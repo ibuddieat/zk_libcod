@@ -295,7 +295,11 @@ typedef enum
 	CRITSECT_UNKNOWN3 = 3,
 	CRITSECT_DVAR = 4,
 	CRITSECT_RD_BUFFER = 5,
-	CRITSECT_COUNT = 6
+	CRITSECT_PRINT = 6, // New
+#if COMPILE_CUSTOM_VOICE == 1
+	CRITSECT_LOAD_SOUND_FILE,
+#endif
+	CRITSECT_COUNT
 } criticalSection_t;
 
 typedef enum
@@ -1222,13 +1226,20 @@ typedef struct DObjTrace_s
 	unsigned short partGroup;
 } DObjTrace_t;
 
+typedef struct
+{
+	char material[64];
+	int surfaceFlags;
+	int contentFlags;
+} dmaterial_t;
+
 typedef struct trace_s
 {
 	float fraction;
 	vec3_t normal;
 	int surfaceFlags;
 	int contents;
-	const char *material;
+	dmaterial_t *material;
 	uint16_t entityNum;
 	uint16_t partName;
 	uint16_t partGroup;

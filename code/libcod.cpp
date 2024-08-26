@@ -289,6 +289,11 @@ char altSystemInfo[BIG_INFO_STRING];
 char altIwds[MAX_STRINGLENGTH];
 char altReferencedIwds[MAX_STRINGLENGTH];
 
+// We use a custom (extended) list of mutexes. All references to the original
+// crit_sections list are hooked away
+pthread_mutex_t crit_sections[CRITSECT_COUNT];
+
+
 void custom_Com_InitDvars(void)
 {
 	// Register custom dvars required early on server start
@@ -506,7 +511,7 @@ void custom_Dvar_SetFromStringFromSource(dvar_t *dvar, const char *string, DvarS
 	char buf[MAX_STRINGLENGTH];
 	DvarValue newValue;
 
-	Sys_EnterCriticalSectionInternal(CRITSECT_DVAR);
+	Sys_EnterCriticalSection(CRITSECT_DVAR);
 
 	/* New: sv_version dvar value sanitization */
 	if ( sv_version && dvar == sv_version )
@@ -524,7 +529,7 @@ void custom_Dvar_SetFromStringFromSource(dvar_t *dvar, const char *string, DvarS
 
 	Dvar_SetVariant(dvar, newValue, source);
 
-	Sys_LeaveCriticalSectionInternal(CRITSECT_DVAR);
+	Sys_LeaveCriticalSection(CRITSECT_DVAR);
 }
 
 int hitchFrameTime = 0;
@@ -1045,6 +1050,40 @@ void hook_Com_MakeSoundAliasesPermanent(snd_alias_list_t *aliasList, SoundFileIn
 
 	// Call the original function at this address
 	Com_MakeSoundAliasesPermanent(aliasList, fileInfo);
+}
+
+void custom_Sys_InitializeCriticalSections(void)
+{
+	int i;
+	pthread_mutexattr_t muxattr;
+
+	pthread_mutexattr_init(&muxattr);
+	// New: PTHREAD_MUTEX_RECURSIVE instead of PTHREAD_MUTEX_NORMAL
+	pthread_mutexattr_settype(&muxattr, PTHREAD_MUTEX_RECURSIVE);
+
+	// New: Support for more mutexes as defined via criticalSection_t
+	for ( i = 0; i < CRITSECT_COUNT; i++ )
+	{
+		pthread_mutex_init(&crit_sections[i], &muxattr);
+	}
+
+	pthread_mutexattr_destroy(&muxattr);
+
+}
+
+void custom_Sys_EnterCriticalSection(criticalSection_t section)
+{
+	pthread_mutex_lock(&crit_sections[section]);
+}
+
+void custom_Sys_LeaveCriticalSection(criticalSection_t section)
+{
+	pthread_mutex_unlock(&crit_sections[section]);
+}
+
+int Sys_TryEnterCriticalSection(criticalSection_t section)
+{
+	return pthread_mutex_trylock(&crit_sections[section]);
 }
 
 void custom_Sys_Quit(void)
@@ -4806,7 +4845,7 @@ void custom_Com_Error(errorParm_t code, const char *format, ...)
 {
 	va_list va;
 
-	Sys_EnterCriticalSectionInternal(CRITSECT_COM_ERROR);
+	Sys_EnterCriticalSection(CRITSECT_COM_ERROR);
 
 	if ( com_errorEntered )
 	{
@@ -4833,7 +4872,7 @@ void custom_Com_Error(errorParm_t code, const char *format, ...)
 	
 	com_errorType = code;
 	
-	Sys_LeaveCriticalSectionInternal(CRITSECT_COM_ERROR);
+	Sys_LeaveCriticalSection(CRITSECT_COM_ERROR);
 
 	longjmp((__jmp_buf_tag*)Sys_GetValue(2), -1);
 }
@@ -5064,7 +5103,6 @@ void Scr_CodeCallback_NotifyDebug(unsigned int entId, char *message, unsigned in
 scr_notify_t scr_notify[MAX_NOTIFY_DEBUG_BUFFER];
 int scr_notify_index = 0;
 #if COMPILE_CUSTOM_VOICE == 1
-pthread_mutex_t loadSoundFileResultLock;
 loadSoundFileResult_t loadSoundFileResults[MAX_THREAD_RESULTS_BUFFER];
 int loadSoundFileResultsIndex = 0;
 int currentMaxSoundIndex = 0;
@@ -5139,21 +5177,24 @@ void custom_G_RunFrame(int levelTime)
 
 #if COMPILE_CUSTOM_VOICE == 1
 	// Try process results from Speex encoder tasks
-	if ( pthread_mutex_trylock(&loadSoundFileResultLock) == 0 && Scr_IsSystemActive() )
+	if ( Scr_IsSystemActive() )
 	{
-		if ( loadSoundFileResultsIndex == MAX_THREAD_RESULTS_BUFFER )
+		if ( Sys_TryEnterCriticalSection(CRITSECT_LOAD_SOUND_FILE) == 0 )
 		{
-			Com_Printf("Warning: LoadSoundFile results buffer full\n");
+			if ( loadSoundFileResultsIndex == MAX_THREAD_RESULTS_BUFFER )
+			{
+				Com_Printf("Warning: LoadSoundFile results buffer full\n");
+			}
+			for ( i = 0; i < loadSoundFileResultsIndex; i++ )
+			{
+				stackPushInt(loadSoundFileResults[i].result);
+				stackPushInt(loadSoundFileResults[i].soundIndex);
+				short ret = Scr_ExecThread(loadSoundFileResults[i].callback, 2);
+				Scr_FreeThread(ret);
+			}
+			loadSoundFileResultsIndex = 0;
+			Sys_LeaveCriticalSection(CRITSECT_LOAD_SOUND_FILE);
 		}
-		for ( i = 0; i < loadSoundFileResultsIndex; i++ )
-		{
-			stackPushInt(loadSoundFileResults[i].result);
-			stackPushInt(loadSoundFileResults[i].soundIndex);
-			short ret = Scr_ExecThread(loadSoundFileResults[i].callback, 2);
-			Scr_FreeThread(ret);
-		}
-		loadSoundFileResultsIndex = 0;
-		pthread_mutex_unlock(&loadSoundFileResultLock);
 	}
 
 	// Process custom voice data queue
@@ -8029,12 +8070,14 @@ void custom_Com_PrintMessage(int /* print_msg_type_t */ channel, char *message)
 		*/
 		if ( channel != 4 )
 		{
+			Sys_EnterCriticalSection(CRITSECT_PRINT);
 			Sys_Print(message);
+			Sys_LeaveCriticalSection(CRITSECT_PRINT);
 		}
 
 		if ( com_logfile != NULL && com_logfile->current.integer != 0 )
 		{
-			Sys_EnterCriticalSectionInternal(CRITSECT_CONSOLE);
+			Sys_EnterCriticalSection(CRITSECT_CONSOLE);
 			if ( FS_Initialized() )
 			{
 				if ( logfile == 0 && opening_qconsole == 0 && logfileName->current.string )
@@ -8072,20 +8115,20 @@ void custom_Com_PrintMessage(int /* print_msg_type_t */ channel, char *message)
 					}
 				}
 			}
-			Sys_LeaveCriticalSectionInternal(CRITSECT_CONSOLE);
+			Sys_LeaveCriticalSection(CRITSECT_CONSOLE);
 		}
 	}
 	else if ( channel != 4 )
 	{
 		// RCON output buffer
-		Sys_EnterCriticalSectionInternal(CRITSECT_RD_BUFFER);
+		Sys_EnterCriticalSection(CRITSECT_RD_BUFFER);
 		if ( rd_buffersize - 1U < ( strlen(rd_buffer) + strlen(message) ) )
 		{
 			rd_flush(rd_buffer);
 			*rd_buffer = '\0';
 		}
 		I_strncat(rd_buffer, rd_buffersize, message);
-		Sys_LeaveCriticalSectionInternal(CRITSECT_RD_BUFFER);
+		Sys_LeaveCriticalSection(CRITSECT_RD_BUFFER);
 	}
 }
 
@@ -9914,6 +9957,9 @@ public:
 		cracking_hook_function(0x0811220C, (int)custom_ScrCmd_SetContents);
 		cracking_hook_function(0x0808C706, (int)custom_SV_Status_f);
 		cracking_hook_function(0x0811037A, (int)custom_GScr_LoadLevelScript);
+		cracking_hook_function(0x080D67DA, (int)custom_Sys_InitializeCriticalSections);
+		cracking_hook_function(0x080D6842, (int)custom_Sys_EnterCriticalSection);
+		cracking_hook_function(0x080D6864, (int)custom_Sys_LeaveCriticalSection);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC8CA, (int)Jump_ReduceFriction);

@@ -69,9 +69,6 @@ static const SV_RunFrame_t SV_RunFrame = (SV_RunFrame_t)0x08096752;
 typedef void (*Sys_Error_t)(const char *fmt, ...);
 static const Sys_Error_t Sys_Error = (Sys_Error_t)0x080D3B3C;
 
-typedef void (*Sys_EnterCriticalSectionInternal_t)(int section);
-static const Sys_EnterCriticalSectionInternal_t Sys_EnterCriticalSectionInternal = (Sys_EnterCriticalSectionInternal_t)0x080D6842;
-
 typedef void * (*Sys_GetValue_t)(int key);
 static const Sys_GetValue_t Sys_GetValue = (Sys_GetValue_t)0x080D6BC0;
 
@@ -80,9 +77,6 @@ static const Sys_IsLANAddress_t Sys_IsLANAddress = (Sys_IsLANAddress_t)0x080D563
 
 typedef qboolean (*Sys_StringToSockaddr_t)(const char *s, struct sockaddr_in *sadr);
 static const Sys_StringToSockaddr_t Sys_StringToSockaddr = (Sys_StringToSockaddr_t)0x080D5254;
-
-typedef void (*Sys_LeaveCriticalSectionInternal_t)(int section);
-static const Sys_LeaveCriticalSectionInternal_t Sys_LeaveCriticalSectionInternal = (Sys_LeaveCriticalSectionInternal_t)0x080D6864;
 
 typedef int (*Sys_Milliseconds_t)(void);
 static const Sys_Milliseconds_t Sys_Milliseconds = (Sys_Milliseconds_t)0x080D5D98;
