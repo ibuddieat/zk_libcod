@@ -103,6 +103,7 @@ dvar_t *g_playerCollision;
 dvar_t *g_playerCollisionEjectDamageAllowed;
 dvar_t *g_playerCollisionEjectDuration;
 dvar_t *g_playerEject;
+dvar_t *g_reservedModels;
 dvar_t *g_resetSlide;
 dvar_t *g_safePrecache;
 dvar_t *g_spawnMapTurrets;
@@ -166,10 +167,8 @@ cHook *hook_pm_beginweaponchange;
 cHook *hook_pmove;
 cHook *hook_scr_execentthread;
 cHook *hook_scr_execthread;
-cHook *hook_scr_loadgametype;
 cHook *hook_scr_notify;
 cHook *hook_sys_quit;
-cHook *hook_sv_freeconfigstrings;
 cHook *hook_sv_masterheartbeat;
 cHook *hook_sv_verifyiwds_f;
 cHook *hook_touch_item_auto;
@@ -293,6 +292,10 @@ char altReferencedIwds[MAX_STRINGLENGTH];
 // crit_sections list are hooked away
 pthread_mutex_t crit_sections[CRITSECT_COUNT];
 
+
+// Flag used for g_reservedModels logic so that we can apply model precache
+// limits on maps
+qboolean precaching = qfalse;
 
 void custom_Com_InitDvars(void)
 {
@@ -836,6 +839,19 @@ void custom_SV_SpawnServer(char *server)
 	{
 		sv.configstrings[index] = CopyStringInternal("");
 	}
+
+	/* New code start */
+	// We (re)register model/fx loading dvars here so that any latched value is
+	// applied in time
+	g_reservedModels = Dvar_RegisterInt("g_reservedModels", 0, 0, 255, DVAR_ARCHIVE | DVAR_LATCH | DVAR_CHANGEABLE_RESET);
+	g_safePrecache = Dvar_RegisterBool("g_safePrecache", qfalse, DVAR_ARCHIVE | DVAR_LATCH | DVAR_CHANGEABLE_RESET);
+	if ( g_safePrecache->current.boolean )
+	{
+		SV_SetConfigstring(847, "fx/misc/missing_fx.efx");
+		SV_SetConfigstring(335, "xmodel/default_static_model");
+		cached_models[1] = SV_XModelGet("xmodel/default_static_model");
+	}
+	/* New code end */
 
 	Dvar_ResetScriptInfo();
 
@@ -6128,10 +6144,6 @@ void custom_G_SpawnEntitiesFromString(void)
 
 void custom_Scr_LoadGameType(void)
 {
-	hook_scr_loadgametype->unhook();
-	void (*Scr_LoadGameType)(void);
-	*(int *)&Scr_LoadGameType = hook_scr_loadgametype->from;
-
 	/* New code start: map weapons callback */
 	if ( codecallback_map_weapons_load )
 	{
@@ -6202,8 +6214,35 @@ void custom_Scr_LoadGameType(void)
 	}
 	/* New code end */
 
-	Scr_LoadGameType();
-	hook_scr_loadgametype->hook();
+	precaching = qtrue; // New
+
+	short ret = Scr_ExecThread(g_scr_data.gametype.main, 0);
+	Scr_FreeThread(ret);
+
+	precaching = qfalse; // New
+}
+
+void custom_Scr_LoadLevel(void)
+{
+	if ( g_scr_data.levelscript != 0 )
+	{
+		precaching = qtrue; // New
+
+		short ret = Scr_ExecThread(g_scr_data.levelscript, 0);
+		Scr_FreeThread(ret);
+
+		precaching = qfalse; // New
+	}
+}
+
+void custom_Scr_StartupGameType(void)
+{
+	precaching = qtrue; // New
+
+	short ret = Scr_ExecThread(g_scr_data.gametype.startupgametype, 0);
+	Scr_FreeThread(ret);
+
+	precaching = qfalse; // New
 }
 
 bool custom_CM_IsBadStaticModel(cStaticModel_t *model, char *src, float *origin, float *angles, float (*scale) [3])
@@ -9291,22 +9330,6 @@ int custom_SV_CanReplaceServerCommand(client_t *client, const char *command)
 	return -1;
 }
 
-void custom_SV_FreeConfigstrings(void)
-{
-	hook_sv_freeconfigstrings->unhook();
-	SV_FreeConfigstrings();
-	hook_sv_freeconfigstrings->hook();
-
-	// We (re)register the dvar here so that any latched value is applied in time
-	g_safePrecache = Dvar_RegisterBool("g_safePrecache", qfalse, DVAR_ARCHIVE | DVAR_LATCH | DVAR_CHANGEABLE_RESET);
-	if ( g_safePrecache->current.boolean )
-	{
-		SV_SetConfigstring(847, "fx/misc/missing_fx.efx");
-		SV_SetConfigstring(335, "xmodel/default_static_model");
-		cached_models[1] = SV_XModelGet("xmodel/default_static_model");
-	}
-}
-
 int custom_G_FindConfigstringIndex(const char *name, int start, int max, qboolean create, const char *fieldname)
 {
 	const char *s1;
@@ -9366,12 +9389,19 @@ int custom_G_FindConfigstringIndex(const char *name, int start, int max, qboolea
 unsigned int custom_G_ModelIndex(const char *name)
 {
 	const char *modelName;
-	signed int i;
+	int i;
+	int limit;
 
 	if ( !*name )
 		return 0;
 
-	for ( i = 1; i < MAX_MODELS; ++i )
+	/* New code start: Added g_reservedModels logic */
+	limit = MAX_MODELS;
+	if ( level.initializing && !precaching )
+		limit -= g_reservedModels->current.integer;
+	/* New code end */
+
+	for ( i = 1; i < limit; ++i )
 	{
 		modelName = SV_GetConfigstringConst(i + 334);
 
@@ -9397,7 +9427,7 @@ unsigned int custom_G_ModelIndex(const char *name)
 		}
 	}
 
-	if ( i == MAX_MODELS )
+	if ( i == limit )
 	{
 		// New: Added g_safePrecache dvar logic
 		if ( !g_safePrecache->current.boolean )
@@ -9620,8 +9650,6 @@ public:
 		hook_sv_masterheartbeat->hook();
 		hook_g_runframe = new cHook(0x0810A13A, (int)custom_G_RunFrame);
 		hook_g_runframe->hook();
-		hook_scr_loadgametype = new cHook(0x081182F4, (int)custom_Scr_LoadGameType);
-		hook_scr_loadgametype->hook();
 		hook_vm_notify = new cHook(0x0808359E, (int)custom_VM_Notify);
 		hook_vm_notify->hook();
 		hook_g_processipbans = new cHook(0x0811BB60, (int)custom_G_ProcessIPBans);
@@ -9644,8 +9672,6 @@ public:
 		hook_scr_execentthread->hook();
 		hook_scr_execthread = new cHook(0x08083FD6, int(custom_Scr_ExecThread));
 		hook_scr_execthread->hook();
-		hook_sv_freeconfigstrings = new cHook(0x080932B6, int(custom_SV_FreeConfigstrings));
-		hook_sv_freeconfigstrings->hook();
 		hook_sys_quit = new cHook(0x080D3A7A, int(custom_Sys_Quit));
 		hook_sys_quit->hook();
 		hook_fs_registerdvars = new cHook(0x080A2C3C, (int)custom_FS_RegisterDvars);
@@ -9741,6 +9767,9 @@ public:
 		cracking_hook_function(0x080D67DA, (int)custom_Sys_InitializeCriticalSections);
 		cracking_hook_function(0x080D6842, (int)custom_Sys_EnterCriticalSection);
 		cracking_hook_function(0x080D6864, (int)custom_Sys_LeaveCriticalSection);
+		cracking_hook_function(0x081182F4, (int)custom_Scr_LoadGameType);
+		cracking_hook_function(0x081101D0, (int)custom_Scr_LoadLevel);
+		cracking_hook_function(0x08118322, (int)custom_Scr_StartupGameType);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC8CA, (int)Jump_ReduceFriction);

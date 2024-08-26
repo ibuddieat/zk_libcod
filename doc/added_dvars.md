@@ -69,6 +69,12 @@ Added dvars:
     * Min. Value: 50
     * Max. Value: 1000
     * Effect: Defines the time in milliseconds how long players that are too close to each other will be moved away from each other with the speed defined via the `g_playerCollisionEjectSpeed` dvar.
+  * `g_reservedModels`
+    * Type: Integer
+    * Default: 0
+    * Min. Value: 0
+    * Max. Value: 255
+    * Effect: Set the number of models that cannot be used by the loaded map, thus reserves a specific number of slots to be loadable for precached weapons (the necessary world models) and regular precached models. Recommended to be used only together with the `g_safePrecache` dvar enabled. The slots are reserved for precaching within the following script functions: Map `main()`, gametype `main()`, and `CodeCallback_StartGameType`.
   * `g_resetSlide`
     * Type: Boolean
     * Default: False
@@ -76,7 +82,7 @@ Added dvars:
   * `g_safePrecache`
     * Type: Boolean
     * Default: False
-    * Effect: If true, exceeding the limits of `LoadFx` or `PrecacheModel` will generate console log warnings instead of stopping the server. Excess effects will be replaced by (= displayed as) `fx/misc/missing_fx.efx` and excess models as `xmodel/default_static_model`. These default assets are loaded automatically (and therefore occupy one config string each) if the dvar is set to true.
+    * Effect: If true, exceeding the limits of `LoadFx` or `PrecacheModel` will generate console log warnings instead of stopping the server. Excess effects will be replaced by (= displayed as) `fx/misc/missing_fx.efx` and excess models as `xmodel/default_static_model`. These default assets are loaded automatically (and therefore occupy one config string each) if the dvar is set to true. Map models are loaded first, but can be limited via the `g_reservedModels` dvar.
   * `g_spawnMapTurrets`
     * Type: Boolean
     * Default: True
