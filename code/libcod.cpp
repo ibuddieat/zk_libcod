@@ -165,6 +165,7 @@ cHook *hook_play_movement;
 cHook *hook_playercmd_cloneplayer;
 cHook *hook_pm_beginweaponchange;
 cHook *hook_pmove;
+cHook *hook_scr_dumpscriptthreads;
 cHook *hook_scr_execentthread;
 cHook *hook_scr_execthread;
 cHook *hook_scr_notify;
@@ -9589,6 +9590,22 @@ void hook_SetExpFog_density_typo(const char *string)
 	Scr_Error("setExpFog: density must be greater than 0 and less than 1");
 }
 
+void custom_Scr_DumpScriptThreads(void)
+{
+	/* New code start: Avoid spamming timestamps within script thread dump */
+	byte logTimestampsValue = logTimestamps->current.boolean;
+	logTimestamps->current.boolean = 0;
+	/* New code end */
+
+	hook_scr_dumpscriptthreads->unhook();
+	void (*Scr_DumpScriptThreads)(void);
+	*(int *)&Scr_DumpScriptThreads = hook_scr_dumpscriptthreads->from;
+	Scr_DumpScriptThreads();
+	hook_scr_dumpscriptthreads->hook();
+
+	logTimestamps->current.boolean = logTimestampsValue; // New
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -9678,6 +9695,8 @@ public:
 		hook_fs_registerdvars->hook();
 		hook_pmove = new cHook(0x080E9464, (int)custom_Pmove);
 		hook_pmove->hook();
+		hook_scr_dumpscriptthreads = new cHook(0x0807A43E, (int)custom_Scr_DumpScriptThreads);
+		hook_scr_dumpscriptthreads->hook();
 
 		#if COMPILE_PLAYER == 1
 		hook_play_movement = new cHook(0x08090DAC, (int)custom_SV_ClientThink);
