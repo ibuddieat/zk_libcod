@@ -1446,7 +1446,4 @@ static const Jump_AddSurfaceEvent_t Jump_AddSurfaceEvent = (Jump_AddSurfaceEvent
 typedef void (*Jump_ClearState_t)(playerState_t *ps);
 static const Jump_ClearState_t Jump_ClearState = (Jump_ClearState_t)0x080dC718;
 
-typedef void (*Jump_PushOffLadder_t)(playerState_t *ps, pml_t *pml);
-static const Jump_PushOffLadder_t Jump_PushOffLadder = (Jump_PushOffLadder_t)0x080DCB48;
-
 #endif

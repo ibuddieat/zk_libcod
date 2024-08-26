@@ -58,7 +58,7 @@ Added dvars:
   * `g_resetSlide`
     * Type: Boolean
     * Default: False
-    * Effect: Fix for slide-like player movement after receiving damage from falling not being reset.
+    * Effect: Fix for slide-like player movement after receiving damage from falling or grenades not being reset.
   * `g_safePrecache`
     * Type: Boolean
     * Default: False

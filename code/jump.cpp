@@ -52,6 +52,36 @@ double Jump_GetLandFactor(playerState_t *ps)
 	return 2.5;
 }
 
+void Jump_PushOffLadder(playerState_s *ps, pml_t *pml)
+{
+	// Function follows stock logic, but it is necessary to be reimplemented
+	// here because we redefined the jump_ladderPushVel dvar
+
+	vec3_t flatForward;
+	vec3_t pushOffDir;
+	float dot;
+
+	ps->velocity[2] = ps->velocity[2] * 0.75;
+	flatForward[0] = pml->forward[0];
+	flatForward[1] = pml->forward[1];
+	flatForward[2] = 0.0;
+	Vec3Normalize(flatForward);
+	dot = DotProduct(ps->vLadderVec, pml->forward);
+	if ( dot >= 0.0 )
+	{
+		VectorCopy(flatForward, pushOffDir);
+	}
+	else
+	{
+		dot = DotProduct(ps->vLadderVec, flatForward);
+		VectorMA(flatForward, -2.0 * dot, ps->vLadderVec, pushOffDir);
+		Vec3Normalize(pushOffDir);
+	}
+	ps->velocity[0] = jump_ladderPushVel->current.decimal * pushOffDir[0];
+	ps->velocity[1] = jump_ladderPushVel->current.decimal * pushOffDir[1];
+	ps->pm_flags &= ~PMF_LADDER;
+}
+
 void Jump_Start(pmove_t *pm, pml_t *pml, float height)
 {
 	float factor;

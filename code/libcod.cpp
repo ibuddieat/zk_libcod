@@ -9916,14 +9916,12 @@ public:
 		cracking_hook_function(0x0811037A, (int)custom_GScr_LoadLevelScript);
 
 		#if COMPILE_JUMP == 1
-		cracking_hook_function(0x080DC718, (int)Jump_ClearState);
 		cracking_hook_function(0x080DC8CA, (int)Jump_ReduceFriction);
 		cracking_hook_function(0x080DC95C, (int)Jump_ClampVelocity);
 		cracking_hook_function(0x080DC7C8, (int)Jump_IsPlayerAboveMax);
 		cracking_hook_function(0x080DC73A, (int)Jump_GetStepHeight);
 		cracking_hook_function(0x080DCCA8, (int)Jump_Check);
 		cracking_hook_function(0x080DC818, (int)Jump_ApplySlowdown);
-		cracking_hook_function(0x080DC7EE, (int)Jump_ActivateSlowdown);
 		cracking_hook_function(0x080DC60C, (int)Jump_RegisterDvars);
 		#endif
 
