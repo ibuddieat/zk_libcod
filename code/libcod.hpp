@@ -16,3 +16,4 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script);
 void Scr_CodeCallback_Error(qboolean terminal, qboolean emit, const char *internal_function, char *message);
 void ClearNotSolidForPlayerFlags(int clientNum);
 int custom_ClientEndFrame(gentity_t *ent);
+void ProcessClientUserinfoChange(int clientNum);

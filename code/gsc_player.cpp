@@ -815,17 +815,7 @@ void gsc_player_processclientuserinfochange(scr_entref_t ref)
 		return;
 	}
 	
-	ClientUserinfoChanged(id);
-
-	client_t *cl = &svs.clients[ref.entnum];
-	if( g_forceSnaps->current.integer > 0 )
-	{
-		cl->snapshotMsec = 1000 / g_forceSnaps->current.integer;
-	}
-	if( g_forceRate->current.integer > 0 )
-	{
-		cl->rate = g_forceRate->current.integer;
-	}
+	ProcessClientUserinfoChange(id);
 	
 	stackPushBool(qtrue);
 }

@@ -60,6 +60,9 @@ static const SV_InitArchivedSnapshot_t SV_InitArchivedSnapshot = (SV_InitArchive
 typedef void (*SV_InitGameProgs_t)(int savepersist);
 static const SV_InitGameProgs_t SV_InitGameProgs = (SV_InitGameProgs_t)0x080926B0;
 
+typedef qboolean (*SV_IsLocalClient_t)(int clientNum);
+static const SV_IsLocalClient_t SV_IsLocalClient = (SV_IsLocalClient_t)0x08092472;
+
 typedef int (*SV_RateMsec_t)(client_t *client, int messageSize);
 static const SV_RateMsec_t SV_RateMsec = (SV_RateMsec_t)0x0809AAD0;
 
@@ -130,10 +133,19 @@ typedef void (*Cmd_AddCommand_t)(const char *cmd_name, xcommand_t function);
 static const Cmd_AddCommand_t Cmd_AddCommand = (Cmd_AddCommand_t)0x080606B6;
 
 typedef void (*Cmd_ExecuteString_t)(const char *cmd);
-static const Cmd_ExecuteString_t Cmd_ExecuteString = (Cmd_ExecuteString_t)0x080609CC; // That's actually SV_Cmd_ExecuteString, but doesn't matter
+static const Cmd_ExecuteString_t Cmd_ExecuteString = (Cmd_ExecuteString_t)0x080609CC;
+
+typedef void (*ClientBegin_t)(int clientNum);
+static const ClientBegin_t ClientBegin = (ClientBegin_t)0x080F90AE;
+
+typedef void (*ClientCleanName_t)(const char *in, char *out, int outSize);
+static const ClientCleanName_t ClientCleanName = (ClientCleanName_t)0x080F8B2C;
 
 typedef void (*ClientCommand_t)(int clientNum);
 static const ClientCommand_t ClientCommand = (ClientCommand_t)0x08100E62;
+
+typedef const char * (*ClientConnect_t)(unsigned int clientNum, short scriptPersId);
+static const ClientConnect_t ClientConnect = (ClientConnect_t)0x080F8E7A;
 
 typedef char (*FS_Initialized_t)(void);
 static const FS_Initialized_t FS_Initialized = (FS_Initialized_t)0x0809E620;
@@ -327,9 +339,6 @@ static const SV_DelayDropClient_t SV_DelayDropClient = (SV_DelayDropClient_t)0x0
 typedef void (*SV_UserinfoChanged_t)(client_t *client);
 static const SV_UserinfoChanged_t SV_UserinfoChanged = (SV_UserinfoChanged_t)0x080907CC;
 
-typedef void (*ClientUserinfoChanged_t)(int clientNum);
-static const ClientUserinfoChanged_t ClientUserinfoChanged = (ClientUserinfoChanged_t)0x080F8C5E;
-
 typedef void (*SV_GetUserinfo_t)(int index, char *buffer, int bufferSize);
 static const SV_GetUserinfo_t SV_GetUserinfo = (SV_GetUserinfo_t)0x08092C04;
 
@@ -362,6 +371,9 @@ static const Info_ValueForKey_t Info_ValueForKey = (Info_ValueForKey_t)0x080B810
 
 typedef void (*Info_RemoveKey_t)(char *s, const char *key);
 static const Info_RemoveKey_t Info_RemoveKey = (Info_RemoveKey_t)0x080B8318;
+
+typedef qboolean (*Info_Validate_t)(const char *s); 
+static const Info_Validate_t Info_Validate = (Info_Validate_t)0x080B857C;
 
 typedef short (*Scr_ExecThread_t)(int callbackHook, unsigned int numArgs);
 static const Scr_ExecThread_t Scr_ExecThread = (Scr_ExecThread_t)0x08083FD6;
@@ -1391,12 +1403,6 @@ static const FX_RegisterEffect_t FX_RegisterEffect = (FX_RegisterEffect_t)0x0812
 
 typedef void * (*Hunk_AllocInternal_t)(int size);
 static const Hunk_AllocInternal_t Hunk_AllocInternal = (Hunk_AllocInternal_t)0x080ABF78;
-
-typedef const char * (*ClientConnect_t)(unsigned int clientNum, short scriptPersId);
-static const ClientConnect_t ClientConnect = (ClientConnect_t)0x080F8E7A;
-
-typedef void (*ClientBegin_t)(int clientNum);
-static const ClientBegin_t ClientBegin = (ClientBegin_t)0x080F90AE;
 
 typedef qboolean (*OnSameTeam_t)(gentity_t *ent1, gentity_t *ent2);
 static const OnSameTeam_t OnSameTeam = (OnSameTeam_t)0x0811C0D0;

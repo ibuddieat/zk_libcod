@@ -95,6 +95,8 @@ dvar_t *g_corpseHit;
 dvar_t *g_debugCallbacks;
 dvar_t *g_debugEvents;
 dvar_t *g_debugStaticModels;
+dvar_t *g_forceRate;
+dvar_t *g_forceSnaps;
 dvar_t *g_logPickup;
 dvar_t *g_mantleBlockEnable;
 dvar_t *g_playerCollision;
@@ -102,8 +104,6 @@ dvar_t *g_playerCollisionEjectDamageAllowed;
 dvar_t *g_playerCollisionEjectDuration;
 dvar_t *g_playerEject;
 dvar_t *g_resetSlide;
-dvar_t *g_forceSnaps;
-dvar_t *g_forceRate;
 dvar_t *g_safePrecache;
 dvar_t *g_spawnMapTurrets;
 dvar_t *g_spawnMapWeapons;
@@ -393,6 +393,8 @@ void common_init_complete_print(const char *format, ...)
 	g_debugCallbacks = Dvar_RegisterBool("g_debugCallbacks", qfalse, DVAR_ARCHIVE);
 	g_debugEvents = Dvar_RegisterBool("g_debugEvents", qfalse, DVAR_ARCHIVE);
 	g_debugStaticModels = Dvar_RegisterBool("g_debugStaticModels", qfalse, DVAR_ARCHIVE);
+	g_forceRate = Dvar_RegisterInt("g_forceRate", 0, 0, 25000, DVAR_ARCHIVE);
+	g_forceSnaps = Dvar_RegisterInt("g_forceSnaps", 0, 0, 30, DVAR_ARCHIVE);
 	g_logPickup = Dvar_RegisterBool("g_logPickup", qtrue, DVAR_ARCHIVE);
 	g_mantleBlockEnable = Dvar_RegisterBool("g_mantleBlockEnable", qtrue, DVAR_ARCHIVE);
 	g_playerCollision = Dvar_RegisterBool("g_playerCollision", qtrue, DVAR_ARCHIVE);
@@ -400,8 +402,6 @@ void common_init_complete_print(const char *format, ...)
 	g_playerCollisionEjectDuration = Dvar_RegisterInt("g_playerCollisionEjectDuration", 300, 50, 1000, DVAR_ARCHIVE);
 	g_playerEject = Dvar_RegisterBool("g_playerEject", qtrue, DVAR_ARCHIVE);
 	g_resetSlide = Dvar_RegisterBool("g_resetSlide", qfalse, DVAR_ARCHIVE);
-	g_forceSnaps = Dvar_RegisterInt("g_forceSnaps", 0, 0, 30, DVAR_ARCHIVE);
-	g_forceRate = Dvar_RegisterInt("g_forceRate", 0, 0, 25000, DVAR_ARCHIVE);
 	g_spawnMapTurrets = Dvar_RegisterBool("g_spawnMapTurrets", qtrue, DVAR_ARCHIVE);
 	g_spawnMapWeapons = Dvar_RegisterBool("g_spawnMapWeapons", qtrue, DVAR_ARCHIVE);
 	g_triggerMode = Dvar_RegisterInt("g_triggerMode", 1, 0, 2, DVAR_ARCHIVE);
@@ -1702,28 +1702,84 @@ const char * hook_AuthorizeState(int arg)
 	return s;
 }
 
-void hook_ClientUserinfoChanged(int clientNum)
+void custom_ClientUserinfoChanged(int clientNum)
 {
-	if ( !Scr_IsSystemActive() )
+	if ( !Scr_IsSystemActive() || sv.state != SS_GAME )
 		return;
 
-	if ( !codecallback_userinfochanged )
+	if ( codecallback_userinfochanged )
 	{	
-		ClientUserinfoChanged(clientNum);
-		return;
+		short ret;
+		client_t *cl = &svs.clients[clientNum];
+
+		// Do not call the callback right on connect as at that point the
+		// client is not yet active from a script perspective. Therefore,
+		// CodeCallback_PlayerConnect remains the first script callback that is
+		// called on a new client.
+		if ( cl->state >= CS_CONNECTED )
+		{
+			ret = Scr_ExecEntThread(&g_entities[clientNum], codecallback_userinfochanged, 0);
+			Scr_FreeThread(ret);
+			return;
+		}
 	}
 
-	short ret = Scr_ExecEntThread(&g_entities[clientNum], codecallback_userinfochanged, 0);
-	Scr_FreeThread(ret);
+	// This contains all logic from stock ClientUserinfoChanged, and more
+	ProcessClientUserinfoChange(clientNum);
+}
+
+void ForceServerSnapsAndRate(client_t *client)
+{
+	if ( g_forceSnaps->current.integer > 0 )
+	{
+		client->snapshotMsec = 1000 / g_forceSnaps->current.integer;
+	}
+	if ( g_forceRate->current.integer > 1000 )
+	{
+		client->rate = g_forceRate->current.integer;
+	}
+}
+
+void ProcessClientUserinfoChange(int clientNum)
+{
+	char userinfo[MAX_STRINGLENGTH];
+	char oldname[MAX_STRINGLENGTH];
+	const char *value;
+	gentity_t *entity = &g_entities[clientNum];
+	gclient_t *client = entity->client;
 	client_t *cl = &svs.clients[clientNum];
-	if( g_forceSnaps->current.integer > 0 )
+
+	SV_GetUserinfo(clientNum, userinfo, MAX_STRINGLENGTH);
+
+	if ( !Info_Validate(userinfo) )
+		strcpy(userinfo, "\\name\\badinfo");
+
+	client->sess.localClient = SV_IsLocalClient(clientNum);
+	value = Info_ValueForKey(userinfo, "cg_predictItems");
+
+	if ( atoi(value) )
+		client->sess.predictItemPickup = 1;
+	else
+		client->sess.predictItemPickup = 0;
+
+	if ( client->sess.connected == CON_CONNECTED && level.manualNameChange )
 	{
-		cl->snapshotMsec = 1000 / g_forceSnaps->current.integer;
+		value = Info_ValueForKey(userinfo, "name");
+		ClientCleanName(value, client->sess.name, 32);
 	}
-	if( g_forceRate->current.integer > 0 )
+	else
 	{
-		cl->rate = g_forceRate->current.integer;
+		I_strncpyz(oldname, client->sess.state.name, MAX_STRINGLENGTH);
+		value = Info_ValueForKey(userinfo, "name");
+		ClientCleanName(value, client->sess.state.name, 32);
+		I_strncpyz(client->sess.name, client->sess.state.name, 32);
 	}
+
+	level_bgs.clientinfo[clientNum].clientNum = clientNum;
+	I_strncpyz(level_bgs.clientinfo[clientNum].name, client->sess.state.name, 32);
+	level_bgs.clientinfo[clientNum].team = client->sess.state.team;
+
+	ForceServerSnapsAndRate(cl); // New
 }
 
 void custom_DeathmatchScoreboardMessage(gentity_t *ent)
@@ -3066,6 +3122,12 @@ void custom_SV_SendClientGameState(client_t *client)
 	customPlayerState[id].protocolVersion = protocolVersion;
 	memcpy(&customPlayerState[id].preProxyIP, &preProxyIP, 16);
 	customPlayerState[id].preProxyPort = preProxyPort;
+
+	// Restore user-provided rate and snaps after download
+	SV_UserinfoChanged(client);
+
+	// Enforce rate and snaps, overriding user-provided settings
+	ForceServerSnapsAndRate(client);
 
 	// Update entity-related stuff
 	ClearNotSolidForPlayerFlags(id);
@@ -9801,7 +9863,6 @@ public:
 		cracking_hook_call(0x08090BA0, (int)hook_ClientCommand);
 		cracking_hook_call(0x0808DB12, (int)hook_AuthorizeState);
 		cracking_hook_call(0x0808BDC8, (int)hook_findMap);
-		cracking_hook_call(0x08090A52, (int)hook_ClientUserinfoChanged);
 		cracking_hook_call(0x08070BE7, (int)Scr_GetCustomFunction);
 		cracking_hook_call(0x08070E0B, (int)Scr_GetCustomMethod);
 		cracking_hook_call(0x08082346, (int)hook_RuntimeError_in_VM_Execute);
@@ -9957,6 +10018,7 @@ public:
 		cracking_hook_function(0x0811220C, (int)custom_ScrCmd_SetContents);
 		cracking_hook_function(0x0808C706, (int)custom_SV_Status_f);
 		cracking_hook_function(0x0811037A, (int)custom_GScr_LoadLevelScript);
+		cracking_hook_function(0x080F8C5E, (int)custom_ClientUserinfoChanged);
 		cracking_hook_function(0x080D67DA, (int)custom_Sys_InitializeCriticalSections);
 		cracking_hook_function(0x080D6842, (int)custom_Sys_EnterCriticalSection);
 		cracking_hook_function(0x080D6864, (int)custom_Sys_LeaveCriticalSection);

@@ -41,6 +41,20 @@ Added dvars:
     * Type: Boolean
     * Default: False
     * Effect: Toggle logging of info about static models on map load.
+  * `g_forceRate`
+    * Type: Integer
+    * Default: 0
+    * Min. Value: 0 (disabled)
+    * Min. Effective Value: 1000
+    * Max. Value: 25000
+    * Effect: Forces every client's rate. Does not update the rate dvar value on the client side.
+  * `g_forceSnaps`
+    * Type: Integer
+    * Default: 0
+    * Min. Value: 0 (disabled)
+    * Min. Effective Value: 1
+    * Max. Value: 30
+    * Effect: Forces every client's snaps. Does not update the snaps dvar value on the client side. 
   * `g_logPickup`
     * Type: Boolean
     * Default: True
