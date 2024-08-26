@@ -69,6 +69,12 @@ static const SV_RateMsec_t SV_RateMsec = (SV_RateMsec_t)0x0809AAD0;
 typedef void (*SV_RunFrame_t)(void);
 static const SV_RunFrame_t SV_RunFrame = (SV_RunFrame_t)0x08096752;
 
+typedef void (*Sys_EnterCriticalSection_t)(int section);
+static const Sys_EnterCriticalSection_t Sys_EnterCriticalSection = (Sys_EnterCriticalSection_t)0x080D6842;
+
+typedef void (*Sys_LeaveCriticalSection_t)(int section);
+static const Sys_LeaveCriticalSection_t Sys_LeaveCriticalSection = (Sys_LeaveCriticalSection_t)0x080D6864;
+
 typedef void (*Sys_Error_t)(const char *fmt, ...);
 static const Sys_Error_t Sys_Error = (Sys_Error_t)0x080D3B3C;
 
@@ -146,6 +152,9 @@ static const ClientCommand_t ClientCommand = (ClientCommand_t)0x08100E62;
 
 typedef const char * (*ClientConnect_t)(unsigned int clientNum, short scriptPersId);
 static const ClientConnect_t ClientConnect = (ClientConnect_t)0x080F8E7A;
+
+typedef void (*ClientUserinfoChanged_t)(int clientNum);
+static const ClientUserinfoChanged_t ClientUserinfoChanged = (ClientUserinfoChanged_t)0x080F8C5E;
 
 typedef char (*FS_Initialized_t)(void);
 static const FS_Initialized_t FS_Initialized = (FS_Initialized_t)0x0809E620;
