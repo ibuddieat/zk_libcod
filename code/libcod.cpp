@@ -7448,7 +7448,7 @@ void custom_Bullet_Fire_Extended(const gentity_t *inflictor, gentity_t *attacker
 
 		G_LocationalTrace(&trace, start, end, inflictor->s.number, contentMask, priorityMap);
 		Vec3Lerp(start, end, trace.fraction, origin);
-		custom_G_CheckHitTriggerDamage(attacker, start, origin, wp->weapDef->damage, meansOfDeath);
+		G_CheckHitTriggerDamage(attacker, start, origin, wp->weapDef->damage, meansOfDeath);
 		self = &g_entities[trace.entityNum];
 		VectorSubtract(end, start, dir);
 		Vec3Normalize(dir);
@@ -7599,7 +7599,7 @@ qboolean custom_Bullet_Fire_Drop(droppingBullet_t *bullet, const gentity_t *infl
 	else
 		G_LocationalTrace(&trace, start, end, inflictor->s.number, contentMask, priorityMap);
 	Vec3Lerp(start, end, trace.fraction, origin);
-	custom_G_CheckHitTriggerDamage(attacker, start, origin, wp->weapDef->damage, meansOfDeath);
+	G_CheckHitTriggerDamage(attacker, start, origin, wp->weapDef->damage, meansOfDeath);
 	self = &g_entities[trace.entityNum];
 	VectorSubtract(end, start, dir);
 	Vec3Normalize(dir);
@@ -8624,288 +8624,6 @@ qboolean custom_SV_ClientCommand(client_t *cl, msg_t *msg)
 	return qfalse;
 }
 
-void custom_G_CheckHitTriggerDamage(gentity_t *pActivator, float *vStart, float *vEnd, int iDamage, meansOfDeath_t iMOD)
-{
-	// Function has stock logic
-	gentity_t *ent;
-	vec3_t maxs;
-	vec3_t mins;
-	int entityList[1026];
-	int count;
-	int i;
-	int entNum;
-
-	VectorCopy(vStart, mins);
-	VectorCopy(vStart, maxs);
-	AddPointToBounds(vEnd, mins, maxs);
-	count = CM_AreaEntities(mins, maxs, entityList, MAX_GENTITIES, CONTENTS_DONOTENTER_LARGE);
-	for ( i = 0; i < count; i++)
-	{
-		entNum = entityList[i];
-		ent = g_entities + entNum;
-		if ( g_entities[entNum].classname == scr_const.trigger_damage )
-		{
-			if ( SV_SightTraceToEntity(vStart, vec3_origin, vec3_origin, vEnd, (ent->s).number, -1) )
-			{
-				Scr_AddEntity(pActivator);
-				Scr_AddInt(iDamage);
-				Scr_Notify(ent, scr_const.damage, 2);
-				Activate_trigger_damage(ent, pActivator, iDamage, iMOD);
-				if ( g_entities[entNum].trigger.accumulate == 0 )
-				{
-					g_entities[entNum].health = 32000;
-				}
-			}
-		}
-	}
-}
-
-void custom_G_GrenadeTouchTriggerDamage(gentity_t *pActivator, float *vStart, float *vEnd, int iDamage, meansOfDeath_t iMOD)
-{
-	// Function has stock logic
-	gentity_t *ent;
-	vec3_t maxs;
-	vec3_t mins;
-	int entityList[1026];
-	int count;
-	int i;
-	int entNum;
-
-	VectorCopy(vStart, mins);
-	VectorCopy(vStart, maxs);
-	AddPointToBounds(vEnd, mins, maxs);
-	count = CM_AreaEntities(mins, maxs, entityList, MAX_GENTITIES, CONTENTS_DONOTENTER_LARGE);
-	for ( i = 0; i < count; i++ )
-	{
-		entNum = entityList[i];
-		ent = g_entities + entNum;
-		if ( g_entities[entNum].classname == scr_const.trigger_damage && (g_entities[entNum].flags & FL_GRENADE_TOUCH_DAMAGE) != 0 )
-		{
-			if ( SV_SightTraceToEntity(vStart, vec3_origin, vec3_origin, vEnd, (ent->s).number, -1) )
-			{
-				Scr_AddEntity(pActivator);
-				Scr_AddInt(iDamage);
-				Scr_Notify(ent, scr_const.damage, 2);
-				Activate_trigger_damage(ent, pActivator, iDamage, iMOD);
-				if ( g_entities[entNum].trigger.accumulate == 0 )
-				{
-					g_entities[entNum].health = 32000;
-				}
-			}
-		}
-	}
-}
-
-void custom_SV_LinkEntity(gentity_t *gEnt)
-{
-	// Function has stock logic
-	svEntity_t *ent;
-	vec_t *angles;
-	vec_t *origin;
-	clipHandle_t clip;
-	DObj *dobj;
-	double radius;
-	int i;
-	vec3_t max;
-	vec3_t min;
-	int lastLeaf;
-	int c;
-	int b;
-	int a;
-	int num_leafs;
-	int cluster;
-	int leafs[128];
-
-	ent = SV_SvEntityForGentity(gEnt);
-	if ( !(gEnt->r).bmodel )
-	{
-		if ( ((gEnt->r).contents & ( CONTENTS_SOLID | CONTENTS_BODY )) == 0 )
-		{
-			(gEnt->s).solid = 0;
-		}
-		else
-		{
-			a = (int)((gEnt->r).maxs[0]);
-			if ( a < 1 )
-			{
-				a = 1;
-			}
-			if ( 0xFF < a )
-			{
-				a = 0xFF;
-			}
-			b = (int)(1.0 - (gEnt->r).mins[2]);
-			if ( b < 1 )
-			{
-				b = 1;
-			}
-			if ( 0xFF < b )
-			{
-				b = 0xFF;
-			}
-			c = (int)((gEnt->r).maxs[2] + 32.0);
-			if ( c < 1 )
-			{
-				c = 1;
-			}
-			if ( 0xFF < c )
-			{
-				c = 0xFF;
-			}
-			(gEnt->s).solid = b << 8 | c << 0x10 | a;
-		}
-	}
-	else
-	{
-		(gEnt->s).solid = 0xffffff;
-	}
-	angles = (gEnt->r).currentAngles;
-	origin = (gEnt->r).currentOrigin;
-	SnapAngles(angles);
-	if ( !(gEnt->r).bmodel || ( *angles == 0.0 && (gEnt->r).currentAngles[1] == 0.0 && (gEnt->r).currentAngles[2] == 0.0 ) )
-	{
-		VectorAdd(origin, (gEnt->r).mins, (gEnt->r).absmin);
-		VectorAdd(origin, (gEnt->r).maxs, (gEnt->r).absmax);
-	}
-	else if ( *angles == 0.0 && (gEnt->r).currentAngles[2] == 0.0 )
-	{
-		radius = RadiusFromBounds2((gEnt->r).mins, (gEnt->r).maxs);
-		for ( i = 0; i < 2; i++ )
-		{
-			(gEnt->r).absmin[i] = origin[i] - (float)radius;
-			(gEnt->r).absmax[i] = origin[i] + (float)radius;
-		}
-		(gEnt->r).absmin[2] = (gEnt->r).currentOrigin[2] + (gEnt->r).mins[2];
-		(gEnt->r).absmax[2] = (gEnt->r).currentOrigin[2] + (gEnt->r).maxs[2];
-	}
-	else
-	{
-		radius = RadiusFromBounds((gEnt->r).mins, (gEnt->r).maxs);
-		for ( i = 0; i < 3; i++ )
-		{
-			(gEnt->r).absmin[i] = origin[i] - (float)radius;
-			(gEnt->r).absmax[i] = origin[i] + (float)radius;
-		}
-	}
-
-	(gEnt->r).absmin[0] = (gEnt->r).absmin[0] - 1.0;
-	(gEnt->r).absmin[1] = (gEnt->r).absmin[1] - 1.0;
-	(gEnt->r).absmin[2] = (gEnt->r).absmin[2] - 1.0;
-	(gEnt->r).absmax[0] = (gEnt->r).absmax[0] + 1.0;
-	(gEnt->r).absmax[1] = (gEnt->r).absmax[1] + 1.0;
-	(gEnt->r).absmax[2] = (gEnt->r).absmax[2] + 1.0;
-	ent->numClusters = 0;
-	ent->lastCluster = 0;
-	if ( ((gEnt->r).svFlags & 0x19) == 0 )
-	{
-		num_leafs = CM_BoxLeafnums((gEnt->r).absmin, (gEnt->r).absmax, leafs, MAX_TOTAL_ENT_LEAFS, &lastLeaf);
-		if ( num_leafs == 0 )
-		{
-			CM_UnlinkEntity(ent);
-			return;
-		}
-		for ( i = 0; i < num_leafs; i++ )
-		{
-			cluster = CM_LeafCluster(leafs[i]);
-			if ( cluster != -1 )
-			{
-				ent->clusternums[ent->numClusters++] = cluster;
-				if ( ent->numClusters == MAX_ENT_CLUSTERS )
-					break;
-			}
-		}
-		if ( i != num_leafs )
-			ent->lastCluster = CM_LeafCluster(lastLeaf);
-	}
-	(gEnt->r).linked = 1;
-	if ( (gEnt->r).contents == 0 )
-	{
-		CM_UnlinkEntity(ent);
-	}
-	else
-	{
-		clip = SV_ClipHandleForEntity(gEnt);
-		dobj = Com_GetServerDObj((gEnt->s).number);
-		if ( dobj == NULL || ( ((gEnt->r).svFlags & 6) == 0 ) )
-		{
-			CM_LinkEntity(ent, (gEnt->r).absmin, (gEnt->r).absmax, clip);
-		}
-		else
-		{
-			if ( ((gEnt->r).svFlags & 2) == 0 )
-			{
-				DObjGetBounds(dobj, min, max);
-				VectorAdd(origin, min, min);
-				VectorAdd(origin, max, max);
-			}
-			else
-			{
-				VectorAdd(origin, actorLocationalMins, min);
-				VectorAdd(origin, actorLocationalMaxs, max);
-			}
-			CM_LinkEntity(ent, min, max, clip);
-		}
-	}
-}
-
-void custom_CM_AreaEntities_r(unsigned int nodeIndex, areaParms_t *ap)
-{
-	// Function has stock logic, but different loop structure
-	struct worldSector_s *node;
-	gentity_t *gcheck;
-	int en;
-	unsigned int nextNodeIndex;
-	int gnum;
-
-	for ( node = &cm_world.sectors[nodeIndex]; node->contents.contentsEntities & ap->contentmask; node = &cm_world.sectors[nodeIndex] )
-	{
-		for ( en = node->contents.entities; en > 0; en = sv.svEntities[gnum].nextEntityInWorldSector )
-		{
-			gnum = en - 1;
-			gcheck = SV_GentityNum(gnum);
-
-			if ( gcheck->r.contents & ap->contentmask )
-			{
-				if ( gcheck->r.absmin[0] > ap->maxs[0]
-				|| gcheck->r.absmin[1] > ap->maxs[1]
-				|| gcheck->r.absmin[2] > ap->maxs[2]
-				|| gcheck->r.absmax[0] < ap->mins[0]
-				|| gcheck->r.absmax[1] < ap->mins[1]
-				|| gcheck->r.absmax[2] < ap->mins[2] )
-				{
-					continue;
-				}
-				if ( ap->count == ap->maxcount )
-				{
-					Com_DPrintf("CM_AreaEntities: MAXCOUNT\n");
-					return;
-				}
-				ap->list[ap->count] = gnum;
-				++ap->count;
-			}
-		}
-
-		if ( node->tree.dist >= ap->maxs[node->tree.axis] )
-		{
-			nodeIndex = node->tree.child[1];
-			if ( node->tree.dist <= ap->mins[node->tree.axis] )
-			{
-				return;
-			}
-		}
-		else if ( node->tree.dist <= ap->mins[node->tree.axis] )
-		{
-			nodeIndex = node->tree.child[0];
-		}
-		else
-		{
-			nextNodeIndex = node->tree.child[1];
-			custom_CM_AreaEntities_r(node->tree.child[0], ap);
-			nodeIndex = nextNodeIndex;
-		}
-	}
-}
-
 int TriggerDamageEntities(int *entityList)
 {
 	int i;
@@ -8983,7 +8701,7 @@ int custom_CM_AreaEntities(const float *mins, const float *maxs, int *entityList
 	ae.count = 0;
 	ae.maxcount = maxcount;
 	ae.contentmask = contentmask;
-	custom_CM_AreaEntities_r(1, &ae);
+	CM_AreaEntities_r(1, &ae);
 	return ae.count;
 }
 
@@ -9984,9 +9702,6 @@ public:
 		cracking_hook_function(0x080F5682, (int)custom_G_SetClientContents);
 		cracking_hook_function(0x0809CD64, (int)custom_SV_ClipMoveToEntity);
 		cracking_hook_function(0x08101B40, (int)custom_G_DamageClient);
-		cracking_hook_function(0x0811CEA8, (int)custom_G_CheckHitTriggerDamage);
-		cracking_hook_function(0x0811D096, (int)custom_G_GrenadeTouchTriggerDamage);
-		cracking_hook_function(0x0809C63A, (int)custom_SV_LinkEntity);
 		cracking_hook_function(0x0805E986, (int)custom_CM_AreaEntities);
 		cracking_hook_function(0x080FD518, (int)custom_PlayerCmd_DeactivateReverb);
 		cracking_hook_function(0x080FD7C0, (int)custom_PlayerCmd_DeactivateChannelVolumes);

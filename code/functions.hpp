@@ -816,6 +816,9 @@ static const G_DObjCalcPose_t G_DObjCalcPose = (G_DObjCalcPose_t)0x0811E3C0;
 typedef void (*G_DObjUpdate_t)(gentity_t *ent);
 static const G_DObjUpdate_t G_DObjUpdate = (G_DObjUpdate_t)0x0811D69E;
 
+typedef void (*G_CheckHitTriggerDamage_t)(gentity_t *inflictor, float *muzzleTrace, float *origin, int damage, meansOfDeath_t meansOfDeath);
+static const G_CheckHitTriggerDamage_t G_CheckHitTriggerDamage = (G_CheckHitTriggerDamage_t)0x0811CEA8;
+
 typedef playerState_t * (*SV_GameClientNum_t)(int num);
 static const SV_GameClientNum_t SV_GameClientNum = (SV_GameClientNum_t)0x08091716;
 
@@ -1016,6 +1019,9 @@ static const G_SetClientArchiveTime_t G_SetClientArchiveTime = (G_SetClientArchi
 
 typedef cachedSnapshot_t * (*SV_GetCachedSnapshot_t)(int *pArchiveTime);
 static const SV_GetCachedSnapshot_t SV_GetCachedSnapshot = (SV_GetCachedSnapshot_t)0x08099C04;
+
+typedef void (*CM_AreaEntities_r_t)(unsigned short nodeIndex, areaParms_t *ap);
+static const CM_AreaEntities_r_t CM_AreaEntities_r = (CM_AreaEntities_r_t)0x0805E76E;
 
 typedef XModel * (*CM_XModelPrecache_t)(const char *src);
 static const CM_XModelPrecache_t CM_XModelPrecache = (CM_XModelPrecache_t)0x08058170;
