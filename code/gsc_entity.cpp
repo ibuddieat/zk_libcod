@@ -458,7 +458,7 @@ void gsc_entity_addentityvelocity(scr_entref_t ref)
 				(ent->s).apos.trTime = level.time;
 				VecToAngles((ent->r).currentAngles, (ent->s).apos.trBase);
 			}
-			if( !IsNullVector(velocity) )
+			if ( !IsNullVector(velocity) )
 				(ent->s).groundEntityNum = ENTITY_NONE;
 
 			stackPushBool(qtrue);
@@ -497,7 +497,7 @@ void gsc_entity_setentityvelocity(scr_entref_t ref)
 				(ent->s).apos.trTime = level.time;
 				VecToAngles((ent->r).currentAngles, (ent->s).apos.trBase);
 			}
-			if( !IsNullVector(velocity) )
+			if ( !IsNullVector(velocity) )
 				(ent->s).groundEntityNum = ENTITY_NONE;
 
 			stackPushBool(qtrue);

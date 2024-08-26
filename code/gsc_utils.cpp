@@ -636,7 +636,7 @@ void gsc_utils_sprintf()
 			}
 			else
 			{
-				if( param >= Scr_GetNumParam() )
+				if ( param >= Scr_GetNumParam() )
 					continue;
 
 				switch ( stackGetParamType(param) )
