@@ -4985,8 +4985,6 @@ void custom_SV_Status_f(void)
 
 	/* New code start: Log only one message timestamp at status info */
 	byte logTimestampsValue = logTimestamps->current.boolean;
-
-	Com_Printf("status:"); // This message still has a timestamp
 	logTimestamps->current.boolean = 0;
 	/* New code end */
 
