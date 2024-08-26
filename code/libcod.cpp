@@ -4,11 +4,8 @@
 #include "ratelimiter.hpp"
 #include "utils.hpp"
 
-#include <signal.h>
-
-#if COMPILE_CUSTOM_VOICE == 1
 #include <pthread.h>
-#endif
+#include <signal.h>
 
 // Stock dvars
 dvar_t *bg_bobMax;
