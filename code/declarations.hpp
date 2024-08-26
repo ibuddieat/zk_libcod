@@ -1226,20 +1226,13 @@ typedef struct DObjTrace_s
 	unsigned short partGroup;
 } DObjTrace_t;
 
-typedef struct
-{
-	char material[64];
-	int surfaceFlags;
-	int contentFlags;
-} dmaterial_t;
-
 typedef struct trace_s
 {
 	float fraction;
 	vec3_t normal;
 	int surfaceFlags;
 	int contents;
-	dmaterial_t *material;
+	const char *material;
 	uint16_t entityNum;
 	uint16_t partName;
 	uint16_t partGroup;
