@@ -26,7 +26,6 @@ New script code methods:
   * `<entity> setLight(<red>, <green>, <blue>, <intensity>)`
   * `<entity> solidForPlayer(<player>)`
   * `<entity> spawnGrenade(<weapon>, <origin>, [<direction>], [<velocity>], [<fuseTime>])`
-  * `<player> isAllowingSpectators()`
   * `<player> canUseTurret(<turret>)`
   * `<player> disableBulletDrop()`
   * `<player> disableBulletImpacts()`
@@ -53,6 +52,7 @@ New script code methods:
   * `<player> getRemainingSoundFileDuration()`
   * `<player> getServerCommandQueueSize()`
   * `<player> getViewOrigin()`
+  * `<player> isAllowingSpectators()`
   * `<player> isHiddenFromScoreboard()`
   * `<player> isPlayingSoundFile()`
   * `<player> isReloading()`
