@@ -16,6 +16,7 @@ New script code methods:
   * `<entity> getVmax()`
   * `<entity> getVmin()`
   * `<entity> hasTag(<tag name>)`
+  * `<entity> hideFromPlayer(<player>)`
   * `<entity> isGravityEnabled()`
   * `<entity> isLinkedTo()`
   * `<entity> isTurret()`
