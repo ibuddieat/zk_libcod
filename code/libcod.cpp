@@ -4406,7 +4406,7 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 				}
 				else if ( strcmp(SV_Cmd_Argv(2), "devmap") == 0 )
 				{
-					if ( SV_Cmd_Argc() > 3 && custom_SV_MapExists(SV_Cmd_Argv(3)) )
+					if ( SV_Cmd_Argc() > 3 && SV_MapExists(SV_Cmd_Argv(3)) )
 					{
 						if ( level.finished )
 						{
@@ -4430,7 +4430,7 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 				}
 				else if ( strcmp(SV_Cmd_Argv(2), "map") == 0 )
 				{
-					if ( SV_Cmd_Argc() > 3 && custom_SV_MapExists(SV_Cmd_Argv(3)) )
+					if ( SV_Cmd_Argc() > 3 && SV_MapExists(SV_Cmd_Argv(3)) )
 					{
 						if ( level.finished )
 						{
@@ -7132,6 +7132,14 @@ void custom_GScr_SetHintString(scr_entref_t entref)
 
 qboolean custom_SV_MapExists(const char *name)
 {
+	// Validate input path length to avoid error:
+	// Sys_Error: FS_BuildOSPath: os path length exceeded
+	if ( strlen(name) > MAX_QPATH )
+	{
+		Com_Printf("SV_MapExists: Map name '%s' is too long\n", name);
+		return qfalse;
+	}
+
 	// First try stock mechanism
 	qboolean found = FS_ReadFile(custom_va("maps/mp/%s.%s", SV_GetMapBaseName(name), GetBspExtension()), 0) >= 0;
 	if ( !found )

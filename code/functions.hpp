@@ -1104,6 +1104,9 @@ static const SP_worldspawn_t SP_worldspawn = (SP_worldspawn_t)0x0811B56A;
 typedef const char * (*SV_GetMapBaseName_t)(const char *mapname);
 static const SV_GetMapBaseName_t SV_GetMapBaseName = (SV_GetMapBaseName_t)0x0808BD32;
 
+typedef qboolean (*SV_MapExists_t)(const char *mapname);
+static const SV_MapExists_t SV_MapExists = (SV_MapExists_t)0x08092302;
+
 typedef char * (*GetBspExtension_t)(void);
 static const GetBspExtension_t GetBspExtension = (GetBspExtension_t)0x080A36FE;
 
