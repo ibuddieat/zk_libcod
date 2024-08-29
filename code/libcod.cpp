@@ -8625,7 +8625,7 @@ qboolean custom_SV_ClientCommand(client_t *cl, msg_t *msg)
 		{
 			floodprotect = false;
 		}
-		if ( ( ( *(legacyHacks + 4) == 0 ) && ( CS_PRIMED < cl->state ) ) && ( sv_floodProtect->current.boolean && ( svs.time < cl->nextReliableTime && floodprotect ) ) )
+		if ( !legacyHacks->cl_running && CS_PRIMED < cl->state && sv_floodProtect->current.boolean && svs.time < cl->nextReliableTime && floodprotect )
 		{
 			clientOk = 0;
 			Com_DPrintf("client text ignored for %s: %s\n", cl->name, Cmd_Argv(0));

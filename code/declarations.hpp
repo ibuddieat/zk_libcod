@@ -3684,6 +3684,35 @@ typedef struct cm_world_s
 	worldSector_t sectors[1024];
 } cm_world_t;
 
+typedef struct
+{
+	int cg_norender;
+	int cl_running;
+	int cl_stance;
+	int cl_stanceTemp;
+	int cl_downloadSize;
+	int cl_downloadCount;
+	int cl_downloadTime;
+	char cl_downloadName[64];
+	char cl_serverloadmap[64];
+	char cl_serverloadgametype[64];
+	bool cl_serverloadwaiting;
+	bool sv_killserver;
+	char sv_killreason[256];
+	char ui_scriptMenu[256];
+	int ui_scriptMenuIndex;
+	char ui_newScriptMenu[256];
+	int ui_newScriptMenuIndex;
+	char ui_waitingScriptMenu[256];
+	int ui_waitingScriptMenuIndex;
+	bool ui_waitingScriptMenuNoMouse;
+	bool ui_scriptMenuAllowResponse;
+	char ui_savegameName[256];
+	char ui_savegameInfo[256];
+	bool winnt;
+	int persid;
+} LegacyHacks;
+
 static const int gentities_offset = 0x08716400;
 static const int gclients_offset = 0x087A2500;
 static const int varpub_offset = 0x08397500;
@@ -3786,7 +3815,7 @@ static const int dvar_modifiedFlags_offset = 0x085ABE04;
 #define com_fixedConsolePosition (*((int*)( com_fixedConsolePosition_offset )))
 #define com_errorType (*((int*)( com_errorType_offset )))
 #define testclient_connect_string (*((char*)( testclient_connect_string_offset )))
-#define legacyHacks ((int*)( legacyHacks_offset ))
+#define legacyHacks ((LegacyHacks*)( legacyHacks_offset ))
 #define vec3_origin ((float*)( vec3_origin_offset ))
 #define g_scr_data (*((scr_data_t*)( g_scr_data_offset )))
 #define actorLocationalMins ((float*)( actorLocationalMins_offset ))
@@ -3814,6 +3843,7 @@ static const int dvar_modifiedFlags_offset = 0x085ABE04;
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6
 
+ static_assert((sizeof(bool) == 1), "ERROR: bool size is invalid!");
  static_assert((sizeof(client_t) == 0xB1064), "ERROR: client_t size is invalid!");
  static_assert((sizeof(gentity_t) == 560), "ERROR: gentity_t size is invalid!");
  static_assert((sizeof(gclient_t) == 0x28A4), "ERROR: gclient_t size is invalid!");
@@ -3828,6 +3858,7 @@ static const int dvar_modifiedFlags_offset = 0x085ABE04;
  static_assert((sizeof(animation_t) == 96), "ERROR: animation_t size is invalid!");
  static_assert((sizeof(scr_data_t) == 14072), "ERROR: scr_data_t size is invalid!");
  static_assert((sizeof(entHandlers_t) == 1), "ERROR: entHandlers_t size is invalid!");
+ static_assert((sizeof(LegacyHacks) == 1780), "ERROR: LegacyHacks size is invalid!");
 
 #endif
 
