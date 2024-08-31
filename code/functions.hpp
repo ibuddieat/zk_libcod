@@ -3,6 +3,9 @@
 
 /* MAKE FUNCTIONS STATIC, SO THEY CAN BE IN EVERY FILE */
 
+typedef char * (*va_t)(const char *format, ...);
+static const va_t va = (va_t)0x080B7FA6;
+
 typedef unsigned int (*GetVariableName_t)(unsigned int a1);
 static const GetVariableName_t GetVariableName = (GetVariableName_t)0x0807D0C2;
 
@@ -78,7 +81,7 @@ static const Sys_LeaveCriticalSection_t Sys_LeaveCriticalSection = (Sys_LeaveCri
 typedef void (*Sys_Error_t)(const char *fmt, ...);
 static const Sys_Error_t Sys_Error = (Sys_Error_t)0x080D3B3C;
 
-typedef void * (*Sys_GetValue_t)(int key);
+typedef void * (*Sys_GetValue_t)(ThreadValue key);
 static const Sys_GetValue_t Sys_GetValue = (Sys_GetValue_t)0x080D6BC0;
 
 typedef qboolean (*Sys_IsLANAddress_t)(netadr_t adr);

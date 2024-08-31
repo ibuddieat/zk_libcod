@@ -56,6 +56,9 @@ proxy_t proxies[MAX_PROXIES];
 // not have to be started again and that they need to be freed on server quit
 qboolean initialized = qfalse;
 
+// We do not reuse the stock va() buffers here for concurrency reasons
+va_info_t proxies_va_info[MAX_PROXIES];
+
 // These IP addresses are website server trackers
 const char *trackers[] = {
 	"208.167.241.187",
@@ -107,6 +110,25 @@ void ToLowerCase(char *str)
 		if ( str[i] >= 'A' && str[i] <= 'Z' )
 			str[i] = str[i] + ('a' - 'A');
 	}
+}
+
+char * VaProxies(proxy_t *proxy, const char *format, ...)
+{
+	va_info_t *info;
+	int index;
+	va_list va;
+
+	info = &proxies_va_info[proxy - &proxies[0]];
+	index = info->index;
+	info->index = (info->index + 1) % MAX_VASTRINGS;
+
+	va_start(va, format);
+	Q_vsnprintf(info->va_string[index], sizeof(info->va_string[0]), format, va);
+	va_end(va);
+
+	info->va_string[index][MAX_STRINGLENGTH - 1] = 0;
+
+	return info->va_string[index];
 }
 
 const char * InfoValueForKey(const char *s, const char *key, proxy_t *proxy)
@@ -168,8 +190,8 @@ const char * InfoValueForKey(const char *s, const char *key, proxy_t *proxy)
 
 void ReplaceProtocolString(char *buffer, proxy_t *proxy)
 {
-	const char *proxyProtocolString = custom_va("\\protocol\\%d", proxy->version);
-	const char *parentProtocolString = custom_va("\\protocol\\%d", proxy->parentVersion);
+	const char *proxyProtocolString = VaProxies(proxy, "\\protocol\\%d", proxy->version);
+	const char *parentProtocolString = VaProxies(proxy, "\\protocol\\%d", proxy->parentVersion);
 	char *offset = strstr(buffer, parentProtocolString);
 	if ( offset != NULL )
 		memcpy(offset, proxyProtocolString, 13);
@@ -177,8 +199,8 @@ void ReplaceProtocolString(char *buffer, proxy_t *proxy)
 
 void ReplaceShortversionString(char *buffer, proxy_t *proxy)
 {
-	const char *proxyShortversionString = custom_va("\\shortversion\\%s", proxy->versionString);
-	const char *parentShortversionString = custom_va("\\shortversion\\%s", proxy->parentVersionString);
+	const char *proxyShortversionString = VaProxies(proxy, "\\shortversion\\%s", proxy->versionString);
+	const char *parentShortversionString = VaProxies(proxy, "\\shortversion\\%s", proxy->parentVersionString);
 	char *offset = strstr(buffer, parentShortversionString);
 	if ( offset != NULL )
 		memcpy(offset, proxyShortversionString, 17);
@@ -273,7 +295,7 @@ void SV_SetupProxies()
 
 	Com_Printf("-----------------------------------\n");
 
-	const char *forwardAddress = custom_va("%s:%d", net_ip->current.string, net_port->current.integer);
+	const char *forwardAddress = va("%s:%d", net_ip->current.string, net_port->current.integer);
 
 	sv_proxiesVisibleForTrackers = Dvar_RegisterBool("sv_proxiesVisibleForTrackers", qfalse, DVAR_ARCHIVE);
 	sv_proxyAddress_1_0 = Dvar_RegisterString("sv_proxyAddress_1_0", "0.0.0.0:28960", DVAR_ARCHIVE);

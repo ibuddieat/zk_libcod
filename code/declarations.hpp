@@ -289,6 +289,15 @@ typedef struct game_client_field_s
 
 typedef enum
 {
+	THREAD_VALUE_PROF_STACK = 0x0,
+	THREAD_VALUE_VA = 0x1,
+	THREAD_VALUE_COM_ERROR = 0x2,
+	THREAD_VALUE_TRACE = 0x3,
+	THREAD_VALUE_COUNT = 0x4,
+} ThreadValue;
+
+typedef enum
+{
 	CRITSECT_CONSOLE = 0,
 	CRITSECT_UNKNOWN1 = 1,
 	CRITSECT_COM_ERROR = 2,
@@ -3599,11 +3608,11 @@ typedef struct comBspGlob_t
 	const void *loadedLumpData;
 } comBspGlob_t;
 
-struct va_info_t
+typedef struct va_info_s
 {
-	char va_string[MAX_VASTRINGS][1024];
+	char va_string[MAX_VASTRINGS][MAX_STRINGLENGTH];
 	int index;
-};
+} va_info_t;
 
 typedef struct gameTypeScript_s
 {

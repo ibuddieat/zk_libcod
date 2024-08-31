@@ -687,7 +687,7 @@ const char * custom_FS_LoadedIwdChecksums(qboolean flipped)
 				checksum = GetIW15Checksum(flipped);
 			/* New code end */
 
-			I_strncat(info, sizeof(info), custom_va("%i ", checksum));
+			I_strncat(info, sizeof(info), va("%i ", checksum));
 		}
 	}
 
@@ -737,7 +737,7 @@ const char * custom_FS_ReferencedIwdChecksums(qboolean flipped)
 				checksum = GetIW15Checksum(flipped);
 			/* New code end */
 
-			I_strncat(info, sizeof(info), custom_va("%i ", checksum));
+			I_strncat(info, sizeof(info), va("%i ", checksum));
 		}
 	}
 
@@ -1180,7 +1180,7 @@ void custom_SV_DirectConnect(netadr_t from)
 
 	if ( version < 115 || version > 118 )
 	{
-		NET_OutOfBandPrint(NS_SERVER, from, custom_va("error\nEXE_SERVER_IS_DIFFERENT_VER\x15%s\n", "1.3"));
+		NET_OutOfBandPrint(NS_SERVER, from, va("error\nEXE_SERVER_IS_DIFFERENT_VER\x15%s\n", "1.3"));
 		Com_DPrintf("    rejected connect from protocol version %i (should be between %i and %i)\n", version, 115, 118);
 		return;
 	}
@@ -1377,7 +1377,7 @@ LAB_0808ec36:
 		}
 		else
 		{
-			NET_OutOfBandPrint(NS_SERVER, from, custom_va("error\n%s", denied));
+			NET_OutOfBandPrint(NS_SERVER, from, va("error\n%s", denied));
 			Com_DPrintf("Game rejected a connection: %s.\n", denied);
 			SV_FreeClientScriptId(newcl);
 
@@ -1901,7 +1901,7 @@ void custom_DeathmatchScoreboardMessage(gentity_t *ent)
 		visiblePlayers++;
 	}
 
-	SV_GameSendServerCommand(ent - g_entities, SV_CMD_RELIABLE, custom_va("b %i %i %i%s", visiblePlayers, level.teamScores[1], level.teamScores[2], string));
+	SV_GameSendServerCommand(ent - g_entities, SV_CMD_RELIABLE, va("b %i %i %i%s", visiblePlayers, level.teamScores[1], level.teamScores[2], string));
 }
 
 void custom_SV_DropClient(client_t *drop, const char *reason)
@@ -2033,11 +2033,11 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 			if ( !COM_BitCheck(entity->client->ps.weapons, bg_item->giTag) )
 			{
 				if ( ( BG_WeaponDefs(bg_item->giTag)->weapSlot + ~WEAPSLOT_NONE ) < 2 )
-					SV_GameSendServerCommand(entity - g_entities, SV_CMD_CAN_IGNORE, custom_va("%c \"GAME_CANT_GET_PRIMARY_WEAP_MESSAGE\"", 0x66));
+					SV_GameSendServerCommand(entity - g_entities, SV_CMD_CAN_IGNORE, va("%c \"GAME_CANT_GET_PRIMARY_WEAP_MESSAGE\"", 0x66));
 			}
 			else
 			{
-				SV_GameSendServerCommand(entity - g_entities, SV_CMD_CAN_IGNORE, custom_va("%c \"GAME_PICKUP_CANTCARRYMOREAMMO\x14%s\"", 0x66, BG_WeaponDefs(bg_item->giTag)->szDisplayName));
+				SV_GameSendServerCommand(entity - g_entities, SV_CMD_CAN_IGNORE, va("%c \"GAME_PICKUP_CANTCARRYMOREAMMO\x14%s\"", 0x66, BG_WeaponDefs(bg_item->giTag)->szDisplayName));
 			}
 		}
 	}
@@ -3341,7 +3341,7 @@ int custom_SV_WWWRedirectClient(client_t *cl, msg_t *msg)
 	else
 	{
 		FS_FCloseFile(fp);
-		I_strncpyz(cl->downloadURL, custom_va("%s/%s", sv_wwwBaseURL->current.string, cl->downloadName), MAX_OSPATH);
+		I_strncpyz(cl->downloadURL, va("%s/%s", sv_wwwBaseURL->current.string, cl->downloadName), MAX_OSPATH);
 		Com_Printf("Redirecting client \'%s\'^7 to %s\n", cl->name, cl->downloadURL);
 		cl->downloadingWWW = 1;
 		MSG_WriteByte(msg, svc_download);
@@ -3606,11 +3606,11 @@ qboolean custom_BG_IsWeaponValid(playerState_t *ps, unsigned int index)
 
 char * custom_va(const char *format, ...)
 {
-	struct va_info_t *info;
+	va_info_t *info;
 	int index;
 	va_list va;
 
-	info = (va_info_t*)Sys_GetValue(1);
+	info = (va_info_t*)Sys_GetValue(THREAD_VALUE_VA);
 	index = info->index;
 	info->index = (info->index + 1) % MAX_VASTRINGS;
 
@@ -4061,31 +4061,31 @@ void custom_SVC_Info(netadr_t from)
 	Info_SetValueForKey(infostring, "challenge", Cmd_Argv(1));
 
 	// New: Configurable version response
-	Info_SetValueForKey(infostring, "protocol", custom_va("%i", getProtocolFromShortVersion(sv_version->current.string)));
+	Info_SetValueForKey(infostring, "protocol", va("%i", getProtocolFromShortVersion(sv_version->current.string)));
 
 	Info_SetValueForKey(infostring, "hostname", sv_hostname->current.string);
 	Info_SetValueForKey(infostring, "mapname", sv_mapname->current.string);
-	Info_SetValueForKey(infostring, "clients", custom_va("%i", count));
-	Info_SetValueForKey(infostring, "sv_maxclients", custom_va("%i", sv_maxclients->current.integer - sv_privateClients->current.integer));
+	Info_SetValueForKey(infostring, "clients", va("%i", count));
+	Info_SetValueForKey(infostring, "sv_maxclients", va("%i", sv_maxclients->current.integer - sv_privateClients->current.integer));
 	Info_SetValueForKey(infostring, "gametype", Dvar_GetString("g_gametype"));
-	Info_SetValueForKey(infostring, "pure", custom_va("%i", sv_pure->current.boolean));
+	Info_SetValueForKey(infostring, "pure", va("%i", sv_pure->current.boolean));
 	if ( sv_minPing->current.integer )
 	{
-		Info_SetValueForKey(infostring, "minPing", custom_va("%i", sv_minPing->current.integer));
+		Info_SetValueForKey(infostring, "minPing", va("%i", sv_minPing->current.integer));
 	}
 	if ( sv_maxPing->current.integer )
 	{
-		Info_SetValueForKey(infostring, "maxPing", custom_va("%i", sv_maxPing->current.integer));
+		Info_SetValueForKey(infostring, "maxPing", va("%i", sv_maxPing->current.integer));
 	}
 	gamedir = Dvar_GetString("fs_game");
 	if ( *gamedir )
 	{
 		Info_SetValueForKey(infostring, "game", gamedir);
 	}
-	Info_SetValueForKey( infostring, "sv_allowAnonymous", custom_va("%i", sv_allowAnonymous->current.boolean));
+	Info_SetValueForKey( infostring, "sv_allowAnonymous", va("%i", sv_allowAnonymous->current.boolean));
 	if ( sv_disableClientConsole->current.boolean )
 	{
-		Info_SetValueForKey(infostring, "con_disabled", custom_va("%i", sv_disableClientConsole->current.boolean));
+		Info_SetValueForKey(infostring, "con_disabled", va("%i", sv_disableClientConsole->current.boolean));
 	}
 	password = Dvar_GetString("g_password");
 	if ( password && *password )
@@ -4093,13 +4093,13 @@ void custom_SVC_Info(netadr_t from)
 
 	friendlyfire = Dvar_GetInt("scr_friendlyfire");
 	if ( friendlyfire )
-		Info_SetValueForKey(infostring, "ff", custom_va("%i", friendlyfire));
+		Info_SetValueForKey(infostring, "ff", va("%i", friendlyfire));
 
 	killcam = Dvar_GetInt("scr_killcam");
 	if ( killcam )
-		Info_SetValueForKey(infostring, "kc", custom_va("%i", killcam));
+		Info_SetValueForKey(infostring, "kc", va("%i", killcam));
 
-	Info_SetValueForKey(infostring, "hw", custom_va("%i", 1));
+	Info_SetValueForKey(infostring, "hw", va("%i", 1));
 	serverModded = 0;
 	if ( !sv_pure->current.boolean || ( gamedir && *gamedir ) )
 	{
@@ -4126,8 +4126,8 @@ void custom_SVC_Info(netadr_t from)
 		}
 	}
 
-	Info_SetValueForKey(infostring, "mod", custom_va("%i", serverModded));
-	Info_SetValueForKey(infostring, "voice", custom_va("%i", sv_voice->current.boolean));
+	Info_SetValueForKey(infostring, "mod", va("%i", serverModded));
+	Info_SetValueForKey(infostring, "voice", va("%i", sv_voice->current.boolean));
 	I_strncpyz(infosend, "infoResponse\n", MAX_INFO_STRING);
 	I_strncat(infosend, MAX_INFO_STRING, infostring);
 	NET_OutOfBandPrint(NS_SERVER, from, infosend);
@@ -4229,7 +4229,7 @@ void custom_SVC_Status(netadr_t from)
 		}
 	}
 
-	Info_SetValueForKey(infostring, "mod", custom_va("%i", serverModded));
+	Info_SetValueForKey(infostring, "mod", va("%i", serverModded));
 	Com_sprintf(msg, BIG_INFO_STRING, "statusResponse\n%s\n%s", infostring, status);
 	NET_OutOfBandPrint(NS_SERVER, from, msg);
 	LargeLocalDestructor(&buf);
@@ -4585,7 +4585,7 @@ void custom_SV_GetChallenge(netadr_t from)
 	if ( sv_noauthorize->current.boolean || ( !net_lanauthorize->current.boolean && Sys_IsLANAddress(from) ) )
 	{
 		challenge->pingTime = svs.time;
-		NET_OutOfBandPrint(NS_SERVER, from, custom_va("challengeResponse %i", challenge->challenge));
+		NET_OutOfBandPrint(NS_SERVER, from, va("challengeResponse %i", challenge->challenge));
 		return;
 	}
 
@@ -4617,7 +4617,7 @@ void custom_SV_GetChallenge(netadr_t from)
 		{
 			Com_DPrintf("authorize server timed out\n");
 			challenge->pingTime = svs.time;
-			NET_OutOfBandPrint(NS_SERVER, challenge->adr, custom_va("challengeResponse %i", challenge->challenge));
+			NET_OutOfBandPrint(NS_SERVER, challenge->adr, va("challengeResponse %i", challenge->challenge));
 			return;
 		}
 	}
@@ -4868,7 +4868,7 @@ void custom_Scr_PrintPrevCodePos(conChannel_t channel, const char *codePos, unsi
 			}
 			return;
 		}
-		Com_PrintMessage(channel, custom_va("%s\n\n", codePos));
+		Com_PrintMessage(channel, va("%s\n\n", codePos));
 	}
 }
 
@@ -4986,7 +4986,7 @@ void custom_Com_Error(errorParm_t code, const char *format, ...)
 	
 	Sys_LeaveCriticalSection(CRITSECT_COM_ERROR);
 
-	longjmp((__jmp_buf_tag*)Sys_GetValue(2), -1);
+	longjmp((__jmp_buf_tag*)Sys_GetValue(THREAD_VALUE_COM_ERROR), -1);
 }
 
 void custom_Scr_ErrorInternal(void)
@@ -5102,7 +5102,7 @@ void custom_RuntimeError_Debug(conChannel_t channel, const char *pos, int index,
 	logTimestampsValue = logTimestamps->current.boolean;
 	logTimestamps->current.boolean = 0;
 
-	Com_PrintMessage(channel, custom_va("\n******* script runtime error *******\n%s: ", message));
+	Com_PrintMessage(channel, va("\n******* script runtime error *******\n%s: ", message));
 	custom_Scr_PrintPrevCodePos(channel, pos, index);
 	i = scrVmPub.function_count;
 	if ( scrVmPub.function_count )
@@ -5855,7 +5855,7 @@ void custom_G_GetPlayerViewOrigin(gentity_t *ent, float *origin)
 			if ( g_turretMissingTagTerminalError->current.boolean )
 				Com_Error(ERR_DROP, "G_GetPlayerViewOrigin: Couldn't find [tag_player] on turret");
 			else
-				Scr_CodeCallback_Error(qfalse, qfalse, "G_GetPlayerViewOrigin", custom_va("Turret removed for client %d while alive and in killcam", ent - g_entities));
+				Scr_CodeCallback_Error(qfalse, qfalse, "G_GetPlayerViewOrigin", va("Turret removed for client %d while alive and in killcam", ent - g_entities));
 		}
 	}
 
@@ -6523,7 +6523,7 @@ void custom_PlayerCmd_finishPlayerDamage(scr_entref_t entref)
 
 		if ( !ent->client )
 		{
-			Scr_ObjectError(custom_va("entity %i is not a player", entref.entnum));
+			Scr_ObjectError(va("entity %i is not a player", entref.entnum));
 		}
 	}
 
@@ -6731,7 +6731,7 @@ void custom_PlayerCmd_Suicide(scr_entref_t entref)
 
 		if ( !pSelf->client )
 		{
-			Scr_ObjectError(custom_va("entity %i is not a player", entref.entnum));
+			Scr_ObjectError(va("entity %i is not a player", entref.entnum));
 		}
 	}
 
@@ -6978,7 +6978,7 @@ void custom_GScr_KickPlayer()
 		}
 		else
 		{
-			Cbuf_ExecuteText(2, custom_va("tempBanClient %i\n", id));
+			Cbuf_ExecuteText(2, va("tempBanClient %i\n", id));
 			return;
 		}
 	}
@@ -7105,15 +7105,15 @@ void custom_GScr_SetHintString(scr_entref_t entref)
 	{
 		if ( I_stricmp(Scr_GetString(0), "") == 0 )
 		{
-			(ent->s).scale = 0xff;
+			(ent->s).scale = 0xFF;
 			return;
 		}
 	}
 
-	Scr_ConstructMessageString(0, Scr_GetNumParam() + -1, "Hint String", hintString, MAX_STRINGLENGTH);
+	Scr_ConstructMessageString(0, Scr_GetNumParam() - 1, "Hint String", hintString, MAX_STRINGLENGTH);
 	if ( G_GetHintStringIndex(&index, hintString) == 0 )
 	{
-		Scr_Error(custom_va("Too many different hintstring values. Max allowed is %i different strings", 0x20));
+		Scr_Error(va("Too many different hintstring values. Max allowed is %i different strings", 0x20));
 	}
 	(ent->s).scale = index;
 
@@ -7141,7 +7141,7 @@ qboolean custom_SV_MapExists(const char *name)
 	}
 
 	// First try stock mechanism
-	qboolean found = FS_ReadFile(custom_va("maps/mp/%s.%s", SV_GetMapBaseName(name), GetBspExtension()), 0) >= 0;
+	qboolean found = FS_ReadFile(va("maps/mp/%s.%s", SV_GetMapBaseName(name), GetBspExtension()), 0) >= 0;
 	if ( !found )
 	{
 		char map_check[MAX_OSPATH];
@@ -8818,7 +8818,7 @@ void custom_PlayerCmd_DeactivateReverb(scr_entref_t entref)
 	}
 	else if ( !g_entities[entref.entnum].client )
 	{
-		Scr_ObjectError(custom_va("entity %i is not a player", entref.entnum));
+		Scr_ObjectError(va("entity %i is not a player", entref.entnum));
 	}
 
 	fadetime = 0.0;
@@ -8850,7 +8850,7 @@ void custom_PlayerCmd_DeactivateReverb(scr_entref_t entref)
 	}
 
 	// New: Fixed command that is broken in original code
-	SV_GameSendServerCommand(entref.entnum, SV_CMD_RELIABLE, custom_va("%c %i %g", 68, priority, fadetime));
+	SV_GameSendServerCommand(entref.entnum, SV_CMD_RELIABLE, va("%c %i %g", 68, priority, fadetime));
 }
 
 void custom_PlayerCmd_DeactivateChannelVolumes(scr_entref_t entref)
@@ -8866,7 +8866,7 @@ void custom_PlayerCmd_DeactivateChannelVolumes(scr_entref_t entref)
 	}
 	else if ( !g_entities[entref.entnum].client )
 	{
-		Scr_ObjectError(custom_va("entity %i is not a player", entref.entnum));
+		Scr_ObjectError(va("entity %i is not a player", entref.entnum));
 	}
 
 	fadetime = 0.0;
@@ -8902,7 +8902,7 @@ void custom_PlayerCmd_DeactivateChannelVolumes(scr_entref_t entref)
 	}
 
 	// New: Fixed command that is broken in original code
-	SV_GameSendServerCommand(entref.entnum, SV_CMD_RELIABLE, custom_va("%c %i %g", 70, priority, fadetime));
+	SV_GameSendServerCommand(entref.entnum, SV_CMD_RELIABLE, va("%c %i %g", 70, priority, fadetime));
 }
 
 void custom_Cmd_PrintEntities_f(void)
@@ -9337,7 +9337,7 @@ int custom_G_FindConfigstringIndex(const char *name, int start, int max, qboolea
 			// New: Added g_safePrecache dvar logic
 			if ( !g_safePrecache->current.boolean )
 			{
-				Com_Error(ERR_DROP, custom_va("G_FindConfigstringIndex: overflow (%d): %s", start, name));
+				Com_Error(ERR_DROP, va("G_FindConfigstringIndex: overflow (%d): %s", start, name));
 			}
 			else
 			{
@@ -9348,7 +9348,7 @@ int custom_G_FindConfigstringIndex(const char *name, int start, int max, qboolea
 				}
 				else
 				{
-					Com_Error(ERR_DROP, custom_va("G_FindConfigstringIndex: overflow (%d): %s", start, name));
+					Com_Error(ERR_DROP, va("G_FindConfigstringIndex: overflow (%d): %s", start, name));
 				}
 			}
 		}
@@ -9360,7 +9360,7 @@ int custom_G_FindConfigstringIndex(const char *name, int start, int max, qboolea
 	{
 		if ( fieldname )
 		{
-			Scr_Error(custom_va("%s \"%s\" not precached", fieldname, name));
+			Scr_Error(va("%s \"%s\" not precached", fieldname, name));
 		}
 
 		return 0;
@@ -9398,12 +9398,12 @@ unsigned int custom_G_ModelIndex(const char *name)
 		// New: Added g_safePrecache dvar logic
 		if ( !g_safePrecache->current.boolean )
 		{
-			Scr_Error(custom_va("model '%s' not precached", name));
+			Scr_Error(va("model '%s' not precached", name));
 		}
 		else
 		{
 			Com_Printf("Warning: Model '%s' not precached\n", name);
-			Scr_CodeCallback_Error(qfalse, qfalse, "G_ModelIndex", custom_va("Model '%s' not precached", name));
+			Scr_CodeCallback_Error(qfalse, qfalse, "G_ModelIndex", va("Model '%s' not precached", name));
 			return 1;
 		}
 	}
@@ -9481,7 +9481,7 @@ void custom_ClientScr_SetHeadIconTeam(gclient_t *pSelf, const game_client_field_
 	}
 	else
 	{
-		Scr_Error(custom_va("'%s' is an illegal head icon team string. Must be none, allies, axis, or spectator.", SL_ConvertToString(str)));
+		Scr_Error(va("'%s' is an illegal head icon team string. Must be none, allies, axis, or spectator.", SL_ConvertToString(str)));
 	}
 }
 

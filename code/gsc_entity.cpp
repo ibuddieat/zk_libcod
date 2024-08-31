@@ -87,7 +87,7 @@ void gsc_entity_notsolidforplayer(scr_entref_t ref)
 	gentity_t *player = Scr_GetEntity(0);
 	int id2 = player->s.number;
 	if ( id2 >= MAX_CLIENTS )
-		Scr_ParamError(0, custom_va("entity %i is not a player", id2));
+		Scr_ParamError(0, va("entity %i is not a player", id2));
 
 	customEntityState[id].clientMask[id2 >> 5] |= 1 << (id2 & 0x1F);
 	customEntityState[id].notSolidBrushModel = qtrue;
@@ -110,7 +110,7 @@ void gsc_entity_solidforplayer(scr_entref_t ref)
 	gentity_t *player = Scr_GetEntity(0);
 	int id2 = player->s.number;
 	if ( id2 >= MAX_CLIENTS )
-		Scr_ParamError(0, custom_va("entity %i is not a player", id2));
+		Scr_ParamError(0, va("entity %i is not a player", id2));
 
 	customEntityState[id].clientMask[id2 >> 5] &= ~(1 << (id2 & 0x1F));
 	if ( !customEntityState[id].clientMask[0] && !customEntityState[id].clientMask[1] )

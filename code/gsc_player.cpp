@@ -2352,7 +2352,7 @@ void gsc_player_playfxontagforplayer(scr_entref_t ref)
 	index = Scr_GetInt(0);
 	if ( index < 1 || 0x3f < index )
 	{
-		Scr_ParamError(0, custom_va("effect id %i is invalid\n", index));
+		Scr_ParamError(0, va("effect id %i is invalid\n", index));
 	}
 
 	ent = Scr_GetEntity(1);
@@ -2371,14 +2371,14 @@ void gsc_player_playfxontagforplayer(scr_entref_t ref)
 	if ( SV_DObjGetBoneIndex(ent, tag_id) < 0 )
 	{
 		SV_DObjDumpInfo(ent);
-		Scr_ParamError(2, custom_va("tag \'%s\' does not exist on entity with model \'%s\'", tag_name, G_ModelName(ent->model)));
+		Scr_ParamError(2, va("tag \'%s\' does not exist on entity with model \'%s\'", tag_name, G_ModelName(ent->model)));
 	}
 
 	/* Reusing the attackerEntityNum field that is otherwise only used at
 	 obituary TempEntities. This way we have it archived, for correct killcam
 	 data */
 	ent->s.attackerEntityNum = 1 + id;
-	G_AddEvent(ent, EV_PLAY_FX_ON_TAG, G_FindConfigstringIndex(custom_va("%02d%s", index, tag_name), 0x38e, 0x100, 1, NULL));
+	G_AddEvent(ent, EV_PLAY_FX_ON_TAG, G_FindConfigstringIndex(va("%02d%s", index, tag_name), 0x38E, 0x100, 1, NULL));
 
 	stackPushBool(qtrue);
 }
@@ -2560,7 +2560,7 @@ void gsc_player_objective_player_add(scr_entref_t ref)
 	objective_number = Scr_GetInt(0);
 	if ( ( objective_number < 0 ) || ( 0xF < objective_number ) )
 	{
-		Scr_ParamError(0, custom_va("index %i is an illegal objective index. Valid indexes are 0 to %i\n", objective_number, 15));
+		Scr_ParamError(0, va("index %i is an illegal objective index. Valid indexes are 0 to %i\n", objective_number, 15));
 	}
 
 	obj = &customPlayerState[id].objectives[objective_number];
@@ -2588,7 +2588,7 @@ void gsc_player_objective_player_add(scr_entref_t ref)
 		if ( index != scr_const.current )
 		{
 			state = OBJST_EMPTY;
-			Scr_ParamError(1, custom_va("Illegal objective state \"%s\". Valid states are \"empty\", \"invisible\", \"current\"\n", SL_ConvertToString((uint)index)));
+			Scr_ParamError(1, va("Illegal objective state \"%s\". Valid states are \"empty\", \"invisible\", \"current\"\n", SL_ConvertToString((uint)index)));
 		}
 		state = OBJST_CURRENT;
 	}
@@ -2628,7 +2628,7 @@ void gsc_player_objective_player_delete(scr_entref_t ref)
 	objective_number = Scr_GetInt(0);
 	if ( ( objective_number < 0 ) || ( 0xf < objective_number ) )
 	{
-		Scr_ParamError(0, custom_va("index %i is an illegal objective index. Valid indexes are 0 to %i\n", objective_number, 15));
+		Scr_ParamError(0, va("index %i is an illegal objective index. Valid indexes are 0 to %i\n", objective_number, 15));
 	}
 
 	obj = &customPlayerState[id].objectives[objective_number];
@@ -2667,7 +2667,7 @@ void gsc_player_objective_player_icon(scr_entref_t ref)
 	int objective_number = Scr_GetInt(0);
 	if ( ( objective_number < 0 ) || ( 0xf < objective_number ) )
 	{
-		Scr_ParamError(0, custom_va("index %i is an illegal objective index. Valid indexes are 0 to %i\n", objective_number, 15));
+		Scr_ParamError(0, va("index %i is an illegal objective index. Valid indexes are 0 to %i\n", objective_number, 15));
 	}
 
   	SetObjectiveIcon(&customPlayerState[id].objectives[objective_number], 1);
@@ -2692,7 +2692,7 @@ void gsc_player_objective_player_position(scr_entref_t ref)
 	objective_number = Scr_GetInt(0);
 	if ( ( objective_number < 0 ) || ( 0xf < objective_number ) )
 	{
-		Scr_ParamError(0, custom_va("index %i is an illegal objective index. Valid indexes are 0 to %i\n", objective_number, 15));
+		Scr_ParamError(0, va("index %i is an illegal objective index. Valid indexes are 0 to %i\n", objective_number, 15));
 	}
 
 	obj = &customPlayerState[id].objectives[objective_number];
@@ -2733,7 +2733,7 @@ void gsc_player_objective_player_state(scr_entref_t ref)
 	objective_number = Scr_GetInt(0);
 	if ( ( objective_number < 0 ) || ( 0xf < objective_number ) )
 	{
-		Scr_ParamError(0, custom_va("index %i is an illegal objective index. Valid indexes are 0 to %i\n", objective_number, 15));
+		Scr_ParamError(0, va("index %i is an illegal objective index. Valid indexes are 0 to %i\n", objective_number, 15));
 	}
 
 	obj = &customPlayerState[id].objectives[objective_number];
@@ -2752,7 +2752,7 @@ void gsc_player_objective_player_state(scr_entref_t ref)
 		if ( index != scr_const.current )
 		{
 			state = OBJST_EMPTY;
-			Scr_ParamError(1, custom_va("Illegal objective state \"%s\". Valid states are \"empty\", \"invisible\", \"current\"\n", SL_ConvertToString((uint)state)));
+			Scr_ParamError(1, va("Illegal objective state \"%s\". Valid states are \"empty\", \"invisible\", \"current\"\n", SL_ConvertToString((uint)state)));
 		}
 		state = OBJST_CURRENT;
 	}

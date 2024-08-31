@@ -1,4 +1,3 @@
-char * custom_va(const char *format, ...);
 void manymaps_cleanup(void);
 bool SVC_SpamCallback(const char *str, const char *ip);
 void custom_Bullet_Fire_ApplyDropDrag(droppingBullet_t *bullet);
