@@ -315,7 +315,7 @@ static const NET_CompareBaseAdr_t NET_CompareBaseAdr = (NET_CompareBaseAdr_t)0x0
 typedef qboolean (*NET_IsLocalAddress_t)(netadr_t from);
 static const NET_IsLocalAddress_t NET_IsLocalAddress = (NET_IsLocalAddress_t)0x0806C57A;
 
-typedef void (*NET_OutOfBandPrint_t)(netsrc_t net_socket, netadr_t adr, const char *format, ...);
+typedef bool (*NET_OutOfBandPrint_t)(netsrc_t net_socket, netadr_t adr, const char *format, ...);
 static const NET_OutOfBandPrint_t NET_OutOfBandPrint = (NET_OutOfBandPrint_t)0x0806C8CC;
 
 typedef qboolean (*NET_SendPacket_t)(netsrc_t sock, int length, const void *data, netadr_t to);

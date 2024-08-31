@@ -692,8 +692,26 @@ void gsc_utils_sendpacket()
 	}
 
 	netadr_t to;
-	NET_StringToAdr(address, &to);
-	NET_OutOfBandPrint(NS_SERVER, to, msg);
+
+	if ( NET_StringToAdr(address, &to) )
+	{
+		if ( NET_OutOfBandPrint(NS_SERVER, to, msg) )
+		{
+			stackPushBool(qtrue);
+		}
+		else
+		{
+			stackError("gsc_utils_sendpacket() failed to send packet");
+			stackPushUndefined();
+			return;
+		}
+	}
+	else
+	{
+		stackError("gsc_utils_sendpacket() invalid address");
+		stackPushUndefined();
+		return;
+	}
 }
 
 
