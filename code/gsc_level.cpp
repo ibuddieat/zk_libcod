@@ -79,4 +79,24 @@ void gsc_level_getentitycount()
 	}
 }
 
+void gsc_utils_getsavepersist()
+{
+	stackPushBool(level.savePersist);
+}
+
+void gsc_utils_setsavepersist()
+{
+	int save;
+
+	if ( !stackGetParams("i",  &save) )
+	{
+		stackError("gsc_utils_setsavepersist() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	level.savePersist = save;
+	stackPushBool(qtrue);
+}
+
 #endif

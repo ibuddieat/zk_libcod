@@ -112,6 +112,7 @@ New script code functions:
   * `getEntityCount([<in use>])`
   * `getMicroseconds()`
   * `getMilliseconds()`
+  * `getSavePersist()`
   * `getSoundAliasesFromFile(<filename>)`
   * `getSoundFileDuration(<file path>)`
   * `isSemiAutoWeapon(<weapon name>)`
@@ -125,4 +126,5 @@ New script code functions:
   * `roundTo(<value>, <precision>)`
   * `saveSpeexFile(<sound index>, <file path>)`
   * `setNextTestClientName(<name>)`
+  * `setSavePersist(<save persistent>)`
   * `toHex(<number>)`
