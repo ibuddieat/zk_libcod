@@ -1284,7 +1284,14 @@ void gsc_utils_makeclientlocalizedstring()
 		stackPushUndefined();
 		return;
 	}
-	
+
+	if ( !strlen(input) || strlen(input) > MAX_STRINGLENGTH - 3 )
+	{
+		stackError("gsc_utils_makeclientlocalizedstring() invalid string length");
+		stackPushUndefined();
+		return;
+	}
+
 	char output[MAX_STRINGLENGTH];
 	Com_sprintf(output, MAX_STRINGLENGTH,"\x14%s\x15", input);
 
