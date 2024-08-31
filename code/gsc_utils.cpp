@@ -245,10 +245,10 @@ void gsc_utils_getsoundduration()
 					}
 
 					/* Decided against using a faster in-memory reader via
-					  libavcodec as that causes symbol name overlaps that
-					  cannot be fixed without refactoring the whole project.
-					  We now depend on ffprobe instead of libavcodec-dev:i386
-					  and potentially also libavformat-dev:i386.
+					 libavcodec as that causes symbol name overlaps that
+					 cannot be fixed without refactoring the whole project.
+					 We now depend on ffprobe instead of libavcodec-dev:i386
+					 and potentially also libavformat-dev:i386.
 					*/
 
 					// Check if ffprobe is installed
@@ -414,10 +414,10 @@ void gsc_utils_getsoundinfo()
 					}
 
 					/* Decided against using a faster in-memory reader via
-					  libavcodec as that causes symbol name overlaps that
-					  cannot be fixed without refactoring the whole project.
-					  We now depend on ffprobe instead of libavcodec-dev:i386
-					  and potentially also libavformat-dev:i386.
+					 libavcodec as that causes symbol name overlaps that
+					 cannot be fixed without refactoring the whole project.
+					 We now depend on ffprobe instead of libavcodec-dev:i386
+					 and potentially also libavformat-dev:i386.
 					*/
 
 					// Check if ffprobe is installed
@@ -1704,11 +1704,12 @@ void *encode_async(void *newtask)
 			loadSoundFileResults[loadSoundFileResultsIndex].result = result;
 			loadSoundFileResults[loadSoundFileResultsIndex].soundIndex = task->soundIndex;
 			loadSoundFileResults[loadSoundFileResultsIndex].callback = task->callback;
+			loadSoundFileResults[loadSoundFileResultsIndex].levelId = task->levelId;
 			loadSoundFileResultsIndex++;
 		}
 		/* No message on error excess here since that might introduce another
-		   concurrency issue. Instead, we warn in the main thread if the buffer
-		   is full */
+		 concurrency issue. Instead, we warn in the main thread if the buffer
+		 is full */
 		Sys_LeaveCriticalSection(CRITSECT_LOAD_SOUND_FILE);
 	}
 

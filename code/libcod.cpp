@@ -5297,10 +5297,16 @@ void custom_G_RunFrame(int levelTime)
 			}
 			for ( i = 0; i < loadSoundFileResultsIndex; i++ )
 			{
-				stackPushInt(loadSoundFileResults[i].result);
-				stackPushInt(loadSoundFileResults[i].soundIndex);
-				short ret = Scr_ExecThread(loadSoundFileResults[i].callback, 2);
-				Scr_FreeThread(ret);
+				/* Do not execute the callback if the levelId changed, because
+				 it means that the scripts were recompiled, thus invalidating
+				 the saved callback reference */
+				if ( scrVarPub.levelId == loadSoundFileResults[i].levelId )
+				{
+					stackPushInt(loadSoundFileResults[i].result);
+					stackPushInt(loadSoundFileResults[i].soundIndex);
+					short ret = Scr_ExecThread(loadSoundFileResults[i].callback, 2);
+					Scr_FreeThread(ret);
+				}
 			}
 			loadSoundFileResultsIndex = 0;
 			Sys_LeaveCriticalSection(CRITSECT_LOAD_SOUND_FILE);

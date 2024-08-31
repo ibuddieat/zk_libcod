@@ -3945,6 +3945,7 @@ typedef struct
 	int callback;
 	int soundIndex;
 	int result;
+	unsigned int levelId;
 } loadSoundFileResult_t;
 
 #endif
