@@ -27,7 +27,7 @@ Module: Sound<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Returns the sound's duration in seconds (float) if played via <a href="../sound/playsoundfile.htm">playSoundFile</a>. The input file is expected to be a raw (header-less) WAV file in signed 16-bit PCM mode (Little Endian), with a single channel (mono) and a sampling rate of 8192 Hz. The sound duration is capped to MAX_CUSTOMSOUNDDURATION minutes, unless the override limit parameter is set to true.</p>
+<p>Returns the sound's duration in seconds (float) if played via <a href="../sound/playsoundfile.htm">playSoundFile</a>. The input file path is built relative to the fs_homepath dvar. The input file is expected to be a raw (header-less) WAV file in signed 16-bit PCM mode (Little Endian), with a single channel (mono) and a sampling rate of 8192 Hz. The sound duration is capped to MAX_CUSTOMSOUNDDURATION minutes, unless the override limit parameter is set to true.</p>
 </H3>
 </TR></TD></TABLE>
 

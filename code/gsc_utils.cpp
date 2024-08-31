@@ -6,6 +6,8 @@
 
 extern loadSoundFileResult_t loadSoundFileResults[MAX_THREAD_RESULTS_BUFFER];
 extern int loadSoundFileResultsIndex;
+extern dvar_t *fs_debug;
+extern dvar_t *fs_homepath;
 
 struct encoder_async_task
 {
@@ -1742,7 +1744,20 @@ void gsc_utils_getsoundfileduration()
 		overrideLimit = 0;
 	}
 
-	FILE *file = fopen(filePath, "rb");
+	char ospath[MAX_OSPATH];
+    FS_BuildOSPath(fs_homepath->current.string, filePath, "", ospath);
+    ospath[strlen(ospath) - 1] = '\0';
+    if ( fs_debug->current.integer )
+		Com_Printf("gsc_utils_getsoundfileduration (fs_homepath) : %s\n", ospath);
+
+	if ( strstr(ospath, "..") )
+	{
+		stackError("gsc_utils_getsoundfileduration() invalid file path");
+		stackPushUndefined();
+		return;
+	}
+
+	FILE *file = fopen(ospath, "rb");
 	if ( file != NULL )    
 	{
 		if ( fseek(file, 0, SEEK_END) == 0 )
@@ -1822,6 +1837,31 @@ void gsc_utils_loadsoundfile()
 		return;
 	}
 
+	char ospath[MAX_OSPATH];
+    FS_BuildOSPath(fs_homepath->current.string, filePath, "", ospath);
+    ospath[strlen(ospath) - 1] = '\0';
+    if ( fs_debug->current.integer )
+		Com_Printf("gsc_utils_loadsoundfile (fs_homepath) : %s\n", ospath);
+
+	if ( strstr(ospath, "..") )
+	{
+		stackError("gsc_utils_loadsoundfile() invalid file path");
+		stackPushUndefined();
+		return;
+	}
+
+	FILE *file = fopen(ospath, "r");
+	if ( !file )
+	{
+		stackError("gsc_utils_loadsoundfile() input file could not be opened");
+		stackPushUndefined();
+		return;
+	}
+	else
+	{
+		fclose(file);
+	}
+
 	encoder_async_task *current = first_encoder_async_task;
 
 	while ( current != NULL && current->next != NULL )
@@ -1842,18 +1882,6 @@ void gsc_utils_loadsoundfile()
 		current->next = newtask;
 	else
 		first_encoder_async_task = newtask;
-
-	FILE *file = fopen(filePath, "r");
-	if ( !file )
-	{
-		stackError("gsc_utils_loadsoundfile() input file could not be opened");
-		stackPushUndefined();
-		return;
-	}
-	else
-	{
-		fclose(file);
-	}
 
 	pthread_t encoder_doer;
 
@@ -1900,7 +1928,20 @@ void gsc_utils_loadspeexfile()
 		return;
 	}
 
-	FILE *file = fopen(filePath, "rb");
+	char ospath[MAX_OSPATH];
+    FS_BuildOSPath(fs_homepath->current.string, filePath, "", ospath);
+    ospath[strlen(ospath) - 1] = '\0';
+    if ( fs_debug->current.integer )
+		Com_Printf("gsc_utils_loadspeexfile (fs_homepath) : %s\n", ospath);
+
+	if ( strstr(ospath, "..") )
+	{
+		stackError("gsc_utils_loadspeexfile() invalid file path");
+		stackPushUndefined();
+		return;
+	}
+
+	FILE *file = fopen(ospath, "rb");
 	if ( !file )
 	{
 		stackError("gsc_utils_loadspeexfile() could not open the specified file");
@@ -1969,7 +2010,20 @@ void gsc_utils_savespeexfile()
 		return;
 	}
 
-	FILE *file = fopen(filePath, "wb");
+	char ospath[MAX_OSPATH];
+    FS_BuildOSPath(fs_homepath->current.string, filePath, "", ospath);
+    ospath[strlen(ospath) - 1] = '\0';
+    if ( fs_debug->current.integer )
+		Com_Printf("gsc_utils_savespeexfile (fs_homepath) : %s\n", ospath);
+
+	if ( strstr(ospath, "..") )
+	{
+		stackError("gsc_utils_savespeexfile() invalid file path");
+		stackPushUndefined();
+		return;
+	}
+
+	FILE *file = fopen(ospath, "wb");
 	if ( !file )
 	{
 		stackError("gsc_utils_savespeexfile() could not open the specified file");

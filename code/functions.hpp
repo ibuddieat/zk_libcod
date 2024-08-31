@@ -219,6 +219,9 @@ static const FS_ClearIwdReferences_t FS_ClearIwdReferences = (FS_ClearIwdReferen
 typedef void (*FS_Shutdown_t)(void);
 static const FS_Shutdown_t FS_Shutdown = (FS_Shutdown_t)0x080A2BA8;
 
+typedef void (*FS_BuildOSPath_t)(const char *base, const char *game, const char *qpath, char *ospath);
+static const FS_BuildOSPath_t FS_BuildOSPath = (FS_BuildOSPath_t)0x0809EAB0;
+
 typedef xfunction_t (*Scr_GetFunction_t)(const char** v_functionName, qboolean *v_developer);
 static const Scr_GetFunction_t Scr_GetFunction = (Scr_GetFunction_t)0x08117CB2;
 

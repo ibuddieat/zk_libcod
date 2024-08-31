@@ -19,6 +19,7 @@ dvar_t *com_logfile;
 dvar_t *com_sv_running;
 dvar_t *com_timescale;
 dvar_t *developer;
+dvar_t *fs_debug;
 dvar_t *fs_game;
 dvar_t *fs_homepath;
 dvar_t *g_antilag;
@@ -464,6 +465,7 @@ qboolean custom_FS_RegisterDvars(void)
 	hook_fs_registerdvars->hook();
 
 	// Get references to file system dvars
+	fs_debug = Dvar_FindVar("fs_debug");
 	fs_game = Dvar_FindVar("fs_game");
 	fs_homepath = Dvar_FindVar("fs_homepath");
 
