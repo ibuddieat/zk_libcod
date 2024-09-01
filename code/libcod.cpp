@@ -23,6 +23,7 @@ dvar_t *fs_debug;
 dvar_t *fs_game;
 dvar_t *fs_homepath;
 dvar_t *g_antilag;
+dvar_t *g_banIPs;
 dvar_t *g_knockback;
 dvar_t *g_mantleBlockTimeBuffer;
 dvar_t *g_password;
@@ -171,6 +172,7 @@ cHook *hook_sys_quit;
 cHook *hook_sv_masterheartbeat;
 cHook *hook_sv_verifyiwds_f;
 cHook *hook_touch_item_auto;
+cHook *hook_updateipbans;
 cHook *hook_vm_notify;
 
 // Stock callbacks
@@ -479,6 +481,7 @@ void custom_G_ProcessIPBans(void)
 	 common_init_complete_print hook */
 	bg_bobMax = Dvar_FindVar("bg_bobMax");
 	g_antilag = Dvar_FindVar("g_antilag");
+	g_banIPs = Dvar_FindVar("g_banIPs");
 	g_knockback = Dvar_FindVar("g_knockback");
 	g_mantleBlockTimeBuffer = Dvar_FindVar("g_mantleBlockTimeBuffer");
 	g_password = Dvar_FindVar("g_password");
@@ -563,6 +566,41 @@ void hitch_warning_print(const char *message, int frameTime)
 
 void hook_bad_printf(const char *format, ...) {}
 
+void custom_UpdateIPBans(void)
+{
+	hook_updateipbans->unhook();
+	void (*UpdateIPBans)(void);
+	*(int *)&UpdateIPBans = hook_updateipbans->from;
+	UpdateIPBans();
+	hook_updateipbans->hook();
+
+	int i, j;
+	client_t *cl;
+	
+	for ( i = 0, cl = svs.clients; i < sv_maxclients->current.integer; i++, cl++ )
+	{
+		if ( cl->state < CS_CONNECTED || cl->bIsTestClient )
+		{
+			continue;
+		}
+
+		for ( j = 0; j < ipFilterList->numIPFilters; j++ )
+		{
+			unsigned int ip = 
+			(customPlayerState[i].realAddress.ip[3] << 24) + 
+			(customPlayerState[i].realAddress.ip[2] << 16) + 
+			(customPlayerState[i].realAddress.ip[1] << 8) + 
+			customPlayerState[i].realAddress.ip[0]; 
+
+			if ( ip == ipFilterList->ipFilters[j].compare )
+			{
+				SV_DropClient(cl, "\x15You are permanently banned from this server");
+				cl->lastPacketTime = svs.time;
+			}
+		}
+	}
+}
+
 const char * custom_ClientConnect(unsigned int clientNum, unsigned int scriptPersId)
 {
 	XAnimTree *tree;
@@ -604,14 +642,44 @@ const char * custom_ClientConnect(unsigned int clientNum, unsigned int scriptPer
 	        || strcmp_constant_time(g_password->current.string, password) )
 	{
 		/* New code start: Save original client IP if provided by proxy */
-		char preProxyIP[16];
-	
-		memset(&customPlayerState[clientNum].preProxyIP, 0, sizeof(customPlayerState[0].preProxyIP));
-		I_strncpyz(preProxyIP, Info_ValueForKey(userinfo, "ip"), sizeof(customPlayerState[0].preProxyIP));
+		char preProxyIP[16] = {0};
+		int preProxyPort = 0;
+		client_t *client = &svs.clients[clientNum];
+
+		memset(&customPlayerState[clientNum].realAddress, 0, sizeof(netadr_t));
+		I_strncpyz(preProxyIP, Info_ValueForKey(userinfo, "ip"), sizeof(preProxyIP));
 		if ( strlen(preProxyIP) != 0 )
 		{
-			I_strncpyz(customPlayerState[clientNum].preProxyIP, preProxyIP, sizeof(customPlayerState[0].preProxyIP));
-			customPlayerState[clientNum].preProxyPort = atoi(Info_ValueForKey(userinfo, "port"));
+			preProxyPort = atoi(Info_ValueForKey(userinfo, "port"));
+			if ( !NET_StringToAdr(va("%s:%i", preProxyIP, preProxyPort), &customPlayerState[clientNum].realAddress) )
+			{
+				Com_Printf("Warning: Failed to parse pre-proxy address for client %d: %s\n", clientNum, va("%s:%i", preProxyIP, preProxyPort));
+				memcpy(&customPlayerState[clientNum].realAddress, &client->netchan.remoteAddress, sizeof(netadr_t));
+			}
+		}
+		else
+		{
+			memcpy(&customPlayerState[clientNum].realAddress, &client->netchan.remoteAddress, sizeof(netadr_t));
+		}
+		/* New code end*/
+		
+		/* New code start: g_banIPs dvar enforcement reimplementation */
+		if ( !client->bIsTestClient )
+		{
+			for ( int i = 0; i < ipFilterList->numIPFilters; i++ )
+			{
+				unsigned int ip = 
+				(customPlayerState[clientNum].realAddress.ip[3] << 24) + 
+				(customPlayerState[clientNum].realAddress.ip[2] << 16) + 
+				(customPlayerState[clientNum].realAddress.ip[1] << 8) + 
+				customPlayerState[clientNum].realAddress.ip[0]; 
+
+				if ( ip == ipFilterList->ipFilters[i].compare )
+				{
+					G_FreeEntity(ent);
+					return "\x15You are permanently banned from this server";
+				}
+			}
 		}
 		/* New code end */
 
@@ -1390,6 +1458,7 @@ LAB_0808ec36:
 			gclient->sess.connected = CON_DISCONNECTED;
 			CalculateRanks();
 			/* New code end */
+
 			return;
 		}
 	}
@@ -3133,8 +3202,7 @@ void custom_SV_SendClientGameState(client_t *client)
 	LargeLocal buf;
 	int id = client - svs.clients;
 	int protocolVersion;
-	char preProxyIP[16];
-	int preProxyPort;
+	netadr_t realAddress;
 	int currentConfigstringSize = 0;
 	int clientGamestateDataCount = 1;
 	char *configstring;
@@ -3155,8 +3223,7 @@ void custom_SV_SendClientGameState(client_t *client)
 
 	// Save relevant data before clearing custom player state
 	protocolVersion = customPlayerState[id].protocolVersion;
-	memcpy(&preProxyIP, &customPlayerState[id].preProxyIP, 16);
-	preProxyPort = customPlayerState[id].preProxyPort;
+	memcpy(&realAddress, &customPlayerState[id].realAddress, sizeof(realAddress));
 
 	// Reset custom player state to default values
 	memset(&customPlayerState[id], 0, sizeof(customPlayerState_t));
@@ -3172,8 +3239,7 @@ void custom_SV_SendClientGameState(client_t *client)
 
 	// Restore previously saved values
 	customPlayerState[id].protocolVersion = protocolVersion;
-	memcpy(&customPlayerState[id].preProxyIP, &preProxyIP, 16);
-	customPlayerState[id].preProxyPort = preProxyPort;
+	memcpy(&customPlayerState[id].realAddress, &realAddress, sizeof(realAddress));
 
 	// Restore user-provided rate and snaps after download
 	SV_UserinfoChanged(client);
@@ -5064,21 +5130,12 @@ void custom_SV_Status_f(void)
 
 		Com_Printf("%7i ", svs.time - cl->lastPacketTime);
 
-		/* New code start: Print external client IP in case of proxying */
-		if ( strlen(customPlayerState[i].preProxyIP) )
-		{
-			char s[INET_ADDRSTRLEN + 8] = {0};
-			snprintf(s, sizeof(s), "%s:%i", customPlayerState[i].preProxyIP, customPlayerState[i].preProxyPort);
-			Com_Printf("%s", s);
-			l = 22 - strlen(s);
-		}
-		else
-		/* New code end */
-		{
-			const char *s = NET_AdrToString(cl->netchan.remoteAddress);
-			Com_Printf("%s", s);
-			l = 22 - strlen(s);
-		}
+		// New: Print external client IP in case of proxying */
+		// Original: cl->netchan.remoteAddress
+		const char *s = NET_AdrToString(customPlayerState[i].realAddress);
+		Com_Printf("%s", s);
+		l = 22 - strlen(s);
+
 		for ( j = 0; j < l; j++ )
 			Com_Printf(" ");
 
@@ -9658,6 +9715,8 @@ public:
 		hook_pmove->hook();
 		hook_scr_dumpscriptthreads = new cHook(0x0807A43E, (int)custom_Scr_DumpScriptThreads);
 		hook_scr_dumpscriptthreads->hook();
+		hook_updateipbans = new cHook(0x0811B9FE, (int)custom_UpdateIPBans);
+		hook_updateipbans->hook();
 
 		#if COMPILE_PLAYER == 1
 		hook_play_movement = new cHook(0x08090DAC, (int)custom_SV_ClientThink);

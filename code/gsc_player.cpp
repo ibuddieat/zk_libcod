@@ -1139,12 +1139,13 @@ void gsc_player_getip(scr_entref_t ref)
 		return;
 	}
 
-	client_t *client = &svs.clients[id];
 	char ip[16];
 
-	snprintf(ip, sizeof(ip), "%d.%d.%d.%d", client->netchan.remoteAddress.ip[0], client->netchan.remoteAddress.ip[1], client->netchan.remoteAddress.ip[2], client->netchan.remoteAddress.ip[3]);
-	if ( IsLocalIPAddress(client->netchan.remoteAddress.ip) && strlen(customPlayerState[id].preProxyIP) )
-		snprintf(ip, sizeof(ip), "%s", customPlayerState[id].preProxyIP);
+	snprintf(ip, sizeof(ip), "%d.%d.%d.%d",
+		customPlayerState[id].realAddress.ip[0],
+		customPlayerState[id].realAddress.ip[1],
+		customPlayerState[id].realAddress.ip[2],
+		customPlayerState[id].realAddress.ip[3]);
 
 	stackPushString(ip);
 }

@@ -62,6 +62,7 @@
 #define MAX_EVENTS                  4
 #define MAX_GENTITIES               ( 1 << GENTITYNUM_BITS )
 #define MAX_INFO_STRING             0x400
+#define MAX_IPFILTERS               1024
 #define MAX_ITEM_MODELS             2
 #define MAX_MODEL_ANIMATIONS        512 // animations per model
 #define MAX_MODELS                  256
@@ -3693,6 +3694,18 @@ typedef struct cm_world_s
 	worldSector_t sectors[1024];
 } cm_world_t;
 
+typedef struct ipFilter_s
+{
+	unsigned int mask;
+	unsigned int compare;
+} ipFilter_t;
+
+typedef struct ipFilterList_s
+{
+	ipFilter_t ipFilters[MAX_IPFILTERS];
+	int numIPFilters;
+} ipFilterList_t;
+
 typedef struct
 {
 	int cg_norender;
@@ -3784,6 +3797,7 @@ static const int sv_masterAddress_offset = 0x0849FBE0;
 static const int bg_iNumWeapons_offset = 0x08627080;
 static const int bg_weaponDefs_offset = 0x086270A0;
 static const int dvar_modifiedFlags_offset = 0x085ABE04;
+static const int ipFilterList_offset = 0x08850E00;
 
 #define g_entities ((gentity_t*)(gentities_offset))
 #define g_clients ((gclient_t*)(gclients_offset))
@@ -3848,6 +3862,8 @@ static const int dvar_modifiedFlags_offset = 0x085ABE04;
 #define bg_iNumWeapons (*((int*)( bg_iNumWeapons_offset )))
 #define bg_weaponDefs (*((WeaponDef_t**)( bg_weaponDefs_offset )))
 #define dvar_modifiedFlags (*((int*)( dvar_modifiedFlags_offset )))
+#define ipFilterList ((ipFilterList_t*)( ipFilterList_offset ))
+
 
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6
@@ -4082,8 +4098,7 @@ typedef struct customPlayerState_s
 	int droppingBulletVisualTime;
 	int protocolVersion;
 	resourceLimitedState_t resourceLimitedState;
-	char preProxyIP[16];
-	int preProxyPort;
+	netadr_t realAddress; // client->netchan->remoteAddress, updated for proxied clients 
 	unsigned int weapon;
 	qboolean hiddenFromScoreboard;
 	qboolean notAllowingSpectators;
