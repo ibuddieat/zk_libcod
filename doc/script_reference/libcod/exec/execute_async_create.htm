@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>execute_async_create( &lt;command&gt;, &lt;func&gt; )</H1>
+<H1>execute_async_create( &lt;command&gt;, &lt;callback function&gt;, &lt;parameter&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
@@ -27,7 +27,7 @@ Module: Exec<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Executes a shell command in another thread and returns the result of it. Requires to use <a href="execute_async_checkdone.htm">execute_async_checkdone</a> once every server frame to poll the result.</p>
+<p>Executes a shell command (via popen using /bin/sh as shell) in another thread and returns the result of it. Requires to use <a href="execute_async_checkdone.htm">execute_async_checkdone</a> once every server frame to poll the result. If the call to popen fails, an error is printed to console and the script callback function (if defined) is not called.</p>
 
 </H3>
 </TR></TD></TABLE>
@@ -37,7 +37,26 @@ Module: Exec<BR>
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-execute_async_create("ls", ::resultCallback);
+execLoop()
+{
+    while(true) {
+        execute_async_checkdone();
+        wait 0.05;
+    }
+}
+
+execRun()
+{
+    execute_async_create("ls", ::execCallback, 123);
+}
+
+execCallback(output, parameter)
+{
+    if(isDefined(output)) // Type ARRAY
+        logPrintConsole("Exec async thread returned with parameter " + parameter + " and output\n");
+    else
+        logPrintConsole("Exec async thread returned with parameter " + parameter + "\n");
+}
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -46,8 +65,15 @@ execute_async_create("ls", ::resultCallback);
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;command&gt; Command to execute.</LI>
-<LI>2 : &lt;func&gt; Callback function with result array argument</LI>
+<LI>1 : &lt;command&gt; Command to execute</LI>
+</UL></TR></TD></TABLE>
+<BR>
+<H2>Optional Args</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;callback function&gt; Script callback function to call on completion, with result array as first argument</LI>
+<LI>2 : &lt;parameter&gt; Optional parameter passed to the script callback function as second argument</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>

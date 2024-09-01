@@ -27,7 +27,7 @@ Module: Exec<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Executes a shell command and returns the result of it.</p>
+<p>Executes a shell command (via popen using /bin/sh as shell) and returns the result of it. If the call to popen fails, an error is printed to console and undefined is returned.</p>
 
 </H3>
 </TR></TD></TABLE>
