@@ -2,6 +2,7 @@
 
 #if COMPILE_EXEC == 1
 
+#include <errno.h>
 #include <pthread.h>
 
 enum
@@ -103,49 +104,7 @@ void *exec_async(void *input_c)
 
 	if ( fp == NULL )
 	{	
-		if ( task->callback )
-		{
-			if ( task->hasargument )
-			{
-				switch( task->valueType )
-				{
-				case INT_VALUE:
-					stackPushInt(task->intValue);
-					break;
-
-				case FLOAT_VALUE:
-					stackPushFloat(task->floatValue);
-					break;
-
-				case STRING_VALUE:
-					stackPushString(task->stringValue);
-					break;
-
-				case VECTOR_VALUE:
-					stackPushVector(task->vectorValue);
-					break;
-
-				case OBJECT_VALUE:
-					stackPushObject(task->objectValue);
-					break;
-
-				default:
-					stackPushUndefined();
-					break;
-				}
-			}
-			
-			stackPushArray();
-			
-			if ( task->save )
-			{
-				stackPushUndefined();
-				stackPushArrayLast();
-			}
-					
-			short ret = Scr_ExecThread(task->callback, task->save + task->hasargument);
-			Scr_FreeThread(ret);
-		}
+		Com_Printf("exec_async() popen failed: %s\n", strerror(errno));
 		
 		task->error = true;
 		return NULL;
