@@ -139,7 +139,7 @@ void *exec_async(void *input_c)
 		output->content[curpos] = '\0';
 	}
 	else
-		while ( getc(fp) != EOF ); //make thread wait for function to finish
+		while ( getc(fp) != EOF ); // Make thread wait for function to finish
 	
 	pclose(fp);
 	task->done = true;
@@ -352,11 +352,11 @@ void gsc_exec_async_checkdone()
 		current = current->next;
 		if ( task->done )
 		{
-			if ( Scr_IsSystemActive() && task->save && task->callback && !task->error && (scrVarPub.levelId == task->levelId) )
+			if ( Scr_IsSystemActive() && task->save && task->callback && !task->error && scrVarPub.levelId == task->levelId )
 			{
 				if ( task->hasargument )
 				{
-					switch( task->valueType )
+					switch ( task->valueType )
 					{
 					case INT_VALUE:
 						stackPushInt(task->intValue);
@@ -408,7 +408,7 @@ void gsc_exec_async_checkdone()
 				Scr_FreeThread(ret);
 			}
 
-			//free task
+			// Free task
 			if ( task->next != NULL )
 				task->next->prev = task->prev;
 

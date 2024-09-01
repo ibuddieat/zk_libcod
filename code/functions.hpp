@@ -322,7 +322,7 @@ typedef qboolean (*NET_SendPacket_t)(netsrc_t sock, int length, const void *data
 static const NET_SendPacket_t NET_SendPacket = (NET_SendPacket_t)0x0806C7EC;
 
 typedef void (*NET_Sleep_t)(int msec);
-static const NET_Sleep_t NET_Sleep = (NET_Sleep_t)0x080d5CC4;
+static const NET_Sleep_t NET_Sleep = (NET_Sleep_t)0x080D5CC4;
 
 typedef void (*SV_GameSendServerCommand_t)(int clientnum, svscmd_type type, const char *text);
 static const SV_GameSendServerCommand_t SV_GameSendServerCommand = (SV_GameSendServerCommand_t)0x080917AA;
@@ -469,13 +469,13 @@ typedef void (*MSG_Init_t)(msg_t *buf, byte *data, int length);
 static const MSG_Init_t MSG_Init = (MSG_Init_t)0x08067BD8;
 
 typedef void (*MSG_WriteBit0_t)(msg_t *msg);
-static const MSG_WriteBit0_t MSG_WriteBit0 = (MSG_WriteBit0_t)0x08067d28;
+static const MSG_WriteBit0_t MSG_WriteBit0 = (MSG_WriteBit0_t)0x08067D28;
 
 typedef void (*MSG_WriteBit1_t)(msg_t *msg);
-static const MSG_WriteBit1_t MSG_WriteBit1 = (MSG_WriteBit1_t)0x08067d86;
+static const MSG_WriteBit1_t MSG_WriteBit1 = (MSG_WriteBit1_t)0x08067D86;
 
 typedef void (*MSG_WriteBits_t)(msg_t *msg, int value, int bits);
-static const MSG_WriteBits_t MSG_WriteBits = (MSG_WriteBits_t)0x08067c62;
+static const MSG_WriteBits_t MSG_WriteBits = (MSG_WriteBits_t)0x08067C62;
 
 typedef void (*MSG_WriteByte_t)(msg_t *msg, int c);
 static const MSG_WriteByte_t MSG_WriteByte = (MSG_WriteByte_t)0x0806800C;
@@ -502,7 +502,7 @@ typedef void (*MSG_WriteDeltaObjective_t)(msg_t *msg, objective_t *from, objecti
 static const MSG_WriteDeltaObjective_t MSG_WriteDeltaObjective = (MSG_WriteDeltaObjective_t)0x08069602;
 
 typedef void (*MSG_WriteDeltaHudElems_t)(msg_t *buf, hudelem_t *from, hudelem_t *to, int count);
-static const MSG_WriteDeltaHudElems_t MSG_WriteDeltaHudElems = (MSG_WriteDeltaHudElems_t)0x08069f84;
+static const MSG_WriteDeltaHudElems_t MSG_WriteDeltaHudElems = (MSG_WriteDeltaHudElems_t)0x08069F84;
 
 typedef int (*MSG_WriteBitsCompress_t)(const byte *datasrc, byte *buffdest, int bytecount);
 static const MSG_WriteBitsCompress_t MSG_WriteBitsCompress = (MSG_WriteBitsCompress_t)0x08067F4E;
@@ -844,10 +844,10 @@ typedef gentity_t * (*SV_ClientThink_t)(client_t *cl, usercmd_t *);
 static const SV_ClientThink_t SV_ClientThink = (SV_ClientThink_t)0x08090DAC;
 
 typedef int (*SV_GetArchivedClientInfo_t)(int clientNum, int *pArchiveTime, playerState_t *ps, clientState_t *cs);
-static const SV_GetArchivedClientInfo_t SV_GetArchivedClientInfo = (SV_GetArchivedClientInfo_t)0x0809a0b6;
+static const SV_GetArchivedClientInfo_t SV_GetArchivedClientInfo = (SV_GetArchivedClientInfo_t)0x0809A0B6;
 
 typedef qboolean (*G_ClientCanSpectateTeam_t)(gclient_t *client, int team);
-static const G_ClientCanSpectateTeam_t G_ClientCanSpectateTeam = (G_ClientCanSpectateTeam_t)0x080f6dd0;
+static const G_ClientCanSpectateTeam_t G_ClientCanSpectateTeam = (G_ClientCanSpectateTeam_t)0x080F6DD0;
 
 typedef void (*SV_Heartbeat_f_t)(void);
 static const SV_Heartbeat_f_t SV_Heartbeat_f = (SV_Heartbeat_f_t)0x0808CB98;
@@ -1069,7 +1069,7 @@ typedef void (*Scr_FxParamError_t)(const char *error, int index);
 static const Scr_FxParamError_t Scr_FxParamError = (Scr_FxParamError_t)0x08115034;
 
 typedef const char * (*SEH_StringEd_GetString_t)(const char *pszReference);
-static const SEH_StringEd_GetString_t SEH_StringEd_GetString = (SEH_StringEd_GetString_t)0x081384cc;
+static const SEH_StringEd_GetString_t SEH_StringEd_GetString = (SEH_StringEd_GetString_t)0x081384CC;
 
 typedef void (*AxisToAngles_t)(float *axis, float *angles);
 static const AxisToAngles_t AxisToAngles = (AxisToAngles_t)0x080A9558;
@@ -1216,7 +1216,7 @@ typedef void (*G_TraceCapsule_t)(trace_t *results, const float *start, const flo
 static const G_TraceCapsule_t G_TraceCapsule = (G_TraceCapsule_t)0x0810A528;
 
 typedef void (*SV_Trace_t)(trace_t *results, const float *start, const float *mins, const float *maxs, const float *end, int passEntityNum, int contentMask, int locational, uint8_t *priorityMap, int staticmodels);
-static const SV_Trace_t SV_Trace = (SV_Trace_t)0x0809d884;
+static const SV_Trace_t SV_Trace = (SV_Trace_t)0x0809D884;
 
 typedef void (*G_SightTrace_t)(int *hitNum, const float *start, const float *end, int passEntityNum, int contentmask);
 static const G_SightTrace_t G_SightTrace = (G_SightTrace_t)0x0810A672;
@@ -1462,12 +1462,12 @@ typedef int (*unzCloseCurrentFile_t)(unzFile file);
 static const unzCloseCurrentFile_t unzCloseCurrentFile = (unzCloseCurrentFile_t)0x080D3506;
 
 typedef void (*Jump_ActivateSlowdown_t)(playerState_t *ps);
-static const Jump_ActivateSlowdown_t Jump_ActivateSlowdown = (Jump_ActivateSlowdown_t)0x080dC7EE;
+static const Jump_ActivateSlowdown_t Jump_ActivateSlowdown = (Jump_ActivateSlowdown_t)0x080DC7EE;
 
 typedef void (*Jump_AddSurfaceEvent_t)(playerState_t *ps, pml_t *pml);
 static const Jump_AddSurfaceEvent_t Jump_AddSurfaceEvent = (Jump_AddSurfaceEvent_t)0x080DCC52;
 
 typedef void (*Jump_ClearState_t)(playerState_t *ps);
-static const Jump_ClearState_t Jump_ClearState = (Jump_ClearState_t)0x080dC718;
+static const Jump_ClearState_t Jump_ClearState = (Jump_ClearState_t)0x080DC718;
 
 #endif
