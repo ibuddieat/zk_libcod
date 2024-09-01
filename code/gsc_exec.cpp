@@ -61,6 +61,7 @@ void gsc_exec()
 
 	if ( fp == NULL )
 	{
+		Com_Printf("gsc_exec() popen failed: %s\n", strerror(errno));
 		stackPushUndefined();
 		return;
 	}
@@ -105,7 +106,6 @@ void *exec_async(void *input_c)
 	if ( fp == NULL )
 	{	
 		Com_Printf("exec_async() popen failed: %s\n", strerror(errno));
-		
 		task->error = true;
 		return NULL;
 	}
