@@ -69,6 +69,7 @@ dvar_t *sv_reconnectlimit;
 dvar_t *sv_referencedIwdNames;
 dvar_t *sv_referencedIwds;
 dvar_t *sv_serverid;
+dvar_t *sv_showAverageBPS;
 dvar_t *sv_showCommands;
 dvar_t *sv_timeout;
 dvar_t *sv_voice;
@@ -130,6 +131,7 @@ dvar_t *sv_downloadMessage;
 dvar_t *sv_downloadMessageAtMap;
 dvar_t *sv_downloadMessageForLegacyClients;
 dvar_t *sv_downloadNotifications;
+dvar_t *sv_fastDownload;
 dvar_t *sv_kickGamestateLimitedClients;
 dvar_t *sv_kickMessages;
 dvar_t *sv_limitLocalRcon;
@@ -394,6 +396,7 @@ void common_init_complete_print(const char *format, ...)
 	sv_referencedIwdNames = Dvar_FindVar("sv_referencedIwdNames");
 	sv_referencedIwds = Dvar_FindVar("sv_referencedIwds");
 	sv_serverid = Dvar_FindVar("sv_serverid");
+	sv_showAverageBPS = Dvar_FindVar("sv_showAverageBPS");
 	sv_showCommands = Dvar_FindVar("sv_showCommands");
 	sv_timeout = Dvar_FindVar("sv_timeout");
 	sv_voice = Dvar_FindVar("sv_voice");
@@ -446,6 +449,7 @@ void common_init_complete_print(const char *format, ...)
 	sv_downloadMessageAtMap = Dvar_RegisterBool("sv_downloadMessageAtMap", qtrue, DVAR_ARCHIVE);
 	sv_downloadMessageForLegacyClients = Dvar_RegisterString("sv_downloadMessageForLegacyClients", "", DVAR_ARCHIVE);
 	sv_downloadNotifications = Dvar_RegisterBool("sv_downloadNotifications", qfalse, DVAR_ARCHIVE);
+	sv_fastDownload = Dvar_RegisterBool("sv_fastDownload", qfalse, DVAR_ARCHIVE);
 	sv_kickGamestateLimitedClients = Dvar_RegisterBool("sv_kickGamestateLimitedClients", qtrue, DVAR_ARCHIVE);
 	sv_kickMessages = Dvar_RegisterBool("sv_kickMessages", qtrue, DVAR_ARCHIVE);
 	sv_limitLocalRcon = Dvar_RegisterBool("sv_limitLocalRcon", qtrue, DVAR_ARCHIVE);
@@ -3198,6 +3202,163 @@ void custom_SV_ClientEnterWorld(client_t *client, usercmd_t *cmd)
 	/* New code end */
 }
 
+void custom_SV_SendClientMessages(void)
+{
+	int i;
+	client_t *cl;
+	int numclients = 0;
+
+	sv.bpsTotalBytes = 0;
+	sv.ubpsTotalBytes = 0;
+
+	for ( i = 0; i < sv_maxclients->current.integer; i++ )
+	{
+		cl = &svs.clients[i];
+
+		if ( !cl->state )
+		{
+			continue;
+		}
+
+		if ( svs.time < cl->nextSnapshotTime )
+		{
+			continue;
+		}
+
+		numclients++;
+
+		/* New code start: Speed up direct download without having to increase
+		 the sv_fps dvar */
+		if ( sv_fastDownload->current.boolean && cl->download && !cl->downloadingWWW )
+		{
+			// Experimental value with good results, simulating sv_fps 160
+			for ( int j = 0; j < 1 + ((sv_fps->current.integer / 20) * MAX_DOWNLOAD_WINDOW); j++ )
+			{
+				while ( cl->netchan.unsentFragments )
+				{
+					cl->nextSnapshotTime = svs.time + SV_RateMsec(cl, cl->netchan.unsentLength - cl->netchan.unsentFragmentStart);
+					SV_Netchan_TransmitNextFragment(&cl->netchan);
+				}
+
+				SV_SendClientSnapshot(cl);
+			}
+			SV_SendClientVoiceData(cl);
+		}
+		else
+		/* New code end */
+		{
+			if ( cl->netchan.unsentFragments )
+			{
+				cl->nextSnapshotTime = svs.time + SV_RateMsec(cl, cl->netchan.unsentLength - cl->netchan.unsentFragmentStart);
+				SV_Netchan_TransmitNextFragment(&cl->netchan);
+				continue;
+			}
+
+			SV_SendClientSnapshot(cl);
+			SV_SendClientVoiceData(cl);
+		}
+	}
+
+	if ( sv_showAverageBPS->current.boolean && numclients > 0 )
+	{
+		float ave = 0, uave = 0;
+
+		for ( i = 0; i < MAX_BPS_WINDOW - 1; i++ )
+		{
+			sv.bpsWindow[i] = sv.bpsWindow[i + 1];
+			ave += sv.bpsWindow[i];
+
+			sv.ubpsWindow[i] = sv.ubpsWindow[i + 1];
+			uave += sv.ubpsWindow[i];
+		}
+
+		sv.bpsWindow[MAX_BPS_WINDOW - 1] = sv.bpsTotalBytes;
+		ave += sv.bpsTotalBytes;
+
+		sv.ubpsWindow[MAX_BPS_WINDOW - 1] = sv.ubpsTotalBytes;
+		uave += sv.ubpsTotalBytes;
+
+		if ( sv.bpsTotalBytes >= sv.bpsMaxBytes )
+		{
+			sv.bpsMaxBytes = sv.bpsTotalBytes;
+		}
+
+		if ( sv.ubpsTotalBytes >= sv.ubpsMaxBytes )
+		{
+			sv.ubpsMaxBytes = sv.ubpsTotalBytes;
+		}
+
+		sv.bpsWindowSteps++;
+
+		if ( sv.bpsWindowSteps >= MAX_BPS_WINDOW )
+		{
+			float comp_ratio;
+
+			sv.bpsWindowSteps = 0;
+
+			ave = ave / (float)MAX_BPS_WINDOW;
+			uave = uave / (float)MAX_BPS_WINDOW;
+
+			comp_ratio = (1 - ave / uave) * 100.f;
+			sv.ucompAve += comp_ratio;
+			sv.ucompNum++;
+
+			Com_DPrintf("bpspc(%2.0f) bps(%2.0f) pk(%i) ubps(%2.0f) upk(%i) cr(%2.2f) acr(%2.2f)\n",
+			            ave / (float)numclients, ave, sv.bpsMaxBytes, uave, sv.ubpsMaxBytes, comp_ratio, sv.ucompAve / sv.ucompNum);
+		}
+	}
+}
+
+void custom_SV_SendMessageToClient(msg_t *msg, client_t *client)
+{
+	byte *data;
+	LargeLocal buf;
+	int compressedSize;
+	int rateMsec;
+
+	LargeLocalConstructor(&buf, MAX_MSGLEN);
+	data = LargeLocalGetBuf(&buf);
+	memcpy(data, msg->data, 4);
+	compressedSize = MSG_WriteBitsCompress(msg->data + 4, data + 4, msg->cursize - 4) + 4;
+	if ( client->dropReason )
+	{
+		SV_DropClient(client, client->dropReason);
+	}
+	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSize = compressedSize;
+	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSent = svs.time;
+	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageAcked = -1;
+	SV_Netchan_Transmit(client, data, compressedSize);
+
+	// New: Allow direct download speed above 20 kb/s
+	if ( client->netchan.remoteAddress.type == NA_LOOPBACK || Sys_IsLANAddress(client->netchan.remoteAddress) || (client->download && !client->downloadingWWW) )
+	{
+		client->nextSnapshotTime = svs.time - 1;
+		LargeLocalDestructor(&buf);
+		return;
+	}
+
+	rateMsec = SV_RateMsec(client, compressedSize);
+	if ( rateMsec < client->snapshotMsec )
+	{
+		rateMsec = client->snapshotMsec;
+		client->rateDelayed = qfalse;
+	}
+	else
+	{
+		client->rateDelayed = qtrue;
+	}
+	client->nextSnapshotTime = svs.time + rateMsec;
+	if ( client->state != CS_ACTIVE )
+	{
+		if ( !*client->downloadName && client->nextSnapshotTime < svs.time + 1000 )
+		{
+			client->nextSnapshotTime = svs.time + 1000;
+		}
+	}
+	sv.bpsTotalBytes += compressedSize;
+	LargeLocalDestructor(&buf);
+}
+
 void custom_SV_SendClientGameState(client_t *client)
 {
 	int start;
@@ -3446,6 +3607,7 @@ void SV_WriteDownloadErrorToClient(client_t *cl, msg_t *msg, char *errorMessage)
 void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 {
 	int curindex;
+	int blksize;
 	char downloadNameNoExt[MAX_QPATH];
 	char errorMessage[MAX_STRINGLENGTH];
 
@@ -3514,10 +3676,10 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 		}
 	}
 
-	// Hardcode client variables to make max download speed for everyone
+	// Hardcode client variables to make max. download speed for everyone
 	cl->state = CS_CONNECTED;
 	cl->rate = 25000;
-	cl->snapshotMsec = 50;
+	cl->snapshotMsec = 50; // 20 snaps
 
 	if ( !cl->download )
 	{
@@ -3589,10 +3751,14 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 	{
 		curindex = (cl->downloadCurrentBlock % MAX_DOWNLOAD_WINDOW);
 
-		if ( !cl->downloadBlocks[curindex] )
-			cl->downloadBlocks[curindex] = (unsigned char *)Z_MallocInternal(MAX_DOWNLOAD_BLKSIZE);
+		blksize = MAX_DOWNLOAD_BLKSIZE;
+		if ( sv_fastDownload->current.boolean )
+			blksize = MAX_DOWNLOAD_BLKSIZE_FAST;
 
-		cl->downloadBlockSize[curindex] = FS_Read(cl->downloadBlocks[curindex], MAX_DOWNLOAD_BLKSIZE, cl->download);
+		if ( !cl->downloadBlocks[curindex] )
+			cl->downloadBlocks[curindex] = (unsigned char *)Z_MallocInternal(MAX_DOWNLOAD_BLKSIZE_FAST);
+
+		cl->downloadBlockSize[curindex] = FS_Read(cl->downloadBlocks[curindex], blksize, cl->download);
 
 		if ( cl->downloadBlockSize[curindex] < 0 )
 		{
@@ -9839,6 +10005,8 @@ public:
 		cracking_hook_function(0x081182F4, (int)custom_Scr_LoadGameType);
 		cracking_hook_function(0x081101D0, (int)custom_Scr_LoadLevel);
 		cracking_hook_function(0x08118322, (int)custom_Scr_StartupGameType);
+		cracking_hook_function(0x0809ABA2, (int)custom_SV_SendMessageToClient);
+		cracking_hook_function(0x0809BCCE, (int)custom_SV_SendClientMessages);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC8CA, (int)Jump_ReduceFriction);

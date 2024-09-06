@@ -56,7 +56,8 @@
 #define MAX_CHALLENGES              1024
 #define MAX_CLIENTS                 64
 #define MAX_CONFIGSTRINGS           2048
-#define MAX_DOWNLOAD_BLKSIZE        1024
+#define MAX_DOWNLOAD_BLKSIZE        2048
+#define MAX_DOWNLOAD_BLKSIZE_FAST   0x2000 // Needs to be below MAX_MSGLEN of game version 1.0
 #define MAX_DOWNLOAD_WINDOW         8
 #define MAX_ENT_CLUSTERS            16
 #define MAX_EVENTS                  4

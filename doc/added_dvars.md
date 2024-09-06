@@ -185,6 +185,10 @@ Added dvars:
     * Type: Boolean
     * Default: False
     * Effect: If enabled, prints the relative path to the file requested by the connecting player ingame. Applied for both direct and HTTP-based downloads.
+  * `sv_fastDownload`
+    * Type: Boolean
+    * Default: False
+    * Effect: Enable this for higher direct download speeds. Does not affect HTTP-based downloads. Currently considered experimental.
   * `sv_kickGamestateLimitedClients`
     * Type: Boolean
     * Default: True

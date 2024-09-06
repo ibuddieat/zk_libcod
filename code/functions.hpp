@@ -333,6 +333,9 @@ static const SV_SaveSystemInfo_t SV_SaveSystemInfo = (SV_SaveSystemInfo_t)0x0809
 typedef void (*SV_SendClientSnapshot_t)(client_t *cl);
 static const SV_SendClientSnapshot_t SV_SendClientSnapshot = (SV_SendClientSnapshot_t)0x0809ADEA;
 
+typedef void (*SV_SendClientVoiceData_t)(client_t *cl);
+static const SV_SendClientVoiceData_t SV_SendClientVoiceData = (SV_SendClientVoiceData_t)0x0809C0A2;
+
 typedef void (QDECL *SV_SendServerCommand_t)(client_t *cl, int type, const char *fmt, ...);
 static const SV_SendServerCommand_t SV_SendServerCommand = (SV_SendServerCommand_t)0x08094A10;
 

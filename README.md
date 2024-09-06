@@ -8,7 +8,7 @@
 
 ## ⭐ What's new?
 
-The extension requires the [server binary for version 1.3](cod2_lnxded) to be used as basis and **supports all three major game versions** (check out the `sv_version` and proxy dvars), including the ability to let players from all those versions to connect to the same server. The following list documents changes in comparison to the [parent repository](doc/history.md):
+The extension requires the [server binary for game version 1.3](cod2_lnxded) to be used as basis and **supports all three major game versions** (check out the `sv_version` and proxy dvars), including the ability to let players from all those versions to connect to the same server. The following list documents changes in comparison to the [parent repository](doc/history.md):
 
 - 🔢 [Added dvars](doc/added_dvars.md) (see example [libcod.cfg](doc/libcod.cfg))
 - 🔀 [Added script callback functions](doc/added_script_callback_functions.md)
@@ -16,6 +16,7 @@ The extension requires the [server binary for version 1.3](cod2_lnxded) to be us
 - 🏗 [Changed script code functions](doc/changed_script_functions.md)
 - 🚨 [Improved server security](doc/security_features.md)
 - ⚙ Other functional adaptions
+  - Faster direct file download for game version 1.0
   - Added support for map commands in custom rcon callback
   - Allow to show head icons to both teams (via `axis_allies`)
   - Excluded clients with wrong password from scoreboard
