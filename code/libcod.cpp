@@ -129,6 +129,7 @@ dvar_t *sv_disconnectMessages;
 dvar_t *sv_downloadMessage;
 dvar_t *sv_downloadMessageAtMap;
 dvar_t *sv_downloadMessageForLegacyClients;
+dvar_t *sv_downloadNotifications;
 dvar_t *sv_kickGamestateLimitedClients;
 dvar_t *sv_kickMessages;
 dvar_t *sv_limitLocalRcon;
@@ -444,6 +445,7 @@ void common_init_complete_print(const char *format, ...)
 	sv_downloadMessage = Dvar_RegisterString("sv_downloadMessage", "", DVAR_ARCHIVE);
 	sv_downloadMessageAtMap = Dvar_RegisterBool("sv_downloadMessageAtMap", qtrue, DVAR_ARCHIVE);
 	sv_downloadMessageForLegacyClients = Dvar_RegisterString("sv_downloadMessageForLegacyClients", "", DVAR_ARCHIVE);
+	sv_downloadNotifications = Dvar_RegisterBool("sv_downloadNotifications", qfalse, DVAR_ARCHIVE);
 	sv_kickGamestateLimitedClients = Dvar_RegisterBool("sv_kickGamestateLimitedClients", qtrue, DVAR_ARCHIVE);
 	sv_kickMessages = Dvar_RegisterBool("sv_kickMessages", qtrue, DVAR_ARCHIVE);
 	sv_limitLocalRcon = Dvar_RegisterBool("sv_limitLocalRcon", qtrue, DVAR_ARCHIVE);
@@ -452,7 +454,7 @@ void common_init_complete_print(const char *format, ...)
 	sv_noauthorize = Dvar_RegisterBool("sv_noauthorize", qfalse, DVAR_ARCHIVE);
 	sv_timeoutMessages = Dvar_RegisterBool("sv_timeoutMessages", qtrue, DVAR_ARCHIVE);
 	sv_verifyIwds = Dvar_RegisterBool("sv_verifyIwds", qtrue, DVAR_ARCHIVE);
-	sv_wwwDlDisconnectedMessages = Dvar_RegisterInt("sv_wwwDlDisconnectedMessages", 1, 0, 2, DVAR_ARCHIVE);
+	sv_wwwDlDisconnectedMessages = Dvar_RegisterBool("sv_wwwDlDisconnectedMessages", qtrue, DVAR_ARCHIVE);
 
 	/* Register (thus override) dvars that would otherwise be defined later in
 	 G_RegisterDvars, example:
@@ -2035,7 +2037,7 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 	if ( !sv_disconnectMessages->current.boolean && I_stricmp(reason, "EXE_DISCONNECTED") == 0 )
 		showIngameMessage = qfalse;
 
-	if ( sv_wwwDlDisconnectedMessages->current.integer != 1 && I_stricmp(reason, "PC_PATCH_1_1_DOWNLOADDISCONNECTED") == 0 )
+	if ( !sv_wwwDlDisconnectedMessages->current.boolean && I_stricmp(reason, "PC_PATCH_1_1_DOWNLOADDISCONNECTED") == 0 )
 		showIngameMessage = qfalse;
 
 	translatedReason = SEH_StringEd_GetString(reason);
@@ -3422,7 +3424,7 @@ int custom_SV_WWWRedirectClient(client_t *cl, msg_t *msg)
 		MSG_WriteLong(msg, sv_wwwDlDisconnected->current.boolean != 0);
 
 		/* New code start */
-		if ( sv_wwwDlDisconnectedMessages->current.integer == 2 )
+		if ( sv_downloadNotifications->current.boolean )
 			SV_SendServerCommand(0, SV_CMD_CAN_IGNORE, "f \"%s^7 downloads %s\"", cl->name, cl->downloadName);
 		/* New code end */
 
@@ -3576,6 +3578,10 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 		cl->downloadCurrentBlock = cl->downloadClientBlock = cl->downloadXmitBlock = 0;
 		cl->downloadCount = 0;
 		cl->downloadEOF = qfalse;
+
+		// Announce download
+		if ( sv_downloadNotifications->current.boolean )
+			SV_SendServerCommand(0, SV_CMD_CAN_IGNORE, "f \"%s^7 downloads %s\"", cl->name, cl->downloadName);
 	}
 
 	// Perform any reads that we need to

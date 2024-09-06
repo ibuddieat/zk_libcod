@@ -181,6 +181,10 @@ Added dvars:
     * Type: String
     * Default: ""
     * Effect: If set to a non-empty string, players on game version 1.0 that attempt to download a file on connect are disconnected from the server, with the specified message displayed after disconnect. Related dvars: `sv_downloadMessage`, `sv_downloadMessageAtMap`.
+  * `sv_downloadNotifications`
+    * Type: Boolean
+    * Default: False
+    * Effect: If enabled, prints the relative path to the file requested by the connecting player ingame. Applied for both direct and HTTP-based downloads.
   * `sv_kickGamestateLimitedClients`
     * Type: Boolean
     * Default: True
@@ -281,11 +285,9 @@ Added dvars:
     * Default: "1.3"
     * Effect: Controls the server's game version as announced to the master server and returned in server info and status requests. Also, when using version 1.0, the maps `mp_rhine` and `mp_harbor` are not available via manymaps unless added as standalone maps (like other custom maps). Requires a map reload after being changed. Recommended to be kept on "1.3" if the sv_proxy dvars are used to start proxies.
   * `sv_wwwDlDisconnectedMessages`
-    * Type: Integer
-    * Default: 1
-    * Min. Value: 0
-    * Max. Value: 2
-    * Effect: Toggle output of download-disconnected game messages. A value of `2` prints the relative path to the file requested by the connecting player.
+    * Type: Boolean
+    * Default: True
+    * Effect: Toggle output of download-disconnected game messages.
 
 Other dvars (e.g., from legacy versions of libcod or other repositories):
 
