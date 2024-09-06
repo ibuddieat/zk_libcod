@@ -18,4 +18,4 @@ Most of the issues listed here are problems that are present in the original gam
 - To get a debug build version, use `./doit.sh debug` in the build process
 - The server attempts to write a crash.log file in the server's working directory on unexpected termination (e.g., on segmentation faults), containing a stack trace
 - Running the server within GDB:
-  - `gdb -ex r --args env LD_PRELOAD=./bin/libcod2.so ./cod2_lnxded +set fs_game ...` etc.
+  - `gdb -ex 'set follow-fork-mode parent' -ex r --args env LD_PRELOAD=./bin/libcod2.so ./cod2_lnxded +set fs_game ...` etc.
