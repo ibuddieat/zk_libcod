@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>SetCullFog( &lt;near distance&gt;, &lt;far distance&gt;, &lt;red&gt;, &lt;green&gt;, &lt;blue&gt;, &lt;transition time&gt; )</H1>
+<H1>setCullFogForPlayer( &lt;near distance&gt;, &lt;far distance&gt;, &lt;red&gt;, &lt;green&gt;, &lt;blue&gt;, &lt;transition time&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
@@ -27,8 +27,16 @@ Module: Effects<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Sets the amount of fog in the distance. The fog will increase linearly</p>
+<p>Sets the amount of fog in the distance, for the given player only. The fog will increase linearly. Please note that visibility traces through fog only take the global fog settings (see <a href="../../stock/effects/setcullfog.htm">SetCullFog</a>) into account.</p>
 
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Call this on:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+The player
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -37,7 +45,7 @@ Module: Effects<BR>
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-SetCullFog(0, 16500, 0.7, 0.85, 1.0, 0);
+self setCullFogForPlayer(0, 16500, 0.7, 0.85, 1.0, 0);
 </PRE>
 </H3>
 </TR></TD></TABLE>

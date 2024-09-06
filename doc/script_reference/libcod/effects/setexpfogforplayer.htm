@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>SetExpFog( &lt;density&gt;, &lt;red&gt;, &lt;green&gt;, &lt;blue&gt;, &lt;transition time&gt; )</H1>
+<H1>setExpFogForPlayer( &lt;density&gt;, &lt;red&gt;, &lt;green&gt;, &lt;blue&gt;, &lt;transition time&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
@@ -27,8 +27,16 @@ Module: Effects<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Creates an exponential fog. Density must be greater than 0 and less than 1, and typically less than .001. For example, .0002 means the fog gets .02% more dense for every 1 unit of distance (about 1% thicker every 50 units of distance).</p>
+<p>Creates an exponential fog, for the given player only. Density must be greater than 0 and less than 1, and typically less than .001. For example, .0002 means the fog gets .02% more dense for every 1 unit of distance (about 1% thicker every 50 units of distance). Please note that visibility traces through fog only take the global fog settings (see <a href="../../stock/effects/setexpfog.htm">SetExpFog</a>) into account.</p>
 
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Call this on:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+The player
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -37,7 +45,7 @@ Module: Effects<BR>
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-SetExpFog(0.0001144, 131/255, 116/255, 71/255, 0);
+self setExpFogForPlayer(0.0001144, 131/255, 116/255, 71/255, 0);
 </PRE>
 </H3>
 </TR></TD></TABLE>

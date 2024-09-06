@@ -3175,6 +3175,81 @@ void gsc_player_isallowingspectators(scr_entref_t ref)
 	stackPushBool(!customPlayerState[id].notAllowingSpectators);
 }
 
+void Scr_SetFogForPlayer(const char *cmd, float start, float density, float heightDensity, float r, float g, float b, float time, int clientNum)
+{
+	if ( start < 0.0 )
+		Scr_Error(va("%s: near distance must be >= 0", cmd));
+
+	if ( start >= density )
+		Scr_Error(va("%s: near distance must be less than far distance", cmd));
+
+	if ( r < 0.0 || r > 1.0 || g < 0.0 || g > 1.0 || b < 0.0 || b > 1.0 )
+		Scr_Error(va("%s: red/green/blue color components must be in the range [0, 1]", cmd));
+
+	if ( time < 0.0 )
+		Scr_Error(va("%s: transition time must be >= 0 seconds", cmd));
+
+	client_t *client = &svs.clients[clientNum];
+	char configstring[MAX_STRINGLENGTH];
+
+	Com_sprintf(configstring, MAX_STRINGLENGTH, "d 12 %s", va("%g %g %g %g %g %g %.0f", start, density, heightDensity, r, g, b, (float)(time * 1000.0)));
+	SV_SendServerCommand(client, 1, configstring);
+}
+
+void gsc_player_setcullfogforplayer(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_setcullfogforplayer() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( Scr_GetNumParam() != 6 )
+		Scr_Error("USAGE: setCullFogForPlayer(near distance, far distance, red, green, blue, transition time);\n");
+
+	float nearDistance = Scr_GetFloat(0);
+	float farDistance = Scr_GetFloat(1);
+	float r = Scr_GetFloat(2);
+	float g = Scr_GetFloat(3);
+	float b = Scr_GetFloat(4);
+	float transitionTime = Scr_GetFloat(5);
+
+	Scr_SetFogForPlayer("setCullFogForPlayer", nearDistance, farDistance, 1.0, r, g, b, transitionTime, id);
+
+	stackPushBool(qtrue);
+}
+
+void gsc_player_setexpfogforplayer(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_setexpfogforplayer() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( Scr_GetNumParam() != 5 )
+		Scr_Error("USAGE: setExpFogForPlayer(density, red, green, blue, transition time);\nDensity must be greater than 0 and less than 1, and typically less than .001. For example, .0002 means the fog gets .02%% more dense for every 1 unit of distance (about 1%% thicker every 50 units of distance)\n");
+
+	float density = Scr_GetFloat(0);
+	float r = Scr_GetFloat(1);
+	float g = Scr_GetFloat(2);
+	float b = Scr_GetFloat(3);
+	float transitionTime = Scr_GetFloat(4);
+
+	if ( density <= 0.0 || 1.0 <= density)
+		Scr_Error("setExpFogForPlayer: density must be greater than 0 and less than 1");
+
+	Scr_SetFogForPlayer("setExpFogForPlayer", 0.0, 1.0, density, r, g, b, transitionTime, id);
+
+	stackPushBool(qtrue);
+}
+
 #if COMPILE_CUSTOM_VOICE == 1
 
 extern VoicePacket_t voiceDataStore[MAX_CUSTOMSOUNDS][MAX_STOREDVOICEPACKETS];

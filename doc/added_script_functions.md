@@ -80,8 +80,10 @@ New script code methods:
   * `<player> setBulletVelocity(<value>)`
   * `<player> setCollisionTeam(<team>)`
   * `<player> setConfigString(<string>, <index>)`
+  * `<player> setCullFogForPlayer(<near distance>, <far distance>, <red>, <green>, <blue>, <transition time>)`
   * `<player> setCurrentWeaponAmmo(<value>)`
   * `<player> setCurrentWeaponClipAmmo(<value>)`
+  * `<player> setExpFogForPlayer(<density>, <red>, <green>, <blue>, <transition time>)`
   * `<player> setFireRangeScale(<scale>)`
   * `<player> setFireThroughWalls(<enabled>)`
   * `<player> setHiddenFromScoreboard(<enabled>)`
