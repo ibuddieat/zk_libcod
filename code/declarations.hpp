@@ -64,10 +64,10 @@
 #define MAX_INFO_STRING             0x400
 #define MAX_IPFILTERS               1024
 #define MAX_ITEM_MODELS             2
-#define MAX_MODEL_ANIMATIONS        512 // animations per model
+#define MAX_MODEL_ANIMATIONS        512 // Animations per model
 #define MAX_MODELS                  256
 #define MAX_MSGLEN                  0x20000
-#define MAX_LARGE_MSGLEN            0x20000 // for voice chat and snapshot
+#define MAX_LARGE_MSGLEN            0x20000 // For voice chat and snapshot
 #define MAX_NETNAME                 16
 #define MAX_OSPATH                  256
 #define MAX_PACKETLEN               1400

@@ -59,7 +59,6 @@ dvar_t *sv_iwds;
 dvar_t *sv_mapname;
 dvar_t *sv_maxclients;
 dvar_t *sv_maxPing;
-dvar_t *sv_maxRate;
 dvar_t *sv_minPing;
 dvar_t *sv_packet_info;
 dvar_t *sv_padPackets;
@@ -144,36 +143,37 @@ dvar_t *sv_verifyIwds;
 dvar_t *sv_version;
 dvar_t *sv_wwwDlDisconnectedMessages;
 
-cHook *hook_add_opcode;
-cHook *hook_bg_playanim;
-cHook *hook_clientendframe;
-cHook *hook_com_initdvars;
-cHook *hook_console_print;
-cHook *hook_developer_prints;
+cHook *hook_AddOpcodePos;
+cHook *hook_BG_PlayAnim;
+cHook *hook_ClientEndFrame;
+cHook *hook_Com_InitDvars;
+cHook *hook_Com_DPrintf;
 cHook *hook_fire_grenade;
-cHook *hook_fs_registerdvars;
-cHook *hook_g_freeentity;
-cHook *hook_g_initgentity;
-cHook *hook_g_processipbans;
-cHook *hook_g_runframe;
-cHook *hook_g_tempentity;
-cHook *hook_gametype_scripts;
-cHook *hook_gscr_loadconsts;
-cHook *hook_init_opcode;
-cHook *hook_play_movement;
-cHook *hook_playercmd_cloneplayer;
-cHook *hook_pm_beginweaponchange;
-cHook *hook_pmove;
-cHook *hook_scr_dumpscriptthreads;
-cHook *hook_scr_execentthread;
-cHook *hook_scr_execthread;
-cHook *hook_scr_notify;
-cHook *hook_sys_quit;
-cHook *hook_sv_masterheartbeat;
-cHook *hook_sv_verifyiwds_f;
-cHook *hook_touch_item_auto;
-cHook *hook_updateipbans;
-cHook *hook_vm_notify;
+cHook *hook_FS_RegisterDvars;
+cHook *hook_G_FreeEntity;
+cHook *hook_G_InitGentity;
+cHook *hook_G_ProcessIPBans;
+cHook *hook_G_RunFrame;
+cHook *hook_G_TempEntity;
+cHook *hook_G_TryPushingEntity;
+cHook *hook_GScr_LoadConsts;
+cHook *hook_GScr_LoadGameTypeScript;
+cHook *hook_PlayerCmd_ClonePlayer;
+cHook *hook_PM_BeginWeaponChange;
+cHook *hook_Pmove;
+cHook *hook_Scr_DumpScriptThreads;
+cHook *hook_Scr_ExecEntThread;
+cHook *hook_Scr_ExecThread;
+cHook *hook_Scr_InitOpcodeLookup;
+cHook *hook_Scr_Notify;
+cHook *hook_SV_ClientThink;
+cHook *hook_SV_MasterHeartbeat;
+cHook *hook_SV_VerifyIwds_f;
+cHook *hook_Sys_Print;
+cHook *hook_Sys_Quit;
+cHook *hook_Touch_Item_Auto;
+cHook *hook_UpdateIPBans;
+cHook *hook_VM_Notify;
 
 // Stock callbacks
 int codecallback_startgametype = 0;
@@ -338,11 +338,11 @@ void custom_Com_InitDvars(void)
 	 Hunk_AllocateTempMemory failures */
 	com_hunkMegs = Dvar_RegisterInt("com_hunkMegs", 160, 1, 512, DVAR_CHANGEABLE_RESET | DVAR_LATCH | DVAR_SYSTEMINFO | DVAR_ARCHIVE);
 
-	hook_com_initdvars->unhook();
+	hook_Com_InitDvars->unhook();
 	void (*Com_InitDvars)(void);
-	*(int *)&Com_InitDvars = hook_com_initdvars->from;
+	*(int *)&Com_InitDvars = hook_Com_InitDvars->from;
 	Com_InitDvars();
-	hook_com_initdvars->hook();
+	hook_Com_InitDvars->hook();
 
 	// Get references to early loaded stock dvars
 	cl_paused = Dvar_FindVar("cl_paused");
@@ -460,11 +460,11 @@ qboolean custom_FS_RegisterDvars(void)
 {
 	int ret;
 
-	hook_fs_registerdvars->unhook();
+	hook_FS_RegisterDvars->unhook();
 	qboolean (*FS_RegisterDvars)(void);
-	*(int *)&FS_RegisterDvars = hook_fs_registerdvars->from;
+	*(int *)&FS_RegisterDvars = hook_FS_RegisterDvars->from;
 	ret = FS_RegisterDvars();
-	hook_fs_registerdvars->hook();
+	hook_FS_RegisterDvars->hook();
 
 	// Get references to file system dvars
 	fs_debug = Dvar_FindVar("fs_debug");
@@ -493,11 +493,11 @@ void custom_G_ProcessIPBans(void)
 	player_meleeRange = Dvar_FindVar("player_meleeRange");
 	player_meleeWidth = Dvar_FindVar("player_meleeWidth");
 
-	hook_g_processipbans->unhook();
+	hook_G_ProcessIPBans->unhook();
 	void (*G_ProcessIPBans)(void);
-	*(int *)&G_ProcessIPBans = hook_g_processipbans->from;
+	*(int *)&G_ProcessIPBans = hook_G_ProcessIPBans->from;
 	G_ProcessIPBans();
-	hook_g_processipbans->hook();
+	hook_G_ProcessIPBans->hook();
 }
 
 customStringIndex_t custom_scr_const;
@@ -522,11 +522,11 @@ void custom_GScr_LoadConsts(void)
 	custom_scr_const.title = GScr_AllocString("title");
 	custom_scr_const.trigger_radius = GScr_AllocString("trigger_radius");
 
-	hook_gscr_loadconsts->unhook();
+	hook_GScr_LoadConsts->unhook();
 	void (*GScr_LoadConsts)(void);
-	*(int *)&GScr_LoadConsts = hook_gscr_loadconsts->from;
+	*(int *)&GScr_LoadConsts = hook_GScr_LoadConsts->from;
 	GScr_LoadConsts();
-	hook_gscr_loadconsts->hook();
+	hook_GScr_LoadConsts->hook();
 }
 
 void custom_Dvar_SetFromStringFromSource(dvar_t *dvar, const char *string, DvarSetSource source)
@@ -568,11 +568,11 @@ void hook_bad_printf(const char *format, ...) {}
 
 void custom_UpdateIPBans(void)
 {
-	hook_updateipbans->unhook();
+	hook_UpdateIPBans->unhook();
 	void (*UpdateIPBans)(void);
-	*(int *)&UpdateIPBans = hook_updateipbans->from;
+	*(int *)&UpdateIPBans = hook_UpdateIPBans->from;
 	UpdateIPBans();
-	hook_updateipbans->hook();
+	hook_UpdateIPBans->hook();
 
 	int i, j;
 	client_t *cl;
@@ -590,7 +590,7 @@ void custom_UpdateIPBans(void)
 			(customPlayerState[i].realAddress.ip[3] << 24) + 
 			(customPlayerState[i].realAddress.ip[2] << 16) + 
 			(customPlayerState[i].realAddress.ip[1] << 8) + 
-			customPlayerState[i].realAddress.ip[0]; 
+			customPlayerState[i].realAddress.ip[0];
 
 			if ( ip == ipFilterList->ipFilters[j].compare )
 			{
@@ -668,11 +668,11 @@ const char * custom_ClientConnect(unsigned int clientNum, unsigned int scriptPer
 		{
 			for ( int i = 0; i < ipFilterList->numIPFilters; i++ )
 			{
-				unsigned int ip = 
+				unsigned int ip =
 				(customPlayerState[clientNum].realAddress.ip[3] << 24) + 
 				(customPlayerState[clientNum].realAddress.ip[2] << 16) + 
 				(customPlayerState[clientNum].realAddress.ip[1] << 8) + 
-				customPlayerState[clientNum].realAddress.ip[0]; 
+				customPlayerState[clientNum].realAddress.ip[0];
 
 				if ( ip == ipFilterList->ipFilters[i].compare )
 				{
@@ -895,7 +895,7 @@ void custom_SV_SpawnServer(char *server)
 	Com_Printf("------ Server Initialization ------\n");
 	Com_Printf("Server: %s\n", server);
 
-	hook_developer_prints->hook(); // New
+	hook_Com_DPrintf->hook(); // New
 
 	SV_ClearServer();
 
@@ -1200,11 +1200,11 @@ void custom_Sys_Quit(void)
 	SV_ShutdownProxies();
 
 	// Continue exit routines
-	hook_sys_quit->unhook();
+	hook_Sys_Quit->unhook();
 	void (*Sys_Quit)(void);
-	*(int *)&Sys_Quit = hook_sys_quit->from;
+	*(int *)&Sys_Quit = hook_Sys_Quit->from;
 	Sys_Quit();
-	hook_sys_quit->hook();
+	hook_Sys_Quit->hook();
 }
 
 void custom_SV_DirectConnect(netadr_t from)
@@ -1491,11 +1491,11 @@ void custom_SV_MasterHeartbeat(const char *hbname)
 		Com_DPrintf("Enabled heartbeat logging\n");
 	}
 
-	hook_sv_masterheartbeat->unhook();
+	hook_SV_MasterHeartbeat->unhook();
 	void (*SV_MasterHeartbeat)(const char *hbname);
-	*(int *)&SV_MasterHeartbeat = hook_sv_masterheartbeat->from;
+	*(int *)&SV_MasterHeartbeat = hook_SV_MasterHeartbeat->from;
 	SV_MasterHeartbeat(hbname);
-	hook_sv_masterheartbeat->hook();
+	hook_SV_MasterHeartbeat->hook();
 }
 
 int custom_GScr_LoadGameTypeScript()
@@ -1503,11 +1503,11 @@ int custom_GScr_LoadGameTypeScript()
 	unsigned int i;
 	char path_for_cb[512] = "maps/mp/gametypes/_callbacksetup";
 
-	hook_gametype_scripts->unhook();
+	hook_GScr_LoadGameTypeScript->unhook();
 	int (*GScr_LoadGameTypeScript)();
-	*(int *)&GScr_LoadGameTypeScript = hook_gametype_scripts->from;
+	*(int *)&GScr_LoadGameTypeScript = hook_GScr_LoadGameTypeScript->from;
 	int ret = GScr_LoadGameTypeScript();
-	hook_gametype_scripts->hook();
+	hook_GScr_LoadGameTypeScript->hook();
 
 	if ( strlen(fs_callbacks->current.string) )
 		strncpy(path_for_cb, fs_callbacks->current.string, sizeof(path_for_cb));
@@ -1759,10 +1759,10 @@ qboolean custom_StuckInClient(gentity_t *self)
 
 gentity_t * custom_fire_grenade(gentity_t *attacker, vec3_t start, vec3_t dir, int weaponIndex, int fuseTime)
 {
+	gentity_t *grenade;
+
 	hook_fire_grenade->unhook();
-	gentity_t* (*fire_grenade)(gentity_t *attacker, vec3_t start, vec3_t dir, int weaponIndex, int fuseTime);
-	*(int *)&fire_grenade = hook_fire_grenade->from;
-	gentity_t* grenade = fire_grenade(attacker, start, dir, weaponIndex, fuseTime);
+	grenade = fire_grenade(attacker, start, dir, weaponIndex, fuseTime);
 	hook_fire_grenade->hook();
 
 	if ( codecallback_fire_grenade && Scr_IsSystemActive() )
@@ -2070,9 +2070,9 @@ void custom_Touch_Item_Auto(gentity_t * item, gentity_t * entity, int touch)
 	if ( customPlayerState[entity->client->ps.clientNum].noPickup )
 		return;
 	
-	hook_touch_item_auto->unhook();
+	hook_Touch_Item_Auto->unhook();
 	Touch_Item_Auto(item, entity, touch);
-	hook_touch_item_auto->hook();
+	hook_Touch_Item_Auto->hook();
 }
 
 void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
@@ -2248,23 +2248,22 @@ void custom_G_AddEvent(gentity_t *ent, int event, int eventParm)
 
 gentity_t * custom_G_TempEntity(vec3_t origin, int event)
 {
-	hook_g_tempentity->unhook();
-
-	gentity_t* (*sig)(vec3_t origin, int event);
-	*(int *)&sig = hook_g_tempentity->from;
+	gentity_t* tempEntity;
 
 	if ( g_debugEvents->current.boolean )
 		Com_DPrintf("G_TempEntity() event %26s at (%f,%f,%f)\n", *(&entity_event_names + event), origin[0], origin[1], origin[2]);
 
+	hook_G_TempEntity->unhook();
+	gentity_t* (*sig)(vec3_t origin, int event);
+	*(int *)&sig = hook_G_TempEntity->from;
 	/* Filter example:
 	if (event == EV_PLAY_FX)
 		event = EV_NONE;
 	 Note: This can cause script runtime errors (or worse) on some events,
 	 e.g., when using the obituary function, due to (then) undefined
 	 parameters */
-	gentity_t* tempEntity = sig(origin, event);
-
-	hook_g_tempentity->hook();
+	tempEntity = sig(origin, event);
+	hook_G_TempEntity->hook();
 
 	return tempEntity;
 }
@@ -3211,14 +3210,14 @@ void custom_SV_SendClientGameState(client_t *client)
 	data = LargeLocalGetBuf(&buf);
 	while ( client->state != CS_FREE && client->netchan.unsentFragments )
 		SV_Netchan_TransmitNextFragment(&client->netchan);
-	
+
  	Com_DPrintf("SV_SendClientGameState() for %s\n", client->name);
 	Com_DPrintf("Going from CS_CONNECTED to CS_PRIMED for %s\n", client->name);
-	
+
 	client->state = CS_PRIMED;
 	client->pureAuthentic = 0;
 	client->gamestateMessageNum = client->netchan.outgoingSequence;
-	
+
 	/* New code start: libcod client state */
 
 	// Save relevant data before clearing custom player state
@@ -3699,9 +3698,9 @@ void custom_SV_VerifyIwds_f(client_t *cl)
 	{
 		if ( sv_verifyIwds->current.boolean )
 		{
-			hook_sv_verifyiwds_f->unhook();
+			hook_SV_VerifyIwds_f->unhook();
 			SV_VerifyIwds_f(cl);
-			hook_sv_verifyiwds_f->hook();
+			hook_SV_VerifyIwds_f->hook();
 		}
 		else
 		{
@@ -3873,9 +3872,9 @@ void hook_RuntimeError_in_VM_Execute(const char *pos, int error_index, const cha
 
 void custom_SV_ClientThink(client_t *cl, usercmd_t *ucmd)
 {
-	hook_play_movement->unhook();
+	hook_SV_ClientThink->unhook();
 	SV_ClientThink(cl, ucmd);
-	hook_play_movement->hook();
+	hook_SV_ClientThink->hook();
 
 	int clientnum = cl - svs.clients;
 
@@ -4022,11 +4021,11 @@ void custom_SV_ClientThink(client_t *cl, usercmd_t *ucmd)
 
 int custom_ClientEndFrame(gentity_t *ent)
 {
-	hook_clientendframe->unhook();
+	hook_ClientEndFrame->unhook();
 	int (*ClientEndFrame)(gentity_t *ent);
-	*(int *)&ClientEndFrame = hook_clientendframe->from;
+	*(int *)&ClientEndFrame = hook_ClientEndFrame->from;
 	int ret = ClientEndFrame(ent);
-	hook_clientendframe->hook();
+	hook_ClientEndFrame->hook();
 
 	if ( ent->client->sess.sessionState == STATE_PLAYING )
 	{
@@ -4053,19 +4052,16 @@ int custom_ClientEndFrame(gentity_t *ent)
 
 int custom_BG_PlayAnim(playerState_t *ps, int animNum, animBodyPart_t bodyPart, int forceDuration, qboolean setTimer, qboolean isContinue, qboolean force)
 {
-	hook_bg_playanim->unhook();
-
-	int (*BG_PlayAnim)(playerState_t *ps, int animNum, animBodyPart_t bodyPart, int forceDuration, qboolean setTimer, qboolean isContinue, qboolean force);
-	*(int *)&BG_PlayAnim = hook_bg_playanim->from;
-
 	int duration;
 
+	hook_BG_PlayAnim->unhook();
+	int (*BG_PlayAnim)(playerState_t *ps, int animNum, animBodyPart_t bodyPart, int forceDuration, qboolean setTimer, qboolean isContinue, qboolean force);
+	*(int *)&BG_PlayAnim = hook_BG_PlayAnim->from;
 	if ( !customPlayerState[ps->clientNum].animation )
 		duration = BG_PlayAnim(ps, animNum, bodyPart, forceDuration, setTimer, isContinue, force);
 	else
 		duration = BG_PlayAnim(ps, customPlayerState[ps->clientNum].animation, bodyPart, forceDuration, qtrue, isContinue, qtrue);
-
-	hook_bg_playanim->hook();
+	hook_BG_PlayAnim->hook();
 
 	return duration;
 }
@@ -4865,38 +4861,34 @@ void custom_GScr_LoadLevelScript()
 
 void custom_Scr_InitOpcodeLookup()
 {
-	hook_init_opcode->unhook();
-	
-	void (*GE_Scr_InitOpcodeLookup)();
-	*(int *)&GE_Scr_InitOpcodeLookup = hook_init_opcode->from;
-	
 	scrVarPub_t *vars = &scrVarPub;
-	
+
 	vars->developer = 1;
-	GE_Scr_InitOpcodeLookup();
-	
+
+	hook_Scr_InitOpcodeLookup->unhook();
+	void (*Scr_InitOpcodeLookup)();
+	*(int *)&Scr_InitOpcodeLookup = hook_Scr_InitOpcodeLookup->from;
+	Scr_InitOpcodeLookup();
+	hook_Scr_InitOpcodeLookup->hook();
+
 	if ( !developer->current.integer )
 		vars->developer = 0;
-	
-	hook_init_opcode->hook();
 }
 
 void custom_AddOpcodePos(int a1, int a2)
 {
-	hook_add_opcode->unhook();
-	
-	void (*AddOpcodePos)(int, int);
-	*(int *)&AddOpcodePos = hook_add_opcode->from;
-	
 	scrVarPub_t *vars = &scrVarPub;
-	
+
 	vars->developer = 1;
-	AddOpcodePos(a1, a2);
-	
+
+	hook_AddOpcodePos->unhook();
+	void (*AddOpcodePos)(int, int);
+	*(int *)&AddOpcodePos = hook_AddOpcodePos->from;
+	AddOpcodePos(a1, a2);	
+	hook_AddOpcodePos->hook();
+
 	if ( !developer->current.integer )
 		vars->developer = 0;
-	
-	hook_add_opcode->hook();
 }
 
 void custom_Scr_PrintPrevCodePos(conChannel_t channel, const char *codePos, unsigned int index)
@@ -4940,7 +4932,7 @@ void custom_Scr_PrintPrevCodePos(conChannel_t channel, const char *codePos, unsi
 	}
 }
 
-void hook_Sys_Print(const char *msg)
+void custom_Sys_Print(const char *msg)
 {
 	if ( Scr_IsSystemActive() && con_coloredPrints->current.boolean )
 	{
@@ -4948,9 +4940,9 @@ void hook_Sys_Print(const char *msg)
 	}
 	else
 	{
-		hook_console_print->unhook();
+		hook_Sys_Print->unhook();
 		Sys_Print(msg);
-		hook_console_print->hook();
+		hook_Sys_Print->hook();
 	}
 }
 
@@ -5282,9 +5274,9 @@ void custom_G_RunFrame(int levelTime)
 	int i, j;
 	client_t *client = svs.clients;
 	
-	hook_g_runframe->unhook();
+	hook_G_RunFrame->unhook();
 	void (*G_RunFrame)(int levelTime);
-	*(int *)&G_RunFrame = hook_g_runframe->from;
+	*(int *)&G_RunFrame = hook_G_RunFrame->from;
 
 	// Warn about server lag
 	if ( codecallback_hitchwarning && hitchFrameTime && Scr_IsSystemActive() )
@@ -5457,7 +5449,7 @@ void custom_G_RunFrame(int levelTime)
 	}
 
 	G_RunFrame(levelTime);
-	hook_g_runframe->hook();
+	hook_G_RunFrame->hook();
 }
 
 void custom_SV_ArchiveSnapshot(void)
@@ -6421,10 +6413,7 @@ LAB_08121ee6:
 void custom_PlayerCmd_ClonePlayer(scr_entref_t entref)
 {
 	int id = entref.entnum;
-
-	hook_playercmd_cloneplayer->unhook();
-	void (*PlayerCmd_ClonePlayer)(scr_entref_t entref);
-	*(int *)&PlayerCmd_ClonePlayer = hook_playercmd_cloneplayer->from;
+	gentity_t *entity = &g_entities[id];
 
 	if ( id >= MAX_CLIENTS )
 	{
@@ -6433,7 +6422,10 @@ void custom_PlayerCmd_ClonePlayer(scr_entref_t entref)
 		return;
 	}
 
-	gentity_t *entity = &g_entities[id];
+	hook_PlayerCmd_ClonePlayer->unhook();
+	void (*PlayerCmd_ClonePlayer)(scr_entref_t entref);
+	*(int *)&PlayerCmd_ClonePlayer = hook_PlayerCmd_ClonePlayer->from;
+
 	if ( !Com_GetServerDObj((entity->client->ps).clientNum) )
 	{
 		stackPushUndefined();
@@ -6443,7 +6435,7 @@ void custom_PlayerCmd_ClonePlayer(scr_entref_t entref)
 		PlayerCmd_ClonePlayer(entref);
 	}
 
-	hook_playercmd_cloneplayer->hook();
+	hook_PlayerCmd_ClonePlayer->hook();
 }
 
 void custom_player_die(gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, meansOfDeath_t meansOfDeath, int iWeapon, const float *vDir, hitLocation_t hitLoc, int psTimeOffset)
@@ -6820,9 +6812,9 @@ void custom_PlayerCmd_Suicide(scr_entref_t entref)
 
 void custom_PM_BeginWeaponChange(playerState_t *ps, unsigned int newweapon)
 {
-	hook_pm_beginweaponchange->unhook();
+	hook_PM_BeginWeaponChange->unhook();
 	void (*PM_BeginWeaponChange)(playerState_t *ps, unsigned int newweapon);
-	*(int *)&PM_BeginWeaponChange = hook_pm_beginweaponchange->from;
+	*(int *)&PM_BeginWeaponChange = hook_PM_BeginWeaponChange->from;
 
 	/* New code start: CodeCallback_WeaponChange */
 	if ( codecallback_weapon_change && newweapon != customPlayerState[ps->clientNum].weapon && Scr_IsSystemActive() )
@@ -6835,8 +6827,7 @@ void custom_PM_BeginWeaponChange(playerState_t *ps, unsigned int newweapon)
 	/* New code end */
 
 	PM_BeginWeaponChange(ps, newweapon);
-
-	hook_pm_beginweaponchange->hook();
+	hook_PM_BeginWeaponChange->hook();
 }
 
 void custom_Scr_BulletTrace(void)
@@ -7274,11 +7265,11 @@ void custom_VM_Notify(unsigned int entId, unsigned int constString, VariableValu
 	if ( codecallback_notifydebug )
 		Scr_QueueNotifyDebugForCallback(entId, constString, arguments);
 
-	hook_vm_notify->unhook();
+	hook_VM_Notify->unhook();
 	void (*VM_Notify)(unsigned int entId, unsigned int constString, VariableValue *arguments);
-	*(int *)&VM_Notify = hook_vm_notify->from;
+	*(int *)&VM_Notify = hook_VM_Notify->from;
 	VM_Notify(entId, constString, arguments);
-	hook_vm_notify->hook();
+	hook_VM_Notify->hook();
 }
 
 void custom_Scr_Notify(gentity_t *ent, unsigned short constString, unsigned int numArgs)
@@ -7319,9 +7310,9 @@ void custom_Scr_Notify(gentity_t *ent, unsigned short constString, unsigned int 
 		}
 	}
 
-	hook_scr_notify->unhook();
+	hook_Scr_Notify->unhook();
 	void (*Scr_Notify)(gentity_t *ent, unsigned short constString, unsigned int numArgs);
-	*(int *)&Scr_Notify = hook_scr_notify->from;
+	*(int *)&Scr_Notify = hook_Scr_Notify->from;
 	// Execute Scr_Notify -> Scr_NotifyNum -> VM_Notify
 	Scr_Notify(ent, constString, numArgs);
 
@@ -7350,7 +7341,7 @@ void custom_Scr_Notify(gentity_t *ent, unsigned short constString, unsigned int 
 		Scr_FreeThread(ret);
 	}
 	
-	hook_scr_notify->hook();
+	hook_Scr_Notify->hook();
 }
 
 void G_UpdateSingleObjective(objective_t *from, objective_t *to)
@@ -8283,11 +8274,11 @@ void custom_G_InitGentity(gentity_t *ent)
 {
 	memset(&customEntityState[(ent->s).number], 0, sizeof(customEntityState_t));
 
-	hook_g_initgentity->unhook();
+	hook_G_InitGentity->unhook();
 	void (*G_InitGentity)(gentity_t *ent);
-	*(int *)&G_InitGentity = hook_g_initgentity->from;
+	*(int *)&G_InitGentity = hook_G_InitGentity->from;
 	G_InitGentity(ent);
-	hook_g_initgentity->hook();
+	hook_G_InitGentity->hook();
 }
 
 void custom_G_FreeEntity(gentity_t *ent)
@@ -8295,11 +8286,11 @@ void custom_G_FreeEntity(gentity_t *ent)
 	// Find out from where ent is freed:
 	//Com_Printf(">>> G_FreeEntity for entity %d from %p\n", (ent->s).number, __builtin_return_address(0));
 
-	hook_g_freeentity->unhook();
+	hook_G_FreeEntity->unhook();
 	void (*G_FreeEntity)(gentity_t *ent);
-	*(int *)&G_FreeEntity = hook_g_freeentity->from;
+	*(int *)&G_FreeEntity = hook_G_FreeEntity->from;
 	G_FreeEntity(ent);
-	hook_g_freeentity->hook();
+	hook_G_FreeEntity->hook();
 }
 
 qboolean G_BounceGravityModel(gentity_t *ent, trace_t *trace) // G_BounceMissile as base
@@ -8403,7 +8394,7 @@ void G_RunGravityModelWithBounce(gentity_t *ent) // G_RunMissile as base
 	if ( customEntityState[(ent->s).number].maxVelocity > 0.0 )
 	{
 		VectorSubtract(origin, (ent->r).currentOrigin, maxLerpVector);
-		VectorClampLength(maxLerpVector, customEntityState[(ent->s).number].maxVelocity / sv_fps->current.integer);
+		VectorClampLength(maxLerpVector, customEntityState[(ent->s).number].maxVelocity / (float)sv_fps->current.integer);
 		VectorAdd((ent->r).currentOrigin, maxLerpVector, origin);
 	}
 
@@ -8493,7 +8484,7 @@ void G_RunGravityModelNoBounce(gentity_t *ent) // G_RunItem as base
 		if ( customEntityState[(ent->s).number].maxVelocity > 0.0 )
 		{
 			VectorSubtract(origin, (ent->r).currentOrigin, maxLerpVector);
-			VectorClampLength(maxLerpVector, customEntityState[(ent->s).number].maxVelocity / sv_fps->current.integer);
+			VectorClampLength(maxLerpVector, customEntityState[(ent->s).number].maxVelocity / (float)sv_fps->current.integer);
 			VectorAdd((ent->r).currentOrigin, maxLerpVector, origin);
 		}
 
@@ -8824,11 +8815,11 @@ short custom_Scr_ExecEntThread(gentity_t *ent, int callbackHook, unsigned int nu
 	if ( g_debugCallbacks->current.boolean )
 		PrintCallbackInfo(ent, callbackHook, numArgs);
 
-	hook_scr_execentthread->unhook();
+	hook_Scr_ExecEntThread->unhook();
 	short (*Scr_ExecEntThread)(gentity_t *ent, int callbackHook, unsigned int numArgs);
-	*(int *)&Scr_ExecEntThread = hook_scr_execentthread->from;
+	*(int *)&Scr_ExecEntThread = hook_Scr_ExecEntThread->from;
 	short ret = Scr_ExecEntThread(ent, callbackHook, numArgs);
-	hook_scr_execentthread->hook();
+	hook_Scr_ExecEntThread->hook();
 
 	return ret;
 }
@@ -8838,11 +8829,11 @@ short custom_Scr_ExecThread(int callbackHook, unsigned int numArgs)
 	if ( g_debugCallbacks->current.boolean )
 		PrintCallbackInfo(NULL, callbackHook, numArgs);
 
-	hook_scr_execthread->unhook();
+	hook_Scr_ExecThread->unhook();
 	short (*Scr_ExecThread)(int callbackHook, unsigned int numArgs);
-	*(int *)&Scr_ExecThread = hook_scr_execthread->from;
+	*(int *)&Scr_ExecThread = hook_Scr_ExecThread->from;
 	short ret = Scr_ExecThread(callbackHook, numArgs);
-	hook_scr_execthread->hook();
+	hook_Scr_ExecThread->hook();
 
 	return ret;
 }
@@ -9591,11 +9582,11 @@ void custom_Pmove(pmove_t *pm)
 		playerMovementTrace = qtrue;
 	/* New code end */
 
-	hook_pmove->unhook();
+	hook_Pmove->unhook();
 	void (*Pmove)(pmove_t *pm);
-	*(int *)&Pmove = hook_pmove->from;
+	*(int *)&Pmove = hook_Pmove->from;
 	Pmove(pm);
-	hook_pmove->hook();
+	hook_Pmove->hook();
 
 	// New: (not)SolidForPlayer
 	if ( updateBrushModelContents )
@@ -9615,11 +9606,11 @@ void custom_Scr_DumpScriptThreads(void)
 	logTimestamps->current.boolean = 0;
 	/* New code end */
 
-	hook_scr_dumpscriptthreads->unhook();
+	hook_Scr_DumpScriptThreads->unhook();
 	void (*Scr_DumpScriptThreads)(void);
-	*(int *)&Scr_DumpScriptThreads = hook_scr_dumpscriptthreads->from;
+	*(int *)&Scr_DumpScriptThreads = hook_Scr_DumpScriptThreads->from;
 	Scr_DumpScriptThreads();
-	hook_scr_dumpscriptthreads->hook();
+	hook_Scr_DumpScriptThreads->hook();
 
 	logTimestamps->current.boolean = logTimestampsValue; // New
 }
@@ -9659,72 +9650,72 @@ public:
 		cracking_hook_call(0x080AD1FE, (int)hook_Com_MakeSoundAliasesPermanent);
 		cracking_hook_call(0x0811599A, (int)hook_SetExpFog_density_typo);
 
-		hook_gametype_scripts = new cHook(0x08110286, (int)custom_GScr_LoadGameTypeScript);
-		hook_gametype_scripts->hook();
+		hook_GScr_LoadGameTypeScript = new cHook(0x08110286, (int)custom_GScr_LoadGameTypeScript);
+		hook_GScr_LoadGameTypeScript->hook();
 
-		hook_developer_prints = new cHook(0x08060E3A, (int)custom_Com_DPrintf);
+		hook_Com_DPrintf = new cHook(0x08060E3A, (int)custom_Com_DPrintf);
 		#if COMPILE_UTILS == 1
-		hook_console_print = new cHook(0x080D4AE0, int(hook_Sys_Print));
-		hook_console_print->hook();
+		hook_Sys_Print = new cHook(0x080D4AE0, int(custom_Sys_Print));
+		hook_Sys_Print->hook();
 		#endif
 
-		hook_init_opcode = new cHook(0x080771DC, (int)custom_Scr_InitOpcodeLookup);
-		hook_init_opcode->hook();
-		hook_add_opcode = new cHook(0x080773D2, (int)custom_AddOpcodePos);
-		hook_add_opcode->hook();
+		hook_Scr_InitOpcodeLookup = new cHook(0x080771DC, (int)custom_Scr_InitOpcodeLookup);
+		hook_Scr_InitOpcodeLookup->hook();
+		hook_AddOpcodePos = new cHook(0x080773D2, (int)custom_AddOpcodePos);
+		hook_AddOpcodePos->hook();
 
 		hook_fire_grenade = new cHook(0x0810E68E, (int)custom_fire_grenade);
 		hook_fire_grenade->hook();
-		hook_touch_item_auto = new cHook(0x08105C80, int(custom_Touch_Item_Auto));
-		hook_touch_item_auto->hook();
-		hook_g_tempentity = new cHook(0x0811EFC4, (int)custom_G_TempEntity);
-		hook_g_tempentity->hook();
-		hook_gscr_loadconsts = new cHook(0x081224F8, (int)custom_GScr_LoadConsts);
-		hook_gscr_loadconsts->hook();
-		hook_sv_masterheartbeat = new cHook(0x08096ED6, (int)custom_SV_MasterHeartbeat);
-		hook_sv_masterheartbeat->hook();
-		hook_g_runframe = new cHook(0x0810A13A, (int)custom_G_RunFrame);
-		hook_g_runframe->hook();
-		hook_vm_notify = new cHook(0x0808359E, (int)custom_VM_Notify);
-		hook_vm_notify->hook();
-		hook_g_processipbans = new cHook(0x0811BB60, (int)custom_G_ProcessIPBans);
-		hook_g_processipbans->hook();
-		hook_scr_notify = new cHook(0x0811B2DE, (int)custom_Scr_Notify);
-		hook_scr_notify->hook();
-		hook_playercmd_cloneplayer = new cHook(0x080FCC76, (int)custom_PlayerCmd_ClonePlayer);
-		hook_playercmd_cloneplayer->hook();
-		hook_pm_beginweaponchange = new cHook(0x080EDC30, (int)custom_PM_BeginWeaponChange);
-		hook_pm_beginweaponchange->hook();
-		hook_com_initdvars = new cHook(0x08061D90, (int)custom_Com_InitDvars);
-		hook_com_initdvars->hook();
-		hook_sv_verifyiwds_f = new cHook(0x08090534, int(custom_SV_VerifyIwds_f));
-		hook_sv_verifyiwds_f->hook();
-		hook_g_freeentity = new cHook(0x0811EE50, int(custom_G_FreeEntity));
-		hook_g_freeentity->hook();
-		hook_g_initgentity = new cHook(0x0811E85C, int(custom_G_InitGentity));
-		hook_g_initgentity->hook();
-		hook_scr_execentthread = new cHook(0x0811B284, int(custom_Scr_ExecEntThread));
-		hook_scr_execentthread->hook();
-		hook_scr_execthread = new cHook(0x08083FD6, int(custom_Scr_ExecThread));
-		hook_scr_execthread->hook();
-		hook_sys_quit = new cHook(0x080D3A7A, int(custom_Sys_Quit));
-		hook_sys_quit->hook();
-		hook_fs_registerdvars = new cHook(0x080A2C3C, (int)custom_FS_RegisterDvars);
-		hook_fs_registerdvars->hook();
-		hook_pmove = new cHook(0x080E9464, (int)custom_Pmove);
-		hook_pmove->hook();
-		hook_scr_dumpscriptthreads = new cHook(0x0807A43E, (int)custom_Scr_DumpScriptThreads);
-		hook_scr_dumpscriptthreads->hook();
-		hook_updateipbans = new cHook(0x0811B9FE, (int)custom_UpdateIPBans);
-		hook_updateipbans->hook();
+		hook_Touch_Item_Auto = new cHook(0x08105C80, int(custom_Touch_Item_Auto));
+		hook_Touch_Item_Auto->hook();
+		hook_G_TempEntity = new cHook(0x0811EFC4, (int)custom_G_TempEntity);
+		hook_G_TempEntity->hook();
+		hook_GScr_LoadConsts = new cHook(0x081224F8, (int)custom_GScr_LoadConsts);
+		hook_GScr_LoadConsts->hook();
+		hook_SV_MasterHeartbeat = new cHook(0x08096ED6, (int)custom_SV_MasterHeartbeat);
+		hook_SV_MasterHeartbeat->hook();
+		hook_G_RunFrame = new cHook(0x0810A13A, (int)custom_G_RunFrame);
+		hook_G_RunFrame->hook();
+		hook_VM_Notify = new cHook(0x0808359E, (int)custom_VM_Notify);
+		hook_VM_Notify->hook();
+		hook_G_ProcessIPBans = new cHook(0x0811BB60, (int)custom_G_ProcessIPBans);
+		hook_G_ProcessIPBans->hook();
+		hook_Scr_Notify = new cHook(0x0811B2DE, (int)custom_Scr_Notify);
+		hook_Scr_Notify->hook();
+		hook_PlayerCmd_ClonePlayer = new cHook(0x080FCC76, (int)custom_PlayerCmd_ClonePlayer);
+		hook_PlayerCmd_ClonePlayer->hook();
+		hook_PM_BeginWeaponChange = new cHook(0x080EDC30, (int)custom_PM_BeginWeaponChange);
+		hook_PM_BeginWeaponChange->hook();
+		hook_Com_InitDvars = new cHook(0x08061D90, (int)custom_Com_InitDvars);
+		hook_Com_InitDvars->hook();
+		hook_SV_VerifyIwds_f = new cHook(0x08090534, int(custom_SV_VerifyIwds_f));
+		hook_SV_VerifyIwds_f->hook();
+		hook_G_FreeEntity = new cHook(0x0811EE50, int(custom_G_FreeEntity));
+		hook_G_FreeEntity->hook();
+		hook_G_InitGentity = new cHook(0x0811E85C, int(custom_G_InitGentity));
+		hook_G_InitGentity->hook();
+		hook_Scr_ExecEntThread = new cHook(0x0811B284, int(custom_Scr_ExecEntThread));
+		hook_Scr_ExecEntThread->hook();
+		hook_Scr_ExecThread = new cHook(0x08083FD6, int(custom_Scr_ExecThread));
+		hook_Scr_ExecThread->hook();
+		hook_Sys_Quit = new cHook(0x080D3A7A, int(custom_Sys_Quit));
+		hook_Sys_Quit->hook();
+		hook_FS_RegisterDvars = new cHook(0x080A2C3C, (int)custom_FS_RegisterDvars);
+		hook_FS_RegisterDvars->hook();
+		hook_Pmove = new cHook(0x080E9464, (int)custom_Pmove);
+		hook_Pmove->hook();
+		hook_Scr_DumpScriptThreads = new cHook(0x0807A43E, (int)custom_Scr_DumpScriptThreads);
+		hook_Scr_DumpScriptThreads->hook();
+		hook_UpdateIPBans = new cHook(0x0811B9FE, (int)custom_UpdateIPBans);
+		hook_UpdateIPBans->hook();
 
 		#if COMPILE_PLAYER == 1
-		hook_play_movement = new cHook(0x08090DAC, (int)custom_SV_ClientThink);
-		hook_play_movement->hook();
-		hook_clientendframe = new cHook(0x080F7516, (int)custom_ClientEndFrame);
-		hook_clientendframe->hook();
-		hook_bg_playanim = new cHook(0x080D90D6, (int)custom_BG_PlayAnim);
-		hook_bg_playanim->hook();
+		hook_SV_ClientThink = new cHook(0x08090DAC, (int)custom_SV_ClientThink);
+		hook_SV_ClientThink->hook();
+		hook_ClientEndFrame = new cHook(0x080F7516, (int)custom_ClientEndFrame);
+		hook_ClientEndFrame->hook();
+		hook_BG_PlayAnim = new cHook(0x080D90D6, (int)custom_BG_PlayAnim);
+		hook_BG_PlayAnim->hook();
 		#endif
 
 		cracking_hook_function(0x08105CAC, (int)custom_Touch_Item);
