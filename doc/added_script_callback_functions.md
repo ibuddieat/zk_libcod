@@ -4,6 +4,7 @@ Added script callback functions:
   * `CodeCallback_HitchWarning`
   * `CodeCallback_MapTurretsLoad`
   * `CodeCallback_MapWeaponsLoad`
+  * `CodeCallback_MoverBlockage`
   * `CodeCallback_Notify`
   * `CodeCallback_NotifyDebug`
   * `CodeCallback_Pickup`

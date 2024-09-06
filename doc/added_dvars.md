@@ -59,6 +59,10 @@ Added dvars:
     * Type: Boolean
     * Default: True
     * Effect: Toggle game logging of item pickup actions.
+  * `g_noMoverBlockage`
+    * Type: Boolean
+    * Default: False
+    * Effect: Defines whether mover entities (e.g., elevators) can be blocked by other entities. Related script callback function: `CodeCallback_MoverBlockage`.
   * `g_playerCollisionEjectDamageAllowed`
     * Type: Boolean
     * Default: False

@@ -97,6 +97,7 @@ dvar_t *g_forceRate;
 dvar_t *g_forceSnaps;
 dvar_t *g_logPickup;
 dvar_t *g_mantleBlockEnable;
+dvar_t *g_noMoverBlockage;
 dvar_t *g_playerCollision;
 dvar_t *g_playerCollisionEjectDamageAllowed;
 dvar_t *g_playerCollisionEjectDuration;
@@ -191,6 +192,7 @@ int codecallback_fire_grenade = 0;
 int codecallback_hitchwarning = 0;
 int codecallback_map_turrets_load = 0;
 int codecallback_map_weapons_load = 0;
+int codecallback_moverblockage = 0;
 int codecallback_notify = 0;
 int codecallback_notifydebug = 0;
 int codecallback_pickup = 0;
@@ -232,6 +234,7 @@ callback_t callbacks[] =
 	{ &codecallback_hitchwarning, "CodeCallback_HitchWarning"},
 	{ &codecallback_map_turrets_load, "CodeCallback_MapTurretsLoad"},
 	{ &codecallback_map_weapons_load, "CodeCallback_MapWeaponsLoad"},
+	{ &codecallback_moverblockage, "CodeCallback_MoverBlockage"},
 	{ &codecallback_notify, "CodeCallback_Notify"},
 	{ &codecallback_notifydebug, "CodeCallback_NotifyDebug"},
 	{ &codecallback_pickup, "CodeCallback_Pickup"},
@@ -418,6 +421,7 @@ void common_init_complete_print(const char *format, ...)
 	g_forceSnaps = Dvar_RegisterInt("g_forceSnaps", 0, 0, 30, DVAR_ARCHIVE);
 	g_logPickup = Dvar_RegisterBool("g_logPickup", qtrue, DVAR_ARCHIVE);
 	g_mantleBlockEnable = Dvar_RegisterBool("g_mantleBlockEnable", qtrue, DVAR_ARCHIVE);
+	g_noMoverBlockage = Dvar_RegisterBool("g_noMoverBlockage", qfalse, DVAR_ARCHIVE);
 	g_playerCollision = Dvar_RegisterBool("g_playerCollision", qtrue, DVAR_ARCHIVE);
 	g_playerCollisionEjectDamageAllowed = Dvar_RegisterBool("g_playerCollisionEjectDamageAllowed", qfalse, DVAR_ARCHIVE);
 	g_playerCollisionEjectDuration = Dvar_RegisterInt("g_playerCollisionEjectDuration", 300, 50, 1000, DVAR_ARCHIVE);
@@ -9615,6 +9619,34 @@ void custom_Scr_DumpScriptThreads(void)
 	logTimestamps->current.boolean = logTimestampsValue; // New
 }
 
+qboolean custom_G_TryPushingEntity(gentity_t *check, gentity_t *pusher, float *move, float *amove)
+{
+	hook_G_TryPushingEntity->unhook();
+	qboolean (*G_TryPushingEntity)(gentity_t *check, gentity_t *pusher, float *move, float *amove);
+	*(int *)&G_TryPushingEntity = hook_G_TryPushingEntity->from;
+	bool res = G_TryPushingEntity(check, pusher, move, amove);
+	hook_G_TryPushingEntity->hook();
+
+	/* New code start: Use g_noMoverBlockage dvar so that players cannot block
+	 movers (e.g., script brush model elevators). CodeCallback_MoverBlockage is
+	 a new script callback, triggered independently from g_noMoverBlockage dvar */
+	if ( !res )
+	{
+		if ( codecallback_moverblockage && Scr_IsSystemActive() )
+		{
+			Scr_AddEntity(pusher);
+			short ret = Scr_ExecEntThread(check, codecallback_moverblockage, 1);
+			Scr_FreeThread(ret);
+		}
+
+		if ( g_noMoverBlockage->current.boolean )
+			return true;
+	}
+	/* New code end */
+
+	return res;
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -9708,6 +9740,8 @@ public:
 		hook_Scr_DumpScriptThreads->hook();
 		hook_UpdateIPBans = new cHook(0x0811B9FE, (int)custom_UpdateIPBans);
 		hook_UpdateIPBans->hook();
+		hook_G_TryPushingEntity = new cHook(0x0810EF9C, (int)custom_G_TryPushingEntity);
+        hook_G_TryPushingEntity->hook();
 
 		#if COMPILE_PLAYER == 1
 		hook_SV_ClientThink = new cHook(0x08090DAC, (int)custom_SV_ClientThink);
