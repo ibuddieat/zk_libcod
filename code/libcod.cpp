@@ -3231,7 +3231,7 @@ void custom_SV_SendClientMessages(void)
 		 the sv_fps dvar */
 		if ( sv_fastDownload->current.boolean && cl->download && !cl->downloadingWWW )
 		{
-			// Experimental value with good results, simulating sv_fps 160
+			// Experimental value with good results, simulating sv_fps 180
 			for ( int j = 0; j < 1 + ((sv_fps->current.integer / 20) * MAX_DOWNLOAD_WINDOW); j++ )
 			{
 				while ( cl->netchan.unsentFragments )
@@ -3329,8 +3329,8 @@ void custom_SV_SendMessageToClient(msg_t *msg, client_t *client)
 	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageAcked = -1;
 	SV_Netchan_Transmit(client, data, compressedSize);
 
-	// New: Allow direct download speed above 20 kb/s
-	if ( client->netchan.remoteAddress.type == NA_LOOPBACK || Sys_IsLANAddress(client->netchan.remoteAddress) || (client->download && !client->downloadingWWW) )
+	// New: Allow direct download speed above 20 kb/s via sv_fastDownload dvar
+	if ( client->netchan.remoteAddress.type == NA_LOOPBACK || Sys_IsLANAddress(client->netchan.remoteAddress) || (sv_fastDownload->current.boolean && client->download && !client->downloadingWWW) )
 	{
 		client->nextSnapshotTime = svs.time - 1;
 		LargeLocalDestructor(&buf);
