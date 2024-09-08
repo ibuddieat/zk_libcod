@@ -5131,7 +5131,7 @@ void custom_Com_DPrintf(const char *format, ...)
 	Q_vsnprintf(s, sizeof(s), format, va);
 	va_end(va);
 
-	if ( codecallback_dprintf && Scr_IsSystemActive() )
+	if ( codecallback_dprintf && Scr_IsSystemActive() && Sys_IsMainThread() )
 	{
 		stackPushString(s);
 		short ret = Scr_ExecThread(codecallback_dprintf, 1);

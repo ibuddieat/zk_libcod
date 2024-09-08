@@ -87,6 +87,9 @@ static const Sys_GetValue_t Sys_GetValue = (Sys_GetValue_t)0x080D6BC0;
 typedef qboolean (*Sys_IsLANAddress_t)(netadr_t adr);
 static const Sys_IsLANAddress_t Sys_IsLANAddress = (Sys_IsLANAddress_t)0x080D5638;
 
+typedef bool (*Sys_IsMainThread_t)(void);
+static const Sys_IsMainThread_t Sys_IsMainThread = (Sys_IsMainThread_t)0x080D6B88;
+
 typedef qboolean (*Sys_StringToSockaddr_t)(const char *s, struct sockaddr_in *sadr);
 static const Sys_StringToSockaddr_t Sys_StringToSockaddr = (Sys_StringToSockaddr_t)0x080D5254;
 
