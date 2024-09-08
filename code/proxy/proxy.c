@@ -36,6 +36,7 @@ dvar_t *sv_proxyForwardAddress_1_0;
 dvar_t *sv_proxyForwardAddress_1_2;
 dvar_t *sv_proxyForwardAddress_1_3;
 
+extern dvar_t *com_sv_running;
 extern dvar_t *fs_game;
 extern dvar_t *net_ip;
 extern dvar_t *net_port;
@@ -537,7 +538,7 @@ void * SV_StartProxy(void *threadArgs)
 				clientThreadInfo[clientIndex] = t_info;
 				proxy->numClients++;
 
-				if ( activeClient )
+				if ( activeClient && com_sv_running->current.boolean )
 					Com_DPrintf("Proxy: Client connecting from %s:%d\n", client_ip, ntohs(addr.sin_port));
 
 				sendto(s_client, buffer, bytes_received, 0, (struct sockaddr *)&forwarderAddr, sizeof(forwarderAddr));
@@ -596,6 +597,9 @@ void * SV_ProxyMasterServerLoop(void *threadArgs)
 
 	while ( 1 )
 	{
+		while ( !com_sv_running->current.boolean )
+			sleep(1);
+
 		if ( sv_logHeartbeats->current.boolean )
 			Com_Printf("Sending proxy heartbeat to %s for version %s\n", sv_masterServer->current.string, proxy->versionString);
 
@@ -693,7 +697,7 @@ void * SV_ProxyClientThread(void *threadArgs)
 			Com_DPrintf("Proxy: Error on sendto when forwarding packets to client\n");
 	}
 
-	if ( strlen(client_ip) && args->activeClient )
+	if ( strlen(client_ip) && args->activeClient && com_sv_running->current.boolean )
 		Com_DPrintf("Proxy: Client connection released for %s:%d\n", client_ip, ntohs(args->addr.sin_port));
 
 	pthread_mutex_lock(&proxy->lock);
