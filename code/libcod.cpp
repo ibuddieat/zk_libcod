@@ -6995,8 +6995,10 @@ void custom_PM_BeginWeaponChange(playerState_t *ps, unsigned int newweapon)
 	/* New code start: CodeCallback_WeaponChange */
 	if ( codecallback_weapon_change && newweapon != customPlayerState[ps->clientNum].weapon && Scr_IsSystemActive() )
 	{
+		WeaponDef_t *def = BG_WeaponDefs(newweapon);
+		stackPushString(def->szInternalName);
 		stackPushInt(newweapon);
-		short ret = Scr_ExecEntThread(&g_entities[ps->clientNum], codecallback_weapon_change, 1);
+		short ret = Scr_ExecEntThread(&g_entities[ps->clientNum], codecallback_weapon_change, 2);
 		Scr_FreeThread(ret);
 	}
 	customPlayerState[ps->clientNum].weapon = newweapon;
