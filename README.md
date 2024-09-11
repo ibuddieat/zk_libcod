@@ -35,6 +35,7 @@ The extension requires the [server binary for game version 1.3](cod2_lnxded) to 
 ## 💡 Knowledge base
 - [Build and use](doc/building.md)
 - [Known issues and debugging](doc/debugging.md)
+- [Tuning and performance](doc/tuning.md)
 
 ### 🤝 Acknowledgements
 - IzNoGoD for feedback, testing and further ideas
