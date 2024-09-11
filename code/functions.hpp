@@ -1173,6 +1173,9 @@ static const Player_GetItemCursorHint_t Player_GetItemCursorHint = (Player_GetIt
 typedef int (*Player_GetUseList_t)(gentity_t *player, useList_t *useList);
 static const Player_GetUseList_t Player_GetUseList = (Player_GetUseList_t)0x08121494;
 
+typedef void (*Player_UpdateLookAtEntity_t)(gentity_t *player);
+static const Player_UpdateLookAtEntity_t Player_UpdateLookAtEntity = (Player_UpdateLookAtEntity_t)0x0812200A;
+
 typedef void (*Player_SetTurretDropHint_t)(gentity_t *player);
 static const Player_SetTurretDropHint_t Player_SetTurretDropHint = (Player_SetTurretDropHint_t)0x08121B36;
 

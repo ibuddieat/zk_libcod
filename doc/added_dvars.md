@@ -189,6 +189,10 @@ Added dvars:
     * Type: Boolean
     * Default: False
     * Effect: Enable this for higher direct download speeds. Does not affect HTTP-based downloads. Currently considered experimental.
+  * `sv_isLookingAtOnDemand`
+    * Type: Boolean
+    * Default: False
+    * Effect: Enable this if you expect only a few calls (less than one per player per server frame) to the stock `IsLookingAt` script method during runtime, to improve server performance.
   * `sv_kickGamestateLimitedClients`
     * Type: Boolean
     * Default: True

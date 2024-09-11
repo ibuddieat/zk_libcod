@@ -132,6 +132,7 @@ dvar_t *sv_downloadMessageAtMap;
 dvar_t *sv_downloadMessageForLegacyClients;
 dvar_t *sv_downloadNotifications;
 dvar_t *sv_fastDownload;
+dvar_t *sv_isLookingAtOnDemand;
 dvar_t *sv_kickGamestateLimitedClients;
 dvar_t *sv_kickMessages;
 dvar_t *sv_limitLocalRcon;
@@ -162,6 +163,7 @@ cHook *hook_G_TempEntity;
 cHook *hook_G_TryPushingEntity;
 cHook *hook_GScr_LoadConsts;
 cHook *hook_GScr_LoadGameTypeScript;
+cHook *hook_Player_UpdateLookAtEntity;
 cHook *hook_PlayerCmd_ClonePlayer;
 cHook *hook_PM_BeginWeaponChange;
 cHook *hook_Pmove;
@@ -450,6 +452,7 @@ void common_init_complete_print(const char *format, ...)
 	sv_downloadMessageForLegacyClients = Dvar_RegisterString("sv_downloadMessageForLegacyClients", "", DVAR_ARCHIVE);
 	sv_downloadNotifications = Dvar_RegisterBool("sv_downloadNotifications", qfalse, DVAR_ARCHIVE);
 	sv_fastDownload = Dvar_RegisterBool("sv_fastDownload", qfalse, DVAR_ARCHIVE);
+	sv_isLookingAtOnDemand = Dvar_RegisterBool("sv_isLookingAtOnDemand", qfalse, DVAR_ARCHIVE);
 	sv_kickGamestateLimitedClients = Dvar_RegisterBool("sv_kickGamestateLimitedClients", qtrue, DVAR_ARCHIVE);
 	sv_kickMessages = Dvar_RegisterBool("sv_kickMessages", qtrue, DVAR_ARCHIVE);
 	sv_limitLocalRcon = Dvar_RegisterBool("sv_limitLocalRcon", qtrue, DVAR_ARCHIVE);
@@ -7008,6 +7011,47 @@ void custom_PM_BeginWeaponChange(playerState_t *ps, unsigned int newweapon)
 	hook_PM_BeginWeaponChange->hook();
 }
 
+void custom_Player_UpdateLookAtEntity(gentity_t *player)
+{
+	hook_Player_UpdateLookAtEntity->unhook();
+
+	// New: sv_isLookingAtOnDemand dvar
+	if ( !sv_isLookingAtOnDemand->current.boolean )
+		Player_UpdateLookAtEntity(player);
+
+	hook_Player_UpdateLookAtEntity->hook();
+}
+
+void custom_ScrCmd_IsLookingAt(scr_entref_t entref)
+{
+	gentity_t *pSelf;
+	gentity_t *pOther;
+
+	if ( entref.classnum )
+	{
+		Scr_ObjectError("not an entity");
+		pSelf = 0;
+	}
+	else
+	{
+		pSelf = &g_entities[entref.entnum];
+
+		if ( !pSelf->client )
+		{
+			Scr_ObjectError(va("entity %i is not a player", entref.entnum));
+		}
+	}
+
+	pOther = Scr_GetEntity(0);
+
+	/* New code start: sv_isLookingAtOnDemand dvar */
+	if ( sv_isLookingAtOnDemand->current.boolean )
+		Player_UpdateLookAtEntity(pSelf);
+	/* New code end */
+
+	Scr_AddInt(pSelf->client->pLookatEnt == pOther);
+}
+
 void custom_Scr_BulletTrace(void)
 {
 	int args;
@@ -9916,6 +9960,8 @@ public:
 		hook_UpdateIPBans->hook();
 		hook_G_TryPushingEntity = new cHook(0x0810EF9C, (int)custom_G_TryPushingEntity);
         hook_G_TryPushingEntity->hook();
+		hook_Player_UpdateLookAtEntity = new cHook(0x0812200A, (int)custom_Player_UpdateLookAtEntity);
+        hook_Player_UpdateLookAtEntity->hook();
 
 		#if COMPILE_PLAYER == 1
 		hook_SV_ClientThink = new cHook(0x08090DAC, (int)custom_SV_ClientThink);
@@ -10009,6 +10055,7 @@ public:
 		cracking_hook_function(0x08118322, (int)custom_Scr_StartupGameType);
 		cracking_hook_function(0x0809ABA2, (int)custom_SV_SendMessageToClient);
 		cracking_hook_function(0x0809BCCE, (int)custom_SV_SendClientMessages);
+		cracking_hook_function(0x080FD900, (int)custom_ScrCmd_IsLookingAt);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC8CA, (int)Jump_ReduceFriction);
