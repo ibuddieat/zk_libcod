@@ -279,7 +279,7 @@ Added dvars:
     * Default: 256
     * Min. Value: 0
     * Max. Value: 8192
-    * Effect: For map-mod combinations that might exceed the available gamestate data on older game versions (1.0 and 1.2), reserve some buffer for configstrings that are allocated at runtime (e.g., those populated by playFxOnTag or when playing sounds). Its value needs to be set higher in case clients with older game versions tend to run into "MAX_GAMESTATE_CHARS exceeded" errors.
+    * Effect: For map-mod combinations that might exceed the available gamestate data on older game versions (1.0 and 1.2), reserve some buffer for configstrings that are allocated at runtime (e.g., those populated by `PlayFxOnTag` or when playing sounds). Its value needs to be set higher in case clients with older game versions tend to run into "MAX_GAMESTATE_CHARS exceeded" errors.
   * `sv_timeoutMessages`
     * Type: Boolean
     * Default: True

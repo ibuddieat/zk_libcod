@@ -27,7 +27,7 @@ Module: Callbacks<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Calls CodeCallback_DPrintf() in maps/mp/gametypes/_callbacksetup.gsc on debug messages (calls to Com_DPrintf), even if the developer dvar has value zero. Refrain from using this callback together with an excessive amount of debug messages since the callback allocates (and potentially exceeds the limit of) internal script variables. Only called for debug prints occurring within the main server thread, therefore debug prints from the proxy and asynchronous MySQL threads to not pass into this script callback function.</p>
+<p>Calls CodeCallback_DPrintf() in maps/mp/gametypes/_callbacksetup.gsc on debug messages (calls to Com_DPrintf), even if the developer dvar has value zero. Refrain from using this callback together with an excessive amount of debug messages since the callback allocates (and potentially exceeds the limit of) internal script variables. Only called for debug prints occurring within the main server thread, therefore debug prints from the proxy and asynchronous MySQL threads do not pass into this script callback function.</p>
 </H3>
 </TR></TD></TABLE>
 <p>Note: The existance of the callback function is checked only once on server start. Functions added later are not taken into account, even after a map switch.</p>
