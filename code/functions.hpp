@@ -159,6 +159,9 @@ static const ClientCommand_t ClientCommand = (ClientCommand_t)0x08100E62;
 typedef const char * (*ClientConnect_t)(unsigned int clientNum, short scriptPersId);
 static const ClientConnect_t ClientConnect = (ClientConnect_t)0x080F8E7A;
 
+typedef void (*ClientEndFrame_t)(gentity_t *ent);
+static const ClientEndFrame_t ClientEndFrame = (ClientEndFrame_t)0x080F7516;
+
 typedef void (*ClientUserinfoChanged_t)(int clientNum);
 static const ClientUserinfoChanged_t ClientUserinfoChanged = (ClientUserinfoChanged_t)0x080F8C5E;
 

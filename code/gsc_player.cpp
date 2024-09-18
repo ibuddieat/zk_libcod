@@ -2879,7 +2879,7 @@ void gsc_player_setoriginandangles(scr_entref_t ref)
     SV_LinkEntity(ent);
 
 	// Fix for spectators being moved into free spectate mode
-	custom_ClientEndFrame(ent);
+	ClientEndFrame(ent);
 }
 
 void gsc_player_getservercommandqueuesize(scr_entref_t ref)

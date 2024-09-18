@@ -4198,12 +4198,10 @@ void custom_SV_ClientThink(client_t *cl, usercmd_t *ucmd)
 	customPlayerState[clientnum].previousButtons = ucmd->buttons;
 }
 
-int custom_ClientEndFrame(gentity_t *ent)
+void custom_ClientEndFrame(gentity_t *ent)
 {
 	hook_ClientEndFrame->unhook();
-	int (*ClientEndFrame)(gentity_t *ent);
-	*(int *)&ClientEndFrame = hook_ClientEndFrame->from;
-	int ret = ClientEndFrame(ent);
+	ClientEndFrame(ent);
 	hook_ClientEndFrame->hook();
 
 	if ( ent->client->sess.sessionState == STATE_PLAYING )
@@ -4225,8 +4223,6 @@ int custom_ClientEndFrame(gentity_t *ent)
 			}
 		}
 	}
-
-	return ret;
 }
 
 int custom_BG_PlayAnim(playerState_t *ps, int animNum, animBodyPart_t bodyPart, int forceDuration, qboolean setTimer, qboolean isContinue, qboolean force)
