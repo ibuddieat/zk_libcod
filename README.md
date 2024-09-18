@@ -17,6 +17,7 @@ The extension requires the [server binary for game version 1.3](cod2_lnxded) to 
 - 🚨 [Improved server security](doc/security_features.md)
 - ⚙ Other functional adaptions
   - Faster direct file download for game version 1.0
+  - Increased max. direct file download size from 64 MB to 512 MB
   - Added support for map commands in custom rcon callback
   - Allow to show head icons to both teams (via `axis_allies`)
   - Excluded clients with wrong password from scoreboard
