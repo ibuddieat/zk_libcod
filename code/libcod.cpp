@@ -3758,6 +3758,8 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 		if ( sv_fastDownload->current.boolean )
 			blksize = MAX_DOWNLOAD_BLKSIZE_FAST;
 
+		// Keeping the malloc size fixed even if the sv_fastDownload dvar
+		// changes, to avoid "corrupted size vs. prev_size" errors in glibc
 		if ( !cl->downloadBlocks[curindex] )
 			cl->downloadBlocks[curindex] = (unsigned char *)Z_MallocInternal(MAX_DOWNLOAD_BLKSIZE_FAST);
 
