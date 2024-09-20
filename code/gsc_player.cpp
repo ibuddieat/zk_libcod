@@ -3095,13 +3095,13 @@ void gsc_player_processsuicide(scr_entref_t ref)
 	player_die(pSelf, pSelf, pSelf, 100000, MOD_SUICIDE, 0, 0, HITLOC_NONE, 0);
 }
 
-void gsc_player_sethiddenfromscroreboard(scr_entref_t ref)
+void gsc_player_sethiddenfromscoreboard(scr_entref_t ref)
 {
 	int id = ref.entnum;
 
 	if ( id >= MAX_CLIENTS )
 	{
-		stackError("gsc_player_sethiddenfromscroreboard() entity %i is not a player", id);
+		stackError("gsc_player_sethiddenfromscoreboard() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
@@ -3112,13 +3112,13 @@ void gsc_player_sethiddenfromscroreboard(scr_entref_t ref)
 	stackPushBool(qtrue);
 }
 
-void gsc_player_ishiddenfromscroreboard(scr_entref_t ref)
+void gsc_player_ishiddenfromscoreboard(scr_entref_t ref)
 {
 	int id = ref.entnum;
 
 	if ( id >= MAX_CLIENTS )
 	{
-		stackError("gsc_player_ishiddenfromscroreboard() entity %i is not a player", id);
+		stackError("gsc_player_ishiddenfromscoreboard() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
