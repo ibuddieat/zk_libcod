@@ -4,6 +4,7 @@
 #include "gsc.hpp"
 #include "libcod.hpp"
 
+void gsc_player_executeclientcommand(scr_entref_t entref);
 void gsc_player_getprotocol(scr_entref_t ref);
 void gsc_player_getprotocolstring(scr_entref_t ref);
 void gsc_player_enablebulletdrop(scr_entref_t ref);

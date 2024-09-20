@@ -340,6 +340,7 @@ scr_method_t scriptMethods[] =
 	#endif
 
 	#if COMPILE_PLAYER == 1
+	{"executeClientCommand", gsc_player_executeclientcommand, 0},
 	{"getProtocol", gsc_player_getprotocol, 0},
 	{"getProtocolString", gsc_player_getprotocolstring, 0},
 	{"enableBulletDrop", gsc_player_enablebulletdrop, 0},

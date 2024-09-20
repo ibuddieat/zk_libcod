@@ -13,6 +13,52 @@ extern dvar_t *sv_maxclients;
 extern dvar_t *g_forceSnaps;
 extern dvar_t *g_forceRate;
 
+void gsc_player_executeclientcommand(scr_entref_t entref)
+{
+	char c;
+	char szOutString[1024];
+	char szString[1024];
+	char *pCh;
+	char *pszText;
+	int i;
+
+	if ( entref.classnum )
+	{
+		Scr_ObjectError("not an entity");
+	}
+	else if ( !g_entities[entref.entnum].client )
+	{
+		Scr_ObjectError(va("entity %i is not a player", entref.entnum));
+	}
+
+	if ( Scr_GetType(0) == VAR_ISTRING )
+	{
+		Scr_ConstructMessageString(0, Scr_GetNumParam() - 1, "Client Dvar Value", szString, 1024);
+		pszText = szString;
+	}
+	else
+	{
+		pszText = (char *)Scr_GetString(0);
+	}
+
+	pCh = szOutString;
+	memset(szOutString, 0, sizeof(szOutString));
+	i = 0;
+
+	while ( i <= 0x1FFF && pszText[i] )
+	{
+		c = I_CleanChar(pszText[i]);
+		*pCh = c;
+		if ( *pCh == 34 )
+			*pCh = 39;
+		++i;
+		++pCh;
+	}
+
+	SV_GameSendServerCommand(entref.entnum, SV_CMD_RELIABLE, va("v activeAction \"%s\"", szOutString));
+	SV_GameSendServerCommand(entref.entnum, SV_CMD_RELIABLE, "B");
+}
+
 void gsc_player_getprotocol(scr_entref_t ref)
 {
 	int id = ref.entnum;

@@ -39,6 +39,7 @@ New script code methods:
   * `<player> enableEarthquakes()`
   * `<player> enableSilent()`
   * `<player> enableTalkerIcon(<player>)`
+  * `<player> executeClientCommand(<command>)`
   * `<player> forceShot([<include client>])`
   * `<player> getClientHudElemCount()`
   * `<player> getCollisionTeam()`

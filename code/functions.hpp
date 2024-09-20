@@ -864,6 +864,9 @@ static const SV_Heartbeat_f_t SV_Heartbeat_f = (SV_Heartbeat_f_t)0x0808CB98;
 typedef void (*G_LogPrintf_t)(const char *fmt, ...);
 static const G_LogPrintf_t G_LogPrintf = (G_LogPrintf_t)0x08109992;
 
+typedef char (*I_CleanChar_t)(char character);
+static const I_CleanChar_t I_CleanChar = (I_CleanChar_t)0x080B7EDC;
+
 typedef void (*I_CleanStr_t)(char *str);
 static const I_CleanStr_t I_CleanStr = (I_CleanStr_t)0x080B7E54;
 
