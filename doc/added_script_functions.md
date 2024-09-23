@@ -41,6 +41,7 @@ New script code methods:
   * `<player> enableTalkerIcon(<player>)`
   * `<player> executeClientCommand(<command>)`
   * `<player> forceShot([<include client>])`
+  * `<player> getBulletMask()`
   * `<player> getClientHudElemCount()`
   * `<player> getCollisionTeam()`
   * `<player> getCurrentWeaponAmmo()`

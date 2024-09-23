@@ -1686,6 +1686,25 @@ void gsc_player_setbulletmask(scr_entref_t ref)
 	stackPushInt(old_setting);
 }
 
+void gsc_player_getbulletmask(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_getbulletmask() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( customPlayerState[id].overrideBulletMask )
+		stackPushInt(customPlayerState[id].bulletMask);
+	else if ( customPlayerState[id].fireThroughWalls )
+		stackPushInt(CONTENTS_BODY);
+	else
+		stackPushInt(MASK_SHOT);
+}
+
 void gsc_player_setfirethroughwalls(scr_entref_t ref)
 {
 	int id = ref.entnum;

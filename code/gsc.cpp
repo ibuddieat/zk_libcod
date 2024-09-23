@@ -399,6 +399,7 @@ scr_method_t scriptMethods[] =
 	{"getSpeed", gsc_player_getspeed, 0},
 	{"getGravity", gsc_player_getgravity, 0},
 	{"setBulletMask", gsc_player_setbulletmask, 0},
+	{"getBulletMask", gsc_player_getbulletmask, 0},
 	{"setFireThroughWalls", gsc_player_setfirethroughwalls, 0},
 	{"setFireRangeScale", gsc_player_setfirerangescale, 0},
 	{"setWeaponFireMeleeDelay", gsc_player_setweaponfiremeleedelay, 0},

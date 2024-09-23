@@ -67,6 +67,7 @@ void gsc_player_setspeed(scr_entref_t ref);
 void gsc_player_setgravity(scr_entref_t ref);
 void gsc_player_getspeed(scr_entref_t ref);
 void gsc_player_getgravity(scr_entref_t ref);
+void gsc_player_getbulletmask(scr_entref_t ref);
 void gsc_player_setbulletmask(scr_entref_t ref);
 void gsc_player_setfirethroughwalls(scr_entref_t ref);
 void gsc_player_setfirerangescale(scr_entref_t ref);
