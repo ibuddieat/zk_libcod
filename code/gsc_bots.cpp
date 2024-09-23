@@ -200,6 +200,42 @@ void gsc_bots_throwgrenade(scr_entref_t ref)
 	stackPushBool(qtrue);
 }
 
+void gsc_bots_throwsmokegrenade(scr_entref_t ref)
+{
+	int id = ref.entnum;
+	int grenade;
+
+	if ( !stackGetParams("i", &grenade) )
+	{
+		stackError("gsc_bots_throwsmokegrenade() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_bots_throwsmokegrenade() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	client_t *client = &svs.clients[id];
+
+	if ( client->netchan.remoteAddress.type != NA_BOT )
+	{
+		stackError("gsc_bots_throwsmokegrenade() player %i is not a bot", id);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( !grenade )
+		customPlayerState[id].botButtons &= ~KEY_MASK_SMOKE;
+	else
+		customPlayerState[id].botButtons |= KEY_MASK_SMOKE;
+
+	stackPushBool(qtrue);
+}
+
 void gsc_bots_fireweapon(scr_entref_t ref)
 {
 	int id = ref.entnum;

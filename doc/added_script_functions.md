@@ -1,5 +1,6 @@
 New script code methods:
   * `<bot> setWalkValues(<forward_count>, <right_count>)`
+  * `<bot> throwSmokeGrenade(<bool>)`
   * `<entity> addEntityVelocity(<velocity>)`
   * `<entity> addGrenadeFuseTime(<time>)`
   * `<entity> disableBounce()`

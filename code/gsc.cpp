@@ -297,6 +297,7 @@ scr_method_t scriptMethods[] =
 	{"setLean", gsc_bots_setlean, 0},
 	{"setBotStance", gsc_bots_setbotstance, 0},
 	{"throwGrenade", gsc_bots_throwgrenade, 0},
+	{"throwSmokeGrenade", gsc_bots_throwsmokegrenade, 0},
 	{"fireWeapon", gsc_bots_fireweapon, 0},
 	{"meleeWeapon", gsc_bots_meleeweapon, 0},
 	{"reloadWeapon", gsc_bots_reloadweapon, 0},
