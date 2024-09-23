@@ -3,6 +3,9 @@
 Script code functions:
   * Renamed `exponent()` to `pow()`
 
+Dvars:
+  * Changed `sv_wwwDlDisconnectedMessages` in favor of the new `sv_downloadNotifications`
+
 # Changed with or since release v11.0:
 
 Script code methods:
