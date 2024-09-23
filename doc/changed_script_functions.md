@@ -5,6 +5,7 @@ Script code functions:
 
 Dvars:
   * Changed `sv_wwwDlDisconnectedMessages` in favor of the new `sv_downloadNotifications`
+  * Removed `g_dumpVoiceData`
 
 # Changed with or since release v11.0:
 
