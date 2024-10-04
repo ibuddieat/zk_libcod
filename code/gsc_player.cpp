@@ -2346,7 +2346,7 @@ void gsc_player_playfxforplayer(scr_entref_t ref)
 	}
 
 	gentity_t *ent = G_TempEntity(origin, EV_PLAY_FX);
-	ent->s.eventParm = index & 0xff;
+	ent->s.eventParm = index & 0xFF;
 	ent->s.otherEntityNum = id + 1;
 
 	if ( args == 2 )
@@ -2416,7 +2416,7 @@ void gsc_player_playfxontagforplayer(scr_entref_t ref)
 	}
 
 	index = Scr_GetInt(0);
-	if ( index < 1 || 0x3f < index )
+	if ( index < 1 || 0x3F < index )
 	{
 		Scr_ParamError(0, va("effect id %i is invalid\n", index));
 	}
