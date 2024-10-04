@@ -4418,6 +4418,12 @@ void custom_SVC_Status(netadr_t from)
 		cl = svs.clients + i;
 		if ( CS_ZOMBIE < cl->state )
 		{
+			/* New code start: Ability to hide players in scoreboard is also
+			 reflected in status messages */
+			if ( customPlayerState[i].hiddenFromScoreboard )
+				continue;
+			/* New code end */
+
 			/* New: Custom ping value for status responses */
 			ping = cl->ping;
 			if ( customPlayerState[i].overrideStatusPing )
