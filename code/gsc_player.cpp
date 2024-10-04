@@ -3216,9 +3216,12 @@ void gsc_player_setallowspectators(scr_entref_t ref)
 		{
 			if ( i == id )
 				continue;
-			
+
 			player = &g_entities[i];
-			if ( player->client->spectatorClient == id )
+			if ( player->client && 
+				player->client->sess.connected != CON_DISCONNECTED && 
+				player->client->sess.sessionState == STATE_SPECTATOR &&
+				player->client->spectatorClient == id )
 				StopFollowing(player);
 		}
 	}
