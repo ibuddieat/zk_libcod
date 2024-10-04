@@ -249,6 +249,33 @@ void gsc_weapons_getweaponmeleetime()
 	stackPushInt(weapon->iMeleeTime);
 }
 
+void gsc_weapons_getweaponraisetime()
+{
+	int id;
+	char *name;
+
+	if ( stackGetParams("s", &name) ) 
+	{
+		id = BG_FindWeaponIndexForName(name);
+	}
+	else if ( !stackGetParams("i", &id) )
+	{
+		stackError("gsc_weapons_getweaponraisetime() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( !isValidWeaponId(id) )
+	{
+		stackPushUndefined();
+		return;
+	}
+
+	WeaponDef_t *weapon = BG_WeaponDefs(id);
+
+	stackPushInt(weapon->iRaiseTime);
+}
+
 void gsc_weapons_getweaponreloadtime()
 {
 	int id;
@@ -527,6 +554,35 @@ void gsc_weapons_setweaponmeleetime()
 
 	WeaponDef_t *weapon = BG_WeaponDefs(id);
 	weapon->iMeleeTime = time;
+
+	stackPushBool(qtrue);
+}
+
+void gsc_weapons_setweaponraisetime()
+{
+	int id;
+	char *name;
+	int time;
+
+	if ( stackGetParams("si", &name, &time) ) 
+	{
+		id = BG_FindWeaponIndexForName(name);
+	}
+	else if ( !stackGetParams("ii", &id, &time) )
+	{
+		stackError("gsc_weapons_setweaponraisetime() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( !isValidWeaponId(id) )
+	{
+		stackPushUndefined();
+		return;
+	}
+
+	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	weapon->iRaiseTime = time;
 
 	stackPushBool(qtrue);
 }

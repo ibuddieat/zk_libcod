@@ -243,6 +243,8 @@ scr_function_t scriptFunctions[] =
 	{"setWeaponFireTime", gsc_weapons_setweaponfiretime, 0},
 	{"getWeaponMeleeTime", gsc_weapons_getweaponmeleetime, 0},
 	{"setWeaponMeleeTime", gsc_weapons_setweaponmeleetime, 0},
+	{"getWeaponRaiseTime", gsc_weapons_getweaponraisetime, 0},
+	{"setWeaponRaiseTime", gsc_weapons_setweaponraisetime, 0},
 	{"getWeaponReloadTime", gsc_weapons_getweaponreloadtime, 0},
 	{"setWeaponReloadTime", gsc_weapons_setweaponreloadtime, 0},
 	{"getWeaponReloadEmptyTime", gsc_weapons_getweaponreloademptytime, 0},

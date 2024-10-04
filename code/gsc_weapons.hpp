@@ -26,6 +26,8 @@ void gsc_weapons_getweaponfiretime();
 void gsc_weapons_setweaponfiretime();
 void gsc_weapons_getweaponmeleetime();
 void gsc_weapons_setweaponmeleetime();
+void gsc_weapons_getweaponraisetime();
+void gsc_weapons_setweaponraisetime();
 void gsc_weapons_getweaponreloadtime();
 void gsc_weapons_setweaponreloadtime();
 void gsc_weapons_getweaponreloademptytime();

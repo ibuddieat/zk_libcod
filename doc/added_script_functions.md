@@ -120,6 +120,7 @@ New script code functions:
   * `getSavePersist()`
   * `getSoundAliasesFromFile(<filename>)`
   * `getSoundFileDuration(<file path>)`
+  * `getWeaponRaiseTime(<weapon name>)`
   * `isSemiAutoWeapon(<weapon name>)`
   * `loadSoundFile(<file path>, <callback function>, [<volume>], [<sound index>])`
   * `loadSpeexFile(<file path>, [<sound index>])`
@@ -132,4 +133,5 @@ New script code functions:
   * `saveSpeexFile(<sound index>, <file path>)`
   * `setNextTestClientName(<name>)`
   * `setSavePersist(<save persistent>)`
+  * `setWeaponRaiseTime(<weapon name>, <raise time>)`
   * `toHex(<number>)`
