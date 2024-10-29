@@ -162,7 +162,6 @@ cHook *hook_G_TempEntity;
 cHook *hook_G_TryPushingEntity;
 cHook *hook_GScr_LoadConsts;
 cHook *hook_GScr_LoadGameTypeScript;
-cHook *hook_Player_UpdateLookAtEntity;
 cHook *hook_PlayerCmd_ClonePlayer;
 cHook *hook_PM_BeginWeaponChange;
 cHook *hook_Pmove;
@@ -7010,15 +7009,11 @@ void custom_PM_BeginWeaponChange(playerState_t *ps, unsigned int newweapon)
 	hook_PM_BeginWeaponChange->hook();
 }
 
-void custom_Player_UpdateLookAtEntity(gentity_t *player)
+void hook_Player_UpdateLookAtEntity(gentity_t *player)
 {
-	hook_Player_UpdateLookAtEntity->unhook();
-
 	// New: sv_isLookingAtOnDemand dvar
 	if ( !sv_isLookingAtOnDemand->current.boolean )
 		Player_UpdateLookAtEntity(player);
-
-	hook_Player_UpdateLookAtEntity->hook();
 }
 
 void custom_ScrCmd_IsLookingAt(scr_entref_t entref)
@@ -9929,6 +9924,7 @@ public:
 		cracking_hook_call(0x08062644, (int)hitch_warning_print);
 		cracking_hook_call(0x080AD1FE, (int)hook_Com_MakeSoundAliasesPermanent);
 		cracking_hook_call(0x0811599A, (int)hook_SetExpFog_density_typo);
+		cracking_hook_call(0x080F7803, (int)hook_Player_UpdateLookAtEntity);
 
 		hook_GScr_LoadGameTypeScript = new cHook(0x08110286, (int)custom_GScr_LoadGameTypeScript);
 		hook_GScr_LoadGameTypeScript->hook();
@@ -9990,8 +9986,6 @@ public:
 		hook_UpdateIPBans->hook();
 		hook_G_TryPushingEntity = new cHook(0x0810EF9C, (int)custom_G_TryPushingEntity);
         hook_G_TryPushingEntity->hook();
-		hook_Player_UpdateLookAtEntity = new cHook(0x0812200A, (int)custom_Player_UpdateLookAtEntity);
-        hook_Player_UpdateLookAtEntity->hook();
 
 		#if COMPILE_PLAYER == 1
 		hook_SV_ClientThink = new cHook(0x08090DAC, (int)custom_SV_ClientThink);
