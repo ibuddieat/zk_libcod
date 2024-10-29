@@ -14,7 +14,6 @@ dvar_t *bg_fallDamageMinHeight;
 dvar_t *cl_allowDownload;
 dvar_t *cl_paused;
 dvar_t *com_dedicated;
-dvar_t *com_hunkMegs;
 dvar_t *com_logfile;
 dvar_t *com_sv_running;
 dvar_t *com_timescale;
@@ -341,10 +340,6 @@ void custom_Com_InitDvars(void)
 	/* Register stock dvars here with different settings, scheme:
 	dvar_t *dvar = Dvar_Register<Type>(var_name, default value, [min. value, max. value,] flags); */
 	Dvar_RegisterInt("protocol", 118, 115, 118, DVAR_CHANGEABLE_RESET | DVAR_ROM | DVAR_SERVERINFO);
-
-	/* Force server memory setting for clients to be able to counter 
-	 Hunk_AllocateTempMemory failures */
-	com_hunkMegs = Dvar_RegisterInt("com_hunkMegs", 160, 1, 512, DVAR_CHANGEABLE_RESET | DVAR_LATCH | DVAR_SYSTEMINFO | DVAR_ARCHIVE);
 
 	hook_Com_InitDvars->unhook();
 	void (*Com_InitDvars)(void);
