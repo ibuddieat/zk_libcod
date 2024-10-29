@@ -9864,6 +9864,37 @@ qboolean custom_G_TryPushingEntity(gentity_t *check, gentity_t *pusher, float *m
 	return res;
 }
 
+char * custom_SV_AllocSkelMemory(unsigned int size)
+{
+	char *pos;
+
+	/* New code start: Init g_sv_skel_memory_start if necessary, to avoid
+	 a potential server crash when a trace script function is called in the
+	 very first server frame */
+	if ( !*g_sv_skel_memory_start )
+		SV_ResetSkeletonCache();
+	/* New code end */
+
+	while ( 1 )
+	{
+		pos = *g_sv_skel_memory_start + sv.skelMemPos;
+		sv.skelMemPos += (size + 0xF) & 0xFFFFFFF0;
+
+		if ( sv.skelMemPos < 0x3FFF1 )
+			break;
+
+		if ( g_sv_skel_warn_count != sv.skelTimeStamp )
+		{
+			g_sv_skel_warn_count = sv.skelTimeStamp;
+			Com_Printf("^3WARNING: SV_SKEL_MEMORY_SIZE exceeded\n");
+		}
+
+		SV_ResetSkeletonCache();
+	}
+
+	return pos;
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -10055,6 +10086,7 @@ public:
 		cracking_hook_function(0x0809ABA2, (int)custom_SV_SendMessageToClient);
 		cracking_hook_function(0x0809BCCE, (int)custom_SV_SendClientMessages);
 		cracking_hook_function(0x080FD900, (int)custom_ScrCmd_IsLookingAt);
+		cracking_hook_function(0x08091F0E, (int)custom_SV_AllocSkelMemory);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC8CA, (int)Jump_ReduceFriction);

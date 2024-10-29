@@ -61,7 +61,7 @@
 #define MAX_DOWNLOAD_WINDOW         8
 #define MAX_ENT_CLUSTERS            16
 #define MAX_EVENTS                  4
-#define MAX_GENTITIES               ( 1 << GENTITYNUM_BITS )
+#define MAX_GENTITIES               ( 1 << GENTITYNUM_BITS ) // 0x400
 #define MAX_INFO_STRING             0x400
 #define MAX_IPFILTERS               1024
 #define MAX_ITEM_MODELS             2
@@ -3799,6 +3799,8 @@ static const int bg_iNumWeapons_offset = 0x08627080;
 static const int bg_weaponDefs_offset = 0x086270A0;
 static const int dvar_modifiedFlags_offset = 0x085ABE04;
 static const int ipFilterList_offset = 0x08850E00;
+static const int g_sv_skel_memory_start_offset = 0x08423000;
+static const int g_sv_skel_warn_count_offset = 0x08423004;
 
 #define g_entities ((gentity_t*)(gentities_offset))
 #define g_clients ((gclient_t*)(gclients_offset))
@@ -3864,7 +3866,8 @@ static const int ipFilterList_offset = 0x08850E00;
 #define bg_weaponDefs (*((WeaponDef_t**)( bg_weaponDefs_offset )))
 #define dvar_modifiedFlags (*((int*)( dvar_modifiedFlags_offset )))
 #define ipFilterList ((ipFilterList_t*)( ipFilterList_offset ))
-
+#define g_sv_skel_memory_start ((char**)( g_sv_skel_memory_start_offset ))
+#define g_sv_skel_warn_count (*((int*)( g_sv_skel_warn_count_offset )))
 
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6
