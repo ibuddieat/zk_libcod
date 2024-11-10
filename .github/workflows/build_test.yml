@@ -3,7 +3,7 @@ name: "Build & Test"
 on:
   push:
     branches: [ "dev" ]
-    paths-ignore: [ "**.htm", "**.html", "**.md", "**.yml" ]
+    paths-ignore: [ "**.cfg", "**.htm", "**.html", "**.md", "**.yml" ]
   pull_request:
     branches: [ "dev" ]
 
