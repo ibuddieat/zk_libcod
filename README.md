@@ -8,7 +8,7 @@
 
 ## ⭐ What's new?
 
-The extension requires the [server binary for game version 1.3](cod2_lnxded) to be used as basis and **supports all three major game versions** (check out the `sv_version` and proxy dvars), including the ability to let players from all those versions to connect to the same server. All functions in this extension work with the original (stock) client executables.
+The extension requires the [server binary](cod2_lnxded) and .iwd files for game version 1.3 to be used as basis and **supports all three major game versions** (check out the `sv_version` and proxy dvars), including the ability to let players from all those versions to connect to the same server. All functions in this extension work with the original (stock) client executables.
 
 The following list documents changes in comparison to the [parent repository](doc/history.md):
 
