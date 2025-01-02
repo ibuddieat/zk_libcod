@@ -9348,6 +9348,7 @@ void custom_SV_ExecuteClientMessage(client_t *cl, msg_t *msg)
 	if ( decompressMsg.cursize == decompressMsg.maxsize )
 	{
 		SV_DropClient(cl, "SV_ExecuteClientMessage: Client sent oversize message");
+		LargeLocalDestructor(&buf);
 		return;
 	}
 
