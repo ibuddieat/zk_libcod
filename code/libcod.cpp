@@ -543,7 +543,7 @@ void custom_Dvar_SetFromStringFromSource(dvar_t *dvar, const char *string, DvarS
 
 	Sys_EnterCriticalSection(CRITSECT_DVAR);
 
-	/* New: sv_version dvar value sanitization */
+	/* New code start: sv_version dvar value sanitization */
 	if ( sv_version && dvar == sv_version )
 		string = getShortVersionFromProtocol(getProtocolFromShortVersion(string));
 	/* New code end */
@@ -967,7 +967,7 @@ void custom_SV_SpawnServer(char *server)
 
 	sv_serverId_value = (byte)(sv_serverId_value + 16);
 
-	if ( (sv_serverId_value & 0xF0) == 0 )
+	if ( ( sv_serverId_value & 0xF0 ) == 0 )
 		sv_serverId_value += 16;
 
 	Dvar_SetInt(sv_serverid, sv_serverId_value);
@@ -999,7 +999,7 @@ void custom_SV_SpawnServer(char *server)
 			continue;
 		}
 
-		/* New: sv_botReconnectMode dvar */
+		/* New code start: sv_botReconnectMode dvar */
 		if ( cl->bIsTestClient )
 		{
 			if ( sv_botReconnectMode->current.integer == 1 )
@@ -1595,7 +1595,7 @@ void custom_SV_ClipMoveToEntity(moveclip_t *clip, svEntity_t *entity, trace_t *t
 	touch = SV_GentityNum(touchNum);
 
 	// Check if contents to collide with are present
-	if ( (touch->r.contents & clip->contentmask) == 0 )
+	if ( ( touch->r.contents & clip->contentmask ) == 0 )
 		return;
 
 	// Ignore specific entities
@@ -1614,7 +1614,7 @@ void custom_SV_ClipMoveToEntity(moveclip_t *clip, svEntity_t *entity, trace_t *t
 			return;
 		
 		/* New code start: (not)SolidForPlayer */
-		if ( playerMovementTrace && customEntityState[touchNum].clientMask[clip->passEntityNum >> 5] & (1 << (clip->passEntityNum & 0x1F)) )
+		if ( playerMovementTrace && customEntityState[touchNum].clientMask[clip->passEntityNum >> 5] & ( 1 << ( clip->passEntityNum & 0x1F ) ) )
 			return;
 		/* New code end */
 	}
@@ -1700,12 +1700,12 @@ qboolean custom_StuckInClient(gentity_t *self)
 		return qfalse;
 	/* New code end */
 
-	if ( ( ( ((self->client->ps).pm_flags & PMF_VIEWLOCKED) != 0 ) && ( (self->client->sess).sessionState == STATE_PLAYING ) ) && ( customPlayerState[id].collisionTeam != CUSTOM_TEAM_AXIS_ALLIES /* New condition */ || ( ((self->r).contents & CONTENTS_BODY) != 0 || ( (self->r).contents == CONTENTS_CORPSE ) ) ) )
+	if ( ( ( ( self->client->ps.pm_flags & PMF_VIEWLOCKED ) != 0 ) && ( (self->client->sess).sessionState == STATE_PLAYING ) ) && ( customPlayerState[id].collisionTeam != CUSTOM_TEAM_AXIS_ALLIES /* New condition */ || ( ( self->r.contents & CONTENTS_BODY ) != 0 || ( (self->r).contents == CONTENTS_CORPSE ) ) ) )
 	{
 		hit = g_entities;
 		for ( i = 0; i < level.maxclients; i++, hit++)
 		{
-			if ( ( ( ( ( ( (hit->r).inuse != 0 ) && ( ((hit->client->ps).pm_flags & PMF_VIEWLOCKED) != 0 ) ) && ( (hit->client->sess).sessionState == STATE_PLAYING )  ) && ( (hit != self && hit->client != NULL ) ) ) && ( 0 < hit->health && ( /* New condition */ customPlayerState[i].collisionTeam != CUSTOM_TEAM_AXIS_ALLIES || ( ((hit->r).contents & CONTENTS_BODY) != 0 || ( (hit->r).contents == CONTENTS_CORPSE ) ) ) ) ) &&
+			if ( ( ( ( ( ( (hit->r).inuse != 0 ) && ( ( hit->client->ps.pm_flags & PMF_VIEWLOCKED ) != 0 ) ) && ( (hit->client->sess).sessionState == STATE_PLAYING )  ) && ( (hit != self && hit->client != NULL ) ) ) && ( 0 < hit->health && ( /* New condition */ customPlayerState[i].collisionTeam != CUSTOM_TEAM_AXIS_ALLIES || ( ( hit->r.contents & CONTENTS_BODY ) != 0 || ( (hit->r).contents == CONTENTS_CORPSE ) ) ) ) ) &&
 			( (hit->r).absmin[0] <= (self->r).absmax[0] && ( ( ( (self->r).absmin[0] <= (hit->r).absmax[0] && ( (hit->r).absmin[1] <= (self->r).absmax[1] ) ) && ( (self->r).absmin[1] <= (hit->r).absmax[1] ) ) && ( (hit->r).absmin[2] <= (self->r).absmax[2] && ( (self->r).absmin[2] <= (hit->r).absmax[2] ) ) ) ) )
 			{
 				/* New code start: per-player/team collison */
@@ -2310,7 +2310,7 @@ void custom_MSG_WriteDeltaField(msg_t *buf, byte *from, byte *to, netField_t *fi
 				{
 					MSG_WriteBit0(buf);
 					MSG_WriteBits(buf, trunc + FLOAT_INT_BIAS, 5);
-					MSG_WriteByte(buf, (char)((trunc + 0x1000) >> 5));
+					MSG_WriteByte(buf, (char)( ( trunc + 0x1000 ) >> 5 ));
 				}
 				else
 				{
@@ -2336,7 +2336,7 @@ void custom_MSG_WriteDeltaField(msg_t *buf, byte *from, byte *to, netField_t *fi
 				{
 					MSG_WriteBit0(buf);
 					MSG_WriteBits(buf, trunc + 0x200, 2);
-					MSG_WriteByte(buf, (trunc + 0x200) >> 2);
+					MSG_WriteByte(buf, ( trunc + 0x200 ) >> 2);
 				}
 				else
 				{
@@ -2463,7 +2463,7 @@ void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t 
 					{
 						if ( customEntityState[entNum].notSolidBrushModel )
 						{
-							if ( customEntityState[entNum].clientMask[clientNum >> 5] & (1 << (clientNum & 0x1F)) )
+							if ( customEntityState[entNum].clientMask[clientNum >> 5] & ( 1 << ( clientNum & 0x1F ) ) )
 								*toF |= 0x1;
 						}
 					}
@@ -2642,20 +2642,20 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 	lc = 0;
 	for ( i = 0, field = &playerStateFields; i < 0x69; i++, field++ )
 	{
-		fromF = ( int * )( (byte *)from + field->offset );
-		toF = ( int * )( (byte *)to + field->offset );
+		fromF = (int *)( (byte *)from + field->offset );
+		toF = (int *)( (byte *)to + field->offset );
 
 		if ( *fromF != *toF )
 			lc = i + 1;
 	}
 	
-	MSG_WriteByte( msg, lc );
+	MSG_WriteByte(msg, lc);
 	
 	field = &playerStateFields;
 	for ( i = 0; i < lc; i++, field++ )
 	{
-		fromF = ( int * )( (byte *)from + field->offset );
-		toF = ( int * )( (byte *)to + field->offset );
+		fromF = (int *)( (byte *)from + field->offset );
+		toF = (int *)( (byte *)to + field->offset );
 		
 		if ( *fromF == *toF )
 		{
@@ -2674,7 +2674,7 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 				{
 					MSG_WriteBit0(msg);
 					MSG_WriteBits(msg, trunc + FLOAT_INT_BIAS, 5);
-					MSG_WriteByte(msg, (char)((trunc + 0x1000) >> 5));
+					MSG_WriteByte(msg, (char)( ( trunc + 0x1000 ) >> 5 ));
 				}
 				else
 				{
@@ -2758,7 +2758,7 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 		while ( i < 0x10 )
 		{
 			if ( to->ammo[j * 0x10 + i] != from->ammo[j * 0x10 + i] )
-				ammobits[j] = 1 << ((byte)i & 0x1f) | ammobits[j];
+				ammobits[j] |= 1 << i;
 			i++;
 		}
 		j++;
@@ -2780,11 +2780,11 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 			else
 			{
 				MSG_WriteBit1(msg);
-				MSG_WriteShort(msg,ammobits[j]);
+				MSG_WriteShort(msg, ammobits[j]);
 				i = 0;
 				while ( i < 0x10 )
 				{
-					if ( ( ammobits[j] >> ( (byte)i & 0x1F ) & 1 ) != 0 )
+					if ( ammobits[j] & ( 1 << i ) )
 						MSG_WriteShort(msg, to->ammo[j * 0x10 + i]);
 					i++;
 				}
@@ -2801,7 +2801,7 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 		while ( i < 0x10 )
 		{
 			if ( to->ammoclip[j * 0x10 + i] != from->ammoclip[j * 0x10 + i] )
-				clipbits = clipbits | 1 << ( (byte)i & 0x1F );
+				clipbits |= 1 << i;
 			i++;
 		}
 		if ( !clipbits )
@@ -2811,11 +2811,11 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 		else
 		{
 			MSG_WriteBit1(msg);
-			MSG_WriteShort(msg,clipbits);
+			MSG_WriteShort(msg, clipbits);
 			i = 0;
 			while ( i < 0x10 )
 			{
-				if ( clipbits >> ( (byte)i & 0x1F ) & 1 )
+				if ( clipbits & ( 1 << i ) )
 					MSG_WriteShort(msg, to->ammoclip[j * 0x10 + i]);
 				i++;
 			}
@@ -3057,9 +3057,9 @@ void custom_SV_WriteSnapshotToClient(client_t *client, msg_t *msg)
 		oldframe = NULL;
 		lastframe = 0;
 	}
-	else if ( (client->netchan).outgoingSequence - client->deltaMessage < ( PACKET_BACKUP - 3 ) )
+	else if ( client->netchan.outgoingSequence - client->deltaMessage < ( PACKET_BACKUP - 3 ) )
 	{
-		oldframe = &client->frames[ client->deltaMessage & PACKET_MASK ];
+		oldframe = &client->frames[client->deltaMessage & PACKET_MASK];
 		lastframe = client->netchan.outgoingSequence - client->deltaMessage;
 		if ( oldframe->first_entity < svs.nextSnapshotEntities - svs.numSnapshotEntities )
 		{
@@ -3075,7 +3075,7 @@ void custom_SV_WriteSnapshotToClient(client_t *client, msg_t *msg)
 		lastframe = 0;
 	}
 	
-	MSG_WriteByte(msg, 6);
+	MSG_WriteByte(msg, svc_snapshot);
 	MSG_WriteLong(msg, svs.time);
 	MSG_WriteByte(msg, lastframe);
 	snapFlags = svs.snapFlagServerBit;
@@ -3136,7 +3136,7 @@ qboolean custom_Netchan_TransmitNextFragment(netchan_t *chan)
 
 	fragmentLength = FRAGMENT_SIZE;
 
-	if ( chan->unsentFragmentStart  + fragmentLength > chan->unsentLength )
+	if ( chan->unsentFragmentStart + fragmentLength > chan->unsentLength )
 	{
 		fragmentLength = chan->unsentLength - chan->unsentFragmentStart;
 	}
@@ -3229,7 +3229,7 @@ void custom_SV_SendClientMessages(void)
 		if ( sv_fastDownload->current.boolean && cl->download && !cl->downloadingWWW )
 		{
 			// Experimental value with good results, simulating sv_fps 180
-			for ( int j = 0; j < 1 + ((sv_fps->current.integer / 20) * MAX_DOWNLOAD_WINDOW); j++ )
+			for ( int j = 0; j < 1 + ( ( sv_fps->current.integer / 20 ) * MAX_DOWNLOAD_WINDOW ); j++ )
 			{
 				while ( cl->netchan.unsentFragments )
 				{
@@ -3539,7 +3539,7 @@ void custom_SV_SendClientGameState(client_t *client)
 				if ( client->reliableSequence - client->reliableAcknowledge == ( MAX_RELIABLE_COMMANDS - 1 ) )
 				{
 					// This could potentially be delayed further, to avoid
-					// filling up the command queue at once.
+					// filling up the command queue at once
 					Com_Printf("Aborting configstring queue at %i as client %i command queue is full\n", start, id);
 					customPlayerState[id].resourceLimitedState = LIMITED_CONFIGSTRING;
 					return;
@@ -3551,7 +3551,7 @@ void custom_SV_SendClientGameState(client_t *client)
 				clientGamestateDataCount += strlen(sv.configstrings[start]) + 1;
 
 				// Update gamestate size: Size of byte + size of byte + length of configstring
-				customPlayerState[id].gamestateSize += (3 + strlen(sv.configstrings[start]));
+				customPlayerState[id].gamestateSize += ( 3 + strlen(sv.configstrings[start]) );
 			}
 		}
 		Com_DPrintf("Sending another %i bytes in gamestate as reliable commands to client: %i\n", customPlayerState[id].gamestateSize - msg.cursize, id);
@@ -4011,9 +4011,9 @@ void custom_SV_BotUserMove(client_t *client)
 	gentity_t *ent = SV_GentityNum(num);
 
 	if ( customPlayerState[num].botWeapon )
-		ucmd.weapon = (byte)(customPlayerState[num].botWeapon & 0xFF);
+		ucmd.weapon = (byte)( customPlayerState[num].botWeapon & 0xFF );
 	else
-		ucmd.weapon = (byte)(ps->weapon & 0xFF);
+		ucmd.weapon = (byte)( ps->weapon & 0xFF );
 
 	if ( ent->client == NULL )
 		return;
@@ -4213,7 +4213,7 @@ void custom_ClientEndFrame(gentity_t *ent)
 		// Experimental slide bug fix
 		if ( g_resetSlide->current.boolean )
 		{
-			if ( (ent->client->ps.pm_flags & PMF_SLIDING) != 0 && ent->client->ps.pm_time == 0 )
+			if ( ( ent->client->ps.pm_flags & PMF_SLIDING ) != 0 && ent->client->ps.pm_time == 0 )
 			{
 				ent->client->ps.pm_flags &= ~PMF_SLIDING;
 			}
@@ -4255,7 +4255,7 @@ bool SVC_SpamCallback(const char *str, const char *ip)
 
 void custom_SV_AuthorizeIpPacket(netadr_t from)
 {
-    /* New: Rate limiting */
+    /* New code start: Rate limiting */
 	if ( SVC_ApplyAuthorizeIpPacketLimit(from, OUTBOUND_BUCKET_MAIN) )
 		return;
 	/* New code end */
@@ -4276,7 +4276,7 @@ void custom_SVC_Info(netadr_t from)
 	const char *referencedIwdNames;
 	char *iwd;
 
-	/* New: Rate limiting */
+	/* New code start: Rate limiting */
 	if ( SVC_ApplyInfoLimit(from, OUTBOUND_BUCKET_MAIN) )
 		return;
 	/* New code end */
@@ -4388,7 +4388,7 @@ void custom_SVC_Status(netadr_t from)
 	char *iwd;
 	char msg[BIG_INFO_STRING];
 
-	/* New: Rate limiting */
+	/* New code start: Rate limiting */
 	if ( SVC_ApplyStatusLimit(from, OUTBOUND_BUCKET_MAIN) )
 		return;
 	/* New code end */
@@ -4418,7 +4418,7 @@ void custom_SVC_Status(netadr_t from)
 				continue;
 			/* New code end */
 
-			/* New: Custom ping value for status responses */
+			/* New code start: Custom ping value for status responses */
 			ping = cl->ping;
 			if ( customPlayerState[i].overrideStatusPing )
 				ping = customPlayerState[i].statusPing;
@@ -4491,7 +4491,7 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 	int i;
 	qboolean valid;
 
-	/* New: sv_allowRcon dvar */
+	/* New code start: sv_allowRcon dvar */
 	if ( !sv_allowRcon->current.boolean )
 		return;
 	/* New code end */
@@ -4499,7 +4499,7 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 	LargeLocalConstructor(&buf, SV_OUTPUTBUF_LENGTH);
 	sv_outputbuf = (char *)LargeLocalGetBuf(&buf);
 
-	/* New: Patched out half-second limit
+	/* New code start: Patched out half-second limit
 	int time = Com_Milliseconds();
 	if ( rcon_lasttime != 0 && ( time - rcon_lasttime < 500 ) )
 	{
@@ -4513,7 +4513,7 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 	// New: Time-constant string comparison for rcon_password dvar
 	qboolean badRconPassword = !strlen(rcon_password->current.string) || !strcmp_constant_time(password, rcon_password->current.string);
 
-	/* New: Rate limiting and sv_limitLocalRcon dvar */
+	/* New code start: Rate limiting and sv_limitLocalRcon dvar */
 	if ( sv_limitLocalRcon->current.boolean || !IsLocalIPAddress(from.ip) )
 	{
 		if ( SVC_ApplyRconLimit(from, badRconPassword) )
@@ -4537,7 +4537,7 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 			Com_Printf("Rcon from %s: %s ", NET_AdrToString(from), SV_Cmd_Argv(2));
 	}
 
-	/* New: CodeCallback_RemoteCommand */
+	/* New code start: CodeCallback_RemoteCommand */
 	if (
 		!from_script &&
 		codecallback_remotecommand && 
@@ -4597,10 +4597,10 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 		{
 			cmd_aux[len] = 0;
 
-			/* New: Delayed processing of map-related commands when passed 
-			 through CodeCallback_RemoteCommand. Note that Com_Printf output
-			 here between Com_BeginRedirect and Com_EndRedirect is passed to
-			 the rcon client */
+			/* New code start: Delayed processing of map-related commands 
+			 when passed through CodeCallback_RemoteCommand. Note that
+			 Com_Printf output here between Com_BeginRedirect and
+			 Com_EndRedirect is passed to the rcon client */
 			if ( from_script )
 			{
 				if ( strcmp(SV_Cmd_Argv(2), "fast_restart") == 0 )
@@ -4625,10 +4625,10 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 				}
 				else if ( strcmp(SV_Cmd_Argv(2), "map_restart") == 0 )
 				{
-					/* Note: The operator command map_restart behaves 
-					 differently than the map_restart script function, as the
-					 latter actually performs a fast_restart. Here we follow
-					 the stock operator command logic. This implies that
+					/* Note code start: The operator command map_restart
+					 behaves differently than the map_restart script function,
+					 as the latter actually performs a fast_restart. Here we
+					 follow the stock operator command logic. This implies that
 					 level.savePersist is always false here. Use the map
 					 command instead if level.savePersist is required to be
 					 true */
@@ -4788,7 +4788,7 @@ void custom_SV_GetChallenge(netadr_t from)
 	challenge_t *challenge;
 	netadr_t *master;
 
-	/* New: Rate limiting */
+	/* New code start: Rate limiting */
 	if ( SVC_ApplyChallengeLimit(from, OUTBOUND_BUCKET_MAIN) )
 		return;
 	/* New code end */
@@ -5678,7 +5678,7 @@ void custom_SV_ArchiveSnapshot(void)
 					goto LAB_0809b5f4;
 				cachedFrameIndex = m;
 				if ( m < 0 )
-					cachedFrameIndex = i + 0x1fe;
+					cachedFrameIndex = i + 0x1FE;
 				cachedFrame = svs.cachedSnapshotFrames + m + (cachedFrameIndex >> 9) * -0x200;
 				i = m;
 			} while ( cachedFrame->archivedFrame < svs.nextArchivedSnapshotFrames - sv_fps->current.integer || cachedFrame->usesDelta );
@@ -5691,7 +5691,7 @@ LAB_0809b5f4:
 				
 				nextCachedSnapFrames = svs.nextCachedSnapshotFrames;
 				if ( svs.nextCachedSnapshotFrames < 0 )
-					nextCachedSnapFrames = svs.nextCachedSnapshotFrames + 0x1ff;
+					nextCachedSnapFrames = svs.nextCachedSnapshotFrames + 0x1FF;
 				cachedFrame = svs.cachedSnapshotFrames + svs.nextCachedSnapshotFrames + (nextCachedSnapFrames >> 9) * -0x200;
 				cachedFrame->archivedFrame = svs.nextArchivedSnapshotFrames;
 				cachedFrame->num_entities = 0;
@@ -5707,11 +5707,11 @@ LAB_0809b5f4:
 					{
 						nextCachedSnapClients = svs.nextCachedSnapshotClients;
 						if ( svs.nextCachedSnapshotClients < 0 )
-							nextCachedSnapClients = svs.nextCachedSnapshotClients + 0xfff;
-						cachedClient1 = svs.cachedSnapshotClients + svs.nextCachedSnapshotClients + (nextCachedSnapClients >> 0xc) * -0x1000;
+							nextCachedSnapClients = svs.nextCachedSnapshotClients + 0xFFF;
+						cachedClient1 = svs.cachedSnapshotClients + svs.nextCachedSnapshotClients + (nextCachedSnapClients >> 0xC) * -0x1000;
 						cachedClient2 = cachedClient1;
 						
-						memcpy(&cachedClient1->cs, G_GetClientState(m), 0x5c);
+						memcpy(&cachedClient1->cs, G_GetClientState(m), 0x5C);
 						custom_MSG_WriteDeltaClient(&msg, NULL, &cachedClient2->cs, 1);
 						cachedClient1 = cachedClient2;
 						i = GetFollowPlayerState(m, &cachedClient2->ps);
@@ -5724,11 +5724,11 @@ LAB_0809b5f4:
 						else
 						{
 							MSG_WriteBit1(&msg);
-							custom_MSG_WriteDeltaPlayerstate(&msg, NULL, &cachedClient2->ps);
+							custom_MSG_WriteDeltaPlayerstate(&msg, NULL, &cachedClient2->ps, NULL);
 						}
 						i = svs.nextCachedSnapshotClients;
 						svs.nextCachedSnapshotClients++;
-						if ( i != 0x7ffffffc && 0x7ffffffc < svs.nextCachedSnapshotClients )
+						if ( i != 0x7FFFFFFC && 0x7FFFFFFC < svs.nextCachedSnapshotClients )
 							Com_Error(ERR_FATAL, "\x15svs.nextCachedSnapshotClients wrapped");
 						cachedFrame->num_clients++;
 					}
@@ -5738,12 +5738,12 @@ LAB_0809b5f4:
 				{
 					gent = SV_GentityNum(k);
 					if ( gent->r.linked &&
-					(( gent->r.broadcastTime || (((gent->r.svFlags & 1) == 0 && ((svEnt = SV_SvEntityForGentity(gent), (gent->r.svFlags & 0x18) || svEnt->numClusters )))))))
+					(( gent->r.broadcastTime || ((( gent->r.svFlags & 1 ) == 0 && ((svEnt = SV_SvEntityForGentity(gent), ( gent->r.svFlags & 0x18 ) || svEnt->numClusters )))))))
 					{
 						nextCachedSnapEnts = svs.nextCachedSnapshotEntities;
 						if (svs.nextCachedSnapshotEntities < 0)
-							nextCachedSnapEnts = svs.nextCachedSnapshotEntities + 0x3fff;
-						archEnt = svs.cachedSnapshotEntities + svs.nextCachedSnapshotEntities + (nextCachedSnapEnts >> 0xe) * -0x4000;
+							nextCachedSnapEnts = svs.nextCachedSnapshotEntities + 0x3FFF;
+						archEnt = svs.cachedSnapshotEntities + svs.nextCachedSnapshotEntities + (nextCachedSnapEnts >> 0xE) * -0x4000;
 						memcpy(archEnt, gent, 0xF0);
 						archEnt->r.svFlags = gent->r.svFlags;
 						if ( gent->r.broadcastTime )
@@ -5754,14 +5754,14 @@ LAB_0809b5f4:
 						VectorCopy(gent->r.absmax, archEnt->r.absmax);
 						
 						/* New code start: setEarthquakes */
-						if ( (archEnt->s.eType - 10) == EV_EARTHQUAKE )
+						if ( ( archEnt->s.eType - 10 ) == EV_EARTHQUAKE )
 						{
 							for ( l = 0; l < sv_maxclients->current.integer; l++ )
 							{
 								if ( customPlayerState[l].noEarthquakes )
 								{
 									if ( l > 31 )
-										archEnt->r.clientMask[1] |= 1 << (l - 32);
+										archEnt->r.clientMask[1] |= 1 << ( l - 32 );
 									else
 										archEnt->r.clientMask[0] |= 1 << l;
 								}
@@ -5772,13 +5772,13 @@ LAB_0809b5f4:
 						custom_MSG_WriteDeltaArchivedEntity(&msg, &sv.svEntities[gent->s.number].baseline, archEnt, 1);
 						i = svs.nextCachedSnapshotEntities;
 						svs.nextCachedSnapshotEntities++;
-						if ( i != 0x7ffffffc && 0x7ffffffc < svs.nextCachedSnapshotEntities )
+						if ( i != 0x7FFFFFFC && 0x7FFFFFFC < svs.nextCachedSnapshotEntities )
 							Com_Error(ERR_FATAL, "\x15svs.nextCachedSnapshotEntities wrapped");
 						cachedFrame->num_entities++;
 					}
 				}
 				svs.nextCachedSnapshotFrames++;
-				if ( i != 0x7ffffffc && 0x7ffffffc < svs.nextCachedSnapshotFrames )
+				if ( i != 0x7FFFFFFC && 0x7FFFFFFC < svs.nextCachedSnapshotFrames )
 					Com_Error(ERR_FATAL, "\x15svs.nextCachedSnapshotFrames wrapped");
 			}
 			else
@@ -5802,8 +5802,8 @@ LAB_0809b5f4:
 							i = cachedFrame->first_client + j;
 							cachedFrameIndex2 = i;
 							if ( i < 0 )
-								cachedFrameIndex2 = i + 0xfff;
-							cachedClient2 = svs.cachedSnapshotClients + i + (cachedFrameIndex2 >> 0xc) * -0x1000;
+								cachedFrameIndex2 = i + 0xFFF;
+							cachedClient2 = svs.cachedSnapshotClients + i + (cachedFrameIndex2 >> 0xC) * -0x1000;
 							x = cachedClient2->cs.clientIndex;
 						}
 						else
@@ -5871,7 +5871,7 @@ LAB_0809b5f4:
 								if ( customPlayerState[l].noEarthquakes )
 								{
 									if ( l > 31 )
-										to.r.clientMask[1] |= 1 << (l - 32);
+										to.r.clientMask[1] |= 1 << ( l - 32 );
 									else
 										to.r.clientMask[0] |= 1 << l;
 								}
@@ -5883,18 +5883,18 @@ LAB_0809b5f4:
 					}
 				}
 			}
-			MSG_WriteBits(&msg, 0x3ff, 10);
+			MSG_WriteBits(&msg, 0x3FF, 10);
 			if ( !msg.overflowed )
 			{
-				archSnap = &svs.archivedSnapshotFrames[svs.nextArchivedSnapshotFrames % 0x4b0];
+				archSnap = &svs.archivedSnapshotFrames[svs.nextArchivedSnapshotFrames % 0x4B0];
 				archSnap->start = svs.nextArchivedSnapshotBuffer;
 				archSnap->size = msg.cursize;
 				nextArchSnapBuffer = svs.nextArchivedSnapshotBuffer;
 				if ( svs.nextArchivedSnapshotBuffer < 0 )
-					nextArchSnapBuffer = svs.nextArchivedSnapshotBuffer + 0x1ffffff;
+					nextArchSnapBuffer = svs.nextArchivedSnapshotBuffer + 0x1FFFFFF;
 				index = svs.nextArchivedSnapshotBuffer + (nextArchSnapBuffer >> 0x19) * -0x2000000;
 				svs.nextArchivedSnapshotBuffer += msg.cursize;
-				if ( 0x7ffffffd < svs.nextArchivedSnapshotBuffer )
+				if ( 0x7FFFFFFD < svs.nextArchivedSnapshotBuffer )
 					Com_Error(ERR_FATAL, "\x15svs.nextArchivedSnapshotBuffer wrapped");
 				freeBytes = ARCHIVEDSSBUF_SIZE - index;
 				
@@ -5909,7 +5909,7 @@ LAB_0809b5f4:
 				}
 				i = svs.nextArchivedSnapshotFrames;
 				svs.nextArchivedSnapshotFrames++;
-				if ( i != 0x7ffffffc && 0x7ffffffc < svs.nextArchivedSnapshotFrames )
+				if ( i != 0x7FFFFFFC && 0x7FFFFFFC < svs.nextArchivedSnapshotFrames )
 					Com_Error(ERR_FATAL, "\x15svs.nextArchivedSnapshotFrames wrapped");
 				LargeLocalDestructor(&buf);
 			}
@@ -5948,7 +5948,7 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 	vec3_t org;
 	client_t *snapClient;
 
-	frame = &client->frames[ client->netchan.outgoingSequence & PACKET_MASK ];
+	frame = &client->frames[client->netchan.outgoingSequence & PACKET_MASK];
 	
 	frame->num_entities = 0;
 	frame->num_clients = 0;
@@ -5985,7 +5985,7 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 					entState = svs.snapshotEntities + svs.nextSnapshotEntities % svs.numSnapshotEntities;
 					*entState = ent->s;
 					svs.nextSnapshotEntities++;
-					if ( svs.nextSnapshotEntities >= 0x7ffffffe )
+					if ( svs.nextSnapshotEntities >= 0x7FFFFFFE )
 						Com_Error(ERR_FATAL, "\x15svs.nextSnapshotEntities wrapped");
 					frame->num_entities++;
 				}
@@ -5999,7 +5999,7 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 						*clientState = *clientStateSource;
 						
 						svs.nextSnapshotClients++;
-						if ( svs.nextSnapshotClients >= 0x7ffffffe )
+						if ( svs.nextSnapshotClients >= 0x7FFFFFFE )
 							Com_Error(ERR_FATAL, "\x15svs.nextSnapshotClients wrapped");
 						frame->num_clients++;
 					}
@@ -6013,8 +6013,8 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 					j = cachedSnap->first_entity + entityNumbers.snapshotEntities[i];
 					cachedSnapEnts = j;
 					if ( j < 0 )
-						cachedSnapEnts = j + 0x3fff;
-					aent = svs.cachedSnapshotEntities + j + (cachedSnapEnts >> 0xe) * -0x4000;
+						cachedSnapEnts = j + 0x3FFF;
+					aent = svs.cachedSnapshotEntities + j + (cachedSnapEnts >> 0xE) * -0x4000;
 					entState = svs.snapshotEntities + svs.nextSnapshotEntities % svs.numSnapshotEntities;
 					*entState = aent->s;
 					if ( entState->pos.trTime )
@@ -6027,23 +6027,23 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 						entState->time2 += snapTime;
 					
 					/* New code start: setEarthquakes */
-					if ( (aent->s.eType - 10) == EV_EARTHQUAKE )
+					if ( ( aent->s.eType - 10 ) == EV_EARTHQUAKE )
 					{
 						if ( clientNum > 31 )
 						{
-							if ( aent->r.clientMask[1] & (1 << (clientNum - 32)) )
+							if ( aent->r.clientMask[1] & ( 1 << ( clientNum - 32 ) ) )
 								aent->s.eType = (entityType_t)EV_NONE;
 						}
 						else
 						{
-							if ( aent->r.clientMask[0] & (1 << clientNum ) )
+							if ( aent->r.clientMask[0] & ( 1 << clientNum ) )
 								aent->s.eType = (entityType_t)EV_NONE;
 						}
 					}
 					/* New code end */
 					
 					svs.nextSnapshotEntities++;
-					if ( svs.nextSnapshotEntities >= 0x7ffffffe )
+					if ( svs.nextSnapshotEntities >= 0x7FFFFFFE )
 						Com_Error(ERR_FATAL, "\x15svs.nextSnapshotEntities wrapped");
 					frame->num_entities++;
 				}
@@ -6052,12 +6052,12 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 					j = cachedSnap->first_client + i;
 					cachedSnapClients = j;
 					if ( j < 0 )
-						cachedSnapClients = j + 0xfff;
-					cachedClient = svs.cachedSnapshotClients + j + (cachedSnapClients >> 0xc) * -0x1000;
+						cachedSnapClients = j + 0xFFF;
+					cachedClient = svs.cachedSnapshotClients + j + (cachedSnapClients >> 0xC) * -0x1000;
 					clientState = &svs.snapshotClients[svs.nextSnapshotClients % svs.numSnapshotClients];
 					*clientState = cachedClient->cs;
 					svs.nextSnapshotClients++;
-					if ( svs.nextSnapshotClients >= 0x7ffffffe )
+					if ( svs.nextSnapshotClients >= 0x7FFFFFFE )
 						Com_Error(ERR_FATAL, "\x15svs.nextSnapshotClients wrapped");
 					frame->num_clients++;
 				}
@@ -6077,7 +6077,7 @@ void custom_G_GetPlayerViewOrigin(gentity_t *ent, float *origin)
 
 	client = ent->client;
 
-	if ( (client->ps.eFlags & EF_TURRET_STAND) != 0 )
+	if ( ( client->ps.eFlags & EF_TURRET_STAND ) != 0 )
 	{
 		if ( G_DObjGetWorldTagPos(&g_entities[client->ps.viewlocked_entNum], scr_const.tag_player, origin) )
 		{
@@ -6312,7 +6312,7 @@ void ClearNotSolidForPlayerFlags(int clientNum)
 
 		if ( ent->r.bmodel )
 		{
-			customEntityState[id].clientMask[clientNum >> 5] &= ~(1 << (clientNum & 0x1F));
+			customEntityState[id].clientMask[clientNum >> 5] &= ~( 1 << ( clientNum & 0x1F ) );
 			if ( !customEntityState[id].clientMask[0] && !customEntityState[id].clientMask[1] )
 				customEntityState[id].notSolidBrushModel = qfalse;
 		}
@@ -6504,7 +6504,7 @@ void custom_Player_UpdateCursorHints(gentity_t *player)
 		if ( !player->active )
 		{
 			useListSize = Player_GetUseList(player, (useList_t *)useList);
-			if ( ( (player->client->ps).pm_flags & PMF_MANTLE ) == 0 && useListSize )
+			if ( ( ( player->client->ps).pm_flags & PMF_MANTLE ) == 0 && useListSize )
 			{
 				cursorHint = 0;
 				cursorHintString = -1;
@@ -6580,7 +6580,7 @@ LAB_08121ee6:
 				}
 			}
 		}
-		else if ( ( (client->ps).eFlags & EF_TURRET_STAND ) != 0 )
+		else if ( ( client->ps.eFlags & EF_TURRET_STAND ) != 0 )
 		{
 			Player_SetTurretDropHint(player);
 		}
@@ -6627,7 +6627,7 @@ void custom_player_die(gentity_t *self, gentity_t *inflictor, gentity_t *attacke
 
 	if ( Com_GetServerDObj(self->client->ps.clientNum)
 	        && self->client->ps.pm_type <= PM_NORMAL_LINKED
-	        && (self->client->ps.pm_flags & 0x400000) == 0 )
+	        && ( self->client->ps.pm_flags & 0x400000 ) == 0 )
 	{
 		bgs = &level_bgs;
 
@@ -6641,7 +6641,7 @@ void custom_player_die(gentity_t *self, gentity_t *inflictor, gentity_t *attacke
 		{
 			if ( attacker->client )
 			{
-				if ( (attacker->client->ps.eFlags & EF_TURRET_STAND) != 0 )
+				if ( ( attacker->client->ps.eFlags & EF_TURRET_STAND ) != 0 )
 				{
 					turret = &g_entities[attacker->s.otherEntityNum];
 
@@ -6803,7 +6803,7 @@ void custom_PlayerCmd_finishPlayerDamage(scr_entref_t entref)
 		else
 			VectorClear(localdir);
 
-		if ( (ent->flags & 8) != 0 || (dflags & 4) != 0 )
+		if ( ( ent->flags & 8 ) != 0 || ( dflags & 4 ) != 0 )
 		{
 			minDmg = 0;
 		}
@@ -6811,11 +6811,11 @@ void custom_PlayerCmd_finishPlayerDamage(scr_entref_t entref)
 		{
 			dmgRange = 0.30000001;
 
-			if ( (ent->client->ps.pm_flags & 1) != 0 )
+			if ( ( ent->client->ps.pm_flags & 1 ) != 0 )
 			{
 				dmgRange = 0.02;
 			}
-			else if ( (ent->client->ps.pm_flags & 2) != 0 )
+			else if ( ( ent->client->ps.pm_flags & 2 ) != 0 )
 			{
 				dmgRange = 0.15000001;
 			}
@@ -6827,7 +6827,7 @@ void custom_PlayerCmd_finishPlayerDamage(scr_entref_t entref)
 
 			if ( minDmg )
 			{
-				if ( (ent->client->ps.eFlags & 0x300) == 0 )
+				if ( ( ent->client->ps.eFlags & EF_TURRET_STAND ) == 0 )
 				{
 					knockback = (float)minDmg * g_knockback->current.decimal / 250.0;
 					VectorScale(localdir, knockback, velocaityScale);
@@ -6850,7 +6850,7 @@ void custom_PlayerCmd_finishPlayerDamage(scr_entref_t entref)
 			}
 		}
 
-		if ( (ent->flags & 1) == 0 )
+		if ( ( ent->flags & 1 ) == 0 )
 		{
 			if ( weaponIndex && BG_GetWeaponDef(weaponIndex)->weapType == WEAPTYPE_BULLET && bodyBulletImpacts )
 			{
@@ -6863,7 +6863,7 @@ void custom_PlayerCmd_finishPlayerDamage(scr_entref_t entref)
 				tempEnt->s.scale = DirToByte(localdir);
 				tempEnt->s.surfType = 7;
 				tempEnt->s.otherEntityNum = attacker->s.number;
-				tempEnt->r.clientMask[ent->client->ps.clientNum >> 5] |= 1 << (ent->client->ps.clientNum & 0x1F);
+				tempEnt->r.clientMask[ent->client->ps.clientNum >> 5] |= 1 << ( ent->client->ps.clientNum & 0x1F );
 
 				if ( BG_GetWeaponDef(weaponIndex)->bRifleBullet )
 					tempEnt = G_TempEntity(vPoint, EV_BULLET_HIT_CLIENT_LARGE);
@@ -6875,7 +6875,7 @@ void custom_PlayerCmd_finishPlayerDamage(scr_entref_t entref)
 				tempEnt->s.clientNum = ent->client->ps.clientNum;
 				tempEnt->r.clientMask[0] = -1;
 				tempEnt->r.clientMask[1] = -1;
-				tempEnt->r.clientMask[ent->client->ps.clientNum >> 5] &= ~(1 << (ent->client->ps.clientNum & 0x1F));
+				tempEnt->r.clientMask[ent->client->ps.clientNum >> 5] &= ~( 1 << ( ent->client->ps.clientNum & 0x1F ) );
 			}
 
 			ent->client->damage_blood += damage;
@@ -6891,7 +6891,7 @@ void custom_PlayerCmd_finishPlayerDamage(scr_entref_t entref)
 				ent->client->damage_fromWorld = 1;
 			}
 
-			if ( (ent->flags & 2) != 0 && ent->health - damage <= 0 )
+			if ( ( ent->flags & 2 ) != 0 && ent->health - damage <= 0 )
 				damage = ent->health - 1;
 
 			maxTime = player_dmgtimer_maxTime->current.decimal;
@@ -7109,7 +7109,7 @@ void custom_Scr_BulletTrace(void)
 	{
 		Scr_AddVector(trace.normal);
 		Scr_AddArrayStringIndexed(scr_const.normal);
-		Scr_AddString(Com_SurfaceTypeToName((int)(trace.surfaceFlags & 0x1F00000U) >> 0x14));
+		Scr_AddString(Com_SurfaceTypeToName((int)( trace.surfaceFlags & 0x1F00000U ) >> 0x14));
 		Scr_AddArrayStringIndexed(scr_const.surfacetype);
 		Scr_AddInt(trace.surfaceFlags);
 		Scr_AddArrayStringIndexed(custom_scr_const.flags);
@@ -7620,7 +7620,7 @@ void custom_G_DamageClient(gentity_t *self, gentity_t *inflictor, gentity_t *att
 		if ( inflictor )
 		{
 			/* New code start: scr_turretDamageName dvar */
-			if ( scr_turretDamageName->current.boolean && inflictor->s.eFlags & EF_TURRET_STAND )
+			if ( scr_turretDamageName->current.boolean && ( inflictor->s.eFlags & EF_TURRET_STAND ) )
 			{
 				gentity_t *turret = &level.gentities[inflictor->client->ps.viewlocked_entNum];
 
@@ -7654,7 +7654,7 @@ void custom_FireWeaponMelee(gentity_t *player)
 	int id;
 	float range, width, height;
 
-	if ( (player->client->ps.eFlags & EF_TURRET_STAND) == 0 || player->active == 0 )
+	if ( ( player->client->ps.eFlags & EF_TURRET_STAND ) == 0 || player->active == 0 )
 	{
 		id = player->client->ps.clientNum;
 		wp.weapDef = BG_GetWeaponDef(player->s.weapon);
@@ -7747,7 +7747,7 @@ void custom_Bullet_Fire_Extended(const gentity_t *inflictor, gentity_t *attacker
 		dot = DotProduct(dir, trace.normal) * -2.0;
 		VectorMA(dir, dot, trace.normal, dir);
 
-		if ( (trace.surfaceFlags & SURF_SKY) == 0 && !self->client && trace.fraction < 1.0 )
+		if ( ( trace.surfaceFlags & SURF_SKY ) == 0 && !self->client && trace.fraction < 1.0 )
 		{
 			if ( wp->weapDef->weapClass == WEAPCLASS_SPREAD )
 			{
@@ -7795,14 +7795,14 @@ void custom_Bullet_Fire_Extended(const gentity_t *inflictor, gentity_t *attacker
 				if ( self->s.eType == ET_PLAYER_CORPSE && g_corpseHit->current.boolean ) // New: g_corpseHit dvar
 					surfaceType = 7;
 				else
-					surfaceType = (trace.surfaceFlags & 0x1F00000) >> 20;
+					surfaceType = ( trace.surfaceFlags & 0x1F00000 ) >> 20;
 
 				tempEnt->s.surfType = surfaceType;
 				tempEnt->s.otherEntityNum = weaponEnt->s.number;
 			}
 		}
 
-		if ( (trace.contents & CONTENTS_GLASS) != 0 )
+		if ( ( trace.contents & CONTENTS_GLASS ) != 0 )
 		{
 			VectorSubtract(end, start, dir);
 			Vec3Normalize(dir);
@@ -7828,7 +7828,7 @@ void custom_Bullet_Fire_Extended(const gentity_t *inflictor, gentity_t *attacker
 
 				if ( self->client )
 				{
-					if ( (dflags & 0x20) != 0 && ( Dvar_GetInt("scr_friendlyfire") || !OnSameTeam(self, attacker) ) )
+					if ( ( dflags & 0x20 ) != 0 && ( Dvar_GetInt("scr_friendlyfire") || !OnSameTeam(self, attacker) ) )
 					{
 						scale = dmgScale * 0.5;
 						custom_Bullet_Fire_Extended(self, attacker, origin, end, scale, callCount + 1, wp, weaponEnt, gameTime);
@@ -7909,7 +7909,7 @@ qboolean custom_Bullet_Fire_Drop(droppingBullet_t *bullet, const gentity_t *infl
 	VectorMA(dir, dot, trace.normal, dir);
 
 	// Bullet holes
-	if ( (trace.surfaceFlags & SURF_SKY) == 0 && !self->client && trace.fraction < 1.0 )
+	if ( ( trace.surfaceFlags & SURF_SKY ) == 0 && !self->client && trace.fraction < 1.0 )
 	{
 		if ( wp->weapDef->weapClass == WEAPCLASS_SPREAD )
 		{
@@ -7955,7 +7955,7 @@ qboolean custom_Bullet_Fire_Drop(droppingBullet_t *bullet, const gentity_t *infl
 			if ( self->s.eType == ET_PLAYER_CORPSE && g_corpseHit->current.boolean ) // New: g_corpseHit dvar
 				surfaceType = 7;
 			else
-				surfaceType = (trace.surfaceFlags & 0x1F00000) >> 20;
+				surfaceType = ( trace.surfaceFlags & 0x1F00000 ) >> 20;
 
 			tempEnt->s.surfType = surfaceType;
 			tempEnt->s.otherEntityNum = weaponEnt->s.number;
@@ -7963,7 +7963,7 @@ qboolean custom_Bullet_Fire_Drop(droppingBullet_t *bullet, const gentity_t *infl
 	}
 
 	// If glass was hit, keep the bullet alive
-	if ( (trace.contents & CONTENTS_GLASS) != 0 )
+	if ( ( trace.contents & CONTENTS_GLASS ) != 0 )
 	{
 		VectorSubtract(end, start, dir);
 		Vec3Normalize(dir);
@@ -7994,7 +7994,7 @@ qboolean custom_Bullet_Fire_Drop(droppingBullet_t *bullet, const gentity_t *infl
 
 			if ( self->client )
 			{
-				if ( (dflags & 0x20) != 0 && ( Dvar_GetInt("scr_friendlyfire") || !OnSameTeam(self, attacker) ) )
+				if ( ( dflags & 0x20 ) != 0 && ( Dvar_GetInt("scr_friendlyfire") || !OnSameTeam(self, attacker) ) )
 				{
 					bullet->dmgScale = dmgScale * 0.5;
 					return qfalse;
@@ -8297,7 +8297,7 @@ void custom_FireWeaponAntiLag(gentity_t *player, int time)
 	float currentAimSpreadScale;
 	weaponParms wp;
 
-	if ( ((player->client->ps).eFlags & EF_TURRET_STAND) == 0 || player->active == 0 )
+	if ( ( player->client->ps.eFlags & EF_TURRET_STAND ) == 0 || player->active == 0 )
 	{
 		wp.weapDef = BG_GetWeaponDef((player->s).weapon);
 		G_CalcMuzzlePoints(player, &wp);
@@ -8542,7 +8542,7 @@ qboolean G_BounceGravityModel(gentity_t *ent, trace_t *trace) // G_BounceMissile
 			if ( Scr_IsSystemActive() )
 			{
 				Scr_AddEntity(&g_entities[trace->entityNum]);
-				Scr_AddString(Com_SurfaceTypeToName((int)(trace->surfaceFlags & 0x1F00000U) >> 0x14));
+				Scr_AddString(Com_SurfaceTypeToName((int)( trace->surfaceFlags & 0x1F00000U ) >> 0x14));
 				Scr_Notify(ent, custom_scr_const.land, 2);
 			}
 			G_SetOrigin(ent, (ent->r).currentOrigin);
@@ -8667,7 +8667,7 @@ void G_RunGravityModelWithBounce(gentity_t *ent) // G_RunMissile as base
 		if ( bounce && trace.startsolid == 0 && Scr_IsSystemActive() )
 		{
 			Scr_AddEntity(&g_entities[trace.entityNum]);
-			Scr_AddString(Com_SurfaceTypeToName((int)(trace.surfaceFlags & 0x1F00000U) >> 0x14));
+			Scr_AddString(Com_SurfaceTypeToName((int)( trace.surfaceFlags & 0x1F00000U ) >> 0x14));
 			Scr_Notify(ent, custom_scr_const.bounce, 2);
 		}
 	}
@@ -8682,7 +8682,7 @@ void G_RunGravityModelNoBounce(gentity_t *ent) // G_RunItem as base
 	vec3_t maxLerpVector;
 
 	if ( ( ( ( (ent->s).groundEntityNum == ENTITY_NONE ) || ( level.gentities[(ent->s).groundEntityNum].s.pos.trType != TR_STATIONARY ) ) && ( (ent->s).pos.trType != TR_GRAVITY ) ) &&
-	( ( ( ent->spawnflags ^ 1) & 1) != 0 ) )
+	( ( ( ent->spawnflags ^ 1) & 1 ) != 0 ) )
 	{
 		(ent->s).pos.trType = TR_GRAVITY;
 		(ent->s).pos.trTime = level.time;
@@ -8762,7 +8762,7 @@ void G_RunGravityModelNoBounce(gentity_t *ent) // G_RunItem as base
 				if ( (ent->s).groundEntityNum != trace.entityNum && Scr_IsSystemActive() )
 				{
 					Scr_AddEntity(&g_entities[trace.entityNum]);
-					Scr_AddString(Com_SurfaceTypeToName((int)(trace.surfaceFlags & 0x1F00000U) >> 0x14));
+					Scr_AddString(Com_SurfaceTypeToName((int)( trace.surfaceFlags & 0x1F00000U ) >> 0x14));
 					Scr_Notify(ent, custom_scr_const.land, 2);
 				}
 				(ent->s).groundEntityNum = trace.entityNum;
@@ -9394,7 +9394,7 @@ void custom_SV_ExecuteClientMessage(client_t *cl, msg_t *msg)
 		} while ( cl->state != CS_ZOMBIE );
 		LargeLocalDestructor(&buf);
 	}
-	else if ( (cl->serverId & 0xF0) == (sv_serverId_value & 0xF0) )
+	else if ( ( cl->serverId & 0xF0 ) == ( sv_serverId_value & 0xF0 ) )
 	{
 		if ( cl->state == CS_PRIMED )
 		{
@@ -9526,7 +9526,7 @@ void custom_SV_PacketEvent(netadr_t from, msg_t *msg)
 		cl = svs.clients;
 		for ( i = 0; i < sv_maxclients->current.integer; i++, cl++ )
 		{
-			if ( cl->state != CS_FREE && NET_CompareBaseAdr(from, (cl->netchan).remoteAddress) && (cl->netchan).qport == (qport & 0xFFFF) )
+			if ( cl->state != CS_FREE && NET_CompareBaseAdr(from, (cl->netchan).remoteAddress) && (cl->netchan).qport == ( qport & 0xFFFF ) )
 			{
 				if ( (cl->netchan).remoteAddress.port != from.port )
 				{
@@ -9873,7 +9873,7 @@ char * custom_SV_AllocSkelMemory(unsigned int size)
 	while ( 1 )
 	{
 		pos = *g_sv_skel_memory_start + sv.skelMemPos;
-		sv.skelMemPos += (size + 0xF) & 0xFFFFFFF0;
+		sv.skelMemPos += ( size + 0xF ) & 0xFFFFFFF0;
 
 		if ( sv.skelMemPos < 0x3FFF1 )
 			break;

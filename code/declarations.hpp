@@ -1607,7 +1607,7 @@ typedef struct playerState_s
 	int pm_time;
 	vec3_t origin;
 	vec3_t velocity;
-	vec2_t oldVelocity; // 48
+	vec2_t oldVelocity;
 	int weaponTime;
 	int weaponDelay;
 	int grenadeTimeLeft;
@@ -4132,7 +4132,8 @@ typedef struct
 	unsigned short trigger_radius;
 } customStringIndex_t;
 
-typedef enum {
+typedef enum
+{
 	OUTBOUND_BUCKET_MAIN = 0x0,
 	OUTBOUND_BUCKET_PROXY1 = 0x1,
 	OUTBOUND_BUCKET_PROXY2 = 0x2,
