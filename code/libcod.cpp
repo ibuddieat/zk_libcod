@@ -1505,13 +1505,13 @@ void custom_SV_MasterHeartbeat(const char *hbname)
 	hook_SV_MasterHeartbeat->hook();
 }
 
-int custom_GScr_LoadGameTypeScript()
+int custom_GScr_LoadGameTypeScript(void)
 {
 	unsigned int i;
 	char path_for_cb[512] = "maps/mp/gametypes/_callbacksetup";
 
 	hook_GScr_LoadGameTypeScript->unhook();
-	int (*GScr_LoadGameTypeScript)();
+	int (*GScr_LoadGameTypeScript)(void);
 	*(int *)&GScr_LoadGameTypeScript = hook_GScr_LoadGameTypeScript->from;
 	int ret = GScr_LoadGameTypeScript();
 	hook_GScr_LoadGameTypeScript->hook();
@@ -5036,14 +5036,14 @@ void custom_GScr_LoadLevelScript()
 	}
 }
 
-void custom_Scr_InitOpcodeLookup()
+void custom_Scr_InitOpcodeLookup(void)
 {
 	scrVarPub_t *vars = &scrVarPub;
 
 	vars->developer = 1;
 
 	hook_Scr_InitOpcodeLookup->unhook();
-	void (*Scr_InitOpcodeLookup)();
+	void (*Scr_InitOpcodeLookup)(void);
 	*(int *)&Scr_InitOpcodeLookup = hook_Scr_InitOpcodeLookup->from;
 	Scr_InitOpcodeLookup();
 	hook_Scr_InitOpcodeLookup->hook();
@@ -9527,12 +9527,12 @@ void custom_SV_PacketEvent(netadr_t from, msg_t *msg)
 		cl = svs.clients;
 		for ( i = 0; i < sv_maxclients->current.integer; i++, cl++ )
 		{
-			if ( cl->state != CS_FREE && NET_CompareBaseAdr(from, (cl->netchan).remoteAddress) && (cl->netchan).qport == ( qport & 0xFFFF ) )
+			if ( cl->state != CS_FREE && NET_CompareBaseAdr(from, cl->netchan.remoteAddress) && cl->netchan.qport == ( qport & 0xFFFF ) )
 			{
-				if ( (cl->netchan).remoteAddress.port != from.port )
+				if ( cl->netchan.remoteAddress.port != from.port )
 				{
 					Com_Printf("SV_ReadPackets: fixing up a translated port\n");
-					(cl->netchan).remoteAddress.port = from.port;
+					cl->netchan.remoteAddress.port = from.port;
 				}
 
 				if ( !Netchan_Process(&cl->netchan, msg) )
