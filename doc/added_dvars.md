@@ -180,7 +180,7 @@ Added dvars:
   * `sv_downloadMessageForLegacyClients`
     * Type: String
     * Default: ""
-    * Effect: If set to a non-empty string, players on game version 1.0 that attempt to download a file on connect are disconnected from the server, with the specified message displayed after disconnect. Related dvars: `sv_downloadMessage`, `sv_downloadMessageAtMap`.
+    * Effect: If set to a non-empty string, players on game version 1.0 and 1.3 (protocol 119 only) that attempt to download a file on connect are disconnected from the server, with the specified message displayed after disconnect. Related dvars: `sv_downloadMessage`, `sv_downloadMessageAtMap`.
   * `sv_downloadNotifications`
     * Type: Boolean
     * Default: False
@@ -253,6 +253,10 @@ Added dvars:
     * Type: String
     * Default: "0.0.0.0:28962"
     * Effect: Hostname and port the proxy socket for game version 1.3 should listen to (see `sv_proxyEnable_1_3` dvar).
+  * `sv_proxyAddress_1_3_119`
+    * Type: String
+    * Default: "0.0.0.0:28963"
+    * Effect: Hostname and port the proxy socket for game version 1.3 (protocol 119) should listen to (see `sv_proxyEnable_1_3_119` dvar).
   * `sv_proxyEnable_1_0`
     * Type: Boolean
     * Default: False
@@ -265,6 +269,10 @@ Added dvars:
     * Type: Boolean
     * Default: False
     * Effect: Allows to open another (proxy) port that is advertised to the master server to show up as game version 1.3 in the ingame server browser. Has no effect if sv_version is already set to "1.3". If enabled, the proxy is started on map (re)load, and shuts down (only) on server quit. Rcon commands are ignored on proxy ports. Clients connecting via the proxy always have a zero GUID, and player ping restrictions are not enforced on that port.
+  * `sv_proxyEnable_1_3_119`
+    * Type: Boolean
+    * Default: False
+    * Effect: Allows to open another (proxy) port that is advertised to the master server to show up as game version 1.3 (protocol 119) in the ingame server browser. If enabled, the proxy is started on map (re)load, and shuts down (only) on server quit. Rcon commands are ignored on proxy ports. Clients connecting via the proxy always have a zero GUID, and player ping restrictions are not enforced on that port.
   * `sv_proxyForwardAddress_1_0`
     * Type: String
     * Default: "`[net_ip]:[net_port]`"
@@ -277,6 +285,10 @@ Added dvars:
     * Type: String
     * Default: "`[net_ip]:[net_port]`"
     * Effect: Destination hostname and port the proxy socket for game version 1.3 should forward packets to (see `sv_proxyAddress_1_3` dvar).
+  * `sv_proxyForwardAddress_1_3_119`
+    * Type: String
+    * Default: "`[net_ip]:[net_port]`"
+    * Effect: Destination hostname and port the proxy socket for game version 1.3 (protocol 119) should forward packets to (see `sv_proxyAddress_1_3_119` dvar).
   * `sv_reservedConfigstringBufferSize`
     * Type: Integer
     * Default: 256

@@ -296,12 +296,10 @@ const entityHandler_t entityHandlers[] =
 customEntityState_t customEntityState[MAX_GENTITIES];
 customPlayerState_t customPlayerState[MAX_CLIENTS];
 
-// Information about loaded .iwd files, sent to clients that use game version
-// 1.2 while the server runs on version 1.0 or 1.3. Applied the other way
-// around if the server runs on version 1.2
-char altSystemInfo[BIG_INFO_STRING];
-char altIwds[MAX_STRINGLENGTH];
-char altReferencedIwds[MAX_STRINGLENGTH];
+// Information about loaded .iwd files, covering all four protocol versions
+char systemInfo[PROTOCOL_COUNT][BIG_INFO_STRING];
+char iwds[PROTOCOL_COUNT][MAX_STRINGLENGTH];
+char referencedIwds[PROTOCOL_COUNT][MAX_STRINGLENGTH];
 
 // We use a custom (extended) list of mutexes. All references to the original
 // crit_sections list are hooked away
@@ -338,6 +336,10 @@ void custom_Com_InitDvars(void)
 
 	/* Register stock dvars here with different settings, scheme:
 	dvar_t *dvar = Dvar_Register<Type>(var_name, default value, [min. value, max. value,] flags); */
+
+	// We do not allow protocol 119 as max. value here as it does not have a
+	// unique shortVersion. It is supported via proxy only, see
+	// sv_proxyEnable_1_3_119 dvar
 	Dvar_RegisterInt("protocol", 118, 115, 118, DVAR_CHANGEABLE_RESET | DVAR_ROM | DVAR_SERVERINFO);
 
 	hook_Com_InitDvars->unhook();
@@ -723,27 +725,58 @@ qboolean IsNeededIwd(searchpath_t *search)
 		return qfalse;
 }
 
-int GetIW15Checksum(qboolean flipped)
+int GetIW06Checksum(int protocol)
 {
-	int checksum;
-
-	if ( !strncmp(sv_version->current.string, "1.2", 3) )
+	switch ( protocol )
 	{
-		checksum = 2103914635;
-		if ( flipped )
-			checksum = 181429573;
-	}
-	else
-	{
-		checksum = 181429573; // Fine for 1.0 and 1.3
-		if ( flipped )
-			checksum = 2103914635;
+		case 115:
+		case 117:
+		case 118:
+			return 1053665859;
+		case 119: // 1.3.4054
+			return -141992458;
+		default:
+			Com_Error(ERR_FATAL, "\x15Invalid protocol version requested for iw_06.iwd");
 	}
 
-	return checksum;
+	return 0;
 }
 
-const char * custom_FS_LoadedIwdChecksums(qboolean flipped)
+int GetIW07Checksum(int protocol)
+{
+	switch ( protocol )
+	{
+		case 115:
+		case 117:
+		case 118:
+			return 1046874969;
+		case 119: // 1.3.4054
+			return 840608716;
+		default:
+			Com_Error(ERR_FATAL, "\x15Invalid protocol version requested for iw_07.iwd");
+	}
+
+	return 0;
+}
+
+int GetIW15Checksum(int protocol)
+{
+	switch ( protocol )
+	{
+		case 115:
+		case 118:
+		case 119:
+			return 181429573;
+		case 117:
+			return 2103914635;
+		default:
+			Com_Error(ERR_FATAL, "\x15Invalid protocol version requested for iw_15.iwd");
+	}
+
+	return 0;
+}
+
+const char * custom_FS_LoadedIwdChecksums(int protocol)
 {
 	static char info[BIG_INFO_STRING];
 	searchpath_t *search;
@@ -758,10 +791,13 @@ const char * custom_FS_LoadedIwdChecksums(qboolean flipped)
 		{
 			checksum = search->iwd->checksum;
 
-			/* New code start: Multi-version support without iwd_15.iwd file
-			 error on game version 1.2 */
-			if ( !strncmp(search->iwd->iwdBasename, "iw_15", 5) )
-				checksum = GetIW15Checksum(flipped);
+			/* New code start: Multi-version support */
+			if ( !strncmp(search->iwd->iwdBasename, "iw_06", 5) )
+				checksum = GetIW06Checksum(protocol);
+			else if ( !strncmp(search->iwd->iwdBasename, "iw_07", 5) )
+				checksum = GetIW07Checksum(protocol);
+			else if ( !strncmp(search->iwd->iwdBasename, "iw_15", 5) )
+				checksum = GetIW15Checksum(protocol);
 			/* New code end */
 
 			I_strncat(info, sizeof(info), va("%i ", checksum));
@@ -794,7 +830,7 @@ const char * custom_FS_LoadedIwdNames(void)
 	return info;
 }
 
-const char * custom_FS_ReferencedIwdChecksums(qboolean flipped)
+const char * custom_FS_ReferencedIwdChecksums(int protocol)
 {
 	searchpath_t *search;
 	static char info[BIG_INFO_STRING];
@@ -802,16 +838,19 @@ const char * custom_FS_ReferencedIwdChecksums(qboolean flipped)
 
 	info[0] = '\0';
 
-	for ( search = fs_searchpaths ; search != (searchpath_t *)0x0 ; search = search->next )
+	for ( search = fs_searchpaths; search != (searchpath_t *)0x0; search = search->next )
 	{
 		if ( search->iwd != NULL && ( search->iwd->referenced || I_strnicmp(search->iwd->iwdGamename, "main", 4) ) )
 		{
 			checksum = search->iwd->checksum;
 
-			/* New code start: Multi-version support without iwd_15.iwd file
-			 error on game version 1.2 */
-			if ( !strncmp(search->iwd->iwdBasename, "iw_15", 5) )
-				checksum = GetIW15Checksum(flipped);
+			/* New code start: Multi-version support */
+			if ( !strncmp(search->iwd->iwdBasename, "iw_06", 5) )
+				checksum = GetIW06Checksum(protocol);
+			else if ( !strncmp(search->iwd->iwdBasename, "iw_07", 5) )
+				checksum = GetIW07Checksum(protocol);
+			else if ( !strncmp(search->iwd->iwdBasename, "iw_15", 5) )
+				checksum = GetIW15Checksum(protocol);
 			/* New code end */
 
 			I_strncat(info, sizeof(info), va("%i ", checksum));
@@ -829,13 +868,23 @@ void custom_SV_SaveSystemInfo()
 
 	I_strncpyz(info, Dvar_InfoString_Big(DVAR_SYSTEMINFO), sizeof(info));
 
-	/* New code start: Alternative config string for clients connecting via
-	 a different game version than what is set via the sv_version dvar */
+	/* New code start: Multi-version support: Alternative config string for
+	 clients connecting via a different game version than what is set via the
+	 sv_version dvar, if multi-version proxies are in use */
+
+	// Save original dvar values
 	I_strncpyz(tempIwds, sv_iwds->current.string, sizeof(tempIwds));
-	Dvar_SetString(sv_iwds, altIwds);
 	I_strncpyz(tempReferencedIwds, sv_referencedIwds->current.string, sizeof(tempReferencedIwds));
-	Dvar_SetString(sv_referencedIwds, altReferencedIwds);
-	I_strncpyz(altSystemInfo, Dvar_InfoString_Big(DVAR_SYSTEMINFO), sizeof(altSystemInfo));
+
+	// Construct alternative system info strings via Dvar_InfoString_Big
+	for ( int i = 0; i < PROTOCOL_COUNT; i++ )
+	{
+		Dvar_SetString(sv_iwds, iwds[i]);
+		Dvar_SetString(sv_referencedIwds, referencedIwds[i]);
+		I_strncpyz(systemInfo[i], Dvar_InfoString_Big(DVAR_SYSTEMINFO), sizeof(systemInfo[0]));
+	}
+
+	// Restore original dvar values
 	Dvar_SetString(sv_iwds, tempIwds);
 	Dvar_SetString(sv_referencedIwds, tempReferencedIwds);
 
@@ -1036,25 +1085,40 @@ void custom_SV_SpawnServer(char *server)
 
 	if ( sv_pure->current.boolean )
 	{
-		iwdChecksums = custom_FS_LoadedIwdChecksums(qfalse);
+		/* New code start: Multi-version support */
+		for ( i = 0; i < PROTOCOL_COUNT; i++ )
+		{
+			I_strncpyz(iwds[i], custom_FS_LoadedIwdChecksums(getProtocolForIndex(i)), sizeof(iwds[0]));
+		}
+		/* New code end */
+
+		iwdChecksums = iwds[getIndexForProtocol(getProtocolFromShortVersion(sv_version->current.string))];
 		Dvar_SetString(sv_iwds, iwdChecksums);
 
 		if ( !*iwdChecksums )
 			Com_Printf("WARNING: sv_pure set but no IWD files loaded\n");
-
-		I_strncpyz(altIwds, custom_FS_LoadedIwdChecksums(qtrue), sizeof(altIwds)); // New
 
 		iwdNames = custom_FS_LoadedIwdNames();
 		Dvar_SetString(sv_iwdNames, iwdNames);
 	}
 	else
 	{
+		/* New code start: Multi-version support */
+		memset(iwds, 0, sizeof(iwds));
+		/* New code end */
+
 		Dvar_SetString(sv_iwds, "");
 		Dvar_SetString(sv_iwdNames, "");
 	}
 
-	Dvar_SetString(sv_referencedIwds, custom_FS_ReferencedIwdChecksums(qfalse));
-	I_strncpyz(altReferencedIwds, custom_FS_ReferencedIwdChecksums(qtrue), sizeof(altReferencedIwds)); // New
+	/* New code start: Multi-version support */
+	for ( i = 0; i < PROTOCOL_COUNT; i++ )
+	{
+		I_strncpyz(referencedIwds[i], custom_FS_ReferencedIwdChecksums(getProtocolForIndex(i)), sizeof(referencedIwds[0]));
+	}
+	Dvar_SetString(sv_referencedIwds, referencedIwds[getIndexForProtocol(getProtocolFromShortVersion(sv_version->current.string))]);
+	/* New code end */
+
 	Dvar_SetString(sv_referencedIwdNames, FS_ReferencedIwdNames());
 
 	/* New code start: sv_minimizeSysteminfo dvar */
@@ -1255,10 +1319,10 @@ void custom_SV_DirectConnect(netadr_t from)
 
 	version = atoi(Info_ValueForKey(userinfo, "protocol"));
 
-	if ( version < 115 || version > 118 )
+	if ( version < 115 || version > 119 )
 	{
-		NET_OutOfBandPrint(NS_SERVER, from, va("error\nEXE_SERVER_IS_DIFFERENT_VER\x15%s\n", "1.3"));
-		Com_DPrintf("    rejected connect from protocol version %i (should be between %i and %i)\n", version, 115, 118);
+		NET_OutOfBandPrint(NS_SERVER, from, va("error\nEXE_SERVER_IS_DIFFERENT_VER\x15%s\n", sv_version->current.string));
+		Com_DPrintf("    rejected connect from protocol version %i (should be between %i and %i)\n", version, 115, 119);
 		return;
 	}
 
@@ -1410,7 +1474,7 @@ LAB_0808ec36:
 
 		/* New code start: Save client protocol version */
 		customPlayerState[clientNum].protocolVersion = version;
-		Com_Printf("Connecting player #%i runs on version %s\n", clientNum, getShortVersionFromProtocol(version));
+		Com_Printf("Connecting player #%i runs on version %s (protocol %i)\n", clientNum, getShortVersionFromProtocol(version), version);
 		/* New code end */
 
 		if ( guid == 0 )
@@ -2617,7 +2681,7 @@ void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t 
 	}
 }
 
-void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerState_t *to)
+void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerState_t *to, client_t *client)
 {
 	playerState_t dummy;
 	int i, j, lc;
@@ -2724,8 +2788,21 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 	i = 0;
 	while ( i < 6 )
 	{
+		/* New code start: Multi version support */
+		if ( client && customPlayerState[client - svs.clients].protocolVersion == 119 && i == 4)
+		{
+			// Skipping STAT_IDENT_CLIENT_HEALTH
+			i++;
+			
+			// Adjust bit index for STAT_SPAWN_COUNT
+			if ( to->stats[i] != from->stats[i] )
+				statsbits |= 1 << ( i - 1 );
+			break;
+		}
+		/* New code end */
+
 		if ( to->stats[i] != from->stats[i] )
-			statsbits = statsbits | 1 << ((byte)i & 0x1f);
+			statsbits |= 1 << i;
 		i++;
 	}
 	if ( !statsbits )
@@ -2735,19 +2812,39 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 	else
 	{
 		MSG_WriteBit1(msg);
-		MSG_WriteBits(msg, statsbits, 6);
-		if ( statsbits & 1U )
-			MSG_WriteShort(msg, to->stats[0]);
-		if ( statsbits & 2U )
-			MSG_WriteShort(msg, to->stats[1]);
-		if ( statsbits & 4U )
-			MSG_WriteShort(msg, to->stats[2]);
-		if ( statsbits & 8U )
-			MSG_WriteBits(msg, to->stats[3],6);
-		if ( statsbits & 0x10U )
-			MSG_WriteShort(msg, to->stats[4]);
-		if ( statsbits & 0x20U )
-			MSG_WriteByte(msg, (char)to->stats[5]);
+
+		/* New code start: Multi version support */
+		if ( client && customPlayerState[client - svs.clients].protocolVersion == 119 )
+		{
+			MSG_WriteBits(msg, statsbits, MAX_STATS - 1);
+			if ( statsbits & ( 1 << STAT_HEALTH ) )
+				MSG_WriteShort(msg, to->stats[STAT_HEALTH]);
+			if ( statsbits & ( 1 << STAT_DEAD_YAW ) )
+				MSG_WriteShort(msg, to->stats[STAT_DEAD_YAW]);
+			if ( statsbits & ( 1 << STAT_MAX_HEALTH ) )
+				MSG_WriteShort(msg, to->stats[STAT_MAX_HEALTH]);
+			if ( statsbits & ( 1 << STAT_IDENT_CLIENT_NUM ) )
+				MSG_WriteBits(msg, to->stats[STAT_IDENT_CLIENT_NUM], 6);
+			if ( statsbits & ( 1 << ( STAT_SPAWN_COUNT - 1 ) ) )
+				MSG_WriteByte(msg, to->stats[STAT_SPAWN_COUNT]);
+		}
+		else
+		/* New code end */
+		{
+			MSG_WriteBits(msg, statsbits, MAX_STATS);
+			if ( statsbits & ( 1 << STAT_HEALTH ) )
+				MSG_WriteShort(msg, to->stats[STAT_HEALTH]);
+			if ( statsbits & ( 1 << STAT_DEAD_YAW ) )
+				MSG_WriteShort(msg, to->stats[STAT_DEAD_YAW]);
+			if ( statsbits & ( 1 << STAT_MAX_HEALTH ) )
+				MSG_WriteShort(msg, to->stats[STAT_MAX_HEALTH]);
+			if ( statsbits & ( 1 << STAT_IDENT_CLIENT_NUM ) )
+				MSG_WriteBits(msg, to->stats[STAT_IDENT_CLIENT_NUM], 6);
+			if ( statsbits & ( 1 << STAT_IDENT_CLIENT_HEALTH ) )
+				MSG_WriteShort(msg, to->stats[STAT_IDENT_CLIENT_HEALTH]);
+			if ( statsbits & ( 1 << STAT_SPAWN_COUNT ) )
+				MSG_WriteByte(msg, to->stats[STAT_SPAWN_COUNT]);
+		}
 	}
 	
 	j = 0;
@@ -3093,7 +3190,7 @@ void custom_SV_WriteSnapshotToClient(client_t *client, msg_t *msg)
 	MSG_WriteByte(msg, snapFlags);
 	if ( oldframe == NULL )
 	{
-		custom_MSG_WriteDeltaPlayerstate(msg, NULL, to);
+		custom_MSG_WriteDeltaPlayerstate(msg, NULL, to, client);
 		from_num_entities = 0;
 		from_first_entity = 0;
 		from_num_clients = 0;
@@ -3101,7 +3198,7 @@ void custom_SV_WriteSnapshotToClient(client_t *client, msg_t *msg)
 	}
 	else
 	{
-		custom_MSG_WriteDeltaPlayerstate(msg, &oldframe->ps, to);
+		custom_MSG_WriteDeltaPlayerstate(msg, &oldframe->ps, to, client);
 		from_num_entities = oldframe->num_entities;
 		from_first_entity = oldframe->first_entity;
 		from_num_clients = oldframe->num_clients;
@@ -3142,7 +3239,7 @@ qboolean custom_Netchan_TransmitNextFragment(netchan_t *chan)
 	}
 
 	/* New code start: Multi version support */
-	if ( customPlayerState[id].protocolVersion < 118 )
+	if ( customPlayerState[id].protocolVersion != 118 )
 		MSG_WriteShort(&send, chan->unsentFragmentStart);
 	else
 		MSG_WriteLong(&send, chan->unsentFragmentStart);
@@ -3446,14 +3543,9 @@ void custom_SV_SendClientGameState(client_t *client)
 
 			/* New code start: Multi version support */
 
-			// Fix iw_15.iwd checksum mismatch for version 1.2
+			// Fix .iwd file checksum mismatches between versions
 			if ( start == CS_SYSTEMINFO )
-			{
-				if ( protocolVersion == 117 && getProtocolFromShortVersion(sv_version->current.string) != 117 )
-					configstring = altSystemInfo;
-				else if ( protocolVersion != 117 && getProtocolFromShortVersion(sv_version->current.string) == 117 )
-					configstring = altSystemInfo;
-			}
+				configstring = systemInfo[getIndexForProtocol(protocolVersion)];
 
 			// Older protocol versions: Sending overflowing config strings
 			// afterwards via reliable server commands is constrained by
@@ -3473,8 +3565,10 @@ void custom_SV_SendClientGameState(client_t *client)
 			// set higher in case clients with older game versions tend to run
 			// into "MAX_GAMESTATE_CHARS exceeded" errors.
 			currentConfigstringSize = strlen(configstring);
-			if ( protocolVersion < 118 )
+			if ( protocolVersion != 118 )
 			{
+				// 3 = svc_configstring and index
+				// 10 = svc_EOF and checksumFeed
 				if ( ( msg.cursize + currentConfigstringSize + 3 + 10 ) > 0x4000 )
 				{
 					Com_Printf("Client %i ran into gamestate limit at configstring %i\n", id, start);
@@ -3522,8 +3616,8 @@ void custom_SV_SendClientGameState(client_t *client)
 		{
 			if ( sv.configstrings[start][0] )
 			{
-				// We do not apply the iw_15.iwd checksum mismatch fix here
-				// (again, see above) as we assume that the entity baseline
+				// We do not apply the .iwd file checksum mismatch fixes here
+				// again (see above) as we assume that the entity baseline
 				// will not consume all the available gamestate space
 
 				currentConfigstringSize = strlen(sv.configstrings[start]);
@@ -3647,8 +3741,10 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 	}
 
 	// If set, download custom message instead of download. Here for clients on
-	// version 1.0 that do not support HTTP download
-	if ( strlen(sv_downloadMessageForLegacyClients->current.string) && customPlayerState[cl - svs.clients].protocolVersion == 115 )
+	// version 1.0 that do not support HTTP download and also for clients on
+	// protocol version 119 where HTTP download seems broken
+	if ( strlen(sv_downloadMessageForLegacyClients->current.string) && 
+		 ( customPlayerState[cl - svs.clients].protocolVersion == 115 || customPlayerState[cl - svs.clients].protocolVersion == 119 ) )
 	{
 		if ( ( strstr(cl->downloadName, "mp_") || strstr(cl->downloadName, "empty") ) && !sv_downloadMessageAtMap->current.boolean )
 		{
@@ -3663,15 +3759,25 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 		}
 	}
 
-	if ( sv_wwwDownload->current.boolean && cl->wwwOk )
+	// Avoid seemingly broken HTTP download in protocol version 119
+	if ( customPlayerState[cl - svs.clients].protocolVersion != 119 )
 	{
-		if ( !cl->wwwFallback )
+		if ( sv_wwwDownload->current.boolean && cl->wwwOk )
 		{
-			// Redirect to HTTP server
-			custom_SV_WWWRedirectClient(cl, msg);
-			return;
+			if ( !cl->wwwFallback )
+			{
+				// Redirect to HTTP server
+				if ( custom_SV_WWWRedirectClient(cl, msg) )
+					return;
+			}
+			else
+			{
+				cl->wwwFallback = 0;
+			}
 		}
 	}
+
+	cl->downloadingWWW = 0;
 
 	// Hardcode client variables to make max. download speed for everyone
 	cl->state = CS_CONNECTED;
@@ -5821,7 +5927,7 @@ LAB_0809b5f4:
 							else
 							{
 								MSG_WriteBit1(&msg);
-								custom_MSG_WriteDeltaPlayerstate(&msg, &cachedClient2->ps, &ps);
+								custom_MSG_WriteDeltaPlayerstate(&msg, &cachedClient2->ps, &ps, NULL);
 							}
 							j++;
 							clientNum++;
@@ -5837,7 +5943,7 @@ LAB_0809b5f4:
 							else
 							{
 								MSG_WriteBit1(&msg);
-								custom_MSG_WriteDeltaPlayerstate(&msg, NULL, &ps);
+								custom_MSG_WriteDeltaPlayerstate(&msg, NULL, &ps, NULL);
 							}
 							clientNum++;
 						}

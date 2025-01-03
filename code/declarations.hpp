@@ -1431,16 +1431,6 @@ typedef struct
 
 typedef enum
 {
-	STAT_HEALTH,
-	STAT_DEAD_YAW,
-	STAT_MAX_HEALTH,
-	STAT_FRIENDLY_LOOKAT_CLIENTNUM,
-	STAT_FRIENDLY_LOOKAT_HEALTH,
-	STAT_SPAWN_COUNT
-} statIndex_t;
-
-typedef enum
-{
 	PLAYERVIEWLOCK_NONE = 0x0,
 	PLAYERVIEWLOCK_FULL = 0x1,
 	PLAYERVIEWLOCK_WEAPONJITTER = 0x2,
@@ -1597,6 +1587,17 @@ typedef enum
 	WEAPON_BINOCULARS_END = 0x16,
 	WEAPONSTATES_NUM = 0x17,
 } weaponstate_t;
+
+typedef enum
+{
+	STAT_HEALTH = 0x0,
+	STAT_DEAD_YAW = 0x1,
+	STAT_MAX_HEALTH = 0x2,
+	STAT_IDENT_CLIENT_NUM = 0x3, // STAT_FRIENDLY_LOOKAT_CLIENTNUM
+	STAT_IDENT_CLIENT_HEALTH = 0x4, // STAT_FRIENDLY_LOOKAT_HEALTH
+	STAT_SPAWN_COUNT = 0x5,
+	MAX_STATS = 0x6,
+} statIndex_t;
 
 typedef struct playerState_s
 {
@@ -4137,7 +4138,8 @@ typedef enum
 	OUTBOUND_BUCKET_MAIN = 0x0,
 	OUTBOUND_BUCKET_PROXY1 = 0x1,
 	OUTBOUND_BUCKET_PROXY2 = 0x2,
-	OUTBOUND_BUCKET_MAX = 0x3
+	OUTBOUND_BUCKET_PROXY3 = 0x3,
+	OUTBOUND_BUCKET_MAX = 0x4
 } outboundLeakyBucketIndex_t;
 
 typedef struct leakyBucket_s leakyBucket_t;
@@ -4151,6 +4153,7 @@ struct leakyBucket_s
 	leakyBucket_t *prev, *next;
 };
 
+#define MAX_PROXIES 3 // One per protocol, in addition to actual server
 typedef struct
 {
 	outboundLeakyBucketIndex_t bucket;
@@ -4184,3 +4187,12 @@ typedef struct
 	int *s_client;
 	int src_port;
 } proxyClientThreadArgs;
+
+typedef enum
+{
+	PROTOCOL_115 = 0x0,
+	PROTOCOL_117 = 0x1,
+	PROTOCOL_118 = 0x2,
+	PROTOCOL_119 = 0x3,
+	PROTOCOL_COUNT = 0x4
+} protocolVersion_t;

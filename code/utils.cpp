@@ -36,6 +36,30 @@ uint64_t Sys_Milliseconds64(void)
 	return (tp.tv_sec - sys_timeBase) * 1000 + tp.tv_usec / 1000;
 }
 
+int getIndexForProtocol(int protocol)
+{
+	switch ( protocol )
+	{
+		case 115: return PROTOCOL_115;
+		case 117: return PROTOCOL_117;
+		case 118: return PROTOCOL_118;
+		case 119: return PROTOCOL_119;
+		default: return PROTOCOL_118;
+	}
+}
+
+int getProtocolForIndex(int index)
+{
+	switch ( index )
+	{
+		case PROTOCOL_115: return 115;
+		case PROTOCOL_117: return 117;
+		case PROTOCOL_118: return 118;
+		case PROTOCOL_119: return 119;
+		default: return 118;
+	}
+}
+
 int getProtocolFromShortVersion(const char *shortVersion)
 {
 	if ( strcmp(shortVersion, "1.0") == 0 )
@@ -44,6 +68,8 @@ int getProtocolFromShortVersion(const char *shortVersion)
 		return 117; // 0x75
 	else
 		return 118; // 0x76, 1.3
+	
+	// Protocol 119 does not have a unique shortVersion
 }
 
 const char * getShortVersionFromProtocol(int protocol)
@@ -52,7 +78,7 @@ const char * getShortVersionFromProtocol(int protocol)
 	{
 		case 115: return "1.0"; // 0x73
 		case 117: return "1.2"; // 0x75
-		default: return "1.3"; // 0x76, 118
+		default: return "1.3"; // 0x76, 118 and 0x77, 119
 	}
 }
 

@@ -29,12 +29,15 @@ dvar_t *sv_proxiesVisibleForTrackers;
 dvar_t *sv_proxyAddress_1_0;
 dvar_t *sv_proxyAddress_1_2;
 dvar_t *sv_proxyAddress_1_3;
+dvar_t *sv_proxyAddress_1_3_119;
 dvar_t *sv_proxyEnable_1_0;
 dvar_t *sv_proxyEnable_1_2;
 dvar_t *sv_proxyEnable_1_3;
+dvar_t *sv_proxyEnable_1_3_119;
 dvar_t *sv_proxyForwardAddress_1_0;
 dvar_t *sv_proxyForwardAddress_1_2;
 dvar_t *sv_proxyForwardAddress_1_3;
+dvar_t *sv_proxyForwardAddress_1_3_119;
 
 extern dvar_t *com_sv_running;
 extern dvar_t *fs_game;
@@ -49,8 +52,7 @@ extern dvar_t *sv_version;
 
 extern leakyBucket_t outboundLeakyBuckets[OUTBOUND_BUCKET_MAX];
 
-// Max. two proxies, in addition to the main server port
-#define MAX_PROXIES 2
+// Proxies in addition to the main server port
 proxy_t proxies[MAX_PROXIES];
 
 // Flag stating whether a proxy has been started, so that we know that they do
@@ -229,11 +231,12 @@ void SV_ResetProxiesInformation()
 	memset(&proxies, 0, sizeof(proxy_t) * MAX_PROXIES);
 }
 
-void SV_ConfigureProxy(proxy_t *proxy, const char *versionString, const char *address, const char *forwardAddress, int parentVersion)
+void SV_ConfigureProxy(proxy_t *proxy, int version, const char *address, const char *forwardAddress, int parentVersion)
 {
 	int index = (proxy - &proxies[0]) + 1;
+	const char *versionString = getShortVersionFromProtocol(version);
 
-	Com_DPrintf("Proxy: Configuring proxy for version %s\n", versionString);
+	Com_DPrintf("Proxy: Configuring proxy for version %s (protocol %i)\n", versionString, version);
 
 	NET_StringToAdr(address, &proxy->listenAdr);
 	if ( proxy->listenAdr.type == NA_BAD )
@@ -246,7 +249,7 @@ void SV_ConfigureProxy(proxy_t *proxy, const char *versionString, const char *ad
 	proxy->numClients = 0;
 	proxy->parentVersion = parentVersion;
 	proxy->parentVersionString = getShortVersionFromProtocol(parentVersion);
-	proxy->version = getProtocolFromShortVersion(versionString);
+	proxy->version = version;
 	proxy->versionString = versionString;
 	proxy->bucket = (outboundLeakyBucketIndex_t)index;
 	proxy->enabled = qtrue;
@@ -264,7 +267,7 @@ void SV_ShutdownProxies()
 			proxy = &proxies[i];
 			if ( proxy->enabled && proxy->started )
 			{
-				printf("> [LIBCOD] Proxy: Shutting down proxy for version %s on port %d\n", proxy->versionString, BigShort(proxy->listenAdr.port));
+				printf("> [LIBCOD] Proxy: Shutting down proxy for version %s (protocol %i) on port %d\n", proxy->versionString, proxy->version, BigShort(proxy->listenAdr.port));
 
 				// Stop thread for announcements to master server
 				if ( proxy->masterServerThread )
@@ -302,12 +305,15 @@ void SV_SetupProxies()
 	sv_proxyAddress_1_0 = Dvar_RegisterString("sv_proxyAddress_1_0", "0.0.0.0:28960", DVAR_ARCHIVE);
 	sv_proxyAddress_1_2 = Dvar_RegisterString("sv_proxyAddress_1_2", "0.0.0.0:28961", DVAR_ARCHIVE);
 	sv_proxyAddress_1_3 = Dvar_RegisterString("sv_proxyAddress_1_3", "0.0.0.0:28962", DVAR_ARCHIVE);
+	sv_proxyAddress_1_3_119 = Dvar_RegisterString("sv_proxyAddress_1_3_119", "0.0.0.0:28963", DVAR_ARCHIVE);
 	sv_proxyEnable_1_0 = Dvar_RegisterBool("sv_proxyEnable_1_0", qfalse, DVAR_ARCHIVE);
 	sv_proxyEnable_1_2 = Dvar_RegisterBool("sv_proxyEnable_1_2", qfalse, DVAR_ARCHIVE);
 	sv_proxyEnable_1_3 = Dvar_RegisterBool("sv_proxyEnable_1_3", qfalse, DVAR_ARCHIVE);
+	sv_proxyEnable_1_3_119 = Dvar_RegisterBool("sv_proxyEnable_1_3_119", qfalse, DVAR_ARCHIVE);
 	sv_proxyForwardAddress_1_0 = Dvar_RegisterString("sv_proxyForwardAddress_1_0", forwardAddress, DVAR_ARCHIVE);
 	sv_proxyForwardAddress_1_2 = Dvar_RegisterString("sv_proxyForwardAddress_1_2", forwardAddress, DVAR_ARCHIVE);
 	sv_proxyForwardAddress_1_3 = Dvar_RegisterString("sv_proxyForwardAddress_1_3", forwardAddress, DVAR_ARCHIVE);
+	sv_proxyForwardAddress_1_3_119 = Dvar_RegisterString("sv_proxyForwardAddress_1_3_119", forwardAddress, DVAR_ARCHIVE);
 
 	SV_ResetProxiesInformation();
 
@@ -315,21 +321,27 @@ void SV_SetupProxies()
 	{
 		case 115:
 			if ( sv_proxyEnable_1_2->current.boolean )
-				SV_ConfigureProxy(&proxies[0], getShortVersionFromProtocol(117), sv_proxyAddress_1_2->current.string, sv_proxyForwardAddress_1_2->current.string, 115);
+				SV_ConfigureProxy(&proxies[0], 117, sv_proxyAddress_1_2->current.string, sv_proxyForwardAddress_1_2->current.string, 115);
 			if ( sv_proxyEnable_1_3->current.boolean )
-				SV_ConfigureProxy(&proxies[1], getShortVersionFromProtocol(118), sv_proxyAddress_1_3->current.string, sv_proxyForwardAddress_1_3->current.string, 115);
+				SV_ConfigureProxy(&proxies[1], 118, sv_proxyAddress_1_3->current.string, sv_proxyForwardAddress_1_3->current.string, 115);
+			if ( sv_proxyEnable_1_3_119->current.boolean )
+				SV_ConfigureProxy(&proxies[2], 119, sv_proxyAddress_1_3_119->current.string, sv_proxyForwardAddress_1_3_119->current.string, 115);
 			break;
 		case 117:
 			if ( sv_proxyEnable_1_0->current.boolean )		
-				SV_ConfigureProxy(&proxies[0], getShortVersionFromProtocol(115), sv_proxyAddress_1_0->current.string, sv_proxyForwardAddress_1_0->current.string, 117);
+				SV_ConfigureProxy(&proxies[0], 115, sv_proxyAddress_1_0->current.string, sv_proxyForwardAddress_1_0->current.string, 117);
 			if ( sv_proxyEnable_1_3->current.boolean )
-				SV_ConfigureProxy(&proxies[1], getShortVersionFromProtocol(118), sv_proxyAddress_1_3->current.string, sv_proxyForwardAddress_1_3->current.string, 117);
+				SV_ConfigureProxy(&proxies[1], 118, sv_proxyAddress_1_3->current.string, sv_proxyForwardAddress_1_3->current.string, 117);
+			if ( sv_proxyEnable_1_3_119->current.boolean )
+				SV_ConfigureProxy(&proxies[2], 119, sv_proxyAddress_1_3_119->current.string, sv_proxyForwardAddress_1_3_119->current.string, 117);
 			break;
 		case 118:
 			if ( sv_proxyEnable_1_0->current.boolean )
-				SV_ConfigureProxy(&proxies[0], getShortVersionFromProtocol(115), sv_proxyAddress_1_0->current.string, sv_proxyForwardAddress_1_0->current.string, 118);
+				SV_ConfigureProxy(&proxies[0], 115, sv_proxyAddress_1_0->current.string, sv_proxyForwardAddress_1_0->current.string, 118);
 			if ( sv_proxyEnable_1_2->current.boolean )
-				SV_ConfigureProxy(&proxies[1], getShortVersionFromProtocol(117), sv_proxyAddress_1_2->current.string, sv_proxyForwardAddress_1_2->current.string, 118);
+				SV_ConfigureProxy(&proxies[1], 117, sv_proxyAddress_1_2->current.string, sv_proxyForwardAddress_1_2->current.string, 118);
+			if ( sv_proxyEnable_1_3_119->current.boolean )
+				SV_ConfigureProxy(&proxies[2], 119, sv_proxyAddress_1_3_119->current.string, sv_proxyForwardAddress_1_3_119->current.string, 118);
 			break;
 	}
 
@@ -343,11 +355,11 @@ void SV_SetupProxies()
 		{
 			if ( pthread_create(&proxy->mainThread, NULL, SV_StartProxy, proxy) )
 			{
-				Com_DPrintf("Proxy: Failed to start proxy thread for version %s\n", proxy->versionString);
+				Com_DPrintf("Proxy: Failed to start proxy thread for version %s (protocol %i) on port %d\n", proxy->versionString, proxy->version, BigShort(proxy->listenAdr.port));
 			}
 			else
 			{
-				Com_DPrintf("Proxy: Started proxy thread for version %s\n", proxy->versionString);
+				Com_DPrintf("Proxy: Started proxy thread for version %s (protocol %i) on port %d\n", proxy->versionString, proxy->version, BigShort(proxy->listenAdr.port));
 				pthread_detach(proxy->mainThread);
 				proxy->started = qtrue;
 			}
@@ -387,7 +399,7 @@ void * SV_StartProxy(void *threadArgs)
 	if ( pthread_create(&masterServerThread, NULL, SV_ProxyMasterServerLoop, proxy) )
 	{
 		close(listenerSocket);
-		Com_Error(ERR_FATAL, "\x15Proxy: Failed to create master server thread for version %s", proxy->versionString);
+		Com_Error(ERR_FATAL, "\x15Proxy: Failed to create master server thread for version %s (protocol %i)", proxy->versionString, proxy->version);
 	}
 	else
 	{
@@ -395,7 +407,7 @@ void * SV_StartProxy(void *threadArgs)
 	}
 	proxy->masterServerThread = &masterServerThread;
 
-	Com_Printf("Proxy server listening on port %d for version %s\n", BigShort(proxy->listenAdr.port), proxy->versionString);
+	Com_Printf("Proxy server listening on port %d for version %s (protocol %i)\n", BigShort(proxy->listenAdr.port), proxy->versionString, proxy->version);
 
 	proxyClientThreadInfo clientThreadInfo[65536];
 	memset(clientThreadInfo, -1, sizeof(clientThreadInfo));

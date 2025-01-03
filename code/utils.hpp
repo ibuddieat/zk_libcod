@@ -8,6 +8,8 @@ void VectorClampLength(float *vec, double max);
 
 uint64_t Sys_Milliseconds64(void);
 
+int getIndexForProtocol(int protocol);
+int getProtocolForIndex(int index);
 int getProtocolFromShortVersion(const char *shortVersion);
 const char * getShortVersionFromProtocol(int protocol);
 

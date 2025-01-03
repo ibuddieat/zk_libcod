@@ -120,7 +120,7 @@ bool SVC_RateLimit(leakyBucket_t *bucket, int burst, int period)
 	return true;
 }
 
-extern proxy_t proxies[2];
+extern proxy_t proxies[MAX_PROXIES];
 bool IsProxySource(netadr_t from)
 {
 	// Requests directed to the proxy ports will pass through this twice, once
@@ -137,7 +137,7 @@ bool IsProxySource(netadr_t from)
 	// and rcon is protected.
 
 	proxy_t *proxy = &proxies[0];
-	for ( int i = 0; i < 2; i++, proxy++ ) {
+	for ( int i = 0; i < MAX_PROXIES; i++, proxy++ ) {
 		if ( proxy->started && !memcmp(from.ip, proxy->listenAdr.ip, 4) )
 			return qtrue;
 	}
