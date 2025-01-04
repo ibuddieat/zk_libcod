@@ -655,19 +655,38 @@ const char * custom_ClientConnect(unsigned int clientNum, unsigned int scriptPer
 		int preProxyPort = 0;
 		client_t *client = &svs.clients[clientNum];
 
-		memset(&customPlayerState[clientNum].realAddress, 0, sizeof(netadr_t));
-		I_strncpyz(preProxyIP, Info_ValueForKey(userinfo, "ip"), sizeof(preProxyIP));
-		if ( strlen(preProxyIP) != 0 )
+		// Check if proxied client or LAN player
+		if ( IsLocalIPAddress(client->netchan.remoteAddress.ip) )
 		{
-			preProxyPort = atoi(Info_ValueForKey(userinfo, "port"));
-			if ( !NET_StringToAdr(va("%s:%i", preProxyIP, preProxyPort), &customPlayerState[clientNum].realAddress) )
+			// Check if the realAddress field is filled already. If not, see if
+			// we have that info coming from a proxy. Note that if IP and port
+			// were provided via a proxy, the userinfo values are gone after a
+			// map restart. Therefore, update the realAddress field only if
+			// there isn't a valid value already. It is cleared on disconnect
+			// in SV_DropClient
+			if ( customPlayerState[clientNum].realAddress.type != NA_IP )
 			{
-				Com_Printf("Warning: Failed to parse pre-proxy address for client %d: %s\n", clientNum, va("%s:%i", preProxyIP, preProxyPort));
-				memcpy(&customPlayerState[clientNum].realAddress, &client->netchan.remoteAddress, sizeof(netadr_t));
+				I_strncpyz(preProxyIP, Info_ValueForKey(userinfo, "ip"), sizeof(preProxyIP));
+				if ( strlen(preProxyIP) != 0 )
+				{
+					preProxyPort = atoi(Info_ValueForKey(userinfo, "port"));
+					if ( !NET_StringToAdr(va("%s:%i", preProxyIP, preProxyPort), &customPlayerState[clientNum].realAddress) )
+					{
+						Com_Printf("Warning: Failed to parse pre-proxy address for client %d: %s\n", clientNum, va("%s:%i", preProxyIP, preProxyPort));
+						memcpy(&customPlayerState[clientNum].realAddress, &client->netchan.remoteAddress, sizeof(netadr_t));
+					}
+				}
+				else
+				{
+					memcpy(&customPlayerState[clientNum].realAddress, &client->netchan.remoteAddress, sizeof(netadr_t));
+				}
 			}
 		}
 		else
 		{
+			// External or LAN client connecting to main server port, address
+			// update from proxy not necessary, so we just copy over the socket
+			// address
 			memcpy(&customPlayerState[clientNum].realAddress, &client->netchan.remoteAddress, sizeof(netadr_t));
 		}
 		/* New code end*/
@@ -2061,7 +2080,8 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 		return;	// Already dropped
 
 	/* New code start: libcod cleanup */
-	for ( i = 0 ; i < sv_maxclients->current.integer; i++ )
+	memset(&customPlayerState[drop - svs.clients].realAddress, 0, sizeof(netadr_t));
+	for ( i = 0; i < sv_maxclients->current.integer; i++ )
 		customPlayerState[i].talkerIcons[drop - svs.clients] = 0;
 	/* New code end */
 
@@ -2127,7 +2147,7 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 	 master so it is known the server is empty send a heartbeat now so the
 	 master will get up to date info if there is already a slot for this ip,
 	 reuse it */
-	for ( i = 0 ; i < sv_maxclients->current.integer ; i++ )
+	for ( i = 0; i < sv_maxclients->current.integer; i++ )
 	{
 		if ( svs.clients[i].state >= CS_CONNECTED )
 			break;
