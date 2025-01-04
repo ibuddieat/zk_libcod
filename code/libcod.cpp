@@ -4660,7 +4660,7 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 	{
 		valid = 1;
 		if ( sv_logRcon->current.boolean ) // New: sv_logRcon dvar
-			Com_Printf("Rcon from %s: %s ", NET_AdrToString(from), SV_Cmd_Argv(2));
+			Com_Printf("Rcon from %s:\n%s\n", NET_AdrToString(from), SV_Cmd_Argv(2));
 	}
 
 	/* New code start: CodeCallback_RemoteCommand */
