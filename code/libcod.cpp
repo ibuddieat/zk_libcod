@@ -5641,7 +5641,7 @@ void custom_G_RunFrame(int levelTime)
 
 #if COMPILE_CUSTOM_VOICE == 1
 	// Try process results from Speex encoder tasks
-	if ( Scr_IsSystemActive() )
+	if ( Scr_IsSystemActive() && loadSoundFileResultsIndex > 0 )
 	{
 		if ( Sys_TryEnterCriticalSection(CRITSECT_LOAD_SOUND_FILE) == 0 )
 		{
