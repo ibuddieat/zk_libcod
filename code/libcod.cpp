@@ -8600,7 +8600,7 @@ void custom_Com_PrintMessage(int /* print_msg_type_t */ channel, char *message)
 	}
 	else if ( channel != 4 )
 	{
-		// RCON output buffer
+		// Rcon output buffer
 		Sys_EnterCriticalSection(CRITSECT_RD_BUFFER);
 		if ( rd_buffersize - 1U < ( strlen(rd_buffer) + strlen(message) ) )
 		{
