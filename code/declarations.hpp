@@ -57,7 +57,7 @@
 #define MAX_CLIENTS                 64
 #define MAX_CONFIGSTRINGS           2048
 #define MAX_DOWNLOAD_BLKSIZE        2048
-#define MAX_DOWNLOAD_BLKSIZE_FAST   0x2000 // Needs to be below MAX_MSGLEN of game version 1.0
+#define MAX_DOWNLOAD_BLKSIZE_FAST   0x2000 // Needs to be below MAX_LEGACY_MSGLEN
 #define MAX_DOWNLOAD_WINDOW         8
 #define MAX_ENT_CLUSTERS            16
 #define MAX_EVENTS                  4
@@ -67,8 +67,9 @@
 #define MAX_ITEM_MODELS             2
 #define MAX_MODEL_ANIMATIONS        512 // Animations per model
 #define MAX_MODELS                  256
-#define MAX_MSGLEN                  0x20000
-#define MAX_LARGE_MSGLEN            0x20000 // For voice chat and snapshot
+#define MAX_MSGLEN                  0x20000 // For clients with protocol 118
+#define MAX_LEGACY_MSGLEN           0x4000  // For clients with protocol != 118
+#define MAX_LARGE_MSGLEN            0x20000 // For voice chat and snapshots, all protocols
 #define MAX_NETNAME                 16
 #define MAX_OSPATH                  256
 #define MAX_PACKETLEN               1400

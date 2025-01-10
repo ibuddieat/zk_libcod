@@ -162,6 +162,7 @@ cHook *hook_G_TempEntity;
 cHook *hook_G_TryPushingEntity;
 cHook *hook_GScr_LoadConsts;
 cHook *hook_GScr_LoadGameTypeScript;
+cHook *hook_Netchan_Transmit;
 cHook *hook_PlayerCmd_ClonePlayer;
 cHook *hook_PM_BeginWeaponChange;
 cHook *hook_Pmove;
@@ -3232,6 +3233,27 @@ void custom_SV_WriteSnapshotToClient(client_t *client, msg_t *msg)
 		MSG_WriteByte(msg, 0);
 }
 
+qboolean custom_Netchan_Transmit(netchan_t *chan, int length, byte *data)
+{
+	int temp = (int)chan - 0x6E6C4;
+	client_t *client = (client_t *)temp;
+	int id = client - svs.clients;
+	qboolean ret;
+
+	/* New code start: Multi version support */
+	if ( customPlayerState[id].protocolVersion != 118 && MAX_LEGACY_MSGLEN < length )
+    	Com_Error(ERR_DROP, "\x15Netchan_Transmit: length = %i", length);
+	/* New code end */
+
+	hook_Netchan_Transmit->unhook();
+	qboolean (*Netchan_Transmit)(netchan_t *chan, int length, byte *data);
+	*(int *)&Netchan_Transmit = hook_Netchan_Transmit->from;
+	ret = Netchan_Transmit(chan, length, data);
+	hook_Netchan_Transmit->hook();
+
+	return ret;
+}
+
 qboolean custom_Netchan_TransmitNextFragment(netchan_t *chan)
 {
 	msg_t send;
@@ -3311,7 +3333,10 @@ void custom_SV_ClientEnterWorld(client_t *client, usercmd_t *cmd)
 	if ( customPlayerState[clientNum].resourceLimitedState > LIMITED_GAMESTATE && sv_kickGamestateLimitedClients->current.boolean )
 	{
 		Com_Printf("WARNING: Kicking client %i due to insufficient gamestate on map %s\n", clientNum, sv_mapname->current.string);
-		SV_DelayDropClient(client, "This map-mod combination requires game version 1.3");
+		if ( customPlayerState[clientNum].protocolVersion == 119 )
+			SV_DelayDropClient(client, "This map-mod combination is not supported via Game Pass");
+		else
+			SV_DelayDropClient(client, "This map-mod combination requires game version 1.3");
 	}
 	/* New code end */
 }
@@ -3430,7 +3455,11 @@ void custom_SV_SendMessageToClient(msg_t *msg, client_t *client)
 	int compressedSize;
 	int rateMsec;
 
-	LargeLocalConstructor(&buf, MAX_MSGLEN);
+	/* New code start: Multi version support */
+	if ( customPlayerState[client - svs.clients].protocolVersion != 118 )
+		LargeLocalConstructor(&buf, MAX_LEGACY_MSGLEN);
+	else /* New code end */
+		LargeLocalConstructor(&buf, MAX_MSGLEN);
 	data = LargeLocalGetBuf(&buf);
 	memcpy(data, msg->data, 4);
 	compressedSize = MSG_WriteBitsCompress(msg->data + 4, data + 4, msg->cursize - 4) + 4;
@@ -3486,8 +3515,14 @@ void custom_SV_SendClientGameState(client_t *client)
 	int currentConfigstringSize = 0;
 	int clientGamestateDataCount = 1;
 	char *configstring;
+	int msglen = MAX_MSGLEN;
 
-	LargeLocalConstructor(&buf, MAX_MSGLEN);
+	/* New code start: Multi version support */
+	if ( customPlayerState[id].protocolVersion != 118 )
+		msglen = MAX_LEGACY_MSGLEN;
+	/* New code end */
+
+	LargeLocalConstructor(&buf, msglen);
 	data = LargeLocalGetBuf(&buf);
 	while ( client->state != CS_FREE && client->netchan.unsentFragments )
 		SV_Netchan_TransmitNextFragment(&client->netchan);
@@ -3538,7 +3573,7 @@ void custom_SV_SendClientGameState(client_t *client)
 		return;
 	}
 
-	MSG_Init(&msg, data, MAX_MSGLEN);
+	MSG_Init(&msg, data, msglen);
 	MSG_WriteLong(&msg, client->lastClientCommand);
 	SV_UpdateServerCommandsToClient(client, &msg);
 	MSG_WriteByte(&msg, svc_gamestate);
@@ -4494,6 +4529,47 @@ void custom_SVC_Info(netadr_t from)
 	NET_OutOfBandPrint(NS_SERVER, from, infosend);
 }
 
+void custom_SVC_GameCompleteStatus(netadr_t to)
+{
+	char player[1024];
+	char status[MAX_LEGACY_MSGLEN]; // New: Cap message size for legacy client compatibility
+	int i;
+	client_t *cl;
+	unsigned int statusLength;
+	unsigned int playerLength;
+	char infostring[MAX_INFO_STRING];
+
+	strcpy(infostring, Dvar_InfoString(DVAR_SERVERINFO | DVAR_NORESTART));
+	Info_SetValueForKey(infostring, "challenge", Cmd_Argv(1));
+
+	if ( Dvar_GetBool("fs_restrict") )
+	{
+		char keywords[MAX_INFO_STRING];
+
+		Com_sprintf(keywords, sizeof(keywords), "demo %s", Info_ValueForKey(infostring, "sv_keywords"));
+		Info_SetValueForKey(infostring, "sv_keywords", keywords);
+	}
+
+	status[0] = 0;
+	statusLength = 0;
+
+	for ( i = 0; i < sv_maxclients->current.integer; i++ )
+	{
+		cl = &svs.clients[i];
+		if ( cl->state >= CS_CONNECTED )
+		{
+			Com_sprintf(player, sizeof(player), "%i %i \"%s\"\n",
+			             G_GetClientScore(cl - svs.clients), cl->ping, cl->name);
+			playerLength = strlen(player);
+			if ( statusLength + playerLength >= sizeof(status) )
+				break;
+			strcpy(status + statusLength, player);
+			statusLength += playerLength;
+		}
+	}
+	NET_OutOfBandPrint(NS_SERVER, to, va("gameCompleteStatus\n%s\n%s", infostring, status));
+}
+
 void custom_SVC_Status(netadr_t from)
 {
 	LargeLocal buf;
@@ -4519,7 +4595,7 @@ void custom_SVC_Status(netadr_t from)
 		return;
 	/* New code end */
 
-	LargeLocalConstructor(&buf, MAX_MSGLEN);
+	LargeLocalConstructor(&buf, MAX_LEGACY_MSGLEN); // New: Cap message size for legacy client compatibility
 	status = (char *)LargeLocalGetBuf(&buf);
 
 	strcpy(infostring, Dvar_InfoString(DVAR_SERVERINFO | DVAR_NORESTART));
@@ -4556,7 +4632,7 @@ void custom_SVC_Status(netadr_t from)
 				Com_sprintf(player, MAX_INFO_STRING, "%i %i \"%s\"\n", 0, ping, cl->name);
 
 			playerLength = strlen(player);
-			if ( ( MAX_MSGLEN - 1 ) < playerLength + statusLength )
+			if ( ( MAX_LEGACY_MSGLEN - 1 ) < playerLength + statusLength )
 			{
 				break;
 			}
@@ -10113,6 +10189,8 @@ public:
 		hook_UpdateIPBans->hook();
 		hook_G_TryPushingEntity = new cHook(0x0810EF9C, (int)custom_G_TryPushingEntity);
         hook_G_TryPushingEntity->hook();
+		hook_Netchan_Transmit = new cHook(0x0806BC6C, (int)custom_Netchan_Transmit);
+        hook_Netchan_Transmit->hook();
 
 		#if COMPILE_PLAYER == 1
 		hook_SV_ClientThink = new cHook(0x08090DAC, (int)custom_SV_ClientThink);
@@ -10208,6 +10286,7 @@ public:
 		cracking_hook_function(0x0809BCCE, (int)custom_SV_SendClientMessages);
 		cracking_hook_function(0x080FD900, (int)custom_ScrCmd_IsLookingAt);
 		cracking_hook_function(0x08091F0E, (int)custom_SV_AllocSkelMemory);
+		cracking_hook_function(0x080950D0, (int)custom_SVC_GameCompleteStatus);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC8CA, (int)Jump_ReduceFriction);
