@@ -277,7 +277,12 @@ void SV_ShutdownProxies()
 				// a potential issue where this server might not show up in the
 				// ingame browser list after being restarted
 				if ( proxy->masterSockAdr )
+				{
+					// Delay to counter rate-limiting on the master server side
+					sleep(1);
+
 					sendto(proxy->socket, HEARTBEAT_STOP_MESSAGE, strlen(HEARTBEAT_STOP_MESSAGE), 0, (struct sockaddr *)proxy->masterSockAdr, sizeof(struct sockaddr_in));
+				}
 
 				// Stop main proxy thread that accepts new clients
 				if ( proxy->mainThread )
@@ -596,6 +601,8 @@ void * SV_ProxyMasterServerLoop(void *threadArgs)
 	netadr_t authorizeAdr;
 	struct sockaddr_in masterSockAdr;
 	struct sockaddr_in authorizeSockAdr;
+	qboolean startup = qtrue;
+	int proxyindex = proxy - &proxies[0];
 
 	Sys_StringToSockaddr(sv_masterServer->current.string, &masterSockAdr);
 	masterSockAdr.sin_family = AF_INET;
@@ -609,16 +616,25 @@ void * SV_ProxyMasterServerLoop(void *threadArgs)
 
 	while ( 1 )
 	{
+		// Delay on startup to counter rate-limiting on the master server side
+		if ( startup )
+		{
+			sleep(proxyindex + 1);
+			startup = qfalse;
+		}
+
+		// Do not continue heartbeats while the server is at rest (e.g., map
+		// load error), but the process is still up
 		while ( !com_sv_running->current.boolean )
 			sleep(1);
 
 		if ( sv_logHeartbeats->current.boolean )
-			Com_Printf("Sending proxy heartbeat to %s for version %s\n", sv_masterServer->current.string, proxy->versionString);
+			Com_Printf("Sending proxy heartbeat to %s for version %s (protocol %i)\n", sv_masterServer->current.string, proxy->versionString, proxy->version);
 
 		sendto(proxy->socket, HEARTBEAT_MESSAGE, strlen(HEARTBEAT_MESSAGE), 0, (struct sockaddr*)&masterSockAdr, sizeof(masterSockAdr));
 
 		if ( sv_logHeartbeats->current.boolean )
-			Com_Printf("Sending proxy getIpAuthorize to %s for version %s\n", sv_authorizeServer->current.string, proxy->versionString);
+			Com_Printf("Sending proxy getIpAuthorize to %s for version %s (protocol %i)\n", sv_authorizeServer->current.string, proxy->versionString, proxy->version);
 
 		char AUTHORIZE_SEND[MAX_BUFFER_SIZE];
 		snprintf(AUTHORIZE_SEND, sizeof(AUTHORIZE_SEND), "%s %ld %i.%i.%i.%i \"%s\" 0",
