@@ -84,6 +84,7 @@ dvar_t *sv_wwwDownload;
 dvar_t *con_coloredPrints;
 #endif
 dvar_t *fs_callbacks;
+dvar_t *fs_gametypes;
 dvar_t *fs_library;
 dvar_t *fs_mapScriptDirectories;
 dvar_t *g_brushModelCollisionTweaks;
@@ -161,7 +162,6 @@ cHook *hook_G_RunFrame;
 cHook *hook_G_TempEntity;
 cHook *hook_G_TryPushingEntity;
 cHook *hook_GScr_LoadConsts;
-cHook *hook_GScr_LoadGameTypeScript;
 cHook *hook_Netchan_Transmit;
 cHook *hook_PlayerCmd_ClonePlayer;
 cHook *hook_PM_BeginWeaponChange;
@@ -411,6 +411,7 @@ void common_init_complete_print(const char *format, ...)
 	con_coloredPrints = Dvar_RegisterBool("con_coloredPrints", qfalse, DVAR_ARCHIVE);
 	#endif
 	fs_callbacks = Dvar_RegisterString("fs_callbacks", "", DVAR_ARCHIVE);
+	fs_gametypes = Dvar_RegisterString("fs_gametypes", "", DVAR_ARCHIVE);
 	fs_library = Dvar_RegisterString("fs_library", "", DVAR_ARCHIVE);
 	fs_mapScriptDirectories = Dvar_RegisterInt("fs_mapScriptDirectories", 0, 0, 2, DVAR_ARCHIVE);
 	g_brushModelCollisionTweaks = Dvar_RegisterBool("g_brushModelCollisionTweaks", qfalse, DVAR_ARCHIVE);
@@ -1589,28 +1590,42 @@ void custom_SV_MasterHeartbeat(const char *hbname)
 	hook_SV_MasterHeartbeat->hook();
 }
 
-int custom_GScr_LoadGameTypeScript(void)
+void custom_GScr_LoadGameTypeScript(void)
 {
 	unsigned int i;
-	char path_for_cb[512] = "maps/mp/gametypes/_callbacksetup";
+	char path_to_callbacks[64] = "maps/mp/gametypes/_callbacksetup";
+	char path_to_gametypes[64] = "maps/mp/gametypes";
+	char path_to_gametype[64];
 
-	hook_GScr_LoadGameTypeScript->unhook();
-	int (*GScr_LoadGameTypeScript)(void);
-	*(int *)&GScr_LoadGameTypeScript = hook_GScr_LoadGameTypeScript->from;
-	int ret = GScr_LoadGameTypeScript();
-	hook_GScr_LoadGameTypeScript->hook();
+	if ( strlen(fs_callbacks->current.string) ) // New dvar
+		strncpy(path_to_callbacks, fs_callbacks->current.string, sizeof(path_to_callbacks));
 
-	if ( strlen(fs_callbacks->current.string) )
-		strncpy(path_for_cb, fs_callbacks->current.string, sizeof(path_for_cb));
+	if ( g_debugCallbacks->current.boolean )
+		Com_Printf("Current callbacks path: %s.gsc\n", path_to_callbacks);
 
+	// Custom callbacks
 	for ( i = 0; i < sizeof(callbacks)/sizeof(callbacks[0]); i++ )
 	{
-		*callbacks[i].pos = Scr_GetFunctionHandle(path_for_cb, callbacks[i].name, 0);
+		*callbacks[i].pos = Scr_GetFunctionHandle(path_to_callbacks, callbacks[i].name, 0);
 		if ( *callbacks[i].pos && g_debugCallbacks->current.boolean )
 			Com_Printf("%s found @ %p\n", callbacks[i].name, scrVarPub.programBuffer + *callbacks[i].pos);
 	}
 
-	return ret;
+	if ( strlen(fs_gametypes->current.string) ) // New dvar
+		strncpy(path_to_gametypes, fs_gametypes->current.string, sizeof(path_to_gametypes));
+
+	Com_sprintf(path_to_gametype, sizeof(path_to_gametypes), "%s/%s", path_to_gametypes, sv_gametype->current.string);
+
+	if ( g_debugCallbacks->current.boolean )
+		Com_Printf("Current gametype path: %s.gsc\n", path_to_gametype);
+
+	// Stock callbacks
+	g_scr_data.gametype.main = Scr_GetFunctionHandle(path_to_gametype, "main", 1);
+	g_scr_data.gametype.startupgametype = Scr_GetFunctionHandle(path_to_callbacks, "CodeCallback_StartGameType", 1);
+	g_scr_data.gametype.playerconnect = Scr_GetFunctionHandle(path_to_callbacks, "CodeCallback_PlayerConnect", 1);
+	g_scr_data.gametype.playerdisconnect = Scr_GetFunctionHandle(path_to_callbacks, "CodeCallback_PlayerDisconnect", 1);
+	g_scr_data.gametype.playerdamage = Scr_GetFunctionHandle(path_to_callbacks, "CodeCallback_PlayerDamage", 1);
+	g_scr_data.gametype.playerkilled = Scr_GetFunctionHandle(path_to_callbacks, "CodeCallback_PlayerKilled", 1);
 }
 
 void custom_G_AddPlayerMantleBlockage(float *endPos, int duration, pmove_t *pm)
@@ -10129,9 +10144,6 @@ public:
 		cracking_hook_call(0x0811599A, (int)hook_SetExpFog_density_typo);
 		cracking_hook_call(0x080F7803, (int)hook_Player_UpdateLookAtEntity);
 
-		hook_GScr_LoadGameTypeScript = new cHook(0x08110286, (int)custom_GScr_LoadGameTypeScript);
-		hook_GScr_LoadGameTypeScript->hook();
-
 		hook_Com_DPrintf = new cHook(0x08060E3A, (int)custom_Com_DPrintf);
 		#if COMPILE_UTILS == 1
 		hook_Sys_Print = new cHook(0x080D4AE0, int(custom_Sys_Print));
@@ -10274,6 +10286,7 @@ public:
 		cracking_hook_function(0x08096E0C, (int)custom_SV_MasterAddress);
 		cracking_hook_function(0x080FDF08, (int)custom_DeathmatchScoreboardMessage);
 		cracking_hook_function(0x0808C706, (int)custom_SV_Status_f);
+		cracking_hook_function(0x08110286, (int)custom_GScr_LoadGameTypeScript);
 		cracking_hook_function(0x0811037A, (int)custom_GScr_LoadLevelScript);
 		cracking_hook_function(0x080F8C5E, (int)custom_ClientUserinfoChanged);
 		cracking_hook_function(0x080D67DA, (int)custom_Sys_InitializeCriticalSections);

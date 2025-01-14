@@ -5,6 +5,10 @@
 
 Added dvars:
 
+  * `fs_gametypes`
+    * Type: String
+    * Default: ""
+    * Effect: Defines the relative path to where the server should look for gametype .gsc files containing a `main` function. If set to an empty string (as by default), the server uses `maps/mp/gametypes`.
   * `fs_mapScriptDirectories`
     * Type: Integer
     * Default: 0
