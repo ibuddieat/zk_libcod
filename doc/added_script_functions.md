@@ -82,7 +82,7 @@ New script code methods:
   * `<player> setBulletModel(<model>, [<time>])`
   * `<player> setBulletVelocity(<value>)`
   * `<player> setCollisionTeam(<team>)`
-  * `<player> setConfigString(<string>, <index>)`
+  * `<player> setConfigStringForPlayer(<string>, <index>)`
   * `<player> setCullFogForPlayer(<near distance>, <far distance>, <red>, <green>, <blue>, <transition time>)`
   * `<player> setCurrentWeaponAmmo(<value>)`
   * `<player> setCurrentWeaponClipAmmo(<value>)`

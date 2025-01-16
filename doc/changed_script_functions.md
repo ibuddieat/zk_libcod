@@ -1,3 +1,8 @@
+# Changed with or since release v13.0:
+
+Script code methods:
+  * Renamed `setConfigString()` to `setConfigStringForPlayer()`
+
 # Changed with or since release v12.0:
 
 Script code functions:

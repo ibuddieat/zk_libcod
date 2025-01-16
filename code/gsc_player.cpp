@@ -2963,13 +2963,13 @@ void gsc_player_getservercommandqueuesize(scr_entref_t ref)
 	stackPushInt(client->reliableSequence - client->reliableAcknowledge);
 }
 
-void gsc_player_setconfigstring(scr_entref_t ref)
+void gsc_player_setconfigstringforplayer(scr_entref_t ref)
 {
 	int id = ref.entnum;
 
 	if ( id >= MAX_CLIENTS )
 	{
-		stackError("gsc_player_setconfigstring() entity %i is not a player", id);
+		stackError("gsc_player_setconfigstringforplayer() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
@@ -2979,7 +2979,7 @@ void gsc_player_setconfigstring(scr_entref_t ref)
 
 	if ( !stackGetParams("si", &value, &index) )
 	{
-		stackError("gsc_player_setconfigstring() argument is undefined or has a wrong type");
+		stackError("gsc_player_setconfigstringforplayer() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
