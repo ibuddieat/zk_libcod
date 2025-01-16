@@ -12,6 +12,7 @@
 
 // 2D vectors
 #define DotProduct2( a, b )         ( ( a )[0] * ( b )[0] + ( a )[1] * ( b )[1] )
+#define VectorAdd2( a, b, c )        ( ( c )[0] = ( a )[0] + ( b )[0],( c )[1] = ( a )[1] + ( b )[1] )
 #define VectorScale2( v, s, o )     ( ( o )[0] = ( v )[0] * ( s ),( o )[1] = ( v )[1] * ( s ) )
 #define VectorSubtract2( a, b, c )  ( ( c )[0] = ( a )[0] - ( b )[0],( c )[1] = ( a )[1] - ( b )[1] )
 
