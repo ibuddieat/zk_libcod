@@ -82,7 +82,7 @@ New script code methods:
   * `<player> setBulletModel(<model>, [<time>])`
   * `<player> setBulletVelocity(<value>)`
   * `<player> setCollisionTeam(<team>)`
-  * `<player> setConfigStringForPlayer(<string>, <index>)`
+  * `<player> setConfigStringForPlayer(<index>, <string>)`
   * `<player> setCullFogForPlayer(<near distance>, <far distance>, <red>, <green>, <blue>, <transition time>)`
   * `<player> setCurrentWeaponAmmo(<value>)`
   * `<player> setCurrentWeaponClipAmmo(<value>)`
@@ -132,7 +132,7 @@ New script code functions:
   * `resetTestClientNaming()`
   * `roundTo(<value>, <precision>)`
   * `saveSpeexFile(<sound index>, <file path>)`
-  * `setConfigString(<string>, <index>)`
+  * `setConfigString(<index>, <string>)`
   * `setNextTestClientName(<name>)`
   * `setSavePersist(<save persistent>)`
   * `setWeaponRaiseTime(<weapon name>, <raise time>)`

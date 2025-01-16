@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>setConfigStringForPlayer( &lt;string&gt;, &lt;index&gt; )</H1>
+<H1>setConfigStringForPlayer( &lt;index&gt;, &lt;string&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
@@ -45,7 +45,7 @@ The player
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-player setConfigStringForPlayer("New Text", index);
+player setConfigStringForPlayer(index, "New Text");
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -54,8 +54,8 @@ player setConfigStringForPlayer("New Text", index);
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;string&gt; The new value to replace the precached string with</LI>
-<LI>2 : &lt;index&gt; Index of the precached string that should be replaced/updated (see /configstrings in client console)</LI>
+<LI>1 : &lt;index&gt; Index of the precached string that should be replaced/updated (see /configstrings in client console)</LI>
+<LI>2 : &lt;string&gt; The new value to replace the precached string with</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>

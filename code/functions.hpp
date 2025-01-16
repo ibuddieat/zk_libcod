@@ -663,7 +663,7 @@ static const Scr_GetInt_t Scr_GetInt = (Scr_GetInt_t)0x08084694;
 typedef float (*Scr_GetFloat_t)(unsigned int param);
 static const Scr_GetFloat_t Scr_GetFloat = (Scr_GetFloat_t)0x08084968;
 
-typedef void (*Scr_GetVector_t)(unsigned int param, vec3_t *vec);
+typedef void (*Scr_GetVector_t)(unsigned int param, float *vec);
 static const Scr_GetVector_t Scr_GetVector = (Scr_GetVector_t)0x08084D40;
 
 typedef const char * (*Scr_GetString_t)(unsigned int param);
@@ -903,7 +903,7 @@ static const G_InitGentity_t G_InitGentity = (G_InitGentity_t)0x0811E85C;
 typedef gentity_t * (*G_Spawn_t)(void);
 static const G_Spawn_t G_Spawn = (G_Spawn_t)0x0811E9D6;
 
-typedef gentity_t * (*G_TempEntity_t)(vec3_t origin, int event);
+typedef gentity_t * (*G_TempEntity_t)(float *origin, int event);
 static const G_TempEntity_t G_TempEntity = (G_TempEntity_t)0x0811EFC4;
 
 typedef void (*SV_LinkEntity_t)(gentity_t *ent);
@@ -1284,10 +1284,10 @@ static const BG_EvaluateTrajectory_t BG_EvaluateTrajectory = (BG_EvaluateTraject
 typedef void (*BG_EvaluateTrajectoryDelta_t)(const trajectory_t *tr, int atTime, float *result);
 static const BG_EvaluateTrajectoryDelta_t BG_EvaluateTrajectoryDelta = (BG_EvaluateTrajectoryDelta_t)0x080DF948;
 
-typedef double (*VectorLength_t)(float *vec);
+typedef long double (*VectorLength_t)(float *vec);
 static const VectorLength_t VectorLength = (VectorLength_t)0x081187F0;
 
-typedef double (*VectorLength2_t)(float *vec);
+typedef long double (*VectorLength2_t)(float *vec);
 static const VectorLength2_t VectorLength2 = (VectorLength2_t)0x080F7C08;
 
 typedef float (*G_crandom_t)(void);

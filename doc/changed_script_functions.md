@@ -1,7 +1,7 @@
 # Changed with or since release v13.0:
 
 Script code methods:
-  * Renamed `setConfigString()` to `setConfigStringForPlayer()`
+  * Renamed `setConfigString()` to `setConfigStringForPlayer()` and flipped its parameter positions
 
 # Changed with or since release v12.0:
 

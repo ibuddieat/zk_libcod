@@ -473,7 +473,7 @@ void gsc_entity_addentityvelocity(scr_entref_t ref)
 		{
 			vec3_t velocity;
 
-			Scr_GetVector(0, &velocity);
+			Scr_GetVector(0, velocity);
 			(ent->s).pos.trType = TR_GRAVITY;
 			(ent->s).pos.trTime = level.time;
 			VectorCopy((ent->r).currentOrigin, (ent->s).pos.trBase);
@@ -512,7 +512,7 @@ void gsc_entity_setentityvelocity(scr_entref_t ref)
 		{
 			vec3_t velocity;
 
-			Scr_GetVector(0, &velocity);
+			Scr_GetVector(0, velocity);
 			(ent->s).pos.trType = TR_GRAVITY;
 			(ent->s).pos.trTime = level.time;
 			VectorCopy((ent->r).currentOrigin, (ent->s).pos.trBase);

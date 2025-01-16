@@ -2353,7 +2353,7 @@ void custom_G_AddEvent(gentity_t *ent, int event, int eventParm)
 	/* New code end */
 }
 
-gentity_t * custom_G_TempEntity(vec3_t origin, int event)
+gentity_t * custom_G_TempEntity(float *origin, int event)
 {
 	gentity_t* tempEntity;
 
@@ -2361,15 +2361,13 @@ gentity_t * custom_G_TempEntity(vec3_t origin, int event)
 		Com_DPrintf("G_TempEntity() event %26s at (%f,%f,%f)\n", *(&entity_event_names + event), origin[0], origin[1], origin[2]);
 
 	hook_G_TempEntity->unhook();
-	gentity_t* (*sig)(vec3_t origin, int event);
-	*(int *)&sig = hook_G_TempEntity->from;
 	/* Filter example:
-	if (event == EV_PLAY_FX)
+	if ( event == EV_PLAY_FX )
 		event = EV_NONE;
 	 Note: This can cause script runtime errors (or worse) on some events,
 	 e.g., when using the obituary function, due to (then) undefined
 	 parameters */
-	tempEntity = sig(origin, event);
+	tempEntity = G_TempEntity(origin, event);
 	hook_G_TempEntity->hook();
 
 	return tempEntity;
@@ -2825,7 +2823,7 @@ void custom_MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_t *from, playerSta
 	while ( i < 6 )
 	{
 		/* New code start: Multi version support */
-		if ( client && customPlayerState[client - svs.clients].protocolVersion == 119 && i == 4)
+		if ( client && customPlayerState[client - svs.clients].protocolVersion == 119 && i == STAT_IDENT_CLIENT_HEALTH )
 		{
 			// Skipping STAT_IDENT_CLIENT_HEALTH
 			i++;
@@ -6958,8 +6956,8 @@ void custom_PlayerCmd_finishPlayerDamage(scr_entref_t entref)
 	gentity_t *attacker;
 	gentity_t *inflictor;
 
-	inflictor = &g_entities[1022];
-	attacker = &g_entities[1022];
+	inflictor = &g_entities[ENTITY_WORLD];
+	attacker = &g_entities[ENTITY_WORLD];
 	dir = 0;
 	point = 0;
 
@@ -6983,36 +6981,36 @@ void custom_PlayerCmd_finishPlayerDamage(scr_entref_t entref)
 	if ( damage > 0 )
 	{
 		if ( Scr_GetType(0) && Scr_GetPointerType(0) == VAR_ENTITY )
-			inflictor = Scr_GetEntity(1u);
+			inflictor = Scr_GetEntity(1);
 
-		if ( Scr_GetType(1u) && Scr_GetPointerType(1u) == VAR_ENTITY )
-			attacker = Scr_GetEntity(1u);
+		if ( Scr_GetType(1) && Scr_GetPointerType(1) == VAR_ENTITY )
+			attacker = Scr_GetEntity(1);
 
-		dflags = Scr_GetInt(3u);
-		mod = Scr_GetString(4u);
+		dflags = Scr_GetInt(3);
+		mod = Scr_GetString(4);
 		modIndex = G_IndexForMeansOfDeath(mod);
-		weaponName = Scr_GetString(5u);
+		weaponName = Scr_GetString(5);
 		weaponIndex = G_GetWeaponIndexForName(weaponName);
 
-		if ( Scr_GetType(6u) )
+		if ( Scr_GetType(6) )
 		{
-			Scr_GetVector(6u, &vPoint);
+			Scr_GetVector(6, vPoint);
 			point = vPoint;
 		}
 
-		if ( Scr_GetType(7u) )
+		if ( Scr_GetType(7) )
 		{
-			Scr_GetVector(7u, &vDir);
+			Scr_GetVector(7, vDir);
 			dir = vDir;
 		}
 
-		hitlocStr = Scr_GetConstString(8u);
+		hitlocStr = Scr_GetConstString(8);
 		hitlocIndex = G_GetHitLocationIndexFromString(hitlocStr);
-		psOffsetTime = Scr_GetInt(9u);
+		psOffsetTime = Scr_GetInt(9);
 		/* New code start: Additional parameter to skip body bullet impacts */
 		bodyBulletImpacts = 1;
 		if ( Scr_GetNumParam() > 10 )
-			bodyBulletImpacts = Scr_GetInt(10u);
+			bodyBulletImpacts = Scr_GetInt(10);
 		/* New code end */
 
 		if ( dir )
@@ -7278,8 +7276,8 @@ void custom_Scr_BulletTrace(void)
 	vec3_t end;
 
 	passEntityNum = ENTITY_NONE;
-	Scr_GetVector(0, &start);
-	Scr_GetVector(1, &end);
+	Scr_GetVector(0, start);
+	Scr_GetVector(1, end);
 	hitCharacters = Scr_GetInt(2);
 	if ( hitCharacters == 0 )
 	{
@@ -7356,8 +7354,8 @@ void custom_Scr_BulletTracePassed(void)
 	vec3_t end;
 
 	passEntityNum = ENTITY_NONE;
-	Scr_GetVector(0, &start);
-	Scr_GetVector(1, &end);
+	Scr_GetVector(0, start);
+	Scr_GetVector(1, end);
 	hitCharacters = Scr_GetInt(2);
 	if ( hitCharacters == 0 )
 	{
@@ -7402,8 +7400,8 @@ void custom_Scr_SightTracePassed(void)
 	float visibility;
 
 	passEntityNum = ENTITY_NONE;
-	Scr_GetVector(0, &start);
-	Scr_GetVector(1, &end);
+	Scr_GetVector(0, start);
+	Scr_GetVector(1, end);
 	hitCharacters = Scr_GetInt(2);
 
 	if ( hitCharacters == 0 )
@@ -7530,7 +7528,7 @@ void custom_GScr_Obituary(void)
 	}
 	else
 	{
-		Scr_GetVector(args - 2, &origin);
+		Scr_GetVector(args - 2, origin);
 		ent = G_TempEntity(origin, EV_OBITUARY);
 	}
 	
@@ -10200,9 +10198,9 @@ public:
 		hook_UpdateIPBans = new cHook(0x0811B9FE, (int)custom_UpdateIPBans);
 		hook_UpdateIPBans->hook();
 		hook_G_TryPushingEntity = new cHook(0x0810EF9C, (int)custom_G_TryPushingEntity);
-        hook_G_TryPushingEntity->hook();
+		hook_G_TryPushingEntity->hook();
 		hook_Netchan_Transmit = new cHook(0x0806BC6C, (int)custom_Netchan_Transmit);
-        hook_Netchan_Transmit->hook();
+		hook_Netchan_Transmit->hook();
 
 		#if COMPILE_PLAYER == 1
 		hook_SV_ClientThink = new cHook(0x08090DAC, (int)custom_SV_ClientThink);

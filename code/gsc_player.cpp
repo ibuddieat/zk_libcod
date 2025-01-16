@@ -13,7 +13,7 @@ extern dvar_t *sv_maxclients;
 extern dvar_t *g_forceSnaps;
 extern dvar_t *g_forceRate;
 
-void gsc_player_executeclientcommand(scr_entref_t entref)
+void gsc_player_executeclientcommand(scr_entref_t ref)
 {
 	char c;
 	char szOutString[1024];
@@ -22,18 +22,18 @@ void gsc_player_executeclientcommand(scr_entref_t entref)
 	char *pszText;
 	int i;
 
-	if ( entref.classnum )
+	if ( ref.classnum )
 	{
 		Scr_ObjectError("not an entity");
 	}
-	else if ( !g_entities[entref.entnum].client )
+	else if ( !g_entities[ref.entnum].client )
 	{
-		Scr_ObjectError(va("entity %i is not a player", entref.entnum));
+		Scr_ObjectError(va("entity %i is not a player", ref.entnum));
 	}
 
 	if ( Scr_GetType(0) == VAR_ISTRING )
 	{
-		Scr_ConstructMessageString(0, Scr_GetNumParam() - 1, "Client Dvar Value", szString, 1024);
+		Scr_ConstructMessageString(0, Scr_GetNumParam() - 1, "Client Dvar Value", szString, MAX_STRINGLENGTH);
 		pszText = szString;
 	}
 	else
@@ -55,8 +55,8 @@ void gsc_player_executeclientcommand(scr_entref_t entref)
 		++pCh;
 	}
 
-	SV_GameSendServerCommand(entref.entnum, SV_CMD_RELIABLE, va("v activeAction \"%s\"", szOutString));
-	SV_GameSendServerCommand(entref.entnum, SV_CMD_RELIABLE, "B");
+	SV_GameSendServerCommand(ref.entnum, SV_CMD_RELIABLE, va("v activeAction \"%s\"", szOutString));
+	SV_GameSendServerCommand(ref.entnum, SV_CMD_RELIABLE, "B");
 }
 
 void gsc_player_getprotocol(scr_entref_t ref)
@@ -2307,7 +2307,7 @@ void gsc_player_playfxforplayer(scr_entref_t ref)
 	vec3_t forward_vec;
 	vec3_t up_vec;
 	vec3_t cross;
-	double length;
+	long double length;
 
 	args = Scr_GetNumParam();
 	error = qfalse;
@@ -2662,7 +2662,7 @@ void gsc_player_objective_player_add(scr_entref_t ref)
 
 	if ( 2 < args )
 	{
-		Scr_GetVector(2, &obj->origin);
+		Scr_GetVector(2, obj->origin);
 		obj->origin[0] = (float)(int)obj->origin[0];
 		obj->origin[1] = (float)(int)obj->origin[1];
 		obj->origin[2] = (float)(int)obj->origin[2];
@@ -2772,7 +2772,7 @@ void gsc_player_objective_player_position(scr_entref_t ref)
 		obj->entNum = ENTITY_NONE;
 	}
 
-	Scr_GetVector(1, &obj->origin);
+	Scr_GetVector(1, obj->origin);
 	obj->origin[0] = (float)(int)obj->origin[0];
 	obj->origin[1] = (float)(int)obj->origin[1];
 	obj->origin[2] = (float)(int)obj->origin[2];

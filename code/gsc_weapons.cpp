@@ -1088,16 +1088,16 @@ void gsc_weapons_spawngrenade(scr_entref_t ref)
 	}
 
 	weapon = BG_WeaponDefs(weaponIndex);
-	Scr_GetVector(1, &origin);
+	Scr_GetVector(1, origin);
 
 	if ( args > 2 )
 	{
-		Scr_GetVector(2, &dir);
+		Scr_GetVector(2, dir);
 	}
 
 	if ( args > 3 )
 	{
-		Scr_GetVector(3, &velocity);
+		Scr_GetVector(3, velocity);
 	}
 
 	if ( args > 4 )

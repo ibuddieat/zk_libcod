@@ -1902,8 +1902,8 @@ struct gentity_s
 	};
 	tagInfo_t *tagInfo; // 520
 	gentity_t *tagChildren; // 524
-	uint16_t attachModelNames[6];
-	uint16_t attachTagNames[6];
+	byte attachModelNames[8];
+	uint16_t attachTagNames[8];
 	int useCount; // 552
 	gentity_t *nextFree; // 556
 }; // verified
@@ -4014,12 +4014,6 @@ typedef struct customEntityState_s
 	qboolean notSolidBrushModel; // If true, not solid for at least one player
 	int clientMask[2];
 } customEntityState_t;
-
-typedef struct savedBrushModelContents_s
-{
-	int num;
-	int contents;
-} savedBrushModelContents_t;
 
 #define MAX_DROPPING_BULLETS 20 // Per player
 typedef struct
