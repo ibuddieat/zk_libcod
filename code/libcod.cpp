@@ -87,6 +87,7 @@ dvar_t *fs_callbacks;
 dvar_t *fs_gametypes;
 dvar_t *fs_library;
 dvar_t *fs_mapScriptDirectories;
+dvar_t *fs_replaceStockMaps;
 dvar_t *g_brushModelCollisionTweaks;
 dvar_t *g_bulletDrop;
 dvar_t *g_bulletDropMaxTime;
@@ -414,6 +415,7 @@ void common_init_complete_print(const char *format, ...)
 	fs_gametypes = Dvar_RegisterString("fs_gametypes", "", DVAR_ARCHIVE);
 	fs_library = Dvar_RegisterString("fs_library", "", DVAR_ARCHIVE);
 	fs_mapScriptDirectories = Dvar_RegisterInt("fs_mapScriptDirectories", 0, 0, 2, DVAR_ARCHIVE);
+	fs_replaceStockMaps = Dvar_RegisterBool("fs_replaceStockMaps", qfalse, DVAR_ARCHIVE);
 	g_brushModelCollisionTweaks = Dvar_RegisterBool("g_brushModelCollisionTweaks", qfalse, DVAR_ARCHIVE);
 	g_bulletDrop = Dvar_RegisterBool("g_bulletDrop", qfalse, DVAR_ARCHIVE);
 	g_bulletDropMaxTime = Dvar_RegisterInt("g_bulletDropMaxTime", 10000, 50, 60000, DVAR_ARCHIVE);
@@ -5142,54 +5144,47 @@ void manymaps_prepare(const char *mapname, int read)
 	char map_check[MAX_OSPATH];
 	char library_path[MAX_OSPATH];
 	const char *stock_maps[] = {"mp_breakout", "mp_brecourt", "mp_burgundy", "mp_carentan", "mp_dawnville", "mp_decoy", "mp_downtown", "mp_farmhouse", "mp_leningrad", "mp_matmata", "mp_railyard", "mp_toujane", "mp_trainstation", "mp_rhine", "mp_harbor"};
+	int map_exists_in_library;
 	int map_num;
+	qboolean is_stock_map = qfalse;
 
 	manymaps_get_library_path(library_path, MAX_OSPATH);
 
+	// Check if we have the requested map in the library
 	Com_sprintf(map_check, MAX_OSPATH, "%s/%s.iwd", library_path, mapname);
+	map_exists_in_library = access(map_check, F_OK) != -1;
 
-	// Version 1.0 does not have mp_rhine and mp_harbor
-	// But they could be added as standalone .iwd files
+	// Check if the requested map is a stock map. Version 1.0 does not have
+	// mp_rhine and mp_harbor, but they could be added as standalone .iwd files
 	map_num = int(sizeof(stock_maps) / sizeof(stock_maps[0]));
 	if ( getProtocolFromShortVersion(sv_version->current.string) < 117 )
 		map_num -= 2;
 
-	bool map_found = false;
-	bool from_stock_map = false;
-
-	for ( int i = 0; i < map_num; i++ )
-	{
-		if ( strcmp(sv_mapname->current.string, stock_maps[i]) == 0 )
-		{
-			from_stock_map = true;
-			break;
-		}
-	}
-
+	// Check if we switch between stock maps
 	for ( int i = 0; i < map_num; i++ )
 	{
 		if ( strcmp(mapname, stock_maps[i]) == 0 )
 		{
-			map_found = true;
-
-			// When changing from stock map to stock map, do not trigger
-			// manymaps
-			if ( from_stock_map )
-				return;
-			else
-				break;
+			is_stock_map = qtrue;
+			break;
 		}
 	}
 
-	int map_exists = access(map_check, F_OK) != -1;
-	if ( !map_exists && !map_found )
+	// End here if the requested map does not exist
+	if ( !map_exists_in_library && !is_stock_map )
 		return;
 
-	// Remove existing links to map library
+	// Remove existing links to map library. Always do that, considering the
+	// fs_replaceStockMaps dvar could have changed during runtime or to clean
+	// up after a server crash - in addition to planned map changes
 	manymaps_cleanup();
 
+	// Do not override stock maps unless explicitly configured to do so
+	if ( is_stock_map && !fs_replaceStockMaps->current.boolean )
+		return;
+
 	// Create new link to map library
-	if ( map_exists )
+	if ( map_exists_in_library )
 	{
 		char src[MAX_OSPATH];
 		char dst[MAX_OSPATH];

@@ -15,6 +15,10 @@ Added dvars:
     * Min. Value: 0
     * Max. Value: 2
     * Effect: `0`: The map script's `main` function is searched in `maps\mp\[mapname].gsc`. `1`: The map script's `main` function is searched in `maps\mp\[mapname]\[mapname].gsc` instead. `2`: The map script's `main` function is first searched in `maps\mp\[mapname]\[mapname].gsc` and reverts to stock behavior if not found.
+  * `fs_replaceStockMaps`
+    * Type: Boolean
+    * Default: False
+    * Effect: If true, manymaps supports to override stock maps (e.g., after placing mp_toujane.iwd into the manymaps library). Related dvar: `fs_library`.
   * `g_brushModelCollisionTweaks`
     * Type: Boolean
     * Default: False
