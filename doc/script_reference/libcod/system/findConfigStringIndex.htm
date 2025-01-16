@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>ord( &lt;string&gt; )</H1>
+<H1>findConfigStringIndex( &lt;string&gt;, &lt;min. index&gt;, &lt;max. index&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
@@ -27,7 +27,7 @@ Module: System<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Returns the integer code point value for a given string character (e.g., 65 for an "A" character as input).</p>
+<p>If found, returns the index of a given configstring that is searched within the given index range. Returns true if the configstring could not be found, or at the first empty configstring within the given index range.</p>
 
 </H3>
 </TR></TD></TABLE>
@@ -37,7 +37,7 @@ Module: System<BR>
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-i = ord("A");
+index = findConfigStringIndex("Text", 1310, 1566);
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -46,8 +46,11 @@ i = ord("A");
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;string&gt; String character to convert to an 8 bit number</LI>
+<LI>1 : &lt;string&gt; The string to search</LI>
+<LI>2 : &lt;min. index&gt; Start index of configstrings to compare against</LI>
+<LI>3 : &lt;max. index&gt; End index of configstrings to compare against</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>
 </HTML>
+    

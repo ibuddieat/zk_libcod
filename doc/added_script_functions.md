@@ -109,6 +109,7 @@ New script code methods:
 New script code functions:
   * `chr(<number>)`
   * `getCallStack()`
+  * `getConfigString(<index>)`
   * `getSoundDuration(<aliasname>)`
   * `getSoundInfo(<aliasname>)`
   * `getWeaponFuseTime(<weapon name>)`
@@ -131,6 +132,7 @@ New script code functions:
   * `resetTestClientNaming()`
   * `roundTo(<value>, <precision>)`
   * `saveSpeexFile(<sound index>, <file path>)`
+  * `setConfigString(<string>, <index>)`
   * `setNextTestClientName(<name>)`
   * `setSavePersist(<save persistent>)`
   * `setWeaponRaiseTime(<weapon name>, <raise time>)`

@@ -1,0 +1,67 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>setConfigString( &lt;string&gt;, &lt;index&gt; )</H1>
+<HR>
+<BODY BGCOLOR='B0C4DE'>
+<I>
+Module: System<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Sets a configstring using the specified index, no matter if the configstring was empty or not. The index ranges for the respecive resources are allocated as follows:</p>
+<UL>
+<LI>Status icons: 22 - 29</LI>
+<LI>Head icons: 30 - 44</LI>
+<LI>Tags (populated via <a href="../../stock/entity/attach.htm">Attach</a>): 110 - 141</LI>
+<LI>Models: 334 - 589</LI>
+<LI>Soundaliases (populated via <a href="../../stock/sound/playsound.htm">PlaySound</a>): 590 - 845</LI>
+<LI>Effects: 846 - 909</LI>
+<LI>Entity effects (populated via <a href="../../stock/effects/playfxontag.htm">PlayFxOnTag</a>): 910 - 1165</LI>
+<LI>Shellshocks: 1166 - 1181</LI>
+<LI>Menus: 1246 - 1277</LI>
+<LI>Hint strings: 1278 - 1309</LI>
+<LI>Strings: 1310 - 1565</LI>
+<LI>Shaders: 1566 - 1693</LI>
+</UL>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+player setConfigString("New Text", index);
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;string&gt; The new value to replace the precached string with</LI>
+<LI>2 : &lt;index&gt; Index of the precached string that should be replaced/updated (see /configstrings in client console)</LI>
+</UL></TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>

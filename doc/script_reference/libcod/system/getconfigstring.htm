@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>ord( &lt;string&gt; )</H1>
+<H1>getConfigString( &lt;index&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
@@ -27,8 +27,21 @@ Module: System<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Returns the integer code point value for a given string character (e.g., 65 for an "A" character as input).</p>
-
+<p>Returns the configstring at the given index, or undefined if the configstring is empty. The index ranges for the respecive resources are allocated as follows:</p>
+<UL>
+<LI>Status icons: 22 - 29</LI>
+<LI>Head icons: 30 - 44</LI>
+<LI>Tags (populated via <a href="../../stock/entity/attach.htm">Attach</a>): 110 - 141</LI>
+<LI>Models: 334 - 589</LI>
+<LI>Soundaliases (populated via <a href="../../stock/sound/playsound.htm">PlaySound</a>): 590 - 845</LI>
+<LI>Effects: 846 - 909</LI>
+<LI>Entity effects (populated via <a href="../../stock/effects/playfxontag.htm">PlayFxOnTag</a>): 910 - 1165</LI>
+<LI>Shellshocks: 1166 - 1181</LI>
+<LI>Menus: 1246 - 1277</LI>
+<LI>Hint strings: 1278 - 1309</LI>
+<LI>Strings: 1310 - 1565</LI>
+<LI>Shaders: 1566 - 1693</LI>
+</UL>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -37,7 +50,7 @@ Module: System<BR>
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-i = ord("A");
+s = getConfigString(1310);
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -46,7 +59,7 @@ i = ord("A");
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;string&gt; String character to convert to an 8 bit number</LI>
+<LI>1 : &lt;index&gt; Index of the configstring to return</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>
