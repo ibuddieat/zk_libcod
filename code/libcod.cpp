@@ -25,6 +25,7 @@ dvar_t *g_antilag;
 dvar_t *g_banIPs;
 dvar_t *g_knockback;
 dvar_t *g_mantleBlockTimeBuffer;
+dvar_t *g_maxDroppedWeapons;
 dvar_t *g_password;
 dvar_t *g_playerCollisionEjectSpeed;
 dvar_t *g_synchronousClients;
@@ -95,6 +96,7 @@ dvar_t *g_corpseHit;
 dvar_t *g_debugCallbacks;
 dvar_t *g_debugEvents;
 dvar_t *g_debugStaticModels;
+dvar_t *g_droppedWeaponsNeglectBots;
 dvar_t *g_forceRate;
 dvar_t *g_forceSnaps;
 dvar_t *g_logPickup;
@@ -423,6 +425,7 @@ void common_init_complete_print(const char *format, ...)
 	g_debugCallbacks = Dvar_RegisterBool("g_debugCallbacks", qfalse, DVAR_ARCHIVE);
 	g_debugEvents = Dvar_RegisterBool("g_debugEvents", qfalse, DVAR_ARCHIVE);
 	g_debugStaticModels = Dvar_RegisterBool("g_debugStaticModels", qfalse, DVAR_ARCHIVE);
+	g_droppedWeaponsNeglectBots = Dvar_RegisterBool("g_droppedWeaponsNeglectBots", qfalse, DVAR_ARCHIVE);
 	g_forceRate = Dvar_RegisterInt("g_forceRate", 0, 0, 25000, DVAR_ARCHIVE);
 	g_forceSnaps = Dvar_RegisterInt("g_forceSnaps", 0, 0, 30, DVAR_ARCHIVE);
 	g_logPickup = Dvar_RegisterBool("g_logPickup", qtrue, DVAR_ARCHIVE);
@@ -497,6 +500,7 @@ void custom_G_ProcessIPBans(void)
 	g_banIPs = Dvar_FindVar("g_banIPs");
 	g_knockback = Dvar_FindVar("g_knockback");
 	g_mantleBlockTimeBuffer = Dvar_FindVar("g_mantleBlockTimeBuffer");
+	g_maxDroppedWeapons = Dvar_FindVar("g_maxDroppedWeapons");
 	g_password = Dvar_FindVar("g_password");
 	g_playerCollisionEjectSpeed = Dvar_FindVar("g_playerCollisionEjectSpeed");
 	g_voiceChatTalkingDuration = Dvar_FindVar("g_voiceChatTalkingDuration");
@@ -2174,7 +2178,7 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 		SV_Heartbeat_f();
 }
 
-void custom_Touch_Item_Auto(gentity_t * item, gentity_t * entity, int touch)
+void custom_Touch_Item_Auto(gentity_t *item, gentity_t *entity, int touch)
 {
 	if ( customPlayerState[entity->client->ps.clientNum].noPickup )
 		return;
@@ -2303,6 +2307,82 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 			G_AddPredictableEvent(entity, event, (item->s).index);
 		G_FreeEntity(item);
 	}
+}
+
+int custom_GetFreeCueSpot(void)
+{
+    int maxDroppedWeapon;
+    gentity_t *ent;
+    float fBestDistSqrd;
+    float fClientDistSqrd;
+    float fDistSqrd;
+    int iBest;
+    int j;
+    int i;
+    int foundRealPlayers;
+
+    iBest = 0;
+    fBestDistSqrd = -1.0;
+    maxDroppedWeapon = g_maxDroppedWeapons->current.integer;
+
+    for ( i = 0; i < maxDroppedWeapon; ++i )
+    {
+        ent = level.droppedWeaponCue[i];
+
+        if ( !ent )
+            return i;
+
+        fDistSqrd = 9.99998e+11;
+
+		/* New code start: g_droppedWeaponsNeglectBots dvar with logic to
+		 exclude bots from dropped weapon removal distance calculations */
+        foundRealPlayers = 0;
+
+		if ( g_droppedWeaponsNeglectBots->current.boolean )
+		{
+			for ( j = 0; j < level.maxclients; ++j )
+			{
+				client_t *client = &svs.clients[j];
+
+				if ( level.clients[j].sess.connected == CON_CONNECTED && 
+					level.clients[j].sess.sessionState == STATE_PLAYING && 
+					client->netchan.remoteAddress.type != NA_BOT )
+				{
+					foundRealPlayers = 1;
+					fClientDistSqrd = (float)Vec3DistanceSq(g_entities[j].r.currentOrigin, ent->r.currentOrigin);
+
+					if ( fDistSqrd > fClientDistSqrd )
+						fDistSqrd = fClientDistSqrd;
+				}
+			}
+		}
+
+        if ( !foundRealPlayers )
+        {
+		/* New code end */
+            for ( j = 0; j < level.maxclients; ++j )
+            {
+                if ( level.clients[j].sess.connected == CON_CONNECTED && 
+					 level.clients[j].sess.sessionState == STATE_PLAYING )
+                {
+                    fClientDistSqrd = (float)Vec3DistanceSq(g_entities[j].r.currentOrigin, ent->r.currentOrigin);
+                    if ( fDistSqrd > fClientDistSqrd )
+                        fDistSqrd = fClientDistSqrd;
+                }
+            }
+        }
+        
+        if ( fDistSqrd > fBestDistSqrd )
+        {
+            fBestDistSqrd = fDistSqrd;
+            iBest = i;
+        }
+    }
+
+    G_FreeEntity(level.droppedWeaponCue[iBest]);
+    level.droppedWeaponCue[iBest] = 0;
+
+    return iBest;
 }
 
 void custom_BG_AddPredictableEventToPlayerstate(int event, int eventParm, playerState_t *ps)
@@ -10260,6 +10340,8 @@ public:
 		hook_BG_PlayAnim->hook();
 		#endif
 
+		
+		cracking_hook_function(0x08105FFA, (int)custom_GetFreeCueSpot);
 		cracking_hook_function(0x08105CAC, (int)custom_Touch_Item);
 		cracking_hook_function(0x0811F232, (int)custom_G_AddEvent);
 		cracking_hook_function(0x080EBF24, (int)custom_BG_IsWeaponValid);

@@ -49,6 +49,10 @@ Added dvars:
     * Type: Boolean
     * Default: False
     * Effect: Toggle logging of info about static models on map load.
+  * `g_droppedWeaponsNeglectBots`
+    * Type: Boolean
+    * Default: False
+    * Effect: If enabled, bots are excluded from dropped weapon removal distance calculations while human players are active.
   * `g_forceRate`
     * Type: Integer
     * Default: 0
