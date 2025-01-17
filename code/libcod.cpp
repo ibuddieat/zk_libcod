@@ -5132,6 +5132,8 @@ void manymaps_cleanup(void)
 				continue;
 
 			int unlink_success = unlink(fileDelete) == 0;
+
+			// Using plain printf here, the file system is not initialized yet
 			printf("> [LIBCOD] Manymaps: Removing old link %s: %s\n", fileDelete, unlink_success ? "success" : "failed");
 		}
 	}
@@ -5147,6 +5149,7 @@ void manymaps_prepare(const char *mapname, int read)
 	int map_exists_in_library;
 	int map_num;
 	qboolean is_stock_map = qfalse;
+	qboolean is_multipart_map = qfalse;
 
 	manymaps_get_library_path(library_path, MAX_OSPATH);
 
@@ -5154,13 +5157,21 @@ void manymaps_prepare(const char *mapname, int read)
 	Com_sprintf(map_check, MAX_OSPATH, "%s/%s.iwd", library_path, mapname);
 	map_exists_in_library = access(map_check, F_OK) != -1;
 
+	// If not found, check if it is a multipart map
+	if ( !map_exists_in_library )
+	{
+		Com_sprintf(map_check, MAX_OSPATH, "%s/%s.pt1.iwd", library_path, mapname);
+		map_exists_in_library = access(map_check, F_OK) != -1;
+		if ( map_exists_in_library )
+			is_multipart_map = qtrue;
+	}
+
 	// Check if the requested map is a stock map. Version 1.0 does not have
 	// mp_rhine and mp_harbor, but they could be added as standalone .iwd files
 	map_num = int(sizeof(stock_maps) / sizeof(stock_maps[0]));
 	if ( getProtocolFromShortVersion(sv_version->current.string) < 117 )
 		map_num -= 2;
 
-	// Check if we switch between stock maps
 	for ( int i = 0; i < map_num; i++ )
 	{
 		if ( strcmp(mapname, stock_maps[i]) == 0 )
@@ -5188,20 +5199,49 @@ void manymaps_prepare(const char *mapname, int read)
 	{
 		char src[MAX_OSPATH];
 		char dst[MAX_OSPATH];
+		int link_success = 0;
 
-		Com_sprintf(src, MAX_OSPATH, "%s/%s.iwd", library_path, mapname);
-		Com_sprintf(dst, MAX_OSPATH, "%s/%s/%s.iwd", fs_homepath->current.string, fs_game->current.string, mapname);
-
-		if ( access(src, F_OK) != -1 )
+		if ( is_multipart_map )
 		{
-			int link_success = symlink(src, dst) == 0;
-			printf("> [LIBCOD] Manymaps: New link from %s to %s: %s\n", src, dst, link_success ? "success" : "failed");
+			int i;
+			int max_parts = 10; // Hard-coded limit, assumed to be sufficient
 
-			// FS_AddIwdFilesForGameDirectory() is needed when 000empty.iwd is
-			// missing as then .d3dbsp is not referenced anywhere
-			if ( link_success && read == -1 )
-				FS_AddIwdFilesForGameDirectory(fs_homepath->current.string, fs_game->current.string);
+            for ( i = 1; i <= max_parts; i++ )
+            {
+				Com_sprintf(src, MAX_OSPATH, "%s/%s.pt%i.iwd", library_path, mapname, i);
+				Com_sprintf(dst, MAX_OSPATH, "%s/%s/%s.pt%i.iwd", fs_homepath->current.string, fs_game->current.string, mapname, i);
+ 
+                if ( access(src, F_OK) != -1 )
+                {
+                    link_success = symlink(src, dst) == 0;
+
+					// Using plain printf here, the file system is not
+					// initialized yet
+					printf("> [LIBCOD] Manymaps: New link from %s to %s: %s\n", src, dst, link_success ? "success" : "failed");
+                }
+                else
+                    break;
+            }
 		}
+		else
+		{
+			Com_sprintf(src, MAX_OSPATH, "%s/%s.iwd", library_path, mapname);
+			Com_sprintf(dst, MAX_OSPATH, "%s/%s/%s.iwd", fs_homepath->current.string, fs_game->current.string, mapname);
+
+			if ( access(src, F_OK) != -1 )
+			{
+				link_success = symlink(src, dst) == 0;
+
+				// Using plain printf here, the file system is not initialized
+				// yet
+				printf("> [LIBCOD] Manymaps: New link from %s to %s: %s\n", src, dst, link_success ? "success" : "failed");
+			}
+		}
+
+		// FS_AddIwdFilesForGameDirectory() is needed when 000empty.iwd is
+		// missing as then .d3dbsp is not referenced anywhere
+		if ( link_success && read == -1 )
+			FS_AddIwdFilesForGameDirectory(fs_homepath->current.string, fs_game->current.string);
 	}
 }
 
@@ -7626,6 +7666,7 @@ qboolean custom_SV_MapExists(const char *name)
 	qboolean found = FS_ReadFile(va("maps/mp/%s.%s", SV_GetMapBaseName(name), GetBspExtension()), 0) >= 0;
 	if ( !found )
 	{
+		// Proceed with manymaps
 		char map_check[MAX_OSPATH];
 		char library_path[MAX_OSPATH];
 
@@ -7633,7 +7674,11 @@ qboolean custom_SV_MapExists(const char *name)
 
 		Com_sprintf(map_check, MAX_OSPATH, "%s/%s.iwd", library_path, name);
 
-		return access(map_check, F_OK) != -1;
+		// If not found, check if it is a multipart map
+        if ( !access(map_check, F_OK) )
+			Com_sprintf(map_check, MAX_OSPATH, "%s/%s.pt1.iwd", library_path, name);
+ 
+        return access(map_check, F_OK) != -1;
 	}
 	else
 	{
