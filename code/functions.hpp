@@ -1098,7 +1098,7 @@ static const VecToAngles_t VecToAngles = (VecToAngles_t)0x080A4FE2;
 typedef double (*Vec3Distance_t)(float *v1, float *v2);
 static const Vec3Distance_t Vec3Distance = (Vec3Distance_t)0x080A40EA;
 
-typedef double (*Vec3DistanceSq_t)(float *v1, float *v2);
+typedef long double (*Vec3DistanceSq_t)(float *v1, float *v2);
 static const Vec3DistanceSq_t Vec3DistanceSq = (Vec3DistanceSq_t)0x080A4116;
 
 typedef vec_t (*Vec3Normalize_t)(vec3_t v);

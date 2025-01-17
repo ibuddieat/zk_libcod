@@ -2674,7 +2674,7 @@ void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t 
 							
 							if ( maxDistance > 0 )
 							{
-								double distance = Vec3DistanceSq(client->gentity->r.currentOrigin, origin);
+								long double distance = Vec3DistanceSq(client->gentity->r.currentOrigin, origin);
 								if ( (int)distance > ( maxDistance * maxDistance ) )
 									*toF = EV_NONE;
 							}
