@@ -41,6 +41,7 @@ The following list documents changes in comparison to the [parent repository](do
 - [Tuning and performance](doc/tuning.md)
 
 ### 🤝 Acknowledgements
+- .BadBoy for feedback, testing and more ideas
 - IzNoGoD for feedback, testing and further ideas
 - Prawy for feedback and discovery of bugs
 - Raphael for valid security concerns
