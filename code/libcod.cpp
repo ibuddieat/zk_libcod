@@ -4047,8 +4047,17 @@ void custom_SV_VerifyIwds_f(client_t *cl)
 {
 	if ( sv_pure->current.boolean )
 	{
-		if ( sv_verifyIwds->current.boolean )
+		/* New code start: sv_verifyIwds dvar. Also: Skip client .iwd
+		 verification for protocol 119 clients as they have different file
+		 checksums for iw_06.iwd and iw_07.iwd, in comparison to the variants
+		 used with protocol 118. The same applies for protocol 117 and
+		 iw_15.iwd */
+		if ( sv_verifyIwds->current.boolean &&
+			 !( customPlayerState[cl - svs.clients].protocolVersion == 117 ) &&
+			 !( customPlayerState[cl - svs.clients].protocolVersion == 119 ) )
 		{
+		/* New code end */
+
 			hook_SV_VerifyIwds_f->unhook();
 			SV_VerifyIwds_f(cl);
 			hook_SV_VerifyIwds_f->hook();
