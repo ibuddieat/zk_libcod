@@ -129,6 +129,7 @@ dvar_t *sv_botKickMessages;
 dvar_t *sv_botReconnectMode;
 dvar_t *sv_botUseTriggerUse;
 dvar_t *sv_cracked;
+dvar_t *sv_debugNetchanTransmit;
 dvar_t *sv_disconnectMessages;
 dvar_t *sv_downloadMessage;
 dvar_t *sv_downloadMessageAtMap;
@@ -323,6 +324,11 @@ map_weapon_t map_weapons[MAX_GENTITIES];
 int num_map_turrets;
 map_turret_t map_turrets[MAX_GENTITIES];
 
+// Netchan debug variables
+int lastSnapshotEntities = 0;
+int lastSnapshotClients = 0;
+int maxCompressedSize = 0;
+
 void custom_Com_InitDvars(void)
 {
 	// Register custom dvars required early on server start
@@ -449,6 +455,7 @@ void common_init_complete_print(const char *format, ...)
 	sv_botReconnectMode = Dvar_RegisterInt("sv_botReconnectMode", 0, 0, 2, DVAR_ARCHIVE);
 	sv_botUseTriggerUse = Dvar_RegisterBool("sv_botUseTriggerUse", qfalse, DVAR_ARCHIVE);
 	sv_cracked = Dvar_RegisterBool("sv_cracked", qfalse, DVAR_ARCHIVE);
+	sv_debugNetchanTransmit = Dvar_RegisterBool("sv_debugNetchanTransmit", qfalse, DVAR_ARCHIVE);
 	sv_disconnectMessages = Dvar_RegisterBool("sv_disconnectMessages", qtrue, DVAR_ARCHIVE);
 	sv_downloadMessage = Dvar_RegisterString("sv_downloadMessage", "", DVAR_ARCHIVE);
 	sv_downloadMessageAtMap = Dvar_RegisterBool("sv_downloadMessageAtMap", qtrue, DVAR_ARCHIVE);
@@ -1210,6 +1217,12 @@ void custom_SV_SpawnServer(char *server)
 	SV_Heartbeat_f();
 
 	SV_SetupProxies(); // New
+
+	/* New code start: Netchan_Transmit error debugging for legacy clients */
+	lastSnapshotEntities = 0;
+	lastSnapshotClients = 0;
+	maxCompressedSize = 0;
+	/* New code end */
 
 	Com_Printf("-----------------------------------\n");
 
@@ -3179,19 +3192,22 @@ void custom_SV_EmitPacketEntities(int client, int from_num_entities, int from_fi
 			custom_MSG_WriteDeltaEntity(msg, oldent, newent, 0, client, newnum);
 			oldindex++;
 			newindex++;
+			lastSnapshotEntities++;
 		}
 		else if ( newnum < oldnum )
 		{
 			custom_MSG_WriteDeltaEntity(msg, &sv.svEntities[newnum].baseline.s, newent, 1, client, newnum);
 			newindex++;
+			lastSnapshotEntities++;
 		}
 		else if ( oldnum < newnum )
 		{
 			custom_MSG_WriteDeltaEntity(msg, oldent, NULL, 1, client, newnum);
 			oldindex++;
+			lastSnapshotEntities++;
 		}
 	}
-	MSG_WriteBits(msg, 0x3ff, 10);
+	MSG_WriteBits(msg, 0x3FF, 10);
 }
 
 void custom_SV_EmitPacketClients(int client, int from_num_clients, int from_first_client, int num_clients, int first_client, msg_t *msg)
@@ -3234,16 +3250,19 @@ void custom_SV_EmitPacketClients(int client, int from_num_clients, int from_firs
 			custom_MSG_WriteDeltaClient(msg, oldcs, newcs, 0);
 			oldindex++;
 			newindex++;
+			lastSnapshotClients++;
 		}
 		else if ( newnum < oldnum )
 		{
 			custom_MSG_WriteDeltaClient(msg, NULL, newcs, 1);
 			newindex++;
+			lastSnapshotClients++;
 		}
 		else if ( oldnum < newnum )
 		{
 			custom_MSG_WriteDeltaClient(msg, oldcs, NULL, 1);
 			oldindex++;
+			lastSnapshotClients++;
 		}
 	}
 	MSG_WriteBit0(msg);
@@ -3549,15 +3568,53 @@ void custom_SV_SendMessageToClient(msg_t *msg, client_t *client)
 	LargeLocal buf;
 	int compressedSize;
 	int rateMsec;
+	int id = client - svs.clients;
 
 	/* New code start: Multi version support */
-	if ( customPlayerState[client - svs.clients].protocolVersion != 118 )
+	if ( customPlayerState[id].protocolVersion != 118 )
 		LargeLocalConstructor(&buf, MAX_LEGACY_MSGLEN);
 	else /* New code end */
 		LargeLocalConstructor(&buf, MAX_MSGLEN);
 	data = LargeLocalGetBuf(&buf);
 	memcpy(data, msg->data, 4);
 	compressedSize = MSG_WriteBitsCompress(msg->data + 4, data + 4, msg->cursize - 4) + 4;
+
+	/* New code start: Netchan_Transmit error debugging for legacy clients */
+	if ( compressedSize > maxCompressedSize )
+	{
+		maxCompressedSize = compressedSize;
+		if ( sv_debugNetchanTransmit->current.boolean )
+			Com_Printf("Netchan debug: maxCompressedSize = %i\n", maxCompressedSize);
+	}
+
+	if ( customPlayerState[id].protocolVersion != 118 && MAX_LEGACY_MSGLEN < compressedSize )
+    {
+		// Server will stop with a Netchan_Transmitt error if we end up here
+
+		if ( sv_debugNetchanTransmit->current.boolean )
+		{
+			// We assume this to happen with snapshots only, as gamestate is
+			// limited to MAX_LEGACY_MSGLEN already; also assuming that Huffman
+			// compression does not increase size on edge cases
+			if ( client->reliableAcknowledge + 1 < client->reliableSequence )
+				Com_Printf("Netchan debug: client %i (\"%s\") has the following un-ack\'d reliable commands:\n", id, client->name);
+
+			int i = client->reliableAcknowledge;
+			while ( i += 1, i <= client->reliableSequence )
+			{
+				Com_Printf("Netchan debug: cmd %i: %s\n", ( i - client->reliableAcknowledge ) - 1, client->reliableCommandInfo[i & 0x7F].command);
+			}
+
+			Com_Printf("Netchan debug: lastSnapshotEntities = %i\n", lastSnapshotEntities);
+			Com_Printf("Netchan debug: lastSnapshotClients = %i\n", lastSnapshotClients);
+		}
+	}
+
+	// Reset counters
+	lastSnapshotEntities = 0;
+	lastSnapshotClients = 0;
+	/* New code end */
+
 	if ( client->dropReason )
 	{
 		SV_DropClient(client, client->dropReason);
@@ -5425,7 +5482,7 @@ void custom_Scr_PrintPrevCodePos(conChannel_t channel, const char *codePos, unsi
 	else
 	{
 		/* Changed logic here so that in non-developer mode as much debug
-		  information as available is still logged */
+		 information as available is still logged */
 		if ( scrVarPub.programBuffer && Scr_IsInOpcodeMemory(codePos) )
 		{
 			pos = Scr_GetPrevSourcePos(codePos - 1, index);
