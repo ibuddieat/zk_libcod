@@ -15,11 +15,12 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>EndLocationSelection()</H1>
+<H1>EnterProne( &lt;interpolation time&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
-Module: Client<BR>
+Module: AI<BR>
+SP Only<BR>
 </I>
 
 <BR>
@@ -27,7 +28,7 @@ Module: Client<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Causes the player to leave location selection mode. Works with beginlocationselection().</p>
+<p>Set the actor to enter the prone position.</p>
 
 </H3>
 </TR></TD></TABLE>
@@ -36,7 +37,7 @@ Module: Client<BR>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-A Player
+&lt;actor&gt; An actor
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -45,11 +46,17 @@ A Player
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-self EndLocationSelection(); 
+ self EnterProne( 1.0 );
 </PRE>
 </H3>
 </TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;interpolation time&gt; Time to enter prone in seconds</LI>
+</UL></TR></TD></TABLE>
 <BR>
 </BODY>
 </HTML>
-
