@@ -660,10 +660,10 @@ const char * custom_ClientConnect(unsigned int clientNum, unsigned int scriptPer
 	ClientUserinfoChanged(clientNum);
 	SV_GetUserinfo(clientNum, userinfo, MAX_STRINGLENGTH);
 	if ( gclient->sess.localClient
-	        || (password = Info_ValueForKey(userinfo, "password"), !*g_password->current.string)
-	        || !I_stricmp(g_password->current.string, "none")
-			// New: Time-constant string comparison for g_password dvar
-	        || strcmp_constant_time(g_password->current.string, password) )
+	     || (password = Info_ValueForKey(userinfo, "password"), !*g_password->current.string)
+	     || !I_stricmp(g_password->current.string, "none")
+	     // New: Time-constant string comparison for g_password dvar
+	     || strcmp_constant_time(g_password->current.string, password) )
 	{
 		/* New code start: Save original client IP if provided by proxy */
 		char preProxyIP[16] = {0};
@@ -1366,11 +1366,9 @@ void custom_SV_DirectConnect(netadr_t from)
 	for ( i = 0, cl = svs.clients; i < sv_maxclients->current.integer; i++, cl++ )
 	{
 		if ( NET_CompareBaseAdr(from, cl->netchan.remoteAddress)
-		        && ( cl->netchan.qport == qport
-		             || from.port == cl->netchan.remoteAddress.port ) )
+		     && ( cl->netchan.qport == qport || from.port == cl->netchan.remoteAddress.port ) )
 		{
-			if ( ( svs.time - cl->lastConnectTime )
-			        < ( sv_reconnectlimit->current.integer * 1000 ) )
+			if ( ( svs.time - cl->lastConnectTime ) < ( sv_reconnectlimit->current.integer * 1000 ) )
 			{
 				Com_DPrintf("%s:reconnect rejected : too soon\n", NET_AdrToString(from));
 				return;
@@ -2318,32 +2316,32 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 
 int custom_GetFreeCueSpot(void)
 {
-    int maxDroppedWeapon;
-    gentity_t *ent;
-    float fBestDistSqrd;
-    float fClientDistSqrd;
-    float fDistSqrd;
-    int iBest;
-    int j;
-    int i;
-    int foundRealPlayers;
+	int maxDroppedWeapon;
+	gentity_t *ent;
+	float fBestDistSqrd;
+	float fClientDistSqrd;
+	float fDistSqrd;
+	int iBest;
+	int j;
+	int i;
+	int foundRealPlayers;
 
-    iBest = 0;
-    fBestDistSqrd = -1.0;
-    maxDroppedWeapon = g_maxDroppedWeapons->current.integer;
+	iBest = 0;
+	fBestDistSqrd = -1.0;
+	maxDroppedWeapon = g_maxDroppedWeapons->current.integer;
 
-    for ( i = 0; i < maxDroppedWeapon; ++i )
-    {
-        ent = level.droppedWeaponCue[i];
+	for ( i = 0; i < maxDroppedWeapon; ++i )
+	{
+		ent = level.droppedWeaponCue[i];
 
-        if ( !ent )
-            return i;
+		if ( !ent )
+			return i;
 
-        fDistSqrd = 9.99998e+11;
+		fDistSqrd = 9.99998e+11;
 
 		/* New code start: g_droppedWeaponsNeglectBots dvar with logic to
 		 exclude bots from dropped weapon removal distance calculations */
-        foundRealPlayers = 0;
+		foundRealPlayers = 0;
 
 		if ( g_droppedWeaponsNeglectBots->current.boolean )
 		{
@@ -2364,32 +2362,32 @@ int custom_GetFreeCueSpot(void)
 			}
 		}
 
-        if ( !foundRealPlayers )
-        {
+		if ( !foundRealPlayers )
+		{
 		/* New code end */
-            for ( j = 0; j < level.maxclients; ++j )
-            {
-                if ( level.clients[j].sess.connected == CON_CONNECTED && 
+			for ( j = 0; j < level.maxclients; ++j )
+			{
+				if ( level.clients[j].sess.connected == CON_CONNECTED && 
 					 level.clients[j].sess.sessionState == STATE_PLAYING )
-                {
-                    fClientDistSqrd = (float)Vec3DistanceSq(g_entities[j].r.currentOrigin, ent->r.currentOrigin);
-                    if ( fDistSqrd > fClientDistSqrd )
-                        fDistSqrd = fClientDistSqrd;
-                }
-            }
-        }
-        
-        if ( fDistSqrd > fBestDistSqrd )
-        {
-            fBestDistSqrd = fDistSqrd;
-            iBest = i;
-        }
-    }
+				{
+					fClientDistSqrd = (float)Vec3DistanceSq(g_entities[j].r.currentOrigin, ent->r.currentOrigin);
+					if ( fDistSqrd > fClientDistSqrd )
+						fDistSqrd = fClientDistSqrd;
+				}
+			}
+		}
+		
+		if ( fDistSqrd > fBestDistSqrd )
+		{
+			fBestDistSqrd = fDistSqrd;
+			iBest = i;
+		}
+	}
 
-    G_FreeEntity(level.droppedWeaponCue[iBest]);
-    level.droppedWeaponCue[iBest] = 0;
+	G_FreeEntity(level.droppedWeaponCue[iBest]);
+	level.droppedWeaponCue[iBest] = 0;
 
-    return iBest;
+	return iBest;
 }
 
 void custom_BG_AddPredictableEventToPlayerstate(int event, int eventParm, playerState_t *ps)
@@ -3344,7 +3342,7 @@ qboolean custom_Netchan_Transmit(netchan_t *chan, int length, byte *data)
 
 	/* New code start: Multi version support */
 	if ( customPlayerState[id].protocolVersion != 118 && MAX_LEGACY_MSGLEN < length )
-    	Com_Error(ERR_DROP, "\x15Netchan_Transmit: length = %i", length);
+		Com_Error(ERR_DROP, "\x15Netchan_Transmit: length = %i", length);
 	/* New code end */
 
 	hook_Netchan_Transmit->unhook();
@@ -3397,11 +3395,11 @@ qboolean custom_Netchan_TransmitNextFragment(netchan_t *chan)
 
 	if ( showpackets->current.boolean )
 	{
-		Com_Printf("%s send %4i : s=%i fragment=%i,%i\n"
-		            , netsrcString[chan->sock]
-		            , send.cursize
-		            , chan->outgoingSequence
-		            , chan->unsentFragmentStart, fragmentLength);
+		Com_Printf("%s send %4i : s=%i fragment=%i,%i\n",
+		           netsrcString[chan->sock],
+		           send.cursize,
+		           chan->outgoingSequence,
+		           chan->unsentFragmentStart, fragmentLength);
 	}
 
 	chan->unsentFragmentStart += fragmentLength;
@@ -4679,7 +4677,7 @@ bool SVC_SpamCallback(const char *str, const char *ip)
 
 void custom_SV_AuthorizeIpPacket(netadr_t from)
 {
-    /* New code start: Rate limiting */
+	/* New code start: Rate limiting */
 	if ( SVC_ApplyAuthorizeIpPacketLimit(from, OUTBOUND_BUCKET_MAIN) )
 		return;
 	/* New code end */
@@ -4822,7 +4820,7 @@ void custom_SVC_GameCompleteStatus(netadr_t to)
 		if ( cl->state >= CS_CONNECTED )
 		{
 			Com_sprintf(player, sizeof(player), "%i %i \"%s\"\n",
-			             G_GetClientScore(cl - svs.clients), cl->ping, cl->name);
+			            G_GetClientScore(cl - svs.clients), cl->ping, cl->name);
 			playerLength = strlen(player);
 			if ( statusLength + playerLength >= sizeof(status) )
 				break;
@@ -5460,22 +5458,22 @@ void manymaps_prepare(const char *mapname, int read)
 			int i;
 			int max_parts = 10; // Hard-coded limit, assumed to be sufficient
 
-            for ( i = 1; i <= max_parts; i++ )
-            {
+			for ( i = 1; i <= max_parts; i++ )
+			{
 				Com_sprintf(src, MAX_OSPATH, "%s/%s.pt%i.iwd", library_path, mapname, i);
 				Com_sprintf(dst, MAX_OSPATH, "%s/%s/%s.pt%i.iwd", fs_homepath->current.string, fs_game->current.string, mapname, i);
  
-                if ( access(src, F_OK) != -1 )
-                {
-                    link_success = symlink(src, dst) == 0;
+				if ( access(src, F_OK) != -1 )
+				{
+					link_success = symlink(src, dst) == 0;
 
 					// Using plain printf here, the file system is not
 					// initialized yet
 					printf("> [LIBCOD] Manymaps: New link from %s to %s: %s\n", src, dst, link_success ? "success" : "failed");
-                }
-                else
-                    break;
-            }
+				}
+				else
+					break;
+			}
 		}
 		else
 		{
@@ -7179,8 +7177,8 @@ void custom_player_die(gentity_t *self, gentity_t *inflictor, gentity_t *attacke
 	int i;
 
 	if ( Com_GetServerDObj(self->client->ps.clientNum)
-	        && self->client->ps.pm_type <= PM_NORMAL_LINKED
-	        && ( self->client->ps.pm_flags & 0x400000 ) == 0 )
+	     && self->client->ps.pm_type <= PM_NORMAL_LINKED
+	     && ( self->client->ps.pm_flags & 0x400000 ) == 0 )
 	{
 		bgs = &level_bgs;
 
@@ -7240,8 +7238,8 @@ void custom_player_die(gentity_t *self, gentity_t *inflictor, gentity_t *attacke
 			client = &level.clients[i];
 
 			if ( client->sess.connected == CON_CONNECTED
-			        && client->sess.sessionState == STATE_SPECTATOR
-			        && client->spectatorClient == self->s.number )
+			     && client->sess.sessionState == STATE_SPECTATOR
+			     && client->spectatorClient == self->s.number )
 			{
 				Cmd_Score_f(&g_entities[i]);
 			}
@@ -8041,10 +8039,10 @@ qboolean custom_SV_MapExists(const char *name)
 		Com_sprintf(map_check, MAX_OSPATH, "%s/%s.iwd", library_path, name);
 
 		// If not found, check if it is a multipart map
-        if ( !access(map_check, F_OK) )
+		if ( !access(map_check, F_OK) )
 			Com_sprintf(map_check, MAX_OSPATH, "%s/%s.pt1.iwd", library_path, name);
  
-        return access(map_check, F_OK) != -1;
+		return access(map_check, F_OK) != -1;
 	}
 	else
 	{
@@ -9863,7 +9861,7 @@ int custom_Cmd_FollowCycle_f(gentity_t *ent, int dir)
 			clientNum = level.maxclients - 1;
 
 		if ( SV_GetArchivedClientInfo(clientNum, &ent->client->sess.archiveTime, &pstate, &cstate)
-		        && G_ClientCanSpectateTeam(ent->client, (team_t)cstate.team) )
+		     && G_ClientCanSpectateTeam(ent->client, (team_t)cstate.team) )
 		{
 			client_t *client = &svs.clients[clientNum];
 
