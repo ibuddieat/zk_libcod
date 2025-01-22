@@ -4842,6 +4842,7 @@ void custom_SVC_Status(netadr_t from)
 void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 {
 	char *sv_outputbuf;
+	int sv_outputbuf_len = SV_OUTPUTBUF_LENGTH;
 	int argc;
 	char *argv;
 	LargeLocal buf;
@@ -4859,7 +4860,12 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 		return;
 	/* New code end */
 
-	LargeLocalConstructor(&buf, SV_OUTPUTBUF_LENGTH);
+	/* New code start: Multi version support */
+	if ( getProtocolFromShortVersion(sv_version->current.string) != 118 )
+		sv_outputbuf_len = SV_OUTPUTBUF_LEGACY_LENGTH;
+	/* New code end */
+
+	LargeLocalConstructor(&buf, sv_outputbuf_len);
 	sv_outputbuf = (char *)LargeLocalGetBuf(&buf);
 
 	/* New code start: Patched out half-second limit
@@ -4928,7 +4934,7 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 	/* New code end */
 
 	svs.redirectAddress = from;
-	Com_BeginRedirect(sv_outputbuf, SV_OUTPUTBUF_LENGTH, SV_FlushRedirect);
+	Com_BeginRedirect(sv_outputbuf, sv_outputbuf_len, SV_FlushRedirect);
 	if ( !strlen(rcon_password->current.string) )
 	{
 		Com_Printf("The server must set \'rcon_password\' for clients to use \'rcon\'.\n");
