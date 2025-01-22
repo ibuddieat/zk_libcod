@@ -2,6 +2,22 @@
 
 #if COMPILE_LEVEL == 1
 
+void gsc_level_getmovers()
+{
+	gentity_t *ent = g_entities;
+	int i;
+
+	stackPushArray();
+	for ( i = 0; i < level.num_entities; i++, ent++ )
+	{
+		if ( ent->s.eType == ET_SCRIPTMOVER )
+		{
+			stackPushEntity(ent);
+			stackPushArrayLast();
+		}
+	}
+}
+
 void gsc_level_getnumberofstaticmodels()
 {
 	stackPushInt(cm.numStaticModels);

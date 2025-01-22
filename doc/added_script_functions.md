@@ -28,6 +28,7 @@ New script code methods:
   * `<entity> setLight(<red>, <green>, <blue>, <intensity>)`
   * `<entity> solidForPlayer(<player>)`
   * `<entity> spawnGrenade(<weapon>, <origin>, [<direction>], [<velocity>], [<fuseTime>])`
+  * `<player> addEntToSnapshots(<entity>)`
   * `<player> canUseTurret(<turret>)`
   * `<player> disableBulletDrop()`
   * `<player> disableBulletImpacts()`
@@ -50,6 +51,7 @@ New script code methods:
   * `<player> getEnterTime()`
   * `<player> getGroundEntity()`
   * `<player> getInactivityTime()`
+  * `<player> getNumberOfEntsInSnapshot()`
   * `<player> getPlayerstateFlags()`
   * `<player> getProtocol()`
   * `<player> getProtocolString()`
@@ -76,6 +78,7 @@ New script code methods:
   * `<player> playSoundFile(<sound index>, [<offset>], [<source player>])`
   * `<player> playScriptAnimation(<scriptAnimEventType>, <isContinue>, <force>)`
   * `<player> processSuicide()`
+  * `<player> removeEntFromSnapshots(<entity>)`
   * `<player> setAllowSpectators(<allow>)`
   * `<player> setBulletDrag(<value>)`
   * `<player> setBulletMask(<mask>)`
@@ -110,6 +113,7 @@ New script code functions:
   * `chr(<number>)`
   * `getCallStack()`
   * `getConfigString(<index>)`
+  * `getMovers()`
   * `getSoundDuration(<aliasname>)`
   * `getSoundInfo(<aliasname>)`
   * `getWeaponFuseTime(<weapon name>)`

@@ -128,6 +128,7 @@ dvar_t *sv_allowRcon;
 dvar_t *sv_authorizePort;
 dvar_t *sv_authorizeServer;
 dvar_t *sv_authorizeTimeout;
+dvar_t *sv_autoAddSnapshotEntities;
 dvar_t *sv_botKickMessages;
 dvar_t *sv_botReconnectMode;
 dvar_t *sv_botUseTriggerUse;
@@ -333,6 +334,7 @@ void custom_Com_InitDvars(void)
 	logfileName = Dvar_RegisterString("logfileName", "console_mp_server.log", DVAR_ARCHIVE);
 	logfileRotate = Dvar_RegisterInt("logfileRotate", 0, 0, 1000, DVAR_ARCHIVE);
 	logTimestamps = Dvar_RegisterBool("logTimestamps", qfalse, DVAR_ARCHIVE);
+	sv_autoAddSnapshotEntities = Dvar_RegisterBool("sv_autoAddSnapshotEntities", qtrue, DVAR_ARCHIVE | DVAR_LATCH | DVAR_CHANGEABLE_RESET);
 	sv_reservedConfigstringBufferSize = Dvar_RegisterInt("sv_reservedConfigstringBufferSize", 256, 0, 8192, DVAR_ARCHIVE);
 	sv_authorizePort = Dvar_RegisterInt("sv_authorizePort", 20700, 0, 65535, DVAR_ARCHIVE);
 	sv_authorizeServer = Dvar_RegisterString("sv_authorizeServer", "cod2master.activision.com", DVAR_ARCHIVE);
@@ -6428,6 +6430,50 @@ LAB_0809b5f4:
 	}
 }
 
+void SV_AddEntToPlayerSnapshots(int clientNum, int entNum)
+{
+	int curSize = customPlayerState[clientNum].snapshotEntities.numSnapshotEntities;
+	int i;
+
+	for ( i = 0; i < curSize; i++ )
+	{
+		if ( customPlayerState[clientNum].snapshotEntities.snapshotEntities[i] == entNum )
+			return;
+	}
+
+	customPlayerState[clientNum].snapshotEntities.snapshotEntities[curSize] = entNum;
+	customPlayerState[clientNum].snapshotEntities.numSnapshotEntities++;
+}
+
+void SV_RemoveEntFromPlayerSnapshots(int clientNum, int entNum)
+{
+	int curSize = customPlayerState[clientNum].snapshotEntities.numSnapshotEntities;
+	int i;
+	qboolean removed = qfalse;
+
+	for ( i = 0; i < curSize; i++ )
+	{
+		if ( customPlayerState[clientNum].snapshotEntities.snapshotEntities[i] == entNum )
+		{
+			customPlayerState[clientNum].snapshotEntities.snapshotEntities[i] = ENTITY_NONE;
+			customPlayerState[clientNum].snapshotEntities.numSnapshotEntities--;
+			removed = qtrue;
+		}
+		if ( removed && i < ( curSize - 1 ) )
+			customPlayerState[clientNum].snapshotEntities.snapshotEntities[i] = customPlayerState[clientNum].snapshotEntities.snapshotEntities[i + 1];
+	}
+}
+
+void SV_AddEntitiesAsDefined(int clientNum, snapshotEntityNumbers_t *eNums)
+{
+	// Entity corruption could occur in case numSnapshotEntities is greater
+	// than 63, which is an issue of too small buffer size on the client side.
+	// For a fix on both server and client side, see:
+	// https://github.com/ioquake/ioq3/commit/ac621642ac6847eb27d5dc20f4769c3947ef40f0
+	for ( int i = 0; i < customPlayerState[clientNum].snapshotEntities.numSnapshotEntities; i++ )
+		SV_AddEntToSnapshot(customPlayerState[clientNum].snapshotEntities.snapshotEntities[i], eNums);
+}
+
 void custom_SV_BuildClientSnapshot(client_t *client)
 {
 	clientState_t *clientStateSource;
@@ -6480,7 +6526,12 @@ void custom_SV_BuildClientSnapshot(client_t *client)
 			AddLeanToPosition(org, ps->viewangles[1], ps->leanf, 16.0, 20.0);
 			if ( !cachedSnap )
 			{
-				SV_AddEntitiesVisibleFromPoint(org, clientNum, &entityNumbers);
+				/* New code start: sv_autoAddSnapshotEntities dvar */
+				if ( !sv_autoAddSnapshotEntities->current.boolean && !svs.archiveEnabled )
+					SV_AddEntitiesAsDefined(clientNum, &entityNumbers);
+				else /* New code end */
+					SV_AddEntitiesVisibleFromPoint(org, clientNum, &entityNumbers);
+
 				for ( i = 0; i < entityNumbers.numSnapshotEntities; i++ )
 				{
 					ent = SV_GentityNum(entityNumbers.snapshotEntities[i]);
@@ -7516,6 +7567,69 @@ void hook_Player_UpdateLookAtEntity(gentity_t *player)
 	// New: sv_isLookingAtOnDemand dvar
 	if ( !sv_isLookingAtOnDemand->current.boolean )
 		Player_UpdateLookAtEntity(player);
+}
+
+void custom_Scr_PlayFX(void)
+{
+	vec3_t forward;
+	vec3_t cross;
+	vec3_t up;
+	vec3_t origin;
+	long double length;
+	int args;
+	uint index;
+	gentity_t *ent;
+
+	args = Scr_GetNumParam();
+	if ( args < 2 || 4 < args )
+	{
+		Scr_Error("Incorrect number of parameters");
+	}
+	index = Scr_GetInt(0);
+	Scr_GetVector(1, origin);
+	ent = G_TempEntity(origin, EV_PLAY_FX);
+	ent->s.eventParm = index & 0xFF;
+	if ( args == 2 )
+	{
+		ent->s.apos.trBase[0] = -90.0;
+	}
+	else
+	{
+		Scr_GetVector(2, forward);
+		length = VectorLength(forward);
+		if ( length == 0.0 )
+		{
+			Scr_FxParamError("playFx called with (0 0 0) forward direction", index);
+		}
+		VectorScale(forward, 1.0 / length, forward);
+		if ( args == 3 )
+		{
+			VecToAngles(forward, ent->s.apos.trBase);
+		}
+		else
+		{
+			Scr_GetVector(3, up);
+			length = VectorLength(up);
+			if ( length == 0.0 )
+			{
+				Scr_FxParamError("playFx called with (0 0 0) up direction", index);
+			}
+			VectorScale(up, 1.0 / length, up);
+			VectorCross(up, forward, cross);
+			length = VectorLength(cross);
+			if ( length < 0.001 )
+			{
+				Scr_FxParamError("playFx called an up direction 0 or 180 degrees from forward", index);
+			}
+			else if ( length < 0.999 )
+			{
+				VectorScale(cross, 1.0 / length, cross);
+				VectorCross(forward, cross, up);
+			}
+			AxisToAngles(forward, ent->s.apos.trBase);
+		}
+	}
+	Scr_AddEntity(ent); // New
 }
 
 void custom_ScrCmd_IsLookingAt(scr_entref_t entref)
@@ -8997,6 +9111,12 @@ void custom_G_InitGentity(gentity_t *ent)
 {
 	memset(&customEntityState[ent->s.number], 0, sizeof(customEntityState_t));
 
+	if ( !sv_autoAddSnapshotEntities->current.boolean )
+	{
+		for ( int i = 0; i < sv_maxclients->current.integer; i++ )
+			SV_RemoveEntFromPlayerSnapshots(i, ent->s.number);
+	}
+
 	hook_G_InitGentity->unhook();
 	void (*G_InitGentity)(gentity_t *ent);
 	*(int *)&G_InitGentity = hook_G_InitGentity->from;
@@ -9008,6 +9128,12 @@ void custom_G_FreeEntity(gentity_t *ent)
 {
 	// Find out from where ent is freed:
 	//Com_Printf(">>> G_FreeEntity for entity %d from %p\n", (ent->s).number, __builtin_return_address(0));
+
+	if ( !sv_autoAddSnapshotEntities->current.boolean )
+	{
+		for ( int i = 0; i < sv_maxclients->current.integer; i++ )
+			SV_RemoveEntFromPlayerSnapshots(i, ent->s.number);
+	}
 
 	hook_G_FreeEntity->unhook();
 	void (*G_FreeEntity)(gentity_t *ent);
@@ -10603,6 +10729,7 @@ public:
 		cracking_hook_function(0x080FD900, (int)custom_ScrCmd_IsLookingAt);
 		cracking_hook_function(0x08091F0E, (int)custom_SV_AllocSkelMemory);
 		cracking_hook_function(0x080950D0, (int)custom_SVC_GameCompleteStatus);
+		cracking_hook_function(0x081150A4, (int)custom_Scr_PlayFX);
 		cracking_hook_function(0x08098B72, (int)custom_SV_AddArchivedEntToSnapshot);
 		cracking_hook_function(0x08098B4C, (int)custom_SV_AddEntToSnapshot);
 		cracking_hook_function(0x0809ADEA, (int)custom_SV_SendClientSnapshot);

@@ -159,6 +159,10 @@ Added dvars:
     * Type: Boolean
     * Default: False
     * Effect: If true, turret weapon names are passed to `Callback_PlayerDamage` when using a turret, instead of the player's current weapon slot's weapon. Also fixes the game issue where grenade (and other) kills are shown as turret kills while the player is using a turret.
+  * `sv_autoAddSnapshotEntities`
+    * Type: Boolean
+    * Default: True
+    * Effect: If set to false, it is up to the script code (instead of the game engine itself) to populate server snapshots with entities to use and draw on the client side. Requires archived server snapshots to be disabled. Related script methods: `SetArchive`, `addEntToSnapshots`, `removeEntFromSnapshots` and `getNumberOfEntsInSnapshot`.
   * `sv_authorizePort`
     * Type: Integer
     * Default: 20700

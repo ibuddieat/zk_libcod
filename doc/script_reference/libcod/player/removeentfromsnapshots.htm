@@ -15,11 +15,11 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>PlayFX( &lt;effect id &gt;, &lt;position of effect&gt;, &lt;forward vector&gt;, &lt;up vector&gt; )</H1>
+<H1>removeEntFromSnapshots( &lt;entity&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
-Module: Effects<BR>
+Module: Player<BR>
 </I>
 
 <BR>
@@ -27,8 +27,16 @@ Module: Effects<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Play this effect. Returns the (temporary) effect entity.</p>
+<p>Removes the specified entity from the list of entities to send to the client. Effective only if the sv_autoAddSnapshotEntities dvar is set to 0 and if archived server snapshots are disabled (see <a href="../../stock/system/setarchive.htm">SetArchive</a>). Entities missing in this list are not rendered on the client side, including players.</p>
 
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Call this on:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+The player
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -37,7 +45,7 @@ Module: Effects<BR>
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-fx = PlayFX( enginesmoke, engine.origin );
+self removeEntFromSnapshots(ent);
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -46,16 +54,7 @@ fx = PlayFX( enginesmoke, engine.origin );
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;effect id&gt; The effect id returned by loadfx</LI>
-<LI>2 : &lt;position of effect&gt; The world position of the effect</LI>
-</UL></TR></TD></TABLE>
-<BR><BR>
-<H2>Optional Args</H2>
-<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
-<TR><TD BGCOLOR="C0D4EE">
-<UL>
-<LI>1 : &lt;forward vector&gt; The forward vector of the effect</LI>
-<LI>2 : &lt;up vector&gt; The up vector of the effect</LI>
+<LI>1 : &lt;entity&gt; The entity to exclude from server snapshots</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>

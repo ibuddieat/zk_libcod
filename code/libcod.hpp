@@ -16,3 +16,5 @@ void Scr_CodeCallback_Error(qboolean terminal, qboolean emit, const char *intern
 void ClearNotSolidForPlayerFlags(int clientNum);
 void custom_ClientEndFrame(gentity_t *ent);
 void ProcessClientUserinfoChange(int clientNum);
+void SV_AddEntToPlayerSnapshots(int clientNum, int entNum);
+void SV_RemoveEntFromPlayerSnapshots(int clientNum, int entNum);

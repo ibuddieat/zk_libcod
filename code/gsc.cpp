@@ -132,6 +132,7 @@ scr_function_t scriptFunctions[] =
 
 	#if COMPILE_LEVEL == 1
 	{"getEntityCount", gsc_level_getentitycount, 0},
+	{"getMovers", gsc_level_getmovers, 0},
 	{"getNumberOfStaticModels", gsc_level_getnumberofstaticmodels, 0},
 	{"getSavePersist", gsc_utils_getsavepersist, 0},
 	{"getStaticModelName", gsc_level_getstaticmodelname, 0},
@@ -343,6 +344,9 @@ scr_method_t scriptMethods[] =
 	#endif
 
 	#if COMPILE_PLAYER == 1
+	{"addEntToSnapshots", gsc_player_addenttosnapshots, 0},
+	{"removeEntFromSnapshots", gsc_player_removeentfromsnapshots, 0},
+	{"getNumberOfEntsInSnapshot", gsc_player_getnumberofentsinsnapshot, 0},
 	{"executeClientCommand", gsc_player_executeclientcommand, 0},
 	{"getProtocol", gsc_player_getprotocol, 0},
 	{"getProtocolString", gsc_player_getprotocolstring, 0},

@@ -1047,6 +1047,9 @@ static const SV_AddEntitiesVisibleFromPoint_t SV_AddEntitiesVisibleFromPoint = (
 typedef void (*SV_AddCachedEntitiesVisibleFromPoint_t)(int from_num_entities, int from_first_entity, float *origin, int clientNum, snapshotEntityNumbers_t *eNums);
 static const SV_AddCachedEntitiesVisibleFromPoint_t SV_AddCachedEntitiesVisibleFromPoint = (SV_AddCachedEntitiesVisibleFromPoint_t)0x08098E32;
 
+typedef void (*SV_AddEntToSnapshot_t)(int entNum, snapshotEntityNumbers_t *eNums);
+static const SV_AddEntToSnapshot_t SV_AddEntToSnapshot = (SV_AddEntToSnapshot_t)0x08098B4C;
+
 typedef void (*SV_AddServerCommand_t)(client_t *client, svscmd_type type, const char *cmd);
 static const SV_AddServerCommand_t SV_AddServerCommand = (SV_AddServerCommand_t)0x08094750;
 

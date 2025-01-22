@@ -15,11 +15,11 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>playFxForPlayer( &lt;effect id &gt;, &lt;position of effect&gt;, &lt;forward vector&gt;, &lt;up vector&gt; )</H1>
+<H1>getNumberOfEntsInSnapshot()</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
-Module: Effects<BR>
+Module: Player<BR>
 </I>
 
 <BR>
@@ -27,7 +27,7 @@ Module: Effects<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Play this effect, visible for this player only. Returns the (temporary) effect entity.</p>
+<p>Returns the number of entities in the list of entities to send to the client (see <a href="../player/addenttosnapshots.htm">addEntToSnapshots</a> and <a href="../player/removeentfromsnapshots.htm">removeEntFromSnapshots</a>).</p>
 
 </H3>
 </TR></TD></TABLE>
@@ -45,26 +45,10 @@ The player
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-self playFxForPlayer(game["fire"], origin);
+num = self getNumberOfEntsInSnapshot();
 </PRE>
 </H3>
 </TR></TD></TABLE>
-<BR><BR>
-<H2>Required Args:</H2>
-<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
-<TR><TD BGCOLOR="C0D4EE">
-<UL>
-<LI>1 : &lt;effect id&gt; The effect id returned by loadfx</LI>
-<LI>2 : &lt;position of effect&gt; The world position of the effect</LI>
-</UL></TR></TD></TABLE>
-<BR><BR>
-<H2>Optional Args</H2>
-<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
-<TR><TD BGCOLOR="C0D4EE">
-<UL>
-<LI>1 : &lt;forward vector&gt; The forward vector of the effect</LI>
-<LI>2 : &lt;up vector&gt; The up vector of the effect</LI>
-</UL></TR></TD></TABLE>
 <BR>
 </BODY>
 </HTML>

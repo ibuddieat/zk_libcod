@@ -4104,6 +4104,7 @@ typedef struct customPlayerState_s
 	unsigned int weapon;
 	qboolean hiddenFromScoreboard;
 	qboolean notAllowingSpectators;
+	snapshotEntityNumbers_t snapshotEntities;
 } customPlayerState_t;
 
 typedef struct callback_s

@@ -1,7 +1,14 @@
+> [!NOTE]
+> * Stock script functions/methods start in uppercase here, whereas libcod script functions/methods start in lowercase.
+
 # Changed with or since release v13.0:
 
+Script code functions:
+  * `PlayFx(<effect id>, <position of effect>, [<forward vector>], [<up vector>])` now returns the (temporary) effect entity
+
 Script code methods:
-  * Renamed `setConfigString()` to `setConfigStringForPlayer()` and flipped its parameter positions
+  * Renamed `setConfigString(<string>, <index>)` to `setConfigStringForPlayer(<index>, <string>)` and flipped its parameter positions
+  * `<player> playFxForPlayer(<effect id>, <position of effect>, [<forward vector>], [<up vector>])` now returns the (temporary) effect entity
 
 # Changed with or since release v12.0:
 
@@ -47,20 +54,20 @@ Script code functions:
   * Renamed `fs_loaddir()` to `loadDir()`
   * Renamed `g_findConfigStringIndexOriginal()` to `findConfigStringIndexOriginal()`
   * Renamed `g_findConfigStringIndex()` to `findConfigStringIndex()`
-  * `bulletTracePassed(<start>, <end>, <hit characters>, <ignore entity>, [<content mask>])` got one more parameter for custom content masks
+  * `BulletTracePassed(<start>, <end>, <hit characters>, <ignore entity>, [<content mask>])` got one more parameter for custom content masks
 
 # Changed since release v10.0:
 
 Script code methods:
-  * `<entity> setHintString(<string>)` now also supports trigger_radius entities
+  * `<entity> SetHintString(<string>)` now also supports trigger_radius entities
   * `<player> disableItemPickup()` and `<player> enableItemPickup()` were merged into `<player> itemPickup(<enabled>)`
-  * `<player> finishPlayerDamage()` got one more parameter to toggle bullet impact events
+  * `<player> FinishPlayerDamage()` got one more parameter to toggle bullet impact events
   * `<player> get_userinfo()` now returns strings only, instead of string or undefined
   * `<player> getClientState()` was renamed to `<player> getClientConnectState()`
 
 Script code functions:
-  * `bulletTrace(<start>, <end>, <hit characters>, <ignore entity>, [<content mask>])` got one more parameter for custom content masks and now also returns surface flags
-  * `getEntByNum(<entity id>)` can be used without developer mode
+  * `BulletTrace(<start>, <end>, <hit characters>, <ignore entity>, [<content mask>])` got one more parameter for custom content masks and now also returns surface flags
+  * `GetEntByNum(<entity id>)` can be used without developer mode
   * `getType(<parameter>)` now correctly resolves object types (e.g., struct, array, entity)
-  * `obituary(<victim>, <attacker>, <weapon>, <meansOfDeath>, [<team>], [<origin>], [<max. distance>])` got three more parameters
-  * `sightTracePassed(<start>, <end>, <hit characters>, <ignore entity>, [<content mask>])` got one more parameter for custom content masks
+  * `Obituary(<victim>, <attacker>, <weapon>, <meansOfDeath>, [<team>], [<origin>], [<max. distance>])` got three more parameters
+  * `SightTracePassed(<start>, <end>, <hit characters>, <ignore entity>, [<content mask>])` got one more parameter for custom content masks

@@ -13,6 +13,56 @@ extern dvar_t *sv_maxclients;
 extern dvar_t *g_forceSnaps;
 extern dvar_t *g_forceRate;
 
+void gsc_player_addenttosnapshots(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_addenttosnapshots() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	gentity_t *ent = Scr_GetEntity(0);
+
+	SV_AddEntToPlayerSnapshots(id, ent->s.number);
+
+	stackPushBool(qtrue);
+}
+
+void gsc_player_removeentfromsnapshots(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_removeentfromsnapshots() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	gentity_t *ent = Scr_GetEntity(0);
+
+	SV_RemoveEntFromPlayerSnapshots(id, ent->s.number);
+
+	stackPushBool(qtrue);
+}
+
+void gsc_player_getnumberofentsinsnapshot(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_getnumberofentsinsnapshot() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushInt(customPlayerState[id].snapshotEntities.numSnapshotEntities);
+}
+
 void gsc_player_executeclientcommand(scr_entref_t ref)
 {
 	char c;
@@ -2390,7 +2440,7 @@ void gsc_player_playfxforplayer(scr_entref_t ref)
 		}
 	}
 
-	stackPushBool(qtrue);
+	stackPushEntity(ent);
 }
 
 void gsc_player_playfxontagforplayer(scr_entref_t ref)

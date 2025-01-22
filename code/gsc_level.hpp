@@ -5,6 +5,7 @@
 #include "gsc.hpp"
 
 void gsc_level_getentitycount();
+void gsc_level_getmovers();
 void gsc_level_getnumberofstaticmodels();
 void gsc_utils_getsavepersist();
 void gsc_level_getstaticmodelname();
