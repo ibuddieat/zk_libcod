@@ -151,6 +151,10 @@ Added dvars:
     * Type: Boolean
     * Default: False
     * Effect: If true, prepend a timestamp (example: "Mon Apr  4 13:37:00 2023 ") to each console log entry.
+  * `net_noFragmentationDelay`
+    * Type: Boolean
+    * Default: False
+    * Effect: If true, the server will send out all pending network fragments instead of a single fragment per server frame. This can improve lag in busy game conditions (i.e., many players and many entities updated at a time), while also increasing server load (higher network I/O).
   * `scr_turretDamageName`
     * Type: Boolean
     * Default: False

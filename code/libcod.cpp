@@ -121,6 +121,7 @@ dvar_t *logErrors;
 dvar_t *logfileName;
 dvar_t *logfileRotate;
 dvar_t *logTimestamps;
+dvar_t *net_noFragmentationDelay;
 dvar_t *scr_turretDamageName;
 dvar_t *sv_allowRcon;
 dvar_t *sv_authorizePort;
@@ -444,6 +445,7 @@ void common_init_complete_print(const char *format, ...)
 	g_spectateBots = Dvar_RegisterBool("g_spectateBots", qtrue, DVAR_ARCHIVE);
 	loc_loadLocalizedMods = Dvar_RegisterBool("loc_loadLocalizedMods", qfalse, DVAR_ARCHIVE);
 	logErrors = Dvar_RegisterBool("logErrors", qfalse, DVAR_ARCHIVE);
+	net_noFragmentationDelay = Dvar_RegisterBool("net_noFragmentationDelay", qfalse, DVAR_ARCHIVE);
 	scr_turretDamageName = Dvar_RegisterBool("scr_turretDamageName", qfalse, DVAR_ARCHIVE);
 	sv_allowRcon = Dvar_RegisterBool("sv_allowRcon", qtrue, DVAR_ARCHIVE);
 	sv_botKickMessages = Dvar_RegisterBool("sv_botKickMessages", qtrue, DVAR_ARCHIVE);
@@ -3484,9 +3486,22 @@ void custom_SV_SendClientMessages(void)
 		{
 			if ( cl->netchan.unsentFragments )
 			{
-				cl->nextSnapshotTime = svs.time + SV_RateMsec(cl, cl->netchan.unsentLength - cl->netchan.unsentFragmentStart);
-				SV_Netchan_TransmitNextFragment(&cl->netchan);
-				continue;
+				/* New code start: net_noFragmentationDelay dvar */
+				if ( net_noFragmentationDelay->current.boolean )
+				{
+					cl->nextSnapshotTime = svs.time;
+					while ( cl->netchan.unsentFragments )
+					{
+						SV_Netchan_TransmitNextFragment(&cl->netchan);
+					}
+				}
+				/* New code end */
+				else
+				{
+					cl->nextSnapshotTime = svs.time + SV_RateMsec(cl, cl->netchan.unsentLength - cl->netchan.unsentFragmentStart);
+					SV_Netchan_TransmitNextFragment(&cl->netchan);
+					continue;
+				}
 			}
 
 			SV_SendClientSnapshot(cl);
