@@ -3439,6 +3439,28 @@ void custom_SV_ClientEnterWorld(client_t *client, usercmd_t *cmd)
 	/* New code end */
 }
 
+void custom_SV_AddArchivedEntToSnapshot(int entNum, snapshotEntityNumbers_t *eNums)
+{
+	// New: Using 256 instead of MAX_SNAPSHOT_ENTITIES since CL_GetSnapshot on
+	// the client side truncates this to 256 anyway
+	if ( eNums->numSnapshotEntities != 256 )
+	{
+		eNums->snapshotEntities[eNums->numSnapshotEntities] = entNum;
+		eNums->numSnapshotEntities++;
+	}
+}
+
+void custom_SV_AddEntToSnapshot(int entNum, snapshotEntityNumbers_t *eNums)
+{
+	// New: Using 256 instead of MAX_SNAPSHOT_ENTITIES since CL_GetSnapshot on
+	// the client side truncates this to 256 anyway
+	if ( eNums->numSnapshotEntities != 256 )
+	{
+		eNums->snapshotEntities[eNums->numSnapshotEntities] = entNum;
+		eNums->numSnapshotEntities++;
+	}
+}
+
 void custom_SV_SendClientMessages(void)
 {
 	int i;
@@ -10468,6 +10490,8 @@ public:
 		cracking_hook_function(0x080FD900, (int)custom_ScrCmd_IsLookingAt);
 		cracking_hook_function(0x08091F0E, (int)custom_SV_AllocSkelMemory);
 		cracking_hook_function(0x080950D0, (int)custom_SVC_GameCompleteStatus);
+		cracking_hook_function(0x08098B72, (int)custom_SV_AddArchivedEntToSnapshot);
+		cracking_hook_function(0x08098B4C, (int)custom_SV_AddEntToSnapshot);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC8CA, (int)Jump_ReduceFriction);
