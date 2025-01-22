@@ -9419,7 +9419,11 @@ void custom_G_RunFrameForEntity(gentity_t *ent)
 				ent->s.eFlags = ent->s.eFlags | 0x20;
 			}
 		}
-		if ( ( ent->s.eFlags == 0x10000 ) && ( ent->s.time2 < level.time ) )
+
+		// New: Fixed eFlags mask check here so that the effect entities of
+		// weapons with a projExplosionEffect are cleaned up after their effect
+		// duration
+		if ( ( ent->s.eFlags & 0x10000 ) && ( ent->s.time2 < level.time ) )
 		{
 			G_FreeEntity(ent);
 		}
