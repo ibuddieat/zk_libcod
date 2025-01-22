@@ -11,9 +11,11 @@ extern dvar_t *jump_spreadAdd;
 
 // Custom dvars
 extern dvar_t *g_resetSlide;
+extern dvar_t *jump_carryMoverVelocity;
 
 #define JUMP_LAND_SLOWDOWN_TIME 1800
 
+extern customEntityState_t customEntityState[MAX_GENTITIES];
 extern customPlayerState_t customPlayerState[MAX_CLIENTS];
 
 int playerstateToClientNum(playerState_t* ps)
@@ -87,6 +89,7 @@ void Jump_Start(pmove_t *pm, pml_t *pml, float height)
 	float factor;
 	float velocitySqrd;
 	playerState_t *ps;
+	int groundEntityNum = pm->ps->groundEntityNum;
 
 	ps = pm->ps;
 	velocitySqrd = (float)(height * 2.0) * (float)ps->gravity;
@@ -116,6 +119,20 @@ void Jump_Start(pmove_t *pm, pml_t *pml, float height)
 	{
 		ps->aimSpreadScale = 255.0;
 	}
+
+	/* New code start: jump_carryMoverVelocity dvar */
+	if ( jump_carryMoverVelocity->current.boolean &&
+		groundEntityNum != ENTITY_WORLD &&
+		groundEntityNum != ENTITY_NONE )
+	{
+		gentity_t *ent = &g_entities[groundEntityNum];
+
+		if ( ent->s.eType == ET_SCRIPTMOVER )
+		{
+			VectorAdd(ps->velocity, customEntityState[ent->s.number].velocity, ps->velocity);
+		}
+	}
+	/* New code end */
 }
 
 double Jump_ReduceFriction(playerState_t *ps)
@@ -275,12 +292,16 @@ void Jump_ApplySlowdown(playerState_t *ps)
 
 void Jump_RegisterDvars()
 {
-	// Original flags: DVAR_CHANGEABLE_RESET | DVAR_CODINFO | DVAR_CHEAT
+	// Stock dvars
+	// New: Flags. Original flags: DVAR_CHANGEABLE_RESET | DVAR_CODINFO | DVAR_CHEAT
 	jump_height = Dvar_RegisterFloat("jump_height", 39.0, 0.0, 128.0, DVAR_CHEAT | DVAR_SYSTEMINFO);
 	jump_stepSize = Dvar_RegisterFloat("jump_stepSize", 18.0, 0.0, 64.0, DVAR_CHEAT | DVAR_SYSTEMINFO);
 	jump_slowdownEnable = Dvar_RegisterBool("jump_slowdownEnable", qtrue, DVAR_CHEAT | DVAR_SYSTEMINFO);
 	jump_ladderPushVel = Dvar_RegisterFloat("jump_ladderPushVel", 128.0, 0.0, 1024.0, DVAR_CHEAT | DVAR_SYSTEMINFO);
 	jump_spreadAdd = Dvar_RegisterFloat("jump_spreadAdd", 64.0, 0.0, 512.0, DVAR_CHEAT | DVAR_SYSTEMINFO);
+
+	// Custom dvars
+	jump_carryMoverVelocity = Dvar_RegisterBool("jump_carryMoverVelocity", qfalse, DVAR_CHEAT | DVAR_SYSTEMINFO);
 }
 
 #endif

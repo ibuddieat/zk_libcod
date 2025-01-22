@@ -114,6 +114,7 @@ dvar_t *g_spawnMapWeapons;
 dvar_t *g_spectateBots;
 dvar_t *g_triggerMode;
 dvar_t *g_turretMissingTagTerminalError;
+dvar_t *jump_carryMoverVelocity;
 dvar_t *libcod;
 dvar_t *loc_loadLocalizedMods;
 dvar_t *logErrors;
@@ -9203,7 +9204,18 @@ void custom_G_RunFrameForEntity(gentity_t *ent)
 				{
 					if ( ent->s.eType == ET_SCRIPTMOVER )
 					{
+						/* New code start: Mover velocity storage */
+						vec3_t oldOrigin;
+
+						VectorCopy(ent->r.currentOrigin, oldOrigin);
+						/* New code end */
+
 						G_RunMover(ent);
+
+						/* New code start: Mover velocity storage */
+						VectorSubtract(ent->r.currentOrigin, oldOrigin, customEntityState[ent->s.number].velocity);
+						VectorScale(customEntityState[ent->s.number].velocity, 20.0, customEntityState[ent->s.number].velocity);
+						/* New code end */
 					}
 					else if ( ent->client == NULL )
 					{
