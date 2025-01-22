@@ -129,7 +129,6 @@ dvar_t *sv_botKickMessages;
 dvar_t *sv_botReconnectMode;
 dvar_t *sv_botUseTriggerUse;
 dvar_t *sv_cracked;
-dvar_t *sv_debugNetchanTransmit;
 dvar_t *sv_disconnectMessages;
 dvar_t *sv_downloadMessage;
 dvar_t *sv_downloadMessageAtMap;
@@ -324,11 +323,6 @@ map_weapon_t map_weapons[MAX_GENTITIES];
 int num_map_turrets;
 map_turret_t map_turrets[MAX_GENTITIES];
 
-// Netchan debug variables
-int lastSnapshotEntities = 0;
-int lastSnapshotClients = 0;
-int maxCompressedSize = 0;
-
 void custom_Com_InitDvars(void)
 {
 	// Register custom dvars required early on server start
@@ -455,7 +449,6 @@ void common_init_complete_print(const char *format, ...)
 	sv_botReconnectMode = Dvar_RegisterInt("sv_botReconnectMode", 0, 0, 2, DVAR_ARCHIVE);
 	sv_botUseTriggerUse = Dvar_RegisterBool("sv_botUseTriggerUse", qfalse, DVAR_ARCHIVE);
 	sv_cracked = Dvar_RegisterBool("sv_cracked", qfalse, DVAR_ARCHIVE);
-	sv_debugNetchanTransmit = Dvar_RegisterBool("sv_debugNetchanTransmit", qfalse, DVAR_ARCHIVE);
 	sv_disconnectMessages = Dvar_RegisterBool("sv_disconnectMessages", qtrue, DVAR_ARCHIVE);
 	sv_downloadMessage = Dvar_RegisterString("sv_downloadMessage", "", DVAR_ARCHIVE);
 	sv_downloadMessageAtMap = Dvar_RegisterBool("sv_downloadMessageAtMap", qtrue, DVAR_ARCHIVE);
@@ -687,7 +680,7 @@ const char * custom_ClientConnect(unsigned int clientNum, unsigned int scriptPer
 					preProxyPort = atoi(Info_ValueForKey(userinfo, "port"));
 					if ( !NET_StringToAdr(va("%s:%i", preProxyIP, preProxyPort), &customPlayerState[clientNum].realAddress) )
 					{
-						Com_Printf("Warning: Failed to parse pre-proxy address for client %d: %s\n", clientNum, va("%s:%i", preProxyIP, preProxyPort));
+						Com_Printf("WARNING: Failed to parse pre-proxy address for client %d: %s\n", clientNum, va("%s:%i", preProxyIP, preProxyPort));
 						memcpy(&customPlayerState[clientNum].realAddress, &client->netchan.remoteAddress, sizeof(netadr_t));
 					}
 				}
@@ -1217,12 +1210,6 @@ void custom_SV_SpawnServer(char *server)
 	SV_Heartbeat_f();
 
 	SV_SetupProxies(); // New
-
-	/* New code start: Netchan_Transmit error debugging for legacy clients */
-	lastSnapshotEntities = 0;
-	lastSnapshotClients = 0;
-	maxCompressedSize = 0;
-	/* New code end */
 
 	Com_Printf("-----------------------------------\n");
 
@@ -3192,19 +3179,16 @@ void custom_SV_EmitPacketEntities(int client, int from_num_entities, int from_fi
 			custom_MSG_WriteDeltaEntity(msg, oldent, newent, 0, client, newnum);
 			oldindex++;
 			newindex++;
-			lastSnapshotEntities++;
 		}
 		else if ( newnum < oldnum )
 		{
 			custom_MSG_WriteDeltaEntity(msg, &sv.svEntities[newnum].baseline.s, newent, 1, client, newnum);
 			newindex++;
-			lastSnapshotEntities++;
 		}
 		else if ( oldnum < newnum )
 		{
 			custom_MSG_WriteDeltaEntity(msg, oldent, NULL, 1, client, newnum);
 			oldindex++;
-			lastSnapshotEntities++;
 		}
 	}
 	MSG_WriteBits(msg, 0x3FF, 10);
@@ -3250,19 +3234,16 @@ void custom_SV_EmitPacketClients(int client, int from_num_clients, int from_firs
 			custom_MSG_WriteDeltaClient(msg, oldcs, newcs, 0);
 			oldindex++;
 			newindex++;
-			lastSnapshotClients++;
 		}
 		else if ( newnum < oldnum )
 		{
 			custom_MSG_WriteDeltaClient(msg, NULL, newcs, 1);
 			newindex++;
-			lastSnapshotClients++;
 		}
 		else if ( oldnum < newnum )
 		{
 			custom_MSG_WriteDeltaClient(msg, oldcs, NULL, 1);
 			oldindex++;
-			lastSnapshotClients++;
 		}
 	}
 	MSG_WriteBit0(msg);
@@ -3342,7 +3323,7 @@ void custom_SV_WriteSnapshotToClient(client_t *client, msg_t *msg)
 	
 	custom_SV_EmitPacketEntities(client - svs.clients, from_num_entities, from_first_entity, client->frames[frame_index].num_entities, client->frames[frame_index].first_entity, msg);
 	custom_SV_EmitPacketClients(client - svs.clients, from_num_clients, from_first_client, client->frames[frame_index].num_clients, client->frames[frame_index].first_client, msg);
-	
+
 	for ( i = 0; i < sv_padPackets->current.integer; i++ )
 		MSG_WriteByte(msg, 0);
 }
@@ -3429,7 +3410,7 @@ qboolean custom_Netchan_TransmitNextFragment(netchan_t *chan)
 
 void custom_SV_ClientEnterWorld(client_t *client, usercmd_t *cmd)
 {
-	gentity_s *ent;
+	gentity_t *ent;
 	int clientNum;
 
 	Com_DPrintf("Going from CS_PRIMED to CS_ACTIVE for %s\n", client->name);
@@ -3468,7 +3449,7 @@ void custom_SV_SendClientMessages(void)
 	{
 		cl = &svs.clients[i];
 
-		if ( !cl->state )
+		if ( cl->state == CS_FREE )
 		{
 			continue;
 		}
@@ -3487,9 +3468,9 @@ void custom_SV_SendClientMessages(void)
 			// Experimental value with good results, simulating sv_fps 180
 			for ( int j = 0; j < 1 + ( ( sv_fps->current.integer / 20 ) * MAX_DOWNLOAD_WINDOW ); j++ )
 			{
+				cl->nextSnapshotTime = svs.time;
 				while ( cl->netchan.unsentFragments )
 				{
-					cl->nextSnapshotTime = svs.time + SV_RateMsec(cl, cl->netchan.unsentLength - cl->netchan.unsentFragmentStart);
 					SV_Netchan_TransmitNextFragment(&cl->netchan);
 				}
 
@@ -3575,57 +3556,23 @@ void custom_SV_SendMessageToClient(msg_t *msg, client_t *client)
 		LargeLocalConstructor(&buf, MAX_LEGACY_MSGLEN);
 	else /* New code end */
 		LargeLocalConstructor(&buf, MAX_MSGLEN);
+
 	data = LargeLocalGetBuf(&buf);
 	memcpy(data, msg->data, 4);
 	compressedSize = MSG_WriteBitsCompress(msg->data + 4, data + 4, msg->cursize - 4) + 4;
-
-	/* New code start: Netchan_Transmit error debugging for legacy clients */
-	if ( compressedSize > maxCompressedSize )
-	{
-		maxCompressedSize = compressedSize;
-		if ( sv_debugNetchanTransmit->current.boolean )
-			Com_Printf("Netchan debug: maxCompressedSize = %i\n", maxCompressedSize);
-	}
-
-	if ( customPlayerState[id].protocolVersion != 118 && MAX_LEGACY_MSGLEN < compressedSize )
-    {
-		// Server will stop with a Netchan_Transmitt error if we end up here
-
-		if ( sv_debugNetchanTransmit->current.boolean )
-		{
-			// We assume this to happen with snapshots only, as gamestate is
-			// limited to MAX_LEGACY_MSGLEN already; also assuming that Huffman
-			// compression does not increase size on edge cases
-			if ( client->reliableAcknowledge + 1 < client->reliableSequence )
-				Com_Printf("Netchan debug: client %i (\"%s\") has the following un-ack\'d reliable commands:\n", id, client->name);
-
-			int i = client->reliableAcknowledge;
-			while ( i += 1, i <= client->reliableSequence )
-			{
-				Com_Printf("Netchan debug: cmd %i: %s\n", ( i - client->reliableAcknowledge ) - 1, client->reliableCommandInfo[i & 0x7F].command);
-			}
-
-			Com_Printf("Netchan debug: lastSnapshotEntities = %i\n", lastSnapshotEntities);
-			Com_Printf("Netchan debug: lastSnapshotClients = %i\n", lastSnapshotClients);
-		}
-	}
-
-	// Reset counters
-	lastSnapshotEntities = 0;
-	lastSnapshotClients = 0;
-	/* New code end */
 
 	if ( client->dropReason )
 	{
 		SV_DropClient(client, client->dropReason);
 	}
+
 	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSize = compressedSize;
 	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSent = svs.time;
 	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageAcked = -1;
 	SV_Netchan_Transmit(client, data, compressedSize);
 
 	// New: Allow direct download speed above 20 kb/s via sv_fastDownload dvar
-	if ( client->netchan.remoteAddress.type == NA_LOOPBACK || Sys_IsLANAddress(client->netchan.remoteAddress) || (sv_fastDownload->current.boolean && client->download && !client->downloadingWWW) )
+	if ( client->netchan.remoteAddress.type == NA_LOOPBACK || Sys_IsLANAddress(client->netchan.remoteAddress) || ( sv_fastDownload->current.boolean && client->download && !client->downloadingWWW ) )
 	{
 		client->nextSnapshotTime = svs.time - 1;
 		LargeLocalDestructor(&buf);
@@ -3643,6 +3590,7 @@ void custom_SV_SendMessageToClient(msg_t *msg, client_t *client)
 		client->rateDelayed = qtrue;
 	}
 	client->nextSnapshotTime = svs.time + rateMsec;
+
 	if ( client->state != CS_ACTIVE )
 	{
 		if ( !*client->downloadName && client->nextSnapshotTime < svs.time + 1000 )
@@ -3650,6 +3598,7 @@ void custom_SV_SendMessageToClient(msg_t *msg, client_t *client)
 			client->nextSnapshotTime = svs.time + 1000;
 		}
 	}
+
 	sv.bpsTotalBytes += compressedSize;
 	LargeLocalDestructor(&buf);
 }
@@ -5586,7 +5535,7 @@ void Scr_CodeCallback_Error(qboolean terminal, qboolean emit, const char *intern
 			}
 			else
 			{
-				printf("Warning: Errors buffer full, not calling CodeCallback_Error for '%s'\n", message);
+				printf("WARNING: Errors buffer full, not calling CodeCallback_Error for '%s'\n", message);
 			}
 		}
 	}
@@ -5923,7 +5872,7 @@ void custom_G_RunFrame(int levelTime)
 		{
 			if ( loadSoundFileResultsIndex == MAX_THREAD_RESULTS_BUFFER )
 			{
-				Com_Printf("Warning: LoadSoundFile results buffer full\n");
+				Com_Printf("WARNING: LoadSoundFile results buffer full\n");
 			}
 			for ( i = 0; i < loadSoundFileResultsIndex; i++ )
 			{
@@ -7869,7 +7818,7 @@ void Scr_QueueNotifyDebugForCallback(unsigned int entId, unsigned int constStrin
 			case STACK_INT: savedArg->u.intValue = arg->u.intValue; break;
 			case STACK_FUNCTION: savedArg->u.codePosValue = arg->u.codePosValue; break;
 			default:
-				printf("Warning: Notify debug with param %d of type 0x%x is currently not supported for CodeCallback_NotifyDebug\n", argc + 1, savedArg->type);
+				printf("WARNING: Notify debug with param %d of type 0x%x is currently not supported for CodeCallback_NotifyDebug\n", argc + 1, savedArg->type);
 				savedArg->type = STACK_UNDEFINED;
 			}
 			argc++;
@@ -7879,7 +7828,7 @@ void Scr_QueueNotifyDebugForCallback(unsigned int entId, unsigned int constStrin
 	}
 	else
 	{
-		printf("Warning: Notify debug buffer full, not calling CodeCallback_NotifyDebug for '%s'\n", SL_ConvertToString(constString));
+		printf("WARNING: Notify debug buffer full, not calling CodeCallback_NotifyDebug for '%s'\n", SL_ConvertToString(constString));
 	}
 }
 
@@ -7927,7 +7876,7 @@ void custom_Scr_Notify(gentity_t *ent, unsigned short constString, unsigned int 
 			case STACK_INT: savedArg->u.intValue = arg->u.intValue; break;
 			case STACK_FUNCTION: savedArg->u.codePosValue = arg->u.codePosValue; break;
 			default:
-				printf("Warning: Notify with param %d of type 0x%x is currently not supported for CodeCallback_Notify\n", i + 1, savedArg->type);
+				printf("WARNING: Notify with param %d of type 0x%x is currently not supported for CodeCallback_Notify\n", i + 1, savedArg->type);
 				savedArg->type = STACK_UNDEFINED;
 			}
 		}
@@ -8782,7 +8731,7 @@ void openLogfile(qboolean reopen)
 					// Remove
 					if ( unlink(logfilePath) != 0 )
 					{
-						printf("Warning: Failed to delete old log file '%s', aborting rotation\n", logfilePath);
+						printf("WARNING: Failed to delete old log file '%s', aborting rotation\n", logfilePath);
 						break;
 					}
 				}
@@ -8792,7 +8741,7 @@ void openLogfile(qboolean reopen)
 					snprintf(newLogfilePath, sizeof(newLogfilePath), "%s/%s/%s.%d", fs_homepath->current.string, fs_game->current.string, logfileName->current.string, fileIndex + 1);
 					if ( rename(logfilePath, newLogfilePath) != 0 )
 					{
-						printf("Warning: Failed to rotate existing log file '%s', aborting rotation\n", logfilePath);
+						printf("WARNING: Failed to rotate existing log file '%s', aborting rotation\n", logfilePath);
 						break;
 					}
 				}
@@ -8806,7 +8755,7 @@ void openLogfile(qboolean reopen)
 		{
 			snprintf(newLogfilePath, sizeof(newLogfilePath), "%s/%s/%s.%d", fs_homepath->current.string, fs_game->current.string, logfileName->current.string, fileIndex + 1);
 			if ( rename(logfilePath, newLogfilePath) != 0 )
-				printf("Warning: Failed to rotate existing log file '%s'\n", logfileName->current.string);
+				printf("WARNING: Failed to rotate existing log file '%s'\n", logfileName->current.string);
 		}
 	}
 
@@ -8895,7 +8844,7 @@ void custom_Com_PrintMessage(int /* print_msg_type_t */ channel, char *message)
 
 void custom_G_InitGentity(gentity_t *ent)
 {
-	memset(&customEntityState[(ent->s).number], 0, sizeof(customEntityState_t));
+	memset(&customEntityState[ent->s.number], 0, sizeof(customEntityState_t));
 
 	hook_G_InitGentity->unhook();
 	void (*G_InitGentity)(gentity_t *ent);
@@ -9188,14 +9137,14 @@ void custom_G_RunFrameForEntity(gentity_t *ent)
 		{
 			if ( ( ent->flags & 0x800 ) == 0 )
 			{
-				(ent->s).eFlags = (ent->s).eFlags & 0xFFFFFFDF;
+				ent->s.eFlags = ent->s.eFlags & 0xFFFFFFDF;
 			}
 			else
 			{
-				(ent->s).eFlags = (ent->s).eFlags | 0x20;
+				ent->s.eFlags = ent->s.eFlags | 0x20;
 			}
 		}
-		if ( ( (ent->s).eFlags == 0x10000 ) && ( (ent->s).time2 < level.time ) )
+		if ( ( ent->s.eFlags == 0x10000 ) && ( ent->s.time2 < level.time ) )
 		{
 			G_FreeEntity(ent);
 		}
@@ -9216,11 +9165,11 @@ void custom_G_RunFrameForEntity(gentity_t *ent)
 			}
 			if ( ent->freeAfterEvent == 0 )
 			{
-				if ( (ent->s).eType == ET_MISSILE )
+				if ( ent->s.eType == ET_MISSILE )
 				{
 					G_RunMissile(ent);
 				}
-				else if ( (ent->s).eType == ET_ITEM )
+				else if ( ent->s.eType == ET_ITEM )
 				{
 					if ( ent->tagInfo == NULL )
 					{
@@ -9232,33 +9181,33 @@ void custom_G_RunFrameForEntity(gentity_t *ent)
 						G_RunThink(ent);
 					}
 				}
-				else if ( (ent->s).eType == ET_PLAYER_CORPSE )
+				else if ( ent->s.eType == ET_PLAYER_CORPSE )
 				{
 					G_RunCorpse(ent);
 				}
 				/* New code start: Entity gravity */
-				else if ( customEntityState[(ent->s).number].gravityType )
+				else if ( customEntityState[ent->s.number].gravityType )
 				{
 					vec3_t oldOrigin;
 
-					VectorCopy((ent->r).currentOrigin, oldOrigin);
-					if ( customEntityState[(ent->s).number].gravityType == GRAVITY_NO_BOUNCE )
+					VectorCopy(ent->r.currentOrigin, oldOrigin);
+					if ( customEntityState[ent->s.number].gravityType == GRAVITY_NO_BOUNCE )
 						G_RunGravityModelNoBounce(ent);
-					else if ( customEntityState[(ent->s).number].gravityType == GRAVITY_BOUNCE )
+					else if ( customEntityState[ent->s.number].gravityType == GRAVITY_BOUNCE )
 						G_RunGravityModelWithBounce(ent);
-					VectorSubtract((ent->r).currentOrigin, oldOrigin, customEntityState[(ent->s).number].velocity);
-					VectorScale(customEntityState[(ent->s).number].velocity, 20.0, customEntityState[(ent->s).number].velocity);
+					VectorSubtract(ent->r.currentOrigin, oldOrigin, customEntityState[ent->s.number].velocity);
+					VectorScale(customEntityState[ent->s.number].velocity, 20.0, customEntityState[ent->s.number].velocity);
 				}
 				/* New code end */
 				else if ( ent->physicsObject == 0 )
 				{
-					if ( (ent->s).eType == ET_SCRIPTMOVER )
+					if ( ent->s.eType == ET_SCRIPTMOVER )
 					{
 						G_RunMover(ent);
 					}
 					else if ( ent->client == NULL )
 					{
-						if ( ( (ent->s).eType == ET_GENERAL ) && ( ent->tagInfo != NULL ) )
+						if ( ( ent->s.eType == ET_GENERAL ) && ( ent->tagInfo != NULL ) )
 						{
 							G_GeneralLink(ent);
 						}
@@ -10023,7 +9972,7 @@ int custom_G_FindConfigstringIndex(const char *name, int start, int max, qboolea
 			{
 				if ( fieldname && !strncmp(fieldname, "effect", 6) )
 				{
-					Com_Printf("Warning: Exceeded number of effect files, defaulting \"%s\"\n", name);
+					Com_Printf("WARNING: Exceeded number of effect files, defaulting \"%s\"\n", name);
 					return 1;
 				}
 				else
@@ -10082,7 +10031,7 @@ unsigned int custom_G_ModelIndex(const char *name)
 		}
 		else
 		{
-			Com_Printf("Warning: Model '%s' not precached\n", name);
+			Com_Printf("WARNING: Model '%s' not precached\n", name);
 			Scr_CodeCallback_Error(qfalse, qfalse, "G_ModelIndex", va("Model '%s' not precached", name));
 			return 1;
 		}
@@ -10097,7 +10046,7 @@ unsigned int custom_G_ModelIndex(const char *name)
 		}
 		else
 		{
-			Com_Printf("Warning: Exceeded number of models, defaulting '%s'\n", name);
+			Com_Printf("WARNING: Exceeded number of models, defaulting '%s'\n", name);
 			return 1;
 		}
 	}
