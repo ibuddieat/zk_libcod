@@ -339,6 +339,24 @@ static const SV_SaveSystemInfo_t SV_SaveSystemInfo = (SV_SaveSystemInfo_t)0x0809
 typedef void (*SV_SendClientSnapshot_t)(client_t *cl);
 static const SV_SendClientSnapshot_t SV_SendClientSnapshot = (SV_SendClientSnapshot_t)0x0809ADEA;
 
+typedef void (*SV_BuildClientSnapshot_t)(client_t *client);
+static const SV_BuildClientSnapshot_t SV_BuildClientSnapshot = (SV_BuildClientSnapshot_t)0x0809A408;
+
+typedef void (*SV_UpdateServerCommandsToClient_t)(client_t *client, msg_t *msg);
+static const SV_UpdateServerCommandsToClient_t SV_UpdateServerCommandsToClient = (SV_UpdateServerCommandsToClient_t)0x080988B2;
+
+typedef void (*SV_WriteSnapshotToClient_t)(client_t *client, msg_t *msg);
+static const SV_WriteSnapshotToClient_t SV_WriteSnapshotToClient = (SV_WriteSnapshotToClient_t)0x080985C8;
+
+typedef void (*SV_WriteDownloadToClient_t)(client_t *cl, msg_t *msg);
+static const SV_WriteDownloadToClient_t SV_WriteDownloadToClient = (SV_WriteDownloadToClient_t)0x0808FDC2;
+
+typedef void (*SV_ShowClientUnAckCommands_t)(client_t *client);
+static const SV_ShowClientUnAckCommands_t SV_ShowClientUnAckCommands = (SV_ShowClientUnAckCommands_t)0x08098A94;
+
+typedef void (*SV_UpdateServerCommandsToClientRecover_t)(client_t *client, msg_t *msg, int iMsgSize);
+static const SV_UpdateServerCommandsToClientRecover_t SV_UpdateServerCommandsToClientRecover = (SV_UpdateServerCommandsToClientRecover_t)0x080989C0;
+
 typedef void (*SV_SendClientVoiceData_t)(client_t *cl);
 static const SV_SendClientVoiceData_t SV_SendClientVoiceData = (SV_SendClientVoiceData_t)0x0809C0A2;
 
@@ -380,9 +398,6 @@ static const SV_MasterAddress_t SV_MasterAddress = (SV_MasterAddress_t)0x08096E0
 
 typedef void (*SV_UpdateLastTimeMasterServerCommunicated_t)(netadr_t from);
 static const SV_UpdateLastTimeMasterServerCommunicated_t SV_UpdateLastTimeMasterServerCommunicated = (SV_UpdateLastTimeMasterServerCommunicated_t)0x0808CF40;
-
-typedef void (*SV_UpdateServerCommandsToClient_t)(client_t *client, msg_t *msg);
-static const SV_UpdateServerCommandsToClient_t SV_UpdateServerCommandsToClient = (SV_UpdateServerCommandsToClient_t)0x080988B2;
 
 typedef int (*SV_ClientHasClientMuted_t)(int clientnum, int mutedclientnum);
 static const SV_ClientHasClientMuted_t SV_ClientHasClientMuted = (SV_ClientHasClientMuted_t)0x0809C1FA;

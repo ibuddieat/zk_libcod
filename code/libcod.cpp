@@ -49,6 +49,7 @@ dvar_t *showpackets;
 dvar_t *sv_allowAnonymous;
 dvar_t *sv_allowDownload;
 dvar_t *sv_cheats;
+dvar_t *sv_debugReliableCmds;
 dvar_t *sv_disableClientConsole;
 dvar_t *sv_floodProtect;
 dvar_t *sv_fps;
@@ -377,6 +378,7 @@ void common_init_complete_print(const char *format, ...)
 	nextmap = Dvar_FindVar("nextmap");
 	rcon_password = Dvar_FindVar("rcon_password");
 	showpackets = Dvar_FindVar("showpackets");
+	sv_debugReliableCmds = Dvar_FindVar("sv_debugReliableCmds");
 	sv_disableClientConsole = Dvar_FindVar("sv_disableClientConsole");
 	sv_allowAnonymous = Dvar_FindVar("sv_allowAnonymous");
 	sv_allowDownload = Dvar_FindVar("sv_allowDownload");
@@ -3459,6 +3461,117 @@ void custom_SV_AddEntToSnapshot(int entNum, snapshotEntityNumbers_t *eNums)
 		eNums->snapshotEntities[eNums->numSnapshotEntities] = entNum;
 		eNums->numSnapshotEntities++;
 	}
+}
+
+void SV_UpdateServerCommandsToClientAsFits(client_t *client, msg_t *msg)
+{
+	size_t cmdlen;
+	unsigned int cmdindex;
+	unsigned int i;
+	int iMsgSize = MAX_MSGLEN;
+	int id = client - svs.clients;
+
+	if ( customPlayerState[id].protocolVersion != 118 )
+		iMsgSize = MAX_LEGACY_MSGLEN;
+
+	if ( ( client->reliableAcknowledge + 1 < client->reliableSequence ) && sv_debugReliableCmds->current.boolean )
+	{
+		Com_Printf("Client %s has the following un-ack\'d reliable commands:\n", client->name);
+	}
+
+	i = client->reliableAcknowledge;
+	while ( ( cmdindex = i + 1, (int)cmdindex <= client->reliableSequence &&
+	( cmdlen = strlen(client->reliableCommandInfo[cmdindex & ( MAX_RELIABLE_COMMANDS - 1 )].command),
+	(int)( cmdlen + 6 + msg->cursize ) < iMsgSize ) ) )
+	{
+		MSG_WriteByte(msg, svc_serverCommand);
+		MSG_WriteLong(msg, cmdindex);
+		MSG_WriteString(msg, client->reliableCommandInfo[cmdindex & ( MAX_RELIABLE_COMMANDS - 1 )].command);
+
+		if ( sv_debugReliableCmds->current.boolean )
+		{
+			Com_Printf("%i: %s\n",
+					   ( i - client->reliableAcknowledge ) - 1,
+					   client->reliableCommandInfo[cmdindex & ( MAX_RELIABLE_COMMANDS - 1 )].command);
+		}
+
+		i = cmdindex;
+	}
+	if ( client->reliableSent < (int)i )
+	{
+		client->reliableSent = i;
+	}
+}
+
+void custom_SV_SendClientSnapshot(client_t *client)
+{
+	byte *data;
+	LargeLocal buf;
+	msg_t msg;
+
+	LargeLocalConstructor(&buf, MAX_LARGE_MSGLEN);
+	data = LargeLocalGetBuf(&buf);
+
+	if ( ( client->state == CS_ACTIVE ) || ( client->state == CS_ZOMBIE ) )
+	{
+		SV_BuildClientSnapshot(client);
+	}
+
+	MSG_Init(&msg, data, MAX_LARGE_MSGLEN);
+	MSG_WriteLong(&msg, client->lastClientCommand);
+
+	if ( ( client->state == CS_ACTIVE ) || ( client->state == CS_ZOMBIE ) )
+	{
+		/* New code start: The original code first adds up to
+		 MAX_RELIABLE_COMMANDS cmds to the message before adding the actual
+		 snapshot data (client and entity states). We flip this around and
+		 check the message length for each added cmd so we can avoid
+		 "Netchan_Transmit: length" errors that could otherwise occur on busy
+		 modded servers that support clients with protocols other than 118. The
+		 snapshot data is not expected to exceed MAX_LEGACY_MSGLEN bytes since
+		 it is capped to 256 entities. While in theory the error could still
+		 happen in case hundreds of entities and multiple entity state fields
+		 thereof are updated within the same server frame, tests have shown
+		 that even under rather busy conditions the message size stays below 
+		 10k bytes */
+		SV_WriteSnapshotToClient(client, &msg);
+		SV_UpdateServerCommandsToClientAsFits(client, &msg);
+		/* New code end */
+	}
+	if ( client->state != CS_ZOMBIE )
+	{
+		SV_WriteDownloadToClient(client, &msg);
+	}
+
+	MSG_WriteByte(&msg, svc_EOF);
+
+	if ( msg.overflowed )
+	{
+		Com_Printf("WARNING: msg overflowed for %s, trying to recover\n", client->name);
+		if ( ( client->state == CS_ACTIVE ) || ( client->state == CS_ZOMBIE ) )
+		{
+			/* New code start: Multi version support */
+			int msgSize = MAX_MSGLEN;
+				
+			if ( customPlayerState[client - svs.clients].protocolVersion != 118 )
+				msgSize = MAX_LEGACY_MSGLEN;
+			/* New code end */
+			
+			SV_ShowClientUnAckCommands(client);
+			MSG_Init(&msg, data, msgSize);
+			MSG_WriteLong(&msg, client->lastClientCommand);
+			SV_UpdateServerCommandsToClientRecover(client, &msg, msgSize);
+			MSG_WriteByte(&msg, svc_EOF);
+		}
+		if ( msg.overflowed )
+		{
+			Com_Printf("WARNING: client disconnected for msg overflow: %s\n", client->name);
+			NET_OutOfBandPrint(NS_SERVER, client->netchan.remoteAddress, "disconnect");
+			SV_DropClient(client, "EXE_SERVERMESSAGEOVERFLOW");
+		}
+	}
+	SV_SendMessageToClient(&msg, client);
+	LargeLocalDestructor(&buf);
 }
 
 void custom_SV_SendClientMessages(void)
@@ -10492,6 +10605,7 @@ public:
 		cracking_hook_function(0x080950D0, (int)custom_SVC_GameCompleteStatus);
 		cracking_hook_function(0x08098B72, (int)custom_SV_AddArchivedEntToSnapshot);
 		cracking_hook_function(0x08098B4C, (int)custom_SV_AddEntToSnapshot);
+		cracking_hook_function(0x0809ADEA, (int)custom_SV_SendClientSnapshot);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC8CA, (int)Jump_ReduceFriction);
