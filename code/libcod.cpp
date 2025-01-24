@@ -9006,11 +9006,20 @@ void openLogfile(qboolean reopen)
 		char newLogfilePath[512];
 		int maxFileIndex = logfileRotate->current.integer;
 		int fileIndex = maxFileIndex;
+		const char *game_folder = "main";
+
+		// Check if the "main" folder is used, or fs_game is set
+		if ( strlen(fs_game->current.string) )
+			game_folder = fs_game->current.string;
 
 		// Check existance of older log files
 		while ( fileIndex > 0 )
 		{
-			snprintf(logfilePath, sizeof(logfilePath), "%s/%s/%s.%d", fs_homepath->current.string, fs_game->current.string, logfileName->current.string, fileIndex);
+			snprintf(logfilePath, sizeof(logfilePath), "%s/%s/%s.%d",
+			                                           fs_homepath->current.string,
+			                                           game_folder,
+			                                           logfileName->current.string,
+			                                           fileIndex);
 			if ( access(logfilePath, F_OK) != -1 )
 			{
 				// Older log file exists, increment file extension unless it already has the max. index
@@ -9026,7 +9035,11 @@ void openLogfile(qboolean reopen)
 				else
 				{
 					// Rename the file
-					snprintf(newLogfilePath, sizeof(newLogfilePath), "%s/%s/%s.%d", fs_homepath->current.string, fs_game->current.string, logfileName->current.string, fileIndex + 1);
+					snprintf(newLogfilePath, sizeof(newLogfilePath), "%s/%s/%s.%d",
+					                                                 fs_homepath->current.string,
+					                                                 game_folder,
+					                                                 logfileName->current.string,
+					                                                 fileIndex + 1);
 					if ( rename(logfilePath, newLogfilePath) != 0 )
 					{
 						printf("WARNING: Failed to rotate existing log file '%s', aborting rotation\n", logfilePath);
@@ -9038,10 +9051,17 @@ void openLogfile(qboolean reopen)
 		}
 
 		// Target file already exists? Append .1 to extension
-		snprintf(logfilePath, sizeof(logfilePath), "%s/%s/%s", fs_homepath->current.string, fs_game->current.string, logfileName->current.string);
+		snprintf(logfilePath, sizeof(logfilePath), "%s/%s/%s",
+		                                           fs_homepath->current.string,
+		                                           game_folder,
+		                                           logfileName->current.string);
 		if ( access(logfilePath, F_OK) != -1 )
 		{
-			snprintf(newLogfilePath, sizeof(newLogfilePath), "%s/%s/%s.%d", fs_homepath->current.string, fs_game->current.string, logfileName->current.string, fileIndex + 1);
+			snprintf(newLogfilePath, sizeof(newLogfilePath), "%s/%s/%s.%d",
+			                                                 fs_homepath->current.string,
+			                                                 game_folder,
+			                                                 logfileName->current.string,
+			                                                 fileIndex + 1);
 			if ( rename(logfilePath, newLogfilePath) != 0 )
 				printf("WARNING: Failed to rotate existing log file '%s'\n", logfileName->current.string);
 		}
