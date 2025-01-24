@@ -10,6 +10,9 @@ Script code methods:
   * Renamed `setConfigString(<string>, <index>)` to `setConfigStringForPlayer(<index>, <string>)` and flipped its parameter positions
   * `<player> playFxForPlayer(<effect id>, <position of effect>, [<forward vector>], [<up vector>])` now returns the (temporary) effect entity
 
+Dvars:
+  * Changed `fs_library` to work relative to `[fs_homepath]/[fs_game]`, instead of specifying an absolute path
+
 # Changed with or since release v12.0:
 
 Script code functions:

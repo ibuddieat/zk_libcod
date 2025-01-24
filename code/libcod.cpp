@@ -5344,10 +5344,26 @@ void custom_SV_GetChallenge(netadr_t from)
 
 void manymaps_get_library_path(char *library_path, size_t library_path_size)
 {
+	// Check if the "main" folder is used, or fs_game is set
+	const char *game_folder = "main";
+	if ( strlen(fs_game->current.string) )
+		game_folder = fs_game->current.string;
+
+	// Check if fs_library is set, otherwise use "Library"
 	if ( strlen(fs_library->current.string) )
-		strncpy(library_path, fs_library->current.string, library_path_size);
-	else
-		snprintf(library_path, library_path_size, "%s/%s/Library", fs_homepath->current.string, fs_game->current.string);
+	{
+		if ( strstr(fs_library->current.string, "..") )
+		{
+			printf("> [LIBCOD] Manymaps: fs_library must not contain dot-dot sequences\n");
+		}
+		else
+		{
+			snprintf(library_path, library_path_size, "%s/%s/%s", fs_homepath->current.string, game_folder, fs_library->current.string);
+			return;
+		}
+	}
+
+	snprintf(library_path, library_path_size, "%s/%s/Library", fs_homepath->current.string, game_folder);
 }
 
 void manymaps_cleanup(void)
@@ -5369,9 +5385,13 @@ void manymaps_cleanup(void)
 		if ( strcmp(dir_ent->d_name, ".") == 0 || strcmp(dir_ent->d_name, "..") == 0 )
 			continue;
 
-		// Check if a file with same name exists in the current fs_game folder
+		// Check if a file with same name exists in the current game folder
 		char fileDelete[MAX_OSPATH];
-		Com_sprintf(fileDelete, MAX_OSPATH, "%s/%s/%s", fs_homepath->current.string, fs_game->current.string, dir_ent->d_name);
+		if ( strlen(fs_game->current.string) )
+			Com_sprintf(fileDelete, MAX_OSPATH, "%s/%s/%s", fs_homepath->current.string, fs_game->current.string, dir_ent->d_name);
+		else
+			Com_sprintf(fileDelete, MAX_OSPATH, "%s/main/%s", fs_homepath->current.string, dir_ent->d_name);
+
 		if ( access(fileDelete, F_OK) != -1 )
 		{
 			// Skip file if we cannot determine if it is a symbolic link
@@ -5402,8 +5422,13 @@ void manymaps_prepare(const char *mapname, int read)
 	int map_num;
 	qboolean is_stock_map = qfalse;
 	qboolean is_multipart_map = qfalse;
+	const char *game_folder = "main";
 
 	manymaps_get_library_path(library_path, MAX_OSPATH);
+
+	// Check if the "main" folder is used, or fs_game is set
+	if ( strlen(fs_game->current.string) )
+		game_folder = fs_game->current.string;
 
 	// Check if we have the requested map in the library
 	Com_sprintf(map_check, MAX_OSPATH, "%s/%s.iwd", library_path, mapname);
@@ -5461,7 +5486,7 @@ void manymaps_prepare(const char *mapname, int read)
 			for ( i = 1; i <= max_parts; i++ )
 			{
 				Com_sprintf(src, MAX_OSPATH, "%s/%s.pt%i.iwd", library_path, mapname, i);
-				Com_sprintf(dst, MAX_OSPATH, "%s/%s/%s.pt%i.iwd", fs_homepath->current.string, fs_game->current.string, mapname, i);
+				Com_sprintf(dst, MAX_OSPATH, "%s/%s/%s.pt%i.iwd", fs_homepath->current.string, game_folder, mapname, i);
  
 				if ( access(src, F_OK) != -1 )
 				{
@@ -5478,7 +5503,7 @@ void manymaps_prepare(const char *mapname, int read)
 		else
 		{
 			Com_sprintf(src, MAX_OSPATH, "%s/%s.iwd", library_path, mapname);
-			Com_sprintf(dst, MAX_OSPATH, "%s/%s/%s.iwd", fs_homepath->current.string, fs_game->current.string, mapname);
+			Com_sprintf(dst, MAX_OSPATH, "%s/%s/%s.iwd", fs_homepath->current.string, game_folder, mapname);
 
 			if ( access(src, F_OK) != -1 )
 			{
@@ -5493,7 +5518,7 @@ void manymaps_prepare(const char *mapname, int read)
 		// FS_AddIwdFilesForGameDirectory() is needed when 000empty.iwd is
 		// missing as then .d3dbsp is not referenced anywhere
 		if ( link_success && read == -1 )
-			FS_AddIwdFilesForGameDirectory(fs_homepath->current.string, fs_game->current.string);
+			FS_AddIwdFilesForGameDirectory(fs_homepath->current.string, game_folder);
 	}
 }
 

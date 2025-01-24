@@ -18,7 +18,7 @@ Added dvars:
   * `fs_replaceStockMaps`
     * Type: Boolean
     * Default: False
-    * Effect: If true, manymaps supports to override stock maps (e.g., after placing mp_toujane.iwd into the manymaps library). Related dvar: `fs_library`.
+    * Effect: If true, manymaps supports to load custom stock map .iwd files so that mp_rhine.iwd and mp_harbor.iwd could be loaded by players on game version 1.0, if these .iwd files are stored in the manymaps library. Related dvar: `fs_library`.
   * `g_brushModelCollisionTweaks`
     * Type: Boolean
     * Default: False
@@ -345,7 +345,7 @@ Other dvars (e.g., from legacy versions of libcod or other repositories):
   * `fs_library`
     * Type: String
     * Default: ""
-    * Effect: Defines the relative path to the manymaps library - a folder, that is supposed to contain map .iwd files. If set to an empty string (as by default), the server uses `[fs_homepath]/[fs_game]/Library`. This is an optional feature, the library folder does not have to exist for a server to operate correctly.
+    * Effect: Defines the relative path to the manymaps library - a folder (relative to `[fs_homepath]/[fs_game]`), that is supposed to contain map .iwd files. If set to an empty string (as by default), the server uses `[fs_homepath]/[fs_game]/Library`. This is an optional feature, the library folder does not have to exist for a server to operate correctly.
   * `g_mantleBlockEnable`
     * Type: Boolean
     * Default: True
