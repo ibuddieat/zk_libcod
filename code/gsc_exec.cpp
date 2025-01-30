@@ -386,7 +386,6 @@ void gsc_exec_async_checkdone()
 
 				stackPushArray();
 				exec_outputline *output = task->output;
-				bool hasoutput = false;
 
 				while ( output != NULL )
 				{
@@ -395,13 +394,6 @@ void gsc_exec_async_checkdone()
 					stackPushArrayLast();
 					delete output;
 					output = next;
-					hasoutput = true;
-				}
-
-				if ( !hasoutput )
-				{
-					stackPushUndefined();
-					stackPushArrayLast();
 				}
 				
 				short ret = Scr_ExecThread(task->callback, task->save + task->hasargument);
