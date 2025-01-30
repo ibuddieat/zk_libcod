@@ -10582,6 +10582,53 @@ char * custom_SV_AllocSkelMemory(unsigned int size)
 	return pos;
 }
 
+int hook_sprintf_in_HudElem_SetEnumString(char *buf, const char *format, char *stringValue, char *fieldName)
+{
+	// New: Fixed buffer overflow via sprintf, see:
+	// https://github.com/voron00/CoD2rev_Server/pull/4/files
+	return snprintf(buf, 2048, format, stringValue, fieldName);
+}
+
+int hook_sprintf_in_G_ParseWeaponAccurayGraphInternal(char *buf, const char *format, char *dirName, char *graphName)
+{
+	// New: Fixed buffer overflow via sprintf, see:
+	// https://github.com/voron00/CoD2rev_Server/pull/4/files
+	return snprintf(buf, MAX_QPATH, format, dirName, graphName);
+}
+
+int hook_sprintf_in_Scr_LoadAnimTreeInternal(char *buf, const char *format, char *filename)
+{
+	// New: Fixed buffer overflow via sprintf, see:
+	// https://github.com/voron00/CoD2rev_Server/pull/4/files
+	return snprintf(buf, MAX_QPATH, format, filename);
+}
+
+int hook_sprintf_in_Scr_AddFields(char *buf, const char *format, char *path, char *field)
+{
+	// New: Fixed buffer overflow via sprintf, see:
+	// https://github.com/voron00/CoD2rev_Server/pull/4/files
+	return snprintf(buf, MAX_QPATH, format, path, field);
+}
+
+int hook_sprintf_in_SV_AuthorizeIpPacket(char *buf, const char *format, char *error)
+{
+	// New: Fixed buffer overflow via sprintf, see:
+	// https://github.com/voron00/CoD2rev_Server/pull/4/files
+	return snprintf(buf, 1024, format, error);
+}
+
+int hook_sprintf_in_FX_ParseEffect(char *buf, const char *format, char *filename)
+{
+	// New: Fixed buffer overflow via sprintf
+	return snprintf(buf, MAX_QPATH, format, filename);
+}
+
+int hook_sprintf_in_SE_R_ListFiles(char *buf, const char *format, const char *psDir, char *filename)
+{
+	// New: Fixed buffer overflow via sprintf
+	return snprintf(buf, MAX_QPATH, format, psDir, filename);
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -10617,6 +10664,14 @@ public:
 		cracking_hook_call(0x080AD1FE, (int)hook_Com_MakeSoundAliasesPermanent);
 		cracking_hook_call(0x0811599A, (int)hook_SetExpFog_density_typo);
 		cracking_hook_call(0x080F7803, (int)hook_Player_UpdateLookAtEntity);
+		cracking_hook_call(0x081035A5, (int)hook_sprintf_in_HudElem_SetEnumString);
+		cracking_hook_call(0x080F4509, (int)hook_sprintf_in_G_ParseWeaponAccurayGraphInternal);
+		cracking_hook_call(0x0806DC09, (int)hook_sprintf_in_Scr_LoadAnimTreeInternal);
+		cracking_hook_call(0x0807FB59, (int)hook_sprintf_in_Scr_AddFields);
+		cracking_hook_call(0x0808E16A, (int)hook_sprintf_in_SV_AuthorizeIpPacket);
+		cracking_hook_call(0x0812C28D, (int)hook_sprintf_in_FX_ParseEffect);
+		cracking_hook_call(0x081393BC, (int)hook_sprintf_in_SE_R_ListFiles);
+		cracking_hook_call(0x0813944A, (int)hook_sprintf_in_SE_R_ListFiles);
 
 		hook_Com_DPrintf = new cHook(0x08060E3A, (int)custom_Com_DPrintf);
 		#if COMPILE_UTILS == 1
