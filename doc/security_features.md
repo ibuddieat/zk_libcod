@@ -6,7 +6,7 @@
 - Blocked directory traversal possibilities via direct server download
 - Blocked the download of (stock) IW .iwd files via direct server download 
 - Blocked the client console `printentities` command if cheats are disabled
-- Added compile flag `ENABLE_UNSAFE` to toggle the availability of potentially unsafe script functions that would make it easy to harm the server with malicious map scripts
+- Added compile flag `ENABLE_UNSAFE` to toggle the availability of potentially unsafe script functions that would make it easy to harm the server with malicious mod or map scripts
 - Time-constant string comparison for server passwords
 - Fixed known issues with stock voting mechanism (`g_allowVote` dvar)
 - Fixed some bugs that resulted in server crashes, to improve server availability
