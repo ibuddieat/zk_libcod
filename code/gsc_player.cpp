@@ -3368,6 +3368,25 @@ void gsc_player_setexpfogforplayer(scr_entref_t ref)
 	stackPushBool(qtrue);
 }
 
+void gsc_player_setactivateonusebuttonrelease(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_setactivateonusebuttonrelease() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	qboolean value = Scr_GetInt(0);
+
+	customPlayerState[id].activateOnUseButtonRelease = value;
+	customPlayerState[id].heldUseButton = qfalse;
+
+	stackPushBool(qtrue);
+}
+
 void gsc_player_ischatting(scr_entref_t ref)
 {
 	int id = ref.entnum;

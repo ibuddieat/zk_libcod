@@ -131,6 +131,7 @@ void gsc_player_setallowspectators(scr_entref_t ref);
 void gsc_player_isallowingspectators(scr_entref_t ref);
 void gsc_player_setcullfogforplayer(scr_entref_t ref);
 void gsc_player_setexpfogforplayer(scr_entref_t ref);
+void gsc_player_setactivateonusebuttonrelease(scr_entref_t ref);
 void gsc_player_ischatting(scr_entref_t ref);
 #if COMPILE_CUSTOM_VOICE == 1
 void gsc_player_playsoundfile(scr_entref_t ref);

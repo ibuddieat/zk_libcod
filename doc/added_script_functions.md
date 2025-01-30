@@ -80,6 +80,7 @@ New script code methods:
   * `<player> playScriptAnimation(<scriptAnimEventType>, <isContinue>, <force>)`
   * `<player> processSuicide()`
   * `<player> removeEntFromSnapshots(<entity>)`
+  * `<player> setActivateOnUseButtonRelease(<enabled>)`
   * `<player> setAllowSpectators(<allow>)`
   * `<player> setBulletDrag(<value>)`
   * `<player> setBulletMask(<mask>)`

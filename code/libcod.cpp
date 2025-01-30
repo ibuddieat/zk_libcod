@@ -2217,7 +2217,7 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 	
 	if ( !BG_CanItemBeGrabbed(&item->s, &entity->client->ps, touch) )
 	{
-		if ( ( !touch && (item->s).clientNum != (entity->s).number ) && bg_item->giType == IT_WEAPON )
+		if ( ( !touch && item->s.clientNum != entity->s.number ) && bg_item->giType == IT_WEAPON )
 		{
 			if ( !COM_BitCheck(entity->client->ps.weapons, bg_item->giTag) )
 			{
@@ -2232,16 +2232,16 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 	}
 	else
 	{
-		I_strncpyz(name, (entity->client->sess.state).name, sizeof(name));
+		I_strncpyz(name, entity->client->sess.state.name, sizeof(name));
 		I_CleanStr(name);
 		
 		// New: g_logPickup dvar
 		if ( g_logPickup->current.boolean )
 		{
 			if ( bg_item->giType == IT_WEAPON )
-				G_LogPrintf("Weapon;%d;%d;%s;%s\n", SV_GetGuid((entity->s).number), (entity->s).number, name, BG_WeaponDefs(bg_item->giTag)->szInternalName);
+				G_LogPrintf("Weapon;%d;%d;%s;%s\n", SV_GetGuid(entity->s.number), entity->s.number, name, BG_WeaponDefs(bg_item->giTag)->szInternalName);
 			else
-				G_LogPrintf("Item;%d;%d;%s;%s\n", SV_GetGuid((entity->s).number), (entity->s).number, name, bg_item->classname);
+				G_LogPrintf("Item;%d;%d;%s;%s\n", SV_GetGuid(entity->s.number), entity->s.number, name, bg_item->classname);
 		}
 		
 		respawn = qtrue;
@@ -2306,10 +2306,10 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 		if ( !respawn )
 			return;
 		
-		if ( (entity->client->sess).predictItemPickup == 0 )
-			G_AddEvent(entity, event, (item->s).index);
+		if ( entity->client->sess.predictItemPickup == 0 )
+			G_AddEvent(entity, event, item->s.index);
 		else
-			G_AddPredictableEvent(entity, event, (item->s).index);
+			G_AddPredictableEvent(entity, event, item->s.index);
 		G_FreeEntity(item);
 	}
 }
@@ -7058,6 +7058,61 @@ bool custom_CM_IsBadStaticModel(cStaticModel_t *model, char *src, float *origin,
 	return xmodel != NULL;
 }
 
+void custom_Player_UpdateActivate(gentity_t *ent)
+{
+	bool useSucceeded;
+	int id = ent->s.number;
+
+	ent->client->ps.pm_flags &= ~KEY_MASK_USE;
+
+	if ( ent->client->ps.weaponstate < WEAPON_BINOCULARS_INIT || ent->client->ps.weaponstate > WEAPON_BINOCULARS_END )
+	{
+		useSucceeded = 0;
+
+		if ( ent->client->useHoldEntity == ENTITY_NONE
+		    || ( ent->client->oldbuttons & KEY_MASK_USERELOAD ) == 0
+		    || ( ent->client->buttons & KEY_MASK_USERELOAD ) != 0 )
+		{
+			/* New code start: */
+			if ( customPlayerState[id].activateOnUseButtonRelease )
+			{
+				if ( ( ent->client->latched_buttons & ( KEY_MASK_USE | KEY_MASK_USERELOAD ) ) != 0 )
+					customPlayerState[id].heldUseButton = qtrue;
+				else if ( ( ent->client->buttons & ( KEY_MASK_USE | KEY_MASK_USERELOAD ) ) == 0 && customPlayerState[id].heldUseButton )
+				{
+					useSucceeded = Player_ActivateCmd(ent);
+					customPlayerState[id].heldUseButton = qfalse;
+				}
+
+				if ( ent->client->useHoldEntity != ENTITY_NONE || useSucceeded )
+					Player_ActivateHoldCmd(ent);
+				else if ( ( ent->client->latched_buttons & KEY_MASK_USERELOAD ) != 0 )
+					ent->client->ps.pm_flags |= KEY_MASK_USE;
+			}
+			/* New code end */
+			else
+			{
+				if ( ( ent->client->latched_buttons & ( KEY_MASK_USE | KEY_MASK_USERELOAD ) ) != 0 )
+					useSucceeded = Player_ActivateCmd(ent);
+
+				if ( ent->client->useHoldEntity != ENTITY_NONE || useSucceeded )
+				{
+					if ( ( ent->client->buttons & ( KEY_MASK_USE | KEY_MASK_USERELOAD ) ) != 0 )
+						Player_ActivateHoldCmd(ent);
+				}
+				else if ( ( ent->client->latched_buttons & KEY_MASK_USERELOAD ) != 0 )
+				{
+					ent->client->ps.pm_flags |= KEY_MASK_USE;
+				}
+			}
+		}
+		else
+		{
+			ent->client->ps.pm_flags |= KEY_MASK_USE;
+		}
+	}
+}
+
 void custom_Player_UpdateCursorHints(gentity_t *player)
 {
 	int useListSize;
@@ -7072,15 +7127,16 @@ void custom_Player_UpdateCursorHints(gentity_t *player)
 	client_t *cl = svs.clients + player->s.number;
 
 	client = player->client;
-	(client->ps).cursorHint = 0;
-	(client->ps).cursorHintString = -1;
-	(client->ps).cursorHintEntIndex = ENTITY_NONE;
-	if ( 0 < player->health && ( (player->client->ps).weaponstate < 0x11 || ( 0x16 < (player->client->ps).weaponstate ) ) )
+	client->ps.cursorHint = 0;
+	client->ps.cursorHintString = -1;
+	client->ps.cursorHintEntIndex = ENTITY_NONE;
+
+	if ( 0 < player->health && ( player->client->ps.weaponstate < WEAPON_BINOCULARS_INIT || WEAPON_BINOCULARS_END < player->client->ps.weaponstate ) )
 	{
 		if ( !player->active )
 		{
 			useListSize = Player_GetUseList(player, (useList_t *)useList);
-			if ( ( ( player->client->ps).pm_flags & PMF_MANTLE ) == 0 && useListSize )
+			if ( ( player->client->ps.pm_flags & PMF_MANTLE ) == 0 && useListSize )
 			{
 				cursorHint = 0;
 				cursorHintString = -1;
@@ -7102,9 +7158,9 @@ void custom_Player_UpdateCursorHints(gentity_t *player)
 							{
 LAB_08121ee6:
 								cursorHint = temp;
-								(client->ps).cursorHintEntIndex = (ent->s).number;
-								(client->ps).cursorHint = cursorHint;
-								(client->ps).cursorHintString = cursorHintString;
+								client->ps.cursorHintEntIndex = ent->s.number;
+								client->ps.cursorHint = cursorHint;
+								client->ps.cursorHintString = cursorHintString;
 
 								/* New code start: sv_botUseTriggerUse dvar */
 								if ( cl->bIsTestClient && sv_botUseTriggerUse->current.boolean && Scr_IsSystemActive() )
@@ -7114,29 +7170,29 @@ LAB_08121ee6:
 								}
 								/* New code end */
 
-								if ( (client->ps).cursorHint != 0 )
+								if ( client->ps.cursorHint != 0 )
 								{
 									return;
 								}
-								(client->ps).cursorHintEntIndex = ENTITY_NONE;
+								client->ps.cursorHintEntIndex = ENTITY_NONE;
 								return;
 							}
 
 							/* New code start: hintString support for trigger_radius */
-							if ( customEntityState[(ent->s).number].convertedTrigger && Scr_IsSystemActive() )
+							if ( customEntityState[ent->s.number].convertedTrigger && Scr_IsSystemActive() )
 							{
 								Scr_AddEntity(player);
 								Scr_Notify(ent, scr_const.trigger, 1);
 							}
 							/* New code end */
 
-							if ( ( ent->team == 0 || ent->team == (player->client->sess.state).team ) &&
-							( ent->trigger.singleUserEntIndex == ENTITY_NONE || ent->trigger.singleUserEntIndex == (player->client->ps).clientNum ) )
+							if ( ( ent->team == 0 || ent->team == player->client->sess.state.team ) &&
+							( ent->trigger.singleUserEntIndex == ENTITY_NONE || ent->trigger.singleUserEntIndex == player->client->ps.clientNum ) )
 							{
-								temp = (ent->s).dmgFlags;
-								if ( (ent->s).dmgFlags != 0 && (ent->s).scale != 0xFF )
+								temp = ent->s.dmgFlags;
+								if ( ent->s.dmgFlags != 0 && ent->s.scale != 0xFF )
 								{
-									cursorHintString = (ent->s).scale;
+									cursorHintString = ent->s.scale;
 								}
 								goto LAB_08121ee6;
 							}
@@ -7144,11 +7200,11 @@ LAB_08121ee6:
 					}
 					else if ( temp == ET_TURRET && G_IsTurretUsable(ent, player) )
 					{
-						temp = (ent->s).weapon + 4;
-						weaponDef = BG_GetWeaponDef((ent->s).weapon);
+						temp = ent->s.weapon + 4;
+						weaponDef = BG_GetWeaponDef(ent->s.weapon);
 						if ( *weaponDef->szUseHintString != '\0' )
 						{
-							weaponDef = BG_GetWeaponDef((ent->s).weapon);
+							weaponDef = BG_GetWeaponDef(ent->s.weapon);
 							cursorHintString = weaponDef->iUseHintStringIndex;
 						}
 						goto LAB_08121ee6;
@@ -10776,6 +10832,7 @@ public:
 		cracking_hook_function(0x08120A70, (int)custom_FireWeaponMelee);
 		cracking_hook_function(0x08120484, (int)custom_Bullet_Fire);
 		cracking_hook_function(0x0811FE90, (int)custom_Bullet_Fire_Extended);
+		cracking_hook_function(0x08121314, (int)custom_Player_UpdateActivate);
 		cracking_hook_function(0x08121BC6, (int)custom_Player_UpdateCursorHints);
 		cracking_hook_function(0x08060C20, (int)custom_Com_PrintMessage);
 		cracking_hook_function(0x08109F5C, (int)custom_G_RunFrameForEntity);

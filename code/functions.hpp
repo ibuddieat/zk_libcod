@@ -1191,6 +1191,12 @@ static const SV_VoicePacket_t SV_VoicePacket = (SV_VoicePacket_t)0x08094B56;
 typedef void (*SV_QueueVoicePacket_t)(int talkerNum, int clientNum, VoicePacket_t *voicePacket);
 static const SV_QueueVoicePacket_t SV_QueueVoicePacket = (SV_QueueVoicePacket_t)0x0809C21C;
 
+typedef qboolean (*Player_ActivateCmd_t)(gentity_t *ent);
+static const Player_ActivateCmd_t Player_ActivateCmd = (Player_ActivateCmd_t)0x08121174;
+
+typedef void (*Player_ActivateHoldCmd_t)(gentity_t *ent);
+static const Player_ActivateHoldCmd_t Player_ActivateHoldCmd = (Player_ActivateHoldCmd_t)0x08121264;
+
 typedef int (*Player_GetItemCursorHint_t)(gclient_t *client, gentity_t *ent);
 static const Player_GetItemCursorHint_t Player_GetItemCursorHint = (Player_GetItemCursorHint_t)0x08121AAA;
 

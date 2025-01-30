@@ -144,6 +144,7 @@
 #define KEY_MASK_MELEE          0x4
 #define KEY_MASK_USE            0x8
 #define KEY_MASK_RELOAD         0x10
+#define KEY_MASK_USERELOAD      0x20
 #define KEY_MASK_LEANLEFT       0x40
 #define KEY_MASK_LEANRIGHT      0x80
 #define KEY_MASK_PRONE          0x100
@@ -4106,6 +4107,8 @@ typedef struct customPlayerState_s
 	qboolean hiddenFromScoreboard;
 	qboolean notAllowingSpectators;
 	snapshotEntityNumbers_t snapshotEntities;
+	qboolean activateOnUseButtonRelease;
+	qboolean heldUseButton;
 } customPlayerState_t;
 
 typedef struct callback_s
