@@ -151,6 +151,7 @@
 #define KEY_MASK_CROUCH         0x200
 #define KEY_MASK_JUMP           0x400
 #define KEY_MASK_ADS_MODE       0x1000
+#define KEY_MASK_BINOCULARS     0x4000
 #define KEY_MASK_HOLDBREATH     0x8000
 #define KEY_MASK_MELEE_BREATH   0x8004
 #define KEY_MASK_FRAG           0x10000
@@ -2330,6 +2331,35 @@ typedef enum
 	SAT_COUNT = 4
 } snd_alias_type_t;
 
+typedef enum
+{
+	SA_INVALID = 0,
+	SA_NAME = 1,
+	SA_SEQUENCE = 2,
+	SA_FILE = 3,
+	SA_SUBTITLE = 4,
+	SA_VOL_MIN = 5,
+	SA_VOL_MAX = 6,
+	SA_VOL_MOD = 7,
+	SA_PITCH_MIN = 8,
+	SA_PITCH_MAX = 9,
+	SA_DIST_MIN = 10,
+	SA_DIST_MAX = 11,
+	SA_CHANNEL = 12,
+	SA_TYPE = 13,
+	SA_LOOP = 14,
+	SA_PROBABILITY = 15,
+	SA_LOADSPEC = 16,
+	SA_MASTERSLAVE = 17,
+	SA_SECONDARYALIASNAME = 18,
+	SA_VOLUMEFALLOFFCURVE = 19,
+	SA_STARTDELAY = 20,
+	SA_SPEAKERMAP = 21,
+	SA_REVERB = 22,
+	SA_LFEPERCENTAGE = 23,
+	SA_NUMFIELDS = 24
+} snd_alias_members_t;
+
 typedef struct
 {
 	unsigned int format;
@@ -2371,7 +2401,7 @@ typedef struct
 	float maxdist;
 } volumeFalloffCurve_t;
 
-struct snd_alias_build_s
+typedef struct snd_alias_build_s
 {
 	char szSourceFile[64];
 	char szAliasName[64];
@@ -2404,7 +2434,7 @@ struct snd_alias_build_s
 	byte pad0;
 	int pSameSoundFile; // SoundFile * ?
 	snd_alias_build_s *pNext;
-};
+} snd_alias_build_t;
 
 typedef struct
 {
