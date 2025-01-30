@@ -467,6 +467,7 @@ scr_method_t scriptMethods[] =
 	{"isAllowingSpectators", gsc_player_isallowingspectators, 0},
 	{"setCullFogForPlayer", gsc_player_setcullfogforplayer, 0},
 	{"setExpFogForPlayer", gsc_player_setexpfogforplayer, 0},
+	{"isChatting", gsc_player_ischatting, 0},
 	#if COMPILE_CUSTOM_VOICE == 1
 	{"playSoundFile", gsc_player_playsoundfile, 0},
 	{"stopSoundFile", gsc_player_stopsoundfile, 0},

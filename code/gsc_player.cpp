@@ -3368,6 +3368,22 @@ void gsc_player_setexpfogforplayer(scr_entref_t ref)
 	stackPushBool(qtrue);
 }
 
+void gsc_player_ischatting(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_ischatting() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	gentity_t *ent = &g_entities[id];
+
+	stackPushBool( ( ent->client->buttons & KEY_MASK_TALK ) != 0);
+}
+
 #if COMPILE_CUSTOM_VOICE == 1
 
 extern VoicePacket_t voiceDataStore[MAX_CUSTOMSOUNDS][MAX_STOREDVOICEPACKETS];

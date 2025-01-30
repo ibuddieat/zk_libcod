@@ -59,6 +59,7 @@ New script code methods:
   * `<player> getServerCommandQueueSize()`
   * `<player> getViewOrigin()`
   * `<player> isAllowingSpectators()`
+  * `<player> isChatting()`
   * `<player> isHiddenFromScoreboard()`
   * `<player> isPlayingSoundFile()`
   * `<player> isReloading()`

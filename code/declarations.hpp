@@ -154,6 +154,7 @@
 #define KEY_MASK_MELEE_BREATH   0x8004
 #define KEY_MASK_FRAG           0x10000
 #define KEY_MASK_SMOKE          0x20000
+#define KEY_MASK_TALK           0x40000
 
 // playerState_t->eFlags
 // entityState_t->eFlags
