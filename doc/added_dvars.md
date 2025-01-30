@@ -315,7 +315,7 @@ Added dvars:
     * Effect: Destination hostname and port the proxy socket for game version 1.3 (protocol 119) should forward packets to (see `sv_proxyAddress_1_3_119` dvar).
   * `sv_reservedConfigstringBufferSize`
     * Type: Integer
-    * Default: 256
+    * Default: 0
     * Min. Value: 0
     * Max. Value: 8192
     * Effect: For map-mod combinations that might exceed the available gamestate data on older game versions (1.0 and 1.2), reserve some buffer for configstrings that are allocated at runtime (e.g., those populated by `PlayFxOnTag` or when playing sounds). Its value needs to be set higher in case clients with older game versions tend to run into "MAX_GAMESTATE_CHARS exceeded" errors.

@@ -335,7 +335,7 @@ void custom_Com_InitDvars(void)
 	logfileRotate = Dvar_RegisterInt("logfileRotate", 0, 0, 1000, DVAR_ARCHIVE);
 	logTimestamps = Dvar_RegisterBool("logTimestamps", qfalse, DVAR_ARCHIVE);
 	sv_autoAddSnapshotEntities = Dvar_RegisterBool("sv_autoAddSnapshotEntities", qtrue, DVAR_ARCHIVE | DVAR_LATCH | DVAR_CHANGEABLE_RESET);
-	sv_reservedConfigstringBufferSize = Dvar_RegisterInt("sv_reservedConfigstringBufferSize", 256, 0, 8192, DVAR_ARCHIVE);
+	sv_reservedConfigstringBufferSize = Dvar_RegisterInt("sv_reservedConfigstringBufferSize", 0, 0, 8192, DVAR_ARCHIVE);
 	sv_authorizePort = Dvar_RegisterInt("sv_authorizePort", 20700, 0, 65535, DVAR_ARCHIVE);
 	sv_authorizeServer = Dvar_RegisterString("sv_authorizeServer", "cod2master.activision.com", DVAR_ARCHIVE);
 	sv_authorizeTimeout = Dvar_RegisterInt("sv_authorizeTimeout", 3000, 0, 1200000, DVAR_ARCHIVE);
