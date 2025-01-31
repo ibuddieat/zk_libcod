@@ -216,7 +216,7 @@ Added dvars:
   * `sv_isLookingAtOnDemand`
     * Type: Boolean
     * Default: False
-    * Effect: Enable this if you expect only a few calls (less than one per player per server frame) to the stock `IsLookingAt` script method during runtime, to improve server performance.
+    * Effect: Enable this if you expect only a few calls (less than one per player per server frame) to the stock `IsLookingAt` script method during runtime, to reduce server load.
   * `sv_kickGamestateLimitedClients`
     * Type: Boolean
     * Default: True
@@ -323,6 +323,10 @@ Added dvars:
     * Type: Boolean
     * Default: True
     * Effect: Toggle output of player timeout game messages.
+  * `sv_updateCursorHints`
+    * Type: Boolean
+    * Default: True
+    * Effect: Disable this on maps without activatable entities (e.g., triggers, turrets, dropped weapons), to reduce server load.
   * `sv_version`
     * Type: String
     * Default: "1.3"

@@ -151,6 +151,7 @@ dvar_t *sv_minimizeSysteminfo;
 dvar_t *sv_noauthorize;
 dvar_t *sv_reservedConfigstringBufferSize;
 dvar_t *sv_timeoutMessages;
+dvar_t *sv_updateCursorHints;
 dvar_t *sv_verifyIwds;
 dvar_t *sv_version;
 dvar_t *sv_wwwDlDisconnectedMessages;
@@ -470,6 +471,7 @@ void common_init_complete_print(const char *format, ...)
 	sv_logRcon = Dvar_RegisterBool("sv_logRcon", qtrue, DVAR_ARCHIVE);
 	sv_noauthorize = Dvar_RegisterBool("sv_noauthorize", qfalse, DVAR_ARCHIVE);
 	sv_timeoutMessages = Dvar_RegisterBool("sv_timeoutMessages", qtrue, DVAR_ARCHIVE);
+	sv_updateCursorHints = Dvar_RegisterBool("sv_updateCursorHints", qtrue, DVAR_ARCHIVE);
 	sv_verifyIwds = Dvar_RegisterBool("sv_verifyIwds", qtrue, DVAR_ARCHIVE);
 	sv_wwwDlDisconnectedMessages = Dvar_RegisterBool("sv_wwwDlDisconnectedMessages", qtrue, DVAR_ARCHIVE);
 
@@ -7130,6 +7132,10 @@ void custom_Player_UpdateCursorHints(gentity_t *player)
 	client->ps.cursorHint = 0;
 	client->ps.cursorHintString = -1;
 	client->ps.cursorHintEntIndex = ENTITY_NONE;
+
+	// New: sv_updateCursorHints dvar
+	if ( !sv_updateCursorHints->current.boolean )
+		return;
 
 	if ( 0 < player->health && ( player->client->ps.weaponstate < WEAPON_BINOCULARS_INIT || WEAPON_BINOCULARS_END < player->client->ps.weaponstate ) )
 	{
