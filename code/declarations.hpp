@@ -277,7 +277,6 @@ typedef signed char sbyte;
 typedef struct gclient_s gclient_t;
 typedef struct gentity_s gentity_t;
 typedef int LargeLocal;
-typedef gentity_t (*useList_t)[2050];
 typedef int clipHandle_t;
 
 typedef struct scr_entref_s
@@ -1911,6 +1910,12 @@ struct gentity_s
 	int useCount; // 552
 	gentity_t *nextFree; // 556
 }; // verified
+
+typedef struct useList_s
+{
+	gentity_t *ent;
+	float score;
+} useList_t;
 
 typedef struct
 {

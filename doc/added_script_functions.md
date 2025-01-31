@@ -64,6 +64,7 @@ New script code methods:
   * `<player> isPlayingSoundFile()`
   * `<player> isReloading()`
   * `<player> isThrowingGrenade()`
+  * `<player> isUseTouching()`
   * `<player> isUsingTurret()`
   * `<player> isUsingBinoculars()`
   * `<player> muteClient(<player id>)`

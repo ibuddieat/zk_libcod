@@ -3400,7 +3400,24 @@ void gsc_player_ischatting(scr_entref_t ref)
 
 	gentity_t *ent = &g_entities[id];
 
-	stackPushBool( ( ent->client->buttons & KEY_MASK_TALK ) != 0);
+	stackPushBool( ( ent->client->buttons & KEY_MASK_TALK ) != 0 );
+}
+
+void gsc_player_isusetouching(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_isusetouching() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	gentity_t *ent = &g_entities[id];
+	gclient_t *client = ent->client;
+
+	stackPushBool( ( client->ps.pm_flags & PMF_SPECTATING ) == 0 && client->ps.cursorHintEntIndex != ENTITY_NONE );
 }
 
 #if COMPILE_CUSTOM_VOICE == 1

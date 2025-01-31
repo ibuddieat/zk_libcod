@@ -7121,7 +7121,7 @@ void custom_Player_UpdateCursorHints(gentity_t *player)
 	int i;
 	int cursorHintString;
 	int cursorHint;
-	gentity_t *useList[2050];
+	useList_t useList[1024];
 	gentity_t *ent;
 	gclient_t *client;
 	client_t *cl = svs.clients + player->s.number;
@@ -7135,14 +7135,14 @@ void custom_Player_UpdateCursorHints(gentity_t *player)
 	{
 		if ( !player->active )
 		{
-			useListSize = Player_GetUseList(player, (useList_t *)useList);
+			useListSize = Player_GetUseList(player, useList);
 			if ( ( player->client->ps.pm_flags & PMF_MANTLE ) == 0 && useListSize )
 			{
 				cursorHint = 0;
 				cursorHintString = -1;
 				for ( i = 0; i < useListSize; i++ )
 				{
-					ent = useList[i * 2];
+					ent = useList[i].ent;
 					temp = (ent->s).eType;
 					if ( temp == ET_ITEM )
 					{
