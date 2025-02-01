@@ -629,6 +629,12 @@ void gsc_utils_sprintf()
 
 	for ( int i = 0; i < len; i++ )
 	{
+		if ( num > ( MAX_STRINGLENGTH - 2 ) )
+		{
+			num = MAX_STRINGLENGTH - 1;
+			break;
+		}
+
 		if ( str[i] == '%' )
 		{
 			if ( str[i + 1] == '%' )
@@ -646,25 +652,25 @@ void gsc_utils_sprintf()
 				case STACK_STRING:
 					char *tmp_str;
 					stackGetParamString(param, &tmp_str); // No error checking, since we know it's a string
-					num += sprintf(&(result[num]), "%s", tmp_str);
+					num += snprintf(&(result[num]), MAX_STRINGLENGTH - num, "%s", tmp_str);
 					break;
 
 				case STACK_VECTOR:
-					float vec[3];
-					stackGetParamVector(param, vec);
-					num += sprintf(&(result[num]), "(%.2f, %.2f, %.2f)", vec[0], vec[1], vec[2]);
+					float tmp_vec[3];
+					stackGetParamVector(param, tmp_vec);
+					num += snprintf(&(result[num]), MAX_STRINGLENGTH - num, "(%.2f, %.2f, %.2f)", tmp_vec[0], tmp_vec[1], tmp_vec[2]);
 					break;
 
 				case STACK_FLOAT:
 					float tmp_float;
 					stackGetParamFloat(param, &tmp_float);
-					num += sprintf(&(result[num]), "%.3f", tmp_float); // Need a way to define precision
+					num += snprintf(&(result[num]), MAX_STRINGLENGTH - num, "%.3f", tmp_float); // Need a way to define precision
 					break;
 
 				case STACK_INT:
 					int tmp_int;
 					stackGetParamInt(param, &tmp_int);
-					num += sprintf(&(result[num]), "%d", tmp_int);
+					num += snprintf(&(result[num]), MAX_STRINGLENGTH - num, "%d", tmp_int);
 					break;
 				}
 
@@ -672,7 +678,9 @@ void gsc_utils_sprintf()
 			}
 		}
 		else
+		{
 			result[num++] = str[i];
+		}
 	}
 
 	result[num] = '\0';
