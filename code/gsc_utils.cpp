@@ -752,13 +752,6 @@ void gsc_utils_logprintconsole()
 		return;
 	}
 
-	if ( !strlen(str) || strlen(str) > MAX_STRINGLENGTH )
-	{
-		stackError("gsc_utils_logprintconsole() invalid string length");
-		stackPushUndefined();
-		return;
-	}
-
 	Com_Printf("%s", str);
 
 	stackPushBool(qtrue);
