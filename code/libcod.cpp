@@ -328,6 +328,12 @@ map_weapon_t map_weapons[MAX_GENTITIES];
 int num_map_turrets;
 map_turret_t map_turrets[MAX_GENTITIES];
 
+// Track how many gamestate bytes have been allocated via newly set
+// configstrings at runtime (through Attach, PlayFxOnTag, PlayLoopSound,
+// PlaySound, PlaySoundAsMaster) so that the sv_reservedConfigstringBufferSize
+// dvar can be adjusted accordingly
+int reservedConfigstringBufferSizeUsage = 0;
+
 void custom_Com_InitDvars(void)
 {
 	// Register custom dvars required early on server start
@@ -1219,6 +1225,8 @@ void custom_SV_SpawnServer(char *server)
 	SV_Heartbeat_f();
 
 	SV_SetupProxies(); // New
+
+	reservedConfigstringBufferSizeUsage = 0; // New
 
 	Com_Printf("-----------------------------------\n");
 
@@ -3865,17 +3873,12 @@ void custom_SV_SendClientGameState(client_t *client)
 			// resources, but that will at least cause some precached shaders
 			// not to be loaded. The order that decides which type of resource
 			// (shader, string, model, etc.) could be set on the server side,
-			// if needed.
-			//
-			// Furthermore, we should reserve some buffer for configstrings
-			// that are allocated at runtime (e.g., those populated by
-			// playFxOnTag or when playing sounds). For this we use the
-			// sv_reservedConfigstringBufferSize dvar. Its value needs to be
-			// set higher in case clients with older game versions tend to run
-			// into "MAX_GAMESTATE_CHARS exceeded" errors.
+			// if needed
 			currentConfigstringSize = strlen(configstring);
 			if ( protocolVersion != 118 )
 			{
+				int remainingReservedBuffer;
+
 				// 3 = svc_configstring and index
 				// 10 = svc_EOF and checksumFeed
 				if ( ( msg.cursize + currentConfigstringSize + 3 + 10 ) > 0x4000 )
@@ -3885,7 +3888,16 @@ void custom_SV_SendClientGameState(client_t *client)
 					break;
 				}
 
-				if ( ( clientGamestateDataCount + currentConfigstringSize + 1 ) > ( 16000 - sv_reservedConfigstringBufferSize->current.integer ) )
+				// If configured, reserve some buffer for configstrings that
+				// are allocated at runtime. For this we use the
+				// sv_reservedConfigstringBufferSize dvar. Its value needs to be
+				// set higher in case clients with older game versions tend to run
+				// into "MAX_GAMESTATE_CHARS exceeded" errors
+				remainingReservedBuffer = sv_reservedConfigstringBufferSize->current.integer - reservedConfigstringBufferSizeUsage;
+				if ( remainingReservedBuffer < 0 )
+					remainingReservedBuffer = 0;
+
+				if ( ( clientGamestateDataCount + currentConfigstringSize + 1 ) > ( 16000 - remainingReservedBuffer ) )
 				{
 					Com_Printf("Client %i ran into configstring limit at configstring %i\n", id, start);
 					customPlayerState[id].resourceLimitedState = LIMITED_CONFIGSTRING;
@@ -3929,8 +3941,12 @@ void custom_SV_SendClientGameState(client_t *client)
 				// again (see above) as we assume that the entity baseline
 				// will not consume all the available gamestate space
 
+				int remainingReservedBuffer = sv_reservedConfigstringBufferSize->current.integer - reservedConfigstringBufferSizeUsage;
+				if ( remainingReservedBuffer < 0 )
+					remainingReservedBuffer = 0;
+
 				currentConfigstringSize = strlen(sv.configstrings[start]);
-				if ( ( clientGamestateDataCount + currentConfigstringSize + 1 ) > ( 16000 - sv_reservedConfigstringBufferSize->current.integer ) )
+				if ( ( clientGamestateDataCount + currentConfigstringSize + 1 ) > ( 16000 - remainingReservedBuffer ) )
 				{
 					Com_Printf("Aborting configstring queue at %i as client %i ran into configstring limit\n", start, id);
 					customPlayerState[id].resourceLimitedState = LIMITED_CONFIGSTRING;
@@ -10378,6 +10394,27 @@ int custom_G_FindConfigstringIndex(const char *name, int start, int max, qboolea
 				}
 			}
 		}
+
+		/* New code start: sv_reservedConfigstringBufferSize dvar */
+
+		// Turret sounds are allocated during precaching, don't count those in
+		if ( !level.initializing )
+		{
+			switch ( start )
+			{
+				case 110: // Attach()
+				case 590: // PlayLoopSound(), PlaySound(), PlaySoundAsMaster()
+				case 910: // PlayFxOnTag()
+				// Not covered here: Animation script sounds
+					reservedConfigstringBufferSizeUsage += strlen(name) + 1;
+					if ( sv_reservedConfigstringBufferSize->current.integer > 0
+						&& reservedConfigstringBufferSizeUsage > sv_reservedConfigstringBufferSize->current.integer )
+						Com_Printf("WARNING: Exceeded sv_reservedConfigstringBufferSize with '%s', consider increasing its value in this map-mod combination\n", name);
+					break;
+				default: break;
+			}
+		}
+		/* New code end */
 
 		SV_SetConfigstring(start + i, name);
 		return i;
