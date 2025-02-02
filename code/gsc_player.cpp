@@ -3417,7 +3417,7 @@ void gsc_player_isusetouching(scr_entref_t ref)
 	gentity_t *ent = &g_entities[id];
 	gclient_t *client = ent->client;
 
-	stackPushBool( ( client->ps.pm_flags & PMF_SPECTATING ) == 0 && client->ps.cursorHintEntIndex != ENTITY_NONE );
+	stackPushBool( client->ps.pm_type != PM_INTERMISSION && ( client->ps.pm_flags & PMF_SPECTATING ) == 0 && client->ps.cursorHintEntIndex != ENTITY_NONE );
 }
 
 #if COMPILE_CUSTOM_VOICE == 1
