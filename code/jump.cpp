@@ -130,6 +130,7 @@ void Jump_Start(pmove_t *pm, pml_t *pml, float height)
 		if ( ent->s.eType == ET_SCRIPTMOVER )
 		{
 			VectorAdd(ps->velocity, customEntityState[ent->s.number].velocity, ps->velocity);
+			ps->jumpOriginZ = ent->r.currentOrigin[2];
 		}
 	}
 	/* New code end */
