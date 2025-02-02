@@ -3473,7 +3473,7 @@ void custom_SV_AddEntToSnapshot(int entNum, snapshotEntityNumbers_t *eNums)
 	}
 }
 
-void SV_UpdateServerCommandsToClientAsFits(client_t *client, msg_t *msg)
+void SV_UpdateServerCommandsToClientAsFits(client_t *client, msg_t *msg, int snapshotSize)
 {
 	size_t cmdlen;
 	unsigned int cmdindex;
@@ -3492,7 +3492,7 @@ void SV_UpdateServerCommandsToClientAsFits(client_t *client, msg_t *msg)
 	i = client->reliableAcknowledge;
 	while ( ( cmdindex = i + 1, (int)cmdindex <= client->reliableSequence &&
 	( cmdlen = strlen(client->reliableCommandInfo[cmdindex & ( MAX_RELIABLE_COMMANDS - 1 )].command),
-	(int)( cmdlen + 6 + msg->cursize ) < iMsgSize ) ) )
+	(int)( snapshotSize + cmdlen + 6 + msg->cursize ) < iMsgSize ) ) )
 	{
 		MSG_WriteByte(msg, svc_serverCommand);
 		MSG_WriteLong(msg, cmdindex);
@@ -3518,6 +3518,8 @@ void custom_SV_SendClientSnapshot(client_t *client)
 	byte *data;
 	LargeLocal buf;
 	msg_t msg;
+	int snapshotSize;
+	byte snapshot[MAX_LARGE_MSGLEN];
 
 	LargeLocalConstructor(&buf, MAX_LARGE_MSGLEN);
 	data = LargeLocalGetBuf(&buf);
@@ -3534,18 +3536,34 @@ void custom_SV_SendClientSnapshot(client_t *client)
 	{
 		/* New code start: The original code first adds up to
 		 MAX_RELIABLE_COMMANDS cmds to the message before adding the actual
-		 snapshot data (client and entity states). We flip this around and
-		 check the message length for each added cmd so we can avoid
+		 snapshot data (client and entity states). We, at first, flip this
+		 around to get the snapshot size so that we can check the total message
+		 length for each added server cmd. This way we can avoid
 		 "Netchan_Transmit: length" errors that could otherwise occur on busy
-		 modded servers that support clients with protocols other than 118. The
-		 snapshot data is not expected to exceed MAX_LEGACY_MSGLEN bytes since
-		 it is capped to 256 entities. While in theory the error could still
-		 happen in case hundreds of entities and multiple entity state fields
-		 thereof are updated within the same server frame, tests have shown
-		 that even under rather busy conditions the message size stays below 
-		 10k bytes */
+		 modded servers that support clients with protocols other than 118.
+		 The order sent to the client remains: First reliable commands, then
+		 snapshot data (otherwise, sounds or effects may not be rendered where
+		 configstrings are populated during runtime).
+		 
+		 The snapshot data is not expected to exceed MAX_LEGACY_MSGLEN bytes
+		 since it is capped to 256 entities. While in theory the error could
+		 still happen in case hundreds of entities and multiple entity state
+		 fields thereof are updated within the same server frame, tests have
+		 shown that even under rather busy conditions the message size stays
+		 below 10k bytes */
+
+		// Write the snapshot so we can get its size, save it, then reset msg
 		SV_WriteSnapshotToClient(client, &msg);
-		SV_UpdateServerCommandsToClientAsFits(client, &msg);
+		snapshotSize = msg.cursize - 4;
+		memcpy(snapshot, &msg.data[4], snapshotSize);
+		memset(&msg.data[4], 0, snapshotSize);
+		msg.cursize = 4;
+
+		// Write the reliable commands
+		SV_UpdateServerCommandsToClientAsFits(client, &msg, snapshotSize);
+
+		// Write the saved snapshot data
+		MSG_WriteData(&msg, snapshot, snapshotSize);
 		/* New code end */
 	}
 	if ( client->state != CS_ZOMBIE )
