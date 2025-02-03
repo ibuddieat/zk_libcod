@@ -754,8 +754,13 @@ void gsc_player_disableitempickup(scr_entref_t ref)
 		return;
 	}
 
+	qboolean noHintString = qfalse;
+	if ( Scr_GetNumParam() > 0 )
+		noHintString = Scr_GetInt(0);
+
 	int old_setting = !customPlayerState[id].noPickup;
 	customPlayerState[id].noPickup = qtrue;
+	customPlayerState[id].noPickupHintString = noHintString;
 
 	stackPushInt(old_setting);
 }
@@ -773,6 +778,7 @@ void gsc_player_enableitempickup(scr_entref_t ref)
 
 	int old_setting = !customPlayerState[id].noPickup;
 	customPlayerState[id].noPickup = qfalse;
+	customPlayerState[id].noPickupHintString = qfalse;
 
 	stackPushInt(old_setting);
 }

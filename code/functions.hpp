@@ -1401,6 +1401,9 @@ static const G_ExplodeMissile_t G_ExplodeMissile = (G_ExplodeMissile_t)0x0810D97
 typedef void (*Touch_Item_Auto_t)(gentity_t *item, gentity_t *entity, int touch);
 static const Touch_Item_Auto_t Touch_Item_Auto = (Touch_Item_Auto_t)0x08105C80;
 
+typedef void (*Touch_Item_t)(gentity_t *item, gentity_t *entity, int touch);
+static const Touch_Item_t Touch_Item = (Touch_Item_t)0x08105CAC;
+
 typedef void (*player_die_t)(gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, meansOfDeath_t meansOfDeath, int iWeapon, const float *vDir, hitLocation_t hitLoc, int psTimeOffset);
 static const player_die_t player_die = (player_die_t)0x0810175A;
 

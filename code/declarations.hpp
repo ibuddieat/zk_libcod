@@ -4093,6 +4093,7 @@ typedef struct customPlayerState_s
 	int fireThroughWalls;
 	float fireRangeScale;
 	qboolean noPickup;
+	qboolean noPickupHintString;
 	qboolean noEarthquakes;
 	customTeam_t collisionTeam;
 	qboolean silent;

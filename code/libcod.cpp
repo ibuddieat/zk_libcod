@@ -184,7 +184,6 @@ cHook *hook_SV_MasterHeartbeat;
 cHook *hook_SV_VerifyIwds_f;
 cHook *hook_Sys_Print;
 cHook *hook_Sys_Quit;
-cHook *hook_Touch_Item_Auto;
 cHook *hook_UpdateIPBans;
 cHook *hook_VM_Notify;
 
@@ -2198,9 +2197,8 @@ void custom_Touch_Item_Auto(gentity_t *item, gentity_t *entity, int touch)
 	if ( customPlayerState[entity->client->ps.clientNum].noPickup )
 		return;
 	
-	hook_Touch_Item_Auto->unhook();
-	Touch_Item_Auto(item, entity, touch);
-	hook_Touch_Item_Auto->hook();
+	item->active = 1;
+	Touch_Item(item, entity, touch);
 }
 
 void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
@@ -7186,6 +7184,11 @@ void custom_Player_UpdateCursorHints(gentity_t *player)
 					temp = (ent->s).eType;
 					if ( temp == ET_ITEM )
 					{
+						/* New code start: Optional hintString toggle when item pickup is disabled */
+						if ( customPlayerState[player->s.number].noPickupHintString )
+							continue;
+						/* New code end */
+						
 						temp = Player_GetItemCursorHint(player->client, ent);
 						if ( temp != 0 )
 							goto LAB_08121ee6;
@@ -10803,8 +10806,6 @@ public:
 
 		hook_fire_grenade = new cHook(0x0810E68E, (int)custom_fire_grenade);
 		hook_fire_grenade->hook();
-		hook_Touch_Item_Auto = new cHook(0x08105C80, int(custom_Touch_Item_Auto));
-		hook_Touch_Item_Auto->hook();
 		hook_G_TempEntity = new cHook(0x0811EFC4, (int)custom_G_TempEntity);
 		hook_G_TempEntity->hook();
 		hook_GScr_LoadConsts = new cHook(0x081224F8, (int)custom_GScr_LoadConsts);
@@ -10862,6 +10863,7 @@ public:
 		
 		cracking_hook_function(0x08105FFA, (int)custom_GetFreeCueSpot);
 		cracking_hook_function(0x08105CAC, (int)custom_Touch_Item);
+		cracking_hook_function(0x08105C80, (int)custom_Touch_Item_Auto);
 		cracking_hook_function(0x0811F232, (int)custom_G_AddEvent);
 		cracking_hook_function(0x080EBF24, (int)custom_BG_IsWeaponValid);
 		cracking_hook_function(0x080DFC78, (int)custom_BG_AddPredictableEventToPlayerstate);
