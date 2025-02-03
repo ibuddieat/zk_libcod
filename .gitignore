@@ -1,9 +1,10 @@
 # Libcod compilation
 code/bin/**
 code/extra/**
-code/objects_cod2_1_0/**
-code/objects_cod2_1_2/**
-code/objects_cod2_1_3/**
+code/objects_cod2/**
 
 # Debugger files
 code/.gdb_history
+
+# IDE files
+.vscode/settings.json
