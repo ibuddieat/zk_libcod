@@ -7,8 +7,9 @@ Script code functions:
   * `PlayFx(<effect id>, <position of effect>, [<forward vector>], [<up vector>])` now returns the (temporary) effect entity
 
 Script code methods:
-  * Renamed `setConfigString(<string>, <index>)` to `setConfigStringForPlayer(<index>, <string>)` and flipped its parameter positions
+  * `<player> disableItemPickup(<hide hint strings>)` now also supports to hide hint strings
   * `<player> playFxForPlayer(<effect id>, <position of effect>, [<forward vector>], [<up vector>])` now returns the (temporary) effect entity
+  * Renamed `<player> setConfigString(<string>, <index>)` to `<player> setConfigStringForPlayer(<index>, <string>)` and flipped its parameter positions
 
 Dvars:
   * Changed `fs_library` to work relative to `[fs_homepath]/[fs_game]`, instead of specifying an absolute path
