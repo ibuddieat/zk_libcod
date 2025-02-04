@@ -11,6 +11,7 @@ extern dvar_t *jump_spreadAdd;
 
 // Custom dvars
 extern dvar_t *g_resetSlide;
+extern dvar_t *jump_bounceEnable;
 extern dvar_t *jump_carryMoverVelocity;
 
 #define JUMP_LAND_SLOWDOWN_TIME 1800
@@ -302,6 +303,7 @@ void Jump_RegisterDvars()
 	jump_spreadAdd = Dvar_RegisterFloat("jump_spreadAdd", 64.0, 0.0, 512.0, DVAR_CHEAT | DVAR_SYSTEMINFO);
 
 	// Custom dvars
+	jump_bounceEnable = Dvar_RegisterBool("jump_bounceEnable", qfalse, DVAR_CHEAT | DVAR_SYSTEMINFO);
 	jump_carryMoverVelocity = Dvar_RegisterBool("jump_carryMoverVelocity", qfalse, DVAR_CHEAT | DVAR_SYSTEMINFO);
 }
 

@@ -121,6 +121,10 @@ Added dvars:
     * Type: Boolean
     * Default: True
     * Effect: If false, the server will not halt when the `tag_player` tag cannot be found on a turret, but instead yield a script error to `CodeCallback_Error`, if that script callback function is enabled. Such error can occur in killcam-related edge cases, e.g., when a turret is removed while the player is alive and in killcam.
+  * `jump_bounceEnable`
+    * Type: Boolean
+    * Default: False
+    * Effect: If true, enables bounce jumping like it is possible in Call of Duty&reg; 4.
   * `jump_carryMoverVelocity`
     * Type: Boolean
     * Default: False

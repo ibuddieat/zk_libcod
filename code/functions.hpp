@@ -645,6 +645,9 @@ static const PM_AddEvent_t PM_AddEvent = (PM_AddEvent_t)0x080E1452;
 typedef void (*PM_AddTouchEnt_t)(pmove_t *pm, int entityNum);
 static const PM_AddTouchEnt_t PM_AddTouchEnt = (PM_AddTouchEnt_t)0x080E1474;
 
+typedef void (*PM_ClipVelocity_t)(const float *velIn, const float *normal, float *velOut);
+static const PM_ClipVelocity_t PM_ClipVelocity = (PM_ClipVelocity_t)0x080E14D4;
+
 typedef StanceState (*PM_GetEffectiveStance_t)(struct playerState_s *ps);
 static const PM_GetEffectiveStance_t PM_GetEffectiveStance = (PM_GetEffectiveStance_t)0x080E1532;
 

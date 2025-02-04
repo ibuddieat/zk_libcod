@@ -115,6 +115,7 @@ dvar_t *g_spawnMapWeapons;
 dvar_t *g_spectateBots;
 dvar_t *g_triggerMode;
 dvar_t *g_turretMissingTagTerminalError;
+dvar_t *jump_bounceEnable;
 dvar_t *jump_carryMoverVelocity;
 dvar_t *libcod;
 dvar_t *loc_loadLocalizedMods;
@@ -10749,6 +10750,44 @@ int hook_sprintf_in_SE_R_ListFiles(char *buf, const char *format, const char *ps
 	return snprintf(buf, MAX_QPATH, format, psDir, filename);
 }
 
+void hook_PM_ClipVelocity_in_PM_StepSlideMove(const float *velIn, const float *normal, float *velOut)
+{
+	float lengthSq2D;
+	float adjusted;
+	float newZ;
+	float lengthScale;
+
+	/* New code start: jump_bounceEnable dvar */
+	if ( !jump_bounceEnable->current.boolean )
+	{
+		PM_ClipVelocity(velIn, normal, velOut);
+		return;
+	}
+	/* New code end */
+
+	lengthSq2D = (float)(velIn[0] * velIn[0]) + (float)(velIn[1] * velIn[1]);
+
+	if ( fabs(normal[2]) < 0.001 || lengthSq2D == 0.0 )
+	{
+		velOut[0] = velIn[0];
+		velOut[1] = velIn[1];
+		velOut[2] = velIn[2];
+	}
+	else
+	{
+		newZ = (float)-(float)((float)(velIn[0] * normal[0]) + (float)(velIn[1] * normal[1])) / normal[2];
+		adjusted = velIn[1];
+		lengthScale = sqrt((float)((float)(velIn[2] * velIn[2]) + lengthSq2D) / (float)((float)(newZ * newZ) + lengthSq2D));
+
+		if ( lengthScale < 1.0 || newZ < 0.0 || velIn[2] > 0.0 )
+		{
+			velOut[0] = lengthScale * velIn[0];
+			velOut[1] = lengthScale * adjusted;
+			velOut[2] = lengthScale * newZ;
+		}
+	}
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -10792,6 +10831,7 @@ public:
 		cracking_hook_call(0x0812C28D, (int)hook_sprintf_in_FX_ParseEffect);
 		cracking_hook_call(0x081393BC, (int)hook_sprintf_in_SE_R_ListFiles);
 		cracking_hook_call(0x0813944A, (int)hook_sprintf_in_SE_R_ListFiles);
+		cracking_hook_call(0x080EA8F2, (int)hook_PM_ClipVelocity_in_PM_StepSlideMove);
 
 		hook_Com_DPrintf = new cHook(0x08060E3A, (int)custom_Com_DPrintf);
 		#if COMPILE_UTILS == 1
