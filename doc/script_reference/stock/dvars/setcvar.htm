@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>SetCvar( &lt;cvar&gt;, &lt;value&gt; )</H1>
+<H1>SetCvar( &lt;cvar&gt;, &lt;value&gt;, &lt;serverinfo&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
@@ -48,6 +48,13 @@ SetCvar( "r_eyesAdjust", "1" );
 <UL>
 <LI>1 : &lt;cvar&gt; The cvar name as a string.</LI>
 <LI>2 : &lt;value&gt; The cvar value.</LI>
+</UL></TR></TD></TABLE>
+<BR><BR>
+<H2>Optional Args</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;serverinfo&gt; If true, this cvar is published via getstatus responses. Default: False</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>
