@@ -4773,7 +4773,7 @@ void custom_SVC_Info(netadr_t from)
 	}
 
 	gamedir = Dvar_GetString("fs_game");
-	if ( *gamedir )
+	if ( gamedir && *gamedir ) // New: Added NULL pointer check
 	{
 		Info_SetValueForKey(infostring, "game", gamedir);
 	}
@@ -4808,7 +4808,7 @@ void custom_SVC_Info(netadr_t from)
 	else
 	{
 		referencedIwdNames = Dvar_GetString("sv_referencedIwdNames");
-		if ( *referencedIwdNames )
+		if ( referencedIwdNames && *referencedIwdNames ) // New: Added NULL pointer check
 		{
 			SV_Cmd_TokenizeString(referencedIwdNames);
 			count = SV_Cmd_Argc();
