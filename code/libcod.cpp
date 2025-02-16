@@ -8159,7 +8159,8 @@ qboolean custom_SV_MapExists(const char *name)
 	// Sys_Error: FS_BuildOSPath: os path length exceeded
 	if ( strlen(name) > MAX_QPATH )
 	{
-		Com_Printf("SV_MapExists: Map name '%s' is too long\n", name);
+		// Using plain printf here, file system might not be initialized yet
+		printf("WARNING: SV_MapExists: Map name '%s' is too long\n", name);
 		return qfalse;
 	}
 
