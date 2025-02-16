@@ -5400,11 +5400,17 @@ void manymaps_get_library_path(char *library_path, size_t library_path_size)
 		else
 		{
 			snprintf(library_path, library_path_size, "%s/%s/%s", fs_homepath->current.string, game_folder, fs_library->current.string);
+
+			if ( fs_debug->current.integer )
+				printf("> [LIBCOD] Manymaps: Using library path '%s'\n", library_path);
+
 			return;
 		}
 	}
 
 	snprintf(library_path, library_path_size, "%s/%s/Library", fs_homepath->current.string, game_folder);
+	if ( fs_debug->current.integer )
+		printf("> [LIBCOD] Manymaps: Using library path '%s'\n", library_path);
 }
 
 void manymaps_cleanup(void)
