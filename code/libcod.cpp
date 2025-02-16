@@ -8177,7 +8177,7 @@ qboolean custom_SV_MapExists(const char *name)
 		Com_sprintf(map_check, MAX_OSPATH, "%s/%s.iwd", library_path, name);
 
 		// If not found, check if it is a multipart map
-		if ( !access(map_check, F_OK) )
+		if ( access(map_check, F_OK) == -1 )
 			Com_sprintf(map_check, MAX_OSPATH, "%s/%s.pt1.iwd", library_path, name);
  
 		return access(map_check, F_OK) != -1;
