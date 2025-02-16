@@ -9185,7 +9185,18 @@ void openLogfile(qboolean reopen)
 
 	opening_qconsole = 0;
 
-	Com_Printf("logfile '%s' opened on %s\n", openLogfileName, strippedTime);
+	// New: We must not call Com_Printf from within Com_PrintMessage because of
+	// the CRITSECT_CONSOLE mutex. Also, print a different message if opening
+	// failed (e.g., due to missing permissions), and halt the server
+	if ( !logfile )
+	{
+		Sys_LeaveCriticalSection(CRITSECT_CONSOLE);
+		Com_Error(ERR_DROP, "Failed to open file %s for writing", openLogfileName);
+	}
+	else
+	{
+		printf("logfile '%s' opened on %s\n", openLogfileName, strippedTime);
+	}
 }
 
 void custom_Com_PrintMessage(int /* print_msg_type_t */ channel, char *message)
@@ -9206,17 +9217,17 @@ void custom_Com_PrintMessage(int /* print_msg_type_t */ channel, char *message)
 			Sys_LeaveCriticalSection(CRITSECT_PRINT);
 		}
 
-		if ( com_logfile != NULL && com_logfile->current.integer != 0 )
+		if ( com_logfile != NULL && com_logfile->current.integer != 0 ) // "logfile" dvar
 		{
 			Sys_EnterCriticalSection(CRITSECT_CONSOLE);
 			if ( FS_Initialized() )
 			{
 				// New: logfileName dvar
-				if ( logfile == 0 && opening_qconsole == 0 && logfileName->current.string )
+				if ( logfile == 0 && opening_qconsole == 0 && strlen(logfileName->current.string) )
 				{
 					openLogfile(qfalse);
 				}
-				else if ( logfile && !opening_qconsole && logfileName->current.string && strncmp(logfileName->current.string, openLogfileName, strlen(openLogfileName)) )
+				else if ( logfile && !opening_qconsole && strlen(logfileName->current.string) && strncmp(logfileName->current.string, openLogfileName, strlen(openLogfileName)) )
 				{
 					// logfileName dvar value changed since log file initialization
 					openLogfile(qtrue);
