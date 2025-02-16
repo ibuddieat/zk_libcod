@@ -4740,7 +4740,7 @@ void custom_SVC_Info(netadr_t from)
 
 	count = 0;
 
-	for ( i = sv_privateClients->current.integer ; i < sv_maxclients->current.integer ; i++ )
+	for ( i = sv_privateClients->current.integer; i < sv_maxclients->current.integer; i++ )
 	{
 		if ( svs.clients[i].state >= CS_CONNECTED )
 		{
@@ -4761,6 +4761,8 @@ void custom_SVC_Info(netadr_t from)
 	Info_SetValueForKey(infostring, "sv_maxclients", va("%i", sv_maxclients->current.integer - sv_privateClients->current.integer));
 	Info_SetValueForKey(infostring, "gametype", Dvar_GetString("g_gametype"));
 	Info_SetValueForKey(infostring, "pure", va("%i", sv_pure->current.boolean));
+
+
 	if ( sv_minPing->current.integer )
 	{
 		Info_SetValueForKey(infostring, "minPing", va("%i", sv_minPing->current.integer));
@@ -4769,23 +4771,28 @@ void custom_SVC_Info(netadr_t from)
 	{
 		Info_SetValueForKey(infostring, "maxPing", va("%i", sv_maxPing->current.integer));
 	}
+
 	gamedir = Dvar_GetString("fs_game");
 	if ( *gamedir )
 	{
 		Info_SetValueForKey(infostring, "game", gamedir);
 	}
-	Info_SetValueForKey( infostring, "sv_allowAnonymous", va("%i", sv_allowAnonymous->current.boolean));
+	
+	Info_SetValueForKey(infostring, "sv_allowAnonymous", va("%i", sv_allowAnonymous->current.boolean));
 	if ( sv_disableClientConsole->current.boolean )
 	{
 		Info_SetValueForKey(infostring, "con_disabled", va("%i", sv_disableClientConsole->current.boolean));
 	}
+
 	password = Dvar_GetString("g_password");
 	if ( password && *password )
 		Info_SetValueForKey(infostring, "pswrd", "1");
 
+
 	friendlyfire = Dvar_GetInt("scr_friendlyfire");
 	if ( friendlyfire )
 		Info_SetValueForKey(infostring, "ff", va("%i", friendlyfire));
+
 
 	killcam = Dvar_GetInt("scr_killcam");
 	if ( killcam )
@@ -4793,6 +4800,7 @@ void custom_SVC_Info(netadr_t from)
 
 	Info_SetValueForKey(infostring, "hw", va("%i", 1));
 	serverModded = 0;
+
 	if ( !sv_pure->current.boolean || ( gamedir && *gamedir ) )
 	{
 		serverModded = 1;
@@ -5042,12 +5050,10 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 	}
 
 	/* New code start: CodeCallback_RemoteCommand */
-	if (
-		!from_script &&
-		codecallback_remotecommand && 
-		!badRconPassword && 
-		Scr_IsSystemActive()
-		)
+	if ( !from_script &&
+		 codecallback_remotecommand && 
+		 !badRconPassword && 
+		 Scr_IsSystemActive() )
 	{
 		stackPushInt((int)msg);
 		stackPushArray();
@@ -9180,7 +9186,7 @@ void custom_Com_PrintMessage(int /* print_msg_type_t */ channel, char *message)
 	PbCaptureConsoleOutput(message, 0x1000);
 	if ( rd_buffer == NULL )
 	{
-		/* Caret patch: Removed the following code:
+		/* New: Caret patch: Removed the following code:
 		if ( *message == '^' && message[1] != '\0' )
 		{
 			message += 2;
@@ -9198,6 +9204,7 @@ void custom_Com_PrintMessage(int /* print_msg_type_t */ channel, char *message)
 			Sys_EnterCriticalSection(CRITSECT_CONSOLE);
 			if ( FS_Initialized() )
 			{
+				// New: logfileName dvar
 				if ( logfile == 0 && opening_qconsole == 0 && logfileName->current.string )
 				{
 					openLogfile(qfalse);
@@ -9209,6 +9216,7 @@ void custom_Com_PrintMessage(int /* print_msg_type_t */ channel, char *message)
 				}
 				if ( logfile != 0 )
 				{
+					// New: logTimestamps dvar
 					if ( logTimestamps->current.boolean && strlen(message) && strcmp(message, " ") != 0 )
 					{
 						time_t timer;
