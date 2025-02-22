@@ -148,6 +148,7 @@ dvar_t *sv_logHeartbeats;
 dvar_t *sv_logRcon;
 dvar_t *sv_masterPort;
 dvar_t *sv_masterServer;
+dvar_t *sv_maxSnapshotEntities;
 dvar_t *sv_minimizeSysteminfo;
 dvar_t *sv_noauthorize;
 dvar_t *sv_reservedConfigstringBufferSize;
@@ -475,6 +476,7 @@ void common_init_complete_print(const char *format, ...)
 	sv_limitLocalRcon = Dvar_RegisterBool("sv_limitLocalRcon", qtrue, DVAR_ARCHIVE);
 	sv_logHeartbeats = Dvar_RegisterBool("sv_logHeartbeats", qtrue, DVAR_ARCHIVE);
 	sv_logRcon = Dvar_RegisterBool("sv_logRcon", qtrue, DVAR_ARCHIVE);
+	sv_maxSnapshotEntities = Dvar_RegisterInt("sv_maxSnapshotEntities", 1024, 64, 1024, DVAR_ARCHIVE);
 	sv_noauthorize = Dvar_RegisterBool("sv_noauthorize", qfalse, DVAR_ARCHIVE);
 	sv_timeoutMessages = Dvar_RegisterBool("sv_timeoutMessages", qtrue, DVAR_ARCHIVE);
 	sv_updateCursorHints = Dvar_RegisterBool("sv_updateCursorHints", qtrue, DVAR_ARCHIVE);
@@ -3452,9 +3454,10 @@ void custom_SV_ClientEnterWorld(client_t *client, usercmd_t *cmd)
 
 void custom_SV_AddArchivedEntToSnapshot(int entNum, snapshotEntityNumbers_t *eNums)
 {
-	// New: Using 256 instead of MAX_SNAPSHOT_ENTITIES since CL_GetSnapshot on
-	// the client side truncates this to 256 anyway
-	if ( eNums->numSnapshotEntities != 256 )
+	// New: Using the sv_maxSnapshotEntities dvar to cap the number of entities
+	// added to snapshots, instead of MAX_SNAPSHOT_ENTITIES (1024).
+	// CL_GetSnapshot on the client side truncates the rendered entities to 256
+	if ( eNums->numSnapshotEntities < sv_maxSnapshotEntities->current.integer )
 	{
 		eNums->snapshotEntities[eNums->numSnapshotEntities] = entNum;
 		eNums->numSnapshotEntities++;
@@ -3463,9 +3466,10 @@ void custom_SV_AddArchivedEntToSnapshot(int entNum, snapshotEntityNumbers_t *eNu
 
 void custom_SV_AddEntToSnapshot(int entNum, snapshotEntityNumbers_t *eNums)
 {
-	// New: Using 256 instead of MAX_SNAPSHOT_ENTITIES since CL_GetSnapshot on
-	// the client side truncates this to 256 anyway
-	if ( eNums->numSnapshotEntities != 256 )
+	// New: Using the sv_maxSnapshotEntities dvar to cap the number of entities
+	// added to snapshots, instead of MAX_SNAPSHOT_ENTITIES (1024).
+	// CL_GetSnapshot on the client side truncates the rendered entities to 256
+	if ( eNums->numSnapshotEntities < sv_maxSnapshotEntities->current.integer )
 	{
 		eNums->snapshotEntities[eNums->numSnapshotEntities] = entNum;
 		eNums->numSnapshotEntities++;
@@ -3545,9 +3549,7 @@ void custom_SV_SendClientSnapshot(client_t *client)
 		 configstrings are populated during runtime).
 		 
 		 The snapshot data is not expected to exceed MAX_LEGACY_MSGLEN bytes
-		 since it is capped to 256 entities. While in theory the error could
-		 still happen in case hundreds of entities and multiple entity state
-		 fields thereof are updated within the same server frame, tests have
+		 with a sv_maxSnapshotEntities dvar setting of 256, as tests have
 		 shown that even under rather busy conditions the message size stays
 		 below 10k bytes */
 

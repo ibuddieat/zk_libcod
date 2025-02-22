@@ -251,6 +251,12 @@ Added dvars:
     * Type: String
     * Default: "cod2master.activision.com"
     * Effect: Hostname of the master server (for the ingame server browser) to communicate to.
+  * `sv_maxSnapshotEntities`
+    * Type: Integer
+    * Default: 1024
+    * Min. Value: 64
+    * Max. Value: 1024
+    * Effect: Controls the max. number of entities added to snapshots. Can be used to avoid Netchan_Transmit overflow errors if legacy client support is enabled (e.g., with a setting of 256), or to avoid entity corruption issues on the client side.
   * `sv_minimizeSysteminfo`
     * Type: Integer
     * Default: 0
