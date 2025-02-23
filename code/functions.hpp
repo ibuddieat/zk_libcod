@@ -810,7 +810,7 @@ static const G_ParseEntityFields_t G_ParseEntityFields = (G_ParseEntityFields_t)
 typedef void (*G_SetModel_t)(gentity_t *ent, const char *modelName);
 static const G_SetModel_t G_SetModel = (G_SetModel_t)0x0811D87A;
 
-typedef char (*G_EntLinkToWithOffset_t)(gentity_t *ent, gentity_t *parent, unsigned int tagId, vec3_t *originOffset, vec3_t *anglesOffset);
+typedef char (*G_EntLinkToWithOffset_t)(gentity_t *ent, gentity_t *parent, unsigned int tagId, float *originOffset, float *anglesOffset);
 static const G_EntLinkToWithOffset_t G_EntLinkToWithOffset = (G_EntLinkToWithOffset_t)0x0811DD4A;
 
 typedef void (*G_EntUnlink_t)(gentity_t *ent);

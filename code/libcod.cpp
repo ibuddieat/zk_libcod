@@ -8159,7 +8159,7 @@ void custom_GScr_SetHintString(scr_entref_t entref)
 	{
 		if ( I_stricmp(Scr_GetString(0), "") == 0 )
 		{
-			(ent->s).scale = 0xFF;
+			ent->s.scale = 0xFF;
 			return;
 		}
 	}
@@ -8169,18 +8169,19 @@ void custom_GScr_SetHintString(scr_entref_t entref)
 	{
 		Scr_Error(va("Too many different hintstring values. Max allowed is %i different strings", 0x20));
 	}
-	(ent->s).scale = index;
+	ent->s.scale = index;
 
 	// Added trigger_radius support by converting it to a trigger_use_touch
 	if ( ent->classname == custom_scr_const.trigger_radius )
 	{
 		Scr_SetString(&ent->classname, scr_const.trigger_use_touch);
 		ent->trigger.singleUserEntIndex = ENTITY_NONE;
-		(ent->r).contents = CONTENTS_DONOTENTER;
-		(ent->r).svFlags = 1;
-		(ent->s).dmgFlags = 2;
+		ent->r.contents = CONTENTS_DONOTENTER;
+		ent->r.svFlags = 1;
+		ent->s.dmgFlags = 2;
+
 		// Set it to a 'converted' trigger to still emit 'trigger' notifies
-		customEntityState[(ent->s).number].convertedTrigger = qtrue;
+		customEntityState[ent->s.number].convertedTrigger = qtrue;
 	}
 }
 

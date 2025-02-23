@@ -169,7 +169,7 @@ void gsc_entity_gettagangles(scr_entref_t ref)
 	SV_LinkEntity(tempEnt);
 
 	// Link entities with zero offsets
-	if ( !G_EntLinkToWithOffset(tempEnt, parent, tagId, &originOffset, &anglesOffset) )
+	if ( !G_EntLinkToWithOffset(tempEnt, parent, tagId, originOffset, anglesOffset) )
 	{
 		G_FreeEntity(tempEnt);
 		if ( !SV_DObjExists(parent) )

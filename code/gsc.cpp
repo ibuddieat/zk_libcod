@@ -42,11 +42,10 @@ const char * stackGetParamTypeAsString(int param)
 	VariableValue *var;
 	var = &scrVmPub.top[-param];
 
-	if ( var->type == 1 ) // Pointer to object
+	if ( var->type == STACK_OBJECT ) // VAR_OBJECT
 		return getParamTypeAsString(Scr_GetPointerType(param));
 	else
 		return getParamTypeAsString(var->type);
-
 }
 
 void Scr_AddFunc(const char *value)
@@ -598,23 +597,6 @@ int stackGetPrevCodePosLineNumber(const char *codePos, unsigned int index)
 	return -1;
 }
 
-void stackError(const char *format, ...)
-{
-	char s[MAX_STRINGLENGTH];
-	int len = 0;
-	va_list va;
-
-	va_start(va, format);
-	Q_vsnprintf(s, sizeof(s) - 1, format, va);
-	va_end(va);
-
-	len = strlen(s);
-	s[len] = '\n';
-	s[len + 1] = '\0';
-	Com_PrintMessage(0, s);
-	Scr_CodeCallback_Error(qfalse, qfalse, "stackError", s);
-}
-
 int stackGetParams(const char *params, ...)
 {
 	va_list args;
@@ -844,4 +826,21 @@ int stackGetParamObject(int param, unsigned int *value)
 	*value = var->u.pointerValue;
 
 	return 1;
+}
+
+void stackError(const char *format, ...)
+{
+	char s[MAX_STRINGLENGTH];
+	int len = 0;
+	va_list va;
+
+	va_start(va, format);
+	Q_vsnprintf(s, sizeof(s) - 1, format, va);
+	va_end(va);
+
+	len = strlen(s);
+	s[len] = '\n';
+	s[len + 1] = '\0';
+	Com_PrintMessage(0, s);
+	Scr_CodeCallback_Error(qfalse, qfalse, "stackError", s);
 }
