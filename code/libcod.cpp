@@ -335,6 +335,9 @@ map_turret_t map_turrets[MAX_GENTITIES];
 // dvar can be adjusted accordingly
 int reservedConfigstringBufferSizeUsage = 0;
 
+// Storage for console prefix (name and separator) in chat
+char consolePrefix[MAX_CONSOLE_PREFIX_LENGTH] = "console: ";
+
 void custom_Com_InitDvars(void)
 {
 	// Register custom dvars required early on server start
@@ -10842,6 +10845,16 @@ void hook_PM_ClipVelocity_in_PM_StepSlideMove(const float *velIn, const float *n
 	}
 }
 
+char * hook_strcpy_in_SV_ConSay_f(char *dst, const char *src)
+{
+	return strcpy(dst, consolePrefix);
+}
+
+char * hook_strcpy_in_SV_ConTell_f(char *dst, const char *src)
+{
+	return strcpy(dst, consolePrefix);
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -10886,6 +10899,8 @@ public:
 		cracking_hook_call(0x081393BC, (int)hook_sprintf_in_SE_R_ListFiles);
 		cracking_hook_call(0x0813944A, (int)hook_sprintf_in_SE_R_ListFiles);
 		cracking_hook_call(0x080EA8F2, (int)hook_PM_ClipVelocity_in_PM_StepSlideMove);
+		cracking_hook_call(0x0808C9EB, (int)hook_strcpy_in_SV_ConSay_f);
+		cracking_hook_call(0x0808CB15, (int)hook_strcpy_in_SV_ConTell_f);
 
 		hook_Com_DPrintf = new cHook(0x08060E3A, (int)custom_Com_DPrintf);
 		#if COMPILE_UTILS == 1

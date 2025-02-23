@@ -161,6 +161,7 @@ scr_function_t scriptFunctions[] =
 	{"executeCommand", gsc_utils_executecommand, 0},
 	{"sendCommandToClient", gsc_utils_sendcommandtoclient, 0},
 	{"sendPacket", gsc_utils_sendpacket, 0},
+	{"setConsolePrefix", gsc_utils_setconsoleprefix, 0},
 	#if ENABLE_UNSAFE == 1
 	{"system", gsc_utils_system, 0},
 	#endif

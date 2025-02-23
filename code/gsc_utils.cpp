@@ -765,6 +765,23 @@ void gsc_utils_logprintconsole()
 	stackPushBool(qtrue);
 }
 
+extern char consolePrefix[MAX_CONSOLE_PREFIX_LENGTH];
+void gsc_utils_setconsoleprefix()
+{
+	char *str;
+
+	if ( !stackGetParams("s", &str) )
+	{
+		stackError("gsc_utils_setconsoleprefix() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	Com_sprintf(consolePrefix, MAX_CONSOLE_PREFIX_LENGTH, "%s", str);
+
+	stackPushString(consolePrefix);
+}
+
 void gsc_utils_getarraykeys()
 {
 	unsigned int arrIndex;

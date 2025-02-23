@@ -140,6 +140,7 @@ New script code functions:
   * `roundTo(<value>, <precision>)`
   * `saveSpeexFile(<sound index>, <file path>)`
   * `setConfigString(<index>, <string>)`
+  * `setConsolePrefix(<prefix>)`
   * `setNextTestClientName(<name>)`
   * `setSavePersist(<save persistent>)`
   * `setWeaponRaiseTime(<weapon name>, <raise time>)`

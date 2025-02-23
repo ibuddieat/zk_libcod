@@ -20,6 +20,7 @@ void gsc_utils_sprintf();
 void gsc_utils_sendpacket();
 void gsc_utils_putchar();
 void gsc_utils_logprintconsole();
+void gsc_utils_setconsoleprefix();
 
 void gsc_utils_getarraykeys();
 void gsc_utils_getascii();

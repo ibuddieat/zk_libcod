@@ -58,6 +58,7 @@
 #define MAX_CHALLENGES              1024
 #define MAX_CLIENTS                 64
 #define MAX_CONFIGSTRINGS           2048
+#define MAX_CONSOLE_PREFIX_LENGTH   64 // Should be kept somewhere below MAX_STRINGLENGTH
 #define MAX_DOWNLOAD_BLKSIZE        2048
 #define MAX_DOWNLOAD_BLKSIZE_FAST   0x2000 // Needs to be below MAX_LEGACY_MSGLEN
 #define MAX_DOWNLOAD_WINDOW         8
