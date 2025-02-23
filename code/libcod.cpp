@@ -5420,8 +5420,12 @@ void manymaps_cleanup(void)
 	DIR *dir;
 	struct dirent *dir_ent;
 	char library_path[MAX_OSPATH];
+	struct stat lstat_buf;
+	struct stat stat_buf;
 
 	manymaps_get_library_path(library_path, MAX_OSPATH);
+	if ( fs_debug->current.integer )
+		printf("> [LIBCOD] Manymaps: Using library path '%s' on cleanup\n", library_path);
 
 	dir = opendir(library_path);
 	if ( !dir )
@@ -5441,17 +5445,29 @@ void manymaps_cleanup(void)
 		else
 			Com_sprintf(fileDelete, MAX_OSPATH, "%s/main/%s", fs_homepath->current.string, dir_ent->d_name);
 
+		// Skip file if we cannot determine if it is a symbolic link
+		if ( lstat(fileDelete, &lstat_buf) )
+			continue;
+
+		// Only delete symbolic links
+		if ( !S_ISLNK(lstat_buf.st_mode) )
+			continue;
+
+		// Check if the file the symbolic link points to still exists. If not,
+		// delete the link as this could be a leftover link created before
+		// changing the library folder name, and the server failed to clean up
+		// the old link (e.g., due to a server crash or forced quit)
+		if ( stat(fileDelete, &stat_buf) )
+		{
+			int unlink_success = unlink(fileDelete) == 0;
+
+			// Using plain printf here, the file system is not initialized yet
+			printf("> [LIBCOD] Manymaps: Removing old link %s: %s\n", fileDelete, unlink_success ? "success" : "failed");
+			continue;
+		}
+
 		if ( access(fileDelete, F_OK) != -1 )
 		{
-			// Skip file if we cannot determine if it is a symbolic link
-			struct stat lstat_buf;
-			if ( lstat(fileDelete, &lstat_buf) )
-				continue;
-
-			// Only delete symbolic links
-			if ( !S_ISLNK(lstat_buf.st_mode) )
-				continue;
-
 			int unlink_success = unlink(fileDelete) == 0;
 
 			// Using plain printf here, the file system is not initialized yet
@@ -5544,6 +5560,11 @@ void manymaps_prepare(const char *mapname, int read)
 					// Using plain printf here, the file system is not
 					// initialized yet
 					printf("> [LIBCOD] Manymaps: New link from %s to %s: %s\n", src, dst, link_success ? "success" : "failed");
+
+					// If making the link failed, reset level.finished so that
+					// map/devmap etc. can be called again
+					if ( !link_success && level.finished )
+						level.finished = 0;
 				}
 				else
 					break;
@@ -5561,6 +5582,11 @@ void manymaps_prepare(const char *mapname, int read)
 				// Using plain printf here, the file system is not initialized
 				// yet
 				printf("> [LIBCOD] Manymaps: New link from %s to %s: %s\n", src, dst, link_success ? "success" : "failed");
+
+				// If making the link failed, reset level.finished so that
+				// map/devmap etc. can be called again
+				if ( !link_success && level.finished )
+					level.finished = 0;
 			}
 		}
 
