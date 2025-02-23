@@ -9310,19 +9310,20 @@ void custom_Com_PrintMessage(int /* print_msg_type_t */ channel, char *message)
 
 void custom_G_InitGentity(gentity_t *ent)
 {
-	memset(&customEntityState[ent->s.number], 0, sizeof(customEntityState_t));
-
-	if ( !sv_autoAddSnapshotEntities->current.boolean )
-	{
-		for ( int i = 0; i < sv_maxclients->current.integer; i++ )
-			SV_RemoveEntFromPlayerSnapshots(i, ent->s.number);
-	}
-
 	hook_G_InitGentity->unhook();
 	void (*G_InitGentity)(gentity_t *ent);
 	*(int *)&G_InitGentity = hook_G_InitGentity->from;
 	G_InitGentity(ent);
 	hook_G_InitGentity->hook();
+
+	// Clear/init custom per-entity settings. Do that here after G_InitGentity
+	// and not before since ent->s.number is set therein
+	memset(&customEntityState[ent->s.number], 0, sizeof(customEntityState_t));
+	if ( !sv_autoAddSnapshotEntities->current.boolean )
+	{
+		for ( int i = 0; i < sv_maxclients->current.integer; i++ )
+			SV_RemoveEntFromPlayerSnapshots(i, ent->s.number);
+	}
 }
 
 void custom_G_FreeEntity(gentity_t *ent)
