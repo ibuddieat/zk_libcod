@@ -77,7 +77,7 @@ void gsc_entity_notsolidforplayer(scr_entref_t ref)
 	int id = ref.entnum;
 	gentity_t *entity = &g_entities[id];
 
-	if ( !(entity->r).bmodel )
+	if ( !entity->r.bmodel )
 	{
 		stackError("gsc_entity_notsolidforplayer() entity %i does not have brush models", id);
 		stackPushUndefined();
@@ -100,7 +100,7 @@ void gsc_entity_solidforplayer(scr_entref_t ref)
 	int id = ref.entnum;
 	gentity_t *entity = &g_entities[id];
 
-	if ( !(entity->r).bmodel )
+	if ( !entity->r.bmodel )
 	{
 		stackError("gsc_entity_notsolidforplayer() entity %i does not have brush models", id);
 		stackPushUndefined();
@@ -336,7 +336,7 @@ void gsc_entity_enablebounce(scr_entref_t ref)
 			customEntityState[id].gravityType = GRAVITY_BOUNCE;
 			customEntityState[id].parallelBounce = parallelBounce;
 			customEntityState[id].perpendicularBounce = perpendicularBounce;
-			(ent->s).eFlags |= EF_BOUNCE;
+			ent->s.eFlags |= EF_BOUNCE;
 
 			stackPushBool(qtrue);
 		}
@@ -362,7 +362,7 @@ void gsc_entity_disablebounce(scr_entref_t ref)
 		if ( customEntityState[id].gravityType )
 		{
 			customEntityState[id].gravityType = GRAVITY_NO_BOUNCE;
-			(ent->s).eFlags &= ~EF_BOUNCE;
+			ent->s.eFlags &= ~EF_BOUNCE;
 
 			stackPushBool(qtrue);
 		}
@@ -402,13 +402,13 @@ void gsc_entity_enablegravity(scr_entref_t ref)
 		customEntityState[id].collideModels = collideModels;
 		customEntityState[id].angledGravity = angledGravity;
 		customEntityState[id].maxVelocity = 8192.0;
-		ent->clipmask = 0x2812891;
+		ent->clipmask = MASK_SHOT | CONTENTS_PLAYERCLIP | CONTENTS_CANSHOTCLIP | CONTENTS_WATER;
 		ent->physicsObject = 1;
 		if ( customEntityState[id].angledGravity )
 		{
-			(ent->s).apos.trType = TR_LINEAR;
-			(ent->s).apos.trTime = level.time;
-			VecToAngles((ent->r).currentAngles, (ent->s).apos.trBase);
+			ent->s.apos.trType = TR_LINEAR;
+			ent->s.apos.trTime = level.time;
+			VecToAngles(ent->r.currentAngles, ent->s.apos.trBase);
 		}
 
 		stackPushBool(qtrue);
@@ -431,10 +431,10 @@ void gsc_entity_disablegravity(scr_entref_t ref)
 		{
 			customEntityState[id].gravityType = GRAVITY_NONE;
 			customEntityState[id].collideModels = qfalse;
-			(ent->s).eFlags &= ~EF_BOUNCE;
-			ent->clipmask = 0;
+			ent->s.eFlags &= ~EF_BOUNCE;
+			ent->clipmask = CONTENTS_NONE;
 			ent->physicsObject = 0;
-			(ent->s).groundEntityNum = ENTITY_NONE;
+			ent->s.groundEntityNum = ENTITY_NONE;
 			G_SetOrigin(ent, ent->r.currentOrigin);
 			G_SetAngle(ent, ent->r.currentAngles);
 
@@ -474,18 +474,18 @@ void gsc_entity_addentityvelocity(scr_entref_t ref)
 			vec3_t velocity;
 
 			Scr_GetVector(0, velocity);
-			(ent->s).pos.trType = TR_GRAVITY;
-			(ent->s).pos.trTime = level.time;
-			VectorCopy((ent->r).currentOrigin, (ent->s).pos.trBase);
-			VectorAdd(customEntityState[id].velocity, velocity, (ent->s).pos.trDelta);
+			ent->s.pos.trType = TR_GRAVITY;
+			ent->s.pos.trTime = level.time;
+			VectorCopy(ent->r.currentOrigin, ent->s.pos.trBase);
+			VectorAdd(customEntityState[id].velocity, velocity, ent->s.pos.trDelta);
 			if ( customEntityState[id].angledGravity )
 			{
-				(ent->s).apos.trType = TR_LINEAR;
-				(ent->s).apos.trTime = level.time;
-				VecToAngles((ent->r).currentAngles, (ent->s).apos.trBase);
+				ent->s.apos.trType = TR_LINEAR;
+				ent->s.apos.trTime = level.time;
+				VecToAngles(ent->r.currentAngles, ent->s.apos.trBase);
 			}
 			if ( !IsNullVector(velocity) )
-				(ent->s).groundEntityNum = ENTITY_NONE;
+				ent->s.groundEntityNum = ENTITY_NONE;
 
 			stackPushBool(qtrue);
 		}
@@ -513,18 +513,18 @@ void gsc_entity_setentityvelocity(scr_entref_t ref)
 			vec3_t velocity;
 
 			Scr_GetVector(0, velocity);
-			(ent->s).pos.trType = TR_GRAVITY;
-			(ent->s).pos.trTime = level.time;
-			VectorCopy((ent->r).currentOrigin, (ent->s).pos.trBase);
-			VectorCopy(velocity, (ent->s).pos.trDelta);
+			ent->s.pos.trType = TR_GRAVITY;
+			ent->s.pos.trTime = level.time;
+			VectorCopy(ent->r.currentOrigin, ent->s.pos.trBase);
+			VectorCopy(velocity, ent->s.pos.trDelta);
 			if ( customEntityState[id].angledGravity )
 			{
-				(ent->s).apos.trType = TR_LINEAR;
-				(ent->s).apos.trTime = level.time;
-				VecToAngles((ent->r).currentAngles, (ent->s).apos.trBase);
+				ent->s.apos.trType = TR_LINEAR;
+				ent->s.apos.trTime = level.time;
+				VecToAngles(ent->r.currentAngles, ent->s.apos.trBase);
 			}
 			if ( !IsNullVector(velocity) )
-				(ent->s).groundEntityNum = ENTITY_NONE;
+				ent->s.groundEntityNum = ENTITY_NONE;
 
 			stackPushBool(qtrue);
 		}
@@ -549,7 +549,7 @@ void gsc_entity_getentityvelocity(scr_entref_t ref)
 	{
 		if ( customEntityState[id].gravityType )
 		{
-			stackPushVector(customEntityState[id].velocity); // (ent->s).pos.trDelta returns only the added velocity
+			stackPushVector(customEntityState[id].velocity); // ent->s.pos.trDelta returns only the added velocity
 		}
 		else
 		{
@@ -641,7 +641,7 @@ void gsc_entity_getcontents(scr_entref_t ref)
 		return;
 	}
 
-	stackPushInt((ent->r).contents);
+	stackPushInt(ent->r.contents);
 }
 
 void gsc_entity_setlight(scr_entref_t ref)

@@ -1670,7 +1670,7 @@ void custom_G_AddPlayerMantleBlockage(float *endPos, int duration, pmove_t *pm)
 	ent->r.ownerNum = pm->ps->clientNum;
 	ent->r.contents = CONTENTS_PLAYERCLIP;
 	ent->clipmask = CONTENTS_PLAYERCLIP;
-	ent->r.svFlags = 33;
+	ent->r.svFlags = SVF_RADIUS | SVF_NOCLIENT;
 	ent->s.eType = ET_INVISIBLE;
 	ent->handler = ENT_HANDLER_PLAYER_BLOCK;
 	VectorCopy(owner->r.mins, ent->r.mins);
@@ -1784,26 +1784,26 @@ void custom_G_SetClientContents(gentity_t *ent)
 		{
 			if ( (ent->client->sess).sessionState == STATE_DEAD )
 			{
-				(ent->r).contents = 0;
+				ent->r.contents = 0;
 			}
 			else
 			{
-				(ent->r).contents = CONTENTS_BODY;
+				ent->r.contents = CONTENTS_BODY;
 
 				/* New code start: per-player/team collison */
 				if ( customPlayerState[id].overrideContents )
-					(ent->r).contents = customPlayerState[id].contents;
+					ent->r.contents = customPlayerState[id].contents;
 				/* New code end */
 			}
 		}
 		else
 		{
-			(ent->r).contents = 0;
+			ent->r.contents = 0;
 		}
 	}
 	else
 	{
-		(ent->r).contents = 0;
+		ent->r.contents = 0;
 	}
 }
 
@@ -6343,7 +6343,7 @@ LAB_0809b5f4:
 				{
 					gent = SV_GentityNum(k);
 					if ( gent->r.linked &&
-					(( gent->r.broadcastTime || ((( gent->r.svFlags & 1 ) == 0 && ((svEnt = SV_SvEntityForGentity(gent), ( gent->r.svFlags & 0x18 ) || svEnt->numClusters )))))))
+					(( gent->r.broadcastTime || ((( gent->r.svFlags & SVF_NOCLIENT ) == 0 && ((svEnt = SV_SvEntityForGentity(gent), ( gent->r.svFlags & ( SVF_OBJECTIVE | SVF_BROADCAST ) ) || svEnt->numClusters )))))))
 					{
 						nextCachedSnapEnts = svs.nextCachedSnapshotEntities;
 						if (svs.nextCachedSnapshotEntities < 0)
@@ -6352,7 +6352,7 @@ LAB_0809b5f4:
 						memcpy(archEnt, gent, 0xF0);
 						archEnt->r.svFlags = gent->r.svFlags;
 						if ( gent->r.broadcastTime )
-							archEnt->r.svFlags = archEnt->r.svFlags | 8;
+							archEnt->r.svFlags = archEnt->r.svFlags | SVF_BROADCAST;
 						archEnt->r.clientMask[0] = gent->r.clientMask[0];
 						archEnt->r.clientMask[1] = gent->r.clientMask[1];
 						VectorCopy(gent->r.absmin, archEnt->r.absmin);
@@ -6457,12 +6457,12 @@ LAB_0809b5f4:
 				{
 					gent = SV_GentityNum(k);
 					if ( gent->r.linked &&
-					( gent->r.broadcastTime != 0 || ( ( gent->r.svFlags & 1 ) == 0 && ( svEnt = SV_SvEntityForGentity(gent), ( gent->r.svFlags & 0x18 ) != 0 || svEnt->numClusters != 0 ) ) ) )
+					( gent->r.broadcastTime != 0 || ( ( gent->r.svFlags & SVF_NOCLIENT ) == 0 && ( svEnt = SV_SvEntityForGentity(gent), ( gent->r.svFlags & ( SVF_OBJECTIVE | SVF_BROADCAST ) ) != 0 || svEnt->numClusters != 0 ) ) ) )
 					{
 						memcpy(&to.s, &gent->s, sizeof(entityState_t));
 						to.r.svFlags = gent->r.svFlags;
 						if ( gent->r.broadcastTime )
-							to.r.svFlags |= 8u;
+							to.r.svFlags |= SVF_BROADCAST;
 						to.r.clientMask[0] = gent->r.clientMask[0];
 						to.r.clientMask[1] = gent->r.clientMask[1];
 						VectorCopy(gent->r.absmin, to.r.absmin);
@@ -7225,7 +7225,7 @@ void custom_Player_UpdateCursorHints(gentity_t *player)
 				for ( i = 0; i < useListSize; i++ )
 				{
 					ent = useList[i].ent;
-					temp = (ent->s).eType;
+					temp = ent->s.eType;
 					if ( temp == ET_ITEM )
 					{
 						/* New code start: Optional hintString toggle when item pickup is disabled */
@@ -8135,7 +8135,7 @@ void custom_GScr_Obituary(void)
 	}
 	ent->s.attackerEntityNum = ENTITY_WORLD;
 LAB_081131e1:
-	ent->r.svFlags = 8;
+	ent->r.svFlags = SVF_BROADCAST;
 	if ( sMeansOfDeath == MOD_MELEE || sMeansOfDeath == MOD_HEAD_SHOT || sMeansOfDeath == MOD_SUICIDE || sMeansOfDeath == MOD_FALLING || sMeansOfDeath == MOD_CRUSH )
 		ent->s.eventParm = sMeansOfDeath | 0x80;
 	else
@@ -8177,7 +8177,7 @@ void custom_GScr_SetHintString(scr_entref_t entref)
 		Scr_SetString(&ent->classname, scr_const.trigger_use_touch);
 		ent->trigger.singleUserEntIndex = ENTITY_NONE;
 		ent->r.contents = CONTENTS_DONOTENTER;
-		ent->r.svFlags = 1;
+		ent->r.svFlags = SVF_NOCLIENT;
 		ent->s.dmgFlags = 2;
 
 		// Set it to a 'converted' trigger to still emit 'trigger' notifies
@@ -8912,14 +8912,14 @@ gentity_t * custom_Bullet_Drop_Create_Visual(int clientNum, droppingBullet_t *bu
 	G_DObjUpdate(ent);
 
 	G_SetOrigin(ent, start);
-	VectorSubtract(end, (ent->r).currentOrigin, dir);
+	VectorSubtract(end, ent->r.currentOrigin, dir);
 	VecToAngles(dir, angles);
 	G_SetAngle(ent, angles);
 
-	(ent->s).pos.trType = TR_LINEAR;
-	(ent->s).pos.trDuration = 50;
-	(ent->s).pos.trTime = level.time - 50;
-	VectorCopy((ent->r).currentOrigin, (ent->s).pos.trBase);
+	ent->s.pos.trType = TR_LINEAR;
+	ent->s.pos.trDuration = 50;
+	ent->s.pos.trTime = level.time - 50;
+	VectorCopy(ent->r.currentOrigin, ent->s.pos.trBase);
 	VectorScale(dir, 20.0, ent->s.pos.trDelta);
 	SV_LinkEntity(ent);
 
@@ -8933,14 +8933,14 @@ void custom_Bullet_Drop_Update_Visual(droppingBullet_t *bullet, float *end)
 
 	ent->eventTime += 50;
 
-	VectorCopy(bullet->position, (ent->r).currentOrigin);
+	VectorCopy(bullet->position, ent->r.currentOrigin);
 	VecToAngles(bullet->direction, angles);
 	G_SetAngle(ent, angles);
 
-	(ent->s).pos.trType = TR_LINEAR;
-	(ent->s).pos.trDuration = 50;
-	(ent->s).pos.trTime = level.time - 50;
-	VectorCopy((ent->r).currentOrigin, (ent->s).pos.trBase);
+	ent->s.pos.trType = TR_LINEAR;
+	ent->s.pos.trDuration = 50;
+	ent->s.pos.trTime = level.time - 50;
+	VectorCopy(ent->r.currentOrigin, ent->s.pos.trBase);
 	VectorScale(bullet->direction, 20.0, ent->s.pos.trDelta);
 }
 
@@ -9069,7 +9069,7 @@ void custom_Fire_Lead(gentity_t *ent, gentity_t *activator)
 	}
 
 	Turret_FillWeaponParms(ent, attacker, &wp);
-	wp.weapDef = BG_GetWeaponDef((ent->s).weapon);
+	wp.weapDef = BG_GetWeaponDef(ent->s.weapon);
 	if ( (wp.weapDef)->weapType == WEAPTYPE_BULLET )
 		custom_Bullet_Fire(attacker, spread, &wp, ent, level.time);
 	else
@@ -9329,7 +9329,7 @@ void custom_G_InitGentity(gentity_t *ent)
 void custom_G_FreeEntity(gentity_t *ent)
 {
 	// Find out from where ent is freed:
-	//Com_Printf(">>> G_FreeEntity for entity %d from %p\n", (ent->s).number, __builtin_return_address(0));
+	//Com_Printf(">>> G_FreeEntity for entity %d from %p\n", ent->s.number, __builtin_return_address(0));
 
 	if ( !sv_autoAddSnapshotEntities->current.boolean )
 	{
@@ -9354,25 +9354,25 @@ qboolean G_BounceGravityModel(gentity_t *ent, trace_t *trace) // G_BounceMissile
 	vec3_t velocity;
 	float dot;
 
-	contents = SV_PointContents((ent->r).currentOrigin, -1, CONTENTS_WATER);
-	BG_EvaluateTrajectoryDelta(&(ent->s).pos, 50 + (int)((float)(level.time - level.previousTime) * trace->fraction) + level.previousTime, velocity);
+	contents = SV_PointContents(ent->r.currentOrigin, -1, CONTENTS_WATER);
+	BG_EvaluateTrajectoryDelta(&ent->s.pos, 50 + (int)((float)(level.time - level.previousTime) * trace->fraction) + level.previousTime, velocity);
 	dot = DotProduct(velocity, trace->normal);
-	VectorMA(velocity, dot * -2.0, trace->normal, (ent->s).pos.trDelta);
+	VectorMA(velocity, dot * -2.0, trace->normal, ent->s.pos.trDelta);
 	if ( 0.7 < trace->normal[2] )
 	{
-		(ent->s).groundEntityNum = trace->entityNum;
+		ent->s.groundEntityNum = trace->entityNum;
 	}
-	if ( ( (ent->s).eFlags & EF_BOUNCE ) != 0 )
+	if ( ( ent->s.eFlags & EF_BOUNCE ) != 0 )
 	{
 		length = VectorLength(velocity);
 		if ( 0.0 < length && ( dot <= 0.0 ) )
 		{
-			VectorScale((ent->s).pos.trDelta, ( customEntityState[(ent->s).number].perpendicularBounce - customEntityState[(ent->s).number].parallelBounce ) * ( dot / -length ) + customEntityState[(ent->s).number].parallelBounce, (ent->s).pos.trDelta);
-			if ( customEntityState[(ent->s).number].maxVelocity > 0.0 )
-				VectorClampLength((ent->s).pos.trDelta, customEntityState[(ent->s).number].maxVelocity);
+			VectorScale(ent->s.pos.trDelta, ( customEntityState[ent->s.number].perpendicularBounce - customEntityState[ent->s.number].parallelBounce ) * ( dot / -length ) + customEntityState[ent->s.number].parallelBounce, ent->s.pos.trDelta);
+			if ( customEntityState[ent->s.number].maxVelocity > 0.0 )
+				VectorClampLength(ent->s.pos.trDelta, customEntityState[ent->s.number].maxVelocity);
 		}
 
-		if ( 0.7 < trace->normal[2] && VectorLength((ent->s).pos.trDelta) < 20.0 )
+		if ( 0.7 < trace->normal[2] && VectorLength(ent->s.pos.trDelta) < 20.0 )
 		{
 			if ( Scr_IsSystemActive() )
 			{
@@ -9380,7 +9380,7 @@ qboolean G_BounceGravityModel(gentity_t *ent, trace_t *trace) // G_BounceMissile
 				Scr_AddString(Com_SurfaceTypeToName((int)( trace->surfaceFlags & 0x1F00000U ) >> 0x14));
 				Scr_Notify(ent, custom_scr_const.land, 2);
 			}
-			G_SetOrigin(ent, (ent->r).currentOrigin);
+			G_SetOrigin(ent, ent->r.currentOrigin);
 			G_MissileLandAngles(ent, trace, angle, 1);
 			G_SetAngle(ent, angle);
 			return qfalse;
@@ -9391,15 +9391,15 @@ qboolean G_BounceGravityModel(gentity_t *ent, trace_t *trace) // G_BounceMissile
 	{
 		planeNormal[2] = 0.0;
 	}
-	VectorAdd((ent->r).currentOrigin, planeNormal, (ent->r).currentOrigin);
-	VectorCopy((ent->r).currentOrigin, (ent->s).pos.trBase);
-	(ent->s).pos.trTime = level.time;
+	VectorAdd(ent->r.currentOrigin, planeNormal, ent->r.currentOrigin);
+	VectorCopy(ent->r.currentOrigin, ent->s.pos.trBase);
+	ent->s.pos.trTime = level.time;
 	G_MissileLandAngles(ent, trace, angle, 0);
-	VectorCopy(angle, (ent->s).apos.trBase);
-	(ent->s).apos.trTime = level.time;
+	VectorCopy(angle, ent->s.apos.trBase);
+	ent->s.apos.trTime = level.time;
 	if ( contents == 0 )
 	{
-		VectorSubtract((ent->s).pos.trDelta, velocity, velocity);
+		VectorSubtract(ent->s.pos.trDelta, velocity, velocity);
 		if ( 100.0 < VectorLength(velocity) )
 		{
 			bounce = 1;
@@ -9426,55 +9426,55 @@ void G_RunGravityModelWithBounce(gentity_t *ent) // G_RunMissile as base
 	vec3_t maxLerpVector;
 	qboolean bounce;
 
-	if ( ( (ent->s).pos.trType == TR_STATIONARY ) && ( (ent->s).groundEntityNum != ENTITY_WORLD ) )
+	if ( ( ent->s.pos.trType == TR_STATIONARY ) && ( ent->s.groundEntityNum != ENTITY_WORLD ) )
 	{
-		VectorCopy((ent->r).currentOrigin, origin);
+		VectorCopy(ent->r.currentOrigin, origin);
 		origin[2] = origin[2] - 1.5;
-		G_MissileTrace(&trace, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask);
+		G_MissileTrace(&trace, ent->r.currentOrigin, origin, ent->s.number, ent->clipmask);
 		if ( trace.fraction == 1.0 )
 		{
-			(ent->s).pos.trType = TR_GRAVITY;
-			(ent->s).pos.trTime = level.time;
-			(ent->s).pos.trDuration = 0;
-			VectorCopy((ent->r).currentOrigin, (ent->s).pos.trBase);
-			VectorClear((ent->s).pos.trDelta);
+			ent->s.pos.trType = TR_GRAVITY;
+			ent->s.pos.trTime = level.time;
+			ent->s.pos.trDuration = 0;
+			VectorCopy(ent->r.currentOrigin, ent->s.pos.trBase);
+			VectorClear(ent->s.pos.trDelta);
 		}
 	}
-	BG_EvaluateTrajectory(&(ent->s).pos, level.time + 50, origin);
+	BG_EvaluateTrajectory(&ent->s.pos, level.time + 50, origin);
 
-	if ( customEntityState[(ent->s).number].maxVelocity > 0.0 )
+	if ( customEntityState[ent->s.number].maxVelocity > 0.0 )
 	{
-		VectorSubtract(origin, (ent->r).currentOrigin, maxLerpVector);
-		VectorClampLength(maxLerpVector, customEntityState[(ent->s).number].maxVelocity / (float)sv_fps->current.integer);
-		VectorAdd((ent->r).currentOrigin, maxLerpVector, origin);
+		VectorSubtract(origin, ent->r.currentOrigin, maxLerpVector);
+		VectorClampLength(maxLerpVector, customEntityState[ent->s.number].maxVelocity / (float)sv_fps->current.integer);
+		VectorAdd(ent->r.currentOrigin, maxLerpVector, origin);
 	}
 
-	absDeltaZ = (ent->s).pos.trDelta[2];
+	absDeltaZ = ent->s.pos.trDelta[2];
 	if ( absDeltaZ < 0 )
 		absDeltaZ *= -1;
-	if ( ( absDeltaZ <= 30.0 ) || SV_PointContents((ent->r).currentOrigin, -1, CONTENTS_WATER) )
+	if ( ( absDeltaZ <= 30.0 ) || SV_PointContents(ent->r.currentOrigin, -1, CONTENTS_WATER) )
 	{
-		G_MissileTrace(&trace, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask);
+		G_MissileTrace(&trace, ent->r.currentOrigin, origin, ent->s.number, ent->clipmask);
 	}
 	else
 	{
-		G_MissileTrace(&trace, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask | CONTENTS_WATER);
+		G_MissileTrace(&trace, ent->r.currentOrigin, origin, ent->s.number, ent->clipmask | CONTENTS_WATER);
 	}
 	if ( ( trace.surfaceFlags & 0x1F00000 ) == SURF_WATER )
 	{
-		G_MissileTrace(&trace, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask);
+		G_MissileTrace(&trace, ent->r.currentOrigin, origin, ent->s.number, ent->clipmask);
 	}
 	if ( ( g_entities[trace.entityNum].flags & EF_TAGCONNECT ) != 0 )
 	{
 		Missile_TraceNoContents(&trace, trace.entityNum, ent, origin);
 	}
-	Vec3Lerp((ent->r).currentOrigin, origin, trace.fraction, lerpOrigin);
-	VectorCopy(lerpOrigin, (ent->r).currentOrigin);
-	if ( ( ( (ent->s).eFlags & EF_BOUNCE ) != 0 ) && ( trace.fraction == 1.0 || ( trace.fraction < 1.0 && ( 0.7 < trace.normal[2] ) ) ) )
+	Vec3Lerp(ent->r.currentOrigin, origin, trace.fraction, lerpOrigin);
+	VectorCopy(lerpOrigin, ent->r.currentOrigin);
+	if ( ( ( ent->s.eFlags & EF_BOUNCE ) != 0 ) && ( trace.fraction == 1.0 || ( trace.fraction < 1.0 && ( 0.7 < trace.normal[2] ) ) ) )
 	{
-		VectorCopy((ent->r).currentOrigin, origin);
+		VectorCopy(ent->r.currentOrigin, origin);
 		origin[2] = origin[2] - 1.5;
-		G_MissileTrace(&trace2, (ent->r).currentOrigin, origin, (ent->s).number, ent->clipmask);
+		G_MissileTrace(&trace2, ent->r.currentOrigin, origin, ent->s.number, ent->clipmask);
 		if ( ( trace2.fraction != 1.0 ) && ( trace2.entityNum == ENTITY_WORLD ) )
 		{
 			trace.fraction = trace2.fraction;
@@ -9489,10 +9489,10 @@ void G_RunGravityModelWithBounce(gentity_t *ent) // G_RunMissile as base
 			trace.partGroup = trace2.partGroup;
 			trace.allsolid = trace2.allsolid;
 			trace.startsolid = trace2.startsolid;
-			Vec3Lerp((ent->r).currentOrigin, origin, trace2.fraction, lerpOrigin);
-			(ent->s).pos.trBase[2] = (ent->s).pos.trBase[2] + ( ( lerpOrigin[2] + 1.5 ) - (ent->r).currentOrigin[2]);
-			VectorCopy(lerpOrigin, (ent->r).currentOrigin);
-			(ent->r).currentOrigin[2] = (ent->r).currentOrigin[2] + 1.5;
+			Vec3Lerp(ent->r.currentOrigin, origin, trace2.fraction, lerpOrigin);
+			ent->s.pos.trBase[2] = ent->s.pos.trBase[2] + ( ( lerpOrigin[2] + 1.5 ) - ent->r.currentOrigin[2]);
+			VectorCopy(lerpOrigin, ent->r.currentOrigin);
+			ent->r.currentOrigin[2] = ent->r.currentOrigin[2] + 1.5;
 		}
 	}
 	SV_LinkEntity(ent);
@@ -9516,70 +9516,70 @@ void G_RunGravityModelNoBounce(gentity_t *ent) // G_RunItem as base
 	vec3_t origin;
 	vec3_t maxLerpVector;
 
-	if ( ( ( ( (ent->s).groundEntityNum == ENTITY_NONE ) || ( level.gentities[(ent->s).groundEntityNum].s.pos.trType != TR_STATIONARY ) ) && ( (ent->s).pos.trType != TR_GRAVITY ) ) &&
+	if ( ( ( ( ent->s.groundEntityNum == ENTITY_NONE ) || ( level.gentities[ent->s.groundEntityNum].s.pos.trType != TR_STATIONARY ) ) && ( ent->s.pos.trType != TR_GRAVITY ) ) &&
 	( ( ( ent->spawnflags ^ 1) & 1 ) != 0 ) )
 	{
-		(ent->s).pos.trType = TR_GRAVITY;
-		(ent->s).pos.trTime = level.time;
-		VectorCopy((ent->r).currentOrigin, (ent->s).pos.trBase);
-		VectorClear((ent->s).pos.trDelta);
+		ent->s.pos.trType = TR_GRAVITY;
+		ent->s.pos.trTime = level.time;
+		VectorCopy(ent->r.currentOrigin, ent->s.pos.trBase);
+		VectorClear(ent->s.pos.trDelta);
 	}
-	if ( ( ( (ent->s).pos.trType == TR_STATIONARY ) || ( (ent->s).pos.trType == TR_GRAVITY_PAUSED ) ) || ( ent->tagInfo != NULL ) )
+	if ( ( ( ent->s.pos.trType == TR_STATIONARY ) || ( ent->s.pos.trType == TR_GRAVITY_PAUSED ) ) || ( ent->tagInfo != NULL ) )
 	{
 		// Removed G_RunThink(ent);
 	}
 	else 
 	{
-		BG_EvaluateTrajectory(&(ent->s).pos, level.time + 50, origin);
+		BG_EvaluateTrajectory(&ent->s.pos, level.time + 50, origin);
 
-		if ( customEntityState[(ent->s).number].maxVelocity > 0.0 )
+		if ( customEntityState[ent->s.number].maxVelocity > 0.0 )
 		{
-			VectorSubtract(origin, (ent->r).currentOrigin, maxLerpVector);
-			VectorClampLength(maxLerpVector, customEntityState[(ent->s).number].maxVelocity / (float)sv_fps->current.integer);
-			VectorAdd((ent->r).currentOrigin, maxLerpVector, origin);
+			VectorSubtract(origin, ent->r.currentOrigin, maxLerpVector);
+			VectorClampLength(maxLerpVector, customEntityState[ent->s.number].maxVelocity / (float)sv_fps->current.integer);
+			VectorAdd(ent->r.currentOrigin, maxLerpVector, origin);
 		}
 
-		if ( Vec3DistanceSq((ent->r).currentOrigin, origin) < 0.1 )
+		if ( Vec3DistanceSq(ent->r.currentOrigin, origin) < 0.1 )
 		{
 			origin[2] = origin[2] - 1.0;
 		}
 
-		if ( customEntityState[(ent->s).number].collideModels )
-			SV_Trace(&trace, (ent->r).currentOrigin, (ent->r).mins, (ent->r).maxs, origin, (ent->s).number, ent->clipmask, 1, NULL, 1);
+		if ( customEntityState[ent->s.number].collideModels )
+			SV_Trace(&trace, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, ent->s.number, ent->clipmask, 1, NULL, 1);
 		else
-			SV_Trace(&trace, (ent->r).currentOrigin, (ent->r).mins, (ent->r).maxs, origin, (ent->s).number, ent->clipmask, 0, NULL, 1);
+			SV_Trace(&trace, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, ent->s.number, ent->clipmask, 0, NULL, 1);
 
 		if ( trace.fraction < 1.0 )
 		{
-			Vec3Lerp((ent->r).currentOrigin, origin, trace.fraction, lerpOrigin);
+			Vec3Lerp(ent->r.currentOrigin, origin, trace.fraction, lerpOrigin);
 			if ( ( trace.startsolid == 0 && ( trace.fraction < 0.01 ) ) && ( trace.normal[2] < 0.5 ) )
 			{
-				VectorSubtract(origin, (ent->r).currentOrigin, subOrigin);
+				VectorSubtract(origin, ent->r.currentOrigin, subOrigin);
 				VectorMA(origin, 1 - DotProduct(subOrigin, trace.normal), trace.normal, origin);
-				if ( customEntityState[(ent->s).number].collideModels )
-					SV_Trace(&trace, (ent->r).currentOrigin, (ent->r).mins, (ent->r).maxs, origin, (ent->s).number, ent->clipmask, 1, NULL, 1);
+				if ( customEntityState[ent->s.number].collideModels )
+					SV_Trace(&trace, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, ent->s.number, ent->clipmask, 1, NULL, 1);
 				else
-					SV_Trace(&trace, (ent->r).currentOrigin, (ent->r).mins, (ent->r).maxs, origin, (ent->s).number, ent->clipmask, 0, NULL, 1);
+					SV_Trace(&trace, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, ent->s.number, ent->clipmask, 0, NULL, 1);
 				Vec3Lerp(lerpOrigin, origin, trace.fraction, lerpOrigin);
 			}
-			(ent->s).pos.trType = TR_LINEAR_STOP;
-			(ent->s).pos.trTime = level.time;
-			(ent->s).pos.trDuration = 50;
-			VectorCopy((ent->r).currentOrigin, (ent->s).pos.trBase);
-			VectorSubtract(lerpOrigin, (ent->r).currentOrigin, (ent->s).pos.trDelta);
-			VectorScale((ent->s).pos.trDelta, 20.0, (ent->s).pos.trDelta);
-			VectorCopy(lerpOrigin, (ent->r).currentOrigin);
+			ent->s.pos.trType = TR_LINEAR_STOP;
+			ent->s.pos.trTime = level.time;
+			ent->s.pos.trDuration = 50;
+			VectorCopy(ent->r.currentOrigin, ent->s.pos.trBase);
+			VectorSubtract(lerpOrigin, ent->r.currentOrigin, ent->s.pos.trDelta);
+			VectorScale(ent->s.pos.trDelta, 20.0, ent->s.pos.trDelta);
+			VectorCopy(lerpOrigin, ent->r.currentOrigin);
 		}
 		else
 		{
-			VectorCopy(origin, (ent->r).currentOrigin);
+			VectorCopy(origin, ent->r.currentOrigin);
 		}
 		SV_LinkEntity(ent);
-		if ( (ent->r).inuse != 0 && ( trace.fraction < 0.01 ) )
+		if ( ent->r.inuse != 0 && ( trace.fraction < 0.01 ) )
 		{
 			if ( trace.normal[2] > 0.0 )
 			{
-				if ( customEntityState[(ent->s).number].angledGravity )
+				if ( customEntityState[ent->s.number].angledGravity )
 				{
 					vec3_t angles;
 					vec3_t v1;
@@ -9587,20 +9587,20 @@ void G_RunGravityModelNoBounce(gentity_t *ent) // G_RunItem as base
 					vec3_t v3;
 					
 					VectorCopy(trace.normal, v3);
-					AngleVectors(&(ent->r).currentAngles, &v1, 0, 0);
+					AngleVectors(&ent->r.currentAngles, &v1, 0, 0);
 					VectorCross(v3, v1, v2);
 					VectorCross(v2, v3, v1);
 					AxisToAngles(v1, angles);
 					G_SetAngle(ent, angles);
 				}
 				G_SetOrigin(ent, lerpOrigin);
-				if ( (ent->s).groundEntityNum != trace.entityNum && Scr_IsSystemActive() )
+				if ( ent->s.groundEntityNum != trace.entityNum && Scr_IsSystemActive() )
 				{
 					Scr_AddEntity(&g_entities[trace.entityNum]);
 					Scr_AddString(Com_SurfaceTypeToName((int)( trace.surfaceFlags & 0x1F00000U ) >> 0x14));
 					Scr_Notify(ent, custom_scr_const.land, 2);
 				}
-				(ent->s).groundEntityNum = trace.entityNum;
+				ent->s.groundEntityNum = trace.entityNum;
 				SV_LinkEntity(ent);
 			}
 		}

@@ -1561,7 +1561,6 @@ void gsc_player_isonladder(scr_entref_t ref)
 	stackPushBool(ps->pm_flags & PMF_LADDER ? qtrue : qfalse);
 }
 
-
 void gsc_player_isusingturret(scr_entref_t ref)
 {
 	int id = ref.entnum;

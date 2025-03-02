@@ -132,8 +132,14 @@
 #define FL_MISSILE_UNKNOWN      0x10000
 #define FL_STABLE_MISSILE       0x20000
 
-#define SVF_NOCLIENT    0x1
-#define SVF_BROADCAST   0x8
+// entity->svFlags
+#define	SVF_NOCLIENT  0x00000001 // Don't send entity to clients, even if it has effects
+#define	SVF_BODY      0x00000002 // Player or corpse
+#define	SVF_DOBJ      0x00000004 // Dobj model, can be player model, script model, item.
+#define	SVF_BROADCAST 0x00000008 // Send to all connected clients
+#define	SVF_OBJECTIVE 0x00000010 // Added to snapshots, even if not nearby or behind fog
+#define SVF_RADIUS    0x00000020 // For trigger_radius and few other things
+#define SVF_DISK      0x00000040 // For trigger_disk and few other things
 
 #define KEY_MASK_NONE       0
 #define KEY_MASK_FORWARD    127

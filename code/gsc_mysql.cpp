@@ -263,7 +263,7 @@ void gsc_mysql_async_initializer() // returns array with mysql connection handle
 
 	stackPushArray();
 	mysql_async_connection *current = first_async_connection;
-	for( i = 0; i < connection_count; i++ )
+	for ( i = 0; i < connection_count; i++ )
 	{
 		mysql_async_connection *newconnection = new mysql_async_connection;
 		newconnection->next = NULL;
@@ -361,7 +361,7 @@ void gsc_mysql_query()
 	int mysql;
 	char *query;
 
-	if ( ! stackGetParams("is", &mysql, &query) )
+	if ( !stackGetParams("is", &mysql, &query) )
 	{
 		stackError("gsc_mysql_query() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
