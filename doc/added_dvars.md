@@ -99,6 +99,10 @@ Added dvars:
     * Type: Boolean
     * Default: False
     * Effect: If true, exceeding the limits of `LoadFx` or `PrecacheModel` will generate console log warnings instead of stopping the server. Excess effects will be replaced by (= displayed as) `fx/misc/missing_fx.efx` and excess models as `xmodel/default_static_model`. These default assets are loaded automatically (and therefore occupy one config string each) if the dvar is set to true. Map models are loaded first, but can be limited via the `g_reservedModels` dvar.
+  * `g_sendEmtpyOffhandEvents`
+    * Type: Boolean
+    * Default: True
+    * Effect: If disabled, players can no longer suppress other player events (e.g., firing or footstep sounds) by holding a grenade button.
   * `g_spawnMapTurrets`
     * Type: Boolean
     * Default: True

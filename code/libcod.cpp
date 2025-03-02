@@ -111,6 +111,7 @@ dvar_t *g_playerEject;
 dvar_t *g_reservedModels;
 dvar_t *g_resetSlide;
 dvar_t *g_safePrecache;
+dvar_t *g_sendEmtpyOffhandEvents;
 dvar_t *g_spawnMapTurrets;
 dvar_t *g_spawnMapWeapons;
 dvar_t *g_spectateBots;
@@ -461,6 +462,7 @@ void common_init_complete_print(const char *format, ...)
 	g_playerCollisionEjectDuration = Dvar_RegisterInt("g_playerCollisionEjectDuration", 300, 50, 1000, DVAR_ARCHIVE);
 	g_playerEject = Dvar_RegisterBool("g_playerEject", qtrue, DVAR_ARCHIVE);
 	g_resetSlide = Dvar_RegisterBool("g_resetSlide", qfalse, DVAR_ARCHIVE);
+	g_sendEmtpyOffhandEvents = Dvar_RegisterBool("g_sendEmtpyOffhandEvents", qtrue, DVAR_ARCHIVE);
 	g_spawnMapTurrets = Dvar_RegisterBool("g_spawnMapTurrets", qtrue, DVAR_ARCHIVE);
 	g_spawnMapWeapons = Dvar_RegisterBool("g_spawnMapWeapons", qtrue, DVAR_ARCHIVE);
 	g_triggerMode = Dvar_RegisterInt("g_triggerMode", 1, 0, 2, DVAR_ARCHIVE);
@@ -10965,6 +10967,16 @@ void custom_Scr_SetOrigin(gentity_t *ent)
 	/* New code end */
 }
 
+void custom_PM_SendEmtpyOffhandEvent(playerState_t *ps)
+{
+	/* New code start: g_sendEmtpyOffhandEvents dvar */
+	if ( !g_sendEmtpyOffhandEvents->current.boolean )
+		return;
+	/* New code end */
+
+	PM_AddEvent(ps, EV_EMPTY_OFFHAND);
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -11181,6 +11193,7 @@ public:
 		cracking_hook_function(0x08098B4C, (int)custom_SV_AddEntToSnapshot);
 		cracking_hook_function(0x0809ADEA, (int)custom_SV_SendClientSnapshot);
 		cracking_hook_function(0x08117E62, (int)custom_Scr_SetOrigin);
+		cracking_hook_function(0x080EFCC6, (int)custom_PM_SendEmtpyOffhandEvent);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC8CA, (int)Jump_ReduceFriction);
