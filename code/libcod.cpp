@@ -1,4 +1,5 @@
 #include "gsc.hpp"
+#include "gsc_entity.hpp"
 #include "libcod.hpp"
 #include "proxy/proxy.h"
 #include "ratelimiter.hpp"
@@ -165,6 +166,7 @@ cHook *hook_Com_InitDvars;
 cHook *hook_Com_DPrintf;
 cHook *hook_fire_grenade;
 cHook *hook_FS_RegisterDvars;
+cHook *hook_G_EntLinkToInternal;
 cHook *hook_G_FreeEntity;
 cHook *hook_G_InitGentity;
 cHook *hook_G_ProcessIPBans;
@@ -180,7 +182,11 @@ cHook *hook_Scr_DumpScriptThreads;
 cHook *hook_Scr_ExecEntThread;
 cHook *hook_Scr_ExecThread;
 cHook *hook_Scr_InitOpcodeLookup;
+cHook *hook_Scr_MoveGravity;
 cHook *hook_Scr_Notify;
+cHook *hook_ScriptMover_Move;
+cHook *hook_ScriptMover_Rotate;
+cHook *hook_ScriptMover_RotateSpeed;
 cHook *hook_SV_ClientThink;
 cHook *hook_SV_MasterHeartbeat;
 cHook *hook_SV_VerifyIwds_f;
@@ -10852,6 +10858,99 @@ char * hook_strcpy_in_SV_ConTell_f(char *dst, const char *src)
 	return strcpy(dst, consolePrefix);
 }
 
+void custom_Scr_MoveGravity(gentity_t *ent, float *velocity, float time)
+{
+	/* New code start: Disable custom gravity */
+	int id = ent - g_entities;
+
+	if ( customEntityState[id].gravityType )
+		Scr_DisableGravity(ent);
+	/* New code end */
+
+	hook_Scr_MoveGravity->unhook();
+	Scr_MoveGravity(ent, velocity, time);
+	hook_Scr_MoveGravity->hook();
+}
+
+void custom_ScriptMover_Move(gentity_t *pEnt, float *vPos, float fTotalTime, float fAccelTime, float fDecelTime)
+{
+	/* New code start: Disable custom gravity */
+	int id = pEnt - g_entities;
+
+	if ( customEntityState[id].gravityType )
+		Scr_DisableGravity(pEnt);
+	/* New code end */
+
+	hook_ScriptMover_Move->unhook();
+	ScriptMover_Move(pEnt, vPos, fTotalTime, fAccelTime, fDecelTime);
+	hook_ScriptMover_Move->hook();
+}
+
+void custom_ScriptMover_Rotate(gentity_t *pEnt, float *vRot, float fTotalTime, float fAccelTime, float fDecelTime)
+{
+	/* New code start: Disable custom gravity */
+	int id = pEnt - g_entities;
+
+	if ( customEntityState[id].gravityType )
+		Scr_DisableGravity(pEnt);
+	/* New code end */
+
+	hook_ScriptMover_Rotate->unhook();
+	ScriptMover_Rotate(pEnt, vRot, fTotalTime, fAccelTime, fDecelTime);
+	hook_ScriptMover_Rotate->hook();
+}
+
+void custom_ScriptMover_RotateSpeed(gentity_t *pEnt, float *vRotSpeed, float fTotalTime, float fAccelTime, float fDecelTime)
+{
+	/* New code start: Disable custom gravity */
+	int id = pEnt - g_entities;
+
+	if ( customEntityState[id].gravityType )
+		Scr_DisableGravity(pEnt);
+	/* New code end */
+
+	hook_ScriptMover_RotateSpeed->unhook();
+	ScriptMover_RotateSpeed(pEnt, vRotSpeed, fTotalTime, fAccelTime, fDecelTime);
+	hook_ScriptMover_RotateSpeed->hook();
+}
+
+qboolean custom_G_EntLinkToInternal(gentity_t *ent, gentity_t *parent, unsigned int tagId)
+{
+	/* New code start: Disable custom gravity */
+	int id = ent - g_entities;
+
+	if ( customEntityState[id].gravityType )
+		Scr_DisableGravity(ent);
+	/* New code end */
+
+	qboolean ret;
+
+	hook_G_EntLinkToInternal->unhook();
+	ret = G_EntLinkToInternal(ent, parent, tagId);
+	hook_G_EntLinkToInternal->hook();
+
+	return ret;
+}
+
+void custom_Scr_SetOrigin(gentity_t *ent)
+{
+	vec3_t origin;
+
+	Scr_GetVector(0, origin);
+	G_SetOrigin(ent, origin);
+	if ( ent->r.linked )
+	{
+		SV_LinkEntity(ent);
+	}
+
+	/* New code start: Update custom gravity */
+	int id = ent - g_entities;
+
+	if ( customEntityState[id].gravityType )
+		ent->s.groundEntityNum = ENTITY_NONE;
+	/* New code end */
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -10954,6 +11053,16 @@ public:
 		hook_G_TryPushingEntity->hook();
 		hook_Netchan_Transmit = new cHook(0x0806BC6C, (int)custom_Netchan_Transmit);
 		hook_Netchan_Transmit->hook();
+		hook_Scr_MoveGravity = new cHook(0x0811943A, (int)custom_Scr_MoveGravity);
+		hook_Scr_MoveGravity->hook();
+		hook_ScriptMover_Move = new cHook(0x081193A8, (int)custom_ScriptMover_Move);
+		hook_ScriptMover_Move->hook();
+		hook_ScriptMover_Rotate = new cHook(0x08119572, (int)custom_ScriptMover_Rotate);
+		hook_ScriptMover_Rotate->hook();
+		hook_ScriptMover_RotateSpeed = new cHook(0x081194E0, (int)custom_ScriptMover_RotateSpeed);
+		hook_ScriptMover_RotateSpeed->hook();
+		hook_G_EntLinkToInternal = new cHook(0x0811DBB0, (int)custom_G_EntLinkToInternal);
+		hook_G_EntLinkToInternal->hook();
 		#if COMPILE_PLAYER == 1
 		hook_SV_ClientThink = new cHook(0x08090DAC, (int)custom_SV_ClientThink);
 		hook_SV_ClientThink->hook();
@@ -11057,6 +11166,7 @@ public:
 		cracking_hook_function(0x08098B72, (int)custom_SV_AddArchivedEntToSnapshot);
 		cracking_hook_function(0x08098B4C, (int)custom_SV_AddEntToSnapshot);
 		cracking_hook_function(0x0809ADEA, (int)custom_SV_SendClientSnapshot);
+		cracking_hook_function(0x08117E62, (int)custom_Scr_SetOrigin);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC8CA, (int)Jump_ReduceFriction);

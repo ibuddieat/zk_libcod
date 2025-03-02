@@ -420,6 +420,20 @@ void gsc_entity_enablegravity(scr_entref_t ref)
 	}
 }
 
+void Scr_DisableGravity(gentity_t *ent)
+{
+	int id = ent - g_entities;
+
+	customEntityState[id].gravityType = GRAVITY_NONE;
+	customEntityState[id].collideModels = qfalse;
+	ent->s.eFlags &= ~EF_BOUNCE;
+	ent->clipmask = CONTENTS_NONE;
+	ent->physicsObject = 0;
+	ent->s.groundEntityNum = ENTITY_NONE;
+	G_SetOrigin(ent, ent->r.currentOrigin);
+	G_SetAngle(ent, ent->r.currentAngles);
+}
+
 void gsc_entity_disablegravity(scr_entref_t ref)
 {
 	int id = ref.entnum;
@@ -429,14 +443,7 @@ void gsc_entity_disablegravity(scr_entref_t ref)
 	{
 		if ( customEntityState[id].gravityType )
 		{
-			customEntityState[id].gravityType = GRAVITY_NONE;
-			customEntityState[id].collideModels = qfalse;
-			ent->s.eFlags &= ~EF_BOUNCE;
-			ent->clipmask = CONTENTS_NONE;
-			ent->physicsObject = 0;
-			ent->s.groundEntityNum = ENTITY_NONE;
-			G_SetOrigin(ent, ent->r.currentOrigin);
-			G_SetAngle(ent, ent->r.currentAngles);
+			Scr_DisableGravity(ent);
 
 			stackPushBool(qtrue);
 		}

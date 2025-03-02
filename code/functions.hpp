@@ -774,6 +774,18 @@ static const Scr_GetPrevSourcePos_t Scr_GetPrevSourcePos = (Scr_GetPrevSourcePos
 typedef void (*Scr_PrintSourcePos_t)(conChannel_t channel, const char *filename, const char *buf, unsigned int sourcePos);
 static const Scr_PrintSourcePos_t Scr_PrintSourcePos = (Scr_PrintSourcePos_t)0x080781D6;
 
+typedef void (*Scr_MoveGravity_t)(gentity_t *ent, float *velocity, float time);
+static const Scr_MoveGravity_t Scr_MoveGravity = (Scr_MoveGravity_t)0x0811943A;
+
+typedef void (*ScriptMover_Move_t)(gentity_t *pEnt, float *vPos, float fTotalTime, float fAccelTime, float fDecelTime);
+static const ScriptMover_Move_t ScriptMover_Move = (ScriptMover_Move_t)0x081193A8;
+
+typedef void (*ScriptMover_Rotate_t)(gentity_t *pEnt, float *vRot, float fTotalTime, float fAccelTime, float fDecelTime);
+static const ScriptMover_Rotate_t ScriptMover_Rotate = (ScriptMover_Rotate_t)0x08119572;
+
+typedef void (*ScriptMover_RotateSpeed_t)(gentity_t *pEnt, float *vRotSpeed, float fTotalTime, float fAccelTime, float fDecelTime); 
+static const ScriptMover_RotateSpeed_t ScriptMover_RotateSpeed = (ScriptMover_RotateSpeed_t)0x081194E0;
+
 typedef int (*DirToByte_t)(vec3_t dir);
 static const DirToByte_t DirToByte = (DirToByte_t)0x080A3F8E;
 
@@ -815,6 +827,9 @@ static const G_SetModel_t G_SetModel = (G_SetModel_t)0x0811D87A;
 
 typedef char (*G_EntLinkToWithOffset_t)(gentity_t *ent, gentity_t *parent, unsigned int tagId, float *originOffset, float *anglesOffset);
 static const G_EntLinkToWithOffset_t G_EntLinkToWithOffset = (G_EntLinkToWithOffset_t)0x0811DD4A;
+
+typedef qboolean (*G_EntLinkToInternal_t)(gentity_t *ent, gentity_t *parent, unsigned int tagId);
+static const G_EntLinkToInternal_t G_EntLinkToInternal = (G_EntLinkToInternal_t)0x0811DBB0;
 
 typedef void (*G_EntUnlink_t)(gentity_t *ent);
 static const G_EntUnlink_t G_EntUnlink = (G_EntUnlink_t)0x0811DDB8;

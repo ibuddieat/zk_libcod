@@ -27,8 +27,20 @@ Module: Entity<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Enables gravity similar to <a href="../../stock/motion/movegravity.htm">movegravity</a>, but continuously and with collision. The initial maximum entity velocity is 8192 units per second (see <a href="../entity/setmaxentityvelocity.htm">setMaxEntityVelocity</a>). A script notify with string 'land' is emit for the entity when landing, with the surface type as first and the ground entity as second parameter. Returns true on success or undefined if the entity is not a script_model.</p>
-
+<p>Enables gravity similar to <a href="../../stock/motion/movegravity.htm">movegravity</a>, but continuously and with collision. The initial maximum entity velocity is 8192 units per second (see <a href="../entity/setmaxentityvelocity.htm">setMaxEntityVelocity</a>). A script notify with string 'land' is emit for the entity when landing, with the surface type as first and the ground entity as second parameter. Returns true on success or undefined if the entity is not a script_model. The following script methods will disable gravity (see <a href="../entity/disablegravity.htm">disableGravity</a>) automatically if called on the entity:</p>
+<UL>
+<LI><a href="../../stock/entity/linkto.htm">LinkTo</a> (unless used as parent)</LI>
+<LI><a href="../../stock/motion/movegravity.htm">MoveGravity</a></LI>
+<LI><a href="../../stock/motion/moveto.htm">MoveTo</a></LI>
+<LI><a href="../../stock/motion/movex.htm">MoveX</a></LI>
+<LI><a href="../../stock/motion/movey.htm">MoveY</a></LI>
+<LI><a href="../../stock/motion/movez.htm">MoveZ</a></LI>
+<LI><a href="../../stock/motion/rotatepitch.htm">RotatePitch</a></LI>
+<LI><a href="../../stock/motion/rotateroll.htm">RotateRoll</a></LI>
+<LI><a href="../../stock/motion/rotateto.htm">RotateTo</a></LI>
+<LI><a href="../../stock/motion/rotatevelocity.htm">RotateVelocity</a></LI>
+<LI><a href="../../stock/motion/rotateyaw.htm">RotateYaw</a></LI>
+</UL>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
