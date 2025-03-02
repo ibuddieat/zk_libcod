@@ -576,6 +576,9 @@ static const SV_Netchan_TransmitNextFragment_t SV_Netchan_TransmitNextFragment =
 typedef void (*Netchan_Setup_t)(netsrc_t src, netchan_t *chan, netadr_t adr, unsigned int qport);
 static const Netchan_Setup_t Netchan_Setup = (Netchan_Setup_t)0x0806B9D0;
 
+typedef qboolean (*Netchan_Transmit_t)(netchan_t *chan, int length, byte *data);
+static const Netchan_Transmit_t Netchan_Transmit = (Netchan_Transmit_t)0x0806BC6C;
+
 typedef qboolean (*Netchan_Process_t)(netchan_t *chan, msg_t *msg);
 static const Netchan_Process_t Netchan_Process = (Netchan_Process_t)0x0806BE8A;
 
@@ -1241,6 +1244,9 @@ static const G_Damage_t G_Damage = (G_Damage_t)0x08101C58;
 
 typedef float (*G_GetWeaponHitLocationMultiplier_t)(int hitLoc, int weapon);
 static const G_GetWeaponHitLocationMultiplier_t G_GetWeaponHitLocationMultiplier = (G_GetWeaponHitLocationMultiplier_t)0x08101AE2;
+
+typedef void (*G_RunFrame_t)(int levelTime);
+static const G_RunFrame_t G_RunFrame = (G_RunFrame_t)0x0810A13A;
 
 typedef void (*G_RunThink_t)(gentity_t *ent);
 static const G_RunThink_t G_RunThink = (G_RunThink_t)0x08109E60;

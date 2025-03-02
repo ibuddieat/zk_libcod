@@ -2456,7 +2456,7 @@ void custom_G_AddEvent(gentity_t *ent, int event, int eventParm)
 
 gentity_t * custom_G_TempEntity(float *origin, int event)
 {
-	gentity_t* tempEntity;
+	gentity_t *tempEntity;
 
 	if ( g_debugEvents->current.boolean )
 		Com_DPrintf("G_TempEntity() event %26s at (%f,%f,%f)\n", *(&entity_event_names + event), origin[0], origin[1], origin[2]);
@@ -3360,8 +3360,6 @@ qboolean custom_Netchan_Transmit(netchan_t *chan, int length, byte *data)
 	/* New code end */
 
 	hook_Netchan_Transmit->unhook();
-	qboolean (*Netchan_Transmit)(netchan_t *chan, int length, byte *data);
-	*(int *)&Netchan_Transmit = hook_Netchan_Transmit->from;
 	ret = Netchan_Transmit(chan, length, data);
 	hook_Netchan_Transmit->hook();
 
@@ -6055,10 +6053,6 @@ void custom_G_RunFrame(int levelTime)
 {
 	int i, j;
 	client_t *client = svs.clients;
-	
-	hook_G_RunFrame->unhook();
-	void (*G_RunFrame)(int levelTime);
-	*(int *)&G_RunFrame = hook_G_RunFrame->from;
 
 	// Warn about server lag
 	if ( codecallback_hitchwarning && hitchFrameTime && Scr_IsSystemActive() )
@@ -6230,6 +6224,7 @@ void custom_G_RunFrame(int levelTime)
 		}
 	}
 
+	hook_G_RunFrame->unhook();
 	G_RunFrame(levelTime);
 	hook_G_RunFrame->hook();
 }
@@ -10909,12 +10904,10 @@ public:
 		hook_Sys_Print = new cHook(0x080D4AE0, int(custom_Sys_Print));
 		hook_Sys_Print->hook();
 		#endif
-
 		hook_Scr_InitOpcodeLookup = new cHook(0x080771DC, (int)custom_Scr_InitOpcodeLookup);
 		hook_Scr_InitOpcodeLookup->hook();
 		hook_AddOpcodePos = new cHook(0x080773D2, (int)custom_AddOpcodePos);
 		hook_AddOpcodePos->hook();
-
 		hook_fire_grenade = new cHook(0x0810E68E, (int)custom_fire_grenade);
 		hook_fire_grenade->hook();
 		hook_G_TempEntity = new cHook(0x0811EFC4, (int)custom_G_TempEntity);
@@ -10961,7 +10954,6 @@ public:
 		hook_G_TryPushingEntity->hook();
 		hook_Netchan_Transmit = new cHook(0x0806BC6C, (int)custom_Netchan_Transmit);
 		hook_Netchan_Transmit->hook();
-
 		#if COMPILE_PLAYER == 1
 		hook_SV_ClientThink = new cHook(0x08090DAC, (int)custom_SV_ClientThink);
 		hook_SV_ClientThink->hook();
@@ -10970,7 +10962,6 @@ public:
 		hook_BG_PlayAnim = new cHook(0x080D90D6, (int)custom_BG_PlayAnim);
 		hook_BG_PlayAnim->hook();
 		#endif
-
 		
 		cracking_hook_function(0x08105FFA, (int)custom_GetFreeCueSpot);
 		cracking_hook_function(0x08105CAC, (int)custom_Touch_Item);
