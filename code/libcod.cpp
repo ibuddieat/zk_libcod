@@ -216,6 +216,7 @@ int codecallback_notify = 0;
 int codecallback_notifydebug = 0;
 int codecallback_pickup = 0;
 int codecallback_playercommand = 0;
+int codecallback_playerevent = 0;
 int codecallback_remotecommand = 0;
 int codecallback_suicide = 0;
 int codecallback_userinfochanged = 0;
@@ -258,6 +259,7 @@ callback_t callbacks[] =
 	{ &codecallback_notifydebug, "CodeCallback_NotifyDebug"},
 	{ &codecallback_pickup, "CodeCallback_Pickup"},
 	{ &codecallback_playercommand, "CodeCallback_PlayerCommand"},
+	{ &codecallback_playerevent, "CodeCallback_PlayerEvent"},
 	{ &codecallback_remotecommand, "CodeCallback_RemoteCommand"},
 	{ &codecallback_suicide, "CodeCallback_Suicide"},
 	{ &codecallback_userinfochanged, "CodeCallback_UserInfoChanged"},
@@ -2426,6 +2428,18 @@ void custom_BG_AddPredictableEventToPlayerstate(int event, int eventParm, player
 		ps->eventParms[ps->eventSequence & ( MAX_EVENTS - 1 )] = eventParm & 0xff;
 		ps->eventSequence++;
 	}
+
+	/* New code start: CodeCallback_PlayerEvent */
+	if ( codecallback_playerevent && Scr_IsSystemActive() )
+	{
+		gentity_t *ent = &g_entities[ps->clientNum];
+	
+		stackPushInt(eventParm);
+		stackPushInt(event);
+		short ret = Scr_ExecEntThread(ent, codecallback_playerevent, 2);
+		Scr_FreeThread(ret);
+	}
+	/* New code end */
 }
 
 void custom_G_AddEvent(gentity_t *ent, int event, int eventParm)
