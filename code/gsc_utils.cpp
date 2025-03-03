@@ -106,7 +106,7 @@ int stackPrintParam(int param)
 	{
 	case STACK_STRING:
 		char *str;
-		stackGetParamString(param, &str); // no error checking, since we know it's a string
+		stackGetParamString(param, &str); // No error checking, since we know it's a string
 		if ( con_coloredPrints->current.boolean )
 			Sys_AnsiColorPrint(str);
 		else
@@ -122,7 +122,7 @@ int stackPrintParam(int param)
 	case STACK_FLOAT:
 		float tmp_float;
 		stackGetParamFloat(param, &tmp_float);
-		printf("%.3f", tmp_float); // need a way to define precision
+		printf("%.3f", tmp_float); // Need a way to define precision
 		return 1;
 
 	case STACK_INT:
@@ -1611,6 +1611,23 @@ void gsc_utils_gettype()
 	}
 
 	stackPushString(stackGetParamTypeAsString(0));
+}
+
+void gsc_utils_getdvarflags()
+{
+	const char *dvarName;
+	dvar_t *dvar;
+
+	dvarName = Scr_GetString(0);
+	dvar = Dvar_FindVar(dvarName);
+	if ( !dvar )
+	{
+		stackError("gsc_utils_getdvarflags() dvar '%s' does not exist", dvarName);
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushInt(dvar->flags);
 }
 
 void gsc_utils_error()

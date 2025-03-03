@@ -219,6 +219,7 @@ scr_function_t scriptFunctions[] =
 	{"bulletHitEffect", gsc_utils_bullethiteffect, 0},
 	{"getSurfaceName", gsc_utils_getsurfacename, 0},
 	{"getType", gsc_utils_gettype, 0},
+	{"getCvarFlags", gsc_utils_getdvarflags, 0},
 
 	{"error", gsc_utils_error, 0},
 	#endif

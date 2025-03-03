@@ -122,6 +122,7 @@ New script code functions:
   * `getWeaponFuseTime(<weapon name>)`
   * `setWeaponFuseTime(<weapon name>, <time in ms>)`
   * `fromHex(<hex string>)`
+  * `getCvarFlags(<dvar name>)`
   * `getEntityCount([<in use>])`
   * `getMicroseconds()`
   * `getMilliseconds()`
