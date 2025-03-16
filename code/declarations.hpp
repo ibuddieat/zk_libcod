@@ -989,6 +989,20 @@ typedef struct unz_file_info_s
     tm_unz tmu_date;
 } unz_file_info;
 
+enum FsListBehavior
+{
+	FS_LIST_PURE_ONLY = 0x0,
+	FS_LIST_ALL = 0x1,
+};
+
+enum fsMode_t
+{
+	FS_READ,
+	FS_WRITE,
+	FS_APPEND,
+	FS_APPEND_SYNC
+};
+
 typedef enum
 {
 	EV_NONE = 0,
@@ -3666,7 +3680,7 @@ typedef struct va_info_s
 
 typedef struct gameTypeScript_s
 {
-	char pscScript[64];
+	char pszScript[64];
 	char pszName[64];
 	int bTeamBased;
 } gameTypeScript_t;

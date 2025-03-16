@@ -1626,17 +1626,120 @@ void custom_SV_MasterHeartbeat(const char *hbname)
 	hook_SV_MasterHeartbeat->hook();
 }
 
+void custom_Scr_ParseGameTypeList(void)
+{
+	gameTypeScript_t *script;
+	size_t fileLength;
+	char *path;
+	char *token;
+	int f;
+	char listbuf[4096];
+	char buffer[1024];
+	const char *data;
+	int list;
+	int count;
+	int len;
+	int i;
+	char *filename;
+
+	/* New code start: fs_gametypes dvar */
+	char path_to_gametypes[64] = "maps/mp/gametypes";
+	if ( strlen(fs_gametypes->current.string) )
+		Com_sprintf(path_to_gametypes, sizeof(path_to_gametypes), "%s", fs_gametypes->current.string);
+
+	if ( fs_debug->current.integer )
+		Com_Printf("Current gametype path: %s\n", path_to_gametypes);
+	/* New code end */
+
+	memset(buffer, 0, sizeof(buffer));
+	count = 0;
+	memset(g_scr_data.gametype.list, 0, sizeof(g_scr_data.gametype.list));
+	list = FS_GetFileList(path_to_gametypes, "gsc", FS_LIST_PURE_ONLY, listbuf, 4096);
+	filename = listbuf;
+	i = 0;
+	do
+	{
+		if ( list <= i )
+		{
+			g_scr_data.gametype.iNumGameTypes = count;
+			return;
+		}
+		script = g_scr_data.gametype.list + count;
+		fileLength = strlen(filename);
+		if ( *filename != '_' )
+		{
+			if ( I_stricmp(filename + (fileLength - 4), ".gsc") == 0 )
+			{
+				filename[fileLength - 4] = '\0';
+			}
+			if ( count == 32 )
+			{
+				Com_Printf("Too many game type scripts found! Only loading the first %i\n", 31);
+				g_scr_data.gametype.iNumGameTypes = count;
+				return;
+			}
+			I_strncpyz(script->pszScript, filename, 64);
+			I_strlwr(script->pszScript);
+			path = va("%s/%s.txt", path_to_gametypes, filename);
+			len = FS_FOpenFileByMode(path, &f, FS_READ);
+			if ( len < 1 || 1023 < len )
+			{
+				if ( len < 1 )
+				{
+					path = va("%s/%s.txt", path_to_gametypes, filename);
+					Com_Printf("WARNING: Could not load GameType description file %s for gametype %s\n", path, filename);
+				}
+				else
+				{
+					path = va("%s/%s.txt", path_to_gametypes, filename);
+					Com_Printf("WARNING: GameType description file %s is too big to load.\n", path);
+				}
+				I_strncpyz(script->pszName, script->pszScript, 64);
+				script->bTeamBased = 0;
+			}
+			else
+			{
+				FS_Read(buffer, len, f);
+				data = buffer;
+				token = Com_Parse(&data);
+				I_strncpyz(script->pszName, token, 64);
+				token = Com_Parse(&data);
+				script->bTeamBased = token && !I_stricmp(token, "team");
+			}
+			count++;
+			if ( 0 < len )
+			{
+				FS_FCloseFile(f);
+			}
+		}
+		filename = filename + fileLength + 1;
+		i++;
+	} while( true );
+}
+
 void custom_GScr_LoadGameTypeScript(void)
 {
-	unsigned int i;
-	char path_to_callbacks[64] = "maps/mp/gametypes/_callbacksetup";
 	char path_to_gametypes[64] = "maps/mp/gametypes";
 	char path_to_gametype[64];
+	char path_to_callbacks[64] = "maps/mp/gametypes/_callbacksetup";
+	unsigned int i;
 
+	// Gametype script
+	if ( strlen(fs_gametypes->current.string) ) // New dvar
+		Com_sprintf(path_to_gametypes, sizeof(path_to_gametypes), "%s", fs_gametypes->current.string);
+
+	Com_sprintf(path_to_gametype, sizeof(path_to_gametypes), "%s/%s", path_to_gametypes, sv_gametype->current.string);
+
+	if ( fs_debug->current.integer )
+		Com_Printf("Current gametype file: %s.gsc\n", path_to_gametype);
+
+	g_scr_data.gametype.main = Scr_GetFunctionHandle(path_to_gametype, "main", 1);
+
+	// Callback scripts
 	if ( strlen(fs_callbacks->current.string) ) // New dvar
-		strncpy(path_to_callbacks, fs_callbacks->current.string, sizeof(path_to_callbacks));
+		Com_sprintf(path_to_callbacks, sizeof(path_to_callbacks), "%s", fs_callbacks->current.string);
 
-	if ( g_debugCallbacks->current.boolean )
+	if ( fs_debug->current.integer )
 		Com_Printf("Current callbacks path: %s.gsc\n", path_to_callbacks);
 
 	// Custom callbacks
@@ -1647,16 +1750,7 @@ void custom_GScr_LoadGameTypeScript(void)
 			Com_Printf("%s found @ %p\n", callbacks[i].name, scrVarPub.programBuffer + *callbacks[i].pos);
 	}
 
-	if ( strlen(fs_gametypes->current.string) ) // New dvar
-		strncpy(path_to_gametypes, fs_gametypes->current.string, sizeof(path_to_gametypes));
-
-	Com_sprintf(path_to_gametype, sizeof(path_to_gametypes), "%s/%s", path_to_gametypes, sv_gametype->current.string);
-
-	if ( g_debugCallbacks->current.boolean )
-		Com_Printf("Current gametype path: %s.gsc\n", path_to_gametype);
-
 	// Stock callbacks
-	g_scr_data.gametype.main = Scr_GetFunctionHandle(path_to_gametype, "main", 1);
 	g_scr_data.gametype.startupgametype = Scr_GetFunctionHandle(path_to_callbacks, "CodeCallback_StartGameType", 1);
 	g_scr_data.gametype.playerconnect = Scr_GetFunctionHandle(path_to_callbacks, "CodeCallback_PlayerConnect", 1);
 	g_scr_data.gametype.playerdisconnect = Scr_GetFunctionHandle(path_to_callbacks, "CodeCallback_PlayerDisconnect", 1);
@@ -11194,6 +11288,7 @@ public:
 		cracking_hook_function(0x0809ADEA, (int)custom_SV_SendClientSnapshot);
 		cracking_hook_function(0x08117E62, (int)custom_Scr_SetOrigin);
 		cracking_hook_function(0x080EFCC6, (int)custom_PM_SendEmtpyOffhandEvent);
+		cracking_hook_function(0x08117F70, (int)custom_Scr_ParseGameTypeList);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC8CA, (int)Jump_ReduceFriction);

@@ -120,6 +120,9 @@ static const Com_sprintf_t Com_sprintf = (Com_sprintf_t)0x080B7F0A;
 typedef void (*Com_PrintMessage_t)(int channel, const char *message);
 static const Com_PrintMessage_t Com_PrintMessage = (Com_PrintMessage_t)0x08060C20;
 
+typedef char * (*Com_Parse_t)(const char *(*data_p));
+static const Com_Parse_t Com_Parse = (Com_Parse_t)0x080B6DB2;
+
 typedef void (*Com_BeginRedirect_t)(char *buffer, int buffersize, void (*flush)(char *));
 static const Com_BeginRedirect_t Com_BeginRedirect = (Com_BeginRedirect_t)0x08060BA2;
 
@@ -171,8 +174,14 @@ static const FS_Initialized_t FS_Initialized = (FS_Initialized_t)0x0809E620;
 typedef long (*FS_HashFileName_t)(const char *fname, int hashSize);
 static const FS_HashFileName_t FS_HashFileName = (FS_HashFileName_t)0x0809E740;
 
+typedef int (*FS_GetFileList_t)(const char *path, const char *extension, FsListBehavior behavior, char *listbuf, int bufsize);
+static const FS_GetFileList_t FS_GetFileList = (FS_GetFileList_t)0x080A1D4A;
+
 typedef int (*FS_FilenameCompare_t)(const char *s1, const char *s2);
 static const FS_FilenameCompare_t FS_FilenameCompare = (FS_FilenameCompare_t)0x0809F32C;
+
+typedef int (*FS_FOpenFileByMode_t)(const char *qpath, fileHandle_t *f, fsMode_t mode);
+static const FS_FOpenFileByMode_t FS_FOpenFileByMode = (FS_FOpenFileByMode_t)0x080A3562;
 
 typedef const char * (*FS_LoadedIwdChecksums_t)(void);
 static const FS_LoadedIwdChecksums_t FS_LoadedIwdChecksums = (FS_LoadedIwdChecksums_t)0x0806590A;
