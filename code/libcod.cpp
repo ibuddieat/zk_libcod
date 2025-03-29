@@ -11531,7 +11531,7 @@ public:
 		cracking_hook_function(0x08117E62, (int)custom_Scr_SetOrigin);
 		cracking_hook_function(0x080EFCC6, (int)custom_PM_SendEmtpyOffhandEvent);
 		cracking_hook_function(0x08117F70, (int)custom_Scr_ParseGameTypeList);
-		cracking_hook_function(0x080EA3F4, (int)custom_PM_StepSlideMove);
+		//cracking_hook_function(0x080EA3F4, (int)custom_PM_StepSlideMove);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC8CA, (int)Jump_ReduceFriction);
