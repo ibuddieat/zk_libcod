@@ -1914,7 +1914,7 @@ void custom_G_SetClientContents(gentity_t *ent)
 qboolean custom_StuckInClient(gentity_t *self)
 {
 	float fTemp;
-	double dTemp;
+	long double dTemp;
 	float selfEjectSpeed;
 	float hitEjectSpeed;
 	vec2_t dir;
@@ -1929,31 +1929,31 @@ qboolean custom_StuckInClient(gentity_t *self)
 		return qfalse;
 	/* New code end */
 
-	if ( ( ( ( self->client->ps.pm_flags & PMF_VIEWLOCKED ) != 0 ) && ( (self->client->sess).sessionState == STATE_PLAYING ) ) && ( customPlayerState[id].collisionTeam != CUSTOM_TEAM_AXIS_ALLIES /* New condition */ || ( ( self->r.contents & CONTENTS_BODY ) != 0 || ( (self->r).contents == CONTENTS_CORPSE ) ) ) )
+	if ( ( ( ( self->client->ps.pm_flags & PMF_VIEWLOCKED ) != 0 ) && ( self->client->sess.sessionState == STATE_PLAYING ) ) && ( customPlayerState[id].collisionTeam != CUSTOM_TEAM_AXIS_ALLIES /* New condition */ || ( ( self->r.contents & CONTENTS_BODY ) != 0 || ( self->r.contents == CONTENTS_CORPSE ) ) ) )
 	{
 		hit = g_entities;
 		for ( i = 0; i < level.maxclients; i++, hit++)
 		{
-			if ( ( ( ( ( ( (hit->r).inuse != 0 ) && ( ( hit->client->ps.pm_flags & PMF_VIEWLOCKED ) != 0 ) ) && ( (hit->client->sess).sessionState == STATE_PLAYING )  ) && ( (hit != self && hit->client != NULL ) ) ) && ( 0 < hit->health && ( /* New condition */ customPlayerState[i].collisionTeam != CUSTOM_TEAM_AXIS_ALLIES || ( ( hit->r.contents & CONTENTS_BODY ) != 0 || ( (hit->r).contents == CONTENTS_CORPSE ) ) ) ) ) &&
-			( (hit->r).absmin[0] <= (self->r).absmax[0] && ( ( ( (self->r).absmin[0] <= (hit->r).absmax[0] && ( (hit->r).absmin[1] <= (self->r).absmax[1] ) ) && ( (self->r).absmin[1] <= (hit->r).absmax[1] ) ) && ( (hit->r).absmin[2] <= (self->r).absmax[2] && ( (self->r).absmin[2] <= (hit->r).absmax[2] ) ) ) ) )
+			if ( ( ( ( ( ( hit->r.inuse != 0 ) && ( ( hit->client->ps.pm_flags & PMF_VIEWLOCKED ) != 0 ) ) && ( hit->client->sess.sessionState == STATE_PLAYING )  ) && ( ( hit != self && hit->client != NULL ) ) ) && ( 0 < hit->health && ( /* New condition */ customPlayerState[i].collisionTeam != CUSTOM_TEAM_AXIS_ALLIES || ( ( hit->r.contents & CONTENTS_BODY ) != 0 || ( hit->r.contents == CONTENTS_CORPSE ) ) ) ) ) &&
+			( hit->r.absmin[0] <= self->r.absmax[0] && ( ( ( self->r.absmin[0] <= hit->r.absmax[0] && ( hit->r.absmin[1] <= self->r.absmax[1] ) ) && ( self->r.absmin[1] <= hit->r.absmax[1] ) ) && ( hit->r.absmin[2] <= self->r.absmax[2] && ( self->r.absmin[2] <= hit->r.absmax[2] ) ) ) ) )
 			{
 				/* New code start: per-player/team collison */
 				if ( SkipCollision(self, hit) )
 					continue;
 				/* New code end */
 
-				VectorSubtract2((hit->r).currentOrigin, (self->r).currentOrigin, dir);
-				fTemp = (self->r).maxs[0] + (hit->r).maxs[0];
-				dTemp = DotProduct2(dir, dir);
-				if ( dTemp <= ( (double)fTemp * (double)fTemp ) )
+				VectorSubtract2(hit->r.currentOrigin, self->r.currentOrigin, dir);
+				fTemp = self->r.maxs[0] + hit->r.maxs[0];
+				dTemp = Vec2LengthSq(dir);
+				if ( dTemp <= ( (long double)fTemp * (long double)fTemp ) )
 				{
-					VectorSubtract2((hit->r).currentOrigin, (self->r).currentOrigin, dir);
-					fTemp = G_random();
-					dir[0] = dir[0] + ((fTemp + fTemp) - 1.0);
-					fTemp = G_random();
-					dir[1] = dir[1] + ((fTemp + fTemp) - 1.0);
+					VectorSubtract2(hit->r.currentOrigin, self->r.currentOrigin, dir);
+					dTemp = G_crandom();
+					dir[0] = dir[0] + ( ( dTemp + dTemp ) - 1.0 );
+					dTemp = G_crandom();
+					dir[1] = dir[1] + ( ( dTemp + dTemp ) - 1.0 );
 					Vec2Normalize(dir);
-					if ( 0.0 < VectorLength2((hit->client->ps).velocity) )
+					if ( 0.0 < VectorLength2(hit->client->ps.velocity) )
 					{
 						hitEjectSpeed = (float)g_playerCollisionEjectSpeed->current.integer;
 					}
@@ -1962,7 +1962,7 @@ qboolean custom_StuckInClient(gentity_t *self)
 						hitEjectSpeed = 0.0;
 					}
 					hitSpeed = hitEjectSpeed;
-					if ( 0.0 < VectorLength2((self->client->ps).velocity) )
+					if ( 0.0 < VectorLength2(self->client->ps.velocity) )
 					{
 						selfEjectSpeed = (float)g_playerCollisionEjectSpeed->current.integer;
 					}
@@ -1973,15 +1973,16 @@ qboolean custom_StuckInClient(gentity_t *self)
 					selfSpeed = selfEjectSpeed;
 					if ( hitEjectSpeed < 0.0001 && selfEjectSpeed < 0.0001 )
 					{
-						hitSpeed = (float)(hit->client->ps).speed;
-						selfSpeed = (float)(self->client->ps).speed;
+						hitSpeed = (float)hit->client->ps.speed;
+						selfSpeed = (float)self->client->ps.speed;
 					}
-					VectorScale2(dir, hitSpeed, (hit->client->ps).velocity);
-					(hit->client->ps).pm_time = g_playerCollisionEjectDuration->current.integer; // New: g_playerCollisionEjectDuration dvar
-					(hit->client->ps).pm_flags = (hit->client->ps).pm_flags | PMF_SLIDING;
-					VectorScale2(dir, selfSpeed * -1, (self->client->ps).velocity);
-					(self->client->ps).pm_time = g_playerCollisionEjectDuration->current.integer; // New: g_playerCollisionEjectDuration dvar
-					(self->client->ps).pm_flags = (self->client->ps).pm_flags | PMF_SLIDING;
+					VectorScale2(dir, hitSpeed, hit->client->ps.velocity);
+					hit->client->ps.pm_time = g_playerCollisionEjectDuration->current.integer; // New: g_playerCollisionEjectDuration dvar
+					hit->client->ps.pm_flags = hit->client->ps.pm_flags | PMF_SLIDING;
+					VectorScale2(dir, selfSpeed * -1, self->client->ps.velocity);
+					self->client->ps.pm_time = g_playerCollisionEjectDuration->current.integer; // New: g_playerCollisionEjectDuration dvar
+					self->client->ps.pm_flags = self->client->ps.pm_flags | PMF_SLIDING;
+
 					if ( !g_playerCollisionEjectDamageAllowed->current.boolean ) // New: g_playerCollisionEjectDamageAllowed dvar
 						return qtrue;
 					else
@@ -4802,8 +4803,6 @@ int custom_BG_PlayAnim(playerState_t *ps, int animNum, animBodyPart_t bodyPart, 
 	int duration;
 
 	hook_BG_PlayAnim->unhook();
-	int (*BG_PlayAnim)(playerState_t *ps, int animNum, animBodyPart_t bodyPart, int forceDuration, qboolean setTimer, qboolean isContinue, qboolean force);
-	*(int *)&BG_PlayAnim = hook_BG_PlayAnim->from;
 	if ( !customPlayerState[ps->clientNum].animation )
 		duration = BG_PlayAnim(ps, animNum, bodyPart, forceDuration, setTimer, isContinue, force);
 	else
@@ -4880,7 +4879,6 @@ void custom_SVC_Info(netadr_t from)
 	Info_SetValueForKey(infostring, "sv_maxclients", va("%i", sv_maxclients->current.integer - sv_privateClients->current.integer));
 	Info_SetValueForKey(infostring, "gametype", Dvar_GetString("g_gametype"));
 	Info_SetValueForKey(infostring, "pure", va("%i", sv_pure->current.boolean));
-
 
 	if ( sv_minPing->current.integer )
 	{

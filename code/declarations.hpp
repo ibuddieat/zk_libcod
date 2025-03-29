@@ -1252,7 +1252,6 @@ enum StanceState
 	CL_STANCE_STAND = 0x0,
 	CL_STANCE_CROUCH = 0x1,
 	CL_STANCE_PRONE = 0x2,
-	CL_STANCE_DIVE_TO_PRONE = 0x3,
 };
 
 typedef struct DObjTrace_s

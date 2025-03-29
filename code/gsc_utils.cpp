@@ -793,7 +793,7 @@ void gsc_utils_getarraykeys()
 		return;
 	}
 
-	int arraysize = GetArraySize(arrIndex);
+	unsigned int arraysize = GetArraySize(arrIndex);
 
 	if ( !arraysize )
 	{
@@ -807,9 +807,9 @@ void gsc_utils_getarraykeys()
 
 	stackPushArray();
 
-	for ( int i = 0; i < arraysize; i++ )
+	for ( unsigned int i = 0; i < arraysize; i++ )
 	{
-		index = GetNextVariable(index);
+		index = FindNextSibling(index);
 		name = GetVariableName(index);
 
 		if ( name < 0x10000 )

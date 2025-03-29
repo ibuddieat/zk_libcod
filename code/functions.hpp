@@ -6,13 +6,19 @@
 typedef char * (*va_t)(const char *format, ...);
 static const va_t va = (va_t)0x080B7FA6;
 
-typedef unsigned int (*GetVariableName_t)(unsigned int a1);
+typedef unsigned int (*FindNextSibling_t)(unsigned int id);
+static const FindNextSibling_t FindNextSibling = (FindNextSibling_t)0x0807D01E;
+
+typedef unsigned int (*GetVariableName_t)(unsigned int id);
 static const GetVariableName_t GetVariableName = (GetVariableName_t)0x0807D0C2;
 
-typedef unsigned int (*GetNextVariable_t)(unsigned int a1);
-static const GetNextVariable_t GetNextVariable = (GetNextVariable_t)0x0807D01E;
+typedef VariableValueInternal_u * (*GetVariableValueAddress_t)(unsigned int id);
+static const GetVariableValueAddress_t GetVariableValueAddress = (GetVariableValueAddress_t)0x0807CB4C;
 
-typedef int (*GetArraySize_t)(unsigned int a1);
+typedef unsigned int (*GetVarType_t)(unsigned int id);
+static const GetVarType_t GetVarType = (GetVarType_t)0x0807E5CC;
+
+typedef unsigned int (*GetArraySize_t)(unsigned int a1);
 static const GetArraySize_t GetArraySize = (GetArraySize_t)0x0807CFFC;
 
 typedef char * (*SL_ConvertToString_t)(unsigned int index);
@@ -690,6 +696,9 @@ static const BG_AnimScriptEvent_t BG_AnimScriptEvent = (BG_AnimScriptEvent_t)0x0
 typedef int (*BG_AnimationIndexForString_t)(char *src);
 static const BG_AnimationIndexForString_t BG_AnimationIndexForString = (BG_AnimationIndexForString_t)0x080D6DD0;
 
+typedef int (*BG_PlayAnim_t)(playerState_t *ps, int animNum, animBodyPart_t bodyPart, int forceDuration, qboolean setTimer, qboolean isContinue, qboolean force);
+static const BG_PlayAnim_t BG_PlayAnim = (BG_PlayAnim_t)0x080D90D6;
+
 typedef void (*Scr_ResetTimeout_t)(void);
 static const Scr_ResetTimeout_t Scr_ResetTimeout = (Scr_ResetTimeout_t)0x08085628;
 
@@ -1176,6 +1185,9 @@ static const Vec3NormalizeTo_t Vec3NormalizeTo = (Vec3NormalizeTo_t)0x080A45FC;
 typedef void (*Vec3Lerp_t)(const float *from, const float *to, float frac, float *result);
 static const Vec3Lerp_t Vec3Lerp = (Vec3Lerp_t)0x080E129E;
 
+typedef long double (*Vec2LengthSq_t)(float *v);
+static const Vec2LengthSq_t Vec2LengthSq = (Vec2LengthSq_t)0x080F7BE6;
+
 typedef vec_t (*Vec2Normalize_t)(vec2_t v);
 static const Vec2Normalize_t Vec2Normalize = (Vec2Normalize_t)0x080A44C2;
 
@@ -1365,10 +1377,10 @@ static const VectorLength_t VectorLength = (VectorLength_t)0x081187F0;
 typedef long double (*VectorLength2_t)(float *vec);
 static const VectorLength2_t VectorLength2 = (VectorLength2_t)0x080F7C08;
 
-typedef float (*G_crandom_t)(void);
+typedef long double (*G_crandom_t)(void);
 static const G_crandom_t G_crandom = (G_crandom_t)0x080A3792;
 
-typedef float (*G_random_t)(void);
+typedef long double (*G_random_t)(void);
 static const G_random_t G_random = (G_random_t)0x080A3774;
 
 typedef void (*Cbuf_ExecuteText_t)(int exec_when, const char* text);
