@@ -11046,7 +11046,7 @@ void PM_ProjectVelocity(const float *velIn, const float *normal, float *velOut)
 
 	lengthSq2D = (float)(velIn[0] * velIn[0]) + (float)(velIn[1] * velIn[1]);
 
-	if ( fabs(normal[2]) < 0.001 || lengthSq2D == 0.0 )
+	if ( I_fabs(normal[2]) < 0.001 || lengthSq2D == 0.0 )
 	{
 		velOut[0] = velIn[0];
 		velOut[1] = velIn[1];
@@ -11056,7 +11056,7 @@ void PM_ProjectVelocity(const float *velIn, const float *normal, float *velOut)
 	{
 		newZ = (float)-(float)((float)(velIn[0] * normal[0]) + (float)(velIn[1] * normal[1])) / normal[2];
 		adjusted = velIn[1];
-		lengthScale = sqrt((float)((float)(velIn[2] * velIn[2]) + lengthSq2D) / (float)((float)(newZ * newZ) + lengthSq2D));
+		lengthScale = I_sqrt((float)((float)(velIn[2] * velIn[2]) + lengthSq2D) / (float)((float)(newZ * newZ) + lengthSq2D));
 
 		if ( lengthScale < 1.0 || newZ < 0.0 || velIn[2] > 0.0 )
 		{
@@ -11088,7 +11088,6 @@ void custom_PM_StepSlideMove(pmove_t *pm, pml_t *pml, qboolean gravity)
 	bool jumping;
 	int old;
 	int bCloser;
-	int id = pm->ps->clientNum;
 
 	fStepAmount = 0.0;
 	ps = pm->ps;
@@ -11121,21 +11120,21 @@ void custom_PM_StepSlideMove(pmove_t *pm, pml_t *pml, qboolean gravity)
 
 	if ( ps->pm_flags & PMF_PRONE )
 	{
-		/* New code start: per-player step size */
-		if ( customPlayerState[id].overrideStepSize )
-			fStepSize = customPlayerState[id].stepSize;
-		/* New code end */
-		else
-			fStepSize = 18.0;
-	}
-	else
-	{
 		/* New code start: per-player prone step size */
-		if ( customPlayerState[id].overrideProneStepSize )
-			fStepSize = customPlayerState[id].proneStepSize;
+		if ( customPlayerState[ps->clientNum].overrideProneStepSize )
+			fStepSize = customPlayerState[ps->clientNum].proneStepSize;
 		/* New code end */
 		else
 			fStepSize = 10.0;
+	}
+	else
+	{
+		/* New code start: per-player step size */
+		if ( customPlayerState[ps->clientNum].overrideStepSize )
+			fStepSize = customPlayerState[ps->clientNum].stepSize;
+		/* New code end */
+		else
+			fStepSize = 18.0;
 	}
 
 	if ( ps->groundEntityNum == ENTITY_NONE )
@@ -11266,12 +11265,12 @@ void custom_PM_StepSlideMove(pmove_t *pm, pml_t *pml, qboolean gravity)
 		return;
 	}
 
-	if ( fabs(ps->origin[2] - down_o[2]) <= 0.5 )
+	if ( I_fabs(ps->origin[2] - down_o[2]) <= 0.5 )
 	{
 		return;
 	}
 
-	iDelta = floorf(ps->origin[2] - down_o[2]);
+	iDelta = Q_rint(ps->origin[2] - down_o[2]);
 	if ( !iDelta )
 	{
 		return;
@@ -11286,7 +11285,7 @@ void custom_PM_StepSlideMove(pmove_t *pm, pml_t *pml, qboolean gravity)
 	}
 
 	BG_AddPredictableEventToPlayerstate(EV_STEP_VIEW, iDelta + 128, ps);
-	VectorScale(ps->velocity, ( 1.0 - fabs(ps->origin[2] - start_o[2]) / fStepSize ) * 0.8 + 0.2, ps->velocity);
+	VectorScale(ps->velocity, ( 1.0 - I_fabs(ps->origin[2] - start_o[2]) / fStepSize ) * 0.8 + 0.2, ps->velocity);
 
 	if ( abs(iDelta) < 4 )
 	{
@@ -11531,7 +11530,7 @@ public:
 		cracking_hook_function(0x08117E62, (int)custom_Scr_SetOrigin);
 		cracking_hook_function(0x080EFCC6, (int)custom_PM_SendEmtpyOffhandEvent);
 		cracking_hook_function(0x08117F70, (int)custom_Scr_ParseGameTypeList);
-		//cracking_hook_function(0x080EA3F4, (int)custom_PM_StepSlideMove);
+		cracking_hook_function(0x080EA3F4, (int)custom_PM_StepSlideMove);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC8CA, (int)Jump_ReduceFriction);

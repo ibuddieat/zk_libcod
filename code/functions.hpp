@@ -945,6 +945,15 @@ static const I_CleanStr_t I_CleanStr = (I_CleanStr_t)0x080B7E54;
 typedef int (*I_DrawStrlen_t)(const char *str);
 static const I_DrawStrlen_t I_DrawStrlen = (I_DrawStrlen_t)0x080B7DEC;
 
+typedef long double (*I_fabs_t)(const float value);
+static const I_fabs_t I_fabs = (I_fabs_t)0x080EADF2;
+
+typedef int (*Q_rint_t)(float in);
+static const Q_rint_t Q_rint = (Q_rint_t)0x081081EE;
+
+typedef long double (*I_sqrt_t)(const float value);
+static const I_sqrt_t I_sqrt = (I_sqrt_t)0x080AAEBE;
+
 typedef void (*I_strncpyz_t)(char *dest, const char *src, int destsize);
 static const I_strncpyz_t I_strncpyz = (I_strncpyz_t)0x080B7AB6;
 
