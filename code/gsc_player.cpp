@@ -3098,7 +3098,7 @@ void gsc_player_setconfigstringforplayer(scr_entref_t ref)
 	char *value;
 	int index;
 
-	if ( !stackGetParams("si", &value, &index) )
+	if ( !stackGetParams("is", &index, &value) )
 	{
 		stackError("gsc_player_setconfigstringforplayer() argument is undefined or has a wrong type");
 		stackPushUndefined();
