@@ -10920,44 +10920,6 @@ int hook_sprintf_in_SE_R_ListFiles(char *buf, const char *format, const char *ps
 	return snprintf(buf, MAX_QPATH, format, psDir, filename);
 }
 
-void hook_PM_ClipVelocity_in_PM_StepSlideMove(const float *velIn, const float *normal, float *velOut)
-{
-	float lengthSq2D;
-	float adjusted;
-	float newZ;
-	float lengthScale;
-
-	/* New code start: jump_bounceEnable dvar */
-	if ( !jump_bounceEnable->current.boolean )
-	{
-		PM_ClipVelocity(velIn, normal, velOut);
-		return;
-	}
-	/* New code end */
-
-	lengthSq2D = (float)(velIn[0] * velIn[0]) + (float)(velIn[1] * velIn[1]);
-
-	if ( fabs(normal[2]) < 0.001 || lengthSq2D == 0.0 )
-	{
-		velOut[0] = velIn[0];
-		velOut[1] = velIn[1];
-		velOut[2] = velIn[2];
-	}
-	else
-	{
-		newZ = (float)-(float)((float)(velIn[0] * normal[0]) + (float)(velIn[1] * normal[1])) / normal[2];
-		adjusted = velIn[1];
-		lengthScale = sqrt((float)((float)(velIn[2] * velIn[2]) + lengthSq2D) / (float)((float)(newZ * newZ) + lengthSq2D));
-
-		if ( lengthScale < 1.0 || newZ < 0.0 || velIn[2] > 0.0 )
-		{
-			velOut[0] = lengthScale * velIn[0];
-			velOut[1] = lengthScale * adjusted;
-			velOut[2] = lengthScale * newZ;
-		}
-	}
-}
-
 char * hook_strcpy_in_SV_ConSay_f(char *dst, const char *src)
 {
 	return strcpy(dst, consolePrefix);
@@ -11071,6 +11033,289 @@ void custom_PM_SendEmtpyOffhandEvent(playerState_t *ps)
 	PM_AddEvent(ps, EV_EMPTY_OFFHAND);
 }
 
+void PM_ProjectVelocity(const float *velIn, const float *normal, float *velOut)
+{
+	float lengthSq2D;
+	float adjusted;
+	float newZ;
+	float lengthScale;
+
+	if ( !jump_bounceEnable->current.boolean )
+	{
+		PM_ClipVelocity(velIn, normal, velOut);
+		return;
+	}
+
+	lengthSq2D = (float)(velIn[0] * velIn[0]) + (float)(velIn[1] * velIn[1]);
+
+	if ( fabs(normal[2]) < 0.001 || lengthSq2D == 0.0 )
+	{
+		velOut[0] = velIn[0];
+		velOut[1] = velIn[1];
+		velOut[2] = velIn[2];
+	}
+	else
+	{
+		newZ = (float)-(float)((float)(velIn[0] * normal[0]) + (float)(velIn[1] * normal[1])) / normal[2];
+		adjusted = velIn[1];
+		lengthScale = sqrt((float)((float)(velIn[2] * velIn[2]) + lengthSq2D) / (float)((float)(newZ * newZ) + lengthSq2D));
+
+		if ( lengthScale < 1.0 || newZ < 0.0 || velIn[2] > 0.0 )
+		{
+			velOut[0] = lengthScale * velIn[0];
+			velOut[1] = lengthScale * adjusted;
+			velOut[2] = lengthScale * newZ;
+		}
+	}
+}
+
+void custom_PM_StepSlideMove(pmove_t *pm, pml_t *pml, qboolean gravity)
+{
+	playerState_t *ps;
+	qboolean iBumps;
+	float fStepSize;
+	int iDelta;
+	float fStepAmount;
+	vec2_t vel;
+	vec2_t flatDelta;
+	vec3_t down;
+	vec3_t up;
+	trace_t trace;
+	vec3_t down_v;
+	vec3_t down_o;
+	vec3_t start_v;
+	vec3_t start_o;
+	vec3_t endpos;
+	bool bHadGround;
+	bool jumping;
+	int old;
+	int bCloser;
+	int id = pm->ps->clientNum;
+
+	fStepAmount = 0.0;
+	ps = pm->ps;
+	jumping = false;
+
+	if ( ( ps->pm_flags & PMF_LADDER ) == 0 )
+	{
+		if ( !pml->groundPlane )
+		{
+			bHadGround = false;
+			if ( ( ps->pm_flags & PMF_JUMPING ) && ps->pm_time )
+			{
+				Jump_ClearState(ps);
+			}
+		}
+		else
+		{
+			bHadGround = true;
+		}
+	}
+	else
+	{
+		bHadGround = false;
+		Jump_ClearState(ps);
+	}
+
+	VectorCopy(ps->origin, start_o);
+	VectorCopy(ps->velocity, start_v);
+	iBumps = PM_SlideMove(pm, pml, gravity);
+
+	if ( ps->pm_flags & PMF_PRONE )
+	{
+		/* New code start: per-player step size */
+		if ( customPlayerState[id].overrideStepSize )
+			fStepSize = customPlayerState[id].stepSize;
+		/* New code end */
+		else
+			fStepSize = 18.0;
+	}
+	else
+	{
+		/* New code start: per-player prone step size */
+		if ( customPlayerState[id].overrideProneStepSize )
+			fStepSize = customPlayerState[id].proneStepSize;
+		/* New code end */
+		else
+			fStepSize = 10.0;
+	}
+
+	if ( ps->groundEntityNum == ENTITY_NONE )
+	{
+		if ( ( ps->pm_flags & PMF_JUMPING ) && ps->pm_time )
+		{
+			Jump_ClearState(ps);
+		}
+		if ( iBumps && ( ps->pm_flags & PMF_JUMPING ) && Jump_GetStepHeight(ps, start_o, &fStepSize) )
+		{
+			if ( fStepSize < 1.0 )
+			{
+				return;
+			}
+			jumping = true;
+		}
+
+		if ( !jumping )
+		{
+			if ( ( ps->pm_flags & PMF_LADDER ) == 0 || ps->velocity[2] <= 0.0 )
+				return;
+		}
+	}
+
+	VectorCopy(ps->origin, down_o);
+	VectorCopy(ps->velocity, down_v);
+	VectorSubtract2(down_o, start_o, flatDelta);
+
+	if ( iBumps )
+	{
+		VectorCopy(start_o, up);
+		up[2] = up[2] + fStepSize + 1.0;
+
+		PM_playerTrace(pm, &trace, start_o, pm->mins, pm->maxs, up, ps->clientNum, pm->tracemask);
+
+		fStepAmount = ( fStepSize + 1.0 ) * trace.fraction - 1.0;
+		if ( fStepAmount < 1.0 )
+		{
+			fStepAmount = 0.0;
+		}
+		else
+		{
+			VectorSet(ps->origin, up[0], up[1], start_o[2] + fStepAmount);
+			VectorCopy(start_v, ps->velocity);
+			PM_SlideMove(pm, pml, gravity);
+		}
+	}
+
+	if ( bHadGround || fStepAmount != 0 )
+	{
+		VectorCopy(ps->origin, down);
+		down[2] -= fStepAmount;
+		if ( bHadGround )
+		{
+			down[2] -= 9.0;
+		}
+
+		PM_playerTrace(pm, &trace, ps->origin, pm->mins, pm->maxs, down, ps->clientNum, pm->tracemask);
+
+		if ( trace.entityNum < MAX_CLIENTS )
+		{
+			VectorCopy(down_o, ps->origin);
+			VectorCopy(down_v, ps->velocity);
+			return;
+		}
+		if ( trace.fraction < 1.0 )
+		{
+			if ( trace.normal[2] < 0.3 )
+			{
+				VectorCopy(down_o, ps->origin);
+				VectorCopy(down_v, ps->velocity);
+				return;
+			}
+			Vec3Lerp(ps->origin, down, trace.fraction, ps->origin);
+
+			/* New code start: Replaced call to PM_ClipVelocity with this call,
+			 for the jump_bounceEnable dvar */
+			PM_ProjectVelocity(ps->velocity, trace.normal, ps->velocity);
+			/* New code end */
+		}
+		else if ( fStepAmount != 0 )
+		{
+			ps->origin[2] = ps->origin[2] - fStepAmount;
+		}
+	}
+
+	VectorSubtract2(ps->origin, start_o, vel);
+	bCloser = DotProduct2(flatDelta, ps->velocity) + 0.001 >= DotProduct2(vel, ps->velocity);
+
+	if ( bCloser || ( jumping && Jump_IsPlayerAboveMax(ps) ) )
+	{
+		VectorCopy(down_o, ps->origin);
+		VectorCopy(down_v, ps->velocity);
+
+		if ( bHadGround )
+		{
+			VectorCopy(ps->origin, down);
+			down[2] -= 9.0;
+
+			PM_playerTrace(pm, &trace, ps->origin, pm->mins, pm->maxs, down, ps->clientNum, pm->tracemask);
+
+			if ( trace.fraction < 1.0 )
+			{
+				Vec3Lerp(ps->origin, down, trace.fraction, endpos);
+				VectorCopy(endpos, ps->origin);
+				PM_ClipVelocity(ps->velocity, trace.normal, ps->velocity);
+			}
+		}
+	}
+
+	if ( jumping )
+	{
+		Jump_ClampVelocity(ps, down_o);
+	}
+
+	if ( !bHadGround )
+	{
+		return;
+	}
+
+	if ( ps->pm_type >= PM_DEAD )
+	{
+		return;
+	}
+
+	if ( !PM_VerifyPronePosition(pm, start_o, start_v) )
+	{
+		return;
+	}
+
+	if ( fabs(ps->origin[2] - down_o[2]) <= 0.5 )
+	{
+		return;
+	}
+
+	iDelta = floorf(ps->origin[2] - down_o[2]);
+	if ( !iDelta )
+	{
+		return;
+	}
+	if ( iDelta < -16 )
+	{
+		iDelta = -16;
+	}
+	else if ( 24 < iDelta )
+	{
+		iDelta = 24;
+	}
+
+	BG_AddPredictableEventToPlayerstate(EV_STEP_VIEW, iDelta + 128, ps);
+	VectorScale(ps->velocity, ( 1.0 - fabs(ps->origin[2] - start_o[2]) / fStepSize ) * 0.8 + 0.2, ps->velocity);
+
+	if ( abs(iDelta) < 4 )
+	{
+		return;
+	}
+
+	if ( ps->groundEntityNum == ENTITY_NONE )
+	{
+		return;
+	}
+
+	if ( !PM_ShouldMakeFootsteps(pm) )
+	{
+		return;
+	}
+
+	iDelta = abs(iDelta) / 2;
+	if ( 4 < iDelta )
+	{
+		iDelta = 4;
+	}
+
+	old = ps->bobCycle;
+	ps->bobCycle = (int)( old + iDelta * 1.25 + 7.0 ) & 255;
+	PM_FootstepEvent(pm, pml, old, ps->bobCycle, qtrue);
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -11114,7 +11359,6 @@ public:
 		cracking_hook_call(0x0812C28D, (int)hook_sprintf_in_FX_ParseEffect);
 		cracking_hook_call(0x081393BC, (int)hook_sprintf_in_SE_R_ListFiles);
 		cracking_hook_call(0x0813944A, (int)hook_sprintf_in_SE_R_ListFiles);
-		cracking_hook_call(0x080EA8F2, (int)hook_PM_ClipVelocity_in_PM_StepSlideMove);
 		cracking_hook_call(0x0808C9EB, (int)hook_strcpy_in_SV_ConSay_f);
 		cracking_hook_call(0x0808CB15, (int)hook_strcpy_in_SV_ConTell_f);
 
@@ -11289,6 +11533,7 @@ public:
 		cracking_hook_function(0x08117E62, (int)custom_Scr_SetOrigin);
 		cracking_hook_function(0x080EFCC6, (int)custom_PM_SendEmtpyOffhandEvent);
 		cracking_hook_function(0x08117F70, (int)custom_Scr_ParseGameTypeList);
+		cracking_hook_function(0x080EA3F4, (int)custom_PM_StepSlideMove);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC8CA, (int)Jump_ReduceFriction);

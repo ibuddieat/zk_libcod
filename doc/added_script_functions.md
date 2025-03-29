@@ -100,6 +100,8 @@ New script code methods:
   * `<player> setMeleeRangeScale(<scale>)`
   * `<player> setMeleeWidthScale(<scale>)`
   * `<player> setOriginAndAngles(<origin>, <angles>)`
+  * `<player> setProneStepSize(<size>)`
+  * `<player> setStepSize(<size>)`
   * `<player> setTurretSpreadScale(<scale>)`
   * `<player> setWeaponSpreadScale(<scale>)`
   * `<player> setPing(<ingame value>, [<status value>])`

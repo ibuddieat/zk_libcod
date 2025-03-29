@@ -13,6 +13,72 @@ extern dvar_t *sv_maxclients;
 extern dvar_t *g_forceSnaps;
 extern dvar_t *g_forceRate;
 
+void gsc_player_setstepsize(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_setstepsize() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( Scr_GetNumParam() > 0 )
+	{
+		if ( Scr_GetType(0) == STACK_UNDEFINED )
+		{
+			customPlayerState[id].overrideStepSize = qfalse;
+		}
+		else
+		{
+			customPlayerState[id].overrideStepSize = qtrue;
+			customPlayerState[id].stepSize = Scr_GetFloat(0);
+		}
+
+		stackPushBool(qtrue);
+	}
+	else
+	{
+		stackError("gsc_player_setstepsize() missing argument");
+		stackPushUndefined();
+		return;
+	}
+}
+
+void gsc_player_setpronestepsize(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_setpronestepsize() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( Scr_GetNumParam() > 0 )
+	{
+		if ( Scr_GetType(0) == STACK_UNDEFINED )
+		{
+			customPlayerState[id].overrideProneStepSize = qfalse;
+		}
+		else
+		{
+			customPlayerState[id].overrideProneStepSize = qtrue;
+			customPlayerState[id].proneStepSize = Scr_GetFloat(0);
+		}
+
+		stackPushBool(qtrue);
+	}
+	else
+	{
+		stackError("gsc_player_setpronestepsize() missing argument");
+		stackPushUndefined();
+		return;
+	}
+}
+
 void gsc_player_addenttosnapshots(scr_entref_t ref)
 {
 	int id = ref.entnum;

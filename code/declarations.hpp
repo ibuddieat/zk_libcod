@@ -57,6 +57,7 @@
 #define MAX_BPS_WINDOW              20
 #define MAX_CHALLENGES              1024
 #define MAX_CLIENTS                 64
+#define MAX_CLIP_PLANES             8
 #define MAX_CONFIGSTRINGS           2048
 #define MAX_CONSOLE_PREFIX_LENGTH   64 // Should be kept somewhere below MAX_STRINGLENGTH
 #define MAX_DOWNLOAD_BLKSIZE        2048
@@ -4166,6 +4167,10 @@ typedef struct customPlayerState_s
 	snapshotEntityNumbers_t snapshotEntities;
 	qboolean activateOnUseButtonRelease;
 	qboolean heldUseButton;
+	qboolean overrideStepSize;
+	float stepSize;
+	qboolean overrideProneStepSize;
+	float proneStepSize;
 } customPlayerState_t;
 
 typedef struct callback_s

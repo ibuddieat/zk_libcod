@@ -470,7 +470,9 @@ scr_method_t scriptMethods[] =
 	{"setExpFogForPlayer", gsc_player_setexpfogforplayer, 0},
 	{"setActivateOnUseButtonRelease", gsc_player_setactivateonusebuttonrelease, 0},
 	{"isChatting", gsc_player_ischatting, 0},
-	{"isUseTouching", gsc_player_isusetouching, 0}, 
+	{"isUseTouching", gsc_player_isusetouching, 0},
+	{"setStepSize", gsc_player_setstepsize, 0},
+	{"setProneStepSize", gsc_player_setpronestepsize, 0},
 	#if COMPILE_CUSTOM_VOICE == 1
 	{"playSoundFile", gsc_player_playsoundfile, 0},
 	{"stopSoundFile", gsc_player_stopsoundfile, 0},

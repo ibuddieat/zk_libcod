@@ -660,11 +660,29 @@ static const PM_AddTouchEnt_t PM_AddTouchEnt = (PM_AddTouchEnt_t)0x080E1474;
 typedef void (*PM_ClipVelocity_t)(const float *velIn, const float *normal, float *velOut);
 static const PM_ClipVelocity_t PM_ClipVelocity = (PM_ClipVelocity_t)0x080E14D4;
 
+typedef void (*PM_FootstepEvent_t)(pmove_t *pm, pml_t *pml, int iOldBobCycle, int iNewBobCycle, qboolean bFootStep);
+static const PM_FootstepEvent_t PM_FootstepEvent = (PM_FootstepEvent_t)0x080E5402;
+
 typedef StanceState (*PM_GetEffectiveStance_t)(struct playerState_s *ps);
 static const PM_GetEffectiveStance_t PM_GetEffectiveStance = (PM_GetEffectiveStance_t)0x080E1532;
 
 typedef unsigned int (*PM_GroundSurfaceType_t)(pml_t *pml);
 static const PM_GroundSurfaceType_t PM_GroundSurfaceType = (PM_GroundSurfaceType_t)0x080E2220;
+
+typedef long double (*PM_PermuteRestrictiveClipPlanes_t)(const float *velocity, int planeCount, const vec3_t *planes, int *permutation);
+static const PM_PermuteRestrictiveClipPlanes_t PM_PermuteRestrictiveClipPlanes = (PM_PermuteRestrictiveClipPlanes_t)0x080E9B7C;
+
+typedef void (*PM_playerTrace_t)(pmove_t *pmove, trace_t *results, const float *start, const float *mins, const float *maxs, const float *end, int passEntityNum, int contentMask);
+static const PM_playerTrace_t PM_playerTrace = (PM_playerTrace_t)0x080E1360;
+
+typedef bool (*PM_ShouldMakeFootsteps_t)(pmove_t *pm);
+static const PM_ShouldMakeFootsteps_t PM_ShouldMakeFootsteps = (PM_ShouldMakeFootsteps_t)0x080E55CA;
+
+typedef qboolean (*PM_SlideMove_t)(pmove_t *pm, pml_t *pml, qboolean gravity);
+static const PM_SlideMove_t PM_SlideMove = (PM_SlideMove_t)0x080E9C42;
+
+typedef qboolean (*PM_VerifyPronePosition_t)(pmove_t *pm, const float *vFallbackOrg, const float *vFallbackVel);
+static const PM_VerifyPronePosition_t PM_VerifyPronePosition = (PM_VerifyPronePosition_t)0x080E9A7C;
 
 typedef int (*BG_AnimScriptEvent_t)(playerState_t *ps, scriptAnimEventTypes_t event, int isContinue, int force);
 static const BG_AnimScriptEvent_t BG_AnimScriptEvent = (BG_AnimScriptEvent_t)0x080D96EE;
