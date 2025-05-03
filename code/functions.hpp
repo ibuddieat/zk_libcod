@@ -468,6 +468,9 @@ static const NET_StringToAdr_t NET_StringToAdr = (NET_StringToAdr_t)0x0806CD98;
 typedef qboolean (*NET_CompareAdr_t)(netadr_t a, netadr_t b);
 static const NET_CompareAdr_t NET_CompareAdr = (NET_CompareAdr_t)0x0806C54C;
 
+typedef qboolean (*StringToFilter_t)(const char *s, ipFilter_t *f);
+static const StringToFilter_t StringToFilter = (StringToFilter_t)0x0811B894;
+
 typedef void (*Scr_ObjectError_t)(const char *error);
 static const Scr_ObjectError_t Scr_ObjectError = (Scr_ObjectError_t)0x08085478;
 

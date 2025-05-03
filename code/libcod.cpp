@@ -623,6 +623,7 @@ void custom_UpdateIPBans(void)
 
 	int i, j;
 	client_t *cl;
+	ipFilter_t f;
 	
 	for ( i = 0, cl = svs.clients; i < sv_maxclients->current.integer; i++, cl++ )
 	{
@@ -631,18 +632,15 @@ void custom_UpdateIPBans(void)
 			continue;
 		}
 
-		for ( j = 0; j < ipFilterList->numIPFilters; j++ )
+		if ( StringToFilter(NET_AdrToString(customPlayerState[i].realAddress), &f) )
 		{
-			unsigned int ip = 
-			(customPlayerState[i].realAddress.ip[3] << 24) + 
-			(customPlayerState[i].realAddress.ip[2] << 16) + 
-			(customPlayerState[i].realAddress.ip[1] << 8) + 
-			customPlayerState[i].realAddress.ip[0];
-
-			if ( ip == ipFilterList->ipFilters[j].compare )
+			for ( j = 0; j < ipFilterList->numIPFilters; j++ )
 			{
-				SV_DropClient(cl, "\x15You are permanently banned from this server");
-				cl->lastPacketTime = svs.time;
+				if ( ipFilterList->ipFilters[j].mask == f.mask && ipFilterList->ipFilters[j].compare == f.compare )
+				{
+					SV_DropClient(cl, "\x15You are permanently banned from this server");
+					cl->lastPacketTime = svs.time;
+				}
 			}
 		}
 	}
@@ -713,6 +711,7 @@ const char * custom_ClientConnect(unsigned int clientNum, unsigned int scriptPer
 						Com_Printf("WARNING: Failed to parse pre-proxy address for client %d: %s\n", clientNum, va("%s:%i", preProxyIP, preProxyPort));
 						memcpy(&customPlayerState[clientNum].realAddress, &client->netchan.remoteAddress, sizeof(netadr_t));
 					}
+					Com_Printf("Connecting player #%i via proxy from %s\n", clientNum, NET_AdrToString(customPlayerState[clientNum].realAddress));
 				}
 				else
 				{
@@ -732,18 +731,19 @@ const char * custom_ClientConnect(unsigned int clientNum, unsigned int scriptPer
 		/* New code start: g_banIPs dvar enforcement reimplementation */
 		if ( !client->bIsTestClient )
 		{
-			for ( int i = 0; i < ipFilterList->numIPFilters; i++ )
-			{
-				unsigned int ip =
-				(customPlayerState[clientNum].realAddress.ip[3] << 24) + 
-				(customPlayerState[clientNum].realAddress.ip[2] << 16) + 
-				(customPlayerState[clientNum].realAddress.ip[1] << 8) + 
-				customPlayerState[clientNum].realAddress.ip[0];
+			ipFilter_t f;
 
-				if ( ip == ipFilterList->ipFilters[i].compare )
+			if ( StringToFilter(NET_AdrToString(customPlayerState[clientNum].realAddress), &f) )
+			{
+				for ( int i = 0; i < ipFilterList->numIPFilters; i++ )
 				{
-					G_FreeEntity(ent);
-					return "\x15You are permanently banned from this server";
+					if ( ipFilterList->ipFilters[i].mask == f.mask && ipFilterList->ipFilters[i].compare == f.compare )
+					{
+						Com_Printf("Connecting player #%i is permanently banned\n", clientNum);
+						G_FreeEntity(ent);
+
+						return "\x15You are permanently banned from this server";
+					}
 				}
 			}
 		}
@@ -1578,6 +1578,12 @@ LAB_0808ec36:
 			NET_OutOfBandPrint(NS_SERVER, from, va("error\n%s", denied));
 			Com_DPrintf("Game rejected a connection: %s.\n", denied);
 			SV_FreeClientScriptId(newcl);
+
+			/* New code start: Free realAddress as we skip SV_DropClient here.
+			 Covers the case where a banned player is rejected after populating
+			 realAddress */
+			memset(&customPlayerState[clientNum].realAddress, 0, sizeof(netadr_t));
+			/* New code end */
 
 			/* New code start: Remove rejected client from scoreboard. This
 			 does not cover rejection by pbsv.m_AuthClient (PunkBuster) */
@@ -4020,7 +4026,7 @@ void custom_SV_SendClientGameState(client_t *client)
 				// 10 = svc_EOF and checksumFeed
 				if ( ( msg.cursize + currentConfigstringSize + 3 + 10 ) > 0x4000 )
 				{
-					Com_Printf("Client %i ran into gamestate limit at configstring %i\n", id, start);
+					Com_Printf("Connecting player #%i ran into gamestate limit at configstring %i\n", id, start);
 					customPlayerState[id].resourceLimitedState = LIMITED_GAMESTATE;
 					break;
 				}
@@ -4036,7 +4042,7 @@ void custom_SV_SendClientGameState(client_t *client)
 
 				if ( ( clientGamestateDataCount + currentConfigstringSize + 1 ) > ( 16000 - remainingReservedBuffer ) )
 				{
-					Com_Printf("Client %i ran into configstring limit at configstring %i\n", id, start);
+					Com_Printf("Connecting player #%i ran into configstring limit at configstring %i\n", id, start);
 					customPlayerState[id].resourceLimitedState = LIMITED_CONFIGSTRING;
 					break;
 				}
@@ -4085,7 +4091,7 @@ void custom_SV_SendClientGameState(client_t *client)
 				currentConfigstringSize = strlen(sv.configstrings[start]);
 				if ( ( clientGamestateDataCount + currentConfigstringSize + 1 ) > ( 16000 - remainingReservedBuffer ) )
 				{
-					Com_Printf("Aborting configstring queue at %i as client %i ran into configstring limit\n", start, id);
+					Com_Printf("WARNING: Aborting configstring queue at %i as client %i ran into configstring limit\n", start, id);
 					customPlayerState[id].resourceLimitedState = LIMITED_CONFIGSTRING;
 					return;
 				}
@@ -4096,7 +4102,7 @@ void custom_SV_SendClientGameState(client_t *client)
 				{
 					// This could potentially be delayed further, to avoid
 					// filling up the command queue at once
-					Com_Printf("Aborting configstring queue at %i as client %i command queue is full\n", start, id);
+					Com_Printf("WARNING: Aborting configstring queue at %i as client %i command queue is full\n", start, id);
 					customPlayerState[id].resourceLimitedState = LIMITED_CONFIGSTRING;
 					return;
 				}
