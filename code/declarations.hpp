@@ -107,7 +107,8 @@
 #define DVAR_INVALID_ENUM_INDEX -1337
 
 // These are the only configstrings that the system reserves, all the
-// other ones are strictly for servergame to clientgame communication
+// other ones (see cs_index_t) are strictly for servergame to clientgame
+// communication
 #define CS_SERVERINFO   0   // An info string with all the serverinfo cvars
 #define CS_SYSTEMINFO   1   // An info string for server system to client system configuration (timescale, etc.)
 
@@ -1935,6 +1936,42 @@ typedef struct useList_s
 	gentity_t *ent;
 	float score;
 } useList_t;
+
+typedef enum cs_index_s
+{
+	// CS_SERVERINFO = 0,
+	// CS_SYSTEMINFO = 1,
+	CS_GAME_VERSION = 2,
+	CS_AMBIENT = 3,
+	CS_MESSAGE = 4,
+	CS_SCORES1 = 5,
+	CS_SCORES2 = 6,
+	CS_WEAPONS = 7,
+	CS_ITEMS = 8,
+	CS_NORTHYAW = 11,
+	CS_FOGVARS = 12,
+	CS_LEVEL_START_TIME = 13,
+	CS_MOTD = 14,
+	CS_VOTE_TIME = 15,
+	CS_VOTE_STRING = 16,
+	CS_VOTE_YES = 17,
+	CS_VOTE_NO = 18,
+	CS_VOTE_MAPNAME = 19,
+	CS_VOTE_GAMETYPE = 20,
+	CS_MULTI_MAPWINNER = 22,
+	CS_STATUS_ICONS = 23,
+	CS_HEAD_ICONS = 31,
+	CS_TAGS = 110,
+	CS_MODELS = 334,
+	CS_SOUND_ALIASES = 590,
+	CS_EFFECT_NAMES = 846,
+	CS_EFFECT_TAGS = 910,
+	CS_SHELLSHOCKS = 1166,
+	CS_SCRIPT_MENUS = 1246,
+	CS_HINTSTRINGS = 1278,
+	CS_LOCALIZED_STRINGS = 1310,
+	CS_SHADERS = 1566
+} cs_index_t;
 
 typedef struct
 {

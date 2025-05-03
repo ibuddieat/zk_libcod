@@ -10643,7 +10643,7 @@ unsigned int custom_G_ModelIndex(const char *name)
 
 	for ( i = 1; i < limit; ++i )
 	{
-		modelName = SV_GetConfigstringConst(i + 334);
+		modelName = SV_GetConfigstringConst(CS_MODELS + i);
 
 		if ( !*modelName )
 			break;
@@ -10682,7 +10682,7 @@ unsigned int custom_G_ModelIndex(const char *name)
 	}
 
 	cached_models[i] = SV_XModelGet(name);
-	SV_SetConfigstring(i + 334, name);
+	SV_SetConfigstring(CS_MODELS + i, name);
 
 	return i;
 }
