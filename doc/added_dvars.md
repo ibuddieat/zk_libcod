@@ -221,6 +221,12 @@ Added dvars:
     * Type: Boolean
     * Default: False
     * Effect: Enable this for higher direct download speeds. Does not affect HTTP-based downloads. Currently considered experimental.
+  * `sv_fastDownloadSpeed`
+    * Type: Integer
+    * Default: 8
+    * Min. Value: 0
+    * Max. Value: 8
+    * Effect: Controls the direct download speed when the `sv_fastDownload` dvar is enabled.
   * `sv_isLookingAtOnDemand`
     * Type: Boolean
     * Default: False

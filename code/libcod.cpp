@@ -142,6 +142,7 @@ dvar_t *sv_downloadMessageAtMap;
 dvar_t *sv_downloadMessageForLegacyClients;
 dvar_t *sv_downloadNotifications;
 dvar_t *sv_fastDownload;
+dvar_t *sv_fastDownloadSpeed;
 dvar_t *sv_isLookingAtOnDemand;
 dvar_t *sv_kickGamestateLimitedClients;
 dvar_t *sv_kickMessages;
@@ -483,6 +484,7 @@ void common_init_complete_print(const char *format, ...)
 	sv_downloadMessageForLegacyClients = Dvar_RegisterString("sv_downloadMessageForLegacyClients", "", DVAR_ARCHIVE);
 	sv_downloadNotifications = Dvar_RegisterBool("sv_downloadNotifications", qfalse, DVAR_ARCHIVE);
 	sv_fastDownload = Dvar_RegisterBool("sv_fastDownload", qfalse, DVAR_ARCHIVE);
+	sv_fastDownloadSpeed = Dvar_RegisterInt("sv_fastDownloadSpeed", 8, 0, 8, DVAR_ARCHIVE);
 	sv_isLookingAtOnDemand = Dvar_RegisterBool("sv_isLookingAtOnDemand", qfalse, DVAR_ARCHIVE);
 	sv_kickGamestateLimitedClients = Dvar_RegisterBool("sv_kickGamestateLimitedClients", qtrue, DVAR_ARCHIVE);
 	sv_kickMessages = Dvar_RegisterBool("sv_kickMessages", qtrue, DVAR_ARCHIVE);
@@ -3753,11 +3755,11 @@ void custom_SV_SendClientMessages(void)
 		numclients++;
 
 		/* New code start: Speed up direct download without having to increase
-		 the sv_fps dvar */
+		 the sv_fps dvar. Using an experimental value with good results,
+		 simulating sv_fps 180 (9 * default 20) */
 		if ( sv_fastDownload->current.boolean && cl->download && !cl->downloadingWWW )
 		{
-			// Experimental value with good results, simulating sv_fps 180
-			for ( int j = 0; j < 1 + ( ( sv_fps->current.integer / 20 ) * MAX_DOWNLOAD_WINDOW ); j++ )
+			for ( int j = 0; j < 1 + sv_fastDownloadSpeed->current.integer; j++ )
 			{
 				cl->nextSnapshotTime = svs.time;
 				while ( cl->netchan.unsentFragments )
@@ -3767,6 +3769,8 @@ void custom_SV_SendClientMessages(void)
 
 				SV_SendClientSnapshot(cl);
 			}
+
+			// Voice data is sent as usual, otherwise would distort
 			SV_SendClientVoiceData(cl);
 		}
 		else
@@ -10691,6 +10695,7 @@ int custom_SV_GetClientPing(int clientNum)
 {
 	if ( customPlayerState[clientNum].overridePing )
 		return customPlayerState[clientNum].ping;
+
 	return svs.clients[clientNum].ping;
 }
 
