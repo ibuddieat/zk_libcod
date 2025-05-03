@@ -10691,6 +10691,15 @@ unsigned int custom_G_ModelIndex(const char *name)
 	return i;
 }
 
+void custom_G_ShaderIndex(const char *name)
+{
+	char s[64];
+
+	I_strncpyz(s, name, sizeof(s)); // New: Replaced unsafe strcpy
+	I_strlwr(s);
+	G_FindConfigstringIndex(s, CS_SHADERS, MAX_SHADERS, level.initializing, "shader");
+}
+
 int custom_SV_GetClientPing(int clientNum)
 {
 	if ( customPlayerState[clientNum].overridePing )
@@ -11542,6 +11551,7 @@ public:
 		cracking_hook_function(0x080EFCC6, (int)custom_PM_SendEmtpyOffhandEvent);
 		cracking_hook_function(0x08117F70, (int)custom_Scr_ParseGameTypeList);
 		cracking_hook_function(0x080EA3F4, (int)custom_PM_StepSlideMove);
+		cracking_hook_function(0x0811D44A, (int)custom_G_ShaderIndex);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC8CA, (int)Jump_ReduceFriction);

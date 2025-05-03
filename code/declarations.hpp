@@ -79,6 +79,7 @@
 #define MAX_PACKETLEN               1400
 #define MAX_QPATH                   64
 #define MAX_RELIABLE_COMMANDS       128
+#define MAX_SHADERS                 128
 #define MAX_SNAPSHOT_ENTITIES       1024
 #define MAX_STRINGLENGTH            1024
 #define MAX_TOTAL_ENT_LEAFS         128
