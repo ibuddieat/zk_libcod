@@ -155,7 +155,7 @@ double Jump_ReduceFriction(playerState_t *ps)
 	return control;
 }
 
-void Jump_ClampVelocity(playerState_t* ps, vec3_t vec)
+void Jump_ClampVelocity(playerState_t* ps, float* vec)
 {
 	float comp;
 	float newZVelocity;
@@ -189,7 +189,7 @@ qboolean Jump_IsPlayerAboveMax(playerState_t* ps)
 		return qfalse;
 }
 
-qboolean Jump_GetStepHeight(playerState_t* ps, const vec3_t vec1, float* val2)
+qboolean Jump_GetStepHeight(playerState_t* ps, const float* vec1, float* val2)
 {
 	float jumpHeight = getJumpHeight(ps); // Original: jump_height->current.decimal;
 

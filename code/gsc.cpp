@@ -688,7 +688,7 @@ int stackGetParams(const char *params, ...)
 	}
 
 	va_end(args);
-	return errors == 0; // success if no errors
+	return errors == 0; // Success if no errors
 }
 
 int stackGetParamInt(int param, int *value)
