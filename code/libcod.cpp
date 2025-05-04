@@ -10691,13 +10691,13 @@ unsigned int custom_G_ModelIndex(const char *name)
 	return i;
 }
 
-void custom_G_ShaderIndex(const char *name)
+int custom_G_ShaderIndex(const char *name)
 {
 	char s[64];
 
 	I_strncpyz(s, name, sizeof(s)); // New: Replaced unsafe strcpy
 	I_strlwr(s);
-	G_FindConfigstringIndex(s, CS_SHADERS, MAX_SHADERS, level.initializing, "shader");
+	return G_FindConfigstringIndex(s, CS_SHADERS, MAX_SHADERS, level.initializing, "shader");
 }
 
 int custom_SV_GetClientPing(int clientNum)
