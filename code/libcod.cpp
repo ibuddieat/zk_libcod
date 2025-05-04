@@ -669,8 +669,8 @@ const char * custom_ClientConnect(unsigned int clientNum, unsigned int scriptPer
 	ci->infoValid = 1;
 	ci->nextValid = 1;
 	gclient->sess.connected = CON_CONNECTING;
-	gclient->sess.pers = id;
-	gclient->sess.state.team = TEAM_SPECTATOR;
+	gclient->sess.scriptPersId = id;
+	gclient->sess.cs.team = TEAM_SPECTATOR;
 	gclient->sess.sessionState = STATE_SPECTATOR;
 	gclient->spectatorClient = -1;
 	gclient->sess.forceSpectatorClient = -1;
@@ -678,7 +678,7 @@ const char * custom_ClientConnect(unsigned int clientNum, unsigned int scriptPer
 	ent->handler = ENT_HANDLER_NULL;
 	ent->client = gclient;
 	gclient->useHoldEntity = ENTITY_NONE;
-	gclient->sess.state.clientIndex = clientNum;
+	gclient->sess.cs.clientIndex = clientNum;
 	gclient->ps.clientNum = clientNum;
 	ClientUserinfoChanged(clientNum);
 	SV_GetUserinfo(clientNum, userinfo, MAX_STRINGLENGTH);
@@ -1802,16 +1802,16 @@ qboolean SkipCollision(gentity_t *client1, gentity_t *client2)
 		if ( customPlayerState[id1].collisionTeam == CUSTOM_TEAM_NONE || customPlayerState[id2].collisionTeam == CUSTOM_TEAM_NONE )
 			return qtrue;
 
-		if ( customPlayerState[id1].collisionTeam == CUSTOM_TEAM_AXIS && (client2->client->sess.state).team != TEAM_AXIS )
+		if ( customPlayerState[id1].collisionTeam == CUSTOM_TEAM_AXIS && client2->client->sess.cs.team != TEAM_AXIS )
 			return qtrue;
 
-		if ( customPlayerState[id1].collisionTeam == CUSTOM_TEAM_ALLIES && (client2->client->sess.state).team != TEAM_ALLIES )
+		if ( customPlayerState[id1].collisionTeam == CUSTOM_TEAM_ALLIES && client2->client->sess.cs.team != TEAM_ALLIES )
 			return qtrue;
 
-		if ( customPlayerState[id2].collisionTeam == CUSTOM_TEAM_AXIS && (client1->client->sess.state).team != TEAM_AXIS )
+		if ( customPlayerState[id2].collisionTeam == CUSTOM_TEAM_AXIS && client1->client->sess.cs.team != TEAM_AXIS )
 			return qtrue;
 
-		if ( customPlayerState[id2].collisionTeam == CUSTOM_TEAM_ALLIES && (client1->client->sess.state).team != TEAM_ALLIES )
+		if ( customPlayerState[id2].collisionTeam == CUSTOM_TEAM_ALLIES && client1->client->sess.cs.team != TEAM_ALLIES )
 			return qtrue;
 	}
 
@@ -2131,19 +2131,19 @@ void ProcessClientUserinfoChange(int clientNum)
 	if ( client->sess.connected == CON_CONNECTED && level.manualNameChange )
 	{
 		value = Info_ValueForKey(userinfo, "name");
-		ClientCleanName(value, client->sess.name, 32);
+		ClientCleanName(value, client->sess.newnetname, 32);
 	}
 	else
 	{
-		I_strncpyz(oldname, client->sess.state.name, MAX_STRINGLENGTH);
+		I_strncpyz(oldname, client->sess.cs.name, MAX_STRINGLENGTH);
 		value = Info_ValueForKey(userinfo, "name");
-		ClientCleanName(value, client->sess.state.name, 32);
-		I_strncpyz(client->sess.name, client->sess.state.name, 32);
+		ClientCleanName(value, client->sess.cs.name, 32);
+		I_strncpyz(client->sess.newnetname, client->sess.cs.name, 32);
 	}
 
 	level_bgs.clientinfo[clientNum].clientNum = clientNum;
-	I_strncpyz(level_bgs.clientinfo[clientNum].name, client->sess.state.name, 32);
-	level_bgs.clientinfo[clientNum].team = client->sess.state.team;
+	I_strncpyz(level_bgs.clientinfo[clientNum].name, client->sess.cs.name, 32);
+	level_bgs.clientinfo[clientNum].team = client->sess.cs.team;
 
 	ForceServerSnapsAndRate(cl); // New
 }
@@ -2190,7 +2190,7 @@ void custom_DeathmatchScoreboardMessage(gentity_t *ent)
 			    client->sess.score,
 			    -1,
 			    client->sess.deaths,
-			    client->sess.statusIcon);
+			    client->sess.status_icon);
 		}
 		else
 		{
@@ -2204,7 +2204,7 @@ void custom_DeathmatchScoreboardMessage(gentity_t *ent)
 			    client->sess.score,
 			    ping,
 			    client->sess.deaths,
-			    client->sess.statusIcon);
+			    client->sess.status_icon);
 		}
 
 		len = strlen(entry);
@@ -2359,7 +2359,7 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 	}
 	else
 	{
-		I_strncpyz(name, entity->client->sess.state.name, sizeof(name));
+		I_strncpyz(name, entity->client->sess.cs.name, sizeof(name));
 		I_CleanStr(name);
 		
 		// New: g_logPickup dvar
@@ -2807,7 +2807,7 @@ void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t 
 					// ClientDisconnect() nulls parts of clientSession_t
 					if ( client && client->gentity && client->gentity->client && client->gentity->client->sess.connected == CON_CONNECTED )
 					{
-						int clientTeam = (client->gentity->client->sess.state).team;
+						int clientTeam = client->gentity->client->sess.cs.team;
 						if ( headIconTeam && headIconTeam != CUSTOM_TEAM_NONE )
 						{
 							if ( clientTeam == TEAM_AXIS )
@@ -2886,7 +2886,7 @@ void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t 
 						// ClientDisconnect() nulls parts of clientSession_t
 						if ( client && client->gentity && client->gentity->client && client->gentity->client->sess.connected == CON_CONNECTED )
 						{
-							int clientTeam = (client->gentity->client->sess.state).team;
+							int clientTeam = client->gentity->client->sess.cs.team;
 							if ( team )
 							{
 								if ( team != clientTeam && (
@@ -5252,10 +5252,10 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 					else
 					{
 						level.finished = 1;
-						level.savePersist = 0;
+						level.savepersist = 0;
 						if ( SV_Cmd_Argc() > 3 )
 						{
-							level.savePersist = atoi(SV_Cmd_Argv(3));
+							level.savepersist = atoi(SV_Cmd_Argv(3));
 						}
 						Cbuf_ExecuteText(2, cmd_aux);
 					}
@@ -5296,10 +5296,10 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 						else
 						{
 							level.finished = 2;
-							level.savePersist = 0;
+							level.savepersist = 0;
 							if ( SV_Cmd_Argc() > 4 )
 							{
-								level.savePersist = atoi(SV_Cmd_Argv(4));
+								level.savepersist = atoi(SV_Cmd_Argv(4));
 							}
 							Dvar_SetBool(sv_cheats, 1);
 							Cbuf_ExecuteText(2, cmd_aux);
@@ -5320,10 +5320,10 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 						else
 						{
 							level.finished = 2;
-							level.savePersist = 0;
+							level.savepersist = 0;
 							if ( SV_Cmd_Argc() > 4 )
 							{
-								level.savePersist = atoi(SV_Cmd_Argv(4));
+								level.savepersist = atoi(SV_Cmd_Argv(4));
 							}
 							Cbuf_ExecuteText(2, cmd_aux);
 						}
@@ -5345,10 +5345,10 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 					else
 					{
 						level.finished = 3;
-						level.savePersist = 0;
+						level.savepersist = 0;
 						if ( SV_Cmd_Argc() > 3 )
 						{
-							level.savePersist = atoi(SV_Cmd_Argv(3));
+							level.savepersist = atoi(SV_Cmd_Argv(3));
 						}
 						Cbuf_ExecuteText(2, cmd_aux);
 						level.teamScores[1] = 0;
@@ -6941,46 +6941,46 @@ void custom_G_ParseEntityFields(gentity_t *ent)
 	}
 	/* New code end */
 
-	for ( int i = 0; i < level.spawnVars.numSpawnVars; i++ )
+	for ( int i = 0; i < level.spawnVar.numSpawnVars; i++ )
 	{
 		/* New code start: map weapons callback */
 		if ( codecallback_map_turrets_load )
 		{
-			if ( !strncmp(level.spawnVars.spawnVars[i].key, "toparc", 6) )
+			if ( !strncmp(level.spawnVar.spawnVars[i].key, "toparc", 6) )
 			{
-				map_turrets[num_map_turrets].toparc = atoi(level.spawnVars.spawnVars[i].value);
+				map_turrets[num_map_turrets].toparc = atoi(level.spawnVar.spawnVars[i].value);
 			}
-			else if ( !strncmp(level.spawnVars.spawnVars[i].key, "bottomarc", 9) )
+			else if ( !strncmp(level.spawnVar.spawnVars[i].key, "bottomarc", 9) )
 			{
-				map_turrets[num_map_turrets].bottomarc = atoi(level.spawnVars.spawnVars[i].value);
+				map_turrets[num_map_turrets].bottomarc = atoi(level.spawnVar.spawnVars[i].value);
 			}
-			else if ( !strncmp(level.spawnVars.spawnVars[i].key, "leftarc", 7) )
+			else if ( !strncmp(level.spawnVar.spawnVars[i].key, "leftarc", 7) )
 			{
-				map_turrets[num_map_turrets].leftarc = atoi(level.spawnVars.spawnVars[i].value);
+				map_turrets[num_map_turrets].leftarc = atoi(level.spawnVar.spawnVars[i].value);
 			}
-			else if ( !strncmp(level.spawnVars.spawnVars[i].key, "rightarc", 8) )
+			else if ( !strncmp(level.spawnVar.spawnVars[i].key, "rightarc", 8) )
 			{
-				map_turrets[num_map_turrets].rightarc = atoi(level.spawnVars.spawnVars[i].value);
+				map_turrets[num_map_turrets].rightarc = atoi(level.spawnVar.spawnVars[i].value);
 			}
-			else if ( !strncmp(level.spawnVars.spawnVars[i].key, "export", 6) )
+			else if ( !strncmp(level.spawnVar.spawnVars[i].key, "export", 6) )
 			{
-				map_turrets[num_map_turrets].script_export = atoi(level.spawnVars.spawnVars[i].value);
+				map_turrets[num_map_turrets].script_export = atoi(level.spawnVar.spawnVars[i].value);
 			}
-			else if ( !strncmp(level.spawnVars.spawnVars[i].key, "model", 5) )
+			else if ( !strncmp(level.spawnVar.spawnVars[i].key, "model", 5) )
 			{
-				strncpy(map_turrets[num_map_turrets].model, level.spawnVars.spawnVars[i].value, sizeof(map_turrets[num_map_turrets].model));
+				strncpy(map_turrets[num_map_turrets].model, level.spawnVar.spawnVars[i].value, sizeof(map_turrets[num_map_turrets].model));
 			}
-			else if ( !strncmp(level.spawnVars.spawnVars[i].key, "script_gameobjectname", 21) )
+			else if ( !strncmp(level.spawnVar.spawnVars[i].key, "script_gameobjectname", 21) )
 			{
-				strncpy(map_turrets[num_map_turrets].script_gameobjectname, level.spawnVars.spawnVars[i].value, sizeof(map_turrets[num_map_turrets].script_gameobjectname));
+				strncpy(map_turrets[num_map_turrets].script_gameobjectname, level.spawnVar.spawnVars[i].value, sizeof(map_turrets[num_map_turrets].script_gameobjectname));
 			} 
-			else if ( !strncmp(level.spawnVars.spawnVars[i].key, "weaponinfo", 10) )
+			else if ( !strncmp(level.spawnVar.spawnVars[i].key, "weaponinfo", 10) )
 			{
-				strncpy(map_turrets[num_map_turrets].weaponinfo, level.spawnVars.spawnVars[i].value, sizeof(map_turrets[num_map_turrets].weaponinfo));
+				strncpy(map_turrets[num_map_turrets].weaponinfo, level.spawnVar.spawnVars[i].value, sizeof(map_turrets[num_map_turrets].weaponinfo));
 			}
 		}
 		/* New code end */
-		G_ParseEntityField(level.spawnVars.spawnVars[i].key, level.spawnVars.spawnVars[i].value, ent);
+		G_ParseEntityField(level.spawnVar.spawnVars[i].key, level.spawnVar.spawnVars[i].value, ent);
 	}
 	G_SetOrigin(ent, ent->r.currentOrigin);
 	G_SetAngle(ent, ent->r.currentAngles);
@@ -7094,7 +7094,7 @@ void ClearNotSolidForPlayerFlags(int clientNum)
 
 void custom_G_SpawnEntitiesFromString(void)
 {
-	if ( !G_ParseSpawnVars(&level.spawnVars) ) 
+	if ( !G_ParseSpawnVars(&level.spawnVar) ) 
 		Com_Error(ERR_DROP, "\x15SpawnEntities: no entities");
 
 	SP_worldspawn();
@@ -7115,7 +7115,7 @@ void custom_G_SpawnEntitiesFromString(void)
 	}
 	/* New code end */
 
-	while ( G_ParseSpawnVars(&level.spawnVars) )
+	while ( G_ParseSpawnVars(&level.spawnVar) )
 		custom_G_CallSpawn();
 
 	// New: (not)SolidForPlayer cleanup on map load
@@ -7392,7 +7392,7 @@ LAB_08121ee6:
 							}
 							/* New code end */
 
-							if ( ( ent->team == 0 || ent->team == player->client->sess.state.team ) &&
+							if ( ( ent->team == 0 || ent->team == player->client->sess.cs.team ) &&
 							( ent->trigger.singleUserEntIndex == ENTITY_NONE || ent->trigger.singleUserEntIndex == player->client->ps.clientNum ) )
 							{
 								temp = ent->s.dmgFlags;
@@ -8491,14 +8491,14 @@ void custom_G_UpdateObjectiveToClients(void)
 		if ( level.gentities[i].r.inuse != 0 )
 		{
 			client = level.gentities[i].client;
-			team = ((level.gentities[i].client)->sess.state).team;
+			team = level.gentities[i].client->sess.cs.team;
 			for ( j = 0; j < 16; j++ )
 			{
 				/* New code start: per-player objective functions */
 				obj = &customPlayerState[i].objectives[j];
 				if ( obj->state != OBJST_EMPTY )
 				{
-					G_UpdateSingleObjective(&(client->ps).objective[j], obj);
+					G_UpdateSingleObjective(&client->ps.objective[j], obj);
 				}
 				else
 				{
@@ -8506,11 +8506,11 @@ void custom_G_UpdateObjectiveToClients(void)
 					obj = &level.objectives[j];
 					if ( obj->state == OBJST_EMPTY || ( obj->teamNum != 0 && obj->teamNum != team ) )
 					{
-						(client->ps).objective[j].state = OBJST_EMPTY;
+						client->ps.objective[j].state = OBJST_EMPTY;
 					}
 					else
 					{
-						G_UpdateSingleObjective(&(client->ps).objective[j], obj);
+						G_UpdateSingleObjective(&client->ps.objective[j], obj);
 					}
 				}
 			}

@@ -1727,32 +1727,35 @@ typedef struct clientState_s
 	char name[32];
 } clientState_t;
 
+typedef struct playerTeamState_s
+{
+	int location;
+} playerTeamState_t;
+
 typedef struct
 {
 	sessionState_t sessionState;
 	int forceSpectatorClient;
-	int statusIcon;
+	int status_icon;
 	int archiveTime;
 	int score;
 	int deaths;
-	uint16_t pers;
-	byte pad2;
-	byte pad;
+	uint16_t scriptPersId;
 	clientConnected_t connected;
 	usercmd_t cmd;
 	usercmd_t oldcmd;
 	qboolean localClient;
 	qboolean predictItemPickup;
-	char name[32];
+	char newnetname[32];
 	int maxHealth;
 	int enterTime;
+	playerTeamState_t teamState;
 	int voteCount;
 	int teamVoteCount;
-	float moveSpeedScaleMultiplier;
 	int viewmodelIndex;
-	qboolean noSpectate;
-	int teamInfo;
-	clientState_t state;
+	int noSpectate;
+	qboolean teamInfo;
+	clientState_t cs;
 	int psOffsetTime;
 } clientSession_t;
 
@@ -2193,31 +2196,34 @@ typedef struct
 	gentity_t *firstFreeEnt;
 	gentity_t *lastFreeEnt;
 	fileHandle_t logFile;
-	int initializing;
-	int clientIsSpawning;
+	qboolean initializing;
+	qboolean clientIsSpawning;
 	objective_t objectives[16];
 	int maxclients;
 	int framenum;
 	int time;
 	int previousTime;
-	int frameTime;
+	int frametime;
 	int startTime;
 	int teamScores[TEAM_NUM_TEAMS];
 	int lastTeammateHealthTime;
 	qboolean bUpdateScoresForIntermission;
-	int manualNameChange;
+	qboolean manualNameChange;
 	int numConnectedClients;
 	int sortedClients[MAX_CLIENTS];
 	char voteString[1024];
 	char voteDisplayString[1024];
-	int voteTime; // 711
+	int voteTime;
 	int voteExecuteTime;
 	int voteYes;
 	int voteNo;
 	int numVotingClients;
-	byte gap[2072];
-	SpawnVar spawnVars;
-	int savePersist;
+	char teamVoteString[1024][2];
+	int teamVoteTime[2];
+	int teamVoteYes[2];
+	int teamVoteNo[2];
+	SpawnVar spawnVar;
+	int savepersist;
 	struct gentity_s *droppedWeaponCue[32];
 	float fFogOpaqueDist;
 	float fFogOpaqueDistSqrd;
@@ -2228,10 +2234,10 @@ typedef struct
 	int pendingTriggerListSize;
 	int currentTriggerListSize;
 	int finished;
-	int bPlayerIgnoreRadiusDamage;
-	int bPlayerIgnoreRadiusDamageLatched;
-	int registerWeapons;
-	int bRegisterItems;
+	qboolean bPlayerIgnoreRadiusDamage;
+	qboolean bPlayerIgnoreRadiusDamageLatched;
+	qboolean registerWeapons;
+	qboolean bRegisterItems;
 	int currentEntityThink;
 	void *openScriptIOFileHandles[1];
 	char *openScriptIOFileBuffers[1];
@@ -2786,7 +2792,7 @@ typedef struct WeaponDef_t
 	float fightDist;
 	float maxDist;
 	const char *accuracyGraphName[2];
-	int accuracyGraphKnots[2];
+	float (*accuracyGraphKnots[2])[2];
 	int accuracyGraphKnotCount[2];
 	int iPositionReloadTransTime;
 	float leftArc;
@@ -3986,6 +3992,7 @@ static const int g_sv_skel_warn_count_offset = 0x08423004;
  static_assert((sizeof(scr_data_t) == 14072), "ERROR: scr_data_t size is invalid!");
  static_assert((sizeof(entHandlers_t) == 1), "ERROR: entHandlers_t size is invalid!");
  static_assert((sizeof(LegacyHacks) == 1780), "ERROR: LegacyHacks size is invalid!");
+ static_assert((sizeof(clientSession_t) == 256), "ERROR: clientSession_t size is invalid!");
 
 #endif
 

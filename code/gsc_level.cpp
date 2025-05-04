@@ -97,7 +97,7 @@ void gsc_level_getentitycount()
 
 void gsc_utils_getsavepersist()
 {
-	stackPushBool(level.savePersist);
+	stackPushBool(level.savepersist);
 }
 
 void gsc_utils_setsavepersist()
@@ -111,7 +111,7 @@ void gsc_utils_setsavepersist()
 		return;
 	}
 
-	level.savePersist = save;
+	level.savepersist = save;
 	stackPushBool(qtrue);
 }
 
