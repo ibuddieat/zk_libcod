@@ -71,9 +71,7 @@
 #include "gsc_weapons.hpp"
 #endif
 
-#ifdef EXTRA_INCLUDES_INC
-#include "extra/includes.hpp"
-#endif
+#include "gsc_extra.hpp"
 
 #define STACK_UNDEFINED 0
 #define STACK_OBJECT 1

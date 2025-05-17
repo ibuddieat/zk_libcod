@@ -752,6 +752,8 @@ const char * custom_ClientConnect(unsigned int clientNum, unsigned int scriptPer
 		/* New code end */
 
 		Scr_PlayerConnect(ent);
+		if(&extra_Scr_PlayerConnect)
+			extra_Scr_PlayerConnect(ent);
 		CalculateRanks();
 		return 0;
 	}
@@ -1764,6 +1766,9 @@ void custom_GScr_LoadGameTypeScript(void)
 	g_scr_data.gametype.playerdisconnect = Scr_GetFunctionHandle(path_to_callbacks, "CodeCallback_PlayerDisconnect", 1);
 	g_scr_data.gametype.playerdamage = Scr_GetFunctionHandle(path_to_callbacks, "CodeCallback_PlayerDamage", 1);
 	g_scr_data.gametype.playerkilled = Scr_GetFunctionHandle(path_to_callbacks, "CodeCallback_PlayerKilled", 1);
+
+	if(&extra_GScr_LoadGameTypeScript)
+		extra_GScr_LoadGameTypeScript();
 }
 
 void custom_G_AddPlayerMantleBlockage(float *endPos, int duration, pmove_t *pm)
@@ -2010,6 +2015,9 @@ gentity_t * custom_fire_grenade(gentity_t *attacker, vec3_t start, vec3_t dir, i
 	grenade = fire_grenade(attacker, start, dir, weaponIndex, fuseTime);
 	hook_fire_grenade->hook();
 
+	if(&extra_fire_grenade)
+		extra_fire_grenade(attacker, grenade);
+
 	if ( codecallback_fire_grenade && Scr_IsSystemActive() )
 	{
 		WeaponDef_t *def = BG_WeaponDefs(weaponIndex);
@@ -2027,7 +2035,7 @@ void hook_ClientCommand(int clientNum)
 
 	if ( !Scr_IsSystemActive() )
 		return;
-			
+
 	if ( !codecallback_playercommand )
 	{	
 		ClientCommand(clientNum);
@@ -2239,6 +2247,10 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 	for ( i = 0; i < sv_maxclients->current.integer; i++ )
 		customPlayerState[i].talkerIcons[drop - svs.clients] = 0;
 	/* New code end */
+
+
+	if(&extra_SV_DropClient)
+		extra_SV_DropClient(drop, reason);
 
 	drop->dropReason = NULL;
 	I_strncpyz(name, drop->name, sizeof(name));
@@ -3566,6 +3578,9 @@ void custom_SV_ClientEnterWorld(client_t *client, usercmd_t *cmd)
 	client->lastUsercmd = *cmd;
 	ClientBegin(client - svs.clients);
 
+	if(&extra_ClientBegin)
+		extra_ClientBegin(client);
+
 	/* New code start: Multi version support */
 	if ( customPlayerState[clientNum].resourceLimitedState > LIMITED_GAMESTATE && sv_kickGamestateLimitedClients->current.boolean )
 	{
@@ -4634,9 +4649,15 @@ void hook_RuntimeError_in_VM_Execute(const char *pos, int error_index, const cha
 
 void custom_SV_ClientThink(client_t *cl, usercmd_t *ucmd)
 {
+	if(&extra_SV_ClientThinkBefore)
+		extra_SV_ClientThinkBefore(cl, ucmd);
+
 	hook_SV_ClientThink->unhook();
 	SV_ClientThink(cl, ucmd);
 	hook_SV_ClientThink->hook();
+
+	if(&extra_SV_ClientThinkAfter)
+		extra_SV_ClientThinkAfter(cl, ucmd);
 
 	int clientnum = cl - svs.clients;
 
@@ -6348,9 +6369,14 @@ void custom_G_RunFrame(int levelTime)
 		}
 	}
 
+	if(&extra_G_RunFrameBefore)
+		extra_G_RunFrameBefore(levelTime);
 	hook_G_RunFrame->unhook();
 	G_RunFrame(levelTime);
 	hook_G_RunFrame->hook();
+
+	if(&extra_G_RunFrameAfter)
+		extra_G_RunFrameAfter(levelTime);
 }
 
 void custom_SV_ArchiveSnapshot(void)
@@ -10188,7 +10214,8 @@ int custom_Cmd_FollowCycle_f(gentity_t *ent, int dir)
 			clientNum = level.maxclients - 1;
 
 		if ( SV_GetArchivedClientInfo(clientNum, &ent->client->sess.archiveTime, &pstate, &cstate)
-		     && G_ClientCanSpectateTeam(ent->client, (team_t)cstate.team) )
+		     && G_ClientCanSpectateTeam(ent->client, (team_t)cstate.team) 
+			 && (!&extra_G_ClientCanSpectateClient || extra_G_ClientCanSpectateClient(ent->client, &svs.clients[clientNum])))
 		{
 			client_t *client = &svs.clients[clientNum];
 

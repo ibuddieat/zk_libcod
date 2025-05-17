@@ -93,22 +93,6 @@ else
 	set -- "cod2"
 fi
 
-if [ -f extra/functions.hpp ]; then
-	constants+=" -D EXTRA_FUNCTIONS_INC"
-fi
-
-if [ -f extra/config.hpp ]; then
-	constants+=" -D EXTRA_CONFIG_INC"
-fi
-
-if [ -f extra/includes.hpp ]; then
-	constants+=" -D EXTRA_INCLUDES_INC"
-fi
-
-if [ -f extra/methods.hpp ]; then
-	constants+=" -D EXTRA_METHODS_INC"
-fi
-
 mkdir -p bin
 mkdir -p objects_$1
 
@@ -202,7 +186,7 @@ if [ -d extra ]; then
 	for F in *.cpp;
 	do
 		echo "###### COMPILE $1 EXTRA: $F #####"
-		$cc $debug $options $constants -c $F -o ../objects_$1/${F%.cpp}.opp;
+		$cc $debug $options $constants -c $F -o ../objects_$1/extra_${F%.cpp}.opp;
 	done
 	cd ..
 fi
