@@ -285,7 +285,7 @@ xfunction_t Scr_GetCustomFunction(const char **fname, int *fdev)
 		return func.call;
 	}
 
-	if(&Scr_GetExtraFunction)
+	if(Scr_GetExtraFunction)
 		return Scr_GetExtraFunction(fname, fdev);
 
 	return NULL;
@@ -516,7 +516,7 @@ xmethod_t Scr_GetCustomMethod(const char **fname, qboolean *fdev)
 		return func.call;
 	}
 
-	if(&Scr_GetExtraMethod)
+	if(Scr_GetExtraMethod)
 		return Scr_GetExtraMethod(fname, fdev);
 
 	return NULL;

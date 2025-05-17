@@ -752,7 +752,7 @@ const char * custom_ClientConnect(unsigned int clientNum, unsigned int scriptPer
 		/* New code end */
 
 		Scr_PlayerConnect(ent);
-		if(&extra_Scr_PlayerConnect)
+		if(extra_Scr_PlayerConnect)
 			extra_Scr_PlayerConnect(ent);
 		CalculateRanks();
 		return 0;
@@ -1767,7 +1767,7 @@ void custom_GScr_LoadGameTypeScript(void)
 	g_scr_data.gametype.playerdamage = Scr_GetFunctionHandle(path_to_callbacks, "CodeCallback_PlayerDamage", 1);
 	g_scr_data.gametype.playerkilled = Scr_GetFunctionHandle(path_to_callbacks, "CodeCallback_PlayerKilled", 1);
 
-	if(&extra_GScr_LoadGameTypeScript)
+	if(extra_GScr_LoadGameTypeScript)
 		extra_GScr_LoadGameTypeScript();
 }
 
@@ -2015,7 +2015,7 @@ gentity_t * custom_fire_grenade(gentity_t *attacker, vec3_t start, vec3_t dir, i
 	grenade = fire_grenade(attacker, start, dir, weaponIndex, fuseTime);
 	hook_fire_grenade->hook();
 
-	if(&extra_fire_grenade)
+	if(extra_fire_grenade)
 		extra_fire_grenade(attacker, grenade);
 
 	if ( codecallback_fire_grenade && Scr_IsSystemActive() )
@@ -2249,7 +2249,7 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 	/* New code end */
 
 
-	if(&extra_SV_DropClient)
+	if(extra_SV_DropClient)
 		extra_SV_DropClient(drop, reason);
 
 	drop->dropReason = NULL;
@@ -3578,7 +3578,7 @@ void custom_SV_ClientEnterWorld(client_t *client, usercmd_t *cmd)
 	client->lastUsercmd = *cmd;
 	ClientBegin(client - svs.clients);
 
-	if(&extra_ClientBegin)
+	if(extra_ClientBegin)
 		extra_ClientBegin(client);
 
 	/* New code start: Multi version support */
@@ -4649,14 +4649,14 @@ void hook_RuntimeError_in_VM_Execute(const char *pos, int error_index, const cha
 
 void custom_SV_ClientThink(client_t *cl, usercmd_t *ucmd)
 {
-	if(&extra_SV_ClientThinkBefore)
+	if(extra_SV_ClientThinkBefore)
 		extra_SV_ClientThinkBefore(cl, ucmd);
 
 	hook_SV_ClientThink->unhook();
 	SV_ClientThink(cl, ucmd);
 	hook_SV_ClientThink->hook();
 
-	if(&extra_SV_ClientThinkAfter)
+	if(extra_SV_ClientThinkAfter)
 		extra_SV_ClientThinkAfter(cl, ucmd);
 
 	int clientnum = cl - svs.clients;
@@ -6369,13 +6369,13 @@ void custom_G_RunFrame(int levelTime)
 		}
 	}
 
-	if(&extra_G_RunFrameBefore)
+	if(extra_G_RunFrameBefore)
 		extra_G_RunFrameBefore(levelTime);
 	hook_G_RunFrame->unhook();
 	G_RunFrame(levelTime);
 	hook_G_RunFrame->hook();
 
-	if(&extra_G_RunFrameAfter)
+	if(extra_G_RunFrameAfter)
 		extra_G_RunFrameAfter(levelTime);
 }
 
@@ -10215,7 +10215,7 @@ int custom_Cmd_FollowCycle_f(gentity_t *ent, int dir)
 
 		if ( SV_GetArchivedClientInfo(clientNum, &ent->client->sess.archiveTime, &pstate, &cstate)
 		     && G_ClientCanSpectateTeam(ent->client, (team_t)cstate.team) 
-			 && (!&extra_G_ClientCanSpectateClient || extra_G_ClientCanSpectateClient(ent->client, &svs.clients[clientNum])))
+			 && (!extra_G_ClientCanSpectateClient || extra_G_ClientCanSpectateClient(ent->client, &svs.clients[clientNum])))
 		{
 			client_t *client = &svs.clients[clientNum];
 
