@@ -26,9 +26,4 @@
 #define COMPILE_JUMP 1
 #define COMPILE_CUSTOM_VOICE 1
 
-// EXTRA STUFF
-#ifdef EXTRA_CONFIG_INC
-#include "extra/config.hpp"
-#endif
-
 #endif

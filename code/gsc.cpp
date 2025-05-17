@@ -265,11 +265,6 @@ scr_function_t scriptFunctions[] =
 	{"ignoreWeapon", gsc_weapons_ignoreweapon, 0},
 	{"setDefaultWeapon", gsc_weapons_setdefaultweapon, 0},
 	#endif
-
-	#ifdef EXTRA_FUNCTIONS_INC
-	#include "extra/functions.hpp"
-	#endif
-
 	{NULL, NULL, 0} // Terminator
 };
 
@@ -289,6 +284,9 @@ xfunction_t Scr_GetCustomFunction(const char **fname, int *fdev)
 		*fdev = func.developer;
 		return func.call;
 	}
+
+	if(Scr_GetExtraFunction)
+		return Scr_GetExtraFunction(fname, fdev);
 
 	return NULL;
 }
@@ -495,10 +493,6 @@ scr_method_t scriptMethods[] =
 	{"spawnGrenade", gsc_weapons_spawngrenade, 0},
 	#endif
 
-	#ifdef EXTRA_METHODS_INC
-	#include "extra/methods.hpp"
-	#endif
-
 	{NULL, NULL, 0} // Terminator
 };
 
@@ -521,6 +515,9 @@ xmethod_t Scr_GetCustomMethod(const char **fname, qboolean *fdev)
 
 		return func.call;
 	}
+
+	if(Scr_GetExtraMethod)
+		return Scr_GetExtraMethod(fname, fdev);
 
 	return NULL;
 }
