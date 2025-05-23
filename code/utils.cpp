@@ -38,33 +38,33 @@ float Get3DDistance(float *a, float *b)
 
 float Get3DDistanceSquared(float *a, float *b)
 {
-    float dx = b[0] - a[0];
-    float dy = b[1] - a[1];
-    float dz = b[2] - a[2];
-    return dx * dx + dy * dy + dz * dz;
+	float dx = b[0] - a[0];
+	float dy = b[1] - a[1];
+	float dz = b[2] - a[2];
+	return dx * dx + dy * dy + dz * dz;
 }
 
 void ProjectPointOnLine(float *a, float *b, float *p, float *o)
 {
-    vec3_t ap;
+	vec3_t ap;
 	vec3_t ab;
 	vec3_t scaledAb;
 	float abDotAb;
 	float apDotAb;
 
 	VectorSubtract(p, a, ap);
-    VectorSubtract(b, a, ab);
-    abDotAb = DotProduct(ab, ab);
-    apDotAb = DotProduct(ap, ab);
-    VectorScale(ab, apDotAb / abDotAb, scaledAb);
-    VectorAdd(a, scaledAb, o);
+	VectorSubtract(b, a, ab);
+	abDotAb = DotProduct(ab, ab);
+	apDotAb = DotProduct(ap, ab);
+	VectorScale(ab, apDotAb / abDotAb, scaledAb);
+	VectorAdd(a, scaledAb, o);
 }
 
 // Using boost::hash_combine
 size_t HashCombine(size_t seed, float v)
 {
-    std::hash<float>hasher;
-    seed ^= hasher(v) + 0x9E3779B9 + ( seed << 6 ) + ( seed >> 2 );
+	std::hash<float>hasher;
+	seed ^= hasher(v) + 0x9E3779B9 + ( seed << 6 ) + ( seed >> 2 );
 	return seed;
 }
 
