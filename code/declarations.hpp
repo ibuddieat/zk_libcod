@@ -4231,12 +4231,19 @@ typedef struct
 	unsigned short bullet;
 	unsigned short flags;
 	unsigned short land;
-	#if COMPILE_CUSTOM_VOICE == 1
-	unsigned short sound_file_done;
-	unsigned short sound_file_stop;
-	#endif
 	unsigned short title;
 	unsigned short trigger_radius;
+#if COMPILE_CUSTOM_VOICE == 1
+	unsigned short sound_file_done;
+	unsigned short sound_file_stop;
+#endif
+#if COMPILE_GRAPH == 1
+	unsigned short cost;
+	unsigned short end;
+	unsigned short origin;
+	unsigned short start;
+	unsigned short type;
+#endif
 } customStringIndex_t;
 
 typedef enum

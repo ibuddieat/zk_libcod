@@ -60,6 +60,21 @@ void NULL_FUNC(void) {}
 
 scr_function_t scriptFunctions[] =
 {
+	#if COMPILE_GRAPH == 1
+	{"graphCreate", gsc_graph_create_graph, 0},
+	{"graphRemove", gsc_graph_remove_graph, 0},
+	{"graphRemoveAll", gsc_graph_remove_graphs, 0},
+	{"graphAddNode", gsc_graph_add_node, 0},
+	{"graphGetNodeProperties", gsc_graph_get_node_properties, 0},
+	{"graphRemoveNode", gsc_graph_remove_node, 0},
+	{"graphAddEdge", gsc_graph_add_edge, 0},
+	{"graphGetEdgeProperties", gsc_graph_get_edge_properties, 0},
+	{"graphRemoveEdge", gsc_graph_remove_edge, 0},
+	{"graphFindPath", gsc_graph_find_path_astar, 0},
+	{"graphFindClosestNode", gsc_graph_find_closest_node, 0},
+	{"graphFindClosestEdge", gsc_graph_find_closest_edge, 0},
+	#endif
+
 	#if COMPILE_BOTS == 1
 	{"setNextTestClientName", gsc_bots_setnexttestclientname, 0},
 	{"resetTestClientNaming", gsc_bots_resettestclientnaming, 0},

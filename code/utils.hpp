@@ -5,6 +5,12 @@
 
 qboolean IsNullVector(float *vec);
 void VectorClampLength(float *vec, double max);
+bool FloatsApproximatelyEqual(float a, float b);
+float Get3DDistance(float *a, float *b);
+float Get3DDistanceSquared(float *a, float *b);
+void ProjectPointOnLine(float *a, float *b, float *p, float *o);
+
+size_t HashCombine(size_t seed, float v);
 
 uint64_t Sys_Milliseconds64(void);
 

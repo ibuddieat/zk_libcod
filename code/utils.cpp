@@ -20,6 +20,54 @@ void VectorClampLength(float *vec, double max)
 	}
 }
 
+// https://stackoverflow.com/questions/67842444/modern-practice-to-compare-double-float-for-equality-in-modern-c
+#define FLOAT_ALLOWANCE 0.0001 // 0.01% allowed deviation in float value comparison
+bool FloatsApproximatelyEqual(float a, float b)
+{
+	if ( abs(a - b) < FLOAT_ALLOWANCE * std::max(abs(a), abs(b)) )
+		return true;
+
+	return false;
+}
+
+// https://stackoverflow.com/questions/2264760/efficient-way-of-finding-distance-between-two-3d-points
+float Get3DDistance(float *a, float *b)
+{
+	return hypot(hypot(a[0] - b[0], a[1] - b[1]), a[2] - b[2]);
+}
+
+float Get3DDistanceSquared(float *a, float *b)
+{
+    float dx = b[0] - a[0];
+    float dy = b[1] - a[1];
+    float dz = b[2] - a[2];
+    return dx * dx + dy * dy + dz * dz;
+}
+
+void ProjectPointOnLine(float *a, float *b, float *p, float *o)
+{
+    vec3_t ap;
+	vec3_t ab;
+	vec3_t scaledAb;
+	float abDotAb;
+	float apDotAb;
+
+	VectorSubtract(p, a, ap);
+    VectorSubtract(b, a, ab);
+    abDotAb = DotProduct(ab, ab);
+    apDotAb = DotProduct(ap, ab);
+    VectorScale(ab, apDotAb / abDotAb, scaledAb);
+    VectorAdd(a, scaledAb, o);
+}
+
+// Using boost::hash_combine
+size_t HashCombine(size_t seed, float v)
+{
+    std::hash<float>hasher;
+    seed ^= hasher(v) + 0x9E3779B9 + ( seed << 6 ) + ( seed >> 2 );
+	return seed;
+}
+
 time_t sys_timeBase = 0;
 uint64_t Sys_Milliseconds64(void)
 {

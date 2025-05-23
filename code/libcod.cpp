@@ -1,5 +1,6 @@
 #include "gsc.hpp"
 #include "gsc_entity.hpp"
+#include "gsc_graph.hpp"
 #include "libcod.hpp"
 #include "proxy/proxy.h"
 #include "ratelimiter.hpp"
@@ -348,6 +349,11 @@ int reservedConfigstringBufferSizeUsage = 0;
 // Storage for console prefix (name and separator) in chat
 char consolePrefix[MAX_CONSOLE_PREFIX_LENGTH] = "console: ";
 
+#if COMPILE_GRAPH == 1
+// Storage for (path finding) graphs
+std::vector<AStarGraph> AStarGraphs;
+#endif
+
 void custom_Com_InitDvars(void)
 {
 	// Register custom dvars required early on server start
@@ -564,12 +570,19 @@ void custom_GScr_LoadConsts(void)
 	custom_scr_const.bullet = GScr_AllocString("bullet");
 	custom_scr_const.flags = GScr_AllocString("flags");
 	custom_scr_const.land = GScr_AllocString("land");
-	#if COMPILE_CUSTOM_VOICE == 1
-	custom_scr_const.sound_file_done = GScr_AllocString("sound_file_done");
-	custom_scr_const.sound_file_stop = GScr_AllocString("sound_file_stop");
-	#endif
 	custom_scr_const.title = GScr_AllocString("title");
 	custom_scr_const.trigger_radius = GScr_AllocString("trigger_radius");
+#if COMPILE_CUSTOM_VOICE == 1
+	custom_scr_const.sound_file_done = GScr_AllocString("sound_file_done");
+	custom_scr_const.sound_file_stop = GScr_AllocString("sound_file_stop");
+#endif
+#if COMPILE_GRAPH == 1
+	custom_scr_const.cost = GScr_AllocString("cost");
+	custom_scr_const.end = GScr_AllocString("end");
+	custom_scr_const.origin = GScr_AllocString("origin");
+	custom_scr_const.start = GScr_AllocString("start");
+	custom_scr_const.type = GScr_AllocString("type");
+#endif
 
 	hook_GScr_LoadConsts->unhook();
 	void (*GScr_LoadConsts)(void);
@@ -1090,6 +1103,16 @@ void custom_SV_SpawnServer(char *server)
 
 	Com_sprintf(mapname, 64, "maps/mp/%s.%s", server, GetBspExtension());
 	Com_LoadSoundAliases(mapname, "all_mp", SASYS_GAME);
+
+	/* New code start: A* graph cleanup */
+	for ( auto graph = begin(AStarGraphs); graph != end(AStarGraphs); )
+	{
+		if ( !( graph->persist ) )
+			graph = AStarGraphs.erase(graph);
+		else
+			++graph;
+	}
+	/* New code end */
 
 	SV_InitGameProgs(persist);
 	if ( com_dedicated->current.integer )
