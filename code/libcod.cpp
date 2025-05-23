@@ -200,8 +200,8 @@ cHook *hook_VM_Notify;
 // Stock callbacks
 int codecallback_startgametype = 0;
 int codecallback_playerconnect = 0;
-int codecallback_playerdisconnect = 0;
 int codecallback_playerdamage = 0;
+int codecallback_playerdisconnect = 0;
 int codecallback_playerkilled = 0;
 
 // Custom callbacks
@@ -244,8 +244,8 @@ callback_t callbacks[] =
 {
 	{ &codecallback_startgametype, "CodeCallback_StartGameType" }, // g_scr_data.gametype.startupgametype
 	{ &codecallback_playerconnect, "CodeCallback_PlayerConnect" }, // g_scr_data.gametype.playerconnect
-	{ &codecallback_playerdisconnect, "CodeCallback_PlayerDisconnect" }, // g_scr_data.gametype.playerdisconnect
 	{ &codecallback_playerdamage, "CodeCallback_PlayerDamage" }, // g_scr_data.gametype.playerdamage
+	{ &codecallback_playerdisconnect, "CodeCallback_PlayerDisconnect" }, // g_scr_data.gametype.playerdisconnect
 	{ &codecallback_playerkilled, "CodeCallback_PlayerKilled" }, // g_scr_data.gametype.playerkilled
 
 	{ &codecallback_client_spam, "CodeCallback_CLSpam"},
@@ -752,8 +752,12 @@ const char * custom_ClientConnect(unsigned int clientNum, unsigned int scriptPer
 		/* New code end */
 
 		Scr_PlayerConnect(ent);
-		if(extra_Scr_PlayerConnect)
-			extra_Scr_PlayerConnect(ent);
+
+		/* New code start: Possible extra functionality to call after successful player connect */
+		if ( extra_Scr_PlayerConnect_After )
+			extra_Scr_PlayerConnect_After(ent);
+		/* New code end */
+
 		CalculateRanks();
 		return 0;
 	}
@@ -1763,12 +1767,13 @@ void custom_GScr_LoadGameTypeScript(void)
 	// Stock callbacks
 	g_scr_data.gametype.startupgametype = Scr_GetFunctionHandle(path_to_callbacks, "CodeCallback_StartGameType", 1);
 	g_scr_data.gametype.playerconnect = Scr_GetFunctionHandle(path_to_callbacks, "CodeCallback_PlayerConnect", 1);
-	g_scr_data.gametype.playerdisconnect = Scr_GetFunctionHandle(path_to_callbacks, "CodeCallback_PlayerDisconnect", 1);
 	g_scr_data.gametype.playerdamage = Scr_GetFunctionHandle(path_to_callbacks, "CodeCallback_PlayerDamage", 1);
+	g_scr_data.gametype.playerdisconnect = Scr_GetFunctionHandle(path_to_callbacks, "CodeCallback_PlayerDisconnect", 1);
 	g_scr_data.gametype.playerkilled = Scr_GetFunctionHandle(path_to_callbacks, "CodeCallback_PlayerKilled", 1);
 
-	if(extra_GScr_LoadGameTypeScript)
-		extra_GScr_LoadGameTypeScript();
+	// Possible extra functionality to call after successful player connect
+	if ( extra_GScr_LoadGameTypeScript_After )
+		extra_GScr_LoadGameTypeScript_After();
 }
 
 void custom_G_AddPlayerMantleBlockage(float *endPos, int duration, pmove_t *pm)
@@ -2015,8 +2020,9 @@ gentity_t * custom_fire_grenade(gentity_t *attacker, vec3_t start, vec3_t dir, i
 	grenade = fire_grenade(attacker, start, dir, weaponIndex, fuseTime);
 	hook_fire_grenade->hook();
 
-	if(extra_fire_grenade)
-		extra_fire_grenade(attacker, grenade);
+	// Possible extra functionality to call after grenade spawn
+	if ( extra_fire_grenade_After )
+		extra_fire_grenade_After(attacker, grenade);
 
 	if ( codecallback_fire_grenade && Scr_IsSystemActive() )
 	{
@@ -2248,9 +2254,10 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 		customPlayerState[i].talkerIcons[drop - svs.clients] = 0;
 	/* New code end */
 
-
-	if(extra_SV_DropClient)
-		extra_SV_DropClient(drop, reason);
+	/* New code start: Possible extra functionality to call before client drop/kick */
+	if ( extra_SV_DropClient_Before )
+		extra_SV_DropClient_Before(drop, reason);
+	/* New code end */
 
 	drop->dropReason = NULL;
 	I_strncpyz(name, drop->name, sizeof(name));
@@ -3578,8 +3585,10 @@ void custom_SV_ClientEnterWorld(client_t *client, usercmd_t *cmd)
 	client->lastUsercmd = *cmd;
 	ClientBegin(client - svs.clients);
 
-	if(extra_ClientBegin)
-		extra_ClientBegin(client);
+	/* New code start: Possible extra functionality to call after player "begin" notify */
+	if ( extra_ClientBegin_After )
+		extra_ClientBegin_After(client);
+	/* New code end */
 
 	/* New code start: Multi version support */
 	if ( customPlayerState[clientNum].resourceLimitedState > LIMITED_GAMESTATE && sv_kickGamestateLimitedClients->current.boolean )
@@ -4649,15 +4658,17 @@ void hook_RuntimeError_in_VM_Execute(const char *pos, int error_index, const cha
 
 void custom_SV_ClientThink(client_t *cl, usercmd_t *ucmd)
 {
-	if(extra_SV_ClientThinkBefore)
-		extra_SV_ClientThinkBefore(cl, ucmd);
+	// Possible extra functionality to call before player movement command processing
+	if ( extra_SV_ClientThink_Before )
+		extra_SV_ClientThink_Before(cl, ucmd);
 
 	hook_SV_ClientThink->unhook();
 	SV_ClientThink(cl, ucmd);
 	hook_SV_ClientThink->hook();
 
-	if(extra_SV_ClientThinkAfter)
-		extra_SV_ClientThinkAfter(cl, ucmd);
+	// Possible extra functionality to call after player movement command processing
+	if ( extra_SV_ClientThink_After )
+		extra_SV_ClientThink_After(cl, ucmd);
 
 	int clientnum = cl - svs.clients;
 
@@ -6199,6 +6210,8 @@ void custom_G_RunFrame(int levelTime)
 	int i, j;
 	client_t *client = svs.clients;
 
+	/* New code start: Process some additional callbacks, if data is available */
+
 	// Warn about server lag
 	if ( codecallback_hitchwarning && hitchFrameTime && Scr_IsSystemActive() )
 	{
@@ -6224,7 +6237,9 @@ void custom_G_RunFrame(int levelTime)
 	}
 	scr_notify_index = 0;
 
-	// Process voice data tweaks
+	/* New code end */
+
+	/* New code start: Process voice data tweaks */
 	gclient_t *gclient = level.clients;
 	int durationSinceLastTalk;
 	VoicePacket_t fakeVoicePacket;
@@ -6256,9 +6271,10 @@ void custom_G_RunFrame(int levelTime)
 			}
 		}
 	}
+	/* New code end */
 
 #if COMPILE_CUSTOM_VOICE == 1
-	// Try process results from Speex encoder tasks
+	/* New code start: Try process results from Speex encoder tasks */
 	if ( Scr_IsSystemActive() && loadSoundFileResultsIndex > 0 )
 	{
 		if ( Sys_TryEnterCriticalSection(CRITSECT_LOAD_SOUND_FILE) == 0 )
@@ -6279,13 +6295,18 @@ void custom_G_RunFrame(int levelTime)
 					short ret = Scr_ExecThread(loadSoundFileResults[i].callback, 2);
 					Scr_FreeThread(ret);
 				}
+				else
+				{
+					Com_Printf("WARNING: LoadSoundFile result from previous map discarded\n");
+				}
 			}
 			loadSoundFileResultsIndex = 0;
 			Sys_LeaveCriticalSection(CRITSECT_LOAD_SOUND_FILE);
 		}
 	}
+	/* New code end */
 
-	// Process custom voice data queue
+	/* New code start: Process custom voice data queue */
 	qboolean aPlayerIsTalking = qfalse;
 
 	if ( sv_voice->current.boolean )
@@ -6334,9 +6355,10 @@ void custom_G_RunFrame(int levelTime)
 			}
 		}
 	}
+	/* New code end */
 #endif
 
-	// Process bullet drop
+	/* New code start: Process bullet drop */
 	if ( g_bulletDrop->current.boolean )
 	{
 		for ( i = 0, client = svs.clients; i < sv_maxclients->current.integer; i++, client++ )
@@ -6368,15 +6390,21 @@ void custom_G_RunFrame(int levelTime)
 			}
 		}
 	}
+	/* New code end */
 
-	if(extra_G_RunFrameBefore)
-		extra_G_RunFrameBefore(levelTime);
+	/* New code start: Possible extra functionality to call before each server frame */
+	if ( extra_G_RunFrame_Before )
+		extra_G_RunFrame_Before(levelTime);
+	/* New code end */
+	
 	hook_G_RunFrame->unhook();
 	G_RunFrame(levelTime);
 	hook_G_RunFrame->hook();
 
-	if(extra_G_RunFrameAfter)
-		extra_G_RunFrameAfter(levelTime);
+	/* New code start: Possible extra functionality to call after each server frame */
+	if ( extra_G_RunFrame_After )
+		extra_G_RunFrame_After(levelTime);
+	/* New code end */
 }
 
 void custom_SV_ArchiveSnapshot(void)
@@ -10214,8 +10242,10 @@ int custom_Cmd_FollowCycle_f(gentity_t *ent, int dir)
 			clientNum = level.maxclients - 1;
 
 		if ( SV_GetArchivedClientInfo(clientNum, &ent->client->sess.archiveTime, &pstate, &cstate)
-		     && G_ClientCanSpectateTeam(ent->client, (team_t)cstate.team) 
-			 && (!extra_G_ClientCanSpectateClient || extra_G_ClientCanSpectateClient(ent->client, &svs.clients[clientNum])))
+		     && G_ClientCanSpectateTeam(ent->client, (team_t)cstate.team)
+			 /* New code start: Possible extra functionality to customize spectating access */
+		     && (!extra_G_ClientCanSpectateClient || extra_G_ClientCanSpectateClient(ent->client, &svs.clients[clientNum])))
+			 /* New code end */
 		{
 			client_t *client = &svs.clients[clientNum];
 
