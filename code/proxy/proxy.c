@@ -286,7 +286,7 @@ void SV_ShutdownProxies()
 			proxy = &proxies[i];
 			if ( proxy->enabled && proxy->started )
 			{
-				printf("> [LIBCOD] Proxy: Shutting down proxy for version %s (protocol %i) on port %d\n", proxy->versionString, proxy->version, BigShort(proxy->listenAdr.port));
+				printf("> [LIBCOD] Proxy: Shutting down proxy for version %s (protocol %i) on port %hu\n", proxy->versionString, proxy->version, BigShort(proxy->listenAdr.port));
 
 				// Stop thread for announcements to master server
 				if ( proxy->masterServerThread )
@@ -323,7 +323,7 @@ void SV_SetupProxies()
 
 	Com_Printf("-----------------------------------\n");
 
-	const char *forwardAddress = va("%s:%d", net_ip->current.string, net_port->current.integer);
+	const char *forwardAddress = va("%s:%hu", net_ip->current.string, net_port->current.integer);
 
 	sv_proxiesVisibleForTrackers = Dvar_RegisterBool("sv_proxiesVisibleForTrackers", qfalse, DVAR_ARCHIVE);
 	sv_proxyAddress_1_0 = Dvar_RegisterString("sv_proxyAddress_1_0", "0.0.0.0:28960", DVAR_ARCHIVE);
@@ -379,11 +379,11 @@ void SV_SetupProxies()
 		{
 			if ( pthread_create(&proxy->mainThread, NULL, SV_StartProxy, proxy) )
 			{
-				Com_DPrintf("Proxy: Failed to start proxy thread for version %s (protocol %i) on port %d\n", proxy->versionString, proxy->version, BigShort(proxy->listenAdr.port));
+				Com_DPrintf("Proxy: Failed to start proxy thread for version %s (protocol %i) on port %hu\n", proxy->versionString, proxy->version, BigShort(proxy->listenAdr.port));
 			}
 			else
 			{
-				Com_DPrintf("Proxy: Started proxy thread for version %s (protocol %i) on port %d\n", proxy->versionString, proxy->version, BigShort(proxy->listenAdr.port));
+				Com_DPrintf("Proxy: Started proxy thread for version %s (protocol %i) on port %hu\n", proxy->versionString, proxy->version, BigShort(proxy->listenAdr.port));
 				pthread_detach(proxy->mainThread);
 				proxy->started = qtrue;
 			}
@@ -411,12 +411,12 @@ void * SV_StartProxy(void *threadArgs)
 	listenerSocket = socket(AF_INET, SOCK_DGRAM, 0);
 	if ( listenerSocket == -1 )
 	{
-		Com_Error(ERR_FATAL, "\x15Proxy: Failed to open socket on port %d", BigShort(proxy->listenAdr.port));
+		Com_Error(ERR_FATAL, "\x15Proxy: Failed to open socket on port %hu", BigShort(proxy->listenAdr.port));
 	}
 	if ( bind(listenerSocket, (struct sockaddr *)&listenerAddr, sizeof(listenerAddr)) == -1 )
 	{
 		close(listenerSocket);
-		Com_Error(ERR_FATAL, "\x15Proxy: Failed to bind on socket on port %d", BigShort(proxy->listenAdr.port));
+		Com_Error(ERR_FATAL, "\x15Proxy: Failed to bind on socket on port %hu", BigShort(proxy->listenAdr.port));
 	}
 	proxy->socket = listenerSocket;
 
@@ -431,7 +431,7 @@ void * SV_StartProxy(void *threadArgs)
 	}
 	proxy->masterServerThread = &masterServerThread;
 
-	Com_Printf("Proxy server listening on port %d for version %s (protocol %i)\n", BigShort(proxy->listenAdr.port), proxy->versionString, proxy->version);
+	Com_Printf("Proxy server listening on port %hu for version %s (protocol %i)\n", BigShort(proxy->listenAdr.port), proxy->versionString, proxy->version);
 
 	proxyClientThreadInfo clientThreadInfo[65536];
 	memset(clientThreadInfo, -1, sizeof(clientThreadInfo));
@@ -451,13 +451,13 @@ void * SV_StartProxy(void *threadArgs)
 				buffer[bytes_received] = '\0';
 			else
 			{
-				Com_DPrintf("Proxy: Max. size exceeded at recvfrom on port %d\n", BigShort(proxy->listenAdr.port));
+				Com_DPrintf("Proxy: Max. size exceeded at recvfrom on port %hu\n", BigShort(proxy->listenAdr.port));
 				continue;
 			}
 		}
 		else
 		{
-			Com_DPrintf("Proxy: No data from recvfrom on port %d\n", BigShort(proxy->listenAdr.port));
+			Com_DPrintf("Proxy: No data from recvfrom on port %hu\n", BigShort(proxy->listenAdr.port));
 			continue;
 		}
 
@@ -508,7 +508,7 @@ void * SV_StartProxy(void *threadArgs)
 			char ip_insertion[] = "\\ip\\";
 			char port_insertion[] = "\\port\\";
 			char client_port[6];
-			snprintf(client_port, sizeof(client_port), "%d", ntohs(addr.sin_port));
+			snprintf(client_port, sizeof(client_port), "%hu", ntohs(addr.sin_port));
 			size_t current_len = strlen(buffer);
 			size_t added_len = strlen(ip_insertion) + strlen(client_ip) + strlen(port_insertion) + strlen(client_port);
 
@@ -559,7 +559,7 @@ void * SV_StartProxy(void *threadArgs)
 
 				if ( s_client == -1 )
 				{
-					Com_DPrintf("Proxy: Socket error at port %d\n", BigShort(proxy->listenAdr.port));
+					Com_DPrintf("Proxy: Socket error at port %hu\n", BigShort(proxy->listenAdr.port));
 					pthread_mutex_unlock(&proxy->lock);
 					continue;
 				}
@@ -575,7 +575,7 @@ void * SV_StartProxy(void *threadArgs)
 				proxy->numClients++;
 
 				if ( activeClient && com_sv_running->current.boolean )
-					Com_DPrintf("Proxy: Client connecting from %s:%d\n", client_ip, ntohs(addr.sin_port));
+					Com_DPrintf("Proxy: Client connecting from %s:%hu\n", client_ip, ntohs(addr.sin_port));
 
 				sendto(s_client, buffer, bytes_received, 0, (struct sockaddr *)&forwarderAddr, sizeof(forwarderAddr));
 
@@ -589,7 +589,7 @@ void * SV_StartProxy(void *threadArgs)
 				pthread_t thread;
 				if ( pthread_create(&thread, NULL, SV_ProxyClientThread, args) )
 				{
-					Com_DPrintf("Proxy: Failed to create new client thread at port %d\n", BigShort(proxy->listenAdr.port));
+					Com_DPrintf("Proxy: Failed to create new client thread at port %hu\n", BigShort(proxy->listenAdr.port));
 					free(args);
 					close(s_client);
 					clientThreadInfo[clientIndex].s_client = -1;
@@ -745,7 +745,7 @@ void * SV_ProxyClientThread(void *threadArgs)
 	}
 
 	if ( strlen(client_ip) && args->activeClient && com_sv_running->current.boolean )
-		Com_DPrintf("Proxy: Client connection released for %s:%d\n", client_ip, ntohs(args->addr.sin_port));
+		Com_DPrintf("Proxy: Client connection released for %s:%hu\n", client_ip, ntohs(args->addr.sin_port));
 
 	pthread_mutex_lock(&proxy->lock);
 	close(*(args->s_client));

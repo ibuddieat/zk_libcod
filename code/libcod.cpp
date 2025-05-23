@@ -711,7 +711,7 @@ const char * custom_ClientConnect(unsigned int clientNum, unsigned int scriptPer
 					preProxyPort = atoi(Info_ValueForKey(userinfo, "port"));
 					if ( !NET_StringToAdr(va("%s:%i", preProxyIP, preProxyPort), &customPlayerState[clientNum].realAddress) )
 					{
-						Com_Printf("WARNING: Failed to parse pre-proxy address for client %d: %s\n", clientNum, va("%s:%i", preProxyIP, preProxyPort));
+						Com_Printf("WARNING: Failed to parse pre-proxy address for client %d: %s\n", clientNum, va("%s:%hu", preProxyIP, preProxyPort));
 						memcpy(&customPlayerState[clientNum].realAddress, &client->netchan.remoteAddress, sizeof(netadr_t));
 					}
 					Com_Printf("Connecting player #%i via proxy from %s\n", clientNum, NET_AdrToString(customPlayerState[clientNum].realAddress));
@@ -5448,7 +5448,7 @@ netadr_t * custom_SV_MasterAddress(void)
 			{
 				sv_masterAddress.port = BigShort(sv_masterPort->current.integer);
 			}
-			Com_Printf("%s resolved to %i.%i.%i.%i:%i\n",
+			Com_Printf("%s resolved to %i.%i.%i.%i:%hu\n",
 						sv_masterServer->current.string,
 						sv_masterAddress.ip[0],
 						sv_masterAddress.ip[1],
@@ -5519,7 +5519,7 @@ void custom_SV_GetChallenge(netadr_t from)
 			return;
 		}
 		svs.authorizeAddress.port = BigShort(sv_authorizePort->current.integer);
-		Com_Printf("%s resolved to %i.%i.%i.%i:%i\n",
+		Com_Printf("%s resolved to %i.%i.%i.%i:%hu\n",
 					sv_authorizeServer->current.string,
 					svs.authorizeAddress.ip[0],
 					svs.authorizeAddress.ip[1],
@@ -6078,7 +6078,7 @@ void custom_SV_Status_f(void)
 		for ( j = 0; j < l; j++ )
 			Com_Printf(" ");
 
-		Com_Printf("%5i", cl->netchan.qport);
+		Com_Printf("%5hu", cl->netchan.qport);
 
 		Com_Printf(" %5i", cl->rate);
 
@@ -11635,8 +11635,10 @@ public:
 		cracking_hook_function(0x0809676C, (int)custom_SV_BotUserMove);
 		#endif
 
-		cracking_write_hex(0x0818815C, (char *)"00"); // Removes debug mode restriction from getentbynum
+		cracking_write_hex(0x0818815C, (char *)"00"); // Removes debug mode restriction from GetEntByNum
 		cracking_write_hex(0x0815B2A0, (char *)"00"); // Disables warning: "Non-localized %s string is not allowed to have letters in it. Must be changed over to a localized string: \"%s\"\n"
+		cracking_write_hex(0x08143125, (char *)"687500"); // Makes NET_AdrToString always return a positive port number
+
 		// End of hooking block
 
 		gsc_weapons_init();
