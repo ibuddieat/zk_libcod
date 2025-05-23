@@ -5,6 +5,7 @@
 #include "ratelimiter.hpp"
 
 qboolean Sys_IsProxyAddress(netadr_t from);
+qboolean SV_IsAnyProxyStarted();
 void SV_SetupProxies();
 void SV_ShutdownProxies();
 void * SV_StartProxy(void *threadArgs);

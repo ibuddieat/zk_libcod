@@ -55,8 +55,9 @@ extern leakyBucket_t outboundLeakyBuckets[OUTBOUND_BUCKET_MAX];
 // Proxies in addition to the main server port
 proxy_t proxies[MAX_PROXIES];
 
-// Flag stating whether a proxy has been started, so that we know that they do
-// not have to be started again and that they need to be freed on server quit
+// Flag stating whether SV_SetupProxies has been called, so that we know that
+// proxy servers might have been started and that they need to be freed on
+// server quit
 qboolean initialized = qfalse;
 
 // We do not reuse the stock va() buffers here for concurrency reasons
@@ -226,6 +227,23 @@ qboolean Sys_IsProxyAddress(netadr_t from)
 	return qfalse;
 }
 
+qboolean SV_IsAnyProxyStarted()
+{
+	if ( initialized )
+	{
+		proxy_t *proxy;
+
+		for ( int i = 0; i < MAX_PROXIES; i++ )
+		{
+			proxy = &proxies[i];
+			if ( proxy->enabled && proxy->started )
+					return qtrue;
+		}
+	}
+
+	return qfalse;
+}
+
 void SV_ResetProxiesInformation()
 {
 	memset(&proxies, 0, sizeof(proxy_t) * MAX_PROXIES);
@@ -241,6 +259,7 @@ void SV_ConfigureProxy(proxy_t *proxy, int version, const char *address, const c
 	NET_StringToAdr(address, &proxy->listenAdr);
 	if ( proxy->listenAdr.type == NA_BAD )
 		Com_Error(ERR_FATAL, "\x15""Failed to parse listen address for proxy with version %s", versionString);
+
 	NET_StringToAdr(forwardAddress, &proxy->forwardAdr);
 	if ( proxy->forwardAdr.type == NA_BAD )
 		Com_Error(ERR_FATAL, "\x15""Failed to parse forward address for proxy with version %s", versionString);

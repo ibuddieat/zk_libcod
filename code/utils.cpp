@@ -84,11 +84,12 @@ const char * getShortVersionFromProtocol(int protocol)
 
 qboolean IsLocalIPAddress(unsigned char *ip)
 {
-    // As defined by IANA, plus loopback address
-    if ( ip[0] == 10 ||                                             // Class A: 10.0.0.0 – 10.255.255.255
-       ( ip[0] == 172 && ( ip[1] >= 16 && ip[1] <= 31 ) ) ||        // Class B: 172.16.0.0 – 172.31.255.255
-       ( ip[0] == 192 && ip[1] == 168 ) ||                          // Class C: 192.168.0.0 – 192.168.255.255
-       ( ip[0] == 127 && ip[1] == 0 && ip[2] == 0 && ip[3] == 1 ) ) // localhost
+    // As defined by IANA, plus link-local and loopback addresses
+    if ( ip[0] == 10                                                     // Class A: 10.0.0.0 – 10.255.255.255
+         || ( ip[0] == 172 && ( ip[1] >= 16 && ip[1] <= 31 ) )           // Class B: 172.16.0.0 – 172.31.255.255
+         || ( ip[0] == 192 && ip[1] == 168 )                             // Class C: 192.168.0.0 – 192.168.255.255
+		 || ( ip[0] == 169 && ip[1] == 254 )                             // Link local: 169.254.0.0 - 169.254.255.255
+         || ( ip[0] == 127 && ip[1] == 0 && ip[2] == 0 && ip[3] == 1 ) ) // Localhost
     {
         return qtrue;
     }

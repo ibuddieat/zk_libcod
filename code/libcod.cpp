@@ -693,8 +693,9 @@ const char * custom_ClientConnect(unsigned int clientNum, unsigned int scriptPer
 		int preProxyPort = 0;
 		client_t *client = &svs.clients[clientNum];
 
-		// Check if proxied client or LAN player
-		if ( IsLocalIPAddress(client->netchan.remoteAddress.ip) )
+		// Check if proxied client or LAN player. NET_IsLocalAddress identifies
+		// bots and localhost connections, IsLocalIPAddress private subnets
+		if ( !NET_IsLocalAddress(client->netchan.remoteAddress) && IsLocalIPAddress(client->netchan.remoteAddress.ip) )
 		{
 			// Check if the realAddress field is filled already. If not, see if
 			// we have that info coming from a proxy. Note that if IP and port
@@ -717,15 +718,17 @@ const char * custom_ClientConnect(unsigned int clientNum, unsigned int scriptPer
 				}
 				else
 				{
+					// No userinfo ip value given, assuming LAN connection, so
+					// we just copy over the socket address
 					memcpy(&customPlayerState[clientNum].realAddress, &client->netchan.remoteAddress, sizeof(netadr_t));
 				}
 			}
 		}
 		else
 		{
-			// External or LAN client connecting to main server port, address
-			// update from proxy not necessary, so we just copy over the socket
-			// address
+			// Localhost, bot, or external client connecting to main server
+			// port: Address update from proxy not necessary, so we just copy
+			// over the socket address
 			memcpy(&customPlayerState[clientNum].realAddress, &client->netchan.remoteAddress, sizeof(netadr_t));
 		}
 		/* New code end*/
@@ -1422,6 +1425,14 @@ void custom_SV_DirectConnect(netadr_t from)
 			{
 				if ( challenge == svs.challenges[i].challenge )
 				{
+					/* New code start: Do not assign GUIDs for local source
+					 connections while proxies are enabled. This is to avoid
+					 GUID duplicates, independent from the value of the
+					 net_lanauthorize dvar */
+					if ( Sys_IsLANAddress(from) && SV_IsAnyProxyStarted() )
+						break;
+					/* New code end */
+
 					guid = svs.challenges[i].guid;
 					I_strncpyz(PBguid, svs.challenges[i].PBguid, sizeof(PBguid));
 					I_strncpyz(clientPBguid, svs.challenges[i].clientPBguid, sizeof(clientPBguid));
