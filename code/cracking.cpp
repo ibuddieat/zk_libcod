@@ -2,15 +2,15 @@
 
 void cracking_hook_function(int from, int to)
 {
-	int relative = to - (from+5); // +5 is the position of next opcode
+	int relative = to - ( from + 5 ); // +5 is the position of next opcode
 	memset((void *)from, 0xE9, 1); // JMP-OPCODE
-	memcpy((void *)(from+1), &relative, 4); // set relative address with endian
+	memcpy((void *)(from + 1), &relative, 4); // Set relative address with endian
 }
 
 void cracking_hook_call(int from, int to)
 {
-	int relative = to - (from+5); // +5 is the position of next opcode
-	memcpy((void *)(from+1), &relative, 4); // set relative address with endian
+	int relative = to - (from + 5); // +5 is the position of next opcode
+	memcpy((void *)(from + 1), &relative, 4); // Set relative address with endian
 }
 
 int singleHexToNumber(char hexchar)
@@ -79,24 +79,24 @@ int singleHexToNumber(char hexchar)
 int hexToBuffer(char *hex, char *buffer, int bufferLen)
 {
 	int len, neededBytes, i, padding, first, pos, leftPart, rightPart;
-	len = strlen(hex); // every byte of hex is taking 4 bits. F=1111
-	padding = 0; // just for "a", "abc" etc... "a" = 0x0a, "abc" = 0x0abc
-	// we dont handle 4-bits for one hex-number, so round up to bytes...
-	// three bytes will not take 12 bits, they will use 16 bits = 2 bytes
-	if (len % 2 != 0)
+	len = strlen(hex); // Every byte of hex is taking 4 bits. F=1111
+	padding = 0; // Just for "a", "abc" etc... "a" = 0x0a, "abc" = 0x0abc
+	// We do not handle 4-bits for one hex-number, so round up to bytes ...
+	// Three bytes will not take 12 bits, they will use 16 bits = 2 bytes
+	if ( len % 2 != 0 )
 	{
 		padding = 1;
 		len++;
 	}
-	neededBytes = len >> 1; // its like dividing by 2
+	neededBytes = len >> 1; // It's like dividing by 2
 	first = 1;
 	pos = 0;
-	for (i=0; i<neededBytes; i++)
+	for ( i = 0; i < neededBytes; i++ )
 	{
 		char twochars[2] = {'0', '0'};
-		if (first)
+		if ( first )
 		{
-			if (padding)
+			if ( padding )
 			{
 				twochars[1] = hex[0];
 				pos++;
@@ -117,11 +117,11 @@ int hexToBuffer(char *hex, char *buffer, int bufferLen)
 		}
 		leftPart = singleHexToNumber(twochars[0]);
 		rightPart = singleHexToNumber(twochars[1]);
-		if (leftPart == -1 || rightPart == -1)
+		if ( leftPart == -1 || rightPart == -1 )
 			return i;
-		buffer[i] = (leftPart << 4) + rightPart;
+		buffer[i] = ( leftPart << 4 ) + rightPart;
 		// buffer end:
-		if (i == bufferLen)
+		if ( i == bufferLen )
 			return i;
 	}
 	return neededBytes;
@@ -136,7 +136,7 @@ int cracking_write_hex(int address, char *hex)
 	bytes = hexToBuffer(hex, buffer, 128);
 
 
-	for (i=0; i<bytes; i++)
+	for ( i = 0; i < bytes; i++ )
 		ptr[i] = buffer[i];
 
 	return bytes;

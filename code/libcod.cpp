@@ -2287,7 +2287,7 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 
 		for ( i = 0 ; i < MAX_CHALLENGES ; i++, challenge++ )
 		{
-			if ( NET_CompareAdr( drop->netchan.remoteAddress, challenge->adr ) )
+			if ( NET_CompareAdr(drop->netchan.remoteAddress, challenge->adr) )
 			{
 				challenge->connected = qfalse;
 				break;
@@ -4337,7 +4337,7 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 		}
 
 		// Check if file exists in the game paths
-		if ( ( cl->downloadSize = FS_SV_FOpenFileRead( cl->downloadName, &cl->download ) ) <= 0 )
+		if ( ( cl->downloadSize = FS_SV_FOpenFileRead(cl->downloadName, &cl->download) ) <= 0 )
 		{
 			Com_Printf("clientDownload: %d : \"%s\" file not found on server\n", cl - svs.clients, cl->downloadName);
 			Com_sprintf(errorMessage, sizeof(errorMessage), "EXE_AUTODL_FILENOTONSERVER\x15%s", cl->downloadName);
