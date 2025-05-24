@@ -3,7 +3,7 @@
 > * Text in square brackets like `[dvar]` refers to the value of the respective dvar.
 > * Stock script functions/methods start in uppercase here, whereas libcod script functions/methods start in lowercase.
 
-Added dvars:
+🔢 Added dvars:
 
   * `fs_gametypes`
     * Type: String

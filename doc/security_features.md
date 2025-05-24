@@ -1,4 +1,4 @@
-# Security-related features & adaptions
+# 🚨 Security-related features & adaptions
 
 - Added several security fixes/exploit patches known from other Call of Duty&reg; games
 - Added `g_banIPs` dvar support (max. 63 IPs), for use with the `addip`, `removeip` and `listip` console commands
@@ -11,4 +11,3 @@
 - Fixed known issues with stock voting mechanism (`g_allowVote` dvar)
 - Fixed some bugs that resulted in server crashes, to improve server availability
 - Packet rate-limiting is always enabled in this fork
-- Excluded client userinfo updates from flood protection

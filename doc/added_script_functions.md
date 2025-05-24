@@ -1,4 +1,4 @@
-New script code methods:
+🔣 New script code methods:
   * `<bot> setWalkValues(<forward_count>, <right_count>)`
   * `<bot> throwSmokeGrenade(<bool>)`
   * `<entity> addEntityVelocity(<velocity>)`
@@ -114,7 +114,7 @@ New script code methods:
   * `<weapon> getWeaponItemAmmo()`
   * `<weapon> setWeaponItemAmmo(<value>)`
 
-New script code functions:
+🔣 New script code functions:
   * `chr(<number>)`
   * `getCallStack()`
   * `getConfigString(<index>)`
@@ -148,3 +148,27 @@ New script code functions:
   * `setSavePersist(<save persistent>)`
   * `setWeaponRaiseTime(<weapon name>, <raise time>)`
   * `toHex(<number>)`
+
+🔀 New script code callback functions:
+  * `CodeCallback_EntityEvent`
+  * `CodeCallback_Error`
+  * `CodeCallback_HitchWarning`
+  * `CodeCallback_MapTurretsLoad`
+  * `CodeCallback_MapWeaponsLoad`
+  * `CodeCallback_MoverBlockage`
+  * `CodeCallback_Notify`
+  * `CodeCallback_NotifyDebug`
+  * `CodeCallback_Pickup`
+  * `CodeCallback_Suicide`
+  * `CodeCallback_WeaponChange`
+  * `CodeCallback_AdsButton`
+  * `CodeCallback_CrouchButton`
+  * `CodeCallback_FragButton`
+  * `CodeCallback_HoldBreathButton`
+  * `CodeCallback_LeanLeftButton`
+  * `CodeCallback_LeanRightButton`
+  * `CodeCallback_MeleeBreathButton`
+  * `CodeCallback_ProneButton`
+  * `CodeCallback_ReloadButton`
+  * `CodeCallback_SmokeButton`
+  * `CodeCallback_StandButton`

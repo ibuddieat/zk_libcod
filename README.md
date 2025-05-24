@@ -10,27 +10,14 @@ It requires the [server binary](cod2_lnxded) and .iwd files for game version 1.3
 
 ## ⭐ What's new?
 
-The following list documents changes in comparison to the [parent repository](doc/history.md):
+The following list documents changes in comparison to [earlier libcod versions](doc/history.md):
 
 - 🔢 [Added dvars](doc/added_dvars.md) (see example [libcod.cfg](doc/libcod.cfg))
-- 🔀 [Added script callback functions](doc/added_script_callback_functions.md)
 - 🔣 [Added script code functions](doc/added_script_functions.md)
 - 🏗 [Changed script code functions](doc/changed_script_functions.md)
 - 🚨 [Improved server security](doc/security_features.md)
-- ⚙ Other functional adaptions
-  - Faster direct file download for game version 1.0
-  - Increased max. direct file download size from 64 MB to 512 MB
-  - Added support for map commands in custom rcon callback
-  - Allow to show head icons to both teams (via `axis_allies`)
-  - Excluded clients with wrong password from scoreboard
-  - Patched `Com_PrintMessage` so that strings that begin with a caret are printed properly in console
-- 🗒 Improvements in documentation and code
-  - Added a crash logger that saves debugging information (locally)
-  - Added documentation for all new functions and some where documentation was missing
-  - Added documentation for script callback functions (stock and libcod)
-    - See the updated [script docs](https://www.ibuddie.at/libcod/index.html)
-  - Fixed some minor bugs
-  - Tried to align some coding styles 💩
+- 📑 [Improved script documentation](https://www.ibuddie.at/libcod/index.html)
+- ⚙ [Other functional adaptions](doc/other_functional_adaptions.md)
 
 > [!IMPORTANT]
 > The script API might change between major releases, as documented [here](doc/changed_script_functions.md).

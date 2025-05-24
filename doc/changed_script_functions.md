@@ -1,7 +1,7 @@
 > [!NOTE]
 > * Stock script functions/methods start in uppercase here, whereas libcod script functions/methods start in lowercase.
 
-# Changed with or since release v13.0:
+# 🏗 Changed with or since release v13.0:
 
 Script code functions:
   * `PlayFx(<effect id>, <position of effect>, [<forward vector>], [<up vector>])` now returns the (temporary) effect entity
@@ -14,7 +14,7 @@ Script code methods:
 Dvars:
   * Changed `fs_library` to work relative to `[fs_homepath]/[fs_game]`, instead of specifying an absolute path
 
-# Changed with or since release v12.0:
+# 🏗 Changed with or since release v12.0:
 
 Script code functions:
   * Renamed `exponent()` to `pow()`
@@ -23,10 +23,12 @@ Dvars:
   * Changed `sv_wwwDlDisconnectedMessages` in favor of the new `sv_downloadNotifications`
   * Removed `g_dumpVoiceData`
 
-# Changed with or since release v11.0:
+# 🏗 Changed with or since release v11.0:
 
 Script code methods:
   * Aligned return values of `getStance()` with those expected by `setStance()`
+  * Fixed `DeactivateChannelVolumes` as it was broken in original code
+  * Fixed `DeactivateReverb` as it was broken in original code
   * Replaced `silent()` by `enableSilent()` and `disableSilent()`
   * Replaced `setEarthquakes()` by `enableEarthquakes()` and `disableEarthquakes()`
   * Reverted merge of `enableItemPickup()` and `disableItemPickup()` into `itemPickup()`
@@ -60,7 +62,7 @@ Script code functions:
   * Renamed `g_findConfigStringIndex()` to `findConfigStringIndex()`
   * `BulletTracePassed(<start>, <end>, <hit characters>, <ignore entity>, [<content mask>])` got one more parameter for custom content masks
 
-# Changed since release v10.0:
+# 🏗 Changed since release v10.0:
 
 Script code methods:
   * `<entity> SetHintString(<string>)` now also supports trigger_radius entities
