@@ -27,8 +27,8 @@ Dvars:
 
 Script code methods:
   * Aligned return values of `getStance()` with those expected by `setStance()`
-  * Fixed `DeactivateChannelVolumes` as it was broken in original code
-  * Fixed `DeactivateReverb` as it was broken in original code
+  * Fixed `DeactivateChannelVolumes()` as it was broken in original code
+  * Fixed `DeactivateReverb()` as it was broken in original code
   * Replaced `silent()` by `enableSilent()` and `disableSilent()`
   * Replaced `setEarthquakes()` by `enableEarthquakes()` and `disableEarthquakes()`
   * Reverted merge of `enableItemPickup()` and `disableItemPickup()` into `itemPickup()`

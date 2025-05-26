@@ -2315,14 +2315,14 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 	if ( showIngameMessage )
 	{
 		if ( !translatedReason )
-			SV_SendServerCommand(0, SV_CMD_CAN_IGNORE, "e \"\x15%s^7 %s%s\"", name, "", reason);
+			SV_SendServerCommand(NULL, SV_CMD_CAN_IGNORE, "e \"\x15%s^7 %s%s\"", name, "", reason);
 		else
-			SV_SendServerCommand(0, SV_CMD_CAN_IGNORE, "e \"\x15%s^7 %s%s\"", name, "\x14", reason);
+			SV_SendServerCommand(NULL, SV_CMD_CAN_IGNORE, "e \"\x15%s^7 %s%s\"", name, "\x14", reason);
 	}
 
 	Com_Printf("%i:%s %s\n", drop - svs.clients, name, reason);
 
-	SV_SendServerCommand(0, SV_CMD_RELIABLE, "J %d", drop - svs.clients);
+	SV_SendServerCommand(NULL, SV_CMD_RELIABLE, "J %d", drop - svs.clients);
 	if ( !translatedReason )
 		SV_SendServerCommand(drop, SV_CMD_RELIABLE, "w \"%s^7 %s\" PB", name, reason);
 	else
@@ -4184,7 +4184,7 @@ int custom_SV_WWWRedirectClient(client_t *cl, msg_t *msg)
 
 		/* New code start */
 		if ( sv_downloadNotifications->current.boolean )
-			SV_SendServerCommand(0, SV_CMD_CAN_IGNORE, "f \"%s^7 downloads %s\"", cl->name, cl->downloadName);
+			SV_SendServerCommand(NULL, SV_CMD_CAN_IGNORE, "f \"%s^7 downloads %s\"", cl->name, cl->downloadName);
 		/* New code end */
 
 		cl->downloadName[0] = '\0';
@@ -4353,7 +4353,7 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 
 		// Announce download
 		if ( sv_downloadNotifications->current.boolean )
-			SV_SendServerCommand(0, SV_CMD_CAN_IGNORE, "f \"%s^7 downloads %s\"", cl->name, cl->downloadName);
+			SV_SendServerCommand(NULL, SV_CMD_CAN_IGNORE, "f \"%s^7 downloads %s\"", cl->name, cl->downloadName);
 	}
 
 	// Perform any reads that we need to
@@ -6121,7 +6121,7 @@ void custom_RuntimeError_Debug(conChannel_t channel, const char *pos, int index,
 
 void custom_RuntimeError(const char *pos, int index, const char *message, const char *dialog_error)
 {
-	char newline[2];
+	const char *line;
 	qboolean terminate;
 
 	if ( scrVarPub.developer || scrVmPub.terminal_error )
@@ -6152,18 +6152,17 @@ void custom_RuntimeError(const char *pos, int index, const char *message, const 
 		}
 		if ( !dialog_error )
 		{
-			newline[0] = '\0';
+			line = "";
 			dialog_error = "";
 		}
 		else
 		{
-			newline[0] = '\n';
-			newline[1] = '\0';
+			line = "\n";
 		}
 		if ( !scrVmPub.terminal_error )
-			Com_Error(ERR_SCRIPT, "\x15script runtime error\n(see console for details)\n%s%s%s", message, newline, dialog_error);
+			Com_Error(ERR_SCRIPT, "\x15script runtime error\n(see console for details)\n%s%s%s", message, line, dialog_error);
 		else
-			Com_Error(ERR_SCRIPT_DROP, "\x15script runtime error\n(see console for details)\n%s%s%s", message, newline, dialog_error);
+			Com_Error(ERR_SCRIPT_DROP, "\x15script runtime error\n(see console for details)\n%s%s%s", message, line, dialog_error);
 	}
 }
 
