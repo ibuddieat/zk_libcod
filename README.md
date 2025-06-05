@@ -1,4 +1,4 @@
-# ${\textsf{\color{red}lib\color{green}cod\color{blue}2}\ }$
+# libcod2
 
 **This extension ...**
 - provides interoperability between the Call of Duty&reg; 2 server and other software components and/or advanced game modifications (so-called "mods"),
