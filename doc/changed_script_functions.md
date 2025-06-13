@@ -1,6 +1,11 @@
 > [!NOTE]
 > * Stock script functions/methods start in uppercase here, whereas libcod script functions/methods start in lowercase.
 
+# 🏗 Changed with or since release v14.0:
+
+Script code functions:
+  * `Obituary(<victim>, <attacker>, <weapon>, <meansOfDeath>, [<team>], [<origin>], [<max. distance>])` now returns the (temporary) obituary entity
+
 # 🏗 Changed with or since release v13.0:
 
 Script code functions:

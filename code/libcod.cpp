@@ -8329,6 +8329,8 @@ LAB_081131e1:
 		ent->s.eventParm = sMeansOfDeath | 0x80;
 	else
 		ent->s.eventParm = sWeapon;
+
+	Scr_AddEntity(ent); // New
 }
 
 void custom_GScr_SetHintString(scr_entref_t entref)
