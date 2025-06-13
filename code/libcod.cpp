@@ -4450,7 +4450,7 @@ qboolean custom_BG_IsWeaponValid(playerState_t *ps, unsigned int index)
 
 	/* New code start: Fixed potential NULL-pointer crash */
 	if ( !weaponDef )
-		return 0;
+		return qfalse;
 	/* New code end */
 
 	if ( ( ( weaponDef->offhandClass == OFFHAND_CLASS_NONE && ps->weaponslots[1] != index ) && ps->weaponslots[2] != index ) && weaponDef->iAltWeaponIndex != index )
@@ -8191,7 +8191,7 @@ void custom_Scr_SightTracePassed(void)
 void custom_GScr_KickPlayer()
 {
 	int id;
-	char* msg;
+	char *msg;
 	char tmp[128];
 
 	// New: Added 2nd parameter for kick message and some error handling
@@ -8271,7 +8271,7 @@ void custom_GScr_Obituary(void)
 	sMeansOfDeath = G_IndexForMeansOfDeath(Scr_GetString(3));
 	victim = Scr_GetEntity(0);
 
-	// Custom origin
+	// New: Custom origin
 	if ( args < 6 )
 	{
 		ent = G_TempEntity(vec3_origin, EV_OBITUARY);
@@ -8282,7 +8282,7 @@ void custom_GScr_Obituary(void)
 		ent = G_TempEntity(origin, EV_OBITUARY);
 	}
 	
-	// Custom team (default 0 = all)
+	// New: Custom team (default 0 = all)
 	if ( args == 5 || args == 7 )
 	{
 		team_str = Scr_GetString(4);
@@ -8301,9 +8301,11 @@ void custom_GScr_Obituary(void)
 	}
 	ent->s.scale = (int)team; // Reusing the scale field that is otherwise not used at obituary TempEntities
 	
-	// Custom max. distance
+	// New: Custom max. distance
 	if ( args > 5 )
+	{
 		distance = Scr_GetInt(args - 1);
+	}
 	ent->s.dmgFlags = distance; // Reusing the dmgFlags field that is otherwise not used at obituary TempEntities
 	
 	ent->s.otherEntityNum = victim->s.number;
@@ -8319,7 +8321,11 @@ void custom_GScr_Obituary(void)
 	ent->s.attackerEntityNum = ENTITY_WORLD;
 LAB_081131e1:
 	ent->r.svFlags = SVF_BROADCAST;
-	if ( sMeansOfDeath == MOD_MELEE || sMeansOfDeath == MOD_HEAD_SHOT || sMeansOfDeath == MOD_SUICIDE || sMeansOfDeath == MOD_FALLING || sMeansOfDeath == MOD_CRUSH )
+	if ( sMeansOfDeath == MOD_MELEE
+	     || sMeansOfDeath == MOD_HEAD_SHOT
+	     || sMeansOfDeath == MOD_SUICIDE
+	     || sMeansOfDeath == MOD_FALLING
+	     || sMeansOfDeath == MOD_CRUSH )
 		ent->s.eventParm = sMeansOfDeath | 0x80;
 	else
 		ent->s.eventParm = sWeapon;
@@ -8354,7 +8360,7 @@ void custom_GScr_SetHintString(scr_entref_t entref)
 	}
 	ent->s.scale = index;
 
-	// Added trigger_radius support by converting it to a trigger_use_touch
+	// New: Added trigger_radius support by converting it to a trigger_use_touch
 	if ( ent->classname == custom_scr_const.trigger_radius )
 	{
 		Scr_SetString(&ent->classname, scr_const.trigger_use_touch);
@@ -8370,7 +8376,7 @@ void custom_GScr_SetHintString(scr_entref_t entref)
 
 qboolean custom_SV_MapExists(const char *name)
 {
-	// Validate input path length to avoid error:
+	// New: Validate input path length to avoid error:
 	// Sys_Error: FS_BuildOSPath: os path length exceeded
 	if ( strlen(name) > MAX_QPATH )
 	{
