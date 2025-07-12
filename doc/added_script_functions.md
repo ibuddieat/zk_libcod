@@ -63,6 +63,7 @@
   * `<player> isHiddenFromScoreboard()`
   * `<player> isPlayingSoundFile()`
   * `<player> isReloading()`
+  * `<player> isShellShocked()`
   * `<player> isThrowingGrenade()`
   * `<player> isUseTouching()`
   * `<player> isUsingTurret()`

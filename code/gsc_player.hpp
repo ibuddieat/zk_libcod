@@ -20,6 +20,7 @@ void gsc_player_useentity(scr_entref_t ref);
 void gsc_player_useturret(scr_entref_t ref);
 void gsc_player_canuseturret(scr_entref_t ref);
 void gsc_player_isreloading(scr_entref_t ref);
+void gsc_player_isshellshocked(scr_entref_t ref);
 void gsc_player_isthrowinggrenade(scr_entref_t ref);
 void gsc_player_isusingbinoculars(scr_entref_t ref);
 void gsc_player_getcurrentweaponammo(scr_entref_t ref);

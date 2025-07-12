@@ -493,6 +493,23 @@ void gsc_player_isreloading(scr_entref_t ref)
 	// Alternatively: stackPushInt(ps->weaponTime);
 }
 
+void gsc_player_isshellshocked(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_isshellshocked() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	gentity_t *player = &g_entities[id];
+	gclient_t *client = player->client;
+
+	stackPushBool(client->ps.shellshockIndex != 0 && level.time <= (client->ps.shellshockTime + client->ps.shellshockDuration));
+}
+
 void gsc_player_isthrowinggrenade(scr_entref_t ref)
 {
 	int id = ref.entnum;
