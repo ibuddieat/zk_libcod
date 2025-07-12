@@ -8334,6 +8334,36 @@ LAB_081131e1:
 	Scr_AddEntity(ent); // New
 }
 
+void custom_GScr_Earthquake(void)
+{
+	vec3_t source;
+
+	float scale = Scr_GetFloat(0);
+	int duration = floorf(Scr_GetFloat(1) * 1000);
+	Scr_GetVector(2, source);
+	float radius = Scr_GetFloat(3);
+
+	if ( scale <= 0.0 )
+	{
+		Scr_ParamError(0, "Scale must be greater than 0");
+	}
+	if ( duration < 1 )
+	{
+		Scr_ParamError(1, "duration must be greater than 0");
+	}
+	if ( radius <= 0.0 )
+	{
+		Scr_ParamError(3, "Radius must be greater than 0");
+	}
+
+	gentity_t *ent = G_TempEntity(source, EV_EARTHQUAKE);
+	ent->s.angles2[0] = scale;
+	ent->s.time = duration;
+	ent->s.angles2[1] = radius;
+
+	Scr_AddEntity(ent); // New
+}
+
 void custom_GScr_SetHintString(scr_entref_t entref)
 {
 	int id = entref.entnum;
@@ -11628,6 +11658,7 @@ public:
 		cracking_hook_function(0x08117F70, (int)custom_Scr_ParseGameTypeList);
 		cracking_hook_function(0x080EA3F4, (int)custom_PM_StepSlideMove);
 		cracking_hook_function(0x0811D44A, (int)custom_G_ShaderIndex);
+		cracking_hook_function(0x081161BA, (int)custom_GScr_Earthquake);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC8CA, (int)Jump_ReduceFriction);

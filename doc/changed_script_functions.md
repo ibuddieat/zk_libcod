@@ -4,6 +4,7 @@
 # 🏗 Changed with or since release v14.0:
 
 Script code functions:
+  * `EarthQuake(<scale>, <duration>, <source>, <radius>)` now returns the (temporary) earthquake entity
   * `Obituary(<victim>, <attacker>, <weapon>, <meansOfDeath>, [<team>], [<origin>], [<max. distance>])` now returns the (temporary) obituary entity
 
 # 🏗 Changed with or since release v13.0:
