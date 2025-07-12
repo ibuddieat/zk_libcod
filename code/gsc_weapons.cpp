@@ -1000,14 +1000,14 @@ void gsc_weapons_getweaponitemammo(scr_entref_t ref)
     gentity_t *entity = &g_entities[id];
     gitem_t *bg_item = &bg_itemlist;
     
-    if ( entity->s.index < 1 || 0x82 < entity->s.index )
+    if ( entity->s.item < 1 || 0x82 < entity->s.item )
     {
         stackError("gsc_weapons_getweaponitemammo() must be called on a weapon entity");
         stackPushUndefined();
         return;
     }
     
-    bg_item += entity->s.index;
+    bg_item += entity->s.item;
     if ( bg_item->giType == IT_WEAPON )
     {
         stackPushInt(bg_item->quantity);
@@ -1034,14 +1034,14 @@ void gsc_weapons_setweaponitemammo(scr_entref_t ref)
         return;
     }
 
-    if ( entity->s.index < 1 || 0x82 < entity->s.index )
+    if ( entity->s.item < 1 || 0x82 < entity->s.item )
     {
         stackError("gsc_weapons_setweaponitemammo() must be called on a weapon entity");
         stackPushUndefined();
         return;
     }
     
-    bg_item += entity->s.index;
+    bg_item += entity->s.item;
     if ( bg_item->giType == IT_WEAPON )
     {
         bg_item->quantity = quantity;

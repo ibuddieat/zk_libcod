@@ -2756,7 +2756,7 @@ void gsc_player_objective_player_add(scr_entref_t ref)
 	{
 		if ( g_entities[obj->entNum].r.inuse != 0 )
 		{
-			g_entities[obj->entNum].r.svFlags = g_entities[obj->entNum].r.svFlags & 0xef;
+			g_entities[obj->entNum].r.svFlags = g_entities[obj->entNum].r.svFlags & 0xEF;
 		}
 		obj->entNum = ENTITY_NONE;
 	}
@@ -2824,7 +2824,7 @@ void gsc_player_objective_player_delete(scr_entref_t ref)
 	{
 		if ( g_entities[obj->entNum].r.inuse != 0 )
 		{
-			g_entities[obj->entNum].r.svFlags = g_entities[obj->entNum].r.svFlags & 0xef;
+			g_entities[obj->entNum].r.svFlags = g_entities[obj->entNum].r.svFlags & 0xEF;
 		}
 		obj->entNum = ENTITY_NONE;
 	}
@@ -2888,7 +2888,7 @@ void gsc_player_objective_player_position(scr_entref_t ref)
 	{
 		if ( g_entities[obj->entNum].r.inuse != 0 )
 		{
-			g_entities[obj->entNum].r.svFlags = g_entities[obj->entNum].r.svFlags & 0xef;
+			g_entities[obj->entNum].r.svFlags = g_entities[obj->entNum].r.svFlags & 0xEF;
 		}
 		obj->entNum = ENTITY_NONE;
 	}
@@ -2951,7 +2951,7 @@ void gsc_player_objective_player_state(scr_entref_t ref)
 		{
 			if ( g_entities[obj->entNum].r.inuse != 0 )
 			{
-				g_entities[obj->entNum].r.svFlags = g_entities[obj->entNum].r.svFlags & 0xef;
+				g_entities[obj->entNum].r.svFlags = g_entities[obj->entNum].r.svFlags & 0xEF;
 			}
 			obj->entNum = ENTITY_NONE;
 		}
@@ -3431,7 +3431,7 @@ void gsc_player_setexpfogforplayer(scr_entref_t ref)
 	float b = Scr_GetFloat(3);
 	float transitionTime = Scr_GetFloat(4);
 
-	if ( density <= 0.0 || 1.0 <= density)
+	if ( density <= 0.0 || 1.0 <= density )
 		Scr_Error("setExpFogForPlayer: density must be greater than 0 and less than 1");
 
 	Scr_SetFogForPlayer("setExpFogForPlayer", 0.0, 1.0, density, r, g, b, transitionTime, id);
@@ -3471,7 +3471,7 @@ void gsc_player_ischatting(scr_entref_t ref)
 
 	gentity_t *ent = &g_entities[id];
 
-	stackPushBool( ( ent->client->buttons & KEY_MASK_TALK ) != 0 );
+	stackPushBool(( ent->client->buttons & KEY_MASK_TALK ) != 0);
 }
 
 void gsc_player_isusetouching(scr_entref_t ref)
@@ -3488,7 +3488,7 @@ void gsc_player_isusetouching(scr_entref_t ref)
 	gentity_t *ent = &g_entities[id];
 	gclient_t *client = ent->client;
 
-	stackPushBool( client->ps.pm_type != PM_INTERMISSION && ( client->ps.pm_flags & PMF_SPECTATING ) == 0 && client->ps.cursorHintEntIndex != ENTITY_NONE );
+	stackPushBool(client->ps.pm_type != PM_INTERMISSION && ( client->ps.pm_flags & PMF_SPECTATING ) == 0 && client->ps.cursorHintEntIndex != ENTITY_NONE);
 }
 
 #if COMPILE_CUSTOM_VOICE == 1

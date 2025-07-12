@@ -2464,9 +2464,10 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 			return;
 		
 		if ( entity->client->sess.predictItemPickup == 0 )
-			G_AddEvent(entity, event, item->s.index);
+			G_AddEvent(entity, event, item->s.item);
 		else
-			G_AddPredictableEvent(entity, event, item->s.index);
+			G_AddPredictableEvent(entity, event, item->s.item);
+
 		G_FreeEntity(item);
 	}
 }
@@ -8188,7 +8189,7 @@ void custom_Scr_SightTracePassed(void)
 	Scr_AddBool(hitNum == 0);
 }
 
-void custom_GScr_KickPlayer()
+void custom_GScr_KickPlayer(void)
 {
 	int id;
 	char *msg;
@@ -8770,7 +8771,7 @@ void custom_Bullet_Fire_Extended(const gentity_t *inflictor, gentity_t *attacker
 			{
 				tempEnt = G_TempEntity(origin, event);
 				tempEnt->s.eventParm = DirToByte(trace.normal);
-				tempEnt->s.scale = DirToByte(dir);
+				tempEnt->s.eventParm2 = DirToByte(dir);
 
 				if ( self->s.eType == ET_PLAYER_CORPSE && g_corpseHit->current.boolean ) // New: g_corpseHit dvar
 					surfaceType = 7;

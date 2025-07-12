@@ -1413,7 +1413,12 @@ typedef struct entityState_s
 	int constantLight;
 	int loopSound;
 	int surfType;
-	int index; // modelIndex
+	union // index
+	{
+		int brushmodel;
+		int item;
+		int xmodel;
+	};
 	int clientNum;
 	int iHeadIcon;
 	int iHeadIconTeam;
@@ -1421,18 +1426,22 @@ typedef struct entityState_s
 	int eventParm;
 	int eventSequence;
 	int events[4];
-	unsigned int eventParms[4];
+	int eventParms[4];
 	int weapon;
 	int legsAnim;
 	int torsoAnim;
 	int leanf;
-	int scale; // used as loopfxid, hintstring, ... and doesn't actually scale a player's model size
+	union
+	{
+		int scale;
+		int eventParm2;
+	};
 	int dmgFlags;
 	int animMovetype;
 	float fTorsoHeight;
 	float fTorsoPitch;
 	float fWaistPitch;
-} entityState_t; // verified
+} entityState_t;
 
 typedef struct
 {
