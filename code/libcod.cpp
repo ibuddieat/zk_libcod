@@ -734,7 +734,10 @@ const char * custom_ClientConnect(unsigned int clientNum, unsigned int scriptPer
 		/* New code end*/
 		
 		/* New code start: g_banIPs dvar enforcement reimplementation */
-		if ( !client->bIsTestClient )
+
+		// Exclude NA_BOT, as the bIsTestClient flag is not yet set for bots at
+		// this point
+		if ( customPlayerState[clientNum].realAddress.type == NA_IP )
 		{
 			ipFilter_t f;
 
@@ -11439,6 +11442,18 @@ void custom_PM_StepSlideMove(pmove_t *pm, pml_t *pml, qboolean gravity)
 	PM_FootstepEvent(pm, pml, old, ps->bobCycle, qtrue);
 }
 
+int hook_Com_sprintf_in_NET_AdrToString_IP(char *buf, size_t len, const char *format, int ip0, int ip1, int ip2, int ip3, int port)
+{
+	// Makes NET_AdrToString always return a positive port number (IP branch)
+	return Com_sprintf(buf, len, "%i.%i.%i.%i:%hu", ip0, ip1, ip2, ip3, port);
+}
+
+int hook_Com_sprintf_in_NET_AdrToString_IPX(char *buf, size_t len, const char *format, int ipx0, int ipx1, int ipx2, int ipx3, int ipx4, int ipx5, int ipx6, int ipx7, int ipx8, int ipx9, int port)
+{
+	// Makes NET_AdrToString always return a positive port number (IPX branch)
+	return Com_sprintf(buf, len, "%02x%02x%02x%02x.%02x%02x%02x%02x%02x%02x:%hu", ipx0, ipx1, ipx2, ipx3, ipx4, ipx5, ipx6, ipx7, ipx8, ipx9, port);
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -11484,6 +11499,8 @@ public:
 		cracking_hook_call(0x0813944A, (int)hook_sprintf_in_SE_R_ListFiles);
 		cracking_hook_call(0x0808C9EB, (int)hook_strcpy_in_SV_ConSay_f);
 		cracking_hook_call(0x0808CB15, (int)hook_strcpy_in_SV_ConTell_f);
+		cracking_hook_call(0x0806B24F, (int)hook_Com_sprintf_in_NET_AdrToString_IP);
+		cracking_hook_call(0x0806B2CE, (int)hook_Com_sprintf_in_NET_AdrToString_IPX);
 
 		hook_Com_DPrintf = new cHook(0x08060E3A, (int)custom_Com_DPrintf);
 		#if COMPILE_UTILS == 1
@@ -11676,7 +11693,6 @@ public:
 
 		cracking_write_hex(0x0818815C, (char *)"00"); // Removes debug mode restriction from GetEntByNum
 		cracking_write_hex(0x0815B2A0, (char *)"00"); // Disables warning: "Non-localized %s string is not allowed to have letters in it. Must be changed over to a localized string: \"%s\"\n"
-		cracking_write_hex(0x08143125, (char *)"687500"); // Makes NET_AdrToString always return a positive port number
 
 		// End of hooking block
 
