@@ -592,12 +592,10 @@ typedef struct
 {
 	union
 	{
-		bool boolean;
+		bool boolean; // Original name: enabled
 		int integer;
-		float decimal;
-		vec2_t vec2;
-		vec3_t vec3;
-		vec4_t vec4;
+		float decimal; // Original name: value
+		vec_t *vector;
 		const char *string;
 		unsigned char color[4];
 	};

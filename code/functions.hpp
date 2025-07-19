@@ -297,7 +297,7 @@ static const Dvar_InfoString_t Dvar_InfoString = (Dvar_InfoString_t)0x08064188;
 typedef char * (*Dvar_InfoString_Big_t)(unsigned short bit);
 static const Dvar_InfoString_Big_t Dvar_InfoString_Big = (Dvar_InfoString_Big_t)0x080641EA;
 
-typedef DvarValue (*Dvar_StringToValue_t)(const DvarType type, const DvarLimits domain, const char *string);
+typedef DvarValue * (*Dvar_StringToValue_t)(DvarValue *result, const DvarType type, const DvarLimits domain, const char *string);
 static const Dvar_StringToValue_t Dvar_StringToValue = (Dvar_StringToValue_t)0x080B1E18;
 
 typedef void (*Dvar_PrintDomain_t)(DvarType type, DvarLimits domain);

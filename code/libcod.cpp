@@ -591,7 +591,7 @@ void custom_Dvar_SetFromStringFromSource(dvar_t *dvar, const char *string, DvarS
 	/* New code end */
 
 	I_strncpyz(buf, string, sizeof(buf));
-	newValue = Dvar_StringToValue(dvar->type, dvar->domain, buf);
+	Dvar_StringToValue(&newValue, dvar->type, dvar->domain, buf);
 	if ( dvar->type == DVAR_TYPE_ENUM && newValue.integer == DVAR_INVALID_ENUM_INDEX )
 	{
 		Com_Printf("'%s' is not a valid value for dvar '%s'\n", buf, dvar->name);
