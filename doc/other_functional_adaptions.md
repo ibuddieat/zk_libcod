@@ -12,8 +12,8 @@
 - Added basic bullet drop mechanics (see `g_bulletDrop` and `g_bulletDropMaxTime` dvars)
 - Added network code improvements to help older protocol versions with low gamestate and snapshot sizes
 - Added faster direct file download for game version 1.0 (see `sv_fastDownload` dvar)
-- Increased max. direct file download size from 64 MB to 512 MB
-- Increased level script path length limit from 64 characters to 128
+- Increased max. direct file download size from 64 to 512 MB (requires enabled `sv_fastDownload` dvar)
+- Increased level script path length limit from 63 to 127 characters
 - Added multi-part map support for manymaps
 - Added other manymaps improvements, like automatic cleanup of symbolic links and main folder support
 - Added support for map commands in custom rcon script code callback

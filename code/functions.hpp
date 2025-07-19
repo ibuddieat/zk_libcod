@@ -330,7 +330,7 @@ static const NetadrToSockadr_t NetadrToSockadr = (NetadrToSockadr_t)0x080D5160;
 typedef void (*SockadrToNetadr_t)(struct sockaddr_in *s, netadr_t *a);
 static const SockadrToNetadr_t SockadrToNetadr = (SockadrToNetadr_t)0x080D51DE;
 
-typedef int (*NET_CompareBaseAdr_t)(netadr_t a,netadr_t b);
+typedef int (*NET_CompareBaseAdr_t)(netadr_t a, netadr_t b);
 static const NET_CompareBaseAdr_t NET_CompareBaseAdr = (NET_CompareBaseAdr_t)0x0806C424;
 
 typedef qboolean (*NET_IsLocalAddress_t)(netadr_t from);

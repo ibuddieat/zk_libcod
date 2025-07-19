@@ -9121,7 +9121,7 @@ void custom_Bullet_Drop_Nextpos(float *end, droppingBullet_t *bullet)
 void custom_Bullet_Drop_Free(int clientNum, droppingBullet_t *bullet)
 {
 	customPlayerState[clientNum].droppingBulletsCount--;
-	Com_DPrintf("Bullet_Drop_Free: Done after %.2fs and %f units of distance, %d bullets still active\n", (float)(level.time - bullet->startTime)/1000, bullet->distance, customPlayerState[clientNum].droppingBulletsCount);
+	Com_DPrintf("Bullet_Drop_Free: Done after %.2fs and %f units of distance, %d bullets still active\n", (float)(level.time - bullet->startTime) / 1000, bullet->distance, customPlayerState[clientNum].droppingBulletsCount);
 	memset(bullet, 0, sizeof(droppingBullet_t));
 }
 
