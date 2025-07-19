@@ -160,6 +160,7 @@
   * `CodeCallback_Notify`
   * `CodeCallback_NotifyDebug`
   * `CodeCallback_Pickup`
+  * `CodeCallback_PlayerEvent`
   * `CodeCallback_Suicide`
   * `CodeCallback_WeaponChange`
   * `CodeCallback_AdsButton`

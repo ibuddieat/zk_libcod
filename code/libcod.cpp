@@ -598,7 +598,6 @@ void custom_Dvar_SetFromStringFromSource(dvar_t *dvar, const char *string, DvarS
 		Dvar_PrintDomain(dvar->type, dvar->domain);
 		newValue = dvar->reset;
 	}
-
 	Dvar_SetVariant(dvar, newValue, source);
 
 	Sys_LeaveCriticalSection(CRITSECT_DVAR);
@@ -9221,6 +9220,7 @@ void custom_Bullet_Fire(gentity_t *inflictor, float spread, weaponParms *wp, con
 			distance = customPlayerState[id].droppingBulletVelocity / (float)sv_fps->current.integer;
 			if ( distance > 8192.0 ) // Clamp to common stock value
 				distance = 8192.0;
+
 			custom_Bullet_Drop_Firstpos(spread, end, wp, distance, &bullet);
 
 			// Visualize bullet trajectory

@@ -39,11 +39,11 @@ static const Scr_GetNumParam_t Scr_GetNumParam = (Scr_GetNumParam_t)0x08085136;
 typedef void (*Cmd_Score_f_t)(gentity_t *ent);
 static const Cmd_Score_f_t Cmd_Score_f = (Cmd_Score_f_t)0x080FE0EE;
 
-typedef char * (*Cmd_Argv_t)(int arg);
-static const Cmd_Argv_t Cmd_Argv = (Cmd_Argv_t)0x08060220;
-
-typedef int (*Cmd_Argc_t)();
+typedef int (*Cmd_Argc_t)(void);
 static const Cmd_Argc_t Cmd_Argc = (Cmd_Argc_t)0x080601E0;
+
+typedef char * (*Cmd_Argv_t)(unsigned int arg);
+static const Cmd_Argv_t Cmd_Argv = (Cmd_Argv_t)0x080601F4;
 
 typedef int (*SV_Cmd_Argc_t)(void);
 static const SV_Cmd_Argc_t SV_Cmd_Argc = (SV_Cmd_Argc_t)0x080601EA;

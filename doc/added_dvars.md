@@ -401,4 +401,4 @@ Other dvars (e.g., from legacy versions of libcod or other repositories):
   * `sv_verifyIwds`
     * Type: Boolean
     * Default: True
-    * Effect: Toggle IWD file verification triggered by cp client commands.
+    * Effect: Toggle .iwd file verification triggered by cp client commands.
