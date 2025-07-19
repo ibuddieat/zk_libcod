@@ -366,6 +366,9 @@ static const SV_WriteSnapshotToClient_t SV_WriteSnapshotToClient = (SV_WriteSnap
 typedef void (*SV_WriteDownloadToClient_t)(client_t *cl, msg_t *msg);
 static const SV_WriteDownloadToClient_t SV_WriteDownloadToClient = (SV_WriteDownloadToClient_t)0x0808FDC2;
 
+typedef void (*SV_CloseDownload_t)(client_t *cl);
+static const SV_CloseDownload_t SV_CloseDownload = (SV_CloseDownload_t)0x0808F6F6;
+
 typedef void (*SV_ShowClientUnAckCommands_t)(client_t *client);
 static const SV_ShowClientUnAckCommands_t SV_ShowClientUnAckCommands = (SV_ShowClientUnAckCommands_t)0x08098A94;
 

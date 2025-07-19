@@ -217,14 +217,20 @@
     * Type: Boolean
     * Default: False
     * Effect: If enabled, prints the relative path to the file requested by the connecting player ingame. Applied for both direct and HTTP-based downloads.
+  * `sv_downloadRetransmitTimeout`
+    * Type: Integer
+    * Default: 1000
+    * Min. Value: 250
+    * Max. Value: 10000
+    * Effect: Controls the time in milliseconds after which the server will retransmit direct file download blocks, if a client did not acknowledge the previously sent blocks in the specified time.
   * `sv_fastDownload`
     * Type: Boolean
     * Default: False
-    * Effect: Enable this for higher direct download speeds. Does not affect HTTP-based downloads. Currently considered experimental.
+    * Effect: Enable this for higher direct download speeds. Does not affect HTTP-based downloads. Currently considered experimental. May cause clients with an unstable internet connection to get stuck in the download process without an error message on the client side, requiring a manual reconnect.
   * `sv_fastDownloadSpeed`
     * Type: Integer
     * Default: 8
-    * Min. Value: 0
+    * Min. Value: 1
     * Max. Value: 8
     * Effect: Controls the direct download speed when the `sv_fastDownload` dvar is enabled.
   * `sv_isLookingAtOnDemand`

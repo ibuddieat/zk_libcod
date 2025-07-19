@@ -141,6 +141,7 @@ dvar_t *sv_downloadMessage;
 dvar_t *sv_downloadMessageAtMap;
 dvar_t *sv_downloadMessageForLegacyClients;
 dvar_t *sv_downloadNotifications;
+dvar_t *sv_downloadRetransmitTimeout;
 dvar_t *sv_fastDownload;
 dvar_t *sv_fastDownloadSpeed;
 dvar_t *sv_isLookingAtOnDemand;
@@ -483,8 +484,9 @@ void common_init_complete_print(const char *format, ...)
 	sv_downloadMessageAtMap = Dvar_RegisterBool("sv_downloadMessageAtMap", qtrue, DVAR_ARCHIVE);
 	sv_downloadMessageForLegacyClients = Dvar_RegisterString("sv_downloadMessageForLegacyClients", "", DVAR_ARCHIVE);
 	sv_downloadNotifications = Dvar_RegisterBool("sv_downloadNotifications", qfalse, DVAR_ARCHIVE);
+	sv_downloadRetransmitTimeout = Dvar_RegisterInt("sv_downloadRetransmitTimeout", 1000, 250, 10000, DVAR_ARCHIVE);
 	sv_fastDownload = Dvar_RegisterBool("sv_fastDownload", qfalse, DVAR_ARCHIVE);
-	sv_fastDownloadSpeed = Dvar_RegisterInt("sv_fastDownloadSpeed", 8, 0, 8, DVAR_ARCHIVE);
+	sv_fastDownloadSpeed = Dvar_RegisterInt("sv_fastDownloadSpeed", MAX_DOWNLOAD_WINDOW, 1, MAX_DOWNLOAD_WINDOW, DVAR_ARCHIVE);
 	sv_isLookingAtOnDemand = Dvar_RegisterBool("sv_isLookingAtOnDemand", qfalse, DVAR_ARCHIVE);
 	sv_kickGamestateLimitedClients = Dvar_RegisterBool("sv_kickGamestateLimitedClients", qtrue, DVAR_ARCHIVE);
 	sv_kickMessages = Dvar_RegisterBool("sv_kickMessages", qtrue, DVAR_ARCHIVE);
@@ -3799,19 +3801,34 @@ void custom_SV_SendClientMessages(void)
 		numclients++;
 
 		/* New code start: Speed up direct download without having to increase
-		 the sv_fps dvar. Using an experimental value with good results,
-		 simulating sv_fps 180 (9 * default 20) */
-		if ( sv_fastDownload->current.boolean && cl->download && !cl->downloadingWWW )
+		 the sv_fps dvar */
+		if ( sv_fastDownload->current.boolean && cl->download && !cl->downloadingWWW && !cl->clientDownloadingWWW )
 		{
-			for ( int j = 0; j < 1 + sv_fastDownloadSpeed->current.integer; j++ )
+			// If the client had a timeout situation, send only one fragment
+			// per server frame until a new acknowledgement arrives
+			if ( customPlayerState[i].downloadTimedOut )
 			{
-				cl->nextSnapshotTime = svs.time;
-				while ( cl->netchan.unsentFragments )
+				if ( cl->netchan.unsentFragments )
 				{
+					cl->nextSnapshotTime = svs.time;
 					SV_Netchan_TransmitNextFragment(&cl->netchan);
+					continue;
 				}
 
 				SV_SendClientSnapshot(cl);
+			}
+			else
+			{
+				for ( int j = 0; j < sv_fastDownloadSpeed->current.integer; j++ )
+				{
+					cl->nextSnapshotTime = svs.time;
+					while ( cl->netchan.unsentFragments )
+					{
+						SV_Netchan_TransmitNextFragment(&cl->netchan);
+					}
+
+					SV_SendClientSnapshot(cl);
+				}
 			}
 
 			// Voice data is sent as usual, otherwise would distort
@@ -3924,9 +3941,9 @@ void custom_SV_SendMessageToClient(msg_t *msg, client_t *client)
 	SV_Netchan_Transmit(client, data, compressedSize);
 
 	// New: Allow direct download speed above 20 kb/s via sv_fastDownload dvar
-	if ( client->netchan.remoteAddress.type == NA_LOOPBACK || Sys_IsLANAddress(client->netchan.remoteAddress) || ( sv_fastDownload->current.boolean && client->download && !client->downloadingWWW ) )
+	if ( client->netchan.remoteAddress.type == NA_LOOPBACK || Sys_IsLANAddress(client->netchan.remoteAddress) || ( sv_fastDownload->current.boolean && client->download && !client->downloadingWWW && !client->clientDownloadingWWW ) )
 	{
-		client->nextSnapshotTime = svs.time - 1;
+		client->nextSnapshotTime = svs.time;
 		LargeLocalDestructor(&buf);
 		return;
 	}
@@ -4211,6 +4228,38 @@ void SV_WriteDownloadErrorToClient(client_t *cl, msg_t *msg, char *errorMessage)
 	*cl->downloadName = 0;
 }
 
+void custom_SV_NextDownload_f(client_t *cl)
+{
+	int id = cl - svs.clients;
+	int block = atoi(SV_Cmd_Argv(1));
+
+	// TODO: This could or even should be changed to an array of blocks to
+	// expect for 1) more speed and 2) more sv_fastDownload stability against
+	// "broken download" situations over long network distances where packets
+	// may arrive in different order than they were sent.
+	// However, since the client does not accept and reorder multiple blocks
+	// automatically, automatic client speed detection could complement that.
+	if ( block == cl->downloadClientBlock )
+	{
+		customPlayerState[id].downloadTimedOut = qfalse; // New
+
+		Com_DPrintf("clientDownload: %d : client acknowledge of block %d\n", cl - svs.clients, block);
+
+		if ( cl->downloadBlockSize[cl->downloadClientBlock % MAX_DOWNLOAD_WINDOW] == 0 )
+		{
+			Com_Printf("clientDownload: %d : file \"%s\" completed\n", cl - svs.clients, cl->downloadName);
+			SV_CloseDownload(cl);
+			return;
+		}
+
+		cl->downloadSendTime = svs.time;
+		cl->downloadClientBlock++;
+		return;
+	}
+
+	SV_DropClient(cl, "broken download");
+}
+
 void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 {
 	int curindex;
@@ -4412,10 +4461,14 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 	{
 		// We have transmitted the complete window, should we start resending?
 
-		// FIXME: This uses a hardcoded one second timeout for lost blocks
-		// The timeout should be based on client rate somehow
-		if ( svs.time - cl->downloadSendTime > 1000 )
+		// FIXME: The timeout should be based on client rate somehow, and also
+		// consider sv_fastDownload, if enabled
+		if ( svs.time - cl->downloadSendTime > sv_downloadRetransmitTimeout->current.integer )
+		{
+			Com_DPrintf("clientDownload: %d : no acknowledge since %d ms, resending blocks\n", cl - svs.clients, sv_downloadRetransmitTimeout->current.integer);
+			customPlayerState[cl - svs.clients].downloadTimedOut = qtrue;
 			cl->downloadXmitBlock = cl->downloadClientBlock;
+		}
 		else
 			return;
 	}
@@ -11703,6 +11756,7 @@ public:
 		cracking_hook_function(0x0811D44A, (int)custom_G_ShaderIndex);
 		cracking_hook_function(0x081161BA, (int)custom_GScr_Earthquake);
 		cracking_hook_function(0x080B1502, (int)custom_Dvar_FreeString);
+		cracking_hook_function(0x0808F83C, (int)custom_SV_NextDownload_f);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC8CA, (int)Jump_ReduceFriction);

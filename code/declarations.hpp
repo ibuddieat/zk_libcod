@@ -4222,6 +4222,7 @@ typedef struct customPlayerState_s
 	float stepSize;
 	qboolean overrideProneStepSize;
 	float proneStepSize;
+	qboolean downloadTimedOut;
 } customPlayerState_t;
 
 typedef struct callback_s
