@@ -448,6 +448,22 @@ void gsc_player_useturret(scr_entref_t ref)
 	}
 }
 
+void gsc_player_canmantle(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_canmantle() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	playerState_t *ps = SV_GameClientNum(id);
+
+	stackPushBool(ps->mantleState.flags & 8 ? qtrue : qfalse);
+}
+
 void gsc_player_canuseturret(scr_entref_t ref)
 {
 	int id = ref.entnum;

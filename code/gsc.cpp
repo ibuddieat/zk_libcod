@@ -357,6 +357,7 @@ scr_method_t scriptMethods[] =
 	{"overrideContents", gsc_player_overridecontents, 0},
 	{"useEntity", gsc_player_useentity, 0},
 	{"useTurret", gsc_player_useturret, 0},
+	{"canMantle", gsc_player_canmantle, 0},
 	{"canUseTurret", gsc_player_canuseturret, 0},
 	{"isReloading", gsc_player_isreloading, 0},
 	{"isShellShocked", gsc_player_isshellshocked, 0},

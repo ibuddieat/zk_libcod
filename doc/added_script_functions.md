@@ -29,6 +29,7 @@
   * `<entity> solidForPlayer(<player>)`
   * `<entity> spawnGrenade(<weapon>, <origin>, [<direction>], [<velocity>], [<fuseTime>])`
   * `<player> addEntToSnapshots(<entity>)`
+  * `<player> canMantle()`
   * `<player> canUseTurret(<turret>)`
   * `<player> disableBulletDrop()`
   * `<player> disableBulletImpacts()`
