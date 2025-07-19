@@ -1058,7 +1058,13 @@ void custom_SV_SpawnServer(char *server)
 	g_safePrecache = Dvar_RegisterBool("g_safePrecache", qfalse, DVAR_ARCHIVE | DVAR_LATCH | DVAR_CHANGEABLE_RESET);
 	if ( g_safePrecache->current.boolean )
 	{
-		SV_SetConfigstring(847, "fx/misc/missing_fx.efx");
+		// Effects: This defaults to fx/misc/missing_fx.efx on the client side.
+		// Also, we cannot use configstring 846 as it cannot be referenced with
+		// PlayFX on the client side
+		SV_SetConfigstring(847, "0");
+
+		// Models: Reusing a default model, and configstring 334 should be kept
+		// empty as it is used for internal default cases (empty model)
 		SV_SetConfigstring(335, "xmodel/default_static_model");
 		cached_models[1] = SV_XModelGet("xmodel/default_static_model");
 	}
