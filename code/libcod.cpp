@@ -11454,6 +11454,26 @@ int hook_Com_sprintf_in_NET_AdrToString_IPX(char *buf, size_t len, const char *f
 	return Com_sprintf(buf, len, "%02x%02x%02x%02x.%02x%02x%02x%02x%02x%02x:%hu", ipx0, ipx1, ipx2, ipx3, ipx4, ipx5, ipx6, ipx7, ipx8, ipx9, port);
 }
 
+void custom_Dvar_FreeString(char *string)
+{
+	// Find out which dvar strings are freed from where:
+	//Com_Printf(">>> Dvar_FreeString for '%s' (%p), called from %p\n", string, string, __builtin_return_address(0));
+
+	if ( *string != '\0'
+	     && ( ( string[1] != '\0' || *string < '0' ) || '9' < *string )
+	     && string != _dvarOnOffStrings[0] // "off"
+		 && string != _dvarOnOffStrings[1] // "on"
+		 // New: Fixed attempts to free the following strings from .rodata
+		 // segment on server quit:
+	     && string != (char *)0x08151A81 // "linux i386" 
+	     && string != (char *)0x081408DD // "1.3"
+	     && string != (char *)0x0815A582 // "Jun 23 2006"
+	     && string != (char *)0x0815A56A ) // "Call of Duty 2"
+	{
+		Z_FreeInternal(string);
+	}
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -11676,6 +11696,7 @@ public:
 		cracking_hook_function(0x080EA3F4, (int)custom_PM_StepSlideMove);
 		cracking_hook_function(0x0811D44A, (int)custom_G_ShaderIndex);
 		cracking_hook_function(0x081161BA, (int)custom_GScr_Earthquake);
+		cracking_hook_function(0x080B1502, (int)custom_Dvar_FreeString);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC8CA, (int)Jump_ReduceFriction);
