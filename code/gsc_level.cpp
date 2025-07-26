@@ -82,7 +82,7 @@ void gsc_level_getentitycount()
 		ent = g_entities;
 		for ( i = 0; i < level.num_entities; i++, ent++ )
 		{
-			if ( (ent->r).inuse != 0 )
+			if ( ent->r.inuse != 0 )
 			{
 				entities++;
 			}

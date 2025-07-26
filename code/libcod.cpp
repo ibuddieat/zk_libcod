@@ -1892,8 +1892,8 @@ void custom_SV_ClipMoveToEntity(moveclip_t *clip, svEntity_t *entity, trace_t *t
 		return;
 	/* New code end */
 
-	VectorAdd((touch->r).absmin, clip->mins, mins);
-	VectorAdd((touch->r).absmax, clip->maxs, maxs);
+	VectorAdd(touch->r.absmin, clip->mins, mins);
+	VectorAdd(touch->r.absmax, clip->maxs, maxs);
 
 	if ( CM_TraceBox(&clip->extents, mins, maxs, trace->fraction) )
 		return;
@@ -1925,7 +1925,7 @@ void custom_G_SetClientContents(gentity_t *ent)
 	{
 		if ( ent->client->ufo == 0 )
 		{
-			if ( (ent->client->sess).sessionState == STATE_DEAD )
+			if ( ent->client->sess.sessionState == STATE_DEAD )
 			{
 				ent->r.contents = 0;
 			}
@@ -5145,7 +5145,7 @@ void custom_SVC_Status(netadr_t from)
 
 	status[0] = 0;
 	statusLength = 0;
-	for ( i = 0; i < (sv_maxclients->current).integer; i++ )
+	for ( i = 0; i < sv_maxclients->current.integer; i++ )
 	{
 		cl = svs.clients + i;
 		if ( CS_ZOMBIE < cl->state )
@@ -7567,7 +7567,7 @@ void custom_PlayerCmd_ClonePlayer(scr_entref_t entref)
 	void (*PlayerCmd_ClonePlayer)(scr_entref_t entref);
 	*(int *)&PlayerCmd_ClonePlayer = hook_PlayerCmd_ClonePlayer->from;
 
-	if ( !Com_GetServerDObj((entity->client->ps).clientNum) )
+	if ( !Com_GetServerDObj(entity->client->ps.clientNum) )
 	{
 		stackPushUndefined();
 	}
@@ -8113,7 +8113,7 @@ void custom_Scr_BulletTrace(void)
 		if ( type == STACK_ENTITY )
 		{
 			passEnt = Scr_GetEntity(3);
-			passEntityNum = (passEnt->s).number;
+			passEntityNum = passEnt->s.number;
 		}
 	}
 	G_LocationalTrace(&trace, start, end, passEntityNum, contentmask, NULL);
@@ -8191,7 +8191,7 @@ void custom_Scr_BulletTracePassed(void)
 		if ( type == STACK_ENTITY )
 		{
 			passEnt = Scr_GetEntity(3);
-			passEntityNum = (passEnt->s).number;
+			passEntityNum = passEnt->s.number;
 		}
 	}
 
@@ -8238,7 +8238,7 @@ void custom_Scr_SightTracePassed(void)
 		if ( type == STACK_ENTITY )
 		{
 			passEnt = Scr_GetEntity(3);
-			passEntityNum = (passEnt->s).number;
+			passEntityNum = passEnt->s.number;
 		}
 	}
 	G_SightTrace(&hitNum, start, end, passEntityNum, contentmask);
@@ -9359,7 +9359,7 @@ void custom_Fire_Lead(gentity_t *ent, gentity_t *activator)
 	else
 		Weapon_RocketLauncher_Fire(ent, 0.0, &wp);
 
-	G_AddEvent(ent, EV_FIRE_WEAPON_MG42, (attacker->s).number);
+	G_AddEvent(ent, EV_FIRE_WEAPON_MG42, attacker->s.number);
 }
 
 void custom_FireWeaponAntiLag(gentity_t *player, int time)
@@ -9372,11 +9372,11 @@ void custom_FireWeaponAntiLag(gentity_t *player, int time)
 
 	if ( ( player->client->ps.eFlags & EF_TURRET_STAND ) == 0 || player->active == 0 )
 	{
-		wp.weapDef = BG_GetWeaponDef((player->s).weapon);
+		wp.weapDef = BG_GetWeaponDef(player->s.weapon);
 		G_CalcMuzzlePoints(player, &wp);
 		currentAimSpreadScale = player->client->currentAimSpreadScale;
-		BG_GetSpreadForWeapon(&player->client->ps, (player->s).weapon, &minSpread, &maxSpread);
-		if ( (player->client->ps).fWeaponPosFrac == 1.0 )
+		BG_GetSpreadForWeapon(&player->client->ps, player->s.weapon, &minSpread, &maxSpread);
+		if ( player->client->ps.fWeaponPosFrac == 1.0 )
 		{
 			spread = (wp.weapDef)->accuracy + (maxSpread - (wp.weapDef)->accuracy) * currentAimSpreadScale;
 		}
@@ -9395,7 +9395,7 @@ void custom_FireWeaponAntiLag(gentity_t *player, int time)
 		}
 		else if ( (wp.weapDef)->weapType == WEAPTYPE_GRENADE )
 		{
-			weapon_grenadelauncher_fire(player, (player->s).weapon, &wp);
+			weapon_grenadelauncher_fire(player, player->s.weapon, &wp);
 		}
 		else if ( (wp.weapDef)->weapType == WEAPTYPE_PROJECTILE )
 		{
@@ -10568,7 +10568,7 @@ void custom_SV_ConnectionlessPacket(netadr_t from, msg_t *msg)
 		cl = svs.clients;
 		for ( i = 0; i < sv_maxclients->current.integer; i++, cl++ )
 		{
-			if ( cl->state != CS_FREE && NET_CompareBaseAdr(from, (cl->netchan).remoteAddress) && (cl->netchan).remoteAddress.port == from.port )
+			if ( cl->state != CS_FREE && NET_CompareBaseAdr(from, cl->netchan.remoteAddress) && cl->netchan.remoteAddress.port == from.port )
 			{
 				clientNum = i;
 				break;
@@ -11521,9 +11521,9 @@ void custom_Dvar_FreeString(char *string)
 	if ( *string != '\0'
 	     && ( ( string[1] != '\0' || *string < '0' ) || '9' < *string )
 	     && string != _dvarOnOffStrings[0] // "off"
-		 && string != _dvarOnOffStrings[1] // "on"
-		 // New: Fixed attempts to free the following strings from .rodata
-		 // segment on server quit:
+	     && string != _dvarOnOffStrings[1] // "on"
+	     // New: Fixed attempts to free the following strings from .rodata
+	     // segment on server quit:
 	     && string != (char *)0x08151A81 // "linux i386" 
 	     && string != (char *)0x081408DD // "1.3"
 	     && string != (char *)0x0815A582 // "Jun 23 2006"
