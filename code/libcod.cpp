@@ -1749,7 +1749,7 @@ void custom_Scr_ParseGameTypeList(void)
 		}
 		filename = filename + fileLength + 1;
 		i++;
-	} while( true );
+	} while ( true );
 }
 
 void custom_GScr_LoadGameTypeScript(void)

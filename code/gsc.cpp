@@ -133,10 +133,10 @@ scr_function_t scriptFunctions[] =
 	{"getEntityCount", gsc_level_getentitycount, 0},
 	{"getMovers", gsc_level_getmovers, 0},
 	{"getNumberOfStaticModels", gsc_level_getnumberofstaticmodels, 0},
-	{"getSavePersist", gsc_utils_getsavepersist, 0},
+	{"getSavePersist", gsc_level_getsavepersist, 0},
 	{"getStaticModelName", gsc_level_getstaticmodelname, 0},
 	{"getStaticModelOrigin", gsc_level_getstaticmodelorigin, 0},
-	{"setSavePersist", gsc_utils_setsavepersist, 0},
+	{"setSavePersist", gsc_level_setsavepersist, 0},
 	#endif
 
 	#if COMPILE_MEMORY == 1

@@ -583,7 +583,7 @@ void gsc_async_mysql_checkdone()
 					{
 						if ( task->hasargument )
 						{
-							switch( task->valueType )
+							switch ( task->valueType )
 							{
 							case INT_VALUE:
 								stackPushInt(task->intValue);
@@ -623,7 +623,7 @@ void gsc_async_mysql_checkdone()
 				{
 					if ( task->hasargument )
 					{
-						switch( task->valueType )
+						switch ( task->valueType )
 						{
 						case INT_VALUE:
 							stackPushInt(task->intValue);

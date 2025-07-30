@@ -95,12 +95,12 @@ void gsc_level_getentitycount()
 	}
 }
 
-void gsc_utils_getsavepersist()
+void gsc_level_getsavepersist()
 {
 	stackPushBool(level.savepersist);
 }
 
-void gsc_utils_setsavepersist()
+void gsc_level_setsavepersist()
 {
 	int save;
 
