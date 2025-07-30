@@ -136,6 +136,7 @@ scr_function_t scriptFunctions[] =
 	{"getSavePersist", gsc_level_getsavepersist, 0},
 	{"getStaticModelName", gsc_level_getstaticmodelname, 0},
 	{"getStaticModelOrigin", gsc_level_getstaticmodelorigin, 0},
+	{"setNorthYaw", gsc_level_setnorthyaw, 0},
 	{"setSavePersist", gsc_level_setsavepersist, 0},
 	#endif
 

@@ -147,6 +147,7 @@
   * `setConfigString(<index>, <string>)`
   * `setConsolePrefix(<prefix>)`
   * `setNextTestClientName(<name>)`
+  * `setNorthYaw(<angle>)`
   * `setSavePersist(<save persistent>)`
   * `setWeaponRaiseTime(<weapon name>, <raise time>)`
   * `toHex(<number>)`
