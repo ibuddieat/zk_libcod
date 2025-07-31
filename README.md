@@ -6,7 +6,7 @@
 - has its focus on the Linux variant of Call of Duty&reg; 2 Multiplayer and can be used with the original game binary,
 - and was implemented for non-profit and educational purposes.
 
-It requires the [server binary](cod2_lnxded) and .iwd files for game version 1.3 to be used as basis and **supports all four game protocol versions** (check out the `sv_version` and proxy dvars), including the ability to let players from all those versions to connect to the same server. All features in this extension work with the original (stock) client executables.
+It requires the [server binary](cod2_lnxded) and .iwd files for game version 1.3 to be used as basis and **supports all four official game protocol versions** (check out the `sv_version` and proxy dvars), including the ability to let players from all those versions to connect to the same server. All features in this extension work with the original (stock) client executables.
 
 ## ⭐ What's new?
 
