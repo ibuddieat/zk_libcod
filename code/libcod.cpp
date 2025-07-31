@@ -4492,7 +4492,7 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 	Com_DPrintf("clientDownload: %d : writing block %d\n", cl - svs.clients, cl->downloadXmitBlock);
 
 	// Move on to the next block
-	// It will get sent with next snap shot.  The rate will keep us in line.
+	// It will get sent with next snap shot. The rate will keep us in line.
 	cl->downloadXmitBlock++;
 
 	cl->downloadSendTime = svs.time;
@@ -4535,7 +4535,7 @@ char * custom_va(const char *format, ...)
 	Q_vsnprintf(info->va_string[index], sizeof(info->va_string[0]), format, va);
 	va_end(va);
 
-	info->va_string[index][1023] = 0;
+	info->va_string[index][MAX_STRINGLENGTH - 1] = 0;
 
 	// New: Removed call to Com_Error with "Attempted to overrun string in call to va()"
 
@@ -4552,8 +4552,8 @@ void custom_SV_VerifyIwds_f(client_t *cl)
 		 used with protocol 118. The same applies for protocol 117 and
 		 iw_15.iwd */
 		if ( sv_verifyIwds->current.boolean &&
-			 !( customPlayerState[cl - svs.clients].protocolVersion == 117 ) &&
-			 !( customPlayerState[cl - svs.clients].protocolVersion == 119 ) )
+		     !( customPlayerState[cl - svs.clients].protocolVersion == 117 ) &&
+		     !( customPlayerState[cl - svs.clients].protocolVersion == 119 ) )
 		{
 		/* New code end */
 
@@ -5283,9 +5283,9 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 
 	/* New code start: CodeCallback_RemoteCommand */
 	if ( !from_script &&
-		 codecallback_remotecommand && 
-		 !badRconPassword && 
-		 Scr_IsSystemActive() )
+	     codecallback_remotecommand && 
+	     !badRconPassword && 
+	     Scr_IsSystemActive() )
 	{
 		stackPushInt((int)msg);
 		stackPushArray();
@@ -7943,7 +7943,7 @@ void custom_PlayerCmd_Suicide(scr_entref_t entref)
 	/* New code end */
 	else
 	{
-		pSelf->flags &= 0xfffffffc;
+		pSelf->flags &= 0xFFFFFFFC;
 		pSelf->health = 0;
 		pSelf->client->ps.stats[STAT_HEALTH] = 0;
 

@@ -3307,7 +3307,7 @@ void gsc_player_processsuicide(scr_entref_t ref)
 
 	gentity_t *pSelf = &g_entities[id];
 
-	pSelf->flags &= 0xfffffffc;
+	pSelf->flags &= 0xFFFFFFFC;
 	pSelf->health = 0;
 	pSelf->client->ps.stats[STAT_HEALTH] = 0;
 
