@@ -4312,3 +4312,9 @@ typedef enum
 	PROTOCOL_119 = 0x3,
 	PROTOCOL_COUNT = 0x4
 } protocolVersion_t;
+
+typedef struct
+{
+	netadr_t from;
+	msg_t *msg;
+} remoteCommand_t;

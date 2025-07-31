@@ -515,22 +515,20 @@ void gsc_utils_getsoundinfo()
 	stackPushUndefined();
 }
 
+extern remoteCommand_t remoteCommand;
 void gsc_utils_processremotecommand()
 {
-	char *sFrom;
-	int pointerMsg;
-
-	if ( !stackGetParams("si", &sFrom, &pointerMsg) )
+	if ( !remoteCommand.msg )
 	{
-		stackError("gsc_utils_processremotecommand() one or more arguments is undefined or has a wrong type");
+		stackError("gsc_utils_processremotecommand() must be called from CodeCallback_RemoteCommand, without delay, and at most once per rcon command");
 		return;
 	}
 
-	netadr_t from;
-	msg_t *msg = (msg_t *)pointerMsg;
+	custom_SVC_RemoteCommand(remoteCommand.from, remoteCommand.msg, qtrue);
 
-	NET_StringToAdr(sFrom, &from);
-	custom_SVC_RemoteCommand(from, msg, qtrue);
+	// Reset the buffer reference here too to avoid repeated execution of a
+	// single rcon command
+	remoteCommand.msg = NULL;
 }
 
 void gsc_utils_executecommand()

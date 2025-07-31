@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>processRemoteCommand( &lt;from&gt;, &lt;messagePointer&gt; )</H1>
+<H1>processRemoteCommand()</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
@@ -32,22 +32,14 @@ Module: System<BR>
 </TR></TD></TABLE>
 
 <BR><BR>
-<H2>Parameters:</H2>
-<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
-<TR><TD BGCOLOR="C0D4EE">
-<UL>
-<LI>1 : &lt;from&gt;: IP address of the sender.</LI>
-<LI>3 : &lt;messagePointer&gt;: Pointer to the internal message structure (type msg_t).</LI>
-</UL></TR></TD></TABLE>
-<BR><BR>
 <H2>Example:</H2>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-CodeCallback_RemoteCommand(from, args, messagePointer)
+CodeCallback_RemoteCommand(from, args)
 {
-    processRemoteCommand(from, messagePointer);
+    processRemoteCommand();
 }
 </PRE>
 </H3>

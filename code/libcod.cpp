@@ -349,6 +349,14 @@ int reservedConfigstringBufferSizeUsage = 0;
 // Storage for console prefix (name and separator) in chat
 char consolePrefix[MAX_CONSOLE_PREFIX_LENGTH] = "console: ";
 
+// Temporary rcon command reference storage, to avoid invalid memory access in
+// the CodeCallback_RemoteCommand script callback function
+remoteCommand_t remoteCommand;
+
+// Flag used to avoid invalid calls to the CodeCallback_PlayerCommand script
+// callback function
+qboolean playerCommand = qfalse;
+
 void custom_Com_InitDvars(void)
 {
 	// Register custom dvars required early on server start
@@ -2092,8 +2100,15 @@ void hook_ClientCommand(int clientNum)
 		}
 	}
 
+	// Flag player command state to be able to ensure expected usage of the
+	// processClientCommand script function
+	playerCommand = qtrue;
+
 	short ret = Scr_ExecEntThread(&g_entities[clientNum], codecallback_playercommand, 1);
 	Scr_FreeThread(ret);
+
+	// Reset command reference
+	playerCommand = qfalse;
 }
 
 const char * hook_AuthorizeState(int arg)
@@ -5287,7 +5302,11 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 	     !badRconPassword && 
 	     Scr_IsSystemActive() )
 	{
-		stackPushInt((int)msg);
+		// Save command reference to be able to ensure expected usage of the
+		// processRemoteCommand script function
+		memcpy(&remoteCommand.from, &from, sizeof(netadr_t));
+		remoteCommand.msg = msg;
+
 		stackPushArray();
 		args = SV_Cmd_Argc();
 		for ( i = 2; i < args; i++ )
@@ -5299,9 +5318,13 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 		}
 		stackPushString(NET_AdrToString(from));
 	
-		short ret = Scr_ExecThread(codecallback_remotecommand, 3);
+		short ret = Scr_ExecThread(codecallback_remotecommand, 2);
 		Scr_FreeThread(ret);
 		LargeLocalDestructor(&buf);
+
+		// Reset command reference
+		remoteCommand.msg = NULL;
+
 		return;
 	}
 	/* New code end */

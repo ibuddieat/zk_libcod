@@ -3,9 +3,13 @@
 
 # 🏗 Changed with or since release v14.0:
 
+Script callback functions:
+  * `CodeCallback_RemoteCommand(<from>, <args>)` no longer provides the message pointer (3rd argument)
+
 Script code functions:
   * `EarthQuake(<scale>, <duration>, <source>, <radius>)` now returns the (temporary) earthquake entity
   * `Obituary(<victim>, <attacker>, <weapon>, <meansOfDeath>, [<team>], [<origin>], [<max. distance>])` now returns the (temporary) obituary entity
+  * `processRemoteCommand()` no longer requires any parameters to be passed in
 
 # 🏗 Changed with or since release v13.0:
 

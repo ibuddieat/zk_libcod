@@ -1438,6 +1438,7 @@ void gsc_player_setping(scr_entref_t ref)
 	stackPushBool(qtrue);
 }
 
+extern qboolean playerCommand;
 void gsc_player_processclientcommand(scr_entref_t ref)
 {
 	int id = ref.entnum;
@@ -1449,7 +1450,18 @@ void gsc_player_processclientcommand(scr_entref_t ref)
 		return;
 	}
 
+	if ( !playerCommand )
+	{
+		stackError("gsc_player_processclientcommand() must be called from CodeCallback_PlayerCommand, without delay, and at most once per player command");
+		stackPushUndefined();
+		return;
+	}
+
 	ClientCommand(id);
+
+	// Reset the player command state here too to avoid repeated execution of a
+	// single player command
+	playerCommand = qfalse;
 
 	stackPushBool(qtrue);
 }

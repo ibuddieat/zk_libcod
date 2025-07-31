@@ -40,7 +40,6 @@ Module: Callbacks<BR>
 <UL>
 <LI>1 : &lt;from&gt; IP address of the sender.</LI>
 <LI>2 : &lt;args&gt; Received command as an array of strings.</LI>
-<LI>3 : &lt;messagePointer&gt; Pointer to the internal message structure (type msg_t).</LI>
 </UL></TR></TD></TABLE>
 <BR><BR>
 <H2>Example:</H2>
@@ -48,10 +47,10 @@ Module: Callbacks<BR>
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-CodeCallback_RemoteCommand(from, args, messagePointer)
+CodeCallback_RemoteCommand(from, args)
 {
     // Parse commands in args array for filtering or further actions
-    processRemoteCommand(from, messagePointer);
+    processRemoteCommand();
 }
 </PRE>
 </H3>
