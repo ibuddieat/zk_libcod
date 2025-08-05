@@ -11556,6 +11556,14 @@ void custom_Dvar_FreeString(char *string)
 	}
 }
 
+void hook_Cbuf_Execute_in_Com_ExecStartupConfigs(void)
+{
+	// New: Skip calling Cbuf_Execute here since that breaks proper assignment
+	// of the DVAR_AUTOEXEC flag during automatic execution of config files
+	// (default_mp.cfg/default_localize_mp.cfg, language.cfg, and
+	// config_mp_server.cfg). It is called afterwards in Com_RunAutoExec
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -11578,6 +11586,7 @@ public:
 		mprotect((void *)0x08048000, 0x135000, PROT_READ | PROT_WRITE | PROT_EXEC);
 
 		// Begin of hooking block
+		cracking_hook_call(0x08062086, (int)hook_Cbuf_Execute_in_Com_ExecStartupConfigs);
 		cracking_hook_call(0x080622F9, (int)common_init_complete_print);
 		cracking_hook_call(0x08090BA0, (int)hook_ClientCommand);
 		cracking_hook_call(0x0808DB12, (int)hook_AuthorizeState);
