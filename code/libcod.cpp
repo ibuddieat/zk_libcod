@@ -1,3 +1,4 @@
+#include "dvar.hpp"
 #include "gsc.hpp"
 #include "gsc_entity.hpp"
 #include "libcod.hpp"
@@ -9,164 +10,170 @@
 #include <signal.h>
 
 // Stock dvars
-dvar_t *bg_bobMax;
-dvar_t *bg_fallDamageMaxHeight;
-dvar_t *bg_fallDamageMinHeight;
-dvar_t *cl_allowDownload;
-dvar_t *cl_paused;
-dvar_t *com_dedicated;
-dvar_t *com_logfile;
-dvar_t *com_sv_running;
-dvar_t *com_timescale;
-dvar_t *developer;
-dvar_t *fs_debug;
-dvar_t *fs_game;
-dvar_t *fs_homepath;
-dvar_t *g_antilag;
-dvar_t *g_banIPs;
-dvar_t *g_knockback;
-dvar_t *g_mantleBlockTimeBuffer;
-dvar_t *g_maxDroppedWeapons;
-dvar_t *g_password;
-dvar_t *g_playerCollisionEjectSpeed;
-dvar_t *g_synchronousClients;
-dvar_t *g_voiceChatTalkingDuration;
-dvar_t *jump_height;
-dvar_t *jump_stepSize;
-dvar_t *jump_slowdownEnable;
-dvar_t *jump_ladderPushVel;
-dvar_t *jump_spreadAdd;
-dvar_t *net_ip;
-dvar_t *net_lanauthorize;
-dvar_t *net_port;
-dvar_t *nextmap;
-dvar_t *player_dmgtimer_maxTime;
-dvar_t *player_dmgtimer_timePerPoint;
-dvar_t *player_meleeHeight;
-dvar_t *player_meleeRange;
-dvar_t *player_meleeWidth;
-dvar_t *rcon_password;
-dvar_t *showpackets;
-dvar_t *sv_allowAnonymous;
-dvar_t *sv_allowDownload;
-dvar_t *sv_cheats;
-dvar_t *sv_debugReliableCmds;
-dvar_t *sv_disableClientConsole;
-dvar_t *sv_floodProtect;
-dvar_t *sv_fps;
-dvar_t *sv_gametype;
-dvar_t *sv_hostname;
-dvar_t *sv_iwdNames;
-dvar_t *sv_iwds;
-dvar_t *sv_mapname;
-dvar_t *sv_maxclients;
-dvar_t *sv_maxPing;
-dvar_t *sv_minPing;
-dvar_t *sv_packet_info;
-dvar_t *sv_padPackets;
-dvar_t *sv_privateClients;
-dvar_t *sv_privatePassword;
-dvar_t *sv_pure;
-dvar_t *sv_reconnectlimit;
-dvar_t *sv_referencedIwdNames;
-dvar_t *sv_referencedIwds;
-dvar_t *sv_serverid;
-dvar_t *sv_showAverageBPS;
-dvar_t *sv_showCommands;
-dvar_t *sv_timeout;
-dvar_t *sv_voice;
-dvar_t *sv_voiceQuality;
-dvar_t *sv_zombietime;
-dvar_t *cl_wwwDownload;
-dvar_t *sv_wwwBaseURL;
-dvar_t *sv_wwwDlDisconnected;
-dvar_t *sv_wwwDownload;
+extern dvar_t *bg_bobMax;
+extern dvar_t *bg_fallDamageMaxHeight;
+extern dvar_t *bg_fallDamageMinHeight;
+extern dvar_t *cl_allowDownload;
+extern dvar_t *cl_paused;
+extern dvar_t *com_dedicated;
+extern dvar_t *com_logfile;
+extern dvar_t *com_sv_running;
+extern dvar_t *com_timescale;
+extern dvar_t *developer;
+extern dvar_t *fs_debug;
+extern dvar_t *fs_game;
+extern dvar_t *fs_homepath;
+extern dvar_t *g_antilag;
+extern dvar_t *g_banIPs;
+extern dvar_t *g_knockback;
+extern dvar_t *g_mantleBlockTimeBuffer;
+extern dvar_t *g_maxDroppedWeapons;
+extern dvar_t *g_password;
+extern dvar_t *g_playerCollisionEjectSpeed;
+extern dvar_t *g_synchronousClients;
+extern dvar_t *g_voiceChatTalkingDuration;
+extern dvar_t *jump_height;
+extern dvar_t *jump_stepSize;
+extern dvar_t *jump_slowdownEnable;
+extern dvar_t *jump_ladderPushVel;
+extern dvar_t *jump_spreadAdd;
+extern dvar_t *net_ip;
+extern dvar_t *net_lanauthorize;
+extern dvar_t *net_port;
+extern dvar_t *nextmap;
+extern dvar_t *player_dmgtimer_maxTime;
+extern dvar_t *player_dmgtimer_timePerPoint;
+extern dvar_t *player_meleeHeight;
+extern dvar_t *player_meleeRange;
+extern dvar_t *player_meleeWidth;
+extern dvar_t *rcon_password;
+extern dvar_t *showpackets;
+extern dvar_t *sv_allowAnonymous;
+extern dvar_t *sv_allowDownload;
+extern dvar_t *sv_cheats;
+extern dvar_t *sv_debugReliableCmds;
+extern dvar_t *sv_disableClientConsole;
+extern dvar_t *sv_floodProtect;
+extern dvar_t *sv_fps;
+extern dvar_t *sv_gametype;
+extern dvar_t *sv_hostname;
+extern dvar_t *sv_iwdNames;
+extern dvar_t *sv_iwds;
+extern dvar_t *sv_mapname;
+extern dvar_t *sv_maxclients;
+extern dvar_t *sv_maxPing;
+extern dvar_t *sv_minPing;
+extern dvar_t *sv_packet_info;
+extern dvar_t *sv_padPackets;
+extern dvar_t *sv_privateClients;
+extern dvar_t *sv_privatePassword;
+extern dvar_t *sv_pure;
+extern dvar_t *sv_reconnectlimit;
+extern dvar_t *sv_referencedIwdNames;
+extern dvar_t *sv_referencedIwds;
+extern dvar_t *sv_serverid;
+extern dvar_t *sv_showAverageBPS;
+extern dvar_t *sv_showCommands;
+extern dvar_t *sv_timeout;
+extern dvar_t *sv_voice;
+extern dvar_t *sv_voiceQuality;
+extern dvar_t *sv_zombietime;
+extern dvar_t *cl_wwwDownload;
+extern dvar_t *sv_wwwBaseURL;
+extern dvar_t *sv_wwwDlDisconnected;
+extern dvar_t *sv_wwwDownload;
 
 // Custom dvars
 #if COMPILE_UTILS == 1
-dvar_t *con_coloredPrints;
+extern dvar_t *con_coloredPrints;
 #endif
-dvar_t *fs_callbacks;
-dvar_t *fs_gametypes;
-dvar_t *fs_library;
-dvar_t *fs_mapScriptDirectories;
-dvar_t *fs_replaceStockMaps;
-dvar_t *g_brushModelCollisionTweaks;
-dvar_t *g_bulletDrop;
-dvar_t *g_bulletDropMaxTime;
-dvar_t *g_corpseHit;
-dvar_t *g_debugCallbacks;
-dvar_t *g_debugEvents;
-dvar_t *g_debugStaticModels;
-dvar_t *g_droppedWeaponsNeglectBots;
-dvar_t *g_forceRate;
-dvar_t *g_forceSnaps;
-dvar_t *g_logPickup;
-dvar_t *g_mantleBlockEnable;
-dvar_t *g_noMoverBlockage;
-dvar_t *g_playerCollision;
-dvar_t *g_playerCollisionEjectDamageAllowed;
-dvar_t *g_playerCollisionEjectDuration;
-dvar_t *g_playerEject;
-dvar_t *g_reservedModels;
-dvar_t *g_resetSlide;
-dvar_t *g_safePrecache;
-dvar_t *g_sendEmtpyOffhandEvents;
-dvar_t *g_spawnMapTurrets;
-dvar_t *g_spawnMapWeapons;
-dvar_t *g_spectateBots;
-dvar_t *g_triggerMode;
-dvar_t *g_turretMissingTagTerminalError;
-dvar_t *jump_bounceEnable;
-dvar_t *jump_carryMoverVelocity;
-dvar_t *libcod;
-dvar_t *loc_loadLocalizedMods;
-dvar_t *logErrors;
-dvar_t *logfileName;
-dvar_t *logfileRotate;
-dvar_t *logTimestamps;
-dvar_t *net_noFragmentationDelay;
-dvar_t *scr_turretDamageName;
-dvar_t *sv_allowRcon;
-dvar_t *sv_authorizePort;
-dvar_t *sv_authorizeServer;
-dvar_t *sv_authorizeTimeout;
-dvar_t *sv_autoAddSnapshotEntities;
-dvar_t *sv_botKickMessages;
-dvar_t *sv_botReconnectMode;
-dvar_t *sv_botUseTriggerUse;
-dvar_t *sv_cracked;
-dvar_t *sv_disconnectMessages;
-dvar_t *sv_downloadMessage;
-dvar_t *sv_downloadMessageAtMap;
-dvar_t *sv_downloadMessageForLegacyClients;
-dvar_t *sv_downloadNotifications;
-dvar_t *sv_downloadRetransmitTimeout;
-dvar_t *sv_fastDownload;
-dvar_t *sv_fastDownloadSpeed;
-dvar_t *sv_isLookingAtOnDemand;
-dvar_t *sv_kickGamestateLimitedClients;
-dvar_t *sv_kickMessages;
-dvar_t *sv_limitLocalRcon;
-dvar_t *sv_logHeartbeats;
-dvar_t *sv_logRcon;
-dvar_t *sv_masterPort;
-dvar_t *sv_masterServer;
-dvar_t *sv_maxSnapshotEntities;
-dvar_t *sv_minimizeSysteminfo;
-dvar_t *sv_noauthorize;
-dvar_t *sv_reservedConfigstringBufferSize;
-dvar_t *sv_timeoutMessages;
-dvar_t *sv_updateCursorHints;
-dvar_t *sv_verifyIwds;
-dvar_t *sv_version;
-dvar_t *sv_wwwDlDisconnectedMessages;
+extern dvar_t *fs_callbacks;
+extern dvar_t *fs_gametypes;
+extern dvar_t *fs_library;
+extern dvar_t *fs_mapScriptDirectories;
+extern dvar_t *fs_replaceStockMaps;
+extern dvar_t *g_brushModelCollisionTweaks;
+extern dvar_t *g_bulletDrop;
+extern dvar_t *g_bulletDropMaxTime;
+extern dvar_t *g_corpseHit;
+extern dvar_t *g_debugCallbacks;
+extern dvar_t *g_debugEvents;
+extern dvar_t *g_debugStaticModels;
+extern dvar_t *g_droppedWeaponsNeglectBots;
+extern dvar_t *g_forceRate;
+extern dvar_t *g_forceSnaps;
+extern dvar_t *g_logPickup;
+extern dvar_t *g_mantleBlockEnable;
+extern dvar_t *g_noMoverBlockage;
+extern dvar_t *g_playerCollision;
+extern dvar_t *g_playerCollisionEjectDamageAllowed;
+extern dvar_t *g_playerCollisionEjectDuration;
+extern dvar_t *g_playerEject;
+extern dvar_t *g_reservedModels;
+extern dvar_t *g_resetSlide;
+extern dvar_t *g_safePrecache;
+extern dvar_t *g_sendEmtpyOffhandEvents;
+extern dvar_t *g_spawnMapTurrets;
+extern dvar_t *g_spawnMapWeapons;
+extern dvar_t *g_spectateBots;
+extern dvar_t *g_triggerMode;
+extern dvar_t *g_turretMissingTagTerminalError;
+extern dvar_t *jump_bounceEnable;
+extern dvar_t *jump_carryMoverVelocity;
+extern dvar_t *libcod;
+extern dvar_t *loc_loadLocalizedMods;
+extern dvar_t *logErrors;
+extern dvar_t *logfileName;
+extern dvar_t *logfileRotate;
+extern dvar_t *logTimestamps;
+extern dvar_t *net_noFragmentationDelay;
+extern dvar_t *scr_turretDamageName;
+extern dvar_t *sv_allowRcon;
+extern dvar_t *sv_authorizePort;
+extern dvar_t *sv_authorizeServer;
+extern dvar_t *sv_authorizeTimeout;
+extern dvar_t *sv_autoAddSnapshotEntities;
+extern dvar_t *sv_botKickMessages;
+extern dvar_t *sv_botReconnectMode;
+extern dvar_t *sv_botUseTriggerUse;
+extern dvar_t *sv_cracked;
+extern dvar_t *sv_disconnectMessages;
+extern dvar_t *sv_downloadMessage;
+extern dvar_t *sv_downloadMessageAtMap;
+extern dvar_t *sv_downloadMessageForLegacyClients;
+extern dvar_t *sv_downloadNotifications;
+extern dvar_t *sv_downloadRetransmitTimeout;
+extern dvar_t *sv_fastDownload;
+extern dvar_t *sv_fastDownloadSpeed;
+extern dvar_t *sv_isLookingAtOnDemand;
+extern dvar_t *sv_kickGamestateLimitedClients;
+extern dvar_t *sv_kickMessages;
+extern dvar_t *sv_limitLocalRcon;
+extern dvar_t *sv_logHeartbeats;
+extern dvar_t *sv_logRcon;
+extern dvar_t *sv_masterPort;
+extern dvar_t *sv_masterServer;
+extern dvar_t *sv_maxSnapshotEntities;
+extern dvar_t *sv_minimizeSysteminfo;
+extern dvar_t *sv_noauthorize;
+extern dvar_t *sv_reservedConfigstringBufferSize;
+extern dvar_t *sv_timeoutMessages;
+extern dvar_t *sv_updateCursorHints;
+extern dvar_t *sv_verifyIwds;
+extern dvar_t *sv_version;
+extern dvar_t *sv_wwwDlDisconnectedMessages;
 
 cHook *hook_AddOpcodePos;
 cHook *hook_BG_PlayAnim;
 cHook *hook_ClientEndFrame;
 cHook *hook_Com_InitDvars;
 cHook *hook_Com_DPrintf;
+cHook *hook_Dvar_AddCommands;
+cHook *hook_Dvar_Command;
+cHook *hook_Dvar_Reset_f;
+cHook *hook_Dvar_SetCommand;
+cHook *hook_Dvar_Toggle_f;
+cHook *hook_Dvar_TogglePrint_f;
 cHook *hook_fire_grenade;
 cHook *hook_FS_RegisterDvars;
 cHook *hook_G_EntLinkToInternal;
@@ -177,6 +184,8 @@ cHook *hook_G_RunFrame;
 cHook *hook_G_TempEntity;
 cHook *hook_G_TryPushingEntity;
 cHook *hook_GScr_LoadConsts;
+cHook *hook_GScr_MakeDvarServerInfo;
+cHook *hook_GScr_SetDvar;
 cHook *hook_Netchan_Transmit;
 cHook *hook_PlayerCmd_ClonePlayer;
 cHook *hook_PM_BeginWeaponChange;
@@ -357,208 +366,6 @@ remoteCommand_t remoteCommand;
 // callback function
 qboolean playerCommand = qfalse;
 
-void custom_Com_InitDvars(void)
-{
-	// Register custom dvars required early on server start
-	libcod = Dvar_RegisterBool("libcod", qtrue, DVAR_ROM);
-	logfileName = Dvar_RegisterString("logfileName", "console_mp_server.log", DVAR_ARCHIVE);
-	logfileRotate = Dvar_RegisterInt("logfileRotate", 0, 0, 1000, DVAR_ARCHIVE);
-	logTimestamps = Dvar_RegisterBool("logTimestamps", qfalse, DVAR_ARCHIVE);
-	sv_autoAddSnapshotEntities = Dvar_RegisterBool("sv_autoAddSnapshotEntities", qtrue, DVAR_ARCHIVE | DVAR_LATCH | DVAR_CHANGEABLE_RESET);
-	sv_reservedConfigstringBufferSize = Dvar_RegisterInt("sv_reservedConfigstringBufferSize", 0, 0, 8192, DVAR_ARCHIVE);
-	sv_authorizePort = Dvar_RegisterInt("sv_authorizePort", 20700, 0, 65535, DVAR_ARCHIVE);
-	sv_authorizeServer = Dvar_RegisterString("sv_authorizeServer", "cod2master.activision.com", DVAR_ARCHIVE);
-	sv_authorizeTimeout = Dvar_RegisterInt("sv_authorizeTimeout", 3000, 0, 1200000, DVAR_ARCHIVE);
-	sv_masterPort = Dvar_RegisterInt("sv_masterPort", 20710, 0, 65535, DVAR_ARCHIVE);
-	sv_masterServer = Dvar_RegisterString("sv_masterServer", "cod2master.activision.com", DVAR_ARCHIVE);
-	sv_version = Dvar_RegisterString("sv_version", "1.3", DVAR_ARCHIVE | DVAR_LATCH | DVAR_CHANGEABLE_RESET);
-
-	/* Register stock dvars here with different settings, scheme:
-	dvar_t *dvar = Dvar_Register<Type>(var_name, default value, [min. value, max. value,] flags); */
-
-	// We do not allow protocol 119 as max. value here as it does not have a
-	// unique shortVersion. It is supported via proxy only, see
-	// sv_proxyEnable_1_3_119 dvar
-	Dvar_RegisterInt("protocol", 118, 115, 118, DVAR_CHANGEABLE_RESET | DVAR_ROM | DVAR_SERVERINFO);
-
-	hook_Com_InitDvars->unhook();
-	void (*Com_InitDvars)(void);
-	*(int *)&Com_InitDvars = hook_Com_InitDvars->from;
-	Com_InitDvars();
-	hook_Com_InitDvars->hook();
-
-	// Get references to early loaded stock dvars
-	cl_paused = Dvar_FindVar("cl_paused");
-	com_dedicated = Dvar_FindVar("dedicated");
-	com_logfile = Dvar_FindVar("logfile");
-	com_sv_running = Dvar_FindVar("sv_running");
-}
-
-void common_init_complete_print(const char *format, ...)
-{
-	/* We are in Com_Init_Try_Block_Function, after executing Com_InitDvars()
-	 and SV_Init() where a big chunk of dvars are defined. However, there is
-	 still some that are defined later, see custom_G_ProcessIPBans */
-	Com_Printf("--- Common Initialization Complete ---\n");
-
-	// Get references to stock dvars
-	cl_allowDownload = Dvar_RegisterBool("cl_allowDownload", qtrue, DVAR_ARCHIVE | DVAR_SYSTEMINFO); // Force-enable download for clients
-	developer = Dvar_FindVar("developer");
-	net_ip = Dvar_FindVar("net_ip");
-	net_lanauthorize = Dvar_FindVar("net_lanauthorize");
-	net_port = Dvar_FindVar("net_port");
-	nextmap = Dvar_FindVar("nextmap");
-	rcon_password = Dvar_FindVar("rcon_password");
-	showpackets = Dvar_FindVar("showpackets");
-	sv_debugReliableCmds = Dvar_FindVar("sv_debugReliableCmds");
-	sv_disableClientConsole = Dvar_FindVar("sv_disableClientConsole");
-	sv_allowAnonymous = Dvar_FindVar("sv_allowAnonymous");
-	sv_allowDownload = Dvar_FindVar("sv_allowDownload");
-	sv_cheats = Dvar_FindVar("sv_cheats");
-	sv_floodProtect = Dvar_FindVar("sv_floodProtect");
-	sv_fps = Dvar_FindVar("sv_fps");
-	sv_gametype = Dvar_FindVar("g_gametype");
-	sv_hostname = Dvar_FindVar("sv_hostname");
-	sv_iwdNames = Dvar_FindVar("sv_iwdNames");
-	sv_iwds = Dvar_FindVar("sv_iwds");
-	sv_mapname = Dvar_FindVar("mapname");
-	sv_maxclients = Dvar_FindVar("sv_maxclients");
-	sv_maxPing = Dvar_FindVar("sv_maxPing");
-	sv_minPing = Dvar_FindVar("sv_minPing");
-	sv_packet_info = Dvar_FindVar("sv_packet_info");
-	sv_padPackets = Dvar_FindVar("sv_padPackets");
-	sv_privateClients = Dvar_FindVar("sv_privateClients");
-	sv_privatePassword = Dvar_FindVar("sv_privatePassword");
-	sv_pure = Dvar_FindVar("sv_pure");
-	sv_reconnectlimit = Dvar_FindVar("sv_reconnectlimit");
-	sv_referencedIwdNames = Dvar_FindVar("sv_referencedIwdNames");
-	sv_referencedIwds = Dvar_FindVar("sv_referencedIwds");
-	sv_serverid = Dvar_FindVar("sv_serverid");
-	sv_showAverageBPS = Dvar_FindVar("sv_showAverageBPS");
-	sv_showCommands = Dvar_FindVar("sv_showCommands");
-	sv_timeout = Dvar_FindVar("sv_timeout");
-	sv_voice = Dvar_FindVar("sv_voice");
-	sv_voiceQuality = Dvar_FindVar("sv_voiceQuality");
-	sv_zombietime = Dvar_FindVar("sv_zombietime");
-	cl_wwwDownload = Dvar_RegisterBool("cl_wwwDownload", qtrue, DVAR_ARCHIVE | DVAR_SYSTEMINFO); // Force-enable wwwDownload for clients that support it
-	sv_wwwBaseURL = Dvar_FindVar("sv_wwwBaseURL");
-	sv_wwwDlDisconnected = Dvar_FindVar("sv_wwwDlDisconnected");
-	sv_wwwDownload = Dvar_FindVar("sv_wwwDownload");
-
-	// Register custom dvars
-	#if COMPILE_UTILS == 1
-	con_coloredPrints = Dvar_RegisterBool("con_coloredPrints", qfalse, DVAR_ARCHIVE);
-	#endif
-	fs_callbacks = Dvar_RegisterString("fs_callbacks", "", DVAR_ARCHIVE);
-	fs_gametypes = Dvar_RegisterString("fs_gametypes", "", DVAR_ARCHIVE);
-	fs_library = Dvar_RegisterString("fs_library", "", DVAR_ARCHIVE);
-	fs_mapScriptDirectories = Dvar_RegisterInt("fs_mapScriptDirectories", 0, 0, 2, DVAR_ARCHIVE);
-	fs_replaceStockMaps = Dvar_RegisterBool("fs_replaceStockMaps", qfalse, DVAR_ARCHIVE);
-	g_brushModelCollisionTweaks = Dvar_RegisterBool("g_brushModelCollisionTweaks", qfalse, DVAR_ARCHIVE);
-	g_bulletDrop = Dvar_RegisterBool("g_bulletDrop", qfalse, DVAR_ARCHIVE);
-	g_bulletDropMaxTime = Dvar_RegisterInt("g_bulletDropMaxTime", 10000, 50, 60000, DVAR_ARCHIVE);
-	g_corpseHit = Dvar_RegisterBool("g_corpseHit", qtrue, DVAR_ARCHIVE);
-	g_debugCallbacks = Dvar_RegisterBool("g_debugCallbacks", qfalse, DVAR_ARCHIVE);
-	g_debugEvents = Dvar_RegisterBool("g_debugEvents", qfalse, DVAR_ARCHIVE);
-	g_debugStaticModels = Dvar_RegisterBool("g_debugStaticModels", qfalse, DVAR_ARCHIVE);
-	g_droppedWeaponsNeglectBots = Dvar_RegisterBool("g_droppedWeaponsNeglectBots", qfalse, DVAR_ARCHIVE);
-	g_forceRate = Dvar_RegisterInt("g_forceRate", 0, 0, 25000, DVAR_ARCHIVE);
-	g_forceSnaps = Dvar_RegisterInt("g_forceSnaps", 0, 0, 30, DVAR_ARCHIVE);
-	g_logPickup = Dvar_RegisterBool("g_logPickup", qtrue, DVAR_ARCHIVE);
-	g_mantleBlockEnable = Dvar_RegisterBool("g_mantleBlockEnable", qtrue, DVAR_ARCHIVE);
-	g_noMoverBlockage = Dvar_RegisterBool("g_noMoverBlockage", qfalse, DVAR_ARCHIVE);
-	g_playerCollision = Dvar_RegisterBool("g_playerCollision", qtrue, DVAR_ARCHIVE);
-	g_playerCollisionEjectDamageAllowed = Dvar_RegisterBool("g_playerCollisionEjectDamageAllowed", qfalse, DVAR_ARCHIVE);
-	g_playerCollisionEjectDuration = Dvar_RegisterInt("g_playerCollisionEjectDuration", 300, 50, 1000, DVAR_ARCHIVE);
-	g_playerEject = Dvar_RegisterBool("g_playerEject", qtrue, DVAR_ARCHIVE);
-	g_resetSlide = Dvar_RegisterBool("g_resetSlide", qfalse, DVAR_ARCHIVE);
-	g_sendEmtpyOffhandEvents = Dvar_RegisterBool("g_sendEmtpyOffhandEvents", qtrue, DVAR_ARCHIVE);
-	g_spawnMapTurrets = Dvar_RegisterBool("g_spawnMapTurrets", qtrue, DVAR_ARCHIVE);
-	g_spawnMapWeapons = Dvar_RegisterBool("g_spawnMapWeapons", qtrue, DVAR_ARCHIVE);
-	g_triggerMode = Dvar_RegisterInt("g_triggerMode", 1, 0, 2, DVAR_ARCHIVE);
-	g_turretMissingTagTerminalError = Dvar_RegisterBool("g_turretMissingTagTerminalError", qtrue, DVAR_ARCHIVE);
-	g_spectateBots = Dvar_RegisterBool("g_spectateBots", qtrue, DVAR_ARCHIVE);
-	loc_loadLocalizedMods = Dvar_RegisterBool("loc_loadLocalizedMods", qfalse, DVAR_ARCHIVE);
-	logErrors = Dvar_RegisterBool("logErrors", qfalse, DVAR_ARCHIVE);
-	net_noFragmentationDelay = Dvar_RegisterBool("net_noFragmentationDelay", qfalse, DVAR_ARCHIVE);
-	scr_turretDamageName = Dvar_RegisterBool("scr_turretDamageName", qfalse, DVAR_ARCHIVE);
-	sv_allowRcon = Dvar_RegisterBool("sv_allowRcon", qtrue, DVAR_ARCHIVE);
-	sv_botKickMessages = Dvar_RegisterBool("sv_botKickMessages", qtrue, DVAR_ARCHIVE);
-	sv_botReconnectMode = Dvar_RegisterInt("sv_botReconnectMode", 0, 0, 2, DVAR_ARCHIVE);
-	sv_botUseTriggerUse = Dvar_RegisterBool("sv_botUseTriggerUse", qfalse, DVAR_ARCHIVE);
-	sv_cracked = Dvar_RegisterBool("sv_cracked", qfalse, DVAR_ARCHIVE);
-	sv_disconnectMessages = Dvar_RegisterBool("sv_disconnectMessages", qtrue, DVAR_ARCHIVE);
-	sv_downloadMessage = Dvar_RegisterString("sv_downloadMessage", "", DVAR_ARCHIVE);
-	sv_downloadMessageAtMap = Dvar_RegisterBool("sv_downloadMessageAtMap", qtrue, DVAR_ARCHIVE);
-	sv_downloadMessageForLegacyClients = Dvar_RegisterString("sv_downloadMessageForLegacyClients", "", DVAR_ARCHIVE);
-	sv_downloadNotifications = Dvar_RegisterBool("sv_downloadNotifications", qfalse, DVAR_ARCHIVE);
-	sv_downloadRetransmitTimeout = Dvar_RegisterInt("sv_downloadRetransmitTimeout", 1000, 250, 10000, DVAR_ARCHIVE);
-	sv_fastDownload = Dvar_RegisterBool("sv_fastDownload", qfalse, DVAR_ARCHIVE);
-	sv_fastDownloadSpeed = Dvar_RegisterInt("sv_fastDownloadSpeed", MAX_DOWNLOAD_WINDOW, 1, MAX_DOWNLOAD_WINDOW, DVAR_ARCHIVE);
-	sv_isLookingAtOnDemand = Dvar_RegisterBool("sv_isLookingAtOnDemand", qfalse, DVAR_ARCHIVE);
-	sv_kickGamestateLimitedClients = Dvar_RegisterBool("sv_kickGamestateLimitedClients", qtrue, DVAR_ARCHIVE);
-	sv_kickMessages = Dvar_RegisterBool("sv_kickMessages", qtrue, DVAR_ARCHIVE);
-	sv_limitLocalRcon = Dvar_RegisterBool("sv_limitLocalRcon", qtrue, DVAR_ARCHIVE);
-	sv_logHeartbeats = Dvar_RegisterBool("sv_logHeartbeats", qtrue, DVAR_ARCHIVE);
-	sv_logRcon = Dvar_RegisterBool("sv_logRcon", qtrue, DVAR_ARCHIVE);
-	sv_maxSnapshotEntities = Dvar_RegisterInt("sv_maxSnapshotEntities", 1024, 64, 1024, DVAR_ARCHIVE);
-	sv_noauthorize = Dvar_RegisterBool("sv_noauthorize", qfalse, DVAR_ARCHIVE);
-	sv_timeoutMessages = Dvar_RegisterBool("sv_timeoutMessages", qtrue, DVAR_ARCHIVE);
-	sv_updateCursorHints = Dvar_RegisterBool("sv_updateCursorHints", qtrue, DVAR_ARCHIVE);
-	sv_verifyIwds = Dvar_RegisterBool("sv_verifyIwds", qtrue, DVAR_ARCHIVE);
-	sv_wwwDlDisconnectedMessages = Dvar_RegisterBool("sv_wwwDlDisconnectedMessages", qtrue, DVAR_ARCHIVE);
-
-	/* Register (thus override) dvars that would otherwise be defined later in
-	 G_RegisterDvars, example:
-	g_gravity = Dvar_RegisterFloat("g_gravity", 800.0, 1.0, 3.402823e+38, DVAR_CHANGEABLE_RESET);
-	*/
-}
-
-qboolean custom_FS_RegisterDvars(void)
-{
-	int ret;
-
-	hook_FS_RegisterDvars->unhook();
-	qboolean (*FS_RegisterDvars)(void);
-	*(int *)&FS_RegisterDvars = hook_FS_RegisterDvars->from;
-	ret = FS_RegisterDvars();
-	hook_FS_RegisterDvars->hook();
-
-	// Get references to file system dvars
-	fs_debug = Dvar_FindVar("fs_debug");
-	fs_game = Dvar_FindVar("fs_game");
-	fs_homepath = Dvar_FindVar("fs_homepath");
-
-	return ret;
-}
-
-void custom_G_ProcessIPBans(void)
-{
-	/* This is right after G_RegisterDvars() and BG_RegisterDvars(), giving us
-	 access to variables that are not yet defined at the
-	 common_init_complete_print hook */
-	bg_bobMax = Dvar_FindVar("bg_bobMax");
-	g_antilag = Dvar_FindVar("g_antilag");
-	g_banIPs = Dvar_FindVar("g_banIPs");
-	g_knockback = Dvar_FindVar("g_knockback");
-	g_mantleBlockTimeBuffer = Dvar_FindVar("g_mantleBlockTimeBuffer");
-	g_maxDroppedWeapons = Dvar_FindVar("g_maxDroppedWeapons");
-	g_password = Dvar_FindVar("g_password");
-	g_playerCollisionEjectSpeed = Dvar_FindVar("g_playerCollisionEjectSpeed");
-	g_voiceChatTalkingDuration = Dvar_FindVar("g_voiceChatTalkingDuration");
-	player_dmgtimer_maxTime = Dvar_FindVar("player_dmgtimer_maxTime");
-	player_dmgtimer_timePerPoint = Dvar_FindVar("player_dmgtimer_timePerPoint");
-	player_meleeHeight = Dvar_FindVar("player_meleeHeight");
-	player_meleeRange = Dvar_FindVar("player_meleeRange");
-	player_meleeWidth = Dvar_FindVar("player_meleeWidth");
-
-	hook_G_ProcessIPBans->unhook();
-	void (*G_ProcessIPBans)(void);
-	*(int *)&G_ProcessIPBans = hook_G_ProcessIPBans->from;
-	G_ProcessIPBans();
-	hook_G_ProcessIPBans->hook();
-}
-
 customStringIndex_t custom_scr_const;
 void custom_GScr_LoadConsts(void)
 {
@@ -586,31 +393,6 @@ void custom_GScr_LoadConsts(void)
 	*(int *)&GScr_LoadConsts = hook_GScr_LoadConsts->from;
 	GScr_LoadConsts();
 	hook_GScr_LoadConsts->hook();
-}
-
-void custom_Dvar_SetFromStringFromSource(dvar_t *dvar, const char *string, DvarSetSource source)
-{
-	char buf[MAX_STRINGLENGTH];
-	DvarValue newValue;
-
-	Sys_EnterCriticalSection(CRITSECT_DVAR);
-
-	/* New code start: sv_version dvar value sanitization */
-	if ( sv_version && dvar == sv_version )
-		string = getShortVersionFromProtocol(getProtocolFromShortVersion(string));
-	/* New code end */
-
-	I_strncpyz(buf, string, sizeof(buf));
-	Dvar_StringToValue(&newValue, dvar->type, dvar->domain, buf);
-	if ( dvar->type == DVAR_TYPE_ENUM && newValue.integer == DVAR_INVALID_ENUM_INDEX )
-	{
-		Com_Printf("'%s' is not a valid value for dvar '%s'\n", buf, dvar->name);
-		Dvar_PrintDomain(dvar->type, dvar->domain);
-		newValue = dvar->reset;
-	}
-	Dvar_SetVariant(dvar, newValue, source);
-
-	Sys_LeaveCriticalSection(CRITSECT_DVAR);
 }
 
 int hitchFrameTime = 0;
@@ -967,7 +749,7 @@ void custom_SV_SaveSystemInfo()
 	Dvar_SetString(sv_referencedIwds, tempReferencedIwds);
 
 	// We (re)register the dvar here so that any latched value is applied
-	sv_version = Dvar_RegisterString("sv_version", "1.3", DVAR_ARCHIVE | DVAR_LATCH | DVAR_CHANGEABLE_RESET);
+	sv_version = Dvar_RegisterString("sv_version", "1.3", DVAR_ARCHIVE | DVAR_LATCH);
 
 	// Update related dvars accordingly
 	Dvar_SetIntByName("protocol", getProtocolFromShortVersion(sv_version->current.string));
@@ -977,8 +759,8 @@ void custom_SV_SaveSystemInfo()
 	dvar_modifiedFlags &= ~DVAR_SYSTEMINFO;
 	SV_SetConfigstring(CS_SYSTEMINFO, info);
 
-	SV_SetConfigstring(CS_SERVERINFO, Dvar_InfoString(DVAR_SERVERINFO | DVAR_NORESTART));
-	dvar_modifiedFlags &= ~(DVAR_SERVERINFO | DVAR_NORESTART);
+	SV_SetConfigstring(CS_SERVERINFO, Dvar_InfoString(DVAR_SERVERINFO | DVAR_SERVERINFO_NOUPDATE));
+	dvar_modifiedFlags &= ~(DVAR_SERVERINFO | DVAR_SERVERINFO_NOUPDATE);
 
 	SV_SetConfig(142, 96, 256);
 	dvar_modifiedFlags &= ~DVAR_CODINFO;
@@ -1062,8 +844,8 @@ void custom_SV_SpawnServer(char *server)
 	/* New code start */
 	// We (re)register model/fx loading dvars here so that any latched value is
 	// applied in time
-	g_reservedModels = Dvar_RegisterInt("g_reservedModels", 0, 0, 255, DVAR_ARCHIVE | DVAR_LATCH | DVAR_CHANGEABLE_RESET);
-	g_safePrecache = Dvar_RegisterBool("g_safePrecache", qfalse, DVAR_ARCHIVE | DVAR_LATCH | DVAR_CHANGEABLE_RESET);
+	g_reservedModels = Dvar_RegisterInt("g_reservedModels", 0, 0, 255, DVAR_ARCHIVE | DVAR_LATCH);
+	g_safePrecache = Dvar_RegisterBool("g_safePrecache", qfalse, DVAR_ARCHIVE | DVAR_LATCH);
 	if ( g_safePrecache->current.boolean )
 	{
 		// Effects: This defaults to fx/misc/missing_fx.efx on the client side.
@@ -5088,7 +4870,7 @@ void custom_SVC_GameCompleteStatus(netadr_t to)
 	unsigned int playerLength;
 	char infostring[MAX_INFO_STRING];
 
-	strcpy(infostring, Dvar_InfoString(DVAR_SERVERINFO | DVAR_NORESTART));
+	strcpy(infostring, Dvar_InfoString(DVAR_SERVERINFO | DVAR_SERVERINFO_NOUPDATE));
 	Info_SetValueForKey(infostring, "challenge", Cmd_Argv(1));
 
 	if ( Dvar_GetBool("fs_restrict") )
@@ -5131,10 +4913,10 @@ void custom_SVC_Status(netadr_t from)
 	int ping;
 	char player[MAX_INFO_STRING];
 	size_t playerLength;
-	char *password;
+	const char *password;
 	qboolean serverModded;
-	char *gamedir;
-	char *referencedIwdNames;
+	const char *gamedir;
+	const char *referencedIwdNames;
 	int count;
 	char *iwd;
 	char msg[BIG_INFO_STRING];
@@ -5147,7 +4929,7 @@ void custom_SVC_Status(netadr_t from)
 	LargeLocalConstructor(&buf, MAX_LEGACY_MSGLEN); // New: Cap message size for legacy client compatibility
 	status = (char *)LargeLocalGetBuf(&buf);
 
-	strcpy(infostring, Dvar_InfoString(DVAR_SERVERINFO | DVAR_NORESTART));
+	strcpy(infostring, Dvar_InfoString(DVAR_SERVERINFO | DVAR_SERVERINFO_NOUPDATE));
 	Info_SetValueForKey(infostring, "challenge", SV_Cmd_Argv(1));
 
 	if ( Dvar_GetBool("fs_restrict") )
@@ -5863,7 +5645,7 @@ void custom_GScr_LoadLevelScript()
 	dvar_t *sv_mapname;
 	char s[128]; // New: Original size was 64 chars
 
-	sv_mapname = Dvar_RegisterString("mapname", "", DVAR_SERVERINFO | DVAR_ROM | DVAR_CHANGEABLE_RESET);
+	sv_mapname = Dvar_RegisterString("mapname", "", DVAR_SERVERINFO | DVAR_ROM);
 
 	/* New code start: Logic for fs_mapScriptDirectories dvar */
 	switch ( fs_mapScriptDirectories->current.integer )
@@ -8754,9 +8536,9 @@ void custom_FireWeaponMelee(gentity_t *player)
 		G_GetPlayerViewDirection(player, wp.forward, wp.right, wp.up);
 
 		/* Stock values from G_RegisterDvars:
-		player_meleeRange = Dvar_RegisterFloat("player_meleeRange", 64.0, 0.0, 1000.0, DVAR_CHEAT | DVAR_CHANGEABLE_RESET);
-		player_meleeWidth = Dvar_RegisterFloat("player_meleeWidth", 10.0, 0.0, 1000.0, DVAR_CHEAT | DVAR_CHANGEABLE_RESET);
-		player_meleeHeight = Dvar_RegisterFloat("player_meleeHeight", 10.0, 0.0, 1000.0, DVAR_CHEAT | DVAR_CHANGEABLE_RESET);
+		player_meleeRange = Dvar_RegisterFloat("player_meleeRange", 64.0, 0.0, 1000.0, DVAR_CHEAT | DVAR_INTERNAL);
+		player_meleeWidth = Dvar_RegisterFloat("player_meleeWidth", 10.0, 0.0, 1000.0, DVAR_CHEAT | DVAR_INTERNAL);
+		player_meleeHeight = Dvar_RegisterFloat("player_meleeHeight", 10.0, 0.0, 1000.0, DVAR_CHEAT | DVAR_INTERNAL);
 		*/
 
 		/* New code start: per-player melee values */
@@ -11601,6 +11383,10 @@ public:
 		hook_G_TempEntity->hook();
 		hook_GScr_LoadConsts = new cHook(0x081224F8, (int)custom_GScr_LoadConsts);
 		hook_GScr_LoadConsts->hook();
+		hook_GScr_MakeDvarServerInfo = new cHook(0x08116BFA, (int)custom_GScr_MakeDvarServerInfo);
+		hook_GScr_MakeDvarServerInfo->hook();
+		hook_GScr_SetDvar = new cHook(0x08110E46, (int)custom_GScr_SetDvar);
+		hook_GScr_SetDvar->hook();
 		hook_SV_MasterHeartbeat = new cHook(0x08096ED6, (int)custom_SV_MasterHeartbeat);
 		hook_SV_MasterHeartbeat->hook();
 		hook_G_RunFrame = new cHook(0x0810A13A, (int)custom_G_RunFrame);
@@ -11615,6 +11401,18 @@ public:
 		hook_PlayerCmd_ClonePlayer->hook();
 		hook_PM_BeginWeaponChange = new cHook(0x080EDC30, (int)custom_PM_BeginWeaponChange);
 		hook_PM_BeginWeaponChange->hook();
+		hook_Dvar_AddCommands = new cHook(0x0806424C, (int)custom_Dvar_AddCommands);
+		hook_Dvar_AddCommands->hook();
+		hook_Dvar_Command = new cHook(0x08063054, (int)custom_Dvar_Command);
+		hook_Dvar_Command->hook();
+		hook_Dvar_Reset_f = new cHook(0x08063B1A, (int)custom_Dvar_Reset_f);
+		hook_Dvar_Reset_f->hook();
+		hook_Dvar_SetCommand = new cHook(0x080B501C, (int)custom_Dvar_SetCommand);
+		hook_Dvar_SetCommand->hook();
+		hook_Dvar_Toggle_f = new cHook(0x0806354A, (int)custom_Dvar_Toggle_f);
+		hook_Dvar_Toggle_f->hook();
+		hook_Dvar_TogglePrint_f = new cHook(0x08063558, (int)custom_Dvar_TogglePrint_f);
+		hook_Dvar_TogglePrint_f->hook();
 		hook_Com_InitDvars = new cHook(0x08061D90, (int)custom_Com_InitDvars);
 		hook_Com_InitDvars->hook();
 		hook_SV_VerifyIwds_f = new cHook(0x08090534, int(custom_SV_VerifyIwds_f));
@@ -11762,6 +11560,14 @@ public:
 		cracking_hook_function(0x081161BA, (int)custom_GScr_Earthquake);
 		cracking_hook_function(0x080B1502, (int)custom_Dvar_FreeString);
 		cracking_hook_function(0x0808F83C, (int)custom_SV_NextDownload_f);
+		cracking_hook_function(0x08110DA0, (int)custom_GScr_GetDvar);
+		cracking_hook_function(0x08063E2C, (int)custom_Com_DvarDump);
+		cracking_hook_function(0x08063C62, (int)custom_Dvar_List_f);
+		cracking_hook_function(0x08063BE6, (int)custom_Dvar_WriteDefaults);
+		cracking_hook_function(0x08063B6C, (int)custom_Dvar_WriteVariables);
+		cracking_hook_function(0x08063A94, (int)custom_Dvar_SetFromDvar_f);
+		cracking_hook_function(0x080639E4, (int)custom_Dvar_SetS_f);
+		cracking_hook_function(0x0806398C, (int)custom_Dvar_SetU_f);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC8CA, (int)Jump_ReduceFriction);

@@ -295,16 +295,16 @@ void Jump_ApplySlowdown(playerState_t *ps)
 void Jump_RegisterDvars()
 {
 	// Stock dvars
-	// New: Flags. Original flags: DVAR_CHANGEABLE_RESET | DVAR_CODINFO | DVAR_CHEAT
-	jump_height = Dvar_RegisterFloat("jump_height", 39.0, 0.0, 128.0, DVAR_CHEAT | DVAR_SYSTEMINFO);
-	jump_stepSize = Dvar_RegisterFloat("jump_stepSize", 18.0, 0.0, 64.0, DVAR_CHEAT | DVAR_SYSTEMINFO);
-	jump_slowdownEnable = Dvar_RegisterBool("jump_slowdownEnable", qtrue, DVAR_CHEAT | DVAR_SYSTEMINFO);
-	jump_ladderPushVel = Dvar_RegisterFloat("jump_ladderPushVel", 128.0, 0.0, 1024.0, DVAR_CHEAT | DVAR_SYSTEMINFO);
-	jump_spreadAdd = Dvar_RegisterFloat("jump_spreadAdd", 64.0, 0.0, 512.0, DVAR_CHEAT | DVAR_SYSTEMINFO);
+	// New: Flags. Original flags: DVAR_INTERNAL | DVAR_CODINFO | DVAR_CHEAT
+	jump_height = Dvar_RegisterFloat("jump_height", 39.0, 0.0, 128.0, DVAR_INTERNAL | DVAR_CHEAT | DVAR_SYSTEMINFO);
+	jump_stepSize = Dvar_RegisterFloat("jump_stepSize", 18.0, 0.0, 64.0, DVAR_INTERNAL | DVAR_CHEAT | DVAR_SYSTEMINFO);
+	jump_slowdownEnable = Dvar_RegisterBool("jump_slowdownEnable", qtrue, DVAR_INTERNAL | DVAR_CHEAT | DVAR_SYSTEMINFO);
+	jump_ladderPushVel = Dvar_RegisterFloat("jump_ladderPushVel", 128.0, 0.0, 1024.0, DVAR_INTERNAL | DVAR_CHEAT | DVAR_SYSTEMINFO);
+	jump_spreadAdd = Dvar_RegisterFloat("jump_spreadAdd", 64.0, 0.0, 512.0, DVAR_INTERNAL | DVAR_CHEAT | DVAR_SYSTEMINFO);
 
 	// Custom dvars
-	jump_bounceEnable = Dvar_RegisterBool("jump_bounceEnable", qfalse, DVAR_CHEAT | DVAR_SYSTEMINFO);
-	jump_carryMoverVelocity = Dvar_RegisterBool("jump_carryMoverVelocity", qfalse, DVAR_CHEAT | DVAR_SYSTEMINFO);
+	jump_bounceEnable = Dvar_RegisterBool("jump_bounceEnable", qfalse, DVAR_INTERNAL | DVAR_CHEAT | DVAR_SYSTEMINFO);
+	jump_carryMoverVelocity = Dvar_RegisterBool("jump_carryMoverVelocity", qfalse, DVAR_INTERNAL | DVAR_CHEAT | DVAR_SYSTEMINFO);
 }
 
 #endif

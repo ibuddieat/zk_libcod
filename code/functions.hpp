@@ -154,7 +154,7 @@ typedef void (*Cmd_AddCommand_t)(const char *cmd_name, xcommand_t function);
 static const Cmd_AddCommand_t Cmd_AddCommand = (Cmd_AddCommand_t)0x080606B6;
 
 typedef void (*Cmd_ExecuteString_t)(const char *cmd);
-static const Cmd_ExecuteString_t Cmd_ExecuteString = (Cmd_ExecuteString_t)0x080609CC;
+static const Cmd_ExecuteString_t Cmd_ExecuteString = (Cmd_ExecuteString_t)0x080608A6;
 
 typedef void (*ClientBegin_t)(int clientNum);
 static const ClientBegin_t ClientBegin = (ClientBegin_t)0x080F90AE;
@@ -249,8 +249,11 @@ static const Scr_GetFunction_t Scr_GetFunction = (Scr_GetFunction_t)0x08117CB2;
 typedef xmethod_t (*Scr_GetMethod_t)(const char** v_methodName, qboolean *v_developer);
 static const Scr_GetMethod_t Scr_GetMethod = (Scr_GetMethod_t)0x08117DEA;
 
-typedef dvar_t * (*Dvar_FindVar_t)(const char *var_name);
+typedef dvar_t * (*Dvar_FindVar_t)(const char *dvarName);
 static const Dvar_FindVar_t Dvar_FindVar = (Dvar_FindVar_t)0x080B2ED8;
+
+typedef bool (*Dvar_IsValidName_t)(const char *dvarName);
+static const Dvar_IsValidName_t Dvar_IsValidName = (Dvar_IsValidName_t)0x080B12EA;
 
 typedef byte (*Dvar_GetBool_t)(const char *dvarName);
 static const Dvar_GetBool_t Dvar_GetBool = (Dvar_GetBool_t)0x080B2FAA;
@@ -258,8 +261,11 @@ static const Dvar_GetBool_t Dvar_GetBool = (Dvar_GetBool_t)0x080B2FAA;
 typedef int (*Dvar_GetInt_t)(const char *dvarName);
 static const Dvar_GetInt_t Dvar_GetInt = (Dvar_GetInt_t)0x080B2FFC;
 
-typedef char * (*Dvar_GetString_t)(const char *dvarName);
+typedef const char * (*Dvar_GetString_t)(const char *dvarName);
 static const Dvar_GetString_t Dvar_GetString = (Dvar_GetString_t)0x080B318A;
+
+typedef const char * (*Dvar_GetVariantString_t)(const char *dvarName);
+static const Dvar_GetVariantString_t Dvar_GetVariantString = (Dvar_GetVariantString_t)0x080B31D4;
 
 typedef void (*Dvar_SetBool_t)(dvar_t *dvar, byte value);
 static const Dvar_SetBool_t Dvar_SetBool = (Dvar_SetBool_t)0x080B4980;
@@ -276,16 +282,16 @@ static const Dvar_SetString_t Dvar_SetString = (Dvar_SetString_t)0x080B4A80;
 typedef void (*Dvar_SetStringByName_t)(const char *dvarName, const char *value);
 static const Dvar_SetStringByName_t Dvar_SetStringByName = (Dvar_SetStringByName_t)0x080B4E86;
 
-typedef dvar_t * (*Dvar_RegisterBool_t)(const char *var_name, qboolean var_value, unsigned short flags);
+typedef dvar_t * (*Dvar_RegisterBool_t)(const char *dvarName, qboolean var_value, unsigned short flags);
 static const Dvar_RegisterBool_t Dvar_RegisterBool = (Dvar_RegisterBool_t)0x080B3FD2;
 
-typedef dvar_t * (*Dvar_RegisterString_t)(const char *var_name, const char *var_value, unsigned short flags);
+typedef dvar_t * (*Dvar_RegisterString_t)(const char *dvarName, const char *var_value, unsigned short flags);
 static const Dvar_RegisterString_t Dvar_RegisterString = (Dvar_RegisterString_t)0x080B4232;
 
-typedef dvar_t * (*Dvar_RegisterInt_t)(const char * var_name, int var_value, int min_value, int max_value, unsigned short flags);
+typedef dvar_t * (*Dvar_RegisterInt_t)(const char * dvarName, int var_value, int min_value, int max_value, unsigned short flags);
 static const Dvar_RegisterInt_t Dvar_RegisterInt = (Dvar_RegisterInt_t)0x080B403A;
 
-typedef dvar_t * (*Dvar_RegisterFloat_t)(const char* var_name, float var_value, float var_min, float var_max, unsigned short flags);
+typedef dvar_t * (*Dvar_RegisterFloat_t)(const char* dvarName, float var_value, float var_min, float var_max, unsigned short flags);
 static const Dvar_RegisterFloat_t Dvar_RegisterFloat = (Dvar_RegisterFloat_t)0x080B408C;
 
 typedef void (*Dvar_ResetScriptInfo_t)(void);
@@ -305,6 +311,27 @@ static const Dvar_PrintDomain_t Dvar_PrintDomain = (Dvar_PrintDomain_t)0x080B286
 
 typedef void (*Dvar_SetVariant_t)(dvar_t *dvar, DvarValue value, DvarSetSource source);
 static const Dvar_SetVariant_t Dvar_SetVariant = (Dvar_SetVariant_t)0x080B2AFA;
+
+typedef void (*Dvar_SetCommand_t)(const char *dvarName, const char *string);
+static const Dvar_SetCommand_t Dvar_SetCommand = (Dvar_SetCommand_t)0x080B501C;
+
+typedef void (*Dvar_Set_f_t)(void);
+static const Dvar_Set_f_t Dvar_Set_f = (Dvar_Set_f_t)0x080635B0;
+
+typedef void (*Dvar_AddFlags_t)(const dvar_t *dvar, unsigned short flags);
+static const Dvar_AddFlags_t Dvar_AddFlags = (Dvar_AddFlags_t)0x080B507A;
+
+typedef char * (*Dvar_DisplayableValue_t)(const dvar_t *dvar);
+static const Dvar_DisplayableValue_t Dvar_DisplayableValue = (Dvar_DisplayableValue_t)0x080B1F06;
+
+typedef bool (*Dvar_HasLatchedValue_t)(const dvar_t *dvar);
+static const Dvar_HasLatchedValue_t Dvar_HasLatchedValue = (Dvar_HasLatchedValue_t)0x080B2A94;
+
+typedef const char * (*Dvar_DisplayableLatchedValue_t)(const dvar_t *dvar);
+static const Dvar_DisplayableLatchedValue_t Dvar_DisplayableLatchedValue = (Dvar_DisplayableLatchedValue_t)0x080B1F82;
+
+typedef const char * (*Dvar_DisplayableResetValue_t)(const dvar_t *dvar);
+static const Dvar_DisplayableResetValue_t Dvar_DisplayableResetValue = (Dvar_DisplayableResetValue_t)0x080B1F44;
 
 typedef void (*SV_ConnectionlessPacket_t)(netadr_t from, msg_t *msg);
 static const SV_ConnectionlessPacket_t SV_ConnectionlessPacket = (SV_ConnectionlessPacket_t)0x0809594E;
@@ -1046,6 +1073,9 @@ static const Com_SurfaceTypeToName_t Com_SurfaceTypeToName = (Com_SurfaceTypeToN
 
 typedef void (*Com_Restart_t)(void);
 static const Com_Restart_t Com_Restart = (Com_Restart_t)0x080628FA;
+
+typedef int (*Com_Filter_t)(const char *filter, const char *name, qboolean casesensitive);
+static const Com_Filter_t Com_Filter = (Com_Filter_t)0x080AC670;
 
 typedef void (*SV_DObjDumpInfo_t)(gentity_t *ent);
 static const SV_DObjDumpInfo_t SV_DObjDumpInfo = (SV_DObjDumpInfo_t)0x08091E98;

@@ -162,6 +162,9 @@ if [ "$(< config.hpp grep '#define COMPILE_JUMP' | grep -o '[0-9]')" == "1" ]; t
 	$cc $debug $options $constants -c jump.cpp -o objects_"$1"/jump.opp
 fi
 
+echo "##### COMPILE $1 DVAR.CPP #####"
+$cc $debug $options $constants -c dvar.cpp -o objects_$1/dvar.opp
+
 echo "##### COMPILE $1 LIBCOD.CPP #####"
 $cc $debug $options $constants -c libcod.cpp -o objects_$1/libcod.opp
 

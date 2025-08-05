@@ -2,6 +2,7 @@
 
 - Added several security fixes/exploit patches known from other Call of Duty&reg; games
 - Added `g_banIPs` dvar support (max. 63 IPs), for use with the `addip`, `removeip` and `listip` console commands
+- Added the possibility to prevent script code from reading and/or writing to cvars (`protect` console command)
 - Blocked the download of `_svr_` (server-sided) .iwd files via direct server download
 - Blocked directory traversal possibilities via direct server download
 - Blocked the download of (stock) IW .iwd files via direct server download 

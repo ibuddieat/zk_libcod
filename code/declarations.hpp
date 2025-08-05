@@ -51,6 +51,13 @@
 #define SV_OUTPUTBUF_LENGTH         ( 2048 * MAX_CLIENTS - 16 )
 #define SV_OUTPUTBUF_LEGACY_LENGTH  ( 256 * MAX_CLIENTS - 16 )
 
+#define ENTITY_WORLD    0x3FE
+#define ENTITY_NONE     0x3FF
+
+#define HASH_STAT_HEAD    0x8000
+#define HASH_NEXT_MASK    0x3FFF
+#define HASH_STAT_MASK    0xC000
+
 #define MAX_ANIMSCRIPT_ANIMCOMMANDS 8
 #define MAX_ANIMSCRIPT_ITEMS_PER_MODEL  2048
 #define MAX_ANIMSCRIPT_ITEMS        128
@@ -63,6 +70,7 @@
 #define MAX_DOWNLOAD_BLKSIZE        2048
 #define MAX_DOWNLOAD_BLKSIZE_FAST   0x2000 // Needs to be below MAX_LEGACY_MSGLEN
 #define MAX_DOWNLOAD_WINDOW         8
+#define	MAX_DVARS                   1280
 #define MAX_ENT_CLUSTERS            16
 #define MAX_EVENTS                  4
 #define MAX_GENTITIES               ( 1 << GENTITYNUM_BITS ) // 0x400
@@ -90,37 +98,33 @@
 #define MAX_VOICEPACKETSPERFRAME    2.56
 #define MAX_ZPATH                   256
 
-#define DVAR_NOFLAG             0               // 0x0000
-#define DVAR_ARCHIVE            (1 << 0)        // 0x0001
-#define DVAR_USERINFO           (1 << 1)        // 0x0002
-#define DVAR_SERVERINFO         (1 << 2)        // 0x0004
-#define DVAR_SYSTEMINFO         (1 << 3)        // 0x0008
-#define DVAR_INIT               (1 << 4)        // 0x0010
-#define DVAR_LATCH              (1 << 5)        // 0x0020
-#define DVAR_ROM                (1 << 6)        // 0x0040
-#define DVAR_CHEAT              (1 << 7)        // 0x0080
-#define DVAR_CODINFO            (1 << 8)        // 0x0100
-#define DVAR_SAVED              (1 << 9)        // 0x0200
-#define DVAR_NORESTART          (1 << 10)       // 0x0400
-#define DVAR_CHANGEABLE_RESET   (1 << 12)       // 0x1000
-#define DVAR_EXTERNAL           (1 << 14)       // 0x4000
-#define DVAR_AUTOEXEC           (1 << 15)       // 0x8000
-#define DVAR_INVALID_ENUM_INDEX -1337
-
 // These are the only configstrings that the system reserves, all the
 // other ones (see cs_index_t) are strictly for servergame to clientgame
 // communication
 #define CS_SERVERINFO   0   // An info string with all the serverinfo cvars
 #define CS_SYSTEMINFO   1   // An info string for server system to client system configuration (timescale, etc.)
 
-#define HASH_STAT_HEAD    0x8000
-#define HASH_NEXT_MASK    0x3FFF
-#define HASH_STAT_MASK    0xC000
+// dvar_t->flags
+#define DVAR_NOFLAG              0               // 0x0000
+#define DVAR_ARCHIVE             (1 << 0)        // 0x0001 Written to config_mp_server.cfg or whatever specified with writeconfig
+#define DVAR_USERINFO            (1 << 1)        // 0x0002 Sent from client to server on connect or change
+#define DVAR_SERVERINFO          (1 << 2)        // 0x0004 Additional dvars sent to clients on connect or change
+#define DVAR_SYSTEMINFO          (1 << 3)        // 0x0008 Essential system dvars sent to clients on connect or change
+#define DVAR_INIT                (1 << 4)        // 0x0010 Can be set from command line, no change through console allowed
+#define DVAR_LATCH               (1 << 5)        // 0x0020 Changes are not applied until reregistration of that dvar is called
+#define DVAR_ROM                 (1 << 6)        // 0x0040 Read only, but can still be overwritten via SetCvar
+#define DVAR_CHEAT               (1 << 7)        // 0x0080 Cheat-protected dvar
+#define DVAR_CODINFO             (1 << 8)        // 0x0100 Additional dvars sent to clients on connect
+#define DVAR_UNKNOWN_0x0200      (1 << 9)        // 0x0200 Flag is never set, unused
+#define DVAR_SERVERINFO_NOUPDATE (1 << 10)       // 0x0400 Included in getstatus responses for server browser
+#define DVAR_UNKNOWN_0x0800      (1 << 11)       // 0x0800 Flag is never set, unused
+#define DVAR_INTERNAL            (1 << 12)       // 0x1000 Guessed name; flag has no use other than tagging engine-internal stock dvars
+#define DVAR_UNKNOWN_0x2000      (1 << 13)       // 0x2000 Flag is never set, but flag is checked in Dvar_Reregister
+#define DVAR_EXTERNAL            (1 << 14)       // 0x4000 Dvar is not an engine-internal one, or it is loaded from a .cfg file
+#define DVAR_AUTOEXEC            (1 << 15)       // 0x8000 Dvar has been set through automatically executed .cfg file(s)
+#define DVAR_INVALID_ENUM_INDEX  -1337
 
-#define ENTITY_WORLD    0x3FE
-#define ENTITY_NONE     0x3FF
-
-// gentity_s->flags
+// gentity_t->flags
 #define FL_GODMODE              0x1
 #define FL_DEMI_GODMODE         0x2
 #define FL_NOTARGET             0x4
@@ -3913,6 +3917,8 @@ static const int ipFilterList_offset = 0x08850E00;
 static const int g_sv_skel_memory_start_offset = 0x08423000;
 static const int g_sv_skel_warn_count_offset = 0x08423004;
 static const int _dvarOnOffStrings_offset = 0x0817E3CC;
+static const int _sortedDvars_offset = 0x085ABE00;
+static const int _dvarCount_offset = 0x085ABE08;
 
 #define g_entities ((gentity_t*)(gentities_offset))
 #define g_clients ((gclient_t*)(gclients_offset))
@@ -3981,6 +3987,8 @@ static const int _dvarOnOffStrings_offset = 0x0817E3CC;
 #define g_sv_skel_memory_start ((char**)( g_sv_skel_memory_start_offset ))
 #define g_sv_skel_warn_count (*((int*)( g_sv_skel_warn_count_offset )))
 #define _dvarOnOffStrings (((char**)( _dvarOnOffStrings_offset )))
+#define _sortedDvars (*((dvar_t**)( _sortedDvars_offset )))
+#define _dvarCount (*((int*)( _dvarCount_offset )))
 
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6
@@ -4318,3 +4326,16 @@ typedef struct
 	netadr_t from;
 	msg_t *msg;
 } remoteCommand_t;
+
+typedef enum
+{
+	DVAR_SCRIPT_DEFAULT = 0x0,
+    DVAR_SCRIPT_NOREAD = 0x1,
+	DVAR_SCRIPT_NOWRITE = 0x2
+} customDvarFlags_t;
+
+typedef struct
+{
+    dvar_t *dvar;
+    int flags;
+} customDvarSettings_t;
