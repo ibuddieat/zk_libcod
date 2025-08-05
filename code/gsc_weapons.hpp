@@ -5,13 +5,13 @@
 
 void gsc_weapons_init();
 void gsc_weapons_free();
-int hook_findWeaponIndex(char* weapon);
+int hook_BG_FindWeaponIndexForName_in_BG_GetWeaponIndexForName(char *weapon);
 
-void gsc_weapons_addgrenadefusetime(scr_entref_t id);
+void gsc_weapons_addgrenadefusetime(scr_entref_t ref);
 void gsc_weapons_getgrenadefusetime(scr_entref_t ref);
-void gsc_weapons_getweaponitemammo(scr_entref_t id);
-void gsc_weapons_setweaponitemammo(scr_entref_t id);
-void gsc_weapons_spawngrenade(scr_entref_t id);
+void gsc_weapons_getweaponitemammo(scr_entref_t ref);
+void gsc_weapons_setweaponitemammo(scr_entref_t ref);
+void gsc_weapons_spawngrenade(scr_entref_t ref);
 
 void gsc_weapons_issemiautoweapon();
 void gsc_weapons_getweaponmaxammo();

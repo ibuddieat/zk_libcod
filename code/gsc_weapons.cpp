@@ -915,7 +915,7 @@ bool isOnIgnoreList(char* weapon)
 	return false;
 }
 
-int hook_findWeaponIndex(char* weapon)
+int hook_BG_FindWeaponIndexForName_in_BG_GetWeaponIndexForName(char *weapon)
 {
 	if ( isOnIgnoreList(weapon) )
 		return BG_FindWeaponIndexForName(defaultweapon_mp);
@@ -930,7 +930,7 @@ void gsc_weapons_resetignoredweapons()
 
 void gsc_weapons_ignoreweapon()
 {
-	char* weapon;
+	char *weapon;
 
 	if ( !stackGetParams("s", &weapon) )
 	{
@@ -962,7 +962,7 @@ void gsc_weapons_ignoreweapon()
 
 void gsc_weapons_setdefaultweapon()
 {
-	char* weapon;
+	char *weapon;
 
 	if ( !stackGetParams("s", &weapon) )
 	{

@@ -135,7 +135,7 @@
 #define FL_MISSILE_UNKNOWN      0x10000
 #define FL_STABLE_MISSILE       0x20000
 
-// entity->svFlags
+// entityShared_t->svFlags
 #define	SVF_NOCLIENT  0x00000001 // Don't send entity to clients, even if it has effects
 #define	SVF_BODY      0x00000002 // Player or corpse
 #define	SVF_DOBJ      0x00000004 // Dobj model, can be player model, script model, item.

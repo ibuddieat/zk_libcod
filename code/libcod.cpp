@@ -614,15 +614,13 @@ void custom_Dvar_SetFromStringFromSource(dvar_t *dvar, const char *string, DvarS
 }
 
 int hitchFrameTime = 0;
-void hitch_warning_print(const char *message, int frameTime)
+void hook_Com_Printf_in_Com_ModifyMsec(const char *message, int frameTime)
 {
 	// Called if 500 < frameTime && frameTime < 500000
 	Com_Printf(message, frameTime);
 
 	hitchFrameTime = frameTime;
 }
-
-void hook_bad_printf(const char *format, ...) {}
 
 void custom_UpdateIPBans(void)
 {
@@ -2111,7 +2109,7 @@ void hook_ClientCommand(int clientNum)
 	playerCommand = qfalse;
 }
 
-const char * hook_AuthorizeState(int arg)
+const char * hook_SV_Cmd_Argv_in_SV_AuthorizeIpPacket(int arg)
 {
 	const char *s = Cmd_Argv(arg);
 
@@ -5850,11 +5848,10 @@ void manymaps_prepare(const char *mapname, int read)
 	}
 }
 
-int hook_findMap(const char *qpath, void **buffer)
+int hook_FS_ReadFile_in_SV_Map_f(const char *qpath, void **buffer)
 {
 	int read = FS_ReadFile(qpath, buffer);
-	manymaps_prepare(Cmd_Argv(1), read);
-
+	manymaps_prepare(Cmd_Argv(1), read); // New
 	if ( read != -1 )
 		return read;
 	else
@@ -10090,23 +10087,6 @@ int TriggerDamageEntities(int *entityList)
 	return count;
 }
 
-int TriggerTouchEntities(const float *mins, const float *maxs, int *entityList)
-{
-	int i;
-	int count = 0;
-
-	// Skip reserved entity slots: Players, player clones
-	for ( i = 72; i < level.num_entities; i++ )
-	{
-		if ( entityHandlers[g_entities[i].handler].touch || SV_EntityContact(mins, maxs, &g_entities[i]) )
-		{
-			entityList[count++] = i;
-		}
-	}
-
-	return count;
-}
-
 int custom_CM_AreaEntities(const float *mins, const float *maxs, int *entityList, int maxcount, int contentmask)
 {
 	areaParms_t ae;
@@ -10121,7 +10101,7 @@ int custom_CM_AreaEntities(const float *mins, const float *maxs, int *entityList
 	 0x02000000	GScr_positionWouldTelefrag
 	 0x02000000	? indirection
 	 0x02000180	G_MoverPush
-	 0x405c0008	G_TouchTriggers
+	 0x405C0008	G_TouchTriggers
 	 0x80000000	G_RunCorpseMove
 	 0x80000000	G_RunItem
 	 0xFFFFFFFF	G_RadiusDamage
@@ -10136,12 +10116,6 @@ int custom_CM_AreaEntities(const float *mins, const float *maxs, int *entityList
 	{
 		return TriggerDamageEntities(entityList);
 	}
-	// Currently disabled for touch triggers as it can activate trigger_hurt
-	// entities in unwanted situations:
-	//else if ( g_triggerMode->current.integer == 2 && contentmask == 0x405C0008 )
-	//{
-	//	return TriggerTouchEntities(mins, maxs, entityList);
-	//}
 	/* New code end */
 
 	ae.mins = mins;
@@ -11586,32 +11560,31 @@ public:
 		mprotect((void *)0x08048000, 0x135000, PROT_READ | PROT_WRITE | PROT_EXEC);
 
 		// Begin of hooking block
+		cracking_hook_call(0x080EBC58, (int)hook_BG_FindWeaponIndexForName_in_BG_GetWeaponIndexForName);
 		cracking_hook_call(0x08062086, (int)hook_Cbuf_Execute_in_Com_ExecStartupConfigs);
-		cracking_hook_call(0x080622F9, (int)common_init_complete_print);
 		cracking_hook_call(0x08090BA0, (int)hook_ClientCommand);
-		cracking_hook_call(0x0808DB12, (int)hook_AuthorizeState);
-		cracking_hook_call(0x0808BDC8, (int)hook_findMap);
-		cracking_hook_call(0x08070BE7, (int)Scr_GetCustomFunction);
-		cracking_hook_call(0x08070E0B, (int)Scr_GetCustomMethod);
-		cracking_hook_call(0x08082346, (int)hook_RuntimeError_in_VM_Execute);
-		cracking_hook_call(0x0808FD52, (int)hook_bad_printf);
-		cracking_hook_call(0x080EBC58, (int)hook_findWeaponIndex);
-		cracking_hook_call(0x08062644, (int)hitch_warning_print);
 		cracking_hook_call(0x080AD1FE, (int)hook_Com_MakeSoundAliasesPermanent);
-		cracking_hook_call(0x0811599A, (int)hook_SetExpFog_density_typo);
-		cracking_hook_call(0x080F7803, (int)hook_Player_UpdateLookAtEntity);
-		cracking_hook_call(0x081035A5, (int)hook_sprintf_in_HudElem_SetEnumString);
-		cracking_hook_call(0x080F4509, (int)hook_sprintf_in_G_ParseWeaponAccurayGraphInternal);
-		cracking_hook_call(0x0806DC09, (int)hook_sprintf_in_Scr_LoadAnimTreeInternal);
-		cracking_hook_call(0x0807FB59, (int)hook_sprintf_in_Scr_AddFields);
-		cracking_hook_call(0x0808E16A, (int)hook_sprintf_in_SV_AuthorizeIpPacket);
-		cracking_hook_call(0x0812C28D, (int)hook_sprintf_in_FX_ParseEffect);
-		cracking_hook_call(0x081393BC, (int)hook_sprintf_in_SE_R_ListFiles);
-		cracking_hook_call(0x0813944A, (int)hook_sprintf_in_SE_R_ListFiles);
-		cracking_hook_call(0x0808C9EB, (int)hook_strcpy_in_SV_ConSay_f);
-		cracking_hook_call(0x0808CB15, (int)hook_strcpy_in_SV_ConTell_f);
+		cracking_hook_call(0x080622F9, (int)hook_Com_Printf_in_Com_Init_Try_Block_Function);
+		cracking_hook_call(0x08062644, (int)hook_Com_Printf_in_Com_ModifyMsec);
 		cracking_hook_call(0x0806B24F, (int)hook_Com_sprintf_in_NET_AdrToString_IP);
 		cracking_hook_call(0x0806B2CE, (int)hook_Com_sprintf_in_NET_AdrToString_IPX);
+		cracking_hook_call(0x0808BDC8, (int)hook_FS_ReadFile_in_SV_Map_f);
+		cracking_hook_call(0x080F7803, (int)hook_Player_UpdateLookAtEntity);
+		cracking_hook_call(0x08082346, (int)hook_RuntimeError_in_VM_Execute);
+		cracking_hook_call(0x0811599A, (int)hook_SetExpFog_density_typo);
+		cracking_hook_call(0x0812C28D, (int)hook_sprintf_in_FX_ParseEffect);
+		cracking_hook_call(0x080F4509, (int)hook_sprintf_in_G_ParseWeaponAccurayGraphInternal);
+		cracking_hook_call(0x081035A5, (int)hook_sprintf_in_HudElem_SetEnumString);
+		cracking_hook_call(0x0807FB59, (int)hook_sprintf_in_Scr_AddFields);
+		cracking_hook_call(0x0806DC09, (int)hook_sprintf_in_Scr_LoadAnimTreeInternal);
+		cracking_hook_call(0x081393BC, (int)hook_sprintf_in_SE_R_ListFiles);
+		cracking_hook_call(0x0813944A, (int)hook_sprintf_in_SE_R_ListFiles);
+		cracking_hook_call(0x0808E16A, (int)hook_sprintf_in_SV_AuthorizeIpPacket);
+		cracking_hook_call(0x0808C9EB, (int)hook_strcpy_in_SV_ConSay_f);
+		cracking_hook_call(0x0808CB15, (int)hook_strcpy_in_SV_ConTell_f);
+		cracking_hook_call(0x0808DB12, (int)hook_SV_Cmd_Argv_in_SV_AuthorizeIpPacket);
+		cracking_hook_call(0x08070BE7, (int)Scr_GetCustomFunction);
+		cracking_hook_call(0x08070E0B, (int)Scr_GetCustomMethod);
 
 		hook_Com_DPrintf = new cHook(0x08060E3A, (int)custom_Com_DPrintf);
 		#if COMPILE_UTILS == 1
