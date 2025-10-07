@@ -3576,6 +3576,57 @@ void custom_SV_SendClientSnapshot(client_t *client)
 	LargeLocalDestructor(&buf);
 }
 
+void custom_SV_SendServerCommand(client_t *cl, svscmd_type type, const char *fmt, ...)
+{
+	LargeLocal buf;
+	char *message;
+	va_list argptr;
+	int j;
+	client_t *client;
+
+	/* New code start: Skip this for bots */
+	if ( cl && cl->bIsTestClient )
+		return;
+	/* New code end */
+
+	LargeLocalConstructor(&buf, MAX_LARGE_MSGLEN);
+	message = (char *)LargeLocalGetBuf(&buf);
+
+	va_start(argptr, fmt);
+	Q_vsnprintf(message, MAX_LARGE_MSGLEN, fmt, argptr);
+	va_end(argptr);
+
+	if ( cl != NULL )
+	{
+		SV_AddServerCommand(cl, type, message);
+		LargeLocalDestructor(&buf);
+		return;
+	}
+
+	if ( com_dedicated->current.integer && !strncmp(message, "print", 5) )
+	{
+		Com_Printf("broadcast: %s\n", SV_ExpandNewlines(message));
+	}
+
+	for ( j = 0, client = svs.clients; j < sv_maxclients->current.integer ; j++, client++ )
+	{
+		/* New code start: Skip this for bots */
+		if ( client->bIsTestClient )
+		{
+			continue;
+		}
+		/* New code end */
+
+		if ( client->state < CS_PRIMED )
+		{
+			continue;
+		}
+
+		SV_AddServerCommand(client, type, message);
+	}
+	LargeLocalDestructor(&buf);
+}
+
 void custom_SV_SendClientMessages(void)
 {
 	int i;
@@ -3598,6 +3649,13 @@ void custom_SV_SendClientMessages(void)
 		{
 			continue;
 		}
+
+		/* New code start: Skip this for bots */
+		if ( cl->bIsTestClient )
+		{
+			continue;
+		}
+		/* New code end */
 
 		numclients++;
 
@@ -11585,6 +11643,7 @@ public:
 		cracking_hook_function(0x08063A94, (int)custom_Dvar_SetFromDvar_f);
 		cracking_hook_function(0x080639E4, (int)custom_Dvar_SetS_f);
 		cracking_hook_function(0x0806398C, (int)custom_Dvar_SetU_f);
+		cracking_hook_function(0x08094A10, (int)custom_SV_SendServerCommand);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC8CA, (int)Jump_ReduceFriction);
