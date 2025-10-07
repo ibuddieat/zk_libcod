@@ -340,8 +340,8 @@ extern cHook *hook_G_ProcessIPBans;
 void custom_G_ProcessIPBans(void)
 {
 	// This is right after G_RegisterDvars() and BG_RegisterDvars(), giving us
-	// access to variables that are not yet defined at the
-	// common_init_complete_print hook
+	// access to variables that are not yet defined at
+	// hook_Com_Printf_in_Com_Init_Try_Block_Function
 	bg_bobMax = Dvar_FindVar("bg_bobMax");
 	g_antilag = Dvar_FindVar("g_antilag");
 	g_banIPs = Dvar_FindVar("g_banIPs");
@@ -487,7 +487,7 @@ void Dvar_Protect_f(void)
 		else if ( !strcmp(Cmd_Argv(2), "rw") || !strcmp(Cmd_Argv(2), "wr") )
 		{
 			// Read-write protection
-			setting->flags |= ( DVAR_SCRIPT_NOREAD | DVAR_SCRIPT_NOWRITE);
+			setting->flags |= ( DVAR_SCRIPT_NOREAD | DVAR_SCRIPT_NOWRITE );
 		}
 		else
 		{
@@ -543,7 +543,7 @@ void custom_Dvar_Reset_f(void)
 {
 	dvar_t *dvar;
 
-	// Dvar access policies
+	// New: Dvar access policies
 	dvar = Dvar_FindVar(Cmd_Argv(1));
 	if ( dvar && Dvar_IsWriteProtected(dvar) )
 	{
@@ -563,7 +563,7 @@ void custom_Dvar_Toggle_f(void)
 {
 	dvar_t *dvar;
 
-	// Dvar access policies
+	// New: Dvar access policies
 	dvar = Dvar_FindVar(Cmd_Argv(1));
 	if ( dvar && Dvar_IsWriteProtected(dvar) )
 	{
@@ -583,7 +583,7 @@ void custom_Dvar_TogglePrint_f(void)
 {
 	dvar_t *dvar;
 
-	// Dvar access policies
+	// New: Dvar access policies
 	dvar = Dvar_FindVar(Cmd_Argv(1));
 	if ( dvar && Dvar_IsWriteProtected(dvar) )
 	{
@@ -719,7 +719,7 @@ void custom_GScr_SetDvar(void)
 	dvar = Dvar_FindVar(dvarName);
 	if ( dvar )
 	{
-		// Dvar access policies
+		// New: Dvar access policies
 		if ( Dvar_IsWriteProtected(dvar) )
 		{
 			Com_Printf("WARNING: Write attempt via SetCvar on protected dvar '%s'\n", dvarName);
@@ -742,7 +742,7 @@ void custom_GScr_MakeDvarServerInfo(void)
 
 	if ( dvar )
 	{
-		// Dvar access policies
+		// New: Dvar access policies
 		if ( Dvar_IsReadProtected(dvar) )
 		{
 			Com_Printf("WARNING: Read attempt via MakeCvarServerInfo on protected dvar '%s'\n", dvarName);
@@ -766,7 +766,7 @@ qboolean custom_Dvar_Command(void)
 
 	if ( dvar )
 	{
-		// Dvar access policies
+		// New: Dvar access policies
 		if ( Cmd_Argc() == 1 )
 		{
 			if ( Dvar_IsReadProtected(dvar) )
@@ -799,7 +799,7 @@ void custom_Dvar_SetCommand(const char *dvarName, const char *string)
 {
 	dvar_t *dvar;
 
-	// Dvar access policies
+	// New: Dvar access policies
 	dvar = Dvar_FindVar(dvarName);
 	if ( dvar && Dvar_IsWriteProtected(dvar) )
 	{
@@ -864,7 +864,7 @@ void custom_Dvar_List_f(void)
 		else
 			Com_Printf(" ");
 
-		if ( Dvar_IsReadProtected(dvar) ) // New
+		if ( Dvar_IsReadProtected(dvar) ) // New: Dvar access policies
 			Com_Printf(" %s (read protected)\n", dvar->name);
 		else
 			Com_Printf(" %s \"%s\"\n", dvar->name, Dvar_DisplayableValue(dvar));
@@ -893,7 +893,7 @@ void custom_Com_DvarDump(conChannel_t channel)
 		{
 			if ( !match || Com_Filter(match, dvar->name, 0) )
 			{
-				if ( Dvar_IsReadProtected(dvar) ) // New
+				if ( Dvar_IsReadProtected(dvar) ) // New: Dvar access policies
 				{
 					Com_sprintf(summary, sizeof(summary), "      %s (read protected)\n", dvar->name);
 				}
@@ -925,7 +925,7 @@ void custom_Dvar_WriteDefaults(fileHandle_t f)
 		if ( I_stricmp(dvar->name, "cl_cdkey") )
 		{
 			if ( !(dvar->flags & (DVAR_ROM|DVAR_CHEAT|DVAR_EXTERNAL)) &&
-			     !Dvar_IsReadProtected(dvar) ) // New
+			     !Dvar_IsReadProtected(dvar) ) // New: Dvar access policies
 				FS_Printf(f, "set %s \"%s\"\n", dvar->name, Dvar_DisplayableResetValue(dvar));
 		}
 	}
@@ -940,7 +940,7 @@ void custom_Dvar_WriteVariables(fileHandle_t f)
 		if ( I_stricmp(dvar->name, "cl_cdkey") )
 		{
 			if ( !((dvar->flags ^ DVAR_ARCHIVE) & DVAR_ARCHIVE) &&
-			     !Dvar_IsReadProtected(dvar) ) // New
+			     !Dvar_IsReadProtected(dvar) ) // New: Dvar access policies
 				FS_Printf(f, "seta %s \"%s\"\n", dvar->name, Dvar_DisplayableLatchedValue(dvar));
 		}
 	}
