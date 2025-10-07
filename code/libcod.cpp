@@ -3315,7 +3315,10 @@ qboolean custom_Netchan_Transmit(netchan_t *chan, int length, byte *data)
 	int id = client - svs.clients;
 	qboolean ret;
 
-	/* New code start: Multi version support */
+	/* New code start: Multi version support. This check is necessary since the
+	 client will decode the payload into an msg_t buffer of that size, which is
+	 allocated in Com_EventLoop. For protocol 118 clients, the same check (for
+	 the larger buffer size) is done in the original Netchan_Transmit function */
 	if ( customPlayerState[id].protocolVersion != 118 && MAX_LEGACY_MSGLEN < length )
 		Com_Error(ERR_DROP, "\x15Netchan_Transmit: length = %i", length);
 	/* New code end */
@@ -3443,12 +3446,12 @@ void custom_SV_AddEntToSnapshot(int entNum, snapshotEntityNumbers_t *eNums)
 	}
 }
 
-void SV_UpdateServerCommandsToClientAsFits(client_t *client, msg_t *msg, int snapshotSize)
+void SV_UpdateServerCommandsToClientAsFits(client_t *client, msg_t *msg, unsigned int snapshotSize)
 {
 	size_t cmdlen;
 	unsigned int cmdindex;
 	unsigned int i;
-	int iMsgSize = MAX_MSGLEN;
+	unsigned int iMsgSize = MAX_MSGLEN;
 	int id = client - svs.clients;
 
 	if ( customPlayerState[id].protocolVersion != 118 )
@@ -3462,7 +3465,7 @@ void SV_UpdateServerCommandsToClientAsFits(client_t *client, msg_t *msg, int sna
 	i = client->reliableAcknowledge;
 	while ( ( cmdindex = i + 1, (int)cmdindex <= client->reliableSequence &&
 	( cmdlen = strlen(client->reliableCommandInfo[cmdindex & ( MAX_RELIABLE_COMMANDS - 1 )].command),
-	(int)( snapshotSize + cmdlen + 6 + msg->cursize ) < iMsgSize ) ) )
+	( snapshotSize + cmdlen + 6 + msg->cursize ) < iMsgSize ) ) )
 	{
 		MSG_WriteByte(msg, svc_serverCommand);
 		MSG_WriteLong(msg, cmdindex);
@@ -3488,7 +3491,7 @@ void custom_SV_SendClientSnapshot(client_t *client)
 	byte *data;
 	LargeLocal buf;
 	msg_t msg;
-	int snapshotSize;
+	unsigned int snapshotSize;
 	byte snapshot[MAX_LARGE_MSGLEN];
 
 	LargeLocalConstructor(&buf, MAX_LARGE_MSGLEN);
@@ -3522,7 +3525,7 @@ void custom_SV_SendClientSnapshot(client_t *client)
 
 		// Write the snapshot so we can get its size, save it, then reset msg
 		SV_WriteSnapshotToClient(client, &msg);
-		snapshotSize = msg.cursize - 4;
+		snapshotSize = msg.cursize - 4; // No underflow, MSG_WriteLong is above
 		memcpy(snapshot, &msg.data[4], snapshotSize);
 		memset(&msg.data[4], 0, snapshotSize);
 		msg.cursize = 4;
@@ -3541,6 +3544,9 @@ void custom_SV_SendClientSnapshot(client_t *client)
 
 	MSG_WriteByte(&msg, svc_EOF);
 
+	// We could also catch too large Netchan messages here, but if we just drop
+	// snapshots that are too large, the client will end up with an
+	// inconsistent state (e.g., entity positions or models not updated)
 	if ( msg.overflowed )
 	{
 		Com_Printf("WARNING: msg overflowed for %s, trying to recover\n", client->name);
