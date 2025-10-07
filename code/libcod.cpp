@@ -9237,6 +9237,17 @@ void openLogfile(qboolean reopen)
 		FS_FCloseFile(logfile);
 	}
 
+	// New: logfileName dvar: Cover runtime crash caused by an invalid fwrite
+	// attempt after directory traversal refusal 
+	if ( strstr(logfileName->current.string, "..") )
+	{
+		logfile = 0;
+		opening_qconsole = 0;
+		Sys_LeaveCriticalSection(CRITSECT_CONSOLE);
+		Com_Error(ERR_DROP, "logfileName must not contain dot-dot sequences");
+	}
+
+	// New: logfileRotate dvar
 	if ( logfileRotate->current.integer > 0 )
 	{
 		char logfilePath[512];
