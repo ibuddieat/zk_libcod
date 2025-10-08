@@ -471,6 +471,8 @@ scr_method_t scriptMethods[] =
 	{"setExpFogForPlayer", gsc_player_setexpfogforplayer, 0},
 	{"setActivateOnUseButtonRelease", gsc_player_setactivateonusebuttonrelease, 0},
 	{"isChatting", gsc_player_ischatting, 0},
+	{"isFiring", gsc_player_isfiring, 0},
+	{"isMeleeing", gsc_player_ismeleeing, 0},
 	{"isUseTouching", gsc_player_isusetouching, 0},
 	{"setStepSize", gsc_player_setstepsize, 0},
 	{"setProneStepSize", gsc_player_setpronestepsize, 0},

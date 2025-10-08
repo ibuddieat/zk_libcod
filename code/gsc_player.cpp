@@ -3519,6 +3519,40 @@ void gsc_player_ischatting(scr_entref_t ref)
 	stackPushBool(( ent->client->buttons & KEY_MASK_TALK ) != 0);
 }
 
+void gsc_player_isfiring(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_isfiring() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	gentity_t *ent = &g_entities[id];
+	gclient_t *client = ent->client;
+
+	stackPushBool(client->ps.weaponstate == WEAPON_FIRING);
+}
+
+void gsc_player_ismeleeing(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_ismeleeing() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	gentity_t *ent = &g_entities[id];
+	gclient_t *client = ent->client;
+
+	stackPushBool(client->ps.weaponstate == WEAPON_MELEE_FIRE);
+}
+
 void gsc_player_isusetouching(scr_entref_t ref)
 {
 	int id = ref.entnum;

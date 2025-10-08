@@ -61,7 +61,9 @@
   * `<player> getViewOrigin()`
   * `<player> isAllowingSpectators()`
   * `<player> isChatting()`
+  * `<player> isFiring()`
   * `<player> isHiddenFromScoreboard()`
+  * `<player> isMeleeing()`
   * `<player> isPlayingSoundFile()`
   * `<player> isReloading()`
   * `<player> isShellShocked()`
