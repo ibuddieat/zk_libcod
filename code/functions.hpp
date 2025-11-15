@@ -645,6 +645,12 @@ static const BG_WeaponDefs_t BG_WeaponDefs = (BG_WeaponDefs_t)0x080EB9A4;
 typedef WeaponDef_t * (*BG_GetWeaponDef_t)(unsigned int weaponIndex);
 static const BG_GetWeaponDef_t BG_GetWeaponDef = (BG_GetWeaponDef_t)0x080EB9A4;
 
+typedef weapSlot_t (*BG_GetWeaponSlotForName_t)(const char *name);
+static const BG_GetWeaponSlotForName_t BG_GetWeaponSlotForName = (BG_GetWeaponSlotForName_t)0x080F2B84;
+
+typedef const char * (*BG_GetWeaponSlotNameForIndex_t)(int iSlot);
+static const BG_GetWeaponSlotNameForIndex_t BG_GetWeaponSlotNameForIndex = (BG_GetWeaponSlotNameForIndex_t)0x080F2BD2;
+
 typedef int (*BG_WeaponIsClipOnly_t)(unsigned int weapon);
 static const BG_WeaponIsClipOnly_t BG_WeaponIsClipOnly = (BG_WeaponIsClipOnly_t)0x080ED3E2;
 
@@ -684,6 +690,12 @@ static const BG_ValidateWeaponNumber_t BG_ValidateWeaponNumber = (BG_ValidateWea
 typedef qboolean (*COM_BitCheck_t)(unsigned int array[], int bitNum);
 static const COM_BitCheck_t COM_BitCheck = (COM_BitCheck_t)0x080DC5A8;
 
+typedef void (*COM_BitClear_t)(unsigned int array[], int bitNum);
+static const COM_BitClear_t COM_BitClear = (COM_BitClear_t)0x080F2B34;
+
+typedef void (*COM_BitSet_t)(unsigned int array[], int bitNum);
+static const COM_BitSet_t COM_BitSet = (COM_BitSet_t)0x080DC5CE;
+
 typedef void (*RuntimeError_Debug_t)(int channel, const char *pos, int error_index, const char *error_message);
 static const RuntimeError_Debug_t RuntimeError_Debug = (RuntimeError_Debug_t)0x080787DC;
 
@@ -698,6 +710,9 @@ static const PM_AddTouchEnt_t PM_AddTouchEnt = (PM_AddTouchEnt_t)0x080E1474;
 
 typedef void (*PM_ClipVelocity_t)(const float *velIn, const float *normal, float *velOut);
 static const PM_ClipVelocity_t PM_ClipVelocity = (PM_ClipVelocity_t)0x080E14D4;
+
+typedef void (*PM_ContinueWeaponAnim_t)(playerState_t *ps, weapAnimNumber_t anim);
+static const PM_ContinueWeaponAnim_t PM_ContinueWeaponAnim = (PM_ContinueWeaponAnim_t)0x080EB974;
 
 typedef void (*PM_FootstepEvent_t)(pmove_t *pm, pml_t *pml, int iOldBobCycle, int iNewBobCycle, qboolean bFootStep);
 static const PM_FootstepEvent_t PM_FootstepEvent = (PM_FootstepEvent_t)0x080E5402;
@@ -719,6 +734,9 @@ static const PM_ShouldMakeFootsteps_t PM_ShouldMakeFootsteps = (PM_ShouldMakeFoo
 
 typedef qboolean (*PM_SlideMove_t)(pmove_t *pm, pml_t *pml, qboolean gravity);
 static const PM_SlideMove_t PM_SlideMove = (PM_SlideMove_t)0x080E9C42;
+
+typedef void (*PM_StartWeaponAnim_t)(playerState_t *ps, int anim);
+static const PM_StartWeaponAnim_t PM_StartWeaponAnim = (PM_StartWeaponAnim_t)0x080EB944;
 
 typedef qboolean (*PM_VerifyPronePosition_t)(pmove_t *pm, const float *vFallbackOrg, const float *vFallbackVel);
 static const PM_VerifyPronePosition_t PM_VerifyPronePosition = (PM_VerifyPronePosition_t)0x080E9A7C;

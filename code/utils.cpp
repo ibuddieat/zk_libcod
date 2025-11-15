@@ -36,7 +36,7 @@ uint64_t Sys_Milliseconds64(void)
 	return (tp.tv_sec - sys_timeBase) * 1000 + tp.tv_usec / 1000;
 }
 
-int getIndexForProtocol(int protocol)
+int GetIndexForProtocol(int protocol)
 {
 	switch ( protocol )
 	{
@@ -48,7 +48,7 @@ int getIndexForProtocol(int protocol)
 	}
 }
 
-int getProtocolForIndex(int index)
+int GetProtocolForIndex(int index)
 {
 	switch ( index )
 	{
@@ -60,7 +60,7 @@ int getProtocolForIndex(int index)
 	}
 }
 
-int getProtocolFromShortVersion(const char *shortVersion)
+int GetProtocolFromShortVersion(const char *shortVersion)
 {
 	if ( strcmp(shortVersion, "1.0") == 0 )
 		return 115; // 0x73
@@ -72,7 +72,7 @@ int getProtocolFromShortVersion(const char *shortVersion)
 	// Protocol 119 does not have a unique shortVersion
 }
 
-const char * getShortVersionFromProtocol(int protocol)
+const char * GetShortVersionFromProtocol(int protocol)
 {
 	switch ( protocol )
 	{
@@ -94,4 +94,26 @@ qboolean IsLocalIPAddress(unsigned char *ip)
         return qtrue;
     }
     return qfalse;
+}
+
+weapSlot_t GetCurrentWeaponSlot(int clientNum)
+{
+	playerState_t *ps = SV_GameClientNum(clientNum);
+
+	if ( ps->weapon == 0 )
+	{
+		return WEAPSLOT_NONE;
+	} 
+	else if ( (byte)ps->weapon == ps->weaponslots[1] )
+	{
+		return WEAPSLOT_PRIMARY;
+	}
+	else if ( (byte)ps->weapon == ps->weaponslots[2] )
+	{
+		return WEAPSLOT_PRIMARYB;
+	}
+	else
+	{
+		return WEAPSLOT_NONE;
+	}
 }

@@ -8,10 +8,10 @@ void VectorClampLength(float *vec, double max);
 
 uint64_t Sys_Milliseconds64(void);
 
-int getIndexForProtocol(int protocol);
-int getProtocolForIndex(int index);
-int getProtocolFromShortVersion(const char *shortVersion);
-const char * getShortVersionFromProtocol(int protocol);
+int GetIndexForProtocol(int protocol);
+int GetProtocolForIndex(int index);
+int GetProtocolFromShortVersion(const char *shortVersion);
+const char * GetShortVersionFromProtocol(int protocol);
 
 qboolean IsLocalIPAddress(unsigned char *ip);
 
@@ -22,5 +22,7 @@ int Q_vsnprintf(char *s0, size_t size, const char *fmt, va_list args);
 #ifndef strcmp_constant_time
 int strcmp_constant_time(const char *s1, const char *s2);
 #endif
+
+weapSlot_t GetCurrentWeaponSlot(int clientNum);
 
 #endif

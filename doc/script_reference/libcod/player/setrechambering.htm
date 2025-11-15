@@ -15,11 +15,11 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>kick( &lt;clientnum&gt;, &lt;reason&gt; )</H1>
+<H1>setRechambering( &lt;bool&gt;, &lt;weapon slot&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
-Module: System<BR>
+Module: Player<BR>
 </I>
 
 <BR>
@@ -27,8 +27,16 @@ Module: System<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Kicks the specified player, optionally with a message that is shown to the client after being disconnected.</p>
+<p>Sets the rechambering state for the specified weapon slot. Does not alter the boltAction setting of the affected weapon. The weapon slot parameter is optional, by default the currently used weapon slot is affected. Returns false if the specified weapon slot is "none" or if the specified weapon has boltAction disabled.</p>
 
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Call this on:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+The player
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -37,8 +45,7 @@ Module: System<BR>
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-wait 0.05; // Ensures message visibility if kicked right on connect
-kick(self getEntityNumber(), "Kicked from server");
+player setRechambering(true, "primary");
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -47,15 +54,16 @@ kick(self getEntityNumber(), "Kicked from server");
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;clientnum&gt; The client number of the player to kick</LI>
+<LI>1 : &lt;bool&gt; True or false to enforce the desired rechambering state</LI>
 </UL></TR></TD></TABLE>
 <BR><BR>
 <H2>Optional Args</H2>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;reason&gt; The message string shown to the player</LI>
+<LI>1 : &lt;weapon slot&gt; Valid weapon slots are "primary" and "primaryb". Default is the currently used weapon slot</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>
 </HTML>
+

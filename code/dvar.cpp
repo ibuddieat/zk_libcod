@@ -955,7 +955,7 @@ void custom_Dvar_SetFromStringFromSource(dvar_t *dvar, const char *string, DvarS
 
 	/* New code start: sv_version dvar value sanitization */
 	if ( sv_version && dvar == sv_version )
-		string = getShortVersionFromProtocol(getProtocolFromShortVersion(string));
+		string = GetShortVersionFromProtocol(GetProtocolFromShortVersion(string));
 	/* New code end */
 
 	I_strncpyz(buf, string, sizeof(buf));

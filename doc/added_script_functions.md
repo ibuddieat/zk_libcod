@@ -49,6 +49,7 @@
   * `<player> getCollisionTeam()`
   * `<player> getCurrentWeaponAmmo()`
   * `<player> getCurrentWeaponClipAmmo()`
+  * `<player> getCurrentWeaponSlot()`
   * `<player> getEnterTime()`
   * `<player> getGroundEntity()`
   * `<player> getInactivityTime()`
@@ -65,6 +66,7 @@
   * `<player> isHiddenFromScoreboard()`
   * `<player> isMeleeing()`
   * `<player> isPlayingSoundFile()`
+  * `<player> isRechambering([<weapon slot>])`
   * `<player> isReloading()`
   * `<player> isShellShocked()`
   * `<player> isThrowingGrenade()`
@@ -105,6 +107,7 @@
   * `<player> setMeleeWidthScale(<scale>)`
   * `<player> setOriginAndAngles(<origin>, <angles>)`
   * `<player> setProneStepSize(<size>)`
+  * `<player> setRechambering(<bool>, [<weapon slot>])`
   * `<player> setStepSize(<size>)`
   * `<player> setTurretSpreadScale(<scale>)`
   * `<player> setWeaponSpreadScale(<scale>)`

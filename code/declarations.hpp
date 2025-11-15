@@ -1694,7 +1694,7 @@ typedef struct playerState_s
 	int damageYaw;
 	int damagePitch;
 	int damageCount;
-	int stats[6];
+	int stats[MAX_STATS];
 	int ammo[128];
 	int ammoclip[128];
 	unsigned int weapons[4];

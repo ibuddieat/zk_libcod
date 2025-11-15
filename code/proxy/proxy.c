@@ -252,7 +252,7 @@ void SV_ResetProxiesInformation()
 void SV_ConfigureProxy(proxy_t *proxy, int version, const char *address, const char *forwardAddress, int parentVersion)
 {
 	int index = (proxy - &proxies[0]) + 1;
-	const char *versionString = getShortVersionFromProtocol(version);
+	const char *versionString = GetShortVersionFromProtocol(version);
 
 	Com_DPrintf("Proxy: Configuring proxy for version %s (protocol %i)\n", versionString, version);
 
@@ -267,7 +267,7 @@ void SV_ConfigureProxy(proxy_t *proxy, int version, const char *address, const c
 	proxy->lock = PTHREAD_MUTEX_INITIALIZER;
 	proxy->numClients = 0;
 	proxy->parentVersion = parentVersion;
-	proxy->parentVersionString = getShortVersionFromProtocol(parentVersion);
+	proxy->parentVersionString = GetShortVersionFromProtocol(parentVersion);
 	proxy->version = version;
 	proxy->versionString = versionString;
 	proxy->bucket = (outboundLeakyBucketIndex_t)index;
@@ -341,7 +341,7 @@ void SV_SetupProxies()
 
 	SV_ResetProxiesInformation();
 
-	switch ( getProtocolFromShortVersion(sv_version->current.string) )
+	switch ( GetProtocolFromShortVersion(sv_version->current.string) )
 	{
 		case 115:
 			if ( sv_proxyEnable_1_2->current.boolean )

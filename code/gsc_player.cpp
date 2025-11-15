@@ -200,7 +200,7 @@ void gsc_player_getprotocolstring(scr_entref_t ref)
 		return;
 	}
 
-	stackPushString(getShortVersionFromProtocol(customPlayerState[id].protocolVersion));
+	stackPushString(GetShortVersionFromProtocol(customPlayerState[id].protocolVersion));
 }
 
 void gsc_player_enablebulletdrop(scr_entref_t ref)
@@ -840,6 +840,128 @@ void gsc_player_getcurrentoffhandslotammo(scr_entref_t ref)
 	playerState_t *ps = SV_GameClientNum(id);
 
 	stackPushInt(ps->ammoclip[ps->offHandIndex - 1]);
+}
+
+void gsc_player_getcurrentweaponslot(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_getcurrentweaponslot() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushString(BG_GetWeaponSlotNameForIndex(GetCurrentWeaponSlot(id)));
+}
+
+void gsc_player_isrechambering(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_isrechambering() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	int args = Scr_GetNumParam();
+	weapSlot_t slot;
+	playerState_t *ps = SV_GameClientNum(id);
+
+	if ( !args )
+	{
+		slot = GetCurrentWeaponSlot(id);
+	}
+	else
+	{
+		unsigned short index = Scr_GetConstString(0);
+		char *slotName = SL_ConvertToString(index);
+		slot = BG_GetWeaponSlotForName(slotName);
+	}
+
+	stackPushBool(COM_BitCheck(ps->weaponrechamber, ps->weaponslots[slot]));
+}
+
+void gsc_player_setrechambering(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_setrechambering() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	int args = Scr_GetNumParam();
+	qboolean flag = Scr_GetInt(0);
+	weapSlot_t currentSlot = GetCurrentWeaponSlot(id);
+	weapSlot_t selectedSlot = currentSlot;
+	playerState_t *ps = SV_GameClientNum(id);
+
+	if ( args > 1 )
+	{
+		unsigned short index = Scr_GetConstString(1);
+		char *slotName = SL_ConvertToString(index);
+		selectedSlot = BG_GetWeaponSlotForName(slotName);
+	}
+
+	if ( selectedSlot == WEAPSLOT_NONE )
+	{
+		stackPushBool(qfalse);
+		return;
+	}
+
+	int weaponIndex = ps->weaponslots[selectedSlot];
+	WeaponDef_t *weapDef = BG_GetWeaponDef(weaponIndex);
+
+	if ( !weapDef->bBoltAction )
+	{
+		stackPushBool(qfalse);
+		return;
+	}
+
+	if ( flag )
+	{
+		COM_BitSet(ps->weaponrechamber, weaponIndex);
+		if ( currentSlot == selectedSlot )
+		{
+			if ( 0.75 < ps->fWeaponPosFrac )
+			{
+				PM_StartWeaponAnim(ps, WEAP_ADS_RECHAMBER);
+			}
+			else
+			{
+				PM_StartWeaponAnim(ps, WEAP_RECHAMBER);
+			}
+			ps->weaponstate = WEAPON_RECHAMBERING;
+			ps->weaponTime = weapDef->iRechamberTime;
+			if ( weapDef->iRechamberBoltTime == 0 ||
+			( weapDef->iRechamberTime <= weapDef->iRechamberBoltTime ))
+			{
+				ps->weaponDelay = 1;
+			}
+			else
+			{
+				ps->weaponDelay = weapDef->iRechamberBoltTime;
+			}
+			PM_AddEvent(ps, EV_RECHAMBER_WEAPON);
+		}
+	}
+	else
+	{
+		COM_BitClear(ps->weaponrechamber, weaponIndex);
+		if ( currentSlot == selectedSlot )
+		{
+			PM_ContinueWeaponAnim(ps, WEAP_IDLE);
+			ps->weaponstate = WEAPON_READY;
+		}
+	}
+
+	stackPushBool(qtrue);
 }
 
 void gsc_player_disableitempickup(scr_entref_t ref)

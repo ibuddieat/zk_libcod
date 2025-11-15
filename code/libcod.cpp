@@ -752,7 +752,7 @@ void custom_SV_SaveSystemInfo()
 	sv_version = Dvar_RegisterString("sv_version", "1.3", DVAR_ARCHIVE | DVAR_LATCH);
 
 	// Update related dvars accordingly
-	Dvar_SetIntByName("protocol", getProtocolFromShortVersion(sv_version->current.string));
+	Dvar_SetIntByName("protocol", GetProtocolFromShortVersion(sv_version->current.string));
 	Dvar_SetStringByName("shortversion", sv_version->current.string);
 	/* New code end */
 
@@ -954,11 +954,11 @@ void custom_SV_SpawnServer(char *server)
 		/* New code start: Multi-version support */
 		for ( i = 0; i < PROTOCOL_COUNT; i++ )
 		{
-			I_strncpyz(iwds[i], custom_FS_LoadedIwdChecksums(getProtocolForIndex(i)), sizeof(iwds[0]));
+			I_strncpyz(iwds[i], custom_FS_LoadedIwdChecksums(GetProtocolForIndex(i)), sizeof(iwds[0]));
 		}
 		/* New code end */
 
-		iwdChecksums = iwds[getIndexForProtocol(getProtocolFromShortVersion(sv_version->current.string))];
+		iwdChecksums = iwds[GetIndexForProtocol(GetProtocolFromShortVersion(sv_version->current.string))];
 		Dvar_SetString(sv_iwds, iwdChecksums);
 
 		if ( !*iwdChecksums )
@@ -980,9 +980,9 @@ void custom_SV_SpawnServer(char *server)
 	/* New code start: Multi-version support */
 	for ( i = 0; i < PROTOCOL_COUNT; i++ )
 	{
-		I_strncpyz(referencedIwds[i], custom_FS_ReferencedIwdChecksums(getProtocolForIndex(i)), sizeof(referencedIwds[0]));
+		I_strncpyz(referencedIwds[i], custom_FS_ReferencedIwdChecksums(GetProtocolForIndex(i)), sizeof(referencedIwds[0]));
 	}
-	Dvar_SetString(sv_referencedIwds, referencedIwds[getIndexForProtocol(getProtocolFromShortVersion(sv_version->current.string))]);
+	Dvar_SetString(sv_referencedIwds, referencedIwds[GetIndexForProtocol(GetProtocolFromShortVersion(sv_version->current.string))]);
 	/* New code end */
 
 	Dvar_SetString(sv_referencedIwdNames, FS_ReferencedIwdNames());
@@ -1348,7 +1348,7 @@ LAB_0808ec36:
 
 		/* New code start: Save client protocol version */
 		customPlayerState[clientNum].protocolVersion = version;
-		Com_Printf("Connecting player #%i runs on version %s (protocol %i)\n", clientNum, getShortVersionFromProtocol(version), version);
+		Com_Printf("Connecting player #%i runs on version %s (protocol %i)\n", clientNum, GetShortVersionFromProtocol(version), version);
 		/* New code end */
 
 		if ( guid == 0 )
@@ -3929,7 +3929,7 @@ void custom_SV_SendClientGameState(client_t *client)
 
 			// Fix .iwd file checksum mismatches between versions
 			if ( start == CS_SYSTEMINFO )
-				configstring = systemInfo[getIndexForProtocol(protocolVersion)];
+				configstring = systemInfo[GetIndexForProtocol(protocolVersion)];
 
 			// Older protocol versions: Sending overflowing config strings
 			// afterwards via reliable server commands is constrained by
@@ -4845,7 +4845,7 @@ void custom_SVC_Info(netadr_t from)
 	Info_SetValueForKey(infostring, "challenge", Cmd_Argv(1));
 
 	// New: Configurable version response
-	Info_SetValueForKey(infostring, "protocol", va("%i", getProtocolFromShortVersion(sv_version->current.string)));
+	Info_SetValueForKey(infostring, "protocol", va("%i", GetProtocolFromShortVersion(sv_version->current.string)));
 
 	Info_SetValueForKey(infostring, "hostname", sv_hostname->current.string);
 	Info_SetValueForKey(infostring, "mapname", sv_mapname->current.string);
@@ -5095,7 +5095,7 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 	/* New code end */
 
 	/* New code start: Multi version support */
-	if ( getProtocolFromShortVersion(sv_version->current.string) != 118 )
+	if ( GetProtocolFromShortVersion(sv_version->current.string) != 118 )
 		sv_outputbuf_len = SV_OUTPUTBUF_LEGACY_LENGTH;
 	/* New code end */
 
@@ -5608,7 +5608,7 @@ void manymaps_prepare(const char *mapname, int read)
 	// Check if the requested map is a stock map. Version 1.0 does not have
 	// mp_rhine and mp_harbor, but they could be added as standalone .iwd files
 	map_num = int(sizeof(stock_maps) / sizeof(stock_maps[0]));
-	if ( getProtocolFromShortVersion(sv_version->current.string) < 117 )
+	if ( GetProtocolFromShortVersion(sv_version->current.string) < 117 )
 		map_num -= 2;
 
 	for ( int i = 0; i < map_num; i++ )
@@ -10328,7 +10328,7 @@ void custom_SV_ExecuteClientMessage(client_t *cl, msg_t *msg)
 	LargeLocal buf;
 	msg_t decompressMsg;
 	int c;
-	
+
 	LargeLocalConstructor(&buf, MAX_MSGLEN);
 	outputBuf = LargeLocalGetBuf(&buf);
 	MSG_Init(&decompressMsg, outputBuf, MAX_MSGLEN);
