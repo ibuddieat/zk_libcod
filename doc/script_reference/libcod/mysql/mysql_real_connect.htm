@@ -27,7 +27,7 @@ Module: MySQL<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Attempts to establish a connection to a MySQL database engine. Returns a connection handle if the connection was successful or 0.</p>
+<p>Attempts to establish a connection to a MySQL database engine. Returns a connection handle if the connection was successful, otherwise 0.</p>
 
 </H3>
 </TR></TD></TABLE>
@@ -46,12 +46,12 @@ connection_handler = mysql_real_connect( mysql_handler, "localhost", "username",
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;mysql&gt; initialized MYSQL handler</LI>
-<LI>2 : &lt;host&gt; host where the database runs on (like localhost)</LI>
-<LI>3 : &lt;user&gt; username of the database</LI>
-<LI>4 : &lt;pass&gt; the password of the username</LI>
-<LI>5 : &lt;db&gt; database name</LI>
-<LI>6 : &lt;port&gt; database port (default 3306)</LI>
+<LI>1 : &lt;mysql&gt; Initialized MySQL handler</LI>
+<LI>2 : &lt;host&gt; Host where the database runs on (e.g., localhost)</LI>
+<LI>3 : &lt;user&gt; Username of the database</LI>
+<LI>4 : &lt;pass&gt; The password of the username</LI>
+<LI>5 : &lt;db&gt; Database name</LI>
+<LI>6 : &lt;port&gt; Database port (default: 3306)</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>

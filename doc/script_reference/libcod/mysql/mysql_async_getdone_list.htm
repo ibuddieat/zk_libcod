@@ -27,9 +27,7 @@ Module: MySQL<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Returns a list of completed query-ids (see the unique ID in mysql_async_create_query and mysql_async_create_query). Should be combined with a mysql_async_getresult_and_free() for each id returned.<br />
-Returns an array of integers.<br />
-Should be used with the wrapper functions for async mysql</p>
+<p>Returns a list of completed query-IDs (see the unique ID in mysql_async_create_query() and mysql_async_create_query()). Should be combined with a call to mysql_async_getresult_and_free() for each ID returned. Returns an array of integers. Should be used with the wrapper functions for async MySQL.</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -38,7 +36,7 @@ Should be used with the wrapper functions for async mysql</p>
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
- mysql_async_getdone_list();
+mysql_async_getdone_list();
 </PRE>
 </H3>
 </TR></TD></TABLE>

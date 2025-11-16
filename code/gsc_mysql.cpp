@@ -50,7 +50,7 @@ void *mysql_async_query_handler(void* input_nothing) // is threaded after initia
 	static bool started = false;
 	if ( started )
 	{
-		Com_DPrintf("mysql_async_query_handler() async handler already started. Returning\n");
+		Com_DPrintf("mysql_async_query_handler() async handler already started, returning\n");
 		return NULL;
 	}
 	started = true;
@@ -136,6 +136,13 @@ void gsc_mysql_async_create_query_nosave()
 		return;
 	}
 
+	if ( !first_async_connection )
+	{
+		stackError("gsc_mysql_async_create_query_nosave() there are no active async query handlers");
+		stackPushUndefined();
+		return;
+	}
+
 	int id = mysql_async_query_initializer(query, false);
 
 	stackPushInt(id);
@@ -148,6 +155,13 @@ void gsc_mysql_async_create_query()
 	if ( !stackGetParams("s", &query) )
 	{
 		stackError("gsc_mysql_async_create_query() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( !first_async_connection )
+	{
+		stackError("gsc_mysql_async_create_query_nosave() there are no active async query handlers");
 		stackPushUndefined();
 		return;
 	}
@@ -237,7 +251,7 @@ void gsc_mysql_async_initializer() // returns array with mysql connection handle
 
 	if ( pthread_mutex_init(&lock_async_mysql, NULL) != 0 )
 	{
-		Com_DPrintf("Async mutex initialization failed\n");
+		Com_DPrintf("gsc_mysql_async_initializer() async mutex initialization failed\n");
 		stackPushUndefined();
 		return;
 	}
@@ -269,8 +283,14 @@ void gsc_mysql_async_initializer() // returns array with mysql connection handle
 		newconnection->next = NULL;
 		newconnection->connection = mysql_init(NULL);
 		bool reconnect = true;
-		mysql_options(newconnection->connection, MYSQL_OPT_RECONNECT, &reconnect);
+		mysql_options(newconnection->connection, MYSQL_OPT_RECONNECT, &reconnect); // deprecated
 		newconnection->connection = mysql_real_connect((MYSQL*)newconnection->connection, host, user, pass, db, port, NULL, 0);
+		if ( !newconnection->connection )
+		{
+			delete newconnection;
+			stackError("gsc_mysql_async_initializer() failed to open MySQL connection to host '%s'", host);
+			return;
+		}
 		newconnection->task = NULL;
 		if ( current == NULL )
 		{
@@ -332,8 +352,15 @@ void gsc_mysql_real_connect()
 	}
 
 	bool reconnect = true;
-	mysql_options((MYSQL*)mysql, MYSQL_OPT_RECONNECT, &reconnect);
+	mysql_options((MYSQL*)mysql, MYSQL_OPT_RECONNECT, &reconnect); // deprecated
 	mysql = (int)mysql_real_connect((MYSQL *)mysql, host, user, pass, db, port, NULL, 0);
+	if ( !mysql )
+	{
+		stackError("gsc_mysql_async_initializer() failed to open MySQL connection to host '%s'", host);
+		stackPushUndefined();
+		return;
+	}
+
 	if ( cod_mysql_connection == NULL )
 		cod_mysql_connection = (MYSQL*)mysql;
 
@@ -347,6 +374,13 @@ void gsc_mysql_close()
 	if ( !stackGetParams("i", &mysql) )
 	{
 		stackError("gsc_mysql_close() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( !mysql )
+	{
+		stackError("gsc_mysql_close() the provided MySQL handler is invalid");
 		stackPushUndefined();
 		return;
 	}
@@ -368,6 +402,13 @@ void gsc_mysql_query()
 		return;
 	}
 
+	if ( !mysql )
+	{
+		stackError("gsc_mysql_query() the provided MySQL handler is invalid");
+		stackPushUndefined();
+		return;
+	}
+
 	int ret = mysql_query((MYSQL *)mysql, query);
 
 	stackPushInt(ret);
@@ -380,6 +421,13 @@ void gsc_mysql_errno()
 	if ( !stackGetParams("i", &mysql) )
 	{
 		stackError("gsc_mysql_errno() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( !mysql )
+	{
+		stackError("gsc_mysql_errno() the provided MySQL handler is invalid");
 		stackPushUndefined();
 		return;
 	}
@@ -400,6 +448,13 @@ void gsc_mysql_error()
 		return;
 	}
 
+	if ( !mysql )
+	{
+		stackError("gsc_mysql_error() the provided MySQL handler is invalid");
+		stackPushUndefined();
+		return;
+	}
+
 	char *ret = (char *)mysql_error((MYSQL *)mysql);
 
 	stackPushString(ret);
@@ -412,6 +467,13 @@ void gsc_mysql_affected_rows()
 	if ( !stackGetParams("i", &mysql) )
 	{
 		stackError("gsc_mysql_affected_rows() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( !mysql )
+	{
+		stackError("gsc_mysql_affected_rows() the provided MySQL handler is invalid");
 		stackPushUndefined();
 		return;
 	}
@@ -432,6 +494,13 @@ void gsc_mysql_store_result()
 		return;
 	}
 
+	if ( !mysql )
+	{
+		stackError("gsc_mysql_store_result() the provided MySQL handler is invalid");
+		stackPushUndefined();
+		return;
+	}
+
 	MYSQL_RES *result = mysql_store_result((MYSQL *)mysql);
 
 	stackPushInt((int) result);
@@ -448,6 +517,13 @@ void gsc_mysql_num_rows()
 		return;
 	}
 
+	if ( !result )
+	{
+		stackError("gsc_mysql_num_rows() the provided MySQL result set is invalid");
+		stackPushUndefined();
+		return;
+	}
+
 	int ret = mysql_num_rows((MYSQL_RES *)result);
 
 	stackPushInt(ret);
@@ -460,6 +536,13 @@ void gsc_mysql_num_fields()
 	if ( !stackGetParams("i", &result) )
 	{
 		stackError("gsc_mysql_num_fields() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( !result )
+	{
+		stackError("gsc_mysql_num_fields() the provided MySQL result set is invalid");
 		stackPushUndefined();
 		return;
 	}
@@ -481,6 +564,13 @@ void gsc_mysql_field_seek()
 		return;
 	}
 
+	if ( !result )
+	{
+		stackError("gsc_mysql_field_seek() the provided MySQL result set is invalid");
+		stackPushUndefined();
+		return;
+	}
+
 	int ret = mysql_field_seek((MYSQL_RES *)result, offset);
 
 	stackPushInt(ret);
@@ -493,6 +583,13 @@ void gsc_mysql_fetch_field()
 	if ( !stackGetParams("i", &result) )
 	{
 		stackError("gsc_mysql_fetch_field() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( !result )
+	{
+		stackError("gsc_mysql_field_seek() the provided MySQL result set is invalid");
 		stackPushUndefined();
 		return;
 	}
@@ -515,6 +612,13 @@ void gsc_mysql_fetch_row()
 	if ( !stackGetParams("i", &result) )
 	{
 		stackError("gsc_mysql_fetch_row() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( !result )
+	{
+		stackError("gsc_mysql_fetch_row() the provided MySQL result set is invalid");
 		stackPushUndefined();
 		return;
 	}
@@ -551,9 +655,9 @@ void gsc_mysql_free_result()
 		return;
 	}
 
-	if ( result == 0 )
+	if ( !result )
 	{
-		stackError("mysql_free_result() input is a NULL-pointer");
+		stackError("gsc_mysql_free_result() the provided MySQL result set is invalid");
 		stackPushUndefined();
 		return;
 	}
@@ -571,6 +675,13 @@ void gsc_mysql_real_escape_string()
 	if ( !stackGetParams("is", &mysql, &str) )
 	{
 		stackError("gsc_mysql_real_escape_string() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( !mysql )
+	{
+		stackError("gsc_mysql_real_escape_string() the provided MySQL handler is invalid");
 		stackPushUndefined();
 		return;
 	}

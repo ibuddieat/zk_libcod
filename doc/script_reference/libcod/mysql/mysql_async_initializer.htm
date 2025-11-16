@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>mysql_async_initializer( &lt;hostname&gt;, &lt;username&gt;, &lt;password&gt;, &lt;database&gt;, &lt;port&gt;, &lt;connectioncount&gt; )</H1>
+<H1>mysql_async_initializer( &lt;hostname&gt;, &lt;username&gt;, &lt;password&gt;, &lt;database&gt;, &lt;port&gt;, &lt;connection count&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
@@ -27,8 +27,8 @@ Module: MySQL<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Sets up the async mysql module. Only needs to be called once per server-start, will not do anything if called subsequently.<br />
-Advise: Use a relatively low connectioncount (e.g. 4) for normal usage, go up to 10 if your server is busy (30+ players or a lot of queries) or located far from the mysql server.</p>
+<p>Sets up the asynchronous MySQL module. Only needs to be called once per server-start, will not do anything if called subsequently. Returns a list of MySQL handles. Invalid handles (e.g., due to invalid credentials) have the value 0.<br />
+Advise: Use a relatively low connectioncount (e.g., 4) for normal usage, go up to 10 if the server is busy (30+ players or a lot of queries) or if the game server is located far (in terms of ping) from the MySQL server.</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -37,7 +37,7 @@ Advise: Use a relatively low connectioncount (e.g. 4) for normal usage, go up to
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
- mysql_async_initializer(hostname, username, password, database, port_is_int, connectioncount);
+mysql_async_initializer(hostname, username, password, database, port_is_int, connectioncount);
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -46,12 +46,12 @@ Advise: Use a relatively low connectioncount (e.g. 4) for normal usage, go up to
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;hostname&gt; host where the database runs on (like localhost)</LI>
-<LI>2 : &lt;username&gt; username of the database</LI>
-<LI>3 : &lt;password&gt; the password of the username</LI>
-<LI>4 : &lt;database&gt; database name</LI>
-<LI>5 : &lt;port&gt; database port (default 3306)</LI>
-<LI>6 : &lt;connectioncount&gt; connection count</LI>
+<LI>1 : &lt;hostname&gt; Host where the database runs on (e.g., localhost)</LI>
+<LI>2 : &lt;username&gt; Username of the database</LI>
+<LI>3 : &lt;password&gt; The password of the username</LI>
+<LI>4 : &lt;database&gt; Database name</LI>
+<LI>5 : &lt;port&gt; Database port (default: 3306)</LI>
+<LI>6 : &lt;connection count&gt; Connection count</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>
