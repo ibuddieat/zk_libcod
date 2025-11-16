@@ -22,6 +22,9 @@ The following list documents changes in comparison to [earlier libcod versions](
 > [!IMPORTANT]
 > The script API might change between major releases, as documented [here](doc/changed_script_functions.md).
 
+> [!WARNING]
+> Use this extension at your own risk (see [LICENSE](LICENSE.md)). New features are considered highly experimental and might not be stable enough for productive use.
+
 ## 💡 Knowledge base
 - [Build and use](doc/building.md)
 - [Known issues and debugging](doc/debugging.md)
@@ -45,9 +48,11 @@ The following list documents changes in comparison to [earlier libcod versions](
 - [The Speex Project](https://www.speex.org/)
 
 ### 💬 Contact & contributing
-- Discord: ibuddie
-- E-Mail: [ibuddie.at@gmail.com](mailto:ibuddie.at@gmail.com)
-- Want to contribute? Let's get in touch via one of the platforms listed above, or just submit a pull request.
+- 👾 Discord: ibuddie
+- 📧 E-Mail: [ibuddie.at@gmail.com](mailto:ibuddie.at@gmail.com)
+- ✍️ Want to contribute? Let's get in touch via one of the platforms listed above, or just submit a pull request.
+- 🪙 Want to donate? PayPal me at the email address above, or send some spare Satoshis to:
 
-> [!WARNING]
-> Use this extension at your own risk (see [LICENSE](LICENSE.md)). Some features are considered highly experimental and might not be stable enough for productive use.
+bc1qm527saeznwqjsz2y0nsg96744xxytyrshkwhjd
+
+<img width="256" height="256" alt="grafik" src="https://github.com/user-attachments/assets/da079a6b-f17d-4a1e-812f-552506bb23de" />
