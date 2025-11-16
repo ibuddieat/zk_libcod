@@ -26,9 +26,9 @@ void gsc_entity_setalive(scr_entref_t ref)
 void gsc_entity_setbounds(scr_entref_t ref)
 {
 	int id = ref.entnum;
-	float width, height;
+	float length, width, height;
 
-	if ( !stackGetParams("ff", &width, &height) )
+	if ( !stackGetParams("fff", &length, &width, &height) )
 	{
 		stackError("gsc_entity_setbounds() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
@@ -37,8 +37,8 @@ void gsc_entity_setbounds(scr_entref_t ref)
 
 	gentity_t *entity = &g_entities[id];
 
-	vec3_t mins = {-height, -width, -width};
-	vec3_t maxs = {width, width, height};
+	vec3_t mins = {-length, -width, -width};
+	vec3_t maxs = {length, width, height};
 
 	VectorCopy(mins, entity->r.mins);
 	VectorCopy(maxs, entity->r.maxs);
