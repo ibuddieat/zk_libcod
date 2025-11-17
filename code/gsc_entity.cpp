@@ -37,7 +37,7 @@ void gsc_entity_setbounds(scr_entref_t ref)
 
 	gentity_t *entity = &g_entities[id];
 
-	vec3_t mins = {-length, -width, -width};
+	vec3_t mins = {-length, -width, -height};
 	vec3_t maxs = {length, width, height};
 
 	VectorCopy(mins, entity->r.mins);
