@@ -1654,7 +1654,7 @@ typedef struct playerState_s
 	int gravity;
 	float leanf;
 	int speed;
-	vec3_t delta_angles;
+	int delta_angles[3];
 	int groundEntityNum;
 	vec3_t vLadderVec;
 	int jumpTime;
