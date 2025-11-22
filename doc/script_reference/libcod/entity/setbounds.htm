@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>setBounds( &lt;width&gt;, &lt;height&gt; )</H1>
+<H1>setBounds( &lt;length&gt;, &lt;width&gt;, &lt;height&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
@@ -27,7 +27,7 @@ Module: Entity<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Sets the collision bounds of a model.</p>
+<p>Sets the collision bounds of a model. Each of the three parameters extends into both positive and negative offset on the respective axis, with the model's origin in the middle.</p>
 
 </H3>
 </TR></TD></TABLE>
@@ -37,7 +37,7 @@ Module: Entity<BR>
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
- model setBounds(16, 16);
+model setBounds(16, 16, 16);
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -46,8 +46,9 @@ Module: Entity<BR>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;width&gt; Width of the bounds</LI>
-<LI>2 : &lt;height&gt; Height of the bounds</LI>
+<LI>1 : &lt;length&gt; Length of the bounds</LI>
+<LI>2 : &lt;width&gt; Width of the bounds</LI>
+<LI>3 : &lt;height&gt; Height of the bounds</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>
