@@ -37,14 +37,14 @@ Module: Trace<BR>
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-trace = bulletTrace( magicBulletOrigin.origin, eyePos, true, undefined, 41953329 /* 0x2802831 */ );
+trace = bulletTrace(start, end, true, undefined, 41953329 /* 0x2802831 */);
 /*
 trace["fraction"] // float between including 0.0 and 1.0, stating how much of the trace distance was passed
-trace["position"] // end position, if no hit
-trace["entity"] // undefined, if no hit
-trace["normal"] // normalized bullet direction, if no hit
-trace["surfacetype"] // "none", if no hit
-trace["flags"] // 0, if no hit
+trace["position"] // hit position; equals to end, if no hit
+trace["entity"] // hit entity; undefined, if no hit
+trace["normal"] // normalized bullet direction
+trace["surfacetype"] // hit surface type; "none", if no hit
+trace["flags"] // hit surface flags; 0, if no hit
 */
 </PRE>
 </H3>

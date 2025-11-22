@@ -11,6 +11,9 @@ Script code functions:
   * `Obituary(<victim>, <attacker>, <weapon>, <meansOfDeath>, [<team>], [<origin>], [<max. distance>])` now returns the (temporary) obituary entity
   * `processRemoteCommand()` no longer requires any parameters to be passed in
 
+Script code methods:
+  * `<entity> setBounds(<length>, <width>, <height>)` now requires three parameters, instead of two
+
 # 🏗 Changed with or since release v13.0:
 
 Script code functions:
