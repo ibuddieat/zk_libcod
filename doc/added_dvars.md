@@ -85,6 +85,10 @@
     * Min. Value: 50
     * Max. Value: 1000
     * Effect: Defines the time in milliseconds how long players that are too close to each other will be moved away from each other with the speed defined via the `g_playerCollisionEjectSpeed` dvar.
+  * `g_pointTraceMovement`
+    * Type: Boolean
+    * Default: False
+    * Effect: If true, player movement collision is calculated using points instead of boxes. Enables player collision with high-collision-LOD (level of detail) models that have solid contents (e.g., CONTENTS_SOLID, CONTENTS_GLASS). Since collision prediction on the client side is not affected by that setting, it is recommended to set `cg_nopredict` to enabled on the client side when enabling the `g_pointTraceMovement` dvar.
   * `g_reservedModels`
     * Type: Integer
     * Default: 0

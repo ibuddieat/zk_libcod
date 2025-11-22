@@ -109,6 +109,7 @@ extern dvar_t *g_playerCollision;
 extern dvar_t *g_playerCollisionEjectDamageAllowed;
 extern dvar_t *g_playerCollisionEjectDuration;
 extern dvar_t *g_playerEject;
+extern dvar_t *g_pointTraceMovement;
 extern dvar_t *g_reservedModels;
 extern dvar_t *g_resetSlide;
 extern dvar_t *g_safePrecache;
@@ -6158,6 +6159,22 @@ void Scr_CodeCallback_NotifyDebug(unsigned int entId, char *message, unsigned in
 	}
 }
 
+void G_TracePoint(trace_t *results, const float *start, const float *mins, const float *maxs, const float *end, int passEntityNum, int contentMask)
+{
+	// This is basically G_LocationalTrace, since we removed the capsule by
+	// setting mins and maxs to {0, 0, 0}
+	SV_Trace(results, start, vec3_origin, vec3_origin, end, passEntityNum, contentMask, 1, NULL, 1);
+
+	/*
+	// Visualize the trace points, use a low com_maxfps client setting to test
+	vec3_t origin;
+	Vec3Lerp(start, end, results->fraction, origin);
+	gentity_t *ent = G_TempEntity(origin, EV_PLAY_FX);
+	ent->s.eventParm = 13; // Insert valid (loaded) fx ID here
+	ent->s.apos.trBase[0] = -90.0;
+	*/
+}
+
 void custom_G_RunFrame(int levelTime)
 {
 	int i, j;
@@ -6343,6 +6360,16 @@ void custom_G_RunFrame(int levelTime)
 			}
 		}
 	}
+	/* New code end */
+
+	/* New code start: Switch movement traces between capsule and point type */
+	pmoveHandler_t *handler = &pmoveHandlers;
+	handler++;
+
+	if ( g_pointTraceMovement->current.boolean )
+		handler->trace = G_TracePoint;
+	else
+		handler->trace = G_TraceCapsule;
 	/* New code end */
 
 	/* New code start: Possible extra functionality to call before each server frame */

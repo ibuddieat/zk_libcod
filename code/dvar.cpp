@@ -100,6 +100,7 @@ dvar_t *g_playerCollision;
 dvar_t *g_playerCollisionEjectDamageAllowed;
 dvar_t *g_playerCollisionEjectDuration;
 dvar_t *g_playerEject;
+dvar_t *g_pointTraceMovement;
 dvar_t *g_reservedModels;
 dvar_t *g_resetSlide;
 dvar_t *g_safePrecache;
@@ -274,6 +275,7 @@ void hook_Com_Printf_in_Com_Init_Try_Block_Function(const char *format, ...)
 	g_playerCollisionEjectDamageAllowed = Dvar_RegisterBool("g_playerCollisionEjectDamageAllowed", qfalse, DVAR_ARCHIVE);
 	g_playerCollisionEjectDuration = Dvar_RegisterInt("g_playerCollisionEjectDuration", 300, 50, 1000, DVAR_ARCHIVE);
 	g_playerEject = Dvar_RegisterBool("g_playerEject", qtrue, DVAR_ARCHIVE);
+	g_pointTraceMovement = Dvar_RegisterBool("g_pointTraceMovement", qfalse, DVAR_CHEAT);
 	g_resetSlide = Dvar_RegisterBool("g_resetSlide", qfalse, DVAR_ARCHIVE);
 	g_sendEmtpyOffhandEvents = Dvar_RegisterBool("g_sendEmtpyOffhandEvents", qtrue, DVAR_ARCHIVE);
 	g_spawnMapTurrets = Dvar_RegisterBool("g_spawnMapTurrets", qtrue, DVAR_ARCHIVE);
