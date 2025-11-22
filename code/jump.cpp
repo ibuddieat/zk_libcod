@@ -303,8 +303,8 @@ void Jump_RegisterDvars()
 	jump_spreadAdd = Dvar_RegisterFloat("jump_spreadAdd", 64.0, 0.0, 512.0, DVAR_INTERNAL | DVAR_CHEAT | DVAR_SYSTEMINFO);
 
 	// Custom dvars
-	jump_bounceEnable = Dvar_RegisterBool("jump_bounceEnable", qfalse, DVAR_INTERNAL | DVAR_CHEAT | DVAR_SYSTEMINFO);
-	jump_carryMoverVelocity = Dvar_RegisterBool("jump_carryMoverVelocity", qfalse, DVAR_INTERNAL | DVAR_CHEAT | DVAR_SYSTEMINFO);
+	jump_bounceEnable = Dvar_RegisterBool("jump_bounceEnable", qfalse, DVAR_CHEAT);
+	jump_carryMoverVelocity = Dvar_RegisterBool("jump_carryMoverVelocity", qfalse, DVAR_CHEAT);
 }
 
 #endif
