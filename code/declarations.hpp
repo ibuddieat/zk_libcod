@@ -3919,6 +3919,7 @@ static const int g_sv_skel_warn_count_offset = 0x08423004;
 static const int dvarOnOffStrings_offset = 0x0817E3CC;
 static const int sortedDvars_offset = 0x085ABE00;
 static const int dvarCount_offset = 0x085ABE08;
+static const int pmoveHandlers_offset = 0x081869C0;
 
 #define g_entities ((gentity_t*)(gentities_offset))
 #define g_clients ((gclient_t*)(gclients_offset))
@@ -3989,6 +3990,7 @@ static const int dvarCount_offset = 0x085ABE08;
 #define dvarOnOffStrings (((char**)( dvarOnOffStrings_offset )))
 #define sortedDvars (*((dvar_t**)( sortedDvars_offset )))
 #define dvarCount (*((int*)( dvarCount_offset )))
+#define pmoveHandlers (*((pmoveHandler_t*)( pmoveHandlers_offset )))
 
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6
