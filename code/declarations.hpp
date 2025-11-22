@@ -3916,9 +3916,9 @@ static const int dvar_modifiedFlags_offset = 0x085ABE04;
 static const int ipFilterList_offset = 0x08850E00;
 static const int g_sv_skel_memory_start_offset = 0x08423000;
 static const int g_sv_skel_warn_count_offset = 0x08423004;
-static const int _dvarOnOffStrings_offset = 0x0817E3CC;
-static const int _sortedDvars_offset = 0x085ABE00;
-static const int _dvarCount_offset = 0x085ABE08;
+static const int dvarOnOffStrings_offset = 0x0817E3CC;
+static const int sortedDvars_offset = 0x085ABE00;
+static const int dvarCount_offset = 0x085ABE08;
 
 #define g_entities ((gentity_t*)(gentities_offset))
 #define g_clients ((gclient_t*)(gclients_offset))
@@ -3986,9 +3986,9 @@ static const int _dvarCount_offset = 0x085ABE08;
 #define ipFilterList ((ipFilterList_t*)( ipFilterList_offset ))
 #define g_sv_skel_memory_start ((char**)( g_sv_skel_memory_start_offset ))
 #define g_sv_skel_warn_count (*((int*)( g_sv_skel_warn_count_offset )))
-#define _dvarOnOffStrings (((char**)( _dvarOnOffStrings_offset )))
-#define _sortedDvars (*((dvar_t**)( _sortedDvars_offset )))
-#define _dvarCount (*((int*)( _dvarCount_offset )))
+#define dvarOnOffStrings (((char**)( dvarOnOffStrings_offset )))
+#define sortedDvars (*((dvar_t**)( sortedDvars_offset )))
+#define dvarCount (*((int*)( dvarCount_offset )))
 
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6

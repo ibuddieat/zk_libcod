@@ -366,7 +366,34 @@ remoteCommand_t remoteCommand;
 // callback function
 qboolean playerCommand = qfalse;
 
+// Script notify list used for CodeCallback_Notify and CodeCallback_NotifyDebug
+scr_notify_t scr_notify[MAX_NOTIFY_DEBUG_BUFFER];
+int scr_notify_index = 0;
+
+// Data storage for multi-threaded sound encoding and realtime sound streaming
+#if COMPILE_CUSTOM_VOICE == 1
+loadSoundFileResult_t loadSoundFileResults[MAX_THREAD_RESULTS_BUFFER];
+int loadSoundFileResultsIndex = 0;
+int currentMaxSoundIndex = 0;
+VoicePacket_t voiceDataStore[MAX_CUSTOMSOUNDS][MAX_STOREDVOICEPACKETS];
+#endif
+
+// List of additional constant script strings
 customStringIndex_t custom_scr_const;
+
+// Storage for current frameTime (if excessive), for CodeCallback_HitchWarning
+int hitchFrameTime = 0;
+
+// Storage for sound alias data, for getSoundAliasesFromFile script method
+snd_alias_build_s *customSoundAliasInfo = NULL;
+int customSoundAliasInfoCount = 0;
+
+// Flag for if heartbeats to the master server should be logged
+qboolean logHeartbeat = qtrue;
+
+// Storage for using the logfileName dvar
+char openLogfileName[MAX_OSPATH];
+
 void custom_GScr_LoadConsts(void)
 {
 	/* Allocate custom strings for Scr_Notify() here, scheme:
@@ -395,7 +422,6 @@ void custom_GScr_LoadConsts(void)
 	hook_GScr_LoadConsts->hook();
 }
 
-int hitchFrameTime = 0;
 void hook_Com_Printf_in_Com_ModifyMsec(const char *message, int frameTime)
 {
 	// Called if 500 < frameTime && frameTime < 500000
@@ -1060,8 +1086,6 @@ void custom_SV_SpawnServer(char *server)
 		EnablePbSv();
 }
 
-snd_alias_build_s *customSoundAliasInfo = NULL;
-int customSoundAliasInfoCount = 0;
 void hook_Com_MakeSoundAliasesPermanent(snd_alias_list_t *aliasList, SoundFileInfo *fileInfo)
 {
 	/* Save detailed sound alias info before Hunk_ClearTempMemory() wipes this
@@ -1422,7 +1446,6 @@ LAB_0808ec36:
 	}
 }
 
-qboolean logHeartbeat = qtrue;
 void custom_SV_MasterHeartbeat(const char *hbname)
 {
 	int sending_heartbeat_string_offset = 0x0814BBC0;
@@ -6135,14 +6158,6 @@ void Scr_CodeCallback_NotifyDebug(unsigned int entId, char *message, unsigned in
 	}
 }
 
-scr_notify_t scr_notify[MAX_NOTIFY_DEBUG_BUFFER];
-int scr_notify_index = 0;
-#if COMPILE_CUSTOM_VOICE == 1
-loadSoundFileResult_t loadSoundFileResults[MAX_THREAD_RESULTS_BUFFER];
-int loadSoundFileResultsIndex = 0;
-int currentMaxSoundIndex = 0;
-VoicePacket_t voiceDataStore[MAX_CUSTOMSOUNDS][MAX_STOREDVOICEPACKETS];
-#endif
 void custom_G_RunFrame(int levelTime)
 {
 	int i, j;
@@ -9274,7 +9289,6 @@ void custom_FireWeaponAntiLag(gentity_t *player, int time)
 	}
 }
 
-char openLogfileName[MAX_OSPATH];
 void openLogfile(qboolean reopen)
 {
 	time_t timer;
@@ -11374,8 +11388,8 @@ void custom_Dvar_FreeString(char *string)
 
 	if ( *string != '\0'
 	     && ( ( string[1] != '\0' || *string < '0' ) || '9' < *string )
-	     && string != _dvarOnOffStrings[0] // "off"
-	     && string != _dvarOnOffStrings[1] // "on"
+	     && string != dvarOnOffStrings[0] // "off"
+	     && string != dvarOnOffStrings[1] // "on"
 	     // New: Fixed attempts to free the following strings from .rodata
 	     // segment on server quit:
 	     && string != (char *)0x08151A81 // "linux i386" 

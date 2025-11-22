@@ -824,7 +824,7 @@ void custom_Dvar_List_f(void)
 	else
 		match = Cmd_Argv(1);
 
-	for ( dvar = _sortedDvars; dvar; dvar = dvar->next )
+	for ( dvar = sortedDvars; dvar; dvar = dvar->next )
 	{
 		if ( match && !Com_Filter(match, dvar->name, qfalse) )
 			continue;
@@ -870,7 +870,7 @@ void custom_Dvar_List_f(void)
 			Com_Printf(" %s \"%s\"\n", dvar->name, Dvar_DisplayableValue(dvar));
 	}
 
-	Com_Printf("\n%i total dvars\n", _dvarCount);
+	Com_Printf("\n%i total dvars\n", dvarCount);
 }
 
 void custom_Com_DvarDump(conChannel_t channel)
@@ -889,7 +889,7 @@ void custom_Com_DvarDump(conChannel_t channel)
 	{
 		Com_PrintMessage(channel, "=============================== DVAR DUMP ========================================\n");
 
-		for ( dvar = _sortedDvars; dvar; dvar = dvar->next, count++ )
+		for ( dvar = sortedDvars; dvar; dvar = dvar->next, count++ )
 		{
 			if ( !match || Com_Filter(match, dvar->name, 0) )
 			{
@@ -910,7 +910,7 @@ void custom_Com_DvarDump(conChannel_t channel)
 			}
 		}
 
-		Com_sprintf(summary, sizeof(summary), "\n%i total dvars\n%i dvar indexes\n", count, _dvarCount);
+		Com_sprintf(summary, sizeof(summary), "\n%i total dvars\n%i dvar indexes\n", count, dvarCount);
 		Com_PrintMessage(channel, summary);
 		Com_PrintMessage(channel, "=============================== END DVAR DUMP =====================================\n");
 	}
@@ -920,7 +920,7 @@ void custom_Dvar_WriteDefaults(fileHandle_t f)
 {
 	dvar_t *dvar;
 
-	for ( dvar = _sortedDvars; dvar; dvar = dvar->next )
+	for ( dvar = sortedDvars; dvar; dvar = dvar->next )
 	{
 		if ( I_stricmp(dvar->name, "cl_cdkey") )
 		{
@@ -935,7 +935,7 @@ void custom_Dvar_WriteVariables(fileHandle_t f)
 {
 	dvar_t *dvar;
 
-	for ( dvar = _sortedDvars; dvar; dvar = dvar->next )
+	for ( dvar = sortedDvars; dvar; dvar = dvar->next )
 	{
 		if ( I_stricmp(dvar->name, "cl_cdkey") )
 		{
