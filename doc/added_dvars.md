@@ -88,13 +88,13 @@
   * `g_pointTraceMovement`
     * Type: Boolean
     * Default: False
-    * Effect: If true, player movement collision is calculated using points instead of boxes. Enables player collision with high-collision-LOD (level of detail) models that have solid contents (e.g., CONTENTS_SOLID, CONTENTS_GLASS). Since collision prediction on the client side is not affected by that setting, it is recommended to set `cg_nopredict` to enabled on the client side when enabling the `g_pointTraceMovement` dvar.
+    * Effect: If true, player movement collision is calculated using straight lines down from the player's position (tracing to a point) without factoring in the whole bounding box of the player's character. Enables player collision with high-collision-LOD (level of detail) models that have solid contents (e.g., CONTENTS_SOLID, CONTENTS_GLASS). Since collision prediction on the client side is not affected by that setting, it is recommended to set `cg_nopredict` to enabled on the client side when enabling the `g_pointTraceMovement` dvar.
   * `g_reservedModels`
     * Type: Integer
     * Default: 0
     * Min. Value: 0
     * Max. Value: 255
-    * Effect: Set the number of models that cannot be used by the loaded map, thus reserves a specific number of slots to be loadable for precached weapons (the necessary world models) and regular precached models. Recommended to be used only together with the `g_safePrecache` dvar enabled. The slots are reserved for precaching within the following script functions: Map `main()`, gametype `main()`, and `CodeCallback_StartGameType`.
+    * Effect: Set the number of models that cannot be used by the loaded map, thus reserves a specific number of slots to be loadable for precached weapons (the necessary world models) and regular precached models. Recommended to be used only together with the `g_safePrecache` dvar enabled. The slots are reserved for precaching within the following script functions: Map `main`, gametype `main`, and `CodeCallback_StartGameType`.
   * `g_resetSlide`
     * Type: Boolean
     * Default: False
