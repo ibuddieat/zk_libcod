@@ -137,6 +137,7 @@ dvar_t *sv_downloadNotifications;
 dvar_t *sv_downloadRetransmitTimeout;
 dvar_t *sv_fastDownload;
 dvar_t *sv_fastDownloadSpeed;
+dvar_t *sv_genericServerErrorMessage;
 dvar_t *sv_isLookingAtOnDemand;
 dvar_t *sv_kickGamestateLimitedClients;
 dvar_t *sv_kickMessages;
@@ -300,6 +301,7 @@ void hook_Com_Printf_in_Com_Init_Try_Block_Function(const char *format, ...)
 	sv_downloadRetransmitTimeout = Dvar_RegisterInt("sv_downloadRetransmitTimeout", 1000, 250, 10000, DVAR_ARCHIVE);
 	sv_fastDownload = Dvar_RegisterBool("sv_fastDownload", qfalse, DVAR_ARCHIVE);
 	sv_fastDownloadSpeed = Dvar_RegisterInt("sv_fastDownloadSpeed", MAX_DOWNLOAD_WINDOW, 1, MAX_DOWNLOAD_WINDOW, DVAR_ARCHIVE);
+	sv_genericServerErrorMessage = Dvar_RegisterBool("sv_genericServerErrorMessage", qtrue, DVAR_ARCHIVE);
 	sv_isLookingAtOnDemand = Dvar_RegisterBool("sv_isLookingAtOnDemand", qfalse, DVAR_ARCHIVE);
 	sv_kickGamestateLimitedClients = Dvar_RegisterBool("sv_kickGamestateLimitedClients", qtrue, DVAR_ARCHIVE);
 	sv_kickMessages = Dvar_RegisterBool("sv_kickMessages", qtrue, DVAR_ARCHIVE);

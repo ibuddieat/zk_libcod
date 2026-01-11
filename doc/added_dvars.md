@@ -237,6 +237,10 @@
     * Min. Value: 1
     * Max. Value: 8
     * Effect: Controls the direct download speed when the `sv_fastDownload` dvar is enabled.
+  * `sv_genericServerErrorMessage`
+    * Type: Boolean
+    * Default: True
+    * Effect: If enabled, clients will get a generic message (EXE_SERVERKILLED) on a server crash instead of the server's stock behavior of leaking error details like internal file paths, line numbers and the error reason. The message written to server console (and log, if enabled) is not changed, no matter the setting.
   * `sv_isLookingAtOnDemand`
     * Type: Boolean
     * Default: False

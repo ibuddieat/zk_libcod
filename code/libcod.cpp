@@ -146,6 +146,7 @@ extern dvar_t *sv_downloadNotifications;
 extern dvar_t *sv_downloadRetransmitTimeout;
 extern dvar_t *sv_fastDownload;
 extern dvar_t *sv_fastDownloadSpeed;
+extern dvar_t *sv_genericServerErrorMessage;
 extern dvar_t *sv_isLookingAtOnDemand;
 extern dvar_t *sv_kickGamestateLimitedClients;
 extern dvar_t *sv_kickMessages;
@@ -201,6 +202,7 @@ cHook *hook_ScriptMover_Move;
 cHook *hook_ScriptMover_Rotate;
 cHook *hook_ScriptMover_RotateSpeed;
 cHook *hook_SV_ClientThink;
+cHook *hook_SV_FinalMessage;
 cHook *hook_SV_MasterHeartbeat;
 cHook *hook_SV_VerifyIwds_f;
 cHook *hook_Sys_Print;
@@ -11436,6 +11438,22 @@ void hook_Cbuf_Execute_in_Com_ExecStartupConfigs(void)
 	// config_mp_server.cfg). It is called afterwards in Com_RunAutoExec
 }
 
+void custom_SV_FinalMessage(const char *message)
+{
+	if ( sv_genericServerErrorMessage->current.boolean &&
+	     strncmp(message, "EXE_SERVERRESTART", 17) && // Covers multiple messages
+	     strncmp(message, "EXE_SERVERQUIT", 15) )
+	{
+		message = "EXE_SERVERKILLED";
+	}
+
+	hook_SV_FinalMessage->unhook();
+	void (*SV_FinalMessage)(const char *message);
+	*(int *)&SV_FinalMessage = hook_SV_FinalMessage->from;
+	SV_FinalMessage(message);
+	hook_SV_FinalMessage->hook();
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -11565,6 +11583,8 @@ public:
 		hook_ScriptMover_RotateSpeed->hook();
 		hook_G_EntLinkToInternal = new cHook(0x0811DBB0, (int)custom_G_EntLinkToInternal);
 		hook_G_EntLinkToInternal->hook();
+		hook_SV_FinalMessage = new cHook(0x080941CC, (int)custom_SV_FinalMessage);
+		hook_SV_FinalMessage->hook();
 		#if COMPILE_PLAYER == 1
 		hook_SV_ClientThink = new cHook(0x08090DAC, (int)custom_SV_ClientThink);
 		hook_SV_ClientThink->hook();
