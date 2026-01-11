@@ -50,6 +50,8 @@ encoderDone(index, result)
     switch(result) {
         case 0: iprintLn("Sound with index " + index + " finished encoding successfully"); break;
         case 1: iprintLn("Sound with index " + index + " is too long and will end playback at max. sound duration"); break;
+        case 2: iprintLn("Sound with index " + index + " ran into a file not found error"); break;
+        case 3: iprintLn("Sound with index " + index + " ran into an issue while trying to read from the specified file"); break;
         default: break;
     }
 }

@@ -4084,11 +4084,19 @@ typedef struct scr_notify_s
 #define MAX_CUSTOMSOUNDS 64 // Consider ~8MB of memory usage per 10-minute song
 #define MAX_THREAD_RESULTS_BUFFER 64
 
+typedef enum
+{
+	ENCODER_OK,
+	ENCODER_FILE_TOO_LONG,
+	ENCODER_FILE_NOT_FOUND,
+	ENCODER_FILE_READ_ERROR
+} loadSoundFileThreadResult_t;
+
 typedef struct
 {
 	int callback;
 	int soundIndex;
-	int result;
+	loadSoundFileThreadResult_t result;
 	unsigned int levelId;
 } loadSoundFileResult_t;
 

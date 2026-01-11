@@ -1668,7 +1668,7 @@ void Encode_SetOptions(void *encoder)
 void *encode_async(void *newtask)
 {
 	encoder_async_task *task = (encoder_async_task*)newtask;
-	int result = 0;
+	loadSoundFileThreadResult_t result = ENCODER_OK;
 
 	// Reset sound data for this slot
 	memset(&voiceDataStore[task->soundIndex - 1], 0, sizeof(voiceDataStore[0]));
@@ -1710,51 +1710,70 @@ void *encode_async(void *newtask)
 	short in[MAX_VOICEFRAMESIZE];
 	float input[MAX_VOICEFRAMESIZE];
 	char data[MAX_VOICEPACKETDATALEN];
+	size_t readLen;
 	int dataLen;
 	void *g_encoder;
 	SpeexBits encodeBits;
-	int i, packetIndex;
+	unsigned int i, packetIndex;
 	VoicePacket_t *voicePacket;
 
 	// (Re)Open input file
 	FILE *file = fopen(task->filePath, "r");
+	if ( file )
+ 	{
+		// Create a new encoder state in narrowband mode
+		g_encoder = speex_encoder_init(&speex_nb_mode);
+		speex_bits_init(&encodeBits);
+		Encode_SetOptions(g_encoder);
 
-	// Create a new encoder state in narrowband mode
-	g_encoder = speex_encoder_init(&speex_nb_mode);
-	speex_bits_init(&encodeBits);
-	Encode_SetOptions(g_encoder);
-
-	for ( packetIndex = 0; packetIndex <= MAX_STOREDVOICEPACKETS; packetIndex++ )
-	{
-		if ( packetIndex == MAX_STOREDVOICEPACKETS )
+		for ( packetIndex = 0; packetIndex <= MAX_STOREDVOICEPACKETS; packetIndex++ )
 		{
-			// Sound file too long, end encoding here
-			result = 1;
-			break;
+			// Clear the frame before writing
+			memset(input, 0, sizeof(input));
+
+			// End encoding here if sound the file is too long
+			if ( packetIndex == MAX_STOREDVOICEPACKETS )
+			{
+				result = ENCODER_FILE_TOO_LONG;
+				break;
+			}
+
+			// Read a 16 bits/sample audio frame
+			readLen = fread(in, sizeof(short), MAX_VOICEFRAMESIZE, file);
+			if ( readLen < MAX_VOICEFRAMESIZE && !feof(file) )
+			{
+				result = ENCODER_FILE_READ_ERROR;
+				break;
+			}
+
+			// Copy to float and apply volume setting
+			for ( i = 0; i < readLen; i++ )
+				input[i] = in[i] * task->volume;
+
+			// Encode and copy data into voice packet
+			speex_bits_reset(&encodeBits);
+			speex_encode(g_encoder, input, &encodeBits);
+			dataLen = speex_bits_write(&encodeBits, data, MAX_VOICEPACKETDATALEN);
+			voicePacket = &voiceDataStore[task->soundIndex - 1][packetIndex];
+			memcpy(voicePacket->data, data, dataLen);
+			voicePacket->dataLen = dataLen;
+
+			// Done reading?
+			if ( feof(file) )
+				break;
 		}
+		// Reset subsequent voice packet (in case a long sound is replaced by a shorter one)
+		if ( packetIndex != MAX_STOREDVOICEPACKETS )
+			memset(&voiceDataStore[task->soundIndex - 1][packetIndex], 0, sizeof(voiceDataStore[0][0]));
 
-		// Read a 16 bits/sample audio frame
-		fread(in, sizeof(short), MAX_VOICEFRAMESIZE, file);
-		if ( feof(file) )
-			break;
-
-		for ( i = 0; i < MAX_VOICEFRAMESIZE; i++ )
-			input[i] = in[i] * task->volume;
-
-		speex_bits_reset(&encodeBits);
-		speex_encode(g_encoder, input, &encodeBits);
-		dataLen = speex_bits_write(&encodeBits, data, MAX_VOICEPACKETDATALEN);
-		voicePacket = &voiceDataStore[task->soundIndex - 1][packetIndex];
-		memcpy(voicePacket->data, data, dataLen);
-		voicePacket->dataLen = dataLen;
+		speex_encoder_destroy(g_encoder);
+		speex_bits_destroy(&encodeBits);
+		fclose(file);
 	}
-	// Reset subsequent voice packet (in case a long sound is replaced by a shorter one)
-	if ( packetIndex != MAX_STOREDVOICEPACKETS )
-		memset(&voiceDataStore[task->soundIndex - 1][packetIndex], 0, sizeof(voiceDataStore[0][0]));
-
-	speex_encoder_destroy(g_encoder);
-	speex_bits_destroy(&encodeBits);
-	fclose(file);
+	else
+	{
+		result = ENCODER_FILE_NOT_FOUND;
+	}
 
 	if ( Scr_IsSystemActive() )
 	{
@@ -1895,20 +1914,20 @@ void gsc_utils_loadsoundfile()
 		return;
 	}
 
-	char ospath[MAX_OSPATH];
-    FS_BuildOSPath(fs_homepath->current.string, filePath, "", ospath);
-    ospath[strlen(ospath) - 1] = '\0';
+	char osPath[MAX_OSPATH];
+    FS_BuildOSPath(fs_homepath->current.string, filePath, "", osPath);
+    osPath[strlen(osPath) - 1] = '\0';
     if ( fs_debug->current.integer )
-		Com_Printf("gsc_utils_loadsoundfile (fs_homepath) : %s\n", ospath);
+		Com_Printf("gsc_utils_loadsoundfile (fs_homepath) : %s\n", osPath);
 
-	if ( strstr(ospath, "..") )
+	if ( strstr(osPath, "..") )
 	{
 		stackError("gsc_utils_loadsoundfile() invalid file path");
 		stackPushUndefined();
 		return;
 	}
 
-	FILE *file = fopen(ospath, "r");
+	FILE *file = fopen(osPath, "r");
 	if ( !file )
 	{
 		stackError("gsc_utils_loadsoundfile() input file could not be opened");
@@ -1927,10 +1946,9 @@ void gsc_utils_loadsoundfile()
 
 	encoder_async_task *newtask = new encoder_async_task;
 
-	strncpy(newtask->filePath, filePath, MAX_STRINGLENGTH - 1);
 	newtask->prev = current;
 	newtask->next = NULL;
-	newtask->filePath[MAX_STRINGLENGTH - 1] = '\0';
+	I_strncpyz(newtask->filePath, osPath, MAX_STRINGLENGTH);
 	newtask->callback = callback;
 	newtask->volume = volume;
 	newtask->soundIndex = soundIndex;
