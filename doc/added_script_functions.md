@@ -64,6 +64,7 @@
   * `<player> isChatting()`
   * `<player> isFiring()`
   * `<player> isHiddenFromScoreboard()`
+  * `<player> isHoldingWeaponDown()`
   * `<player> isMeleeing()`
   * `<player> isPlayingSoundFile()`
   * `<player> isRechambering([<weapon slot>])`
@@ -102,6 +103,7 @@
   * `<player> setFireRangeScale(<scale>)`
   * `<player> setFireThroughWalls(<enabled>)`
   * `<player> setHiddenFromScoreboard(<enabled>)`
+  * `<player> setHoldingWeaponDown(<enabled>)`
   * `<player> setMeleeHeightScale(<scale>)`
   * `<player> setMeleeRangeScale(<scale>)`
   * `<player> setMeleeWidthScale(<scale>)`

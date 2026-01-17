@@ -3479,6 +3479,137 @@ void gsc_player_ishiddenfromscoreboard(scr_entref_t ref)
 	stackPushBool(customPlayerState[id].hiddenFromScoreboard);
 }
 
+void gsc_player_setholdingweapondown(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_setholdingweapondown() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	playerState_t *ps = SV_GameClientNum(id);
+
+	if ( Scr_GetNumParam() < 1 )
+	{
+		stackError("gsc_player_setholdingweapondown() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( !ps->weapon )
+	{
+		stackPushBool(qfalse);
+		return;
+	}
+
+	WeaponDef_t *weapDef = BG_GetWeaponDef(ps->weapon);
+
+	if ( Scr_GetInt(0) )
+	{
+		if ( customPlayerState[id].isHoldingWeaponDown )
+		{
+			stackPushBool(qfalse);
+			return;
+		}
+
+		// Set new states, some again updated in PM_Weapon
+		customPlayerState[id].isHoldingWeaponDown = ps->weapon;
+		ps->weaponTime = weapDef->iDropTime;
+		ps->weaponDelay = 0;
+      	ps->weaponstate = WEAPON_DROPPING;
+
+		// Reset ADS
+		if ( weapDef->overlayReticle )
+		{
+			PM_ExitAimDownSight(ps);
+			ps->fWeaponPosFrac = 0;
+			ps->adsDelayTime = 0;
+		}
+		if ( !weapDef->bADSFire )
+		{
+			ps->fWeaponPosFrac = 0;
+			ps->adsDelayTime = 0;
+		}
+
+		// Reset grenade state
+		if ( ps->pm_flags | PMF_FRAG )
+		{
+			ps->grenadeTimeLeft = 0;
+			ps->pm_flags &= ~PMF_FRAG;
+		}
+
+		// Animations
+		PM_AddEvent(ps, EV_PUTAWAY_WEAPON);
+		PM_StartWeaponAnim(ps, WEAP_DROP);
+		BG_AnimScriptEvent(ps, ANIM_ET_DROPWEAPON, 0, 1);
+	}
+	else
+	{
+		if ( customPlayerState[id].isHoldingWeaponDown )
+		{
+			ps->weaponTime = weapDef->iRaiseTime;
+			ps->weaponstate = WEAPON_RAISING;
+			PM_AddEvent(ps, EV_RAISE_WEAPON);
+			PM_StartWeaponAnim(ps, WEAP_RAISE);
+			BG_AnimScriptEvent(ps, ANIM_ET_RAISEWEAPON, 0, 1);
+		}
+		customPlayerState[id].isHoldingWeaponDown = 0;
+	}
+
+	stackPushBool(qtrue);
+}
+
+void gsc_player_isholdingweapondown(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_isholdingweapondown() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	gentity_t *ent = &g_entities[id];
+	playerState_t *ps = SV_GameClientNum(id);
+
+	if ( !ps->weapon )
+	{
+		stackPushBool(qfalse);
+		return;
+	}
+
+	if ( customPlayerState[id].isHoldingWeaponDown )
+	{
+		stackPushBool(qtrue);
+		return;
+	}
+
+	if ( !( ent->client->sess.cmd.buttons & KEY_MASK_FIRE ) && !customPlayerState[id].isHoldingWeaponDown )
+	{
+		stackPushBool(qfalse);
+		return;
+	}
+
+	if ( !( ps->weaponstate == WEAPON_DROPPING ) )
+	{
+		stackPushBool(qfalse);
+		return;
+	}
+
+	if ( Scr_GetNumParam() > 0 && Scr_GetInt(0) )
+	{
+		stackPushBool(ps->weaponTime > 1);
+	}
+	else
+	{
+		stackPushBool(ps->weaponTime == 1);
+	}
+}
+
 void gsc_player_setallowspectators(scr_entref_t ref)
 {
 	int id = ref.entnum;

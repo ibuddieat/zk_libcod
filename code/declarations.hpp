@@ -200,6 +200,7 @@
 #define PMF_MANTLE          0x4
 #define PMF_FRAG            0x10
 #define PMF_LADDER          0x20
+#define PMF_ADS             0x40
 #define PMF_BACKWARDS_RUN   0x80
 #define PMF_SLIDING         0x200
 #define PMF_MELEE           0x2000
@@ -4241,6 +4242,7 @@ typedef struct customPlayerState_s
 	qboolean overrideProneStepSize;
 	float proneStepSize;
 	qboolean downloadTimedOut;
+	int isHoldingWeaponDown;
 } customPlayerState_t;
 
 typedef struct callback_s

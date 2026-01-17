@@ -639,8 +639,14 @@ static const NetProf_SendProfile_t NetProf_SendProfile = (NetProf_SendProfile_t)
 typedef void (*BG_GetSpreadForWeapon_t)(const playerState_s *ps, int weaponIndex, float *minSpread, float *maxSpread);
 static const BG_GetSpreadForWeapon_t BG_GetSpreadForWeapon = (BG_GetSpreadForWeapon_t)0x080EC8CC;
 
+typedef int (*BG_WeaponAmmo_t)(playerState_t *ps, int weapon);
+static const BG_WeaponAmmo_t BG_WeaponAmmo = (BG_WeaponAmmo_t)0x080ED3FC;
+
 typedef WeaponDef_t * (*BG_WeaponDefs_t)(unsigned int weaponIndex);
 static const BG_WeaponDefs_t BG_WeaponDefs = (BG_WeaponDefs_t)0x080EB9A4;
+
+typedef int (*BG_WeaponIsClipOnly_t)(unsigned int weapon);
+static const BG_WeaponIsClipOnly_t BG_WeaponIsClipOnly = (BG_WeaponIsClipOnly_t)0x080ED3E2;
 
 typedef WeaponDef_t * (*BG_GetWeaponDef_t)(unsigned int weaponIndex);
 static const BG_GetWeaponDef_t BG_GetWeaponDef = (BG_GetWeaponDef_t)0x080EB9A4;
@@ -650,9 +656,6 @@ static const BG_GetWeaponSlotForName_t BG_GetWeaponSlotForName = (BG_GetWeaponSl
 
 typedef const char * (*BG_GetWeaponSlotNameForIndex_t)(int iSlot);
 static const BG_GetWeaponSlotNameForIndex_t BG_GetWeaponSlotNameForIndex = (BG_GetWeaponSlotNameForIndex_t)0x080F2BD2;
-
-typedef int (*BG_WeaponIsClipOnly_t)(unsigned int weapon);
-static const BG_WeaponIsClipOnly_t BG_WeaponIsClipOnly = (BG_WeaponIsClipOnly_t)0x080ED3E2;
 
 typedef int (*BG_AmmoForWeapon_t)(unsigned int weapon);
 static const BG_AmmoForWeapon_t BG_AmmoForWeapon = (BG_AmmoForWeapon_t)0x080ED3C8;
@@ -708,11 +711,20 @@ static const PM_AddEvent_t PM_AddEvent = (PM_AddEvent_t)0x080E1452;
 typedef void (*PM_AddTouchEnt_t)(pmove_t *pm, int entityNum);
 static const PM_AddTouchEnt_t PM_AddTouchEnt = (PM_AddTouchEnt_t)0x080E1474;
 
+typedef void (*PM_BeginWeaponChange_t)(playerState_t *ps, unsigned int newweapon);
+static const PM_BeginWeaponChange_t PM_BeginWeaponChange = (PM_BeginWeaponChange_t)0x080EDC30;
+
 typedef void (*PM_ClipVelocity_t)(const float *velIn, const float *normal, float *velOut);
 static const PM_ClipVelocity_t PM_ClipVelocity = (PM_ClipVelocity_t)0x080E14D4;
 
 typedef void (*PM_ContinueWeaponAnim_t)(playerState_t *ps, weapAnimNumber_t anim);
 static const PM_ContinueWeaponAnim_t PM_ContinueWeaponAnim = (PM_ContinueWeaponAnim_t)0x080EB974;
+
+typedef void (*PM_ExitAimDownSight_t)(playerState_t *ps);
+static const PM_ExitAimDownSight_t PM_ExitAimDownSight = (PM_ExitAimDownSight_t)0x080ECC72;
+
+typedef void (*PM_ExitBinocularsQuick_t)(playerState_t *ps);
+static const PM_ExitBinocularsQuick_t PM_ExitBinocularsQuick = (PM_ExitBinocularsQuick_t)0x080EFFDA;
 
 typedef void (*PM_FootstepEvent_t)(pmove_t *pm, pml_t *pml, int iOldBobCycle, int iNewBobCycle, qboolean bFootStep);
 static const PM_FootstepEvent_t PM_FootstepEvent = (PM_FootstepEvent_t)0x080E5402;
@@ -740,6 +752,15 @@ static const PM_StartWeaponAnim_t PM_StartWeaponAnim = (PM_StartWeaponAnim_t)0x0
 
 typedef qboolean (*PM_VerifyPronePosition_t)(pmove_t *pm, const float *vFallbackOrg, const float *vFallbackVel);
 static const PM_VerifyPronePosition_t PM_VerifyPronePosition = (PM_VerifyPronePosition_t)0x080E9A7C;
+
+typedef void (*PM_Weapon_FinishRechamber_t)(playerState_t *ps);
+static const PM_Weapon_FinishRechamber_t PM_Weapon_FinishRechamber = (PM_Weapon_FinishRechamber_t)0x080ED664;
+
+typedef int (*PM_WeaponAmmoAvailable_t)(playerState_t *ps);
+static const PM_WeaponAmmoAvailable_t PM_WeaponAmmoAvailable = (PM_WeaponAmmoAvailable_t)0x080ED5FC;
+
+typedef void (*PM_WeaponUseAmmo_t)(playerState_t *ps, int weaponIndex, int amount);
+static const PM_WeaponUseAmmo_t PM_WeaponUseAmmo = (PM_WeaponUseAmmo_t)0x080ED5C0;
 
 typedef int (*BG_AnimScriptEvent_t)(playerState_t *ps, scriptAnimEventTypes_t event, int isContinue, int force);
 static const BG_AnimScriptEvent_t BG_AnimScriptEvent = (BG_AnimScriptEvent_t)0x080D96EE;
@@ -999,8 +1020,8 @@ static const I_DrawStrlen_t I_DrawStrlen = (I_DrawStrlen_t)0x080B7DEC;
 typedef long double (*I_fabs_t)(const float value);
 static const I_fabs_t I_fabs = (I_fabs_t)0x080EADF2;
 
-typedef int (*Q_rint_t)(float in);
-static const Q_rint_t Q_rint = (Q_rint_t)0x081081EE;
+typedef int (*I_max_t)(int x, int y);
+static const I_max_t I_max = (I_max_t)0x080F292E;
 
 typedef long double (*I_sqrt_t)(const float value);
 static const I_sqrt_t I_sqrt = (I_sqrt_t)0x080AAEBE;
@@ -1025,6 +1046,9 @@ static const I_strupr_t I_strupr = (I_strupr_t)0x080B7D56;
 
 typedef void (*I_strncat_t)(char *dest, int size, const char *src);
 static const I_strncat_t I_strncat = (I_strncat_t)0x080B7D98;
+
+typedef int (*Q_rint_t)(float in);
+static const Q_rint_t Q_rint = (Q_rint_t)0x081081EE;
 
 typedef void (*G_FreeEntity_t)(gentity_t *ent);
 static const G_FreeEntity_t G_FreeEntity = (G_FreeEntity_t)0x0811EE50;
@@ -1052,6 +1076,9 @@ static const Scr_SetString_t Scr_SetString = (Scr_SetString_t)0x08079DE0;
 
 typedef float (*BG_GetBobCycle_t)(gclient_t *client);
 static const BG_GetBobCycle_t BG_GetBobCycle = (BG_GetBobCycle_t)0x080F0BDE;
+
+typedef int (*BG_GetFirstAvailableOffhand_t)(playerState_t *ps, OffhandClass_t offhandSlot);
+static const BG_GetFirstAvailableOffhand_t BG_GetFirstAvailableOffhand = (BG_GetFirstAvailableOffhand_t)0x080EBD6E;
 
 typedef float (*BG_GetSpeed_t)(const playerState_t *client, int time);
 static const BG_GetSpeed_t BG_GetSpeed = (BG_GetSpeed_t)0x080E9528;
@@ -1115,6 +1142,9 @@ static const GScr_AllocString_t GScr_AllocString = (GScr_AllocString_t)0x081101B
 
 typedef unsigned short (*Scr_AllocArray_t)(void);
 static const Scr_AllocArray_t Scr_AllocArray = (Scr_AllocArray_t)0x0807BCA8;
+
+typedef int (*Add_Ammo_t)(gentity_t *ent, int weapon, int count, qboolean fillClip);
+static const Add_Ammo_t Add_Ammo = (Add_Ammo_t)0x08104B94;
 
 typedef int (*Pickup_Ammo_t)(gentity_t *item, gentity_t *entity);
 static const Pickup_Ammo_t Pickup_Ammo = (Pickup_Ammo_t)0x08104E64;

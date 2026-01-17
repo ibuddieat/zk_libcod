@@ -191,6 +191,7 @@ cHook *hook_GScr_SetDvar;
 cHook *hook_Netchan_Transmit;
 cHook *hook_PlayerCmd_ClonePlayer;
 cHook *hook_PM_BeginWeaponChange;
+cHook *hook_PM_Weapon;
 cHook *hook_Pmove;
 cHook *hook_Scr_DumpScriptThreads;
 cHook *hook_Scr_ExecEntThread;
@@ -7499,6 +7500,9 @@ void custom_player_die(gentity_t *self, gentity_t *inflictor, gentity_t *attacke
 	int deathAnimDuration;
 	int i;
 
+	// New: setHoldingWeaponDown script method cleanup on death
+	customPlayerState[self->s.number].isHoldingWeaponDown = 0;
+
 	if ( Com_GetServerDObj(self->client->ps.clientNum)
 	     && self->client->ps.pm_type <= PM_NORMAL_LINKED
 	     && ( self->client->ps.pm_flags & 0x400000 ) == 0 )
@@ -7511,7 +7515,8 @@ void custom_player_die(gentity_t *self, gentity_t *inflictor, gentity_t *attacke
 		Scr_AddEntity(attacker);
 		Scr_Notify(self, scr_const.death, 1);
 
-		if ( !scr_turretDamageName->current.boolean && iWeapon ) // New: scr_turretDamageName dvar condition
+		// New: scr_turretDamageName dvar condition
+		if ( !scr_turretDamageName->current.boolean && iWeapon )
 		{
 			if ( attacker->client )
 			{
@@ -7881,6 +7886,27 @@ void custom_PM_BeginWeaponChange(playerState_t *ps, unsigned int newweapon)
 
 	PM_BeginWeaponChange(ps, newweapon);
 	hook_PM_BeginWeaponChange->hook();
+}
+
+void custom_PM_Weapon(pmove_t *pm, pml_t *pml)
+{
+	/* New code start: setHoldingWeaponDown script method */
+	int id = pm->ps->clientNum;
+
+	if ( customPlayerState[id].isHoldingWeaponDown )
+	{
+		pm->ps->weapon = customPlayerState[id].isHoldingWeaponDown;
+		pm->ps->fWeaponPosFrac = 0;
+		pm->ps->adsDelayTime = 0;
+		return;
+	}
+	/* New code end */
+
+	hook_PM_Weapon->unhook();
+	void (*PM_Weapon)(pmove_t *pm, pml_t *pml);
+	*(int *)&PM_Weapon = hook_PM_Weapon->from;
+	PM_Weapon(pm, pml);
+	hook_PM_Weapon->hook();
 }
 
 void hook_Player_UpdateLookAtEntity(gentity_t *player)
@@ -11585,6 +11611,8 @@ public:
 		hook_G_EntLinkToInternal->hook();
 		hook_SV_FinalMessage = new cHook(0x080941CC, (int)custom_SV_FinalMessage);
 		hook_SV_FinalMessage->hook();
+		hook_PM_Weapon = new cHook(0x080F066E, (int)custom_PM_Weapon);
+		hook_PM_Weapon->hook();
 		#if COMPILE_PLAYER == 1
 		hook_SV_ClientThink = new cHook(0x08090DAC, (int)custom_SV_ClientThink);
 		hook_SV_ClientThink->hook();
