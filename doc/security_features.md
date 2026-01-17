@@ -5,8 +5,9 @@
 - Added the possibility to prevent script code from reading and/or writing to cvars (`protect` console command)
 - Blocked the download of `_svr_` (server-sided) .iwd files via direct server download
 - Blocked directory traversal possibilities via direct server download
-- Blocked the download of (stock) IW .iwd files via direct server download 
+- Blocked the download of (stock) IW .iwd files via direct server download
 - Blocked the client console `printentities` command if cheats are disabled
+- Blocked leakage of script errors on server crash (see `sv_genericServerErrorMessage` dvar)
 - Added compile flag `ENABLE_UNSAFE` to toggle the availability of potentially unsafe script functions that would make it easy to harm the server with malicious mod or map scripts
 - Time-constant string comparison for server passwords
 - Fixed known issues with stock voting mechanism (`g_allowVote` dvar)
