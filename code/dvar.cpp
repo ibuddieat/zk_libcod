@@ -833,7 +833,7 @@ void custom_Dvar_List_f(void)
 		if ( match && !Com_Filter(match, dvar->name, qfalse) )
 			continue;
 
-		if ( dvar->flags & (DVAR_SERVERINFO | DVAR_SERVERINFO_NOUPDATE) )
+		if ( dvar->flags & ( DVAR_SERVERINFO | DVAR_SERVERINFO_NOUPDATE ) )
 			Com_Printf("S");
 		else
 			Com_Printf(" ");
@@ -928,7 +928,7 @@ void custom_Dvar_WriteDefaults(fileHandle_t f)
 	{
 		if ( I_stricmp(dvar->name, "cl_cdkey") )
 		{
-			if ( !(dvar->flags & (DVAR_ROM|DVAR_CHEAT|DVAR_EXTERNAL)) &&
+			if ( !( dvar->flags & ( DVAR_ROM | DVAR_CHEAT | DVAR_EXTERNAL ) ) &&
 			     !Dvar_IsReadProtected(dvar) ) // New: Dvar access policies
 				FS_Printf(f, "set %s \"%s\"\n", dvar->name, Dvar_DisplayableResetValue(dvar));
 		}
@@ -943,7 +943,7 @@ void custom_Dvar_WriteVariables(fileHandle_t f)
 	{
 		if ( I_stricmp(dvar->name, "cl_cdkey") )
 		{
-			if ( !((dvar->flags ^ DVAR_ARCHIVE) & DVAR_ARCHIVE) &&
+			if ( !( ( dvar->flags ^ DVAR_ARCHIVE ) & DVAR_ARCHIVE ) &&
 			     !Dvar_IsReadProtected(dvar) ) // New: Dvar access policies
 				FS_Printf(f, "seta %s \"%s\"\n", dvar->name, Dvar_DisplayableLatchedValue(dvar));
 		}

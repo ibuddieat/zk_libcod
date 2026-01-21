@@ -128,18 +128,17 @@ void gsc_level_setnorthyaw()
 	}
 
 	int len = snprintf(NULL, 0, "%g", fYaw);
-
-	if ( len < 0 || len >= MAX_STRINGLENGTH )
+	if ( len <= 0 || len >= MAX_STRINGLENGTH )
 	{
 		stackError("gsc_level_setnorthyaw() one or more arguments is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 
-	char *szYaw = (char *)malloc(len + 1);
+	char *szYaw = (char *)Z_MallocInternal(len + 1);
 	snprintf(szYaw, len + 1, "%g", fYaw);
 	SV_SetConfigstring(11, szYaw);
-	free(szYaw);
+	Z_FreeInternal(szYaw);
 
 	stackPushBool(qtrue);
 }

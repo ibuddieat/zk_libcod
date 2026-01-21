@@ -117,3 +117,33 @@ weapSlot_t GetCurrentWeaponSlot(int clientNum)
 		return WEAPSLOT_NONE;
 	}
 }
+
+int GetAnimationId(const char *string)
+{
+	int i;
+	int hash;
+	animation_t *anim;
+
+	hash = BG_StringHashValue(string);
+
+	for ( i = 0; i < globalScriptData->numAnimations; i++ )
+	{
+		anim = &globalScriptData->animations[i];
+		if ( ( hash == anim->nameHash ) && !I_stricmp(string, anim->name) )
+		{
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+qboolean IsValidWeaponId(int id)
+{
+	int weapons = BG_GetNumWeapons();
+
+	if ( id > weapons || id <= 0 || weapons == 0 )
+		return qfalse;
+
+	return qtrue;
+}

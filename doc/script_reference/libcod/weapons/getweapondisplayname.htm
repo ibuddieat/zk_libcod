@@ -15,11 +15,11 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>addEntToSnapshots( &lt;entity&gt; )</H1>
+<H1>getWeaponDisplayName( &lt;weapon name&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
-Module: Player<BR>
+Module: Weapons<BR>
 </I>
 
 <BR>
@@ -27,16 +27,8 @@ Module: Player<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Adds the specified entity to the list of entities to send to the client. Effective only if the sv_autoAddSnapshotEntities dvar is set to 0 and if archived server snapshots are disabled (see <a href="../../stock/system/setarchive.htm">SetArchive</a>). Entities missing in this list are not rendered on the client side, including players.</p>
+<p>Returns the weapon's display name as a localized string.</p>
 
-</H3>
-</TR></TD></TABLE>
-<BR><BR>
-<H2>Call this on:</H2>
-<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
-<TR><TD BGCOLOR="C0D4EE">
-<H3>
-The player
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -45,7 +37,7 @@ The player
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-player addEntToSnapshots(grenade);
+name = getWeaponDisplayName(weaponName);
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -54,8 +46,16 @@ player addEntToSnapshots(grenade);
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;entity&gt; The entity to include in server snapshots</LI>
+<LI>1 : &lt;weapon name&gt;: (string) The weapon name for this weapon</LI>
 </UL></TR></TD></TABLE>
+<BR><BR>
+<H2>Deprecated Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;id&gt; Weapon ID (available for backwards compatibility). You can get it with <a href="getloadedweapons.htm">getLoadedWeapons</a></LI>
+</UL>
+</TR></TD></TABLE>
 <BR>
 </BODY>
 </HTML>

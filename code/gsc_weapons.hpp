@@ -3,8 +3,8 @@
 
 #include "gsc.hpp"
 
-void gsc_weapons_init();
-void gsc_weapons_free();
+void WeaponsInit();
+void WeaponsFree();
 int hook_BG_FindWeaponIndexForName_in_BG_GetWeaponIndexForName(char *weapon);
 
 void gsc_weapons_addgrenadefusetime(scr_entref_t ref);

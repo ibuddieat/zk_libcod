@@ -2224,40 +2224,11 @@ void gsc_player_setweaponspreadscale(scr_entref_t ref)
 	stackPushFloat(old_scale);
 }
 
-int BG_AnimationCheckForBad(char *anim)
-{
-	int i, v6, v8;
-	int globalScriptData = 0x860B424;
-	int (*ConverteStr)(int a1);
-	*(int *)&ConverteStr = 0x80D6CE0;
-	signed int (*SACh)(char *a1, char *a2);
-	*(int *)&SACh = 0x80B7BF8;
-
-	v6 = ConverteStr((int)anim);
-	v8 = 0;
-
-	for ( i = *(int *)globalScriptData; ; i += 96 ) 
-	{
-		
-		if ( v8 >= *(long *)((*(int *)globalScriptData) + 49152) )
-		{
-			printf("BG_AnimationIndexForString: unknown player animation '%s'\n", anim);
-			return 0;
-		}
-
-		if ( v6 == *(long *)(i + 76) && !SACh(anim, (char *)i) )
-			return v8;
-
-		++v8;
-
-	}
-	return 0;
-}
-
 void gsc_player_setanimation(scr_entref_t ref)
 {
 	int id = ref.entnum;
 	char *animation;
+	int animationId;
 
 	if ( !stackGetParams("s", &animation) )
 	{
@@ -2266,24 +2237,34 @@ void gsc_player_setanimation(scr_entref_t ref)
 		return;
 	}
 
-	gentity_t *entity = &g_entities[id];
+	if ( !strncmp(animation, "none", 4) )
+		animationId = 0;
+	else
+		animationId = GetAnimationId(animation);
 
+	if ( animationId == -1 )
+	{
+		stackError("gsc_player_setanimation() invalid animation string");
+		stackPushUndefined();
+		return;
+	}
+
+	gentity_t *entity = &g_entities[id];
 	if ( entity->s.eType == ET_PLAYER_CORPSE )
 	{
-		int index = BG_AnimationIndexForString(animation);
-		entity->s.legsAnim = index;
+		entity->s.legsAnim = animationId;
 		stackPushBool(qtrue);
 		return;
 	}
 
 	if ( entity->client == NULL )
 	{
-		stackError("gsc_player_playanimation() entity %i is not a player", id);
+		stackError("gsc_player_setanimation() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
 
-	customPlayerState[id].animation = strcmp(animation, "none") ? BG_AnimationCheckForBad(animation) : 0;
+	customPlayerState[id].animation = animationId;
 
 	stackPushBool(qtrue);
 }
@@ -3276,7 +3257,7 @@ void gsc_player_setconfigstringforplayer(scr_entref_t ref)
 	char cmd[MAX_STRINGLENGTH];
 
 	Com_sprintf(cmd, MAX_STRINGLENGTH, "d %i %s", index, value);
-	SV_SendServerCommand(client, 1, cmd);
+	SV_SendServerCommand(client, SV_CMD_RELIABLE, cmd);
 
 	stackPushBool(qtrue);
 }
@@ -3509,14 +3490,14 @@ void gsc_player_setholdingweapondown(scr_entref_t ref)
 
 	if ( Scr_GetInt(0) )
 	{
-		if ( customPlayerState[id].isHoldingWeaponDown )
+		if ( customPlayerState[id].holdingDownWeapon )
 		{
 			stackPushBool(qfalse);
 			return;
 		}
 
 		// Set new states, some again updated in PM_Weapon
-		customPlayerState[id].isHoldingWeaponDown = ps->weapon;
+		customPlayerState[id].holdingDownWeapon = ps->weapon;
 		ps->weaponTime = weapDef->iDropTime;
 		ps->weaponDelay = 0;
       	ps->weaponstate = WEAPON_DROPPING;
@@ -3548,7 +3529,7 @@ void gsc_player_setholdingweapondown(scr_entref_t ref)
 	}
 	else
 	{
-		if ( customPlayerState[id].isHoldingWeaponDown )
+		if ( customPlayerState[id].holdingDownWeapon )
 		{
 			ps->weaponTime = weapDef->iRaiseTime;
 			ps->weaponstate = WEAPON_RAISING;
@@ -3556,7 +3537,7 @@ void gsc_player_setholdingweapondown(scr_entref_t ref)
 			PM_StartWeaponAnim(ps, WEAP_RAISE);
 			BG_AnimScriptEvent(ps, ANIM_ET_RAISEWEAPON, 0, 1);
 		}
-		customPlayerState[id].isHoldingWeaponDown = 0;
+		customPlayerState[id].holdingDownWeapon = 0;
 	}
 
 	stackPushBool(qtrue);
@@ -3582,13 +3563,13 @@ void gsc_player_isholdingweapondown(scr_entref_t ref)
 		return;
 	}
 
-	if ( customPlayerState[id].isHoldingWeaponDown )
+	if ( customPlayerState[id].holdingDownWeapon )
 	{
 		stackPushBool(qtrue);
 		return;
 	}
 
-	if ( !( ent->client->sess.cmd.buttons & KEY_MASK_FIRE ) && !customPlayerState[id].isHoldingWeaponDown )
+	if ( !( ent->client->sess.cmd.buttons & KEY_MASK_FIRE ) && !customPlayerState[id].holdingDownWeapon )
 	{
 		stackPushBool(qfalse);
 		return;
@@ -3680,7 +3661,7 @@ void Scr_SetFogForPlayer(const char *cmd, float start, float density, float heig
 	char configstring[MAX_STRINGLENGTH];
 
 	Com_sprintf(configstring, MAX_STRINGLENGTH, "d 12 %s", va("%g %g %g %g %g %g %.0f", start, density, heightDensity, r, g, b, (float)(time * 1000.0)));
-	SV_SendServerCommand(client, 1, configstring);
+	SV_SendServerCommand(client, SV_CMD_RELIABLE, configstring);
 }
 
 void gsc_player_setcullfogforplayer(scr_entref_t ref)

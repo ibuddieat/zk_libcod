@@ -1748,7 +1748,7 @@ void custom_G_SetClientContents(gentity_t *ent)
 			{
 				ent->r.contents = CONTENTS_BODY;
 
-				/* New code start: per-player/team collison */
+				/* New code start: persistent per-player contents */
 				if ( customPlayerState[id].overrideContents )
 					ent->r.contents = customPlayerState[id].contents;
 				/* New code end */
@@ -4782,13 +4782,15 @@ void custom_ClientEndFrame(gentity_t *ent)
 	{
 		int num = ent - g_entities;
 
+		/* New code start: per-player speed and gravity*/
 		if ( customPlayerState[num].speed > 0 )
 			ent->client->ps.speed = customPlayerState[num].speed;
 
 		if ( customPlayerState[num].gravity > 0 )
 			ent->client->ps.gravity = customPlayerState[num].gravity;
+		/* New code end */
 
-		// Experimental slide bug fix
+		/* New code start: g_resetSlide dvar */
 		if ( g_resetSlide->current.boolean )
 		{
 			if ( ( ent->client->ps.pm_flags & PMF_SLIDING ) != 0 && ent->client->ps.pm_time == 0 )
@@ -4796,6 +4798,7 @@ void custom_ClientEndFrame(gentity_t *ent)
 				ent->client->ps.pm_flags &= ~PMF_SLIDING;
 			}
 		}
+		/* New code end */
 	}
 }
 
@@ -7501,7 +7504,7 @@ void custom_player_die(gentity_t *self, gentity_t *inflictor, gentity_t *attacke
 	int i;
 
 	// New: setHoldingWeaponDown script method cleanup on death
-	customPlayerState[self->s.number].isHoldingWeaponDown = 0;
+	customPlayerState[self->s.number].holdingDownWeapon = 0;
 
 	if ( Com_GetServerDObj(self->client->ps.clientNum)
 	     && self->client->ps.pm_type <= PM_NORMAL_LINKED
@@ -7893,9 +7896,9 @@ void custom_PM_Weapon(pmove_t *pm, pml_t *pml)
 	/* New code start: setHoldingWeaponDown script method */
 	int id = pm->ps->clientNum;
 
-	if ( customPlayerState[id].isHoldingWeaponDown )
+	if ( customPlayerState[id].holdingDownWeapon )
 	{
-		pm->ps->weapon = customPlayerState[id].isHoldingWeaponDown;
+		pm->ps->weapon = customPlayerState[id].holdingDownWeapon;
 		pm->ps->fWeaponPosFrac = 0;
 		pm->ps->adsDelayTime = 0;
 		return;
@@ -8241,8 +8244,7 @@ void custom_GScr_KickPlayer(void)
 		return;
 	}
 
-	strncpy(tmp, msg, sizeof(tmp));
-	tmp[sizeof(tmp) - 1] = '\0';
+	I_strncpyz(tmp, msg, sizeof(tmp));
 	SV_DropClient(client, tmp);
 
 	stackPushBool(qtrue);
@@ -11753,13 +11755,13 @@ public:
 
 		// End of hooking block
 
-		gsc_weapons_init();
+		WeaponsInit();
 		printf("> [LIBCOD] Finished loading extension\n");
 	}
 
 	~cCallOfDuty2Pro()
 	{
-		gsc_weapons_free();
+		WeaponsFree();
 		printf("> [LIBCOD] Unloaded extension\n");
 	}
 };

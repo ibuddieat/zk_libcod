@@ -405,7 +405,7 @@ static const SV_UpdateServerCommandsToClientRecover_t SV_UpdateServerCommandsToC
 typedef void (*SV_SendClientVoiceData_t)(client_t *cl);
 static const SV_SendClientVoiceData_t SV_SendClientVoiceData = (SV_SendClientVoiceData_t)0x0809C0A2;
 
-typedef void (QDECL *SV_SendServerCommand_t)(client_t *cl, int type, const char *fmt, ...);
+typedef void (QDECL *SV_SendServerCommand_t)(client_t *cl, svscmd_type type, const char *fmt, ...);
 static const SV_SendServerCommand_t SV_SendServerCommand = (SV_SendServerCommand_t)0x08094A10;
 
 typedef void (*SV_ShutdownGameProgs_t)(void);
@@ -770,6 +770,9 @@ static const BG_AnimationIndexForString_t BG_AnimationIndexForString = (BG_Anima
 
 typedef int (*BG_PlayAnim_t)(playerState_t *ps, int animNum, animBodyPart_t bodyPart, int forceDuration, qboolean setTimer, qboolean isContinue, qboolean force);
 static const BG_PlayAnim_t BG_PlayAnim = (BG_PlayAnim_t)0x080D90D6;
+
+typedef long (*BG_StringHashValue_t)(const char *fname);
+static const BG_StringHashValue_t BG_StringHashValue = (BG_StringHashValue_t)0x080D6CE0;
 
 typedef void (*Scr_ResetTimeout_t)(void);
 static const Scr_ResetTimeout_t Scr_ResetTimeout = (Scr_ResetTimeout_t)0x08085628;

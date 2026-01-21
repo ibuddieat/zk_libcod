@@ -3302,22 +3302,19 @@ typedef struct scr_anim_s
 	};
 } scr_anim_t;
 
-struct bgsAnim_t
+typedef struct generic_human_s
 {
-	animScriptData_t animScriptData;
-	struct
-	{
-		scr_animtree_t tree;
-		scr_anim_t     root;
-		scr_anim_t     torso;
-		scr_anim_t     legs;
-		scr_anim_t     turning;
-	} generic_human;
-};
+	scr_animtree_t tree;
+	scr_anim_t     root;
+	scr_anim_t     torso;
+	scr_anim_t     legs;
+	scr_anim_t     turning;
+} generic_human_t;
 
 typedef struct __attribute__((aligned(8))) bgs_s
 {
-	bgsAnim_t animData;
+	animScriptData_t animScriptData;
+	generic_human_t generic_human;
 	int time;
 	int latestSnapshotTime;
 	int frametime;
@@ -3921,6 +3918,7 @@ static const int dvarOnOffStrings_offset = 0x0817E3CC;
 static const int sortedDvars_offset = 0x085ABE00;
 static const int dvarCount_offset = 0x085ABE08;
 static const int pmoveHandlers_offset = 0x081869C0;
+static const int globalScriptData_offset = 0x0860B424;
 
 #define g_entities ((gentity_t*)(gentities_offset))
 #define g_clients ((gclient_t*)(gclients_offset))
@@ -3992,6 +3990,7 @@ static const int pmoveHandlers_offset = 0x081869C0;
 #define sortedDvars (*((dvar_t**)( sortedDvars_offset )))
 #define dvarCount (*((int*)( dvarCount_offset )))
 #define pmoveHandlers (*((pmoveHandler_t*)( pmoveHandlers_offset )))
+#define globalScriptData (*((animScriptData_t**)( globalScriptData_offset )))
 
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6
@@ -4242,7 +4241,7 @@ typedef struct customPlayerState_s
 	qboolean overrideProneStepSize;
 	float proneStepSize;
 	qboolean downloadTimedOut;
-	int isHoldingWeaponDown;
+	int holdingDownWeapon;
 } customPlayerState_t;
 
 typedef struct callback_s

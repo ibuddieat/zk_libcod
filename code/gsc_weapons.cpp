@@ -2,14 +2,42 @@
 
 #if COMPILE_WEAPONS == 1
 
-qboolean isValidWeaponId(int id)
+#define MAX_WEAPON_IGNORE_SIZE 20
+#define MAX_WEAPON_NAME_SIZE 32
+char *defaultWeapon = (char*)Z_MallocInternal(MAX_WEAPON_NAME_SIZE);
+char ignoredWeapons[MAX_WEAPON_IGNORE_SIZE][MAX_WEAPON_NAME_SIZE];
+int ignoredWeaponCount = 0;
+
+void WeaponsInit()
 {
-	int weps = BG_GetNumWeapons();
+	I_strncpyz(defaultWeapon, "defaultweapon_mp", MAX_WEAPON_NAME_SIZE);
+}
 
-	if ( id > weps || id <= 0 || weps == 0 )
-		return qfalse;
+void WeaponsFree()
+{
+	Z_FreeInternal(defaultWeapon);
+}
 
-	return qtrue;
+bool IsOnIgnoreList(char *weapon)
+{
+	if ( ignoredWeaponCount == 0 )
+		return false;
+
+	for ( int i = 0; i < ignoredWeaponCount; i++ )
+	{
+		if ( strcmp(ignoredWeapons[i], weapon) == 0 )
+			return true;
+	}
+
+	return false;
+}
+
+int hook_BG_FindWeaponIndexForName_in_BG_GetWeaponIndexForName(char *weapon)
+{
+	if ( IsOnIgnoreList(weapon) )
+		return BG_FindWeaponIndexForName(defaultWeapon);
+	else
+		return BG_FindWeaponIndexForName(weapon);
 }
 
 void gsc_weapons_issemiautoweapon()
@@ -28,7 +56,7 @@ void gsc_weapons_issemiautoweapon()
 		return;
 	}
 
-	if ( !isValidWeaponId(id) )
+	if ( !IsValidWeaponId(id) )
 	{
 		stackPushUndefined();
 		return;
@@ -103,7 +131,7 @@ void gsc_weapons_getweaponmaxammo()
 		return;
 	}
 
-	if ( !isValidWeaponId(id) )
+	if ( !IsValidWeaponId(id) )
 	{
 		stackPushUndefined();
 		return;
@@ -130,7 +158,7 @@ void gsc_weapons_getweaponclipsize()
 		return;
 	}
 
-	if ( !isValidWeaponId(id) )
+	if ( !IsValidWeaponId(id) )
 	{
 		stackPushUndefined();
 		return;
@@ -157,7 +185,7 @@ void gsc_weapons_getweapondamage()
 		return;
 	}
 
-	if ( !isValidWeaponId(id) )
+	if ( !IsValidWeaponId(id) )
 	{
 		stackPushUndefined();
 		return;
@@ -184,7 +212,7 @@ void gsc_weapons_getweaponmeleedamage()
 		return;
 	}
 
-	if ( !isValidWeaponId(id) )
+	if ( !IsValidWeaponId(id) )
 	{
 		stackPushUndefined();
 		return;
@@ -211,7 +239,7 @@ void gsc_weapons_getweaponfiretime()
 		return;
 	}
 
-	if ( !isValidWeaponId(id) )
+	if ( !IsValidWeaponId(id) )
 	{
 		stackPushUndefined();
 		return;
@@ -238,7 +266,7 @@ void gsc_weapons_getweaponmeleetime()
 		return;
 	}
 
-	if ( !isValidWeaponId(id) )
+	if ( !IsValidWeaponId(id) )
 	{
 		stackPushUndefined();
 		return;
@@ -265,7 +293,7 @@ void gsc_weapons_getweaponraisetime()
 		return;
 	}
 
-	if ( !isValidWeaponId(id) )
+	if ( !IsValidWeaponId(id) )
 	{
 		stackPushUndefined();
 		return;
@@ -292,7 +320,7 @@ void gsc_weapons_getweaponreloadtime()
 		return;
 	}
 
-	if ( !isValidWeaponId(id) )
+	if ( !IsValidWeaponId(id) )
 	{
 		stackPushUndefined();
 		return;
@@ -319,7 +347,7 @@ void gsc_weapons_getweaponreloademptytime()
 		return;
 	}
 
-	if ( !isValidWeaponId(id) )
+	if ( !IsValidWeaponId(id) )
 	{
 		stackPushUndefined();
 		return;
@@ -346,7 +374,7 @@ void gsc_weapons_getweaponcookable()
 		return;
 	}
 
-	if ( !isValidWeaponId(id) )
+	if ( !IsValidWeaponId(id) )
 	{
 		stackPushUndefined();
 		return;
@@ -373,7 +401,7 @@ void gsc_weapons_getweaponfusetime()
 		return;
 	}
 
-	if ( !isValidWeaponId(id) )
+	if ( !IsValidWeaponId(id) )
 	{
 		stackPushUndefined();
 		return;
@@ -401,7 +429,7 @@ void gsc_weapons_setweapondamage()
 		return;
 	}
 
-	if ( !isValidWeaponId(id) )
+	if ( !IsValidWeaponId(id) )
 	{
 		stackPushUndefined();
 		return;
@@ -430,7 +458,7 @@ void gsc_weapons_setweaponmaxammo()
 		return;
 	}
 
-	if ( !isValidWeaponId(id) )
+	if ( !IsValidWeaponId(id) )
 	{
 		stackPushUndefined();
 		return;
@@ -459,7 +487,7 @@ void gsc_weapons_setweaponclipsize()
 		return;
 	}
 
-	if ( !isValidWeaponId(id) )
+	if ( !IsValidWeaponId(id) )
 	{
 		stackPushUndefined();
 		return;
@@ -488,7 +516,7 @@ void gsc_weapons_setweaponmeleedamage()
 		return;
 	}
 
-	if ( !isValidWeaponId(id) )
+	if ( !IsValidWeaponId(id) )
 	{
 		stackPushUndefined();
 		return;
@@ -517,7 +545,7 @@ void gsc_weapons_setweaponfiretime()
 		return;
 	}
 
-	if ( !isValidWeaponId(id) )
+	if ( !IsValidWeaponId(id) )
 	{
 		stackPushUndefined();
 		return;
@@ -546,7 +574,7 @@ void gsc_weapons_setweaponmeleetime()
 		return;
 	}
 
-	if ( !isValidWeaponId(id) )
+	if ( !IsValidWeaponId(id) )
 	{
 		stackPushUndefined();
 		return;
@@ -575,7 +603,7 @@ void gsc_weapons_setweaponraisetime()
 		return;
 	}
 
-	if ( !isValidWeaponId(id) )
+	if ( !IsValidWeaponId(id) )
 	{
 		stackPushUndefined();
 		return;
@@ -604,7 +632,7 @@ void gsc_weapons_setweaponreloadtime()
 		return;
 	}
 
-	if ( !isValidWeaponId(id) )
+	if ( !IsValidWeaponId(id) )
 	{
 		stackPushUndefined();
 		return;
@@ -633,7 +661,7 @@ void gsc_weapons_setweaponreloademptytime()
 		return;
 	}
 
-	if ( !isValidWeaponId(id) )
+	if ( !IsValidWeaponId(id) )
 	{
 		stackPushUndefined();
 		return;
@@ -662,7 +690,7 @@ void gsc_weapons_setweaponcookable()
 		return;
 	}
 
-	if ( !isValidWeaponId(id) )
+	if ( !IsValidWeaponId(id) )
 	{
 		stackPushUndefined();
 		return;
@@ -691,7 +719,7 @@ void gsc_weapons_setweaponfusetime()
 		return;
 	}
 
-	if ( !isValidWeaponId(id) )
+	if ( !IsValidWeaponId(id) )
 	{
 		stackPushUndefined();
 		return;
@@ -737,7 +765,7 @@ void gsc_weapons_getweaponhitlocmultiplier()
 		return;
 	}
 
-	if ( !isValidWeaponId(id) )
+	if ( !IsValidWeaponId(id) )
 	{
 		stackPushUndefined();
 		return;
@@ -767,7 +795,7 @@ void gsc_weapons_setweaponhitlocmultiplier()
 		return;
 	}
 
-	if ( !isValidWeaponId(id) )
+	if ( !IsValidWeaponId(id) )
 	{
 		stackPushUndefined();
 		return;
@@ -796,7 +824,7 @@ void gsc_weapons_getmovespeedscale()
 		return;
 	}
 
-	if ( !isValidWeaponId(id) )
+	if ( !IsValidWeaponId(id) )
 	{
 		stackPushUndefined();
 		return;
@@ -824,7 +852,7 @@ void gsc_weapons_setmovespeedscale()
 		return;
 	}
 
-	if ( !isValidWeaponId(id) )
+	if ( !IsValidWeaponId(id) )
 	{
 		stackPushUndefined();
 		return;
@@ -867,7 +895,7 @@ void gsc_weapons_getweapondisplayname()
 		return;
 	}
 
-	if ( !isValidWeaponId(id) )
+	if ( !IsValidWeaponId(id) )
 	{
 		stackPushUndefined();
 		return;
@@ -884,45 +912,6 @@ void gsc_weapons_getweapondisplayname()
 	var->type = STACK_LOCALIZED_STRING;
 }
 
-#define MAX_WEAPON_IGNORE_SIZE 20
-#define MAX_WEAPON_NAME_SIZE 32
-char* defaultweapon_mp = (char*)malloc(MAX_WEAPON_NAME_SIZE);
-char ignoredWeapons[MAX_WEAPON_IGNORE_SIZE][MAX_WEAPON_NAME_SIZE];
-int ignoredWeaponCount = 0;
-
-void gsc_weapons_init()
-{
-	strcpy(defaultweapon_mp, "defaultweapon_mp");
-	defaultweapon_mp[strlen(defaultweapon_mp)] = '\0';
-}
-
-void gsc_weapons_free()
-{
-	free(defaultweapon_mp);
-}
-
-bool isOnIgnoreList(char* weapon)
-{
-	if ( ignoredWeaponCount == 0 )
-		return false;
-
-	for ( int i = 0; i < ignoredWeaponCount; i++ )
-	{
-		if ( strcmp(ignoredWeapons[i], weapon) == 0 )
-			return true;
-	}
-
-	return false;
-}
-
-int hook_BG_FindWeaponIndexForName_in_BG_GetWeaponIndexForName(char *weapon)
-{
-	if ( isOnIgnoreList(weapon) )
-		return BG_FindWeaponIndexForName(defaultweapon_mp);
-	else
-		return BG_FindWeaponIndexForName(weapon);
-}
-
 void gsc_weapons_resetignoredweapons()
 {
 	ignoredWeaponCount = 0;
@@ -934,30 +923,29 @@ void gsc_weapons_ignoreweapon()
 
 	if ( !stackGetParams("s", &weapon) )
 	{
-		printf("gsc_weapons_ignoreweapon() wrongs args\n");
+		stackError("gsc_weapons_ignoreweapon() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 	
-	if ( strlen(weapon) > MAX_WEAPON_NAME_SIZE - 1 )
+	if ( strlen(weapon) > ( MAX_WEAPON_NAME_SIZE - 1 ) )
 	{
-		printf("gsc_weapons_ignoreweapon() weapon name is too long\n");
+		stackError("gsc_weapons_ignoreweapon() weapon name is too long");
 		stackPushUndefined();
 		return;
 	}
 	
 	if ( ignoredWeaponCount >= MAX_WEAPON_IGNORE_SIZE )
 	{
-		printf("gsc_weapons_ignoreweapon() exceeded MAX_WEAPON_IGNORE_SIZE %d\n", MAX_WEAPON_IGNORE_SIZE);
+		stackError("gsc_weapons_ignoreweapon() exceeded MAX_WEAPON_IGNORE_SIZE %d", MAX_WEAPON_IGNORE_SIZE);
 		stackPushUndefined();
 		return;
 	}
 	
-	strcpy(ignoredWeapons[ignoredWeaponCount], weapon);
-	ignoredWeapons[ignoredWeaponCount][strlen(weapon)] = '\0';
+	I_strncpyz(ignoredWeapons[ignoredWeaponCount], weapon, MAX_WEAPON_NAME_SIZE);
 	ignoredWeaponCount++;
 
-	stackPushInt(1);
+	stackPushBool(qtrue);
 }
 
 void gsc_weapons_setdefaultweapon()
@@ -966,30 +954,36 @@ void gsc_weapons_setdefaultweapon()
 
 	if ( !stackGetParams("s", &weapon) )
 	{
-		printf("gsc_weapons_setdefaultweapon() wrongs args\n");
+		stackError("gsc_weapons_setdefaultweapon() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
 	
-	if ( strlen(weapon) > MAX_WEAPON_NAME_SIZE - 1 )
+	if ( strlen(weapon) > ( MAX_WEAPON_NAME_SIZE - 1 ) )
 	{
-		printf("gsc_weapons_setdefaultweapon() weapon name is too long\n");
+		stackError("gsc_weapons_setdefaultweapon() weapon name is too long");
 		stackPushUndefined();
 		return;
 	}
 	
-	if ( strcmp(defaultweapon_mp, weapon) == 0 )
+	if ( strcmp(defaultWeapon, weapon) == 0 )
 	{
 		stackPushInt(2);
 		return;
 	}
 	
-	strcpy(defaultweapon_mp, weapon);
-	defaultweapon_mp[strlen(weapon)] = '\0';
-	memcpy((void*)0x08120DB9, &defaultweapon_mp, 4); // default
-	memcpy((void*)0x080EB1E1, &defaultweapon_mp, 4); // not found
-	//memcpy((void*)0x080F2881, &defaultweapon_mp, 4); // not found backup
-	memcpy((void*)0x080EB9BE, &defaultweapon_mp, 4); // unknown
+	I_strncpyz(defaultWeapon, weapon, MAX_WEAPON_NAME_SIZE);
+	memcpy((void*)0x08120DB9, &defaultWeapon, 4); // In G_SetupWeaponDef
+	memcpy((void*)0x080EB1E1, &defaultWeapon, 4); // In BG_FillInAmmoItems
+
+	// The "defaultweapon_mp" string reference at 0x080F2882 in 
+	// BG_LoadWeaponDef is not replaced as it is used as a fallback mechanism
+	// in case the specified weapon could not be loaded. This is hard-coded
+	// on the client side too
+
+	// The "defaultweapon_mp" string reference at 0x080EB9BE in
+	// CG_SetWeaponDefToDefaultWeapon is not replaced as it is in unreachable
+	// code on the server side
 
 	stackPushInt(1);
 }
@@ -1080,7 +1074,7 @@ void gsc_weapons_spawngrenade(scr_entref_t ref)
 
 	weaponIndex = BG_FindWeaponIndexForName(Scr_GetString(0));
 
-	if ( !isValidWeaponId(weaponIndex) )
+	if ( !IsValidWeaponId(weaponIndex) )
 	{
 		stackError("gsc_weapons_spawngrenade() weapon not precached");
 		stackPushUndefined();

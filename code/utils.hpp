@@ -25,4 +25,8 @@ int strcmp_constant_time(const char *s1, const char *s2);
 
 weapSlot_t GetCurrentWeaponSlot(int clientNum);
 
+int GetAnimationId(const char *string);
+
+qboolean IsValidWeaponId(int id);
+
 #endif

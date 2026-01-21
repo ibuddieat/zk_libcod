@@ -579,7 +579,7 @@ void * SV_StartProxy(void *threadArgs)
 
 				sendto(s_client, buffer, bytes_received, 0, (struct sockaddr *)&forwarderAddr, sizeof(forwarderAddr));
 
-				proxyClientThreadArgs *args = (proxyClientThreadArgs *)malloc(sizeof(proxyClientThreadArgs));
+				proxyClientThreadArgs *args = (proxyClientThreadArgs *)Z_MallocInternal(sizeof(proxyClientThreadArgs));
 				args->addr = addr;
 				args->s_client = &(clientThreadInfo[clientIndex].s_client);
 				args->src_port = ntohs(addr.sin_port);
@@ -590,7 +590,7 @@ void * SV_StartProxy(void *threadArgs)
 				if ( pthread_create(&thread, NULL, SV_ProxyClientThread, args) )
 				{
 					Com_DPrintf("Proxy: Failed to create new client thread at port %hu\n", BigShort(proxy->listenAdr.port));
-					free(args);
+					Z_FreeInternal(args);
 					close(s_client);
 					clientThreadInfo[clientIndex].s_client = -1;
 					proxy->numClients--;
@@ -753,6 +753,6 @@ void * SV_ProxyClientThread(void *threadArgs)
 	proxy->numClients--;
 	pthread_mutex_unlock(&proxy->lock);
 
-	free(args);
+	Z_FreeInternal(args);
 	return NULL;
 }
