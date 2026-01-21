@@ -107,6 +107,7 @@
   * `<player> setMeleeHeightScale(<scale>)`
   * `<player> setMeleeRangeScale(<scale>)`
   * `<player> setMeleeWidthScale(<scale>)`
+  * `<player> setNorthYawForPlayer(<angle>)`
   * `<player> setOriginAndAngles(<origin>, <angles>)`
   * `<player> setProneStepSize(<size>)`
   * `<player> setRechambering(<bool>, [<weapon slot>])`

@@ -464,6 +464,7 @@ scr_method_t scriptMethods[] =
 	{"setMeleeHeightScale", gsc_player_setmeleeheightscale, 0},
 	{"setMeleeRangeScale", gsc_player_setmeleerangescale, 0},
 	{"setMeleeWidthScale", gsc_player_setmeleewidthscale, 0},
+	{"setNorthYawForPlayer", gsc_player_setnorthyawforplayer, 0},
 	{"setOriginAndAngles", gsc_player_setoriginandangles, 0},
 	{"setPing", gsc_player_setping, 0},
 	{"setProneStepSize", gsc_player_setpronestepsize, 0},

@@ -2166,6 +2166,42 @@ void gsc_player_setmeleewidthscale(scr_entref_t ref)
 	stackPushFloat(old_scale);
 }
 
+void gsc_player_setnorthyawforplayer(scr_entref_t ref)
+{
+	int id = ref.entnum;
+	float fYaw;
+	int len;
+	client_t *client = &svs.clients[id];
+	char cmd[MAX_STRINGLENGTH];
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_setnorthyawforplayer() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( !stackGetParams("f", &fYaw) )
+	{
+		stackError("gsc_player_setnorthyawforplayer() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	len = snprintf(NULL, 0, "%g", fYaw);
+	if ( len < 0 || len >= ( MAX_STRINGLENGTH - 5 ) )
+	{
+		stackError("gsc_player_setnorthyawforplayer() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	Com_sprintf(cmd, MAX_STRINGLENGTH, "d 11 %g", fYaw);
+	SV_SendServerCommand(client, SV_CMD_RELIABLE, cmd);
+
+	stackPushBool(qtrue);
+}
+
 void gsc_player_setturretspreadscale(scr_entref_t ref)
 {
 	int id = ref.entnum;

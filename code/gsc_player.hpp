@@ -125,6 +125,7 @@ void gsc_player_setholdingweapondown(scr_entref_t ref);
 void gsc_player_setmeleeheightscale(scr_entref_t ref);
 void gsc_player_setmeleerangescale(scr_entref_t ref);
 void gsc_player_setmeleewidthscale(scr_entref_t ref);
+void gsc_player_setnorthyawforplayer(scr_entref_t ref);
 void gsc_player_setoriginandangles(scr_entref_t ref);
 void gsc_player_setping(scr_entref_t ref);
 void gsc_player_setpronestepsize(scr_entref_t ref);
