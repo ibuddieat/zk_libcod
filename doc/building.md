@@ -36,8 +36,8 @@ sudo apt install ffmpeg
 > If not installed, `getSoundDuration(<aliasname>)` always returns undefined.
 
 **Custom sound file docs (for 64-bit Ubuntu 22.04 LTS)**
-- [Speex installation](doc/install_speex.md)
-- [Audio file conversion](doc/convert_audio_files.md)
+- [Speex installation](install_speex.md)
+- [Audio file conversion](convert_audio_files.md)
 > [!IMPORTANT]
 > Note: This feature is enabled by default and increases RAM usage by about 500 MB. See below for how to disable it (`nospeex`).
 
