@@ -6,17 +6,18 @@
 - has its focus on the Linux variant of Call of Duty&reg; 2 Multiplayer and can be used with the original game binary,
 - and was implemented for non-profit and educational purposes.
 
-It requires the [server binary](cod2_lnxded) and .iwd files for game version 1.3 to be used as basis and **supports all four official game protocol versions** (check out the `sv_version` and proxy dvars), including the ability to let players from all those versions to connect to the same server. All features in this extension work with the original (stock) client executables.
+It requires the [server binary](cod2_lnxded) and .iwd files for game version 1.3 to be used as basis and **supports all four official game protocol versions** (check out the `sv_version` and proxy dvars), including the ability to let players from all those versions to connect to the same server. All features in this extension work with the original (stock) client executables. It also runs within Windows Subsystem for Linux (WSL) version 2, tested on Windows 11.
 
 ## ⭐ What's new?
 
 The following list documents changes in comparison to [earlier libcod versions](doc/history.md):
 
-- 🔢 [Added dvars](doc/added_dvars.md) (see example [libcod.cfg](doc/libcod.cfg))
+- 🔢 [Added dvars](doc/added_dvars.md) (see example [libcod.cfg](setup/libcod.cfg))
 - 🔣 [Added script code functions](doc/added_script_functions.md)
 - 🏗 [Changed script code functions](doc/changed_script_functions.md)
 - 🚨 [Improved server security](doc/security_features.md)
 - 📑 [Improved script documentation](https://www.ibuddie.at/libcod/index.html)
+- 👍 [Improved installation instructions](doc/setup.md)
 - ⚙ [Other functional adaptions](doc/other_functional_adaptions.md)
 
 > [!IMPORTANT]
@@ -26,7 +27,7 @@ The following list documents changes in comparison to [earlier libcod versions](
 > Use this extension at your own risk (see [LICENSE](LICENSE.md)). New features are considered highly experimental and might not be stable enough for productive use.
 
 ## 💡 Knowledge base
-- [Build and use](doc/building.md)
+- [Setup and use](doc/setup.md)
 - [Known issues and debugging](doc/debugging.md)
 - [Tuning and performance](doc/tuning.md)
 

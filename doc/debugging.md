@@ -17,7 +17,7 @@
 Most of the issues listed here are problems that are present in the original game engine already, meaning that they were *not* introduced by libcod add-ons.
 
 ## Debugging
-- To get a debug build version, use `./doit.sh debug` in the build process
+- To get a debug build version, use `./doit.sh debug` in the **manual** build process
 - The server attempts to write a crash.log file in the server's working directory on unexpected termination (e.g., on segmentation faults), containing a stack trace
 - Running the server within GDB:
   - `gdb -ex 'set follow-fork-mode parent' -ex r --args env LD_PRELOAD=./code/bin/libcod2.so ./cod2_lnxded +set fs_game ...` etc.
