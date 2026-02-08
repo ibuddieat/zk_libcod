@@ -67,6 +67,21 @@ void gsc_weapons_issemiautoweapon()
 	stackPushInt(weapon->bSemiAuto);
 }
 
+void gsc_weapons_weaponnametoid()
+{
+	char *name;
+
+	if ( !stackGetParams("s", &name) )
+	{
+		stackError("weaponNameToId() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	int weaponId = BG_FindWeaponIndexForName(name);
+	stackPushInt(weaponId);
+}
+
 void gsc_weapons_addgrenadefusetime(scr_entref_t ref)
 {
 	int id = ref.entnum;
