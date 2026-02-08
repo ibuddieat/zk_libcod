@@ -2,6 +2,7 @@
 code/bin/**
 code/extra/**
 code/objects_cod2/**
+build-output/
 
 # Debugger files
 code/.gdb_history

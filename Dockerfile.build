@@ -1,0 +1,62 @@
+FROM ubuntu:24.04
+
+# Add i386 architecture
+RUN dpkg --add-architecture i386 \
+    && apt-get update >/dev/null
+
+# Install build dependencies
+RUN apt-get install -y \
+        g++-multilib \
+        git \
+        libmysqlclient-dev:i386 \
+        libsqlite3-dev:i386 \
+    >/dev/null \
+    && apt-get clean >/dev/null
+
+# Optional: Speex dependencies (controlled by build arg)
+ARG enable_speex="0"
+RUN if [ "$enable_speex" = "1" ]; then \
+        apt-get install -y \
+            libtool \
+            build-essential \
+            automake \
+            libogg-dev \
+            libogg-dev:i386 \
+        >/dev/null; \
+    fi
+
+# Compile speex if enabled
+RUN if [ "$enable_speex" = "1" ]; then \
+        git clone https://gitlab.xiph.org/xiph/speex.git && \
+        cd speex && \
+        git checkout tags/Speex-1.1.9 -b 1.1.9 && \
+        env AUTOMAKE=automake ACLOCAL=aclocal LIBTOOLIZE=libtoolize \
+            ./autogen.sh CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 --build=x86_64-pc-linux-gnu --host=i686-pc-linux-gnu >/dev/null && \
+        make >/dev/null && \
+        make install >/dev/null && \
+        ldconfig >/dev/null && \
+        cd / && \
+        rm -rf /speex; \
+    fi
+
+# Copy source code
+WORKDIR /build
+COPY . .
+
+# Build libcod
+ARG mysql_variant="mysql1"
+ARG enable_unsafe="0"
+
+WORKDIR /build/code
+RUN set -x && \
+    ARGS="" && \
+    if [ "$mysql_variant" = "mysql1" ]; then ARGS="$ARGS mysql1"; fi && \
+    if [ "$mysql_variant" = "mysql2" ]; then ARGS="$ARGS mysql2"; fi && \
+    if [ "$mysql_variant" = "nomysql" ]; then ARGS="$ARGS nomysql"; fi && \
+    if [ "$enable_speex" = "0" ]; then ARGS="$ARGS nospeex"; fi && \
+    if [ "$enable_unsafe" = "1" ]; then ARGS="$ARGS unsafe"; fi && \
+    ./doit.sh $ARGS
+
+# Verify build output exists
+RUN ls -lh bin/libcod2.so && \
+    echo "Build verification: SUCCESS"
