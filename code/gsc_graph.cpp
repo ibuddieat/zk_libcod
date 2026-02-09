@@ -217,6 +217,40 @@ static bool BuildPathFromParents(
 	return current == goalIndex;
 }
 
+static bool BuildPathFromParentsReverse(
+	AStarGraph& graph,
+	const std::vector<int>& parentByIndex,
+	size_t startIndex,
+	size_t goalIndex,
+	std::vector<unsigned int>& outPath)
+{
+	outPath.clear();
+
+	if ( startIndex == goalIndex )
+		return true;
+
+	std::vector<unsigned int> reversed;
+	size_t current = goalIndex;
+	size_t safety = graph.nodes.size();
+
+	while ( current != startIndex && safety-- > 0 )
+	{
+		reversed.push_back(graph.nodes[current]->id);
+		int next = parentByIndex[current];
+		if ( next < 0 )
+			return false;
+		current = static_cast<size_t>(next);
+	}
+
+	if ( current != startIndex )
+		return false;
+
+	for ( auto it = reversed.rbegin(); it != reversed.rend(); ++it )
+		outPath.push_back(*it);
+
+	return true;
+}
+
 static bool FindPathAStarFast(
 	AStarGraph& graph,
 	unsigned int startId,
@@ -278,7 +312,7 @@ static bool FindPathAStarFast(
 
 		if ( currentIndex == goalIndex )
 		{
-			return BuildPathFromParents(graph, parent, startIndex, goalIndex, outPath);
+			return BuildPathFromParentsReverse(graph, parent, startIndex, goalIndex, outPath);
 		}
 
 		closed[currentIndex] = true;
