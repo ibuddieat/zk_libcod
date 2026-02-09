@@ -1,4 +1,5 @@
 #include "gsc_utils.hpp"
+#include "utils.hpp"
 
 #if COMPILE_CUSTOM_VOICE == 1
 #include <speex/speex.h>

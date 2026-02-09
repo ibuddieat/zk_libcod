@@ -39,6 +39,10 @@
 #include "gsc_exec.hpp"
 #endif
 
+#if COMPILE_GRAPH == 1
+#include "gsc_graph.hpp"
+#endif
+
 #if COMPILE_JUMP == 1
 #include "jump.hpp"
 #endif
