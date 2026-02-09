@@ -49,9 +49,11 @@ void gsc_graph_find_closest_edge(void);
 
 // STL includes
 #include <algorithm>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 #include <array>
+#include <memory>
 #include <cfloat>
 
 // Fast fixed size memory allocator, used for fast node memory management
@@ -138,7 +140,9 @@ public:
 	bool persist;
 	unsigned int numNodes;
 	unsigned int numEdges;
-	std::vector<AStarGraphNode> nodes;
+	std::vector<std::unique_ptr<AStarGraphNode>> nodes;
+	std::unordered_map<unsigned int, AStarGraphNode*> nodeMap;
+	unsigned int nextNodeId = 0;
 
 	AStarGraph(unsigned int _id, bool _persist)
 	{
@@ -146,6 +150,10 @@ public:
 		persist = _persist;
 	}
 
+	AStarGraph(const AStarGraph&) = delete;
+	AStarGraph& operator=(const AStarGraph&) = delete;
+	AStarGraph(AStarGraph&&) = default;
+	AStarGraph& operator=(AStarGraph&&) = default;
 	~AStarGraph()
 	{}
 

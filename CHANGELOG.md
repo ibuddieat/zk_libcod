@@ -23,7 +23,7 @@
 - `graphId = graphCreate([persist], [nodeCapacity])` - nodeCapacity is NOT a hard limit
 - `isSuccess = graphRemove(graphId)`
 - `isSuccess = graphRemoveAll()`
-- `nodeId = graphAddNode(graphId, origin, [type])`
+- `nodeId = graphAddNode(graphId, origin, [type], [nodeId])`
 - `properties = graphGetNodeProperties(graphId, nodeId)`
 - `isSuccess = graphRemoveNode(graphId, nodeId)`
 - `isSuccess = graphAddEdge(graphId, fromNodeId, toNodeId, [type], [cost])`

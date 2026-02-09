@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <limits>
+#include <utility>
 
 using namespace std;
 
@@ -127,20 +128,19 @@ bool AStarGraphNode::IsSameNodeByOrigin(AStarGraphNode &checkNode)
 
 AStarGraphNode* AStarGraph::GetNodeById(unsigned int id)
 {
-	auto it = find_if(nodes.begin(), nodes.end(), [id](const AStarGraphNode& node) -> bool { return node.id == id; });
-	if ( it != nodes.end() )
-		return &(*it);
+	auto it = nodeMap.find(id);
+	if ( it != nodeMap.end() )
+		return it->second;
 
 	return NULL;
 }
 
 int AStarGraph::GetNodeIndex(AStarGraphNode* searchNode)
 {
-	auto it = find_if(nodes.begin(), nodes.end(), [searchNode](const AStarGraphNode& node) -> bool { return &node == searchNode; });
-	if ( it != nodes.end() )
+	for ( size_t i = 0; i < nodes.size(); i++ )
 	{
-		auto index = distance(nodes.begin(), it);
-		return index;
+		if ( nodes[i].get() == searchNode )
+			return static_cast<int>(i);
 	}
 	return -1;
 }
@@ -199,7 +199,10 @@ void gsc_graph_create_graph(void)
 
 	AStarGraphs.emplace_back(id, persist);
 	if ( reserveCount > 0 )
+	{
 		AStarGraphs.back().nodes.reserve(static_cast<size_t>(reserveCount));
+		AStarGraphs.back().nodeMap.reserve(static_cast<size_t>(reserveCount));
+	}
 
 	stackPushInt(id);
 }
@@ -262,8 +265,30 @@ void gsc_graph_add_node(void)
 	if ( Scr_GetNumParam() > 2 )
 		type = Scr_GetInt(2);
 
-	unsigned int nodeId = static_cast<unsigned int>(graph.nodes.size());
-	graph.nodes.emplace_back(nodeId, origin, type);
+	unsigned int nodeId = 0;
+	if ( Scr_GetNumParam() > 3 )
+	{
+		nodeId = static_cast<unsigned int>(Scr_GetInt(3));
+		if ( graph.nodeMap.find(nodeId) != graph.nodeMap.end() )
+		{
+			stackError("gsc_graph_add_node() node id %d already exists in graph %d", nodeId, graphId);
+			stackPushUndefined();
+			return;
+		}
+
+		if ( nodeId >= graph.nextNodeId )
+			graph.nextNodeId = nodeId + 1;
+	}
+	else
+	{
+		nodeId = graph.nextNodeId;
+		graph.nextNodeId++;
+	}
+
+	std::unique_ptr<AStarGraphNode> newNode(new AStarGraphNode(nodeId, origin, type));
+	AStarGraphNode* nodePointer = newNode.get();
+	graph.nodes.emplace_back(std::move(newNode));
+	graph.nodeMap.emplace(nodeId, nodePointer);
 
 	stackPushInt(nodeId);
 }
@@ -312,7 +337,7 @@ void gsc_graph_remove_node(void)
 	}
 	AStarGraph& graph = *graphPointer;
 
-	int nodeId = Scr_GetInt(1);
+	unsigned int nodeId = static_cast<unsigned int>(Scr_GetInt(1));
 	AStarGraphNode* searchNode = graph.GetNodeById(nodeId);
 	if ( searchNode )
 	{
@@ -322,33 +347,34 @@ void gsc_graph_remove_node(void)
 			// Remove edges to node
 			for ( auto node = begin(graph.nodes); node != end(graph.nodes); ++node )
 			{
+				AStarGraphNode* currentNode = node->get();
 #if USE_FSA_MEMORY
-				unsigned int currentNumEdges = node->numEdges;
+				unsigned int currentNumEdges = currentNode->numEdges;
 
 				for ( unsigned int i = 0; i < currentNumEdges; i++ )
 				{
-					if ( node->edges[i].end == searchNode )
+					if ( currentNode->edges[i].end == searchNode )
 					{
 						if ( i < ( MAX_EDGES - 1 ) )
 						{
 							for ( unsigned int j = i; j < MAX_EDGES - 1; j++ )
 							{
-								node->edges[j].start = node->edges[j + 1].start;
-								node->edges[j].end = node->edges[j + 1].end;
-								node->edges[j].type = node->edges[j + 1].type;
-								node->edges[j].cost = node->edges[j + 1].cost;
+								currentNode->edges[j].start = currentNode->edges[j + 1].start;
+								currentNode->edges[j].end = currentNode->edges[j + 1].end;
+								currentNode->edges[j].type = currentNode->edges[j + 1].type;
+								currentNode->edges[j].cost = currentNode->edges[j + 1].cost;
 							}
 						}
-						node->numEdges--;
+						currentNode->numEdges--;
 						break; // Assuming a node cannot have multiple edges to another node
 					}
 				}
 #else
-				for ( auto edge = begin(node->edges); edge != end(node->edges); )
+				for ( auto edge = begin(currentNode->edges); edge != end(currentNode->edges); )
 				{
 					if ( edge->end == searchNode )
 					{
-						edge = node->edges.erase(edge);
+						edge = currentNode->edges.erase(edge);
 						break; // Assuming a node cannot have multiple edges to another node
 					}
 					else
@@ -359,10 +385,16 @@ void gsc_graph_remove_node(void)
 #endif
 			}
 
-			// Remove node itself
-			graph.nodes.erase(graph.nodes.begin() + index);
+			graph.nodeMap.erase(nodeId);
+
+			// Remove node itself using swap-erase
+			size_t indexToRemove = static_cast<size_t>(index);
+			if ( indexToRemove < graph.nodes.size() - 1 )
+				std::swap(graph.nodes[indexToRemove], graph.nodes.back());
+			graph.nodes.pop_back();
 
 			stackPushBool(qtrue);
+			return;
 		}
 	}
 
@@ -757,18 +789,18 @@ void gsc_graph_find_closest_node(void)
 	vec3_t origin;
 	float dist;
 	float closestDist = numeric_limits<float>::infinity();
-	unsigned int nodeId = 0;
-	unsigned int closestNodeId;
+	unsigned int closestNodeId = 0;
 
 	Scr_GetVector(1, origin);
 
-	for ( auto node = begin(graph.nodes); node != end(graph.nodes); ++node, ++nodeId )
+	for ( auto node = begin(graph.nodes); node != end(graph.nodes); ++node )
 	{
-		dist = Get3DDistanceSquared(node->origin, origin);
+		AStarGraphNode* currentNode = node->get();
+		dist = Get3DDistanceSquared(currentNode->origin, origin);
 		if ( dist < closestDist )
 		{
 			closestDist = dist;
-			closestNodeId = nodeId;
+			closestNodeId = currentNode->id;
 		}
 	}
 
@@ -809,7 +841,7 @@ void gsc_graph_find_closest_edge(void)
 	// closest node first, as it may have zero edges
 	for ( auto node = begin(graph.nodes); node != end(graph.nodes); ++node )
 	{
-		currentNode = &(*node);
+		currentNode = node->get();
 
 #if USE_FSA_MEMORY
 		unsigned int i = 0;
