@@ -41,6 +41,7 @@ void gsc_graph_remove_edge(void);
 void gsc_graph_find_path_astar(void);
 void gsc_graph_find_closest_node(void);
 void gsc_graph_find_closest_edge(void);
+void gsc_graph_precompute_paths_to_node(void);
 
 // Used for text debugging
 #include <iostream>
@@ -74,6 +75,38 @@ void gsc_graph_find_closest_edge(void);
 struct AStarGraphNode;
 struct AStarGraph;
 template <class UserState> class AStarSearch;
+
+struct GraphPrecomputeKey
+{
+	unsigned int goalId = 0;
+	unsigned int skipNodeTypes = 0;
+	unsigned int skipEdgeTypes = 0;
+
+	bool operator==(const GraphPrecomputeKey& other) const
+	{
+		return goalId == other.goalId &&
+		       skipNodeTypes == other.skipNodeTypes &&
+		       skipEdgeTypes == other.skipEdgeTypes;
+	}
+};
+
+struct GraphPrecomputeKeyHash
+{
+	size_t operator()(const GraphPrecomputeKey& key) const
+	{
+		size_t seed = 0;
+		seed ^= std::hash<unsigned int>{}(key.goalId) + 0x9E3779B9 + ( seed << 6 ) + ( seed >> 2 );
+		seed ^= std::hash<unsigned int>{}(key.skipNodeTypes) + 0x9E3779B9 + ( seed << 6 ) + ( seed >> 2 );
+		seed ^= std::hash<unsigned int>{}(key.skipEdgeTypes) + 0x9E3779B9 + ( seed << 6 ) + ( seed >> 2 );
+		return seed;
+	}
+};
+
+struct GraphPrecomputeData
+{
+	std::vector<int> parentByIndex;
+	std::vector<float> distByIndex;
+};
 
 class AStarGraphEdge
 {
@@ -142,6 +175,8 @@ public:
 	unsigned int numEdges;
 	std::vector<std::unique_ptr<AStarGraphNode>> nodes;
 	std::unordered_map<unsigned int, AStarGraphNode*> nodeMap;
+	std::unordered_map<unsigned int, size_t> nodeIndexById;
+	std::unordered_map<GraphPrecomputeKey, GraphPrecomputeData, GraphPrecomputeKeyHash> precomputedPaths;
 	unsigned int nextNodeId = 0;
 
 	AStarGraph(unsigned int _id, bool _persist)

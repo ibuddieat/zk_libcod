@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <math.h>
 #include <limits>
+#include <queue>
+#include <unordered_set>
 #include <utility>
 
 using namespace std;
@@ -161,6 +163,254 @@ AStarGraph* GetGraphById(unsigned int id)
 	return NULL;
 }
 
+struct FastHeapNode
+{
+	int index;
+	float f;
+};
+
+struct FastHeapCompare
+{
+	bool operator()(const FastHeapNode& a, const FastHeapNode& b) const
+	{
+		return a.f > b.f;
+	}
+};
+
+struct IncomingEdge
+{
+	int fromIndex;
+	float cost;
+	int type;
+};
+
+static void InvalidatePrecompute(AStarGraph& graph)
+{
+	graph.precomputedPaths.clear();
+}
+
+static bool BuildPathFromParents(
+	AStarGraph& graph,
+	const std::vector<int>& parentByIndex,
+	size_t startIndex,
+	size_t goalIndex,
+	std::vector<unsigned int>& outPath)
+{
+	outPath.clear();
+
+	if ( startIndex == goalIndex )
+		return true;
+
+	size_t current = startIndex;
+	size_t safety = graph.nodes.size();
+
+	while ( current != goalIndex && safety-- > 0 )
+	{
+		int next = parentByIndex[current];
+		if ( next < 0 )
+			return false;
+
+		current = static_cast<size_t>(next);
+		outPath.push_back(graph.nodes[current]->id);
+	}
+
+	return current == goalIndex;
+}
+
+static bool FindPathAStarFast(
+	AStarGraph& graph,
+	unsigned int startId,
+	unsigned int endId,
+	const std::vector<unsigned int>& skipNodes,
+	unsigned int skipNodeTypes,
+	unsigned int skipEdgeTypes,
+	std::vector<unsigned int>& outPath)
+{
+	outPath.clear();
+
+	auto itStart = graph.nodeIndexById.find(startId);
+	auto itGoal = graph.nodeIndexById.find(endId);
+	if ( itStart == graph.nodeIndexById.end() || itGoal == graph.nodeIndexById.end() )
+		return false;
+
+	const size_t startIndex = itStart->second;
+	const size_t goalIndex = itGoal->second;
+
+	if ( startIndex == goalIndex )
+		return true;
+
+	std::unordered_set<unsigned int> skippedNodeSet;
+	if ( !skipNodes.empty() )
+	{
+		skippedNodeSet.reserve(skipNodes.size());
+		for ( auto id : skipNodes )
+			skippedNodeSet.insert(id);
+	}
+
+	const size_t nodeCount = graph.nodes.size();
+	std::vector<float> gScore(nodeCount, std::numeric_limits<float>::infinity());
+	std::vector<float> fScore(nodeCount, std::numeric_limits<float>::infinity());
+	std::vector<int> parent(nodeCount, -1);
+	std::vector<bool> closed(nodeCount, false);
+
+	auto* goalNode = graph.nodes[goalIndex].get();
+
+	std::priority_queue<FastHeapNode, std::vector<FastHeapNode>, FastHeapCompare> openHeap;
+
+	gScore[startIndex] = 0.0f;
+	fScore[startIndex] = Get3DDistance(graph.nodes[startIndex]->origin, goalNode->origin);
+	openHeap.push({static_cast<int>(startIndex), fScore[startIndex]});
+
+	while ( !openHeap.empty() )
+	{
+		FastHeapNode current = openHeap.top();
+		openHeap.pop();
+
+		size_t currentIndex = static_cast<size_t>(current.index);
+		if ( currentIndex >= nodeCount )
+			continue;
+
+		if ( current.f != fScore[currentIndex] )
+			continue;
+
+		if ( closed[currentIndex] )
+			continue;
+
+		if ( currentIndex == goalIndex )
+		{
+			return BuildPathFromParents(graph, parent, startIndex, goalIndex, outPath);
+		}
+
+		closed[currentIndex] = true;
+		AStarGraphNode* currentNode = graph.nodes[currentIndex].get();
+
+#if USE_FSA_MEMORY
+		unsigned int i = 0;
+		for ( auto edge = begin(currentNode->edges); i < currentNode->numEdges; ++edge, ++i )
+#else
+		for ( auto edge = begin(currentNode->edges); edge != end(currentNode->edges); ++edge )
+#endif
+		{
+			if ( edge->type & skipEdgeTypes )
+				continue;
+
+			AStarGraphNode* endNode = edge->end;
+			if ( endNode->type & skipNodeTypes )
+				continue;
+
+			if ( !skippedNodeSet.empty() && skippedNodeSet.find(endNode->id) != skippedNodeSet.end() )
+				continue;
+
+			auto itNeighbor = graph.nodeIndexById.find(endNode->id);
+			if ( itNeighbor == graph.nodeIndexById.end() )
+				continue;
+
+			size_t neighborIndex = itNeighbor->second;
+			float tentativeG = gScore[currentIndex] + edge->cost;
+
+			if ( tentativeG < gScore[neighborIndex] )
+			{
+				parent[neighborIndex] = static_cast<int>(currentIndex);
+				gScore[neighborIndex] = tentativeG;
+				fScore[neighborIndex] = tentativeG + Get3DDistance(endNode->origin, goalNode->origin);
+
+				if ( closed[neighborIndex] )
+					closed[neighborIndex] = false;
+
+				openHeap.push({static_cast<int>(neighborIndex), fScore[neighborIndex]});
+			}
+		}
+	}
+
+	return false;
+}
+
+static bool PrecomputePathsToNode(
+	AStarGraph& graph,
+	unsigned int goalId,
+	unsigned int skipNodeTypes,
+	unsigned int skipEdgeTypes)
+{
+	auto itGoal = graph.nodeIndexById.find(goalId);
+	if ( itGoal == graph.nodeIndexById.end() )
+		return false;
+
+	const size_t goalIndex = itGoal->second;
+	const size_t nodeCount = graph.nodes.size();
+
+	std::vector<std::vector<IncomingEdge>> incoming(nodeCount);
+	incoming.reserve(nodeCount);
+
+	for ( size_t fromIndex = 0; fromIndex < nodeCount; ++fromIndex )
+	{
+		AStarGraphNode* fromNode = graph.nodes[fromIndex].get();
+
+#if USE_FSA_MEMORY
+		unsigned int i = 0;
+		for ( auto edge = begin(fromNode->edges); i < fromNode->numEdges; ++edge, ++i )
+#else
+		for ( auto edge = begin(fromNode->edges); edge != end(fromNode->edges); ++edge )
+#endif
+		{
+			auto itTo = graph.nodeIndexById.find(edge->end->id);
+			if ( itTo == graph.nodeIndexById.end() )
+				continue;
+
+			size_t toIndex = itTo->second;
+			incoming[toIndex].push_back({static_cast<int>(fromIndex), edge->cost, edge->type});
+		}
+	}
+
+	GraphPrecomputeData data;
+	data.parentByIndex.assign(nodeCount, -1);
+	data.distByIndex.assign(nodeCount, std::numeric_limits<float>::infinity());
+
+	std::priority_queue<FastHeapNode, std::vector<FastHeapNode>, FastHeapCompare> openHeap;
+	data.distByIndex[goalIndex] = 0.0f;
+	openHeap.push({static_cast<int>(goalIndex), 0.0f});
+
+	while ( !openHeap.empty() )
+	{
+		FastHeapNode current = openHeap.top();
+		openHeap.pop();
+
+		size_t currentIndex = static_cast<size_t>(current.index);
+		if ( currentIndex >= nodeCount )
+			continue;
+
+		if ( current.f != data.distByIndex[currentIndex] )
+			continue;
+
+		AStarGraphNode* currentNode = graph.nodes[currentIndex].get();
+		if ( currentNode->type & skipNodeTypes )
+			continue;
+
+		for ( const auto& edge : incoming[currentIndex] )
+		{
+			if ( edge.type & skipEdgeTypes )
+				continue;
+
+			size_t fromIndex = static_cast<size_t>(edge.fromIndex);
+			float newDist = data.distByIndex[currentIndex] + edge.cost;
+
+			if ( newDist < data.distByIndex[fromIndex] )
+			{
+				data.distByIndex[fromIndex] = newDist;
+				data.parentByIndex[fromIndex] = static_cast<int>(currentIndex);
+				openHeap.push({static_cast<int>(fromIndex), newDist});
+			}
+		}
+	}
+
+	GraphPrecomputeKey key;
+	key.goalId = goalId;
+	key.skipNodeTypes = skipNodeTypes;
+	key.skipEdgeTypes = skipEdgeTypes;
+	graph.precomputedPaths[key] = std::move(data);
+
+	return true;
+}
+
 //
 // GSC interface
 //
@@ -202,6 +452,7 @@ void gsc_graph_create_graph(void)
 	{
 		AStarGraphs.back().nodes.reserve(static_cast<size_t>(reserveCount));
 		AStarGraphs.back().nodeMap.reserve(static_cast<size_t>(reserveCount));
+		AStarGraphs.back().nodeIndexById.reserve(static_cast<size_t>(reserveCount));
 	}
 
 	stackPushInt(id);
@@ -285,10 +536,13 @@ void gsc_graph_add_node(void)
 		graph.nextNodeId++;
 	}
 
+	InvalidatePrecompute(graph);
+
 	std::unique_ptr<AStarGraphNode> newNode(new AStarGraphNode(nodeId, origin, type));
 	AStarGraphNode* nodePointer = newNode.get();
 	graph.nodes.emplace_back(std::move(newNode));
 	graph.nodeMap.emplace(nodeId, nodePointer);
+	graph.nodeIndexById.emplace(nodeId, graph.nodes.size() - 1);
 
 	stackPushInt(nodeId);
 }
@@ -341,9 +595,11 @@ void gsc_graph_remove_node(void)
 	AStarGraphNode* searchNode = graph.GetNodeById(nodeId);
 	if ( searchNode )
 	{
-		int index = graph.GetNodeIndex(searchNode);
-		if ( index != -1 )
+		auto itIndex = graph.nodeIndexById.find(nodeId);
+		if ( itIndex != graph.nodeIndexById.end() )
 		{
+			InvalidatePrecompute(graph);
+
 			// Remove edges to node
 			for ( auto node = begin(graph.nodes); node != end(graph.nodes); ++node )
 			{
@@ -386,11 +642,16 @@ void gsc_graph_remove_node(void)
 			}
 
 			graph.nodeMap.erase(nodeId);
+			graph.nodeIndexById.erase(nodeId);
 
 			// Remove node itself using swap-erase
-			size_t indexToRemove = static_cast<size_t>(index);
+			size_t indexToRemove = itIndex->second;
 			if ( indexToRemove < graph.nodes.size() - 1 )
+			{
 				std::swap(graph.nodes[indexToRemove], graph.nodes.back());
+				unsigned int swappedId = graph.nodes[indexToRemove]->id;
+				graph.nodeIndexById[swappedId] = indexToRemove;
+			}
 			graph.nodes.pop_back();
 
 			stackPushBool(qtrue);
@@ -472,6 +733,8 @@ void gsc_graph_add_edge(void)
 		cost = Scr_GetFloat(4);
 	else
 		cost = Get3DDistance(fromNode->origin, toNode->origin);	// Euclidean distance
+
+	InvalidatePrecompute(graph);
 
 #if USE_FSA_MEMORY
 	fromNode->edges[fromNode->numEdges].Update(fromNode, toNode, type, cost);
@@ -597,6 +860,7 @@ void gsc_graph_remove_edge(void)
 			}
 			fromNode->numEdges--;
 
+			InvalidatePrecompute(graph);
 			stackPushBool(qtrue);
 			return;
 		}
@@ -608,6 +872,7 @@ void gsc_graph_remove_edge(void)
 		{
 			fromNode->edges.erase(edge);
 
+			InvalidatePrecompute(graph);
 			stackPushBool(qtrue);
 			return;
 		}
@@ -642,16 +907,13 @@ void gsc_graph_find_path_astar(void)
 
 	unsigned int start = Scr_GetInt(1);
 	unsigned int end = Scr_GetInt(2);
-	AStarSearch<AStarGraphNode> astarSearch;
-	AStarGraphNode* nodeStart = graph.GetNodeById(start);
-	if ( !nodeStart )
+	if ( !graph.GetNodeById(start) )
 	{
 		stackError("gsc_graph_find_path_astar() start node %d not found in graph %d", start, graphId);
 		stackPushUndefined();
 		return;
 	}
-	AStarGraphNode* nodeEnd = graph.GetNodeById(end);
-	if ( !nodeEnd )
+	if ( !graph.GetNodeById(end) )
 	{
 		stackError("gsc_graph_find_path_astar() end node %d not found in graph %d", end, graphId);
 		stackPushUndefined();
@@ -697,7 +959,6 @@ void gsc_graph_find_path_astar(void)
 					}
 					skipNodes.push_back(skip);
 				}
-				astarSearch.SetSkippedNodes(skipNodes);
 			}
 		}
 		else
@@ -713,58 +974,107 @@ void gsc_graph_find_path_astar(void)
 	{
 		skipNodeTypes = Scr_GetInt(4);
 	}
-	astarSearch.SetSkippedNodeTypes(skipNodeTypes);
 
 	unsigned int skipEdgeTypes = 0;
 	if ( Scr_GetNumParam() > 5 )
 	{
 		skipEdgeTypes = Scr_GetInt(5);
 	}
-	astarSearch.SetSkippedEdgeTypes(skipEdgeTypes);
 
-	unsigned int SearchState;
-	qboolean success;
+	std::vector<unsigned int> path;
+	bool success = false;
 
-	astarSearch.SetStartAndGoalStates(*nodeStart, *nodeEnd);
-	do
+	if ( skipNodes.empty() )
 	{
-		SearchState = astarSearch.SearchStep();
-	}
-	while ( SearchState == AStarSearch<AStarGraphNode>::SEARCH_STATE_SEARCHING );
+		GraphPrecomputeKey key;
+		key.goalId = end;
+		key.skipNodeTypes = skipNodeTypes;
+		key.skipEdgeTypes = skipEdgeTypes;
 
-	if ( SearchState == AStarSearch<AStarGraphNode>::SEARCH_STATE_SUCCEEDED )
-	{
-		success = qtrue;
-
-		stackPushArray();
-		AStarGraphNode* node = astarSearch.GetSolutionStart();
-
-		for ( ;; )
+		auto itPre = graph.precomputedPaths.find(key);
+		if ( itPre != graph.precomputedPaths.end() )
 		{
-			node = astarSearch.GetSolutionNext();
-
-			if ( !node )
+			auto itStart = graph.nodeIndexById.find(start);
+			auto itGoal = graph.nodeIndexById.find(end);
+			if ( itStart != graph.nodeIndexById.end() && itGoal != graph.nodeIndexById.end() )
 			{
-				break;
+				success = BuildPathFromParents(
+					graph,
+					itPre->second.parentByIndex,
+					itStart->second,
+					itGoal->second,
+					path);
 			}
-			else
-			{
-				stackPushInt(node->id);
-				stackPushArrayLast();
-			}
-		};
-
-		astarSearch.FreeSolutionNodes();
+		}
 	}
-	else if ( SearchState == AStarSearch<AStarGraphNode>::SEARCH_STATE_FAILED ) 
-	{
-		success = qfalse;
-	}
-
-	astarSearch.EnsureMemoryFreed();
 
 	if ( !success )
+	{
+		success = FindPathAStarFast(graph, start, end, skipNodes, skipNodeTypes, skipEdgeTypes, path);
+	}
+
+	if ( success )
+	{
+		stackPushArray();
+		for ( auto nodeId : path )
+		{
+			stackPushInt(static_cast<int>(nodeId));
+			stackPushArrayLast();
+		}
+	}
+	else
+	{
 		stackPushUndefined();
+	}
+}
+
+void gsc_graph_precompute_paths_to_node(void)
+{
+	unsigned int graphId = Scr_GetInt(0);
+	AStarGraph* graphPointer = GetGraphById(graphId);
+	if ( !graphPointer )
+	{
+		stackError("gsc_graph_precompute_paths_to_node() graph %d does not exist", graphId);
+		stackPushUndefined();
+		return;
+	}
+	AStarGraph& graph = *graphPointer;
+
+	if ( graph.nodes.size() < 1 )
+	{
+		stackError("gsc_graph_precompute_paths_to_node() graph %d has no nodes", graphId);
+		stackPushUndefined();
+		return;
+	}
+
+	unsigned int goalId = Scr_GetInt(1);
+	if ( !graph.GetNodeById(goalId) )
+	{
+		stackError("gsc_graph_precompute_paths_to_node() goal node %d not found in graph %d", goalId, graphId);
+		stackPushUndefined();
+		return;
+	}
+
+	unsigned int skipNodeTypes = 0;
+	if ( Scr_GetNumParam() > 2 )
+	{
+		skipNodeTypes = Scr_GetInt(2);
+	}
+
+	unsigned int skipEdgeTypes = 0;
+	if ( Scr_GetNumParam() > 3 )
+	{
+		skipEdgeTypes = Scr_GetInt(3);
+	}
+
+	if ( !PrecomputePathsToNode(graph, goalId, skipNodeTypes, skipEdgeTypes) )
+	{
+		stackError("gsc_graph_precompute_paths_to_node() failed to precompute paths to node %d in graph %d", goalId, graphId);
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushBool(qtrue);
 }
 
 void gsc_graph_find_closest_node(void)

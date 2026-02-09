@@ -71,6 +71,7 @@ scr_function_t scriptFunctions[] =
 	{"graphGetEdgeProperties", gsc_graph_get_edge_properties, 0},
 	{"graphRemoveEdge", gsc_graph_remove_edge, 0},
 	{"graphFindPath", gsc_graph_find_path_astar, 0},
+	{"graphPrecomputePathsToNode", gsc_graph_precompute_paths_to_node, 0},
 	{"graphFindClosestNode", gsc_graph_find_closest_node, 0},
 	{"graphFindClosestEdge", gsc_graph_find_closest_edge, 0},
 	#endif
