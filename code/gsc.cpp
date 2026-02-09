@@ -365,7 +365,7 @@ scr_method_t scriptMethods[] =
 	{"aimButtonPressed", gsc_player_button_ads, 0},
 	{"backButtonPressed", gsc_player_button_back, 0},
 	{"canMantle", gsc_player_canmantle, 0},
-	{"canReload", gsc_player_canreload, 0},
+	{"canReloadSlotId", gsc_player_canreloadslotid, 0},
 	{"canUseTurret", gsc_player_canuseturret, 0},
 	{"clientHasClientMuted", gsc_player_clienthasclientmuted, 0},
 	{"connectionlessPacketToClient", gsc_player_connectionlesspackettoclient, 0},

@@ -1593,21 +1593,38 @@ void gsc_player_setweaponidinslotid(scr_entref_t ref)
 
 // Phase 5: Utility Functions
 
-void gsc_player_canreload(scr_entref_t ref)
+void gsc_player_canreloadslotid(scr_entref_t ref)
 {
 	int id = ref.entnum;
 
 	if ( id >= MAX_CLIENTS )
 	{
-		stackError("gsc_player_canreload() entity %i is not a player", id);
+		stackError("gsc_player_canreloadslotid() entity %i is not a player", id);
 		stackPushUndefined();
 		return;
 	}
 
+	int args = Scr_GetNumParam();
 	int slotId;
-	if ( !stackGetParams("i", &slotId) )
+	float reloadThreshold = 1.0f;
+
+	if ( args < 1 || args > 2 )
 	{
-		stackError("gsc_player_canreload() argument is undefined or has a wrong type");
+		stackError("gsc_player_canreloadslotid() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( !stackGetParamInt(0, &slotId) )
+	{
+		stackError("gsc_player_canreloadslotid() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( args > 1 && !stackGetParamFloat(1, &reloadThreshold) )
+	{
+		stackError("gsc_player_canreloadslotid() argument is undefined or has a wrong type");
 		stackPushUndefined();
 		return;
 	}
@@ -1622,6 +1639,12 @@ void gsc_player_canreload(scr_entref_t ref)
 	int weaponId = ps->weaponslots[slotId];
 
 	if ( weaponId == 0 )
+	{
+		stackPushBool(qfalse);
+		return;
+	}
+
+	if ( BG_WeaponIsClipOnly(weaponId) )
 	{
 		stackPushBool(qfalse);
 		return;
@@ -1646,8 +1669,15 @@ void gsc_player_canreload(scr_entref_t ref)
 	}
 	else
 	{
-		// Can reload when clip is not full
-		stackPushBool(currentClip < maxClip);
+		// Can reload when clip is not full and below threshold
+		if ( maxClip <= 0 )
+		{
+			stackPushBool(qfalse);
+			return;
+		}
+
+		float clipRatio = (float)currentClip / (float)maxClip;
+		stackPushBool(currentClip < maxClip && clipRatio < reloadThreshold);
 	}
 }
 

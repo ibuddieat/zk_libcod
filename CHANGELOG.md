@@ -14,7 +14,7 @@
 - `isSuccess = player setSlotIdAmmo(slotId, ammo)`
 - `isSuccess = player setWeaponIdClipAmmo(weaponId, clipAmmo)`
 - `isSuccess = player setWeaponIdAmmo(weaponId, ammo)`
-- `isSuccess = player canReload(slotId)`
+- `isSuccess = player canReloadSlotId(slotId, [reloadThreshold])`
 - `weaponId = weaponNameToId(weaponName)`
 
 

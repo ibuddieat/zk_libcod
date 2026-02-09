@@ -19,7 +19,7 @@ void gsc_player_button_reload(scr_entref_t ref);
 void gsc_player_button_right(scr_entref_t ref);
 void gsc_player_button_smoke(scr_entref_t ref);
 void gsc_player_canmantle(scr_entref_t ref);
-void gsc_player_canreload(scr_entref_t ref);
+void gsc_player_canreloadslotid(scr_entref_t ref);
 void gsc_player_canuseturret(scr_entref_t ref);
 void gsc_player_clienthasclientmuted(scr_entref_t ref);
 void gsc_player_connectionlesspackettoclient(scr_entref_t ref);
