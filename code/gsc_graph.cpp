@@ -1017,8 +1017,6 @@ void gsc_graph_find_path_astar(void)
 
 	std::vector<unsigned int> path;
 	bool success = false;
-	const char* precomputeStatus = "skipped";
-	bool usedAStar = false;
 
 	if ( skipNodes.empty() )
 	{
@@ -1030,7 +1028,6 @@ void gsc_graph_find_path_astar(void)
 		auto itPre = graph.precomputedPaths.find(key);
 		if ( itPre != graph.precomputedPaths.end() )
 		{
-			precomputeStatus = "hit";
 			auto itStart = graph.nodeIndexById.find(start);
 			auto itGoal = graph.nodeIndexById.find(end);
 			if ( itStart != graph.nodeIndexById.end() && itGoal != graph.nodeIndexById.end() )
@@ -1041,28 +1038,20 @@ void gsc_graph_find_path_astar(void)
 					itStart->second,
 					itGoal->second,
 					path);
-				if ( !success )
-					precomputeStatus = "fail";
 			}
-			else
-			{
-				precomputeStatus = "fail";
-			}
-		}
-		else
-		{
-			precomputeStatus = "miss";
 		}
 	}
 
 	if ( !success )
 	{
-		usedAStar = true;
 		success = FindPathAStarFast(graph, start, end, skipNodes, skipNodeTypes, skipEdgeTypes, path);
 	}
 
 	if ( success )
 	{
+		if ( path.empty() || path.front() != start )
+			path.insert(path.begin(), start);
+
 		stackPushArray();
 		for ( auto nodeId : path )
 		{
@@ -1072,16 +1061,6 @@ void gsc_graph_find_path_astar(void)
 	}
 	else
 	{
-		Com_Printf(
-			"graphFindPath failed: graph=%u start=%u end=%u skipNodes=%zu skipNodeTypes=0x%X skipEdgeTypes=0x%X precompute=%s usedAStar=%d\n",
-			graphId,
-			start,
-			end,
-			skipNodes.size(),
-			skipNodeTypes,
-			skipEdgeTypes,
-			precomputeStatus,
-			usedAStar ? 1 : 0);
 		stackPushUndefined();
 	}
 }
