@@ -117,7 +117,7 @@ public:
 	{
 		id = _id;
 		VectorCopy(_origin, origin);
-		type = type;
+		type = _type;
 	}
 
 	float GetCostToNext(AStarGraphNode& nextNode);

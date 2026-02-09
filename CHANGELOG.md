@@ -32,3 +32,4 @@
 - `path = graphFindPath(graphId, startNodeId, endNodeId, [skipNodeIds], [skipNodeTypes], [skipEdgeTypes])`
 - `nodeId = graphFindClosestNode(graphId, origin)`
 - `edgeInfo = graphFindClosestEdge(graphId, origin)`
+- Fixed graph node type initialization (affects `skipNodeTypes` filtering in path finding).
