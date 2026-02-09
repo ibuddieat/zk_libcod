@@ -171,6 +171,7 @@ void gsc_graph_create_graph(void)
 {
 	unsigned int id = 0;
 	bool persist = 0;
+	int reserveCount = 0;
 
 	// Get next minimal free graph ID
 	while ( true )
@@ -193,7 +194,12 @@ void gsc_graph_create_graph(void)
 	if ( Scr_GetNumParam() > 0 )
 		persist = Scr_GetInt(0);
 
+	if ( Scr_GetNumParam() > 1 )
+		reserveCount = Scr_GetInt(1);
+
 	AStarGraphs.emplace_back(id, persist);
+	if ( reserveCount > 0 )
+		AStarGraphs.back().nodes.reserve(static_cast<size_t>(reserveCount));
 
 	stackPushInt(id);
 }
@@ -256,9 +262,10 @@ void gsc_graph_add_node(void)
 	if ( Scr_GetNumParam() > 2 )
 		type = Scr_GetInt(2);
 
-	graph.nodes.emplace_back(graph.nodes.size(), origin, type);
+	unsigned int nodeId = static_cast<unsigned int>(graph.nodes.size());
+	graph.nodes.emplace_back(nodeId, origin, type);
 
-	stackPushBool(qtrue);
+	stackPushInt(nodeId);
 }
 
 void gsc_graph_get_node_properties(void)

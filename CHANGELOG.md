@@ -20,24 +20,15 @@
 
 # Graph
 
-- `graphId = graphCreate([persist])`
+- `graphId = graphCreate([persist], [nodeCapacity])` - nodeCapacity is NOT a hard limit
 - `isSuccess = graphRemove(graphId)`
 - `isSuccess = graphRemoveAll()`
-- `nodeId = graphAddNode(graphId, origin, [type], [nodeId])`
+- `nodeId = graphAddNode(graphId, origin, [type])`
 - `properties = graphGetNodeProperties(graphId, nodeId)`
-- `origin = graphGetNodeOrigin(graphId, nodeId)`
-- `type = graphGetNodeType(graphId, nodeId)`
-- `nodes = graphGetAllNodes(graphId)`
 - `isSuccess = graphRemoveNode(graphId, nodeId)`
 - `isSuccess = graphAddEdge(graphId, fromNodeId, toNodeId, [type], [cost])`
 - `properties = graphGetEdgeProperties(graphId, fromNodeId, toNodeId)`
-- `type = graphGetEdgeType(graphId, fromNodeId, toNodeId)`
-- `cost = graphGetEdgeCost(graphId, fromNodeId, toNodeId)`
-- `edges = graphGetEdgesFromNode(graphId, nodeId)`
-- `edges = graphGetEdgesToNode(graphId, nodeId)`
-- `edges = graphGetAllEdges(graphId)`
 - `isSuccess = graphRemoveEdge(graphId, fromNodeId, toNodeId)`
 - `path = graphFindPath(graphId, startNodeId, endNodeId, [skipNodeIds], [skipNodeTypes], [skipEdgeTypes])`
 - `nodeId = graphFindClosestNode(graphId, origin)`
-- `nodeId = graphFindClosestNodeWithTrace(graphId, origin, contentmask)`
 - `edgeInfo = graphFindClosestEdge(graphId, origin)`
