@@ -613,6 +613,265 @@ void gsc_graph_get_node_properties(void)
 	Scr_AddArrayStringIndexed(custom_scr_const.type);
 }
 
+void gsc_graph_get_node_origin(void)
+{
+	unsigned int graphId = Scr_GetInt(0);
+	AStarGraph* graphPointer = GetGraphById(graphId);
+	if ( !graphPointer )
+	{
+		stackError("gsc_graph_get_node_origin() graph %d does not exist", graphId);
+		stackPushUndefined();
+		return;
+	}
+	AStarGraph& graph = *graphPointer;
+
+	unsigned int nodeId = Scr_GetInt(1);
+	AStarGraphNode* node = graph.GetNodeById(nodeId);
+	if ( !node )
+	{
+		stackError("gsc_graph_get_node_origin() node %d not found in graph %d", nodeId, graphId);
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushVector(node->origin);
+}
+
+void gsc_graph_set_node_origin(void)
+{
+	unsigned int graphId = Scr_GetInt(0);
+	AStarGraph* graphPointer = GetGraphById(graphId);
+	if ( !graphPointer )
+	{
+		stackError("gsc_graph_set_node_origin() graph %d does not exist", graphId);
+		stackPushUndefined();
+		return;
+	}
+	AStarGraph& graph = *graphPointer;
+
+	unsigned int nodeId = Scr_GetInt(1);
+	AStarGraphNode* node = graph.GetNodeById(nodeId);
+	if ( !node )
+	{
+		stackError("gsc_graph_set_node_origin() node %d not found in graph %d", nodeId, graphId);
+		stackPushUndefined();
+		return;
+	}
+
+	vec3_t origin;
+	Scr_GetVector(2, origin);
+
+	VectorCopy(origin, node->origin);
+
+	// Update edge costs for edges connected to this node (incoming and outgoing)
+	for ( auto nodeIter = begin(graph.nodes); nodeIter != end(graph.nodes); ++nodeIter )
+	{
+		AStarGraphNode* currentNode = nodeIter->get();
+#if USE_FSA_MEMORY
+		unsigned int i = 0;
+		for ( auto edge = begin(currentNode->edges); i < currentNode->numEdges; ++edge, ++i )
+#else
+		for ( auto edge = begin(currentNode->edges); edge != end(currentNode->edges); ++edge )
+#endif
+		{
+			if ( edge->start == node || edge->end == node )
+			{
+				edge->cost = Get3DDistance(edge->start->origin, edge->end->origin);
+			}
+		}
+	}
+
+	InvalidatePrecompute(graph);
+	stackPushBool(qtrue);
+}
+
+void gsc_graph_set_node_type(void)
+{
+	unsigned int graphId = Scr_GetInt(0);
+	AStarGraph* graphPointer = GetGraphById(graphId);
+	if ( !graphPointer )
+	{
+		stackError("gsc_graph_set_node_type() graph %d does not exist", graphId);
+		stackPushUndefined();
+		return;
+	}
+	AStarGraph& graph = *graphPointer;
+
+	unsigned int nodeId = Scr_GetInt(1);
+	AStarGraphNode* node = graph.GetNodeById(nodeId);
+	if ( !node )
+	{
+		stackError("gsc_graph_set_node_type() node %d not found in graph %d", nodeId, graphId);
+		stackPushUndefined();
+		return;
+	}
+
+	int type = Scr_GetInt(2);
+	node->type = type;
+
+	InvalidatePrecompute(graph);
+	stackPushBool(qtrue);
+}
+
+void gsc_graph_get_node_ids_accessible_from(void)
+{
+	unsigned int graphId = Scr_GetInt(0);
+	AStarGraph* graphPointer = GetGraphById(graphId);
+	if ( !graphPointer )
+	{
+		stackError("gsc_graph_get_node_ids_accessible_from() graph %d does not exist", graphId);
+		stackPushUndefined();
+		return;
+	}
+	AStarGraph& graph = *graphPointer;
+
+	unsigned int nodeId = Scr_GetInt(1);
+	AStarGraphNode* startNode = graph.GetNodeById(nodeId);
+	if ( !startNode )
+	{
+		stackError("gsc_graph_get_node_ids_accessible_from() node %d not found in graph %d", nodeId, graphId);
+		stackPushUndefined();
+		return;
+	}
+
+	std::unordered_set<unsigned int> visited;
+	std::vector<AStarGraphNode*> queue;
+	queue.push_back(startNode);
+	visited.insert(startNode->id);
+
+	Scr_MakeArray();
+	for ( size_t qi = 0; qi < queue.size(); ++qi )
+	{
+		AStarGraphNode* currentNode = queue[qi];
+#if USE_FSA_MEMORY
+		unsigned int i = 0;
+		for ( auto edge = begin(currentNode->edges); i < currentNode->numEdges; ++edge, ++i )
+#else
+		for ( auto edge = begin(currentNode->edges); edge != end(currentNode->edges); ++edge )
+#endif
+		{
+			AStarGraphNode* nextNode = edge->end;
+			if ( visited.insert(nextNode->id).second )
+			{
+				queue.push_back(nextNode);
+				stackPushInt(static_cast<int>(nextNode->id));
+				stackPushArrayLast();
+			}
+		}
+	}
+}
+
+void gsc_graph_get_node_ids_accessible_to(void)
+{
+	unsigned int graphId = Scr_GetInt(0);
+	AStarGraph* graphPointer = GetGraphById(graphId);
+	if ( !graphPointer )
+	{
+		stackError("gsc_graph_get_node_ids_accessible_to() graph %d does not exist", graphId);
+		stackPushUndefined();
+		return;
+	}
+	AStarGraph& graph = *graphPointer;
+
+	unsigned int nodeId = Scr_GetInt(1);
+	auto itGoal = graph.nodeIndexById.find(nodeId);
+	if ( itGoal == graph.nodeIndexById.end() )
+	{
+		stackError("gsc_graph_get_node_ids_accessible_to() node %d not found in graph %d", nodeId, graphId);
+		stackPushUndefined();
+		return;
+	}
+
+	const size_t nodeCount = graph.nodes.size();
+	std::vector<std::vector<unsigned int>> incoming(nodeCount);
+	incoming.reserve(nodeCount);
+
+	for ( size_t fromIndex = 0; fromIndex < nodeCount; ++fromIndex )
+	{
+		AStarGraphNode* fromNode = graph.nodes[fromIndex].get();
+#if USE_FSA_MEMORY
+		unsigned int i = 0;
+		for ( auto edge = begin(fromNode->edges); i < fromNode->numEdges; ++edge, ++i )
+#else
+		for ( auto edge = begin(fromNode->edges); edge != end(fromNode->edges); ++edge )
+#endif
+		{
+			auto itTo = graph.nodeIndexById.find(edge->end->id);
+			if ( itTo == graph.nodeIndexById.end() )
+				continue;
+
+			incoming[itTo->second].push_back(fromNode->id);
+		}
+	}
+
+	std::unordered_set<unsigned int> visited;
+	std::vector<unsigned int> queue;
+	queue.push_back(nodeId);
+	visited.insert(nodeId);
+
+	Scr_MakeArray();
+	for ( size_t qi = 0; qi < queue.size(); ++qi )
+	{
+		unsigned int currentId = queue[qi];
+		auto itCurrent = graph.nodeIndexById.find(currentId);
+		if ( itCurrent == graph.nodeIndexById.end() )
+			continue;
+
+		for ( unsigned int fromId : incoming[itCurrent->second] )
+		{
+			if ( visited.insert(fromId).second )
+			{
+				queue.push_back(fromId);
+				stackPushInt(static_cast<int>(fromId));
+				stackPushArrayLast();
+			}
+		}
+	}
+}
+
+void gsc_graph_get_all_nodes(void)
+{
+	unsigned int graphId = Scr_GetInt(0);
+	AStarGraph* graphPointer = GetGraphById(graphId);
+	if ( !graphPointer )
+	{
+		stackError("gsc_graph_get_all_nodes() graph %d does not exist", graphId);
+		stackPushUndefined();
+		return;
+	}
+	AStarGraph& graph = *graphPointer;
+
+	bool useRange = false;
+	vec3_t origin = {0.0f, 0.0f, 0.0f};
+	float maxSquaredDistance = 0.0f;
+
+	if ( Scr_GetNumParam() > 1 )
+	{
+		Scr_GetVector(1, origin);
+		useRange = true;
+
+		if ( Scr_GetNumParam() > 2 )
+			maxSquaredDistance = Scr_GetFloat(2);
+		else
+			maxSquaredDistance = std::numeric_limits<float>::infinity();
+	}
+
+	Scr_MakeArray();
+	for ( auto node = begin(graph.nodes); node != end(graph.nodes); ++node )
+	{
+		AStarGraphNode* currentNode = node->get();
+		if ( useRange )
+		{
+			float distSq = Get3DDistanceSquared(currentNode->origin, origin);
+			if ( distSq > maxSquaredDistance )
+				continue;
+		}
+
+		stackPushInt(static_cast<int>(currentNode->id));
+		stackPushArrayLast();
+	}
+}
+
 void gsc_graph_remove_node(void)
 {
 	unsigned int graphId = Scr_GetInt(0);
@@ -834,6 +1093,57 @@ void gsc_graph_get_edge_properties(void)
 
 	stackError("gsc_graph_get_edge_properties() no edge with start node %d and end node %d found in graph %d", toNodeId, fromNodeId, graphId);
 	stackPushUndefined();
+}
+
+void gsc_graph_set_edge_type(void)
+{
+	unsigned int graphId = Scr_GetInt(0);
+	AStarGraph* graphPointer = GetGraphById(graphId);
+	if ( !graphPointer )
+	{
+		stackError("gsc_graph_set_edge_type() graph %d does not exist", graphId);
+		stackPushUndefined();
+		return;
+	}
+	AStarGraph& graph = *graphPointer;
+
+	unsigned int fromNodeId = Scr_GetInt(1);
+	AStarGraphNode* fromNode = graph.GetNodeById(fromNodeId);
+	if ( !fromNode )
+	{
+		stackError("gsc_graph_set_edge_type() start node %d not found in graph %d", fromNodeId, graphId);
+		stackPushUndefined();
+		return;
+	}
+
+	unsigned int toNodeId = Scr_GetInt(2);
+	AStarGraphNode* toNode = graph.GetNodeById(toNodeId);
+	if ( !toNode )
+	{
+		stackError("gsc_graph_set_edge_type() end node %d not found in graph %d", toNodeId, graphId);
+		stackPushUndefined();
+		return;
+	}
+
+	int type = Scr_GetInt(3);
+
+#if USE_FSA_MEMORY
+	unsigned int i = 0;
+	for ( auto edge = begin(fromNode->edges); i < fromNode->numEdges; ++edge, ++i )
+#else
+	for ( auto edge = begin(fromNode->edges); edge != end(fromNode->edges); ++edge )
+#endif
+	{
+		if ( edge->end == toNode )
+		{
+			edge->type = type;
+			InvalidatePrecompute(graph);
+			stackPushBool(qtrue);
+			return;
+		}
+	}
+
+	stackPushBool(qfalse);
 }
 
 void gsc_graph_remove_edge(void)
