@@ -119,7 +119,7 @@ void *exec_async(void *input_c)
 		char c;
 		int curpos = 0;
 
-		while ( (c = getc(fp)) != EOF )
+		while ( ( c = getc(fp) ) != EOF )
 		{
 			if ( c == '\n' || curpos == MAX_STRINGLENGTH - 1 )
 			{

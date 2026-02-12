@@ -4602,7 +4602,7 @@ void custom_SV_BotUserMove(client_t *client)
 }
 #endif
 
-void hook_RuntimeError_in_VM_Execute(const char *pos, int error_index, const char *error_message, const char *dialog_error_message)
+void hook_RuntimeError_in_VM_ExecuteInternal(const char *pos, int error_index, const char *error_message, const char *dialog_error_message)
 {
 	RuntimeError(pos, error_index, error_message, dialog_error_message);
 
@@ -8965,7 +8965,7 @@ qboolean custom_Bullet_Fire_Drop(droppingBullet_t *bullet, const gentity_t *infl
 			if ( self->s.eType == ET_PLAYER_CORPSE && g_corpseHit->current.boolean ) // New: g_corpseHit dvar
 				surfaceType = 7;
 			else
-				surfaceType = ( trace.surfaceFlags & 0x1F00000 ) >> 20;
+				surfaceType = (trace.surfaceFlags & 0x1F00000) >> 20;
 
 			tempEnt->s.surfType = surfaceType;
 			tempEnt->s.otherEntityNum = weaponEnt->s.number;
@@ -9776,10 +9776,7 @@ void G_RunGravityModelNoBounce(gentity_t *ent) // G_RunItem as base
 			origin[2] = origin[2] - 1.0;
 		}
 
-		if ( customEntityState[ent->s.number].collideModels )
-			SV_Trace(&trace, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, ent->s.number, ent->clipmask, 1, NULL, 1);
-		else
-			SV_Trace(&trace, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, ent->s.number, ent->clipmask, 0, NULL, 1);
+		SV_Trace(&trace, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, ent->s.number, ent->clipmask, customEntityState[ent->s.number].collideModels, NULL, 1);
 
 		if ( trace.fraction < 1.0 )
 		{
@@ -9788,10 +9785,7 @@ void G_RunGravityModelNoBounce(gentity_t *ent) // G_RunItem as base
 			{
 				VectorSubtract(origin, ent->r.currentOrigin, subOrigin);
 				VectorMA(origin, 1 - DotProduct(subOrigin, trace.normal), trace.normal, origin);
-				if ( customEntityState[ent->s.number].collideModels )
-					SV_Trace(&trace, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, ent->s.number, ent->clipmask, 1, NULL, 1);
-				else
-					SV_Trace(&trace, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, ent->s.number, ent->clipmask, 0, NULL, 1);
+				SV_Trace(&trace, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, ent->s.number, ent->clipmask, customEntityState[ent->s.number].collideModels, NULL, 1);
 				Vec3Lerp(lerpOrigin, origin, trace.fraction, lerpOrigin);
 			}
 			ent->s.pos.trType = TR_LINEAR_STOP;
@@ -10056,58 +10050,58 @@ int custom_CM_AreaEntities(const float *mins, const float *maxs, int *entityList
 	return ae.count;
 }
 
-void PrintCallbackInfo(gentity_t *ent, int callbackHook, unsigned int numArgs)
+void PrintCallbackInfo(gentity_t *ent, int handle, unsigned int paramcount)
 {
 	unsigned int i;
 
 	for ( i = 0; i < sizeof(callbacks)/sizeof(callbacks[0]); i++ )
 	{
-		if ( *callbacks[i].pos == callbackHook )
+		if ( *callbacks[i].pos == handle )
 		{
 			if ( !ent )
-				Com_Printf("Calling %s with %d argument(s)\n", callbacks[i].name, numArgs);
+				Com_Printf("Calling %s with %d argument(s)\n", callbacks[i].name, paramcount);
 			else
-				Com_Printf("Calling %s with %d argument(s) on entity %d\n", callbacks[i].name, numArgs, ent - g_entities);
+				Com_Printf("Calling %s with %d argument(s) on entity %d\n", callbacks[i].name, paramcount, ent - g_entities);
 			return;
 		}
 	}
-	if ( callbackHook == g_scr_data.gametype.main )
+	if ( handle == g_scr_data.gametype.main )
 		Com_Printf("Calling gametype::main\n");
-	else if ( callbackHook == g_scr_data.levelscript )
+	else if ( handle == g_scr_data.levelscript )
 		Com_Printf("Calling map::main\n");
-	else if ( callbackHook == g_scr_data.delete_ )
+	else if ( handle == g_scr_data.delete_ )
 		Com_Printf("Calling codescripts/delete::main\n");
-	else if ( callbackHook == g_scr_data.initstructs )
+	else if ( handle == g_scr_data.initstructs )
 		Com_Printf("Calling codescripts/struct::initstructs\n");
-	else if ( callbackHook == g_scr_data.createstruct )
+	else if ( handle == g_scr_data.createstruct )
 		Com_Printf("Calling codescripts/struct::createstruct\n");
 	else
-		Com_Printf("Calling unknown callback @ 0x%x with %d argument(s)\n", callbackHook, numArgs);
+		Com_Printf("Calling unknown callback @ 0x%x with %d argument(s)\n", handle, paramcount);
 }
 
-short custom_Scr_ExecEntThread(gentity_t *ent, int callbackHook, unsigned int numArgs)
+unsigned short custom_Scr_ExecEntThread(gentity_t *ent, int handle, unsigned int paramcount)
 {
 	if ( g_debugCallbacks->current.boolean )
-		PrintCallbackInfo(ent, callbackHook, numArgs);
+		PrintCallbackInfo(ent, handle, paramcount);
 
 	hook_Scr_ExecEntThread->unhook();
-	short (*Scr_ExecEntThread)(gentity_t *ent, int callbackHook, unsigned int numArgs);
+	unsigned short (*Scr_ExecEntThread)(gentity_t *ent, int handle, unsigned int paramcount);
 	*(int *)&Scr_ExecEntThread = hook_Scr_ExecEntThread->from;
-	short ret = Scr_ExecEntThread(ent, callbackHook, numArgs);
+	unsigned short ret = Scr_ExecEntThread(ent, handle, paramcount);
 	hook_Scr_ExecEntThread->hook();
 
 	return ret;
 }
 
-short custom_Scr_ExecThread(int callbackHook, unsigned int numArgs)
+unsigned short custom_Scr_ExecThread(int handle, unsigned int paramcount)
 {
 	if ( g_debugCallbacks->current.boolean )
-		PrintCallbackInfo(NULL, callbackHook, numArgs);
+		PrintCallbackInfo(NULL, handle, paramcount);
 
 	hook_Scr_ExecThread->unhook();
-	short (*Scr_ExecThread)(int callbackHook, unsigned int numArgs);
+	unsigned short (*Scr_ExecThread)(int handle, unsigned int paramcount);
 	*(int *)&Scr_ExecThread = hook_Scr_ExecThread->from;
-	short ret = Scr_ExecThread(callbackHook, numArgs);
+	unsigned short ret = Scr_ExecThread(handle, paramcount);
 	hook_Scr_ExecThread->hook();
 
 	return ret;
@@ -11514,7 +11508,7 @@ public:
 		cracking_hook_call(0x0806B2CE, (int)hook_Com_sprintf_in_NET_AdrToString_IPX);
 		cracking_hook_call(0x0808BDC8, (int)hook_FS_ReadFile_in_SV_Map_f);
 		cracking_hook_call(0x080F7803, (int)hook_Player_UpdateLookAtEntity);
-		cracking_hook_call(0x08082346, (int)hook_RuntimeError_in_VM_Execute);
+		cracking_hook_call(0x08082346, (int)hook_RuntimeError_in_VM_ExecuteInternal);
 		cracking_hook_call(0x0811599A, (int)hook_SetExpFog_density_typo);
 		cracking_hook_call(0x0812C28D, (int)hook_sprintf_in_FX_ParseEffect);
 		cracking_hook_call(0x080F4509, (int)hook_sprintf_in_G_ParseWeaponAccurayGraphInternal);

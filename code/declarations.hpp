@@ -136,17 +136,18 @@
 #define FL_INVISIBLE            0x800
 #define FL_LINKTO_ENABLED       0x1000
 #define FL_GRENADE_TOUCH_DAMAGE 0x4000
+#define FL_GRENADE_NO_BOUNCE    0x8000	// Guessed name
 #define FL_MISSILE_UNKNOWN      0x10000
 #define FL_STABLE_MISSILE       0x20000
 
 // entityShared_t->svFlags
-#define	SVF_NOCLIENT  0x00000001 // Don't send entity to clients, even if it has effects
-#define	SVF_BODY      0x00000002 // Player or corpse
-#define	SVF_DOBJ      0x00000004 // Dobj model, can be player model, script model, item.
-#define	SVF_BROADCAST 0x00000008 // Send to all connected clients
-#define	SVF_OBJECTIVE 0x00000010 // Added to snapshots, even if not nearby or behind fog
-#define SVF_RADIUS    0x00000020 // For trigger_radius and few other things
-#define SVF_DISK      0x00000040 // For trigger_disk and few other things
+#define	SVF_NOCLIENT  0x1	// Don't send entity to clients, even if it has effects
+#define	SVF_BODY      0x2	// Player or corpse
+#define	SVF_DOBJ      0x4	// Dobj model, can be player model, script model, item.
+#define	SVF_BROADCAST 0x8	// Send to all connected clients
+#define	SVF_OBJECTIVE 0x10	// Added to snapshots, even if not nearby or behind fog
+#define SVF_RADIUS    0x20	// For trigger_radius and few other things
+#define SVF_DISK      0x40	// For trigger_disk and few other things
 
 #define KEY_MASK_NONE       0
 #define KEY_MASK_FORWARD    127
@@ -326,7 +327,7 @@ typedef enum
 	CRITSECT_UNKNOWN3 = 3,
 	CRITSECT_DVAR = 4,
 	CRITSECT_RD_BUFFER = 5,
-	CRITSECT_PRINT = 6, // New
+	CRITSECT_PRINT, // New from here on
 #if COMPILE_CUSTOM_VOICE == 1
 	CRITSECT_LOAD_SOUND_FILE,
 #endif

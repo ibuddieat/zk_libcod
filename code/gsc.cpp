@@ -388,7 +388,7 @@ scr_method_t scriptMethods[] =
 	{"getIP", gsc_player_getip, 0},
 	{"getLastConnectTime", gsc_player_getlastconnecttime, 0},
 	{"getLastGamestate", gsc_player_getlastgamestatesize, 0},
-	{"getLastMSG", gsc_player_getlastmsg, 0},
+	{"getLastMsg", gsc_player_getlastmsg, 0},
 	{"getNumberOfEntsInSnapshot", gsc_player_getnumberofentsinsnapshot, 0},
 	{"getPing", gsc_player_getping, 0},
 	{"getPlayerstateFlags", gsc_player_getplayerstateflags, 0},
