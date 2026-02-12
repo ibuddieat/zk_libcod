@@ -1654,6 +1654,23 @@ extern dvar_t *sv_voiceQuality;
 encoder_async_task *first_encoder_async_task = NULL;
 extern int currentMaxSoundIndex;
 
+void Encode_FreeTask(encoder_async_task *task)
+{
+	Sys_EnterCriticalSection(CRITSECT_LOAD_SOUND_FILE);
+
+	if ( task->next != NULL )
+		task->next->prev = task->prev;
+
+	if ( task->prev != NULL )
+		task->prev->next = task->next;
+	else
+		first_encoder_async_task = task->next;
+	
+	Sys_LeaveCriticalSection(CRITSECT_LOAD_SOUND_FILE);
+
+	delete task;
+}
+
 void Encode_SetOptions(void *encoder)
 {
 	int g_encoder_samplerate = 8192;
@@ -1665,7 +1682,7 @@ void Encode_SetOptions(void *encoder)
 	speex_encoder_ctl(encoder, SPEEX_SET_DTX /* 34 */, &enabled); // Discontinuous Transmission (DTX)
 }
 
-void *encode_async(void *newtask)
+void * Encode_Async(void *newtask)
 {
 	encoder_async_task *task = (encoder_async_task*)newtask;
 	loadSoundFileThreadResult_t result = ENCODER_OK;
@@ -1792,15 +1809,9 @@ void *encode_async(void *newtask)
 		Sys_LeaveCriticalSection(CRITSECT_LOAD_SOUND_FILE);
 	}
 
-	if ( task->next != NULL )
-		task->next->prev = task->prev;
+	// Free task object
+	Encode_FreeTask(task);
 
-	if ( task->prev != NULL )
-		task->prev->next = task->next;
-	else
-		first_encoder_async_task = task->next;
-
-	delete task;
 	return NULL;
 }
 
@@ -1939,6 +1950,8 @@ void gsc_utils_loadsoundfile()
 		fclose(file);
 	}
 
+	Sys_EnterCriticalSection(CRITSECT_LOAD_SOUND_FILE);
+
 	encoder_async_task *current = first_encoder_async_task;
 
 	while ( current != NULL && current->next != NULL )
@@ -1958,19 +1971,25 @@ void gsc_utils_loadsoundfile()
 		current->next = newtask;
 	else
 		first_encoder_async_task = newtask;
+	
+	Sys_LeaveCriticalSection(CRITSECT_LOAD_SOUND_FILE);
 
 	pthread_t encoder_doer;
 
-	if ( pthread_create(&encoder_doer, NULL, encode_async, newtask) != 0 )
+	if ( pthread_create(&encoder_doer, NULL, Encode_Async, newtask) != 0 )
 	{
+		Encode_FreeTask(newtask);
 		stackError("gsc_utils_loadsoundfile() error creating encoder async handler thread");
 		stackPushUndefined();
 		return;
 	}
 
-	if ( pthread_detach(encoder_doer) != 0 )
+	int detach = pthread_detach(encoder_doer);
+
+	if ( detach != 0 )
 	{
-		stackError("gsc_utils_loadsoundfile() error detaching encoder async handler thread");
+		// Do not free the task here since the thread was created successfully
+		stackError("gsc_utils_loadsoundfile() error %d detaching encoder async handler thread", detach);
 		stackPushUndefined();
 		return;
 	}
