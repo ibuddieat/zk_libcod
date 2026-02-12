@@ -96,7 +96,22 @@ void gsc_exec()
 	pclose(fp);
 }
 
-void *exec_async(void *input_c)
+void Exec_FreeTask(exec_async_task *task)
+{
+	// No mutex necessary here since we access this only from the main thread
+
+	if ( task->next != NULL )
+		task->next->prev = task->prev;
+
+	if ( task->prev != NULL )
+		task->prev->next = task->next;
+	else
+		first_exec_async_task = task->next;
+
+	delete task;
+}
+
+void * Exec_Async(void *input_c)
 {
 	exec_async_task *task = (exec_async_task*)input_c;
 	FILE *fp;
@@ -227,16 +242,20 @@ void gsc_exec_async_create()
 	
 	pthread_t exec_doer;
 
-	if ( pthread_create(&exec_doer, NULL, exec_async, newtask) != 0 )
+	if ( pthread_create(&exec_doer, NULL, Exec_Async, newtask) != 0 )
 	{
-		stackError("gsc_exec_async_create() error creating exec async handler thread!");
+		Exec_FreeTask(newtask);
+		stackError("gsc_exec_async_create() error creating exec async handler thread");
 		stackPushUndefined();
 		return;
 	}
 
-	if ( pthread_detach(exec_doer) != 0 )
+	int detach = pthread_detach(exec_doer);
+
+	if ( detach != 0 )
 	{
-		stackError("gsc_exec_async_create() error detaching exec async handler thread!");
+		// Do not free the task here since the thread was created successfully
+		stackError("gsc_exec_async_create() error %d detaching exec async handler thread", detach);
 		stackPushUndefined();
 		return;
 	}
@@ -325,16 +344,20 @@ void gsc_exec_async_create_nosave()
 	
 	pthread_t exec_doer;
 
-	if ( pthread_create(&exec_doer, NULL, exec_async, newtask) != 0 )
+	if ( pthread_create(&exec_doer, NULL, Exec_Async, newtask) != 0 )
 	{
-		stackError("gsc_exec_async_create_nosave() error creating exec async handler thread!");
+		Exec_FreeTask(newtask);
+		stackError("gsc_exec_async_create_nosave() error creating exec async handler thread");
 		stackPushUndefined();
 		return;
 	}
 
-	if ( pthread_detach(exec_doer) != 0 )
+	int detach = pthread_detach(exec_doer);
+
+	if ( detach != 0 )
 	{
-		stackError("gsc_exec_async_create_nosave() error detaching exec async handler thread!");
+		// Do not free the task here since the thread was created successfully
+		stackError("gsc_exec_async_create_nosave() error %d detaching exec async handler thread", detach);
 		stackPushUndefined();
 		return;
 	}
@@ -400,16 +423,7 @@ void gsc_exec_async_checkdone()
 				Scr_FreeThread(ret);
 			}
 
-			// Free task
-			if ( task->next != NULL )
-				task->next->prev = task->prev;
-
-			if ( task->prev != NULL )
-				task->prev->next = task->next;
-			else
-				first_exec_async_task = task->next;
-
-			delete task;
+			Exec_FreeTask(task);
 		}
 	}
 }
