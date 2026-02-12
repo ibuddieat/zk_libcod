@@ -13,6 +13,7 @@ Script code functions:
   * `processRemoteCommand()` no longer requires any parameters to be passed in
 
 Script code methods:
+  * Renamed `getLastGamestate()` to `getLastGamestateSize()`
   * `<entity> setBounds(<length>, <width>, <height>)` now requires three parameters, instead of two
 
 # 🏗 Changed with or since release v13.0:
