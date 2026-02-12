@@ -410,8 +410,10 @@ void custom_GScr_LoadConsts(void)
 	custom_scr_const.bot_trigger = GScr_AllocString("bot_trigger");
 	custom_scr_const.bounce = GScr_AllocString("bounce");
 	custom_scr_const.bullet = GScr_AllocString("bullet");
+	custom_scr_const.contents = GScr_AllocString("contents");
 	custom_scr_const.flags = GScr_AllocString("flags");
 	custom_scr_const.land = GScr_AllocString("land");
+	custom_scr_const.material = GScr_AllocString("material");
 	#if COMPILE_CUSTOM_VOICE == 1
 	custom_scr_const.sound_file_done = GScr_AllocString("sound_file_done");
 	custom_scr_const.sound_file_stop = GScr_AllocString("sound_file_stop");
@@ -8077,8 +8079,21 @@ void custom_Scr_BulletTrace(void)
 		Scr_AddArrayStringIndexed(scr_const.normal);
 		Scr_AddString(Com_SurfaceTypeToName((int)( trace.surfaceFlags & 0x1F00000U ) >> 0x14));
 		Scr_AddArrayStringIndexed(scr_const.surfacetype);
+		/* New code start: Return additional trace result data */
 		Scr_AddInt(trace.surfaceFlags);
 		Scr_AddArrayStringIndexed(custom_scr_const.flags);
+		Scr_AddInt(trace.contents);
+		Scr_AddArrayStringIndexed(custom_scr_const.contents);
+		if ( !trace.material )
+		{
+			Scr_AddUndefined();
+		}
+		else
+		{
+			Scr_AddString(trace.material);
+		}
+		Scr_AddArrayStringIndexed(custom_scr_const.material);
+		/* New code end */
 	}
 	else
 	{
@@ -8088,8 +8103,14 @@ void custom_Scr_BulletTrace(void)
 		Scr_AddArrayStringIndexed(scr_const.normal);
 		Scr_AddConstString(scr_const.none);
 		Scr_AddArrayStringIndexed(scr_const.surfacetype);
+		/* New code start: Return additional trace result data */
 		Scr_AddInt(0);
 		Scr_AddArrayStringIndexed(custom_scr_const.flags);
+		Scr_AddInt(0);
+		Scr_AddArrayStringIndexed(custom_scr_const.contents);
+		Scr_AddUndefined();
+		Scr_AddArrayStringIndexed(custom_scr_const.material);
+		/* New code end */
 	}
 }
 

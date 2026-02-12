@@ -4259,8 +4259,10 @@ typedef struct
 	unsigned short bot_trigger;
 	unsigned short bounce;
 	unsigned short bullet;
+	unsigned short contents;
 	unsigned short flags;
 	unsigned short land;
+	unsigned short material;
 	#if COMPILE_CUSTOM_VOICE == 1
 	unsigned short sound_file_done;
 	unsigned short sound_file_stop;

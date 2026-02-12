@@ -27,7 +27,7 @@ Module: Trace<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Allows script to do a point trace with MASK_SHOT content mask (by default). Returns distance fraction, hit position, hit entity, hit surface normal vector, hit surface type, and hit surface flags. Allows to use a custom content mask. If doing so, the hit characters parameter setting is overriden.</p>
+<p>Allows script to do a point trace with MASK_SHOT content mask (by default). Returns distance fraction, hit position, hit entity, hit surface normal vector, hit surface type, hit surface flags, hit surface contents, and the hit surface material. Allows to use a custom content mask. If doing so, the hit characters parameter setting is overriden.</p>
 
 </H3>
 </TR></TD></TABLE>
@@ -45,6 +45,8 @@ trace["entity"] // hit entity; undefined, if no hit
 trace["normal"] // normalized bullet direction
 trace["surfacetype"] // hit surface type; "none", if no hit
 trace["flags"] // hit surface flags; 0, if no hit
+trace["contents"] // hit surface contents; 0, if no hit
+trace["material"] // hit surface material; undefined, if no hit or if the surface has no material
 */
 </PRE>
 </H3>
