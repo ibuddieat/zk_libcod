@@ -1671,4 +1671,7 @@ static const Jump_AddSurfaceEvent_t Jump_AddSurfaceEvent = (Jump_AddSurfaceEvent
 typedef void (*Jump_ClearState_t)(playerState_t *ps);
 static const Jump_ClearState_t Jump_ClearState = (Jump_ClearState_t)0x080DC718;
 
+typedef unsigned int (*VM_Execute_t)(unsigned int localId, const char *pos, unsigned int paramcount);
+static const VM_Execute_t VM_Execute = (VM_Execute_t)0x08083E34;
+
 #endif

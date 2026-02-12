@@ -398,6 +398,9 @@ qboolean logHeartbeat = qtrue;
 // Storage for using the logfileName dvar
 char openLogfileName[MAX_OSPATH];
 
+// Storage for return value of script callback calls
+SavedVariableValue scriptHandleReturnValue;
+
 void custom_GScr_LoadConsts(void)
 {
 	/* Allocate custom strings for Scr_Notify() here, scheme:
@@ -6190,6 +6193,9 @@ void custom_G_RunFrame(int levelTime)
 
 	/* New code start: Process some additional callbacks, if data is available */
 
+	// Wipe saved script callback return value
+	VM_ClearSavedReturnValue();
+
 	// Warn about server lag
 	if ( codecallback_hitchwarning && hitchFrameTime && Scr_IsSystemActive() )
 	{
@@ -11493,6 +11499,46 @@ void custom_SV_FinalMessage(const char *message)
 	hook_SV_FinalMessage->hook();
 }
 
+void VM_ClearSavedReturnValue(void)
+{
+	SavedVariableValue *val = &scriptHandleReturnValue;
+	if ( val->type == STACK_OBJECT && scrVarPub.levelId == val->levelId )
+		RemoveRefToObject(val->u.pointerValue);
+
+	memset(val, 0, sizeof(SavedVariableValue));
+}
+
+void VM_SaveReturnValue(VariableValue *arg)
+{
+	SavedVariableValue *ret = &scriptHandleReturnValue;
+	char *stringValueSrc;
+
+	switch ( arg->type )
+	{
+	case STACK_UNDEFINED: break;
+	case STACK_OBJECT: AddRefToObject(arg->u.pointerValue); ret->u.pointerValue = arg->u.pointerValue; break;
+	case STACK_STRING:
+	case STACK_LOCALIZED_STRING:
+		stringValueSrc = SL_ConvertToString(arg->u.stringValue);
+		I_strncpyz(ret->u.stringValue, stringValueSrc, strlen(stringValueSrc) + 1);
+		break;
+	case STACK_VECTOR: VectorCopy(arg->u.vectorValue, ret->u.vectorValue); break;
+	case STACK_FLOAT: ret->u.floatValue = arg->u.floatValue; break;
+	case STACK_INT: ret->u.intValue = arg->u.intValue; break;
+	case STACK_FUNCTION: ret->u.codePosValue = arg->u.codePosValue; break;
+	default: ret->type = STACK_UNDEFINED;
+	}
+	ret->levelId = scrVarPub.levelId;
+}
+
+unsigned int VM_ExecuteSaveReturnValue(unsigned int localId, const char *pos, unsigned int paramcount)
+{
+	unsigned int id = VM_Execute(localId, pos, paramcount);
+	VM_SaveReturnValue(scrVmPub.top);
+
+	return id;
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -11540,6 +11586,10 @@ public:
 		cracking_hook_call(0x0808DB12, (int)hook_SV_Cmd_Argv_in_SV_AuthorizeIpPacket);
 		cracking_hook_call(0x08070BE7, (int)Scr_GetCustomFunction);
 		cracking_hook_call(0x08070E0B, (int)Scr_GetCustomMethod);
+		cracking_hook_call(0x0808402E, (int)VM_ExecuteSaveReturnValue); // Scr_ExecThread
+		cracking_hook_call(0x080840C0, (int)VM_ExecuteSaveReturnValue); // Scr_ExecEntThreadNum
+		cracking_hook_call(0x08084141, (int)VM_ExecuteSaveReturnValue); // Scr_AddExecThread
+		cracking_hook_call(0x080841BA, (int)VM_ExecuteSaveReturnValue); // Scr_AddExecEntThreadNum
 
 		hook_Com_DPrintf = new cHook(0x08060E3A, (int)custom_Com_DPrintf);
 		#if COMPILE_UTILS == 1

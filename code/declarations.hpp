@@ -4068,6 +4068,7 @@ typedef struct
 {
 	union SavedVariableUnion u;
 	int type;
+	unsigned int levelId;
 } SavedVariableValue;
 
 typedef struct scr_notify_s
