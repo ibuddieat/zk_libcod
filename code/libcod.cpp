@@ -4812,10 +4812,14 @@ int custom_BG_PlayAnim(playerState_t *ps, int animNum, animBodyPart_t bodyPart, 
 	int duration;
 
 	hook_BG_PlayAnim->unhook();
-	if ( !customPlayerState[ps->clientNum].animation )
-		duration = BG_PlayAnim(ps, animNum, bodyPart, forceDuration, setTimer, isContinue, force);
-	else
+
+	// Do not override the animation if the game is about to play a death
+	// animation, to avoid having to create player clones in a delayed manner
+	if ( customPlayerState[ps->clientNum].animation && ( animNum < 30 || animNum > 51 ) )
 		duration = BG_PlayAnim(ps, customPlayerState[ps->clientNum].animation, bodyPart, forceDuration, qtrue, isContinue, qtrue);
+	else
+		duration = BG_PlayAnim(ps, animNum, bodyPart, forceDuration, setTimer, isContinue, force);
+
 	hook_BG_PlayAnim->hook();
 
 	return duration;
