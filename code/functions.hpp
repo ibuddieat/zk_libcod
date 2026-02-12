@@ -735,7 +735,7 @@ static const PM_GetEffectiveStance_t PM_GetEffectiveStance = (PM_GetEffectiveSta
 typedef unsigned int (*PM_GroundSurfaceType_t)(pml_t *pml);
 static const PM_GroundSurfaceType_t PM_GroundSurfaceType = (PM_GroundSurfaceType_t)0x080E2220;
 
-typedef long double (*PM_PermuteRestrictiveClipPlanes_t)(const float *velocity, int planeCount, const vec3_t *planes, int *permutation);
+typedef float (*PM_PermuteRestrictiveClipPlanes_t)(const float *velocity, int planeCount, const vec3_t *planes, int *permutation);
 static const PM_PermuteRestrictiveClipPlanes_t PM_PermuteRestrictiveClipPlanes = (PM_PermuteRestrictiveClipPlanes_t)0x080E9B7C;
 
 typedef void (*PM_playerTrace_t)(pmove_t *pmove, trace_t *results, const float *start, const float *mins, const float *maxs, const float *end, int passEntityNum, int contentMask);
@@ -1020,13 +1020,13 @@ static const I_CleanStr_t I_CleanStr = (I_CleanStr_t)0x080B7E54;
 typedef int (*I_DrawStrlen_t)(const char *str);
 static const I_DrawStrlen_t I_DrawStrlen = (I_DrawStrlen_t)0x080B7DEC;
 
-typedef long double (*I_fabs_t)(const float value);
+typedef float (*I_fabs_t)(const float value);
 static const I_fabs_t I_fabs = (I_fabs_t)0x080EADF2;
 
 typedef int (*I_max_t)(int x, int y);
 static const I_max_t I_max = (I_max_t)0x080F292E;
 
-typedef long double (*I_sqrt_t)(const float value);
+typedef float (*I_sqrt_t)(const float value);
 static const I_sqrt_t I_sqrt = (I_sqrt_t)0x080AAEBE;
 
 typedef void (*I_strncpyz_t)(char *dest, const char *src, int destsize);
@@ -1266,10 +1266,10 @@ static const vectoyaw_t vectoyaw = (vectoyaw_t)0x080A4D5A;
 typedef void (*VecToAngles_t)(vec3_t value1, vec3_t angles);
 static const VecToAngles_t VecToAngles = (VecToAngles_t)0x080A4FE2;
 
-typedef double (*Vec3Distance_t)(float *v1, float *v2);
+typedef float (*Vec3Distance_t)(float *v1, float *v2);
 static const Vec3Distance_t Vec3Distance = (Vec3Distance_t)0x080A40EA;
 
-typedef long double (*Vec3DistanceSq_t)(float *v1, float *v2);
+typedef float (*Vec3DistanceSq_t)(float *v1, float *v2);
 static const Vec3DistanceSq_t Vec3DistanceSq = (Vec3DistanceSq_t)0x080A4116;
 
 typedef vec_t (*Vec3Normalize_t)(vec3_t v);
@@ -1281,7 +1281,7 @@ static const Vec3NormalizeTo_t Vec3NormalizeTo = (Vec3NormalizeTo_t)0x080A45FC;
 typedef void (*Vec3Lerp_t)(const float *from, const float *to, float frac, float *result);
 static const Vec3Lerp_t Vec3Lerp = (Vec3Lerp_t)0x080E129E;
 
-typedef long double (*Vec2LengthSq_t)(float *v);
+typedef float (*Vec2LengthSq_t)(float *v);
 static const Vec2LengthSq_t Vec2LengthSq = (Vec2LengthSq_t)0x080F7BE6;
 
 typedef vec_t (*Vec2Normalize_t)(vec2_t v);
@@ -1467,16 +1467,16 @@ static const BG_EvaluateTrajectory_t BG_EvaluateTrajectory = (BG_EvaluateTraject
 typedef void (*BG_EvaluateTrajectoryDelta_t)(const trajectory_t *tr, int atTime, float *result);
 static const BG_EvaluateTrajectoryDelta_t BG_EvaluateTrajectoryDelta = (BG_EvaluateTrajectoryDelta_t)0x080DF948;
 
-typedef long double (*VectorLength_t)(float *vec);
+typedef float (*VectorLength_t)(float *vec);
 static const VectorLength_t VectorLength = (VectorLength_t)0x081187F0;
 
-typedef long double (*VectorLength2_t)(float *vec);
+typedef float (*VectorLength2_t)(float *vec);
 static const VectorLength2_t VectorLength2 = (VectorLength2_t)0x080F7C08;
 
-typedef long double (*G_crandom_t)(void);
+typedef float (*G_crandom_t)(void);
 static const G_crandom_t G_crandom = (G_crandom_t)0x080A3792;
 
-typedef long double (*G_random_t)(void);
+typedef float (*G_random_t)(void);
 static const G_random_t G_random = (G_random_t)0x080A3774;
 
 typedef void (*Cbuf_ExecuteText_t)(int exec_when, const char* text);
@@ -1497,10 +1497,10 @@ static const Activate_trigger_damage_t Activate_trigger_damage = (Activate_trigg
 typedef void (*SnapAngles_t)(float *angles);
 static const SnapAngles_t SnapAngles = (SnapAngles_t)0x0809C5C2;
 
-typedef double (*RadiusFromBounds2_t)(float *mins, float *maxs);
+typedef float (*RadiusFromBounds2_t)(float *mins, float *maxs);
 static const RadiusFromBounds2_t RadiusFromBounds2 = (RadiusFromBounds2_t)0x080A8660;
 
-typedef double (*RadiusFromBounds_t)(float *mins, float *maxs);
+typedef float (*RadiusFromBounds_t)(float *mins, float *maxs);
 static const RadiusFromBounds_t RadiusFromBounds = (RadiusFromBounds_t)0x080A85D2;
 
 typedef int (*CM_BoxLeafnums_t)(float *mins, float *maxs, int *list, int listsize, int *lastLeaf);

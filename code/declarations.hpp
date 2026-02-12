@@ -4136,7 +4136,7 @@ typedef struct customEntityState_s
 	customGravityType_t gravityType;
 	qboolean collideModels;
 	vec3_t velocity;
-	double maxVelocity;
+	float maxVelocity;
 	qboolean angledGravity;
 	float parallelBounce;
 	float perpendicularBounce;
@@ -4150,7 +4150,7 @@ typedef struct
 {
 	const gentity_t *attacker;
 	vec3_t direction;
-	double distance;
+	float distance;
 	float dmgScale;
 	float drag;
 	gentity_t *inflictor;

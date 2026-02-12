@@ -5,10 +5,10 @@ qboolean IsNullVector(float *vec)
 	return vec[0] == 0.0 && vec[1] == 0.0 && vec[2] == 0.0;
 }
 
-void VectorClampLength(float *vec, double max)
+void VectorClampLength(float *vec, float max)
 {
-	double length;
-	double factor;
+	float length;
+	float factor;
 	
 	length = VectorLength(vec);
 	if ( length > max )

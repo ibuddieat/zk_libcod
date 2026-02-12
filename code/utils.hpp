@@ -4,7 +4,7 @@
 #include "gsc.hpp"
 
 qboolean IsNullVector(float *vec);
-void VectorClampLength(float *vec, double max);
+void VectorClampLength(float *vec, float max);
 
 uint64_t Sys_Milliseconds64(void);
 

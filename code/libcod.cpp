@@ -1768,7 +1768,7 @@ void custom_G_SetClientContents(gentity_t *ent)
 qboolean custom_StuckInClient(gentity_t *self)
 {
 	float fTemp;
-	long double dTemp;
+	float fTemp2;
 	float selfEjectSpeed;
 	float hitEjectSpeed;
 	vec2_t dir;
@@ -1798,14 +1798,14 @@ qboolean custom_StuckInClient(gentity_t *self)
 
 				VectorSubtract2(hit->r.currentOrigin, self->r.currentOrigin, dir);
 				fTemp = self->r.maxs[0] + hit->r.maxs[0];
-				dTemp = Vec2LengthSq(dir);
-				if ( dTemp <= ( (long double)fTemp * (long double)fTemp ) )
+				fTemp2 = Vec2LengthSq(dir);
+				if ( fTemp2 <= fTemp * fTemp )
 				{
 					VectorSubtract2(hit->r.currentOrigin, self->r.currentOrigin, dir);
-					dTemp = G_crandom();
-					dir[0] = dir[0] + ( ( dTemp + dTemp ) - 1.0 );
-					dTemp = G_crandom();
-					dir[1] = dir[1] + ( ( dTemp + dTemp ) - 1.0 );
+					fTemp2 = G_crandom();
+					dir[0] = dir[0] + ( ( fTemp2 + fTemp2 ) - 1.0 );
+					fTemp2 = G_crandom();
+					dir[1] = dir[1] + ( ( fTemp2 + fTemp2 ) - 1.0 );
 					Vec2Normalize(dir);
 					if ( 0.0 < VectorLength2(hit->client->ps.velocity) )
 					{
@@ -2761,7 +2761,7 @@ void custom_MSG_WriteDeltaStruct(msg_t *msg, entityState_t *from, entityState_t 
 							
 							if ( maxDistance > 0 )
 							{
-								long double distance = Vec3DistanceSq(client->gentity->r.currentOrigin, origin);
+								float distance = Vec3DistanceSq(client->gentity->r.currentOrigin, origin);
 								if ( (int)distance > ( maxDistance * maxDistance ) )
 									*toF = EV_NONE;
 							}
@@ -7925,7 +7925,7 @@ void custom_Scr_PlayFX(void)
 	vec3_t cross;
 	vec3_t up;
 	vec3_t origin;
-	long double length;
+	float length;
 	int args;
 	uint index;
 	gentity_t *ent;
@@ -9579,7 +9579,7 @@ void custom_G_FreeEntity(gentity_t *ent)
 qboolean G_BounceGravityModel(gentity_t *ent, trace_t *trace) // G_BounceMissile as base
 {
 	int contents;
-	double length;
+	float length;
 	qboolean bounce;
 	vec3_t angle;
 	vec3_t planeNormal;
@@ -9650,7 +9650,6 @@ qboolean G_BounceGravityModel(gentity_t *ent, trace_t *trace) // G_BounceMissile
 
 void G_RunGravityModelWithBounce(gentity_t *ent) // G_RunMissile as base
 {
-	double absDeltaZ;
 	vec3_t lerpOrigin;
 	trace_t trace2;
 	trace_t trace;
@@ -9681,10 +9680,7 @@ void G_RunGravityModelWithBounce(gentity_t *ent) // G_RunMissile as base
 		VectorAdd(ent->r.currentOrigin, maxLerpVector, origin);
 	}
 
-	absDeltaZ = ent->s.pos.trDelta[2];
-	if ( absDeltaZ < 0 )
-		absDeltaZ *= -1;
-	if ( ( absDeltaZ <= 30.0 ) || SV_PointContents(ent->r.currentOrigin, -1, CONTENTS_WATER) )
+	if ( I_fabs(ent->s.pos.trDelta[2]) <= 30 || SV_PointContents(ent->r.currentOrigin, -1, CONTENTS_WATER) )
 	{
 		G_MissileTrace(&trace, ent->r.currentOrigin, origin, ent->s.number, ent->clipmask);
 	}

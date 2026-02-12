@@ -2612,7 +2612,7 @@ void gsc_player_playfxforplayer(scr_entref_t ref)
 	vec3_t forward_vec;
 	vec3_t up_vec;
 	vec3_t cross;
-	long double length;
+	float length;
 
 	args = Scr_GetNumParam();
 	error = qfalse;

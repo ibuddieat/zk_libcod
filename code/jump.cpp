@@ -42,7 +42,7 @@ bool getJumpSlowdownEnable(playerState_t* ps)
 	return jump_slowdownEnable->current.boolean;
 }
 
-double Jump_GetLandFactor(playerState_t *ps)
+float Jump_GetLandFactor(playerState_t *ps)
 {
 	if ( !getJumpSlowdownEnable(ps) ) // Original: jump_slowdownEnable->current.boolean
 	{
@@ -50,7 +50,7 @@ double Jump_GetLandFactor(playerState_t *ps)
 	}
 	if ( ps->pm_time < 1700 )
 	{
-		return (double)ps->pm_time * 1.5 * 0.00058823527 + 1.0;
+		return ps->pm_time * 1.5 * 0.00058823527 + 1.0;
 	}
 	return 2.5;
 }
@@ -137,7 +137,7 @@ void Jump_Start(pmove_t *pm, pml_t *pml, float height)
 	/* New code end */
 }
 
-double Jump_ReduceFriction(playerState_t *ps)
+float Jump_ReduceFriction(playerState_t *ps)
 {
 	float control;
 
