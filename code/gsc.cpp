@@ -55,6 +55,34 @@ void Scr_AddFunc(const char *value)
 	scrVmPub.top->u.codePosValue = value;
 }
 
+void Scr_ClearInParams(void)
+{
+	for ( ; scrVmPub.inparamcount != 0; scrVmPub.inparamcount-- )
+	{
+		RemoveRefToValue(scrVmPub.top);
+		scrVmPub.top--;
+	}
+}
+
+void IncOutParam(void)
+{
+	Scr_ClearInParams();
+	if ( scrVmPub.top == scrVmPub.maxstack )
+	{
+		Com_Error(ERR_DROP, "\x15Internal script stack overflow");
+	}
+	scrVmPub.top++;
+	scrVmPub.outparamcount++;
+}
+
+void Scr_PushConstString(unsigned int value)
+{
+	IncOutParam();
+	scrVmPub.top->type = VAR_STRING;
+	scrVmPub.top->u.stringValue = value;
+	SL_AddRefToString(value);
+}
+
 void NULL_FUNC_ENTITY(scr_entref_t id) {}
 void NULL_FUNC(void) {}
 

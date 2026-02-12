@@ -99,6 +99,7 @@
 #define STACK_REMOVED_THREAD 23
 
 void Scr_AddFunc(const char *value);
+void Scr_PushConstString(unsigned int value);
 
 #define stackPushUndefined Scr_AddUndefined
 #define stackPushBool Scr_AddBool

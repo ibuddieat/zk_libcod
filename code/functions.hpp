@@ -21,13 +21,16 @@ static const GetVarType_t GetVarType = (GetVarType_t)0x0807E5CC;
 typedef unsigned int (*GetArraySize_t)(unsigned int a1);
 static const GetArraySize_t GetArraySize = (GetArraySize_t)0x0807CFFC;
 
+typedef void (*SL_AddRefToString_t)(unsigned int stringValue);
+static const SL_AddRefToString_t SL_AddRefToString = (SL_AddRefToString_t)0x08079B6E;
+
 typedef char * (*SL_ConvertToString_t)(unsigned int index);
 static const SL_ConvertToString_t SL_ConvertToString = (SL_ConvertToString_t)0x08078EE6;
 
 typedef unsigned int (*SL_GetString_t)(const char *str, int type);
 static const SL_GetString_t SL_GetString = (SL_GetString_t)0x080798E0;
 
-typedef void (*SL_RemoveRefToString_t)(unsigned int);
+typedef void (*SL_RemoveRefToString_t)(unsigned int stringValue);
 static const SL_RemoveRefToString_t SL_RemoveRefToString = (SL_RemoveRefToString_t)0x08079CF2;
 
 typedef int (*Scr_GetFunctionHandle_t)(const char* scriptName, const char* labelName, int isNeeded);
@@ -1307,6 +1310,9 @@ static const AddRefToObject_t AddRefToObject = (AddRefToObject_t)0x0807BE0A;
 
 typedef void (*RemoveRefToObject_t)(unsigned int id);
 static const RemoveRefToObject_t RemoveRefToObject = (RemoveRefToObject_t)0x0807BE2C;
+
+typedef void (*RemoveRefToValue_t)(VariableValue *val);
+static const RemoveRefToValue_t RemoveRefToValue = (RemoveRefToValue_t)0x08075DF4;
 
 typedef unsigned int (*FindVariable_t)(unsigned int parentId, unsigned int unsignedValue);
 static const FindVariable_t FindVariable = (FindVariable_t)0x0807C184;
