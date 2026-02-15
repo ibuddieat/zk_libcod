@@ -404,6 +404,7 @@ void gsc_entity_enablegravity(scr_entref_t ref)
 		customEntityState[id].maxVelocity = 8192.0;
 		ent->clipmask = MASK_SHOT | CONTENTS_PLAYERCLIP | CONTENTS_CANSHOTCLIP | CONTENTS_WATER;
 		ent->physicsObject = 1;
+		memset(&ent->s.pos, 0, sizeof(trajectory_t));
 		if ( customEntityState[id].angledGravity )
 		{
 			ent->s.apos.trType = TR_LINEAR;
