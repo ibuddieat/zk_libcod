@@ -3523,6 +3523,7 @@ void gsc_player_setholdingweapondown(scr_entref_t ref)
 	}
 
 	WeaponDef_t *weapDef = BG_GetWeaponDef(ps->weapon);
+	client_t *client = &svs.clients[id];
 
 	if ( Scr_GetInt(0) )
 	{
@@ -3534,7 +3535,7 @@ void gsc_player_setholdingweapondown(scr_entref_t ref)
 
 		// Set new states, some again updated in PM_Weapon
 		customPlayerState[id].holdingDownWeapon = ps->weapon;
-		ps->weaponTime = weapDef->iDropTime;
+		ps->weaponTime = weapDef->iDropTime + client->ping;
 		ps->weaponDelay = 0;
       	ps->weaponstate = WEAPON_DROPPING;
 
@@ -3567,7 +3568,7 @@ void gsc_player_setholdingweapondown(scr_entref_t ref)
 	{
 		if ( customPlayerState[id].holdingDownWeapon )
 		{
-			ps->weaponTime = weapDef->iRaiseTime;
+			ps->weaponTime = weapDef->iRaiseTime + client->ping;
 			ps->weaponstate = WEAPON_RAISING;
 			PM_AddEvent(ps, EV_RAISE_WEAPON);
 			PM_StartWeaponAnim(ps, WEAP_RAISE);

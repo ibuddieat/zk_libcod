@@ -6977,6 +6977,23 @@ void custom_G_ClientStopUsingTurret(gentity_t *self)
 	self->active = 0;
 	self->r.ownerNum = ENTITY_NONE;
 	info->flags &= ~0x800u;
+
+	/* New code start: setHoldingWeaponDown script method enforcement after
+	 leaving turret */
+	int id = owner - g_entities;
+
+	if ( customPlayerState[id].holdingDownWeapon )
+	{
+		playerState_t *ps = SV_GameClientNum(id);
+		WeaponDef_t *weapDef = BG_GetWeaponDef(ps->weapon);
+		client_t *client = &svs.clients[id];
+
+		ps->weaponTime = weapDef->iDropTime + client->ping;
+		PM_AddEvent(ps, EV_PUTAWAY_WEAPON);
+		PM_StartWeaponAnim(ps, WEAP_DROP);
+		BG_AnimScriptEvent(ps, ANIM_ET_DROPWEAPON, 0, 1);
+	}
+	/* New code end */
 }
 
 void custom_G_ParseEntityFields(gentity_t *ent)
@@ -7401,6 +7418,12 @@ void custom_Player_UpdateCursorHints(gentity_t *player)
 					{
 						/* New code start: Optional hintString toggle when item pickup is disabled */
 						if ( customPlayerState[player->s.number].noPickupHintString )
+							continue;
+						/* New code end */
+
+						/* New code start: setHoldingWeaponDown script method preventing
+						 item pickup */
+						if ( customPlayerState[player->s.number].holdingDownWeapon )
 							continue;
 						/* New code end */
 						
@@ -7905,7 +7928,7 @@ void custom_PM_BeginWeaponChange(playerState_t *ps, unsigned int newweapon)
 
 void custom_PM_Weapon(pmove_t *pm, pml_t *pml)
 {
-	/* New code start: setHoldingWeaponDown script method */
+	/* New code start: setHoldingWeaponDown script method enforcement */
 	int id = pm->ps->clientNum;
 
 	if ( customPlayerState[id].holdingDownWeapon )

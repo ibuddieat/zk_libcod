@@ -27,7 +27,7 @@ Module: Player<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Enables/disables the weapon put away state (visually holding the current weapon down) for the player. Sets the weapon put away animation and blocks other weapon actions (e.g., shooting, switching weapons) until the state is disabled or the player dies. Returns true on success, otherwise (i.e., if the put away state is already enabled or if the player currently holds no weapon) false.</p>
+<p>Enables/disables the weapon put away state (visually holding the current weapon down) for the player. Sets the weapon put away animation and blocks other weapon actions (e.g., shooting, switching weapons) until the state is disabled or the player dies. Turrets can be entered, the state is reinstated after leaving the turret. Prevents the player from picking up a weapon (ammo is still picked up). Returns true on success, otherwise (i.e., if the put away state is already enabled or if the player currently holds no weapon) false.</p>
 
 </H3>
 </TR></TD></TABLE>
