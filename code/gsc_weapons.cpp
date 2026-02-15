@@ -909,7 +909,7 @@ void gsc_weapons_getweapondisplayname()
 	int param = 0;
 
 	var = &scrVmPub.top[-param];
-	var->type = STACK_LOCALIZED_STRING;
+	var->type = VAR_ISTRING;
 }
 
 void gsc_weapons_resetignoredweapons()

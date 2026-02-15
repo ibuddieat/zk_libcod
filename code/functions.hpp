@@ -804,7 +804,7 @@ static const Scr_GetVector_t Scr_GetVector = (Scr_GetVector_t)0x08084D40;
 typedef const char * (*Scr_GetString_t)(unsigned int param);
 static const Scr_GetString_t Scr_GetString = (Scr_GetString_t)0x08084BB2;
 
-typedef int (*Scr_GetType_t)(unsigned int param);
+typedef var_type_t (*Scr_GetType_t)(unsigned int param);
 static const Scr_GetType_t Scr_GetType = (Scr_GetType_t)0x08084FF0;
 
 typedef int (*Scr_GetPointerType_t)(unsigned int param);

@@ -6143,7 +6143,7 @@ void Scr_CodeCallback_NotifyDebug(unsigned int entId, char *message, unsigned in
 
 	if ( Scr_IsSystemActive() )
 	{
-		if ( !argc || !arguments || !arguments->type || arguments->type == STACK_PRECODEPOS )
+		if ( !argc || !arguments || !arguments->type || arguments->type == VAR_PRECODEPOS )
 		{
 			stackPushUndefined();
 		}
@@ -6155,14 +6155,14 @@ void Scr_CodeCallback_NotifyDebug(unsigned int entId, char *message, unsigned in
 				SavedVariableValue *arg = arguments + i;
 				switch ( arg->type )
 				{
-				case STACK_UNDEFINED: stackPushUndefined(); break;
-				case STACK_OBJECT: stackPushObject(arg->u.pointerValue); RemoveRefToObject(arg->u.pointerValue); break;
-				case STACK_STRING:
-				case STACK_LOCALIZED_STRING: stackPushString(arg->u.stringValue); break;
-				case STACK_VECTOR: stackPushVector(arg->u.vectorValue); break;
-				case STACK_FLOAT: stackPushFloat(arg->u.floatValue); break;
-				case STACK_INT: stackPushInt(arg->u.intValue); break;
-				case STACK_FUNCTION: stackPushFunc(arg->u.codePosValue); break;
+				case VAR_UNDEFINED: stackPushUndefined(); break;
+				case VAR_OBJECT: stackPushObject(arg->u.pointerValue); RemoveRefToObject(arg->u.pointerValue); break;
+				case VAR_STRING:
+				case VAR_ISTRING: stackPushString(arg->u.stringValue); break;
+				case VAR_VECTOR: stackPushVector(arg->u.vectorValue); break;
+				case VAR_FLOAT: stackPushFloat(arg->u.floatValue); break;
+				case VAR_INTEGER: stackPushInt(arg->u.intValue); break;
+				case VAR_FUNCTION: stackPushFunc(arg->u.codePosValue); break;
 				}
 				stackPushArrayLast();
 			}
@@ -8058,10 +8058,10 @@ void custom_Scr_BulletTrace(void)
 	/* New code end */
 
 	type = Scr_GetType(3);
-	if ( type == STACK_OBJECT )
+	if ( type == VAR_OBJECT )
 	{
 		type = Scr_GetPointerType(3);
-		if ( type == STACK_ENTITY )
+		if ( type == VAR_ENTITY )
 		{
 			passEnt = Scr_GetEntity(3);
 			passEntityNum = passEnt->s.number;
@@ -8155,10 +8155,10 @@ void custom_Scr_BulletTracePassed(void)
 	/* New code end */
 
 	type = Scr_GetType(3);
-	if ( type == STACK_OBJECT )
+	if ( type == VAR_OBJECT )
 	{
 		type = Scr_GetPointerType(3);
-		if ( type == STACK_ENTITY )
+		if ( type == VAR_ENTITY )
 		{
 			passEnt = Scr_GetEntity(3);
 			passEntityNum = passEnt->s.number;
@@ -8202,10 +8202,10 @@ void custom_Scr_SightTracePassed(void)
 	/* New code end */
 
 	type = Scr_GetType(3);
-	if ( type == STACK_OBJECT )
+	if ( type == VAR_OBJECT )
 	{
 		type = Scr_GetPointerType(3);
-		if ( type == STACK_ENTITY )
+		if ( type == VAR_ENTITY )
 		{
 			passEnt = Scr_GetEntity(3);
 			passEntityNum = passEnt->s.number;
@@ -8340,9 +8340,9 @@ void custom_GScr_Obituary(void)
 	ent->s.dmgFlags = distance; // Reusing the dmgFlags field that is otherwise not used at obituary TempEntities
 	
 	ent->s.otherEntityNum = victim->s.number;
-	if ( Scr_GetType(1) == STACK_OBJECT )
+	if ( Scr_GetType(1) == VAR_OBJECT )
 	{
-		if ( Scr_GetPointerType(1) == STACK_ENTITY )
+		if ( Scr_GetPointerType(1) == VAR_ENTITY )
 		{
 			attacker = Scr_GetEntity(1);
 			ent->s.attackerEntityNum = attacker->s.number;
@@ -8407,7 +8407,7 @@ void custom_GScr_SetHintString(scr_entref_t entref)
 		Scr_Error("The setHintString command only works on trigger_radius, trigger_use or trigger_use_touch entities.\n");
 	}
 
-	if ( Scr_GetType(0) == STACK_STRING )
+	if ( Scr_GetType(0) == VAR_STRING )
 	{
 		if ( I_stricmp(Scr_GetString(0), "") == 0 )
 		{
@@ -8485,26 +8485,26 @@ void Scr_QueueNotifyDebugForCallback(unsigned int entId, unsigned int constStrin
 		AddRefToObject(entId);
 		scr_notify[scr_notify_index].entId = entId;
 		I_strncpyz(scr_notify[scr_notify_index].message, message, strlen(message) + 1);
-		for ( arg = arguments; arg->type != STACK_PRECODEPOS && argc < MAX_NOTIFY_DEBUG_PARAMS; arg-- )
+		for ( arg = arguments; arg->type != VAR_PRECODEPOS && argc < MAX_NOTIFY_DEBUG_PARAMS; arg-- )
 		{
 			savedArg = &scr_notify[scr_notify_index].arguments[argc];
 			savedArg->type = arg->type;
 			switch ( savedArg->type )
 			{
-			case STACK_UNDEFINED: break;
-			case STACK_OBJECT: AddRefToObject(arg->u.pointerValue); savedArg->u.pointerValue = arg->u.pointerValue; break;
-			case STACK_STRING:
-			case STACK_LOCALIZED_STRING:
+			case VAR_UNDEFINED: break;
+			case VAR_OBJECT: AddRefToObject(arg->u.pointerValue); savedArg->u.pointerValue = arg->u.pointerValue; break;
+			case VAR_STRING:
+			case VAR_ISTRING:
 				stringValueSrc = SL_ConvertToString(arg->u.stringValue);
 				I_strncpyz(savedArg->u.stringValue, stringValueSrc, strlen(stringValueSrc) + 1);
 				break;
-			case STACK_VECTOR: VectorCopy(arg->u.vectorValue, savedArg->u.vectorValue); break;
-			case STACK_FLOAT: savedArg->u.floatValue = arg->u.floatValue; break;
-			case STACK_INT: savedArg->u.intValue = arg->u.intValue; break;
-			case STACK_FUNCTION: savedArg->u.codePosValue = arg->u.codePosValue; break;
+			case VAR_VECTOR: VectorCopy(arg->u.vectorValue, savedArg->u.vectorValue); break;
+			case VAR_FLOAT: savedArg->u.floatValue = arg->u.floatValue; break;
+			case VAR_INTEGER: savedArg->u.intValue = arg->u.intValue; break;
+			case VAR_FUNCTION: savedArg->u.codePosValue = arg->u.codePosValue; break;
 			default:
 				printf("WARNING: Notify debug with param %d of type 0x%x is currently not supported for CodeCallback_NotifyDebug\n", argc + 1, savedArg->type);
-				savedArg->type = STACK_UNDEFINED;
+				savedArg->type = VAR_UNDEFINED;
 			}
 			argc++;
 		}
@@ -8549,20 +8549,20 @@ void custom_Scr_Notify(gentity_t *ent, unsigned short constString, unsigned int 
 			savedArg->type = arg->type;
 			switch ( savedArg->type )
 			{
-			case STACK_UNDEFINED: break;
-			case STACK_OBJECT: AddRefToObject(arg->u.pointerValue); savedArg->u.pointerValue = arg->u.pointerValue; break;
-			case STACK_STRING:
-			case STACK_LOCALIZED_STRING:
+			case VAR_UNDEFINED: break;
+			case VAR_OBJECT: AddRefToObject(arg->u.pointerValue); savedArg->u.pointerValue = arg->u.pointerValue; break;
+			case VAR_STRING:
+			case VAR_ISTRING:
 				stringValueSrc = SL_ConvertToString(arg->u.stringValue);
 				I_strncpyz(savedArg->u.stringValue, stringValueSrc, strlen(stringValueSrc) + 1);
 				break;
-			case STACK_VECTOR: VectorCopy(arg->u.vectorValue, savedArg->u.vectorValue); break;
-			case STACK_FLOAT: savedArg->u.floatValue = arg->u.floatValue; break;
-			case STACK_INT: savedArg->u.intValue = arg->u.intValue; break;
-			case STACK_FUNCTION: savedArg->u.codePosValue = arg->u.codePosValue; break;
+			case VAR_VECTOR: VectorCopy(arg->u.vectorValue, savedArg->u.vectorValue); break;
+			case VAR_FLOAT: savedArg->u.floatValue = arg->u.floatValue; break;
+			case VAR_INTEGER: savedArg->u.intValue = arg->u.intValue; break;
+			case VAR_FUNCTION: savedArg->u.codePosValue = arg->u.codePosValue; break;
 			default:
 				printf("WARNING: Notify with param %d of type 0x%x is currently not supported for CodeCallback_Notify\n", i + 1, savedArg->type);
-				savedArg->type = STACK_UNDEFINED;
+				savedArg->type = VAR_UNDEFINED;
 			}
 		}
 	}
@@ -8582,14 +8582,14 @@ void custom_Scr_Notify(gentity_t *ent, unsigned short constString, unsigned int 
 			SavedVariableValue *arg = &savedArgs[i];
 			switch ( arg->type )
 			{
-			case STACK_UNDEFINED: stackPushUndefined(); break;
-			case STACK_OBJECT: stackPushObject(arg->u.pointerValue); RemoveRefToObject(arg->u.pointerValue); break;
-			case STACK_STRING:
-			case STACK_LOCALIZED_STRING: stackPushString(arg->u.stringValue); break;
-			case STACK_VECTOR: stackPushVector(arg->u.vectorValue); break;
-			case STACK_FLOAT: stackPushFloat(arg->u.floatValue); break;
-			case STACK_INT: stackPushInt(arg->u.intValue); break;
-			case STACK_FUNCTION: stackPushFunc(arg->u.codePosValue); break;
+			case VAR_UNDEFINED: stackPushUndefined(); break;
+			case VAR_OBJECT: stackPushObject(arg->u.pointerValue); RemoveRefToObject(arg->u.pointerValue); break;
+			case VAR_STRING:
+			case VAR_ISTRING: stackPushString(arg->u.stringValue); break;
+			case VAR_VECTOR: stackPushVector(arg->u.vectorValue); break;
+			case VAR_FLOAT: stackPushFloat(arg->u.floatValue); break;
+			case VAR_INTEGER: stackPushInt(arg->u.intValue); break;
+			case VAR_FUNCTION: stackPushFunc(arg->u.codePosValue); break;
 			}
 			stackPushArrayLast();
 		}
@@ -11506,7 +11506,7 @@ void custom_SV_FinalMessage(const char *message)
 void VM_ClearSavedReturnValue(void)
 {
 	SavedVariableValue *val = &scriptHandleReturnValue;
-	if ( val->type == STACK_OBJECT && scrVarPub.levelId == val->levelId )
+	if ( val->type == VAR_OBJECT && scrVarPub.levelId == val->levelId )
 		RemoveRefToObject(val->u.pointerValue);
 
 	memset(val, 0, sizeof(SavedVariableValue));
@@ -11519,18 +11519,18 @@ void VM_SaveReturnValue(VariableValue *arg)
 
 	switch ( arg->type )
 	{
-	case STACK_UNDEFINED: break;
-	case STACK_OBJECT: AddRefToObject(arg->u.pointerValue); ret->u.pointerValue = arg->u.pointerValue; break;
-	case STACK_STRING:
-	case STACK_LOCALIZED_STRING:
+	case VAR_UNDEFINED: break;
+	case VAR_OBJECT: AddRefToObject(arg->u.pointerValue); ret->u.pointerValue = arg->u.pointerValue; break;
+	case VAR_STRING:
+	case VAR_ISTRING:
 		stringValueSrc = SL_ConvertToString(arg->u.stringValue);
 		I_strncpyz(ret->u.stringValue, stringValueSrc, strlen(stringValueSrc) + 1);
 		break;
-	case STACK_VECTOR: VectorCopy(arg->u.vectorValue, ret->u.vectorValue); break;
-	case STACK_FLOAT: ret->u.floatValue = arg->u.floatValue; break;
-	case STACK_INT: ret->u.intValue = arg->u.intValue; break;
-	case STACK_FUNCTION: ret->u.codePosValue = arg->u.codePosValue; break;
-	default: ret->type = STACK_UNDEFINED;
+	case VAR_VECTOR: VectorCopy(arg->u.vectorValue, ret->u.vectorValue); break;
+	case VAR_FLOAT: ret->u.floatValue = arg->u.floatValue; break;
+	case VAR_INTEGER: ret->u.intValue = arg->u.intValue; break;
+	case VAR_FUNCTION: ret->u.codePosValue = arg->u.codePosValue; break;
+	default: ret->type = VAR_UNDEFINED;
 	}
 	ret->levelId = scrVarPub.levelId;
 }

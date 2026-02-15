@@ -104,7 +104,7 @@ int stackPrintParam(int param)
 
 	switch ( stackGetParamType(param) )
 	{
-	case STACK_STRING:
+	case VAR_STRING:
 		char *str;
 		stackGetParamString(param, &str); // No error checking, since we know it's a string
 		if ( con_coloredPrints->current.boolean )
@@ -113,19 +113,19 @@ int stackPrintParam(int param)
 			printf("%s", str);
 		return 1;
 
-	case STACK_VECTOR:
+	case VAR_VECTOR:
 		float vec[3];
 		stackGetParamVector(param, vec);
 		printf("(%.2f, %.2f, %.2f)", vec[0], vec[1], vec[2]);
 		return 1;
 
-	case STACK_FLOAT:
+	case VAR_FLOAT:
 		float tmp_float;
 		stackGetParamFloat(param, &tmp_float);
 		printf("%.3f", tmp_float); // Need a way to define precision
 		return 1;
 
-	case STACK_INT:
+	case VAR_INTEGER:
 		int tmp_int;
 		stackGetParamInt(param, &tmp_int);
 		printf("%d", tmp_int);
@@ -647,25 +647,25 @@ void gsc_utils_sprintf()
 
 				switch ( stackGetParamType(param) )
 				{
-				case STACK_STRING:
+				case VAR_STRING:
 					char *tmp_str;
 					stackGetParamString(param, &tmp_str); // No error checking, since we know it's a string
 					num += snprintf(&(result[num]), MAX_STRINGLENGTH - num, "%s", tmp_str);
 					break;
 
-				case STACK_VECTOR:
+				case VAR_VECTOR:
 					float tmp_vec[3];
 					stackGetParamVector(param, tmp_vec);
 					num += snprintf(&(result[num]), MAX_STRINGLENGTH - num, "(%.2f, %.2f, %.2f)", tmp_vec[0], tmp_vec[1], tmp_vec[2]);
 					break;
 
-				case STACK_FLOAT:
+				case VAR_FLOAT:
 					float tmp_float;
 					stackGetParamFloat(param, &tmp_float);
 					num += snprintf(&(result[num]), MAX_STRINGLENGTH - num, "%.3f", tmp_float); // Need a way to define precision
 					break;
 
-				case STACK_INT:
+				case VAR_INTEGER:
 					int tmp_int;
 					stackGetParamInt(param, &tmp_int);
 					num += snprintf(&(result[num]), MAX_STRINGLENGTH - num, "%d", tmp_int);
@@ -1287,7 +1287,7 @@ void gsc_utils_makelocalizedstring()
 	int param = 0;
 
 	var = &scrVmPub.top[-param];
-	var->type = STACK_LOCALIZED_STRING;
+	var->type = VAR_ISTRING;
 }
 
 void gsc_utils_makeclientlocalizedstring()
@@ -1331,7 +1331,7 @@ void gsc_utils_makestring()
 	int param = 0;
 
 	var = &scrVmPub.top[-param];
-	var->type = STACK_STRING;
+	var->type = VAR_STRING;
 }
 
 void gsc_utils_float()
@@ -1345,19 +1345,19 @@ void gsc_utils_float()
 
 	switch ( stackGetParamType(0) )
 	{
-	case STACK_STRING:
+	case VAR_STRING:
 		char *asstring;
 		stackGetParamString(0, &asstring);
 		stackPushFloat( atof(asstring) );
 		return;
 
-	case STACK_FLOAT:
+	case VAR_FLOAT:
 		float asfloat;
 		stackGetParamFloat(0, &asfloat);
 		stackPushFloat( asfloat );
 		return;
 
-	case STACK_INT:
+	case VAR_INTEGER:
 		int asinteger;
 		stackGetParamInt(0, &asinteger);
 		stackPushFloat( float(asinteger) );

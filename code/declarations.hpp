@@ -656,6 +656,35 @@ struct scrStringGlob_t
 	HashEntry *nextFreeEntry;
 };
 
+typedef enum
+{
+	VAR_UNDEFINED,
+	VAR_OBJECT,
+	VAR_STRING,
+	VAR_ISTRING,
+	VAR_VECTOR,
+	VAR_FLOAT,
+	VAR_INTEGER,
+	VAR_CODEPOS,
+	VAR_PRECODEPOS,
+	VAR_FUNCTION,
+	VAR_STACK,
+	VAR_ANIMATION,
+	VAR_DEVELOPER_CODEPOS,
+	VAR_INCLUDE_CODEPOS,
+	VAR_THREAD_LIST,
+	VAR_THREAD,
+	VAR_NOTIFY_THREAD,
+	VAR_TIME_THREAD,
+	VAR_CHILD_THREAD,
+	VAR_STRUCT,
+	VAR_REMOVED_ENTITY,
+	VAR_ENTITY,
+	VAR_ARRAY,
+	VAR_REMOVED_THREAD,
+	VAR_COUNT
+} var_type_t;
+
 struct VariableStackBuffer
 {
 	const char *pos;
@@ -719,7 +748,7 @@ union VariableValueInternal_v
 typedef struct
 {
 	union VariableUnion u;
-	int type;
+	var_type_t type;
 } VariableValue;
 
 union Variable_u
@@ -742,35 +771,6 @@ typedef struct
 	union VariableValueInternal_v v;
 	uint16_t nextSibling;
 } VariableValueInternal;
-
-typedef enum
-{
-	VAR_UNDEFINED,
-	VAR_OBJECT,
-	VAR_STRING,
-	VAR_ISTRING,
-	VAR_VECTOR,
-	VAR_FLOAT,
-	VAR_INTEGER,
-	VAR_CODEPOS,
-	VAR_PRECODEPOS,
-	VAR_FUNCTION,
-	VAR_STACK,
-	VAR_ANIMATION,
-	VAR_DEVELOPER_CODEPOS,
-	VAR_INCLUDE_CODEPOS,
-	VAR_THREAD_LIST,
-	VAR_THREAD,
-	VAR_NOTIFY_THREAD,
-	VAR_TIME_THREAD,
-	VAR_CHILD_THREAD,
-	VAR_STRUCT,
-	VAR_REMOVED_ENTITY,
-	VAR_ENTITY,
-	VAR_ARRAY,
-	VAR_REMOVED_THREAD,
-	VAR_COUNT
-} var_type_t;
 
 typedef struct
 {
