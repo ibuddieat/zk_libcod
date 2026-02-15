@@ -4147,6 +4147,7 @@ typedef struct customEntityState_s
 } customEntityState_t;
 
 #define MAX_DROPPING_BULLETS 20 // Per player
+
 typedef struct
 {
 	const gentity_t *attacker;
@@ -4293,6 +4294,14 @@ struct leakyBucket_s
 };
 
 #define MAX_PROXIES 3 // One per protocol, in addition to actual server
+#define MAX_PROXY_CLIENT_THREADS 65536
+
+typedef struct
+{
+	int socket;
+	pthread_t thread;
+} proxyClientThreadInfo;
+
 typedef struct
 {
 	outboundLeakyBucketIndex_t bucket;
@@ -4302,28 +4311,24 @@ typedef struct
 	pthread_mutex_t lock;
 	pthread_t mainThread;
 	pthread_t *masterServerThread;
-	struct sockaddr_in *masterSockAdr;
+	sockaddr_in *masterSockAdr;
+	proxyClientThreadInfo clientThreadInfo[MAX_PROXY_CLIENT_THREADS];
 	int numClients;
 	int parentVersion;
 	const char *parentVersionString;
 	int socket;
 	qboolean started;
+	volatile qboolean stopped;
 	int version;
 	const char *versionString;
 } proxy_t;
 
 typedef struct
 {
-	int s_client;
-	pthread_t thread;
-} proxyClientThreadInfo;
-
-typedef struct
-{
 	int activeClient;
-	struct sockaddr_in addr;
+	sockaddr_in addr;
 	proxy_t *proxy;
-	int *s_client;
+	int socket;
 	int src_port;
 } proxyClientThreadArgs;
 
