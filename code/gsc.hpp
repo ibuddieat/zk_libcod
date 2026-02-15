@@ -75,6 +75,7 @@
 
 void Scr_AddFunc(const char *value);
 void Scr_PushConstString(unsigned int value);
+void Scr_PushString(const char *value);
 
 #define stackPushUndefined Scr_AddUndefined
 #define stackPushBool Scr_AddBool

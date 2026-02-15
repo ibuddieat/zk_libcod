@@ -83,6 +83,13 @@ void Scr_PushConstString(unsigned int value)
 	SL_AddRefToString(value);
 }
 
+void Scr_PushString(const char *value)
+{
+	IncOutParam();
+	scrVmPub.top->type = VAR_STRING;
+	scrVmPub.top->u.stringValue = SL_GetString(value, 0);
+}
+
 void NULL_FUNC_ENTITY(scr_entref_t id) {}
 void NULL_FUNC(void) {}
 
