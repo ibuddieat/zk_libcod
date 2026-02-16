@@ -291,6 +291,7 @@ void SV_ShutdownProxies()
 		int i;
 		int j;
 		proxy_t *proxy;
+		qboolean stopped = qfalse;
 
 		for ( i = 0; i < MAX_PROXIES; i++ )
 		{
@@ -298,6 +299,9 @@ void SV_ShutdownProxies()
 
 			if ( proxy->enabled && proxy->started )
 			{
+				// Enable flag that states we had to stop a proxy
+				stopped = qtrue;
+
 				printf("> [LIBCOD] Proxy: Shutting down proxy for version %s (protocol %i) on port %hu\n", proxy->versionString, proxy->version, BigShort(proxy->listenAdr.port));
 
 				// Stop thread for announcements to master server
@@ -345,11 +349,14 @@ void SV_ShutdownProxies()
 			}
 		}
 
-		// Time for client threads to return after socket shutdown,
-		// before data is nuked in SV_ResetProxiesInformation
-		sleep(1);
+		if ( stopped )
+		{
+			// Time for client threads to return after socket shutdown,
+			// before data is nuked in SV_ResetProxiesInformation
+			sleep(1);
 
-		SV_ResetProxiesInformation();
+			SV_ResetProxiesInformation();
+		}
 	}
 }
 
