@@ -1078,7 +1078,7 @@ void custom_SV_SpawnServer(char *server)
 	}
 	/* New code end */
 
-	custom_SV_SaveSystemInfo();
+	SV_SaveSystemInfo();
 
 	sv.state = SS_GAME;
 	SV_Heartbeat_f();
@@ -1093,6 +1093,14 @@ void custom_SV_SpawnServer(char *server)
 		DisablePbSv();
 	else
 		EnablePbSv();
+}
+
+void hook_Dvar_SetInt_in_SV_MapRestart(dvar_t *dvar, int value)
+{
+	Dvar_SetInt(dvar, value);
+
+	// Also update alternative system info strings during fast_restart
+	SV_SaveSystemInfo();
 }
 
 void hook_Com_MakeSoundAliasesPermanent(snd_alias_list_t *aliasList, SoundFileInfo *fileInfo)
@@ -11617,6 +11625,7 @@ public:
 		cracking_hook_call(0x080840C0, (int)VM_ExecuteSaveReturnValue); // Scr_ExecEntThreadNum
 		cracking_hook_call(0x08084141, (int)VM_ExecuteSaveReturnValue); // Scr_AddExecThread
 		cracking_hook_call(0x080841BA, (int)VM_ExecuteSaveReturnValue); // Scr_AddExecEntThreadNum
+		cracking_hook_call(0x0808BF55, (int)hook_Dvar_SetInt_in_SV_MapRestart);		
 
 		hook_Com_DPrintf = new cHook(0x08060E3A, (int)custom_Com_DPrintf);
 		#if COMPILE_UTILS == 1
@@ -11823,6 +11832,7 @@ public:
 		cracking_hook_function(0x080639E4, (int)custom_Dvar_SetS_f);
 		cracking_hook_function(0x0806398C, (int)custom_Dvar_SetU_f);
 		cracking_hook_function(0x08094A10, (int)custom_SV_SendServerCommand);
+		cracking_hook_function(0x08093486, (int)custom_SV_SaveSystemInfo);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC8CA, (int)Jump_ReduceFriction);
