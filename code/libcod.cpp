@@ -2254,8 +2254,11 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 			/* New code start: CodeCallback_Pickup */
 			if ( codecallback_pickup && Scr_IsSystemActive() )
 			{
+				stackPushInt(bg_item->quantity);
+				stackPushString(bg_item->display_name);
+				stackPushString(BG_GetWeaponDef(bg_item->giTag)->szInternalName);
 				stackPushString("ammo");
-				short ret = Scr_ExecEntThread(entity, codecallback_pickup, 1);
+				short ret = Scr_ExecEntThread(entity, codecallback_pickup, 4);
 				Scr_FreeThread(ret);
 			}
 			/* New code end */
@@ -2274,11 +2277,12 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 			{
 				stackPushVector(item->r.currentAngles);
 				stackPushVector(item->r.currentOrigin);
-				stackPushInt(bg_item->quantity);
+				stackPushInt(item->item.count2);
+				stackPushInt(item->count);
 				stackPushString(bg_item->display_name);
 				stackPushString(BG_GetWeaponDef(bg_item->giTag)->szInternalName);
 				stackPushString("weapon");
-				short ret = Scr_ExecEntThread(entity, codecallback_pickup, 6);
+				short ret = Scr_ExecEntThread(entity, codecallback_pickup, 7);
 				Scr_FreeThread(ret);
 			}
 			/* New code end */
@@ -2295,8 +2299,11 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 			/* New code start: CodeCallback_Pickup */
 			if ( codecallback_pickup && Scr_IsSystemActive() )
 			{
+				stackPushInt(bg_item->quantity);
+				stackPushString(bg_item->display_name);
+				stackPushUndefined();
 				stackPushString("health");
-				short ret = Scr_ExecEntThread(entity, codecallback_pickup, 1);
+				short ret = Scr_ExecEntThread(entity, codecallback_pickup, 4);
 				Scr_FreeThread(ret);
 			}
 			/* New code end */

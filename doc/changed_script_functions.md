@@ -4,6 +4,7 @@
 # 🏗 Changed with or since release v14.0:
 
 Script callback functions:
+  * `CodeCallback_Pickup(<type>, <weapon>, <name>, <quantity>, <clip>, <origin>, <angles>)` now also provides a weapon's clip ammo amount (5th argument), and health/ammo quantity
   * `CodeCallback_RemoteCommand(<from>, <args>)` no longer provides the message pointer (3rd argument)
 
 Script code functions:
