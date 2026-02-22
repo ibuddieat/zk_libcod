@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>setWeaponItemAmmo( &lt;ammo count&gt; )</H1>
+<H1>setWeaponItemClipAmmo( &lt;clip ammo count&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
@@ -27,7 +27,7 @@ Module: Weapons<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Sets the ammo count for a weapon entity.</p>
+<p>Sets the clip ammo count for a weapon entity.</p>
 
 </H3>
 </TR></TD></TABLE>
@@ -45,9 +45,9 @@ A weapon entity
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-ammo = 10;
+clip = 5;
 ent = spawn("weapon_kar98k_mp", origin); // Precached weapon
-ent setWeaponItemAmmo(ammo);
+ent setWeaponItemClipAmmo(clip);
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -56,7 +56,7 @@ ent setWeaponItemAmmo(ammo);
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;ammo count&gt; New ammo count to set</LI>
+<LI>1 : &lt;clip ammo count&gt; New clip ammo count to set</LI>
 </UL></TR></TD></TABLE>
 </BODY>
 </HTML>

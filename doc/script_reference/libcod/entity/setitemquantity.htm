@@ -15,11 +15,11 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>setWeaponItemAmmo( &lt;ammo count&gt; )</H1>
+<H1>setItemQuantity( &lt;quantity&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
-Module: Weapons<BR>
+Module: Entity<BR>
 </I>
 
 <BR>
@@ -27,7 +27,7 @@ Module: Weapons<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Sets the ammo count for a weapon entity.</p>
+<p>Sets the quantity for an ammo or health entity.</p>
 
 </H3>
 </TR></TD></TABLE>
@@ -36,7 +36,7 @@ Module: Weapons<BR>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-A weapon entity
+An item entity
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -45,9 +45,9 @@ A weapon entity
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-ammo = 10;
-ent = spawn("weapon_kar98k_mp", origin); // Precached weapon
-ent setWeaponItemAmmo(ammo);
+quantity = 10;
+ent = spawn("item_health_small", origin); // Precached item
+ent setItemQuantity(quantity);
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -56,7 +56,7 @@ ent setWeaponItemAmmo(ammo);
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;ammo count&gt; New ammo count to set</LI>
+<LI>1 : &lt;quantity&gt; New quantity to set</LI>
 </UL></TR></TD></TABLE>
 </BODY>
 </HTML>

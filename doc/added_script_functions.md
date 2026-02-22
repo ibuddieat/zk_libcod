@@ -11,6 +11,7 @@
   * `<entity> getContents()`
   * `<entity> getEntityVelocity()`
   * `<entity> getGrenadeFuseTime()`
+  * `<entity> getItemQuantity()`
   * `<entity> getMaxEntityVelocity()`
   * `<entity> getTagAngles(<tag name>)`
   * `<entity> getTagOrigin(<tag name>)`
@@ -24,6 +25,7 @@
   * `<entity> notSolidForPlayer(<player>)`
   * `<entity> setClipmask(<clip mask>)`
   * `<entity> setEntityVelocity(<velocity>)`
+  * `<entity> setItemQuantity(<quantity>)`
   * `<entity> setMaxEntityVelocity(<velocity>)`
   * `<entity> setLight(<red>, <green>, <blue>, <intensity>)`
   * `<entity> solidForPlayer(<player>)`
@@ -122,7 +124,9 @@
   * `<player> useTurret(<turret>)`
   * `<turret> getTurretOwner()`
   * `<weapon> getWeaponItemAmmo()`
+  * `<weapon> getWeaponItemClipAmmo()`
   * `<weapon> setWeaponItemAmmo(<value>)`
+  * `<weapon> setWeaponItemClipAmmo(<value>)`
 
 🔣 New script code functions:
   * `chr(<number>)`

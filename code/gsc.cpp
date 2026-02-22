@@ -354,6 +354,7 @@ scr_method_t scriptMethods[] =
 	{"getClipmask", gsc_entity_getclipmask, 0},
 	{"getContents", gsc_entity_getcontents, 0},
 	{"getEntityVelocity", gsc_entity_getentityvelocity, 0},
+	{"getItemQuantity", gsc_entity_getitemquantity, 0},
 	{"getMaxEntityVelocity", gsc_entity_getmaxentityvelocity, 0},
 	{"getTagAngles", gsc_entity_gettagangles, 0},
 	{"getTagOrigin", gsc_entity_gettagorigin, 0},
@@ -370,6 +371,7 @@ scr_method_t scriptMethods[] =
 	{"setBounds", gsc_entity_setbounds, 0},
 	{"setClipmask", gsc_entity_setclipmask, 0},
 	{"setEntityVelocity", gsc_entity_setentityvelocity, 0},
+	{"setItemQuantity", gsc_entity_setitemquantity, 0},
 	{"setLight", gsc_entity_setlight, 0},
 	{"setMaxEntityVelocity", gsc_entity_setmaxentityvelocity, 0},
 	{"solidForPlayer", gsc_entity_solidforplayer, 0},
@@ -537,7 +539,9 @@ scr_method_t scriptMethods[] =
 	{"addGrenadeFuseTime", gsc_weapons_addgrenadefusetime, 0},
 	{"getGrenadeFuseTime", gsc_weapons_getgrenadefusetime, 0},
 	{"getWeaponItemAmmo", gsc_weapons_getweaponitemammo, 0},
+	{"getWeaponItemClipAmmo", gsc_weapons_getweaponitemclipammo, 0},
 	{"setWeaponItemAmmo", gsc_weapons_setweaponitemammo, 0},
+	{"setWeaponItemClipAmmo", gsc_weapons_setweaponitemclipammo, 0},
 	{"spawnGrenade", gsc_weapons_spawngrenade, 0},
 	#endif
 

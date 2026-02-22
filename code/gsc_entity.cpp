@@ -711,4 +711,65 @@ void gsc_entity_setlight(scr_entref_t ref)
 	}
 }
 
+void gsc_entity_getitemquantity(scr_entref_t ref)
+{
+	int id = ref.entnum;
+    gentity_t *entity = &g_entities[id];
+    gitem_t *bg_item = &bg_itemlist;
+    
+    if ( entity->s.item < 1 || bg_numItems <= entity->s.item )
+    {
+        stackError("gsc_entity_getitemquantity() must be called on an ammo or health entity");
+        stackPushUndefined();
+        return;
+    }
+    
+    bg_item += entity->s.item;
+    if ( bg_item->giType == IT_AMMO || bg_item->giType == IT_HEALTH )
+    {
+        stackPushInt(bg_item->quantity);
+    }
+	else
+	{
+        stackError("gsc_entity_getitemquantity() must be called on an ammo or health entity");
+        stackPushUndefined();
+        return;
+    }
+}
+
+void gsc_entity_setitemquantity(scr_entref_t ref)
+{
+	int id = ref.entnum;
+    int quantity;
+    gentity_t *entity = &g_entities[id];
+    gitem_t *bg_item = &bg_itemlist;
+
+    if ( !stackGetParams("i", &quantity) )
+    {
+        stackError("gsc_entity_setitemquantity() argument is undefined or has a wrong type");
+        stackPushUndefined();
+        return;
+    }
+
+    if ( entity->s.item < 1 || bg_numItems <= entity->s.item )
+    {
+        stackError("gsc_entity_setitemquantity() must be called on an ammo or health entity");
+        stackPushUndefined();
+        return;
+    }
+    
+    bg_item += entity->s.item;
+    if ( bg_item->giType == IT_AMMO || bg_item->giType == IT_HEALTH )
+    {
+        bg_item->quantity = quantity;
+        stackPushBool(qtrue);
+    }
+	else
+	{
+        stackError("gsc_entity_setitemquantity() must be called on an ammo or health entity");
+        stackPushUndefined();
+        return;
+    }
+}
+
 #endif

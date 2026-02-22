@@ -3901,6 +3901,7 @@ static const int objectiveFields_offset = 0x08142A20;
 static const int clientStateFields_offset = 0x08141F60;
 static const int archivedEntityFields_offset = 0x08141AE0;
 static const int bg_itemlist_offset = 0x081850C0;
+static const int bg_numItems_offset = 0x08154ED8;
 static const int testclient_connect_string_offset = 0x0814AB20;
 static const int g_hudelems_offset = 0x08628F80;
 static const int spawns_offset = 0x08188A00;
@@ -3975,6 +3976,7 @@ static const int globalScriptData_offset = 0x0860B424;
 #define clientStateFields (*((netField_t*)( clientStateFields_offset )))
 #define archivedEntityFields (*((netField_t*)( archivedEntityFields_offset )))
 #define bg_itemlist (*((gitem_t*)( bg_itemlist_offset )))
+#define bg_numItems (*((int*)( bg_numItems_offset )))
 #define g_hudelems (*((game_hudelem_t*)( g_hudelems_offset )))
 #define spawns (*((int**)( spawns_offset )))
 #define entity_event_names (*((const char**)( entity_event_names_offset )))
