@@ -808,22 +808,6 @@ void gsc_player_forceshot(scr_entref_t ref)
 	stackPushBool(qtrue);
 }
 
-void gsc_player_getweaponindexoffhand(scr_entref_t ref)
-{
-	int id = ref.entnum;
-
-	if ( id >= MAX_CLIENTS )
-	{
-		stackError("gsc_player_getweaponindexoffhand() entity %i is not a player", id);
-		stackPushUndefined();
-		return;
-	}
-	
-	playerState_t *ps = SV_GameClientNum(id);
-
-	stackPushInt(ps->weapon);
-}
-
 void gsc_player_getcurrentoffhandslotammo(scr_entref_t ref)
 {
 	int id = ref.entnum;
@@ -2301,6 +2285,26 @@ void gsc_player_setanimation(scr_entref_t ref)
 	customPlayerState[id].animation = animationId;
 
 	stackPushBool(qtrue);
+}
+
+void gsc_player_getweaponanimation(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_getweaponanimation() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	playerState_t *ps = SV_GameClientNum(id);
+
+	int anim = ps->weapAnim & 0xFFFFFDFF;
+	if ( ( anim == WEAP_RECHAMBER || anim == WEAP_ADS_RECHAMBER ) && ps->weaponTime == 0 )
+		anim = WEAP_IDLE;
+
+	stackPushInt(anim);
 }
 
 void gsc_player_getcooktime(scr_entref_t ref)
