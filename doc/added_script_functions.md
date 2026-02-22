@@ -62,6 +62,7 @@
   * `<player> getRemainingSoundFileDuration()`
   * `<player> getServerCommandQueueSize()`
   * `<player> getViewOrigin()`
+  * `<player> getWeaponAnimation()`
   * `<player> isAllowingSpectators()`
   * `<player> isChatting()`
   * `<player> isFiring()`
@@ -129,6 +130,7 @@
   * `<weapon> setWeaponItemClipAmmo(<value>)`
 
 🔣 New script code functions:
+  * `ceil(<number>)`
   * `chr(<number>)`
   * `getCallStack()`
   * `getConfigString(<index>)`
@@ -137,6 +139,7 @@
   * `getSoundInfo(<aliasname>)`
   * `getWeaponFuseTime(<weapon name>)`
   * `setWeaponFuseTime(<weapon name>, <time in ms>)`
+  * `floor(<number>)`
   * `fromHex(<hex string>)`
   * `getCvarFlags(<dvar name>)`
   * `getEntityCount([<in use>])`
