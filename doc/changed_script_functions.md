@@ -16,6 +16,7 @@ Script code functions:
 Script code methods:
   * Renamed `getLastGamestate()` to `getLastGamestateSize()`
   * `<entity> setBounds(<length>, <width>, <height>)` now requires three parameters, instead of two
+  * `<player> isReloading()` no longer includes rechambering, see `isRechambering()` for that
 
 # 🏗 Changed with or since release v13.0:
 

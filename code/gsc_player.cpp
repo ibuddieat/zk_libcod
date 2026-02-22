@@ -501,7 +501,7 @@ void gsc_player_isreloading(scr_entref_t ref)
 	
 	playerState_t *ps = SV_GameClientNum(id);
 
-	if ( ps->weaponstate >= WEAPON_RECHAMBERING && ps->weaponstate <= WEAPON_RELOAD_END )
+	if ( ps->weaponstate >= WEAPON_RELOADING && ps->weaponstate <= WEAPON_RELOAD_END )
 		stackPushBool(qtrue);
 	else
 		stackPushBool(qfalse);
