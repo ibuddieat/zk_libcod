@@ -238,7 +238,9 @@ scr_function_t scriptFunctions[] =
 	{"makeClientLocalizedString", gsc_utils_makeclientlocalizedstring, 0},
 	{"makeString", gsc_utils_makestring, 0},
 
+	{"ceil", gsc_utils_ceil, 0},
 	{"float", gsc_utils_float, 0},
+	{"floor", gsc_utils_floor, 0},
 	{"pow", gsc_utils_pow, 0},
 	{"round", gsc_utils_round, 0},
 	{"roundTo", gsc_utils_roundto, 0},

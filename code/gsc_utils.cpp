@@ -1334,6 +1334,20 @@ void gsc_utils_makestring()
 	var->type = VAR_STRING;
 }
 
+void gsc_utils_ceil()
+{
+	float val;
+
+	if ( !stackGetParams("f",  &val) )
+	{
+		stackError("gsc_utils_ceil() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushFloat(ceilf(val));
+}
+
 void gsc_utils_float()
 {
 	if ( Scr_GetNumParam() == 0 )
@@ -1368,6 +1382,20 @@ void gsc_utils_float()
 		stackPushUndefined();
 		return;
 	}
+}
+
+void gsc_utils_floor()
+{
+	float val;
+
+	if ( !stackGetParams("f",  &val) )
+	{
+		stackError("gsc_utils_floor() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushFloat(floorf(val));
 }
 
 void gsc_utils_pow()

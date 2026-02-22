@@ -53,7 +53,9 @@ void gsc_utils_makelocalizedstring();
 void gsc_utils_makeclientlocalizedstring();
 void gsc_utils_makestring();
 
+void gsc_utils_ceil();
 void gsc_utils_float();
+void gsc_utils_floor();
 void gsc_utils_pow();
 void gsc_utils_round();
 void gsc_utils_roundto();
