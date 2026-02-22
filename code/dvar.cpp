@@ -59,6 +59,7 @@ dvar_t *sv_packet_info;
 dvar_t *sv_padPackets;
 dvar_t *sv_privateClients;
 dvar_t *sv_privatePassword;
+dvar_t *sv_punkbuster;
 dvar_t *sv_pure;
 dvar_t *sv_reconnectlimit;
 dvar_t *sv_referencedIwdNames;
@@ -235,6 +236,7 @@ void hook_Com_Printf_in_Com_Init_Try_Block_Function(const char *format, ...)
 	sv_padPackets = Dvar_FindVar("sv_padPackets");
 	sv_privateClients = Dvar_FindVar("sv_privateClients");
 	sv_privatePassword = Dvar_FindVar("sv_privatePassword");
+	sv_punkbuster = Dvar_FindVar("sv_punkbuster");
 	sv_pure = Dvar_FindVar("sv_pure");
 	sv_reconnectlimit = Dvar_FindVar("sv_reconnectlimit");
 	sv_referencedIwdNames = Dvar_FindVar("sv_referencedIwdNames");

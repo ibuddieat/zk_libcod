@@ -68,6 +68,7 @@ extern dvar_t *sv_packet_info;
 extern dvar_t *sv_padPackets;
 extern dvar_t *sv_privateClients;
 extern dvar_t *sv_privatePassword;
+extern dvar_t *sv_punkbuster;
 extern dvar_t *sv_pure;
 extern dvar_t *sv_reconnectlimit;
 extern dvar_t *sv_referencedIwdNames;
@@ -4861,30 +4862,38 @@ void custom_SV_AuthorizeIpPacket(netadr_t from)
 
 void custom_SVC_Info(netadr_t from)
 {
-	int i, count;
+	int i;
+	int privateClientCount;
+	int clientCount;
 	char infostring[MAX_INFO_STRING];
-	char infosend[MAX_INFO_STRING];
+	int maxclients;
 	const char *gamedir;
 	const char *password;
 	int friendlyfire;
 	int killcam;
-	int serverModded;
+	qboolean serverModded;
+	int count;
 	const char *referencedIwdNames;
 	char *iwd;
+	char infosend[MAX_INFO_STRING];
 
 	/* New code start: Rate limiting */
 	if ( SVC_ApplyInfoLimit(from, OUTBOUND_BUCKET_MAIN) )
 		return;
 	/* New code end */
 
-	count = 0;
-
-	for ( i = sv_privateClients->current.integer; i < sv_maxclients->current.integer; i++ )
+	privateClientCount = 0;
+	for ( i = 0; i < sv_privateClients->current.integer; ++i )
 	{
 		if ( svs.clients[i].state >= CS_CONNECTED )
-		{
-			count++;
-		}
+			++privateClientCount;
+	}
+
+	clientCount = privateClientCount;
+	for ( i = sv_privateClients->current.integer; i < sv_maxclients->current.integer; ++i )
+	{
+		if ( svs.clients[i].state >= CS_CONNECTED )
+			++clientCount;
 	}
 
 	infostring[0] = 0;
@@ -4896,15 +4905,29 @@ void custom_SVC_Info(netadr_t from)
 
 	Info_SetValueForKey(infostring, "hostname", sv_hostname->current.string);
 	Info_SetValueForKey(infostring, "mapname", sv_mapname->current.string);
-	Info_SetValueForKey(infostring, "clients", va("%i", count));
-	Info_SetValueForKey(infostring, "sv_maxclients", va("%i", sv_maxclients->current.integer - sv_privateClients->current.integer));
-	Info_SetValueForKey(infostring, "gametype", Dvar_GetString("g_gametype"));
-	Info_SetValueForKey(infostring, "pure", va("%i", sv_pure->current.boolean));
+
+	if ( clientCount )
+	{
+		Info_SetValueForKey(infostring, "clients", va("%i", clientCount));
+	}
+
+	maxclients = sv_maxclients->current.integer - (sv_privateClients->current.integer - privateClientCount);
+	if ( maxclients > 0 )
+	{
+		Info_SetValueForKey(infostring, "sv_maxclients", va("%i", maxclients));
+	}
+
+	Info_SetValueForKey(infostring, "gametype", sv_gametype->current.string);
+	if ( sv_pure->current.boolean || fs_numServerIwds )
+	{
+		Info_SetValueForKey(infostring, "pure", "1");
+	}
 
 	if ( sv_minPing->current.integer )
 	{
 		Info_SetValueForKey(infostring, "minPing", va("%i", sv_minPing->current.integer));
 	}
+
 	if ( sv_maxPing->current.integer )
 	{
 		Info_SetValueForKey(infostring, "maxPing", va("%i", sv_maxPing->current.integer));
@@ -4916,7 +4939,11 @@ void custom_SVC_Info(netadr_t from)
 		Info_SetValueForKey(infostring, "game", gamedir);
 	}
 	
-	Info_SetValueForKey(infostring, "sv_allowAnonymous", va("%i", sv_allowAnonymous->current.boolean));
+	if ( sv_allowAnonymous->current.boolean )
+	{
+		Info_SetValueForKey(infostring, "sv_allowAnonymous", va("%i", sv_allowAnonymous->current.boolean));
+	}
+
 	if ( sv_disableClientConsole->current.boolean )
 	{
 		Info_SetValueForKey(infostring, "con_disabled", va("%i", sv_disableClientConsole->current.boolean));
@@ -4926,19 +4953,17 @@ void custom_SVC_Info(netadr_t from)
 	if ( password && *password )
 		Info_SetValueForKey(infostring, "pswrd", "1");
 
-
 	friendlyfire = Dvar_GetInt("scr_friendlyfire");
 	if ( friendlyfire )
 		Info_SetValueForKey(infostring, "ff", va("%i", friendlyfire));
-
 
 	killcam = Dvar_GetInt("scr_killcam");
 	if ( killcam )
 		Info_SetValueForKey(infostring, "kc", va("%i", killcam));
 
 	Info_SetValueForKey(infostring, "hw", va("%i", 1));
-	serverModded = 0;
 
+	serverModded = 0;
 	if ( !sv_pure->current.boolean || ( gamedir && *gamedir ) )
 	{
 		serverModded = 1;
@@ -4966,6 +4991,7 @@ void custom_SVC_Info(netadr_t from)
 
 	Info_SetValueForKey(infostring, "mod", va("%i", serverModded));
 	Info_SetValueForKey(infostring, "voice", va("%i", sv_voice->current.boolean));
+	Info_SetValueForKey(infostring, "pb", va("%i", sv_punkbuster->current.boolean));
 	I_strncpyz(infosend, "infoResponse\n", MAX_INFO_STRING);
 	I_strncat(infosend, MAX_INFO_STRING, infostring);
 	NET_OutOfBandPrint(NS_SERVER, from, infosend);

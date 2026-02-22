@@ -3928,6 +3928,7 @@ static const int rcon_lasttime_offset = 0x0849FBF4;
 static const int com_frameTime_offset = 0x081A21B8;
 static const int bulletPriorityMap_offset = 0x08187C0C;
 static const int riflePriorityMap_offset = 0x08187C1F;
+static const int fs_numServerIwds_offset = 0x084A4480;
 static const int fs_searchpaths_offset = 0x0849FD68;
 static const int g_EndPos_offset = 0x083D7600;
 static const int scrParserPub_offset = 0x08287334;
@@ -4001,6 +4002,7 @@ static const int globalScriptData_offset = 0x0860B424;
 #define com_frameTime (*((int*)( com_frameTime_offset )))
 #define bulletPriorityMap (*((uint8_t*)( bulletPriorityMap_offset )))
 #define riflePriorityMap (*((uint8_t*)( riflePriorityMap_offset )))
+#define fs_numServerIwds (*((int*)( fs_numServerIwds_offset )))
 #define fs_searchpaths (*((searchpath_t**)( fs_searchpaths_offset )))
 #define g_EndPos (*((char*)( g_EndPos_offset )))
 #define saLoadObjGlob (*((snd_alias_build_s**)( saLoadObjGlob_offset )))
