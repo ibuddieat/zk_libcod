@@ -51,9 +51,6 @@
 #define SV_OUTPUTBUF_LENGTH         ( 2048 * MAX_CLIENTS - 16 )
 #define SV_OUTPUTBUF_LEGACY_LENGTH  ( 256 * MAX_CLIENTS - 16 )
 
-#define ENTITY_WORLD    0x3FE
-#define ENTITY_NONE     0x3FF
-
 #define HASH_STAT_HEAD    0x8000
 #define HASH_NEXT_MASK    0x3FFF
 #define HASH_STAT_MASK    0xC000
@@ -70,7 +67,7 @@
 #define MAX_DOWNLOAD_BLKSIZE        2048
 #define MAX_DOWNLOAD_BLKSIZE_FAST   0x2000 // Needs to be below MAX_LEGACY_MSGLEN
 #define MAX_DOWNLOAD_WINDOW         8
-#define	MAX_DVARS                   1280
+#define MAX_DVARS                   1280
 #define MAX_ENT_CLUSTERS            16
 #define MAX_EVENTS                  4
 #define MAX_GENTITIES               ( 1 << GENTITYNUM_BITS ) // 0x400
@@ -97,6 +94,9 @@
 #define MAX_VOICEPACKETS            40
 #define MAX_VOICEPACKETSPERFRAME    2.56
 #define MAX_ZPATH                   256
+
+#define ENTITYNUM_NONE      ( MAX_GENTITIES - 1 )
+#define ENTITYNUM_WORLD     ( MAX_GENTITIES - 2 )
 
 // These are the only configstrings that the system reserves, all the
 // other ones (see cs_index_t) are strictly for servergame to clientgame
@@ -136,18 +136,18 @@
 #define FL_INVISIBLE            0x800
 #define FL_LINKTO_ENABLED       0x1000
 #define FL_GRENADE_TOUCH_DAMAGE 0x4000
-#define FL_GRENADE_NO_BOUNCE    0x8000	// Guessed name
+#define FL_GRENADE_NO_BOUNCE    0x8000  // Guessed name
 #define FL_MISSILE_UNKNOWN      0x10000
 #define FL_STABLE_MISSILE       0x20000
 
 // entityShared_t->svFlags
-#define	SVF_NOCLIENT  0x1	// Don't send entity to clients, even if it has effects
-#define	SVF_BODY      0x2	// Player or corpse
-#define	SVF_DOBJ      0x4	// Dobj model, can be player model, script model, item.
-#define	SVF_BROADCAST 0x8	// Send to all connected clients
-#define	SVF_OBJECTIVE 0x10	// Added to snapshots, even if not nearby or behind fog
-#define SVF_RADIUS    0x20	// For trigger_radius and few other things
-#define SVF_DISK      0x40	// For trigger_disk and few other things
+#define SVF_NOCLIENT  0x1   // Don't send entity to clients, even if it has effects
+#define SVF_BODY      0x2   // Player or corpse
+#define SVF_DOBJ      0x4   // Dobj model, can be player model, script model, item.
+#define SVF_BROADCAST 0x8   // Send to all connected clients
+#define SVF_OBJECTIVE 0x10  // Added to snapshots, even if not nearby or behind fog
+#define SVF_RADIUS    0x20  // For trigger_radius and few other things
+#define SVF_DISK      0x40  // For trigger_disk and few other things
 
 #define KEY_MASK_NONE       0
 #define KEY_MASK_FORWARD    127
@@ -176,37 +176,62 @@
 // playerState_t->eFlags
 // entityState_t->eFlags
 //
-// Only those with a comment are currently in use and verified usage-wise. For
-// reference, see Enemy-Territory:
+// For reference, see Enemy-Territory:
 // https://github.com/id-Software/Enemy-Territory/blob/40342a9e3690cb5b627a433d4d5cbf30e3c57698/src/game/bg_public.h#L649
 //
-#define EF_TELEPORT_BIT 0x2         // Toggled every time the origin abruptly changes
-#define EF_CROUCHING    0x4         //
-#define EF_PRONE        0x8         //
-#define EF_TURRET_PRONE 0x100       // See EF_TURRET_STAND
-#define EF_TURRET_DUCK  0x200       // See EF_TURRET_STAND
-#define EF_TURRET_STAND 0x300       // Set on players that use a turret
-#define EF_MANTLE       0x4000      //
-#define EF_TAGCONNECT   0x8000      // Connected to another entity via tag
-#define EF_DEAD         0x20000     //
-#define EF_AIMDOWNSIGHT 0x40000     //
-#define EF_VOTED        0x100000    //
-#define EF_TALK         0x200000    //
-#define EF_TAUNT        0x400000    //
-#define EF_BOUNCE       0x1000000   // Missile/grenade/gravity-enabled entity bounce
+#define EF_NONSOLID_BMODEL  0x1         // Brush model is visible, but not solid
+#define EF_TELEPORT_BIT     0x2         // Toggled every time the origin abruptly changes
+#define EF_CROUCHING        0x4         //
+#define EF_PRONE            0x8         //
+                                        // 0x10 appears unused
+#define EF_NODRAW           0x20        //
+#define EF_FIRING           0x40        //
+#define EF_CONNECTION       0x80        //
+#define EF_TURRET_PRONE     0x100       //
+#define EF_TURRET_DUCKED    0x200       //
+#define EF_TURRET_ACTIVE    0x300       // Set on players that use a turret
+#define EF_PROJECTILE       0x400       // Guessed name
+#define EF_AIMASSIST        0x800       // Guessed name
+                                        // 0x1000 appears unused
+                                        // 0x2000 appears unused
+#define EF_MANTLE           0x4000      //
+#define EF_TAGCONNECT       0x8000      // Connected to another entity via tag
+#define EF_TIME_EFFECT      0x10000     // Guessed name; keep entity alive until projectile explosion effect expired
+#define EF_DEAD             0x20000     //
+#define EF_AIMDOWNSIGHT     0x40000     //
+#define EF_BODY_START       0x80000     //
+#define EF_VOTED            0x100000    //
+#define EF_TALK             0x200000    //
+#define EF_TAUNT            0x400000    // Set with pingPlayer script method
+#define EF_PING             0x800000    // Set on non-PVS (Potentially Visible Set) team player being pinged
+#define EF_BOUNCE           0x1000000   // Missile/grenade/gravity-enabled entity bounce
 
+// playerState_t->pm_flags
 #define PMF_PRONE           0x1
 #define PMF_CROUCH          0x2
 #define PMF_DUCKED          PMF_CROUCH
 #define PMF_MANTLE          0x4
+#define PMF_RELOAD          0x8
 #define PMF_FRAG            0x10
 #define PMF_LADDER          0x20
 #define PMF_ADS             0x40
 #define PMF_BACKWARDS_RUN   0x80
-#define PMF_SLIDING         0x200
+#define PMF_ADS_WALK        0x100
+#define PMF_TIME_SLIDE      0x200
+#define PMF_TIME_KNOCKBACK  0x400
+#define PMF_ADS_OVERRIDE    0x800
+#define PMF_RESPAWNED       0x1000
 #define PMF_MELEE           0x2000
-#define PMF_JUMPING         0x80000
-#define PMF_VIEWLOCKED      0x800000    // Guessed name
+#define PMF_BREATH          0x4000
+#define PMF_FROZEN          0x8000
+#define PMF_PRONE_BLOCKED   0x10000
+#define PMF_BINOCULARS      0x20000
+#define PMF_LADDER_END      0x40000
+#define PMF_TIME_LAND       0x80000
+#define PMF_LOOKAT_FRIEND   0x100000
+#define PMF_LOOKAT_ENEMY    0x200000
+#define PMF_FOLLOW          0x400000
+#define PMF_PLAYER          0x800000
 #define PMF_SPECTATING      0x1000000
 #define PMF_DISABLEWEAPON   0x4000000
 
@@ -219,7 +244,7 @@
 #define CONTENTS_WATER              0x20
 #define CONTENTS_CANSHOTCLIP        0x40
 #define CONTENTS_MISSILECLIP        0x80
-#define CONTENTS_ITEM				0x100
+#define CONTENTS_ITEM               0x100
 #define CONTENTS_VEHICLECLIP        0x200
 #define CONTENTS_ITEMCLIP           0x400
 #define CONTENTS_SKY                0x800
@@ -1213,14 +1238,14 @@ typedef enum
 	EV_OBITUARY                 // 198
 } entity_event_t;
 
-#define HMAX 256 /* Maximum symbol */
+#define HMAX 256 // Maximum symbol
 #define INTERNAL_NODE ( HMAX + 1 )
 
 typedef struct nodetype
 {
-	struct  nodetype *left, *right, *parent; /* tree structure */
-	struct  nodetype *next, *prev; /* doubly-linked list */
-	struct  nodetype **head; /* highest ranked node in block */
+	struct nodetype *left, *right, *parent; // Tree structure
+	struct nodetype *next, *prev; // Doubly-linked list
+	struct nodetype **head; // Highest ranked node in block
 	int weight;
 	int symbol;
 } node_t;
@@ -1720,7 +1745,7 @@ typedef struct playerState_s
 	int holdBreathTimer;
 	MantleState mantleState;
 	int entityEventSequence;
-	int weapAnim;
+	int weapAnim; // Uses weapAnimNumber_t
 	float aimSpreadScale;
 	int shellshockIndex;
 	int shellshockTime;
@@ -1855,9 +1880,8 @@ typedef struct turretInfo_s
 
 struct item_ent_t
 {
-	int count;
+	int count2;
 	uint16_t index;
-	uint16_t pad;
 };
 
 struct trigger_ent_t
@@ -1866,8 +1890,6 @@ struct trigger_ent_t
 	int accumulate;
 	int timestamp;
 	int singleUserEntIndex;
-	int damage;
-	byte requireLookAt;
 };
 
 struct mover_ent_t
@@ -1891,6 +1913,11 @@ struct corpse_ent_t
 	int deathAnimStartTime;
 };
 
+struct grenade_ent_t
+{
+	int time;
+};
+
 typedef struct tagInfo_s
 {
 	struct gentity_s *parent;
@@ -1906,47 +1933,48 @@ struct gentity_s
 {
 	entityState_t s;
 	entityShared_t r;
-	gclient_t *client; // 344
-	turretInfo_t *pTurretInfo; // 348
-	byte physicsObject; // 352
-	byte takedamage; // 353
-	byte active; // 354
-	byte nopickup; // 355
-	byte model; // 356
-	byte attachIgnoreCollision; // 357
-	entHandlers_t handler; // 358
-	byte team; // 359
-	uint16_t classname; // 360
+	gclient_t *client;
+	turretInfo_t *pTurretInfo;
+	byte physicsObject;
+	byte takedamage;
+	byte active;
+	byte nopickup;
+	byte model;
+	byte attachIgnoreCollision;
+	entHandlers_t handler;
+	byte team;
+	uint16_t classname;
 	uint16_t target;
 	uint16_t targetname;
 	uint16_t padding;
 	int spawnflags;
 	int flags;
 	int eventTime;
-	qboolean freeAfterEvent; // 380
-	qboolean unlinkAfterEvent; // 384
-	int clipmask; // 388
-	int processedFrame; // 392
-	gentity_t *parent; // 396
-	int nextthink; // 400
-	int health; // 404
-	int maxHealth; // 408
-	int damage; // 412
-	int count; // 416
-	gentity_t *chain; // 420
-	union { // 424
-		struct item_ent_t item[2];
+	qboolean freeAfterEvent;
+	qboolean unlinkAfterEvent;
+	int clipmask;
+	int processedFrame;
+	gentity_t *parent;
+	int nextthink;
+	int health;
+	int maxHealth;
+	int damage;
+	int count;
+	gentity_t *chain;
+	union {
+		struct item_ent_t item;
 		struct trigger_ent_t trigger;
 		struct mover_ent_t mover;
 		struct corpse_ent_t corpse;
+		struct grenade_ent_t grenade;
 	};
-	tagInfo_t *tagInfo; // 520
-	gentity_t *tagChildren; // 524
-	byte attachModelNames[8];
-	uint16_t attachTagNames[8];
-	int useCount; // 552
-	gentity_t *nextFree; // 556
-}; // verified
+	tagInfo_t *tagInfo;
+	gentity_t *tagChildren;
+	byte attachModelNames[7];
+	uint16_t attachTagNames[7];
+	int useCount;
+	gentity_t *nextFree;
+};
 
 typedef struct useList_s
 {
@@ -2389,10 +2417,9 @@ typedef enum weapOverlayReticle_t
 typedef enum weapProjExposion_t
 {
 	WEAPPROJEXP_GRENADE = 0x0,
-	WEAPPROJEXP_MOLOTOV = 0x1,
-	WEAPPROJEXP_ROCKET = 0x2,
-	WEAPPROJEXP_NONE = 0x3,
-	WEAPPROJEXP_NUM = 0x4
+	WEAPPROJEXP_ROCKET = 0x1,
+	WEAPPROJEXP_NONE = 0x2,
+	WEAPPROJEXP_NUM = 0x3
 } weapProjExposion_t;
 
 typedef enum

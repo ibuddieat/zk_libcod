@@ -298,7 +298,7 @@ void gsc_entity_getturretowner(scr_entref_t ref)
 
 	if ( ent->pTurretInfo )
 	{
-		if ( ent->r.ownerNum == ENTITY_NONE )
+		if ( ent->r.ownerNum == ENTITYNUM_NONE )
 		{
 			stackPushUndefined();
 		}
@@ -402,7 +402,7 @@ void gsc_entity_enablegravity(scr_entref_t ref)
 		customEntityState[id].collideModels = collideModels;
 		customEntityState[id].angledGravity = angledGravity;
 		customEntityState[id].maxVelocity = 8192.0;
-		ent->clipmask = MASK_SHOT | CONTENTS_PLAYERCLIP | CONTENTS_CANSHOTCLIP | CONTENTS_WATER;
+		ent->clipmask = MASK_SHOT | CONTENTS_PLAYERCLIP | CONTENTS_CANSHOTCLIP;
 		ent->physicsObject = 1;
 		memset(&ent->s.pos, 0, sizeof(trajectory_t));
 		if ( customEntityState[id].angledGravity )
@@ -430,7 +430,7 @@ void Scr_DisableGravity(gentity_t *ent)
 	ent->s.eFlags &= ~EF_BOUNCE;
 	ent->clipmask = CONTENTS_NONE;
 	ent->physicsObject = 0;
-	ent->s.groundEntityNum = ENTITY_NONE;
+	ent->s.groundEntityNum = ENTITYNUM_NONE;
 	G_SetOrigin(ent, ent->r.currentOrigin);
 	G_SetAngle(ent, ent->r.currentAngles);
 }
@@ -493,7 +493,7 @@ void gsc_entity_addentityvelocity(scr_entref_t ref)
 				VecToAngles(ent->r.currentAngles, ent->s.apos.trBase);
 			}
 			if ( !IsNullVector(velocity) )
-				ent->s.groundEntityNum = ENTITY_NONE;
+				ent->s.groundEntityNum = ENTITYNUM_NONE;
 
 			stackPushBool(qtrue);
 		}
@@ -532,7 +532,7 @@ void gsc_entity_setentityvelocity(scr_entref_t ref)
 				VecToAngles(ent->r.currentAngles, ent->s.apos.trBase);
 			}
 			if ( !IsNullVector(velocity) )
-				ent->s.groundEntityNum = ENTITY_NONE;
+				ent->s.groundEntityNum = ENTITYNUM_NONE;
 
 			stackPushBool(qtrue);
 		}

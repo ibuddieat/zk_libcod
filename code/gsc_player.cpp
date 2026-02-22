@@ -505,8 +505,6 @@ void gsc_player_isreloading(scr_entref_t ref)
 		stackPushBool(qtrue);
 	else
 		stackPushBool(qfalse);
-
-	// Alternatively: stackPushInt(ps->weaponTime);
 }
 
 void gsc_player_isshellshocked(scr_entref_t ref)
@@ -1806,7 +1804,7 @@ void gsc_player_isusingturret(scr_entref_t ref)
 		return;
 	}
 
-	stackPushBool(entity->client->ps.eFlags & EF_TURRET_STAND ? qtrue : qfalse);
+	stackPushBool(entity->client->ps.eFlags & EF_TURRET_ACTIVE ? qtrue : qfalse);
 }
 
 void gsc_player_stopuseturret(scr_entref_t ref)
@@ -1821,7 +1819,7 @@ void gsc_player_stopuseturret(scr_entref_t ref)
 		return;
 	}
 
-	if ( entity->client->ps.pm_flags & PMF_VIEWLOCKED && entity->client->ps.eFlags & EF_TURRET_STAND )
+	if ( entity->client->ps.pm_flags & PMF_PLAYER && entity->client->ps.eFlags & EF_TURRET_ACTIVE )
 	{
 		G_ClientStopUsingTurret(&level.gentities[entity->client->ps.viewlocked_entNum]);
 		stackPushBool(qtrue);
@@ -2867,7 +2865,7 @@ void gsc_player_getgroundentity(scr_entref_t ref)
 	}
 
 	gentity_t *entity = &g_entities[id];
-	if ( entity->client->ps.groundEntityNum == ENTITY_NONE )
+	if ( entity->client->ps.groundEntityNum == ENTITYNUM_NONE )
 		stackPushUndefined();
 	else
 		stackPushEntity(&g_entities[entity->client->ps.groundEntityNum]);
@@ -2936,13 +2934,13 @@ void gsc_player_objective_player_add(scr_entref_t ref)
 
 	obj = &customPlayerState[id].objectives[objective_number];
 
-	if ( obj->entNum != ENTITY_NONE )
+	if ( obj->entNum != ENTITYNUM_NONE )
 	{
 		if ( g_entities[obj->entNum].r.inuse != 0 )
 		{
 			g_entities[obj->entNum].r.svFlags = g_entities[obj->entNum].r.svFlags & 0xEF;
 		}
-		obj->entNum = ENTITY_NONE;
+		obj->entNum = ENTITYNUM_NONE;
 	}
 
 	index = Scr_GetConstString(1);
@@ -2971,7 +2969,7 @@ void gsc_player_objective_player_add(scr_entref_t ref)
 		obj->origin[0] = (float)(int)obj->origin[0];
 		obj->origin[1] = (float)(int)obj->origin[1];
 		obj->origin[2] = (float)(int)obj->origin[2];
-		obj->entNum = ENTITY_NONE;
+		obj->entNum = ENTITYNUM_NONE;
 		if ( 3 < args )
 		{
 			SetObjectiveIcon(obj, 3);
@@ -3004,20 +3002,20 @@ void gsc_player_objective_player_delete(scr_entref_t ref)
 
 	obj = &customPlayerState[id].objectives[objective_number];
 
-	if ( obj->entNum != ENTITY_NONE )
+	if ( obj->entNum != ENTITYNUM_NONE )
 	{
 		if ( g_entities[obj->entNum].r.inuse != 0 )
 		{
 			g_entities[obj->entNum].r.svFlags = g_entities[obj->entNum].r.svFlags & 0xEF;
 		}
-		obj->entNum = ENTITY_NONE;
+		obj->entNum = ENTITYNUM_NONE;
 	}
 
 	obj->state = OBJST_EMPTY;
 	obj->origin[0] = 0.0;
 	obj->origin[1] = 0.0;
 	obj->origin[2] = 0.0;
-	obj->entNum = ENTITY_NONE;
+	obj->entNum = ENTITYNUM_NONE;
 	obj->teamNum = 0;
 	obj->icon = 0;
 
@@ -3068,13 +3066,13 @@ void gsc_player_objective_player_position(scr_entref_t ref)
 
 	obj = &customPlayerState[id].objectives[objective_number];
 
-	if ( obj->entNum != ENTITY_NONE )
+	if ( obj->entNum != ENTITYNUM_NONE )
 	{
 		if ( g_entities[obj->entNum].r.inuse != 0 )
 		{
 			g_entities[obj->entNum].r.svFlags = g_entities[obj->entNum].r.svFlags & 0xEF;
 		}
-		obj->entNum = ENTITY_NONE;
+		obj->entNum = ENTITYNUM_NONE;
 	}
 
 	Scr_GetVector(1, obj->origin);
@@ -3131,13 +3129,13 @@ void gsc_player_objective_player_state(scr_entref_t ref)
 
 	if ( ( state == OBJST_EMPTY ) || ( state == OBJST_INVISIBLE ) )
 	{
-		if ( obj->entNum != ENTITY_NONE )
+		if ( obj->entNum != ENTITYNUM_NONE )
 		{
 			if ( g_entities[obj->entNum].r.inuse != 0 )
 			{
 				g_entities[obj->entNum].r.svFlags = g_entities[obj->entNum].r.svFlags & 0xEF;
 			}
-			obj->entNum = ENTITY_NONE;
+			obj->entNum = ENTITYNUM_NONE;
 		}
 	}
 
@@ -3187,7 +3185,7 @@ void gsc_player_setoriginandangles(scr_entref_t ref)
 	gentity_t *ent = &g_entities[id];
 
     // Stop using MGs
-    if ( ent->client->ps.pm_flags & PMF_VIEWLOCKED && ent->client->ps.eFlags & EF_TURRET_STAND )
+    if ( ent->client->ps.pm_flags & PMF_PLAYER && ent->client->ps.eFlags & EF_TURRET_ACTIVE )
         G_ClientStopUsingTurret(&g_entities[ent->client->ps.viewlocked_entNum]);
 
     G_EntUnlink(ent);
@@ -3838,7 +3836,7 @@ void gsc_player_isusetouching(scr_entref_t ref)
 	gentity_t *ent = &g_entities[id];
 	gclient_t *client = ent->client;
 
-	stackPushBool(client->ps.pm_type != PM_INTERMISSION && ( client->ps.pm_flags & PMF_SPECTATING ) == 0 && client->ps.cursorHintEntIndex != ENTITY_NONE);
+	stackPushBool(client->ps.pm_type != PM_INTERMISSION && ( client->ps.pm_flags & PMF_SPECTATING ) == 0 && client->ps.cursorHintEntIndex != ENTITYNUM_NONE);
 }
 
 #if COMPILE_CUSTOM_VOICE == 1
@@ -4022,7 +4020,7 @@ void gsc_player_clearjumpstate(scr_entref_t ref)
 
 	playerState_t *ps = SV_GameClientNum(id);
 
-	ps->pm_flags &= ~( PMF_JUMPING | PMF_SLIDING );
+	ps->pm_flags &= ~( PMF_TIME_LAND | PMF_TIME_SLIDE );
 	ps->pm_time = 0;
 	ps->jumpTime = 0;
 	ps->jumpOriginZ = 0;

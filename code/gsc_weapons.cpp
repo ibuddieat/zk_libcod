@@ -62,7 +62,7 @@ void gsc_weapons_issemiautoweapon()
 		return;
 	}
 
-	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	WeaponDef_t *weapon = BG_GetWeaponDef(id);
 
 	stackPushInt(weapon->bSemiAuto);
 }
@@ -137,7 +137,7 @@ void gsc_weapons_getweaponmaxammo()
 		return;
 	}
 
-	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	WeaponDef_t *weapon = BG_GetWeaponDef(id);
 
 	stackPushInt(weapon->iMaxAmmo);
 }
@@ -164,7 +164,7 @@ void gsc_weapons_getweaponclipsize()
 		return;
 	}
 
-	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	WeaponDef_t *weapon = BG_GetWeaponDef(id);
 
 	stackPushInt(weapon->iClipSize);
 }
@@ -191,7 +191,7 @@ void gsc_weapons_getweapondamage()
 		return;
 	}
 
-	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	WeaponDef_t *weapon = BG_GetWeaponDef(id);
 
 	stackPushInt(weapon->damage);
 }
@@ -218,7 +218,7 @@ void gsc_weapons_getweaponmeleedamage()
 		return;
 	}
 
-	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	WeaponDef_t *weapon = BG_GetWeaponDef(id);
 
 	stackPushInt(weapon->iMeleeDamage);
 }
@@ -245,7 +245,7 @@ void gsc_weapons_getweaponfiretime()
 		return;
 	}
 
-	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	WeaponDef_t *weapon = BG_GetWeaponDef(id);
 
 	stackPushInt(weapon->iFireTime);
 }
@@ -272,7 +272,7 @@ void gsc_weapons_getweaponmeleetime()
 		return;
 	}
 
-	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	WeaponDef_t *weapon = BG_GetWeaponDef(id);
 
 	stackPushInt(weapon->iMeleeTime);
 }
@@ -299,7 +299,7 @@ void gsc_weapons_getweaponraisetime()
 		return;
 	}
 
-	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	WeaponDef_t *weapon = BG_GetWeaponDef(id);
 
 	stackPushInt(weapon->iRaiseTime);
 }
@@ -326,7 +326,7 @@ void gsc_weapons_getweaponreloadtime()
 		return;
 	}
 
-	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	WeaponDef_t *weapon = BG_GetWeaponDef(id);
 
 	stackPushInt(weapon->iReloadTime);
 }
@@ -353,7 +353,7 @@ void gsc_weapons_getweaponreloademptytime()
 		return;
 	}
 
-	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	WeaponDef_t *weapon = BG_GetWeaponDef(id);
 
 	stackPushInt(weapon->iReloadEmptyTime);
 }
@@ -380,7 +380,7 @@ void gsc_weapons_getweaponcookable()
 		return;
 	}
 
-	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	WeaponDef_t *weapon = BG_GetWeaponDef(id);
 
 	stackPushInt(weapon->bCookOffHold);
 }
@@ -407,7 +407,7 @@ void gsc_weapons_getweaponfusetime()
 		return;
 	}
 
-	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	WeaponDef_t *weapon = BG_GetWeaponDef(id);
 
 	stackPushInt(weapon->iFuseTime);
 }
@@ -435,7 +435,7 @@ void gsc_weapons_setweapondamage()
 		return;
 	}
 
-	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	WeaponDef_t *weapon = BG_GetWeaponDef(id);
 	weapon->damage = damage;
 
 	stackPushBool(qtrue);
@@ -464,7 +464,7 @@ void gsc_weapons_setweaponmaxammo()
 		return;
 	}
 
-	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	WeaponDef_t *weapon = BG_GetWeaponDef(id);
 	weapon->iMaxAmmo = ammo;
 
 	stackPushBool(qtrue);
@@ -493,7 +493,7 @@ void gsc_weapons_setweaponclipsize()
 		return;
 	}
 
-	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	WeaponDef_t *weapon = BG_GetWeaponDef(id);
 	weapon->iClipSize = clipSize;
 
 	stackPushBool(qtrue);
@@ -522,7 +522,7 @@ void gsc_weapons_setweaponmeleedamage()
 		return;
 	}
 
-	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	WeaponDef_t *weapon = BG_GetWeaponDef(id);
 	weapon->iMeleeDamage = damage;
 
 	stackPushBool(qtrue);
@@ -551,7 +551,7 @@ void gsc_weapons_setweaponfiretime()
 		return;
 	}
 
-	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	WeaponDef_t *weapon = BG_GetWeaponDef(id);
 	weapon->iFireTime = time;
 
 	stackPushBool(qtrue);
@@ -580,7 +580,7 @@ void gsc_weapons_setweaponmeleetime()
 		return;
 	}
 
-	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	WeaponDef_t *weapon = BG_GetWeaponDef(id);
 	weapon->iMeleeTime = time;
 
 	stackPushBool(qtrue);
@@ -609,7 +609,7 @@ void gsc_weapons_setweaponraisetime()
 		return;
 	}
 
-	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	WeaponDef_t *weapon = BG_GetWeaponDef(id);
 	weapon->iRaiseTime = time;
 
 	stackPushBool(qtrue);
@@ -638,7 +638,7 @@ void gsc_weapons_setweaponreloadtime()
 		return;
 	}
 
-	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	WeaponDef_t *weapon = BG_GetWeaponDef(id);
 	weapon->iReloadTime = time;
 
 	stackPushBool(qtrue);
@@ -667,7 +667,7 @@ void gsc_weapons_setweaponreloademptytime()
 		return;
 	}
 
-	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	WeaponDef_t *weapon = BG_GetWeaponDef(id);
 	weapon->iReloadEmptyTime = time;
 
 	stackPushBool(qtrue);
@@ -696,7 +696,7 @@ void gsc_weapons_setweaponcookable()
 		return;
 	}
 
-	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	WeaponDef_t *weapon = BG_GetWeaponDef(id);
 	weapon->bCookOffHold = cookable;
 
 	stackPushBool(qtrue);
@@ -725,7 +725,7 @@ void gsc_weapons_setweaponfusetime()
 		return;
 	}
 
-	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	WeaponDef_t *weapon = BG_GetWeaponDef(id);
 	weapon->iFuseTime = time;
 
 	stackPushBool(qtrue);
@@ -771,7 +771,7 @@ void gsc_weapons_getweaponhitlocmultiplier()
 		return;
 	}
 
-	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	WeaponDef_t *weapon = BG_GetWeaponDef(id);
 	int offset = getHitLocOffset(hitloc);
 
 	stackPushFloat(weapon->locationDamageMultipliers[offset]);
@@ -801,7 +801,7 @@ void gsc_weapons_setweaponhitlocmultiplier()
 		return;
 	}
 
-	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	WeaponDef_t *weapon = BG_GetWeaponDef(id);
 	int offset = getHitLocOffset(hitloc);
 	weapon->locationDamageMultipliers[offset] = multiplier;
 
@@ -830,7 +830,7 @@ void gsc_weapons_getmovespeedscale()
 		return;
 	}
 
-	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	WeaponDef_t *weapon = BG_GetWeaponDef(id);
 
 	stackPushFloat(weapon->fMoveSpeedScale);
 }
@@ -858,7 +858,7 @@ void gsc_weapons_setmovespeedscale()
 		return;
 	}
 
-	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	WeaponDef_t *weapon = BG_GetWeaponDef(id);
 	weapon->fMoveSpeedScale = scale;
 
 	stackPushBool(qtrue);
@@ -872,7 +872,7 @@ void gsc_weapons_getloadedweapons()
 
 	for ( int i = 0; i < ( numweapons + 1 ); i++ ) // First is "none"
 	{
-		WeaponDef_t *weapon = BG_WeaponDefs(i);
+		WeaponDef_t *weapon = BG_GetWeaponDef(i);
 
 		stackPushString(weapon->szInternalName);
 		stackPushArrayLast();
@@ -901,7 +901,7 @@ void gsc_weapons_getweapondisplayname()
 		return;
 	}
 	
-	WeaponDef_t *weapon = BG_WeaponDefs(id);
+	WeaponDef_t *weapon = BG_GetWeaponDef(id);
 
 	stackPushString(weapon->szDisplayName);
 	
@@ -1081,7 +1081,7 @@ void gsc_weapons_spawngrenade(scr_entref_t ref)
 		return;
 	}
 
-	weapon = BG_WeaponDefs(weaponIndex);
+	weapon = BG_GetWeaponDef(weaponIndex);
 	Scr_GetVector(1, origin);
 
 	if ( args > 2 )

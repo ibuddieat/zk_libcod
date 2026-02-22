@@ -33,7 +33,7 @@ static const SL_GetString_t SL_GetString = (SL_GetString_t)0x080798E0;
 typedef void (*SL_RemoveRefToString_t)(unsigned int stringValue);
 static const SL_RemoveRefToString_t SL_RemoveRefToString = (SL_RemoveRefToString_t)0x08079CF2;
 
-typedef int (*Scr_GetFunctionHandle_t)(const char* scriptName, const char* labelName, int isNeeded);
+typedef int (*Scr_GetFunctionHandle_t)(const char *scriptName, const char *labelName, int isNeeded);
 static const Scr_GetFunctionHandle_t Scr_GetFunctionHandle = (Scr_GetFunctionHandle_t)0x08110208;
 
 typedef int (*Scr_GetNumParam_t)(void);
@@ -645,14 +645,11 @@ static const BG_GetSpreadForWeapon_t BG_GetSpreadForWeapon = (BG_GetSpreadForWea
 typedef int (*BG_WeaponAmmo_t)(playerState_t *ps, int weapon);
 static const BG_WeaponAmmo_t BG_WeaponAmmo = (BG_WeaponAmmo_t)0x080ED3FC;
 
-typedef WeaponDef_t * (*BG_WeaponDefs_t)(unsigned int weaponIndex);
-static const BG_WeaponDefs_t BG_WeaponDefs = (BG_WeaponDefs_t)0x080EB9A4;
+typedef WeaponDef_t * (*BG_GetWeaponDef_t)(unsigned int weaponIndex);
+static const BG_GetWeaponDef_t BG_GetWeaponDef = (BG_GetWeaponDef_t)0x080EB9A4;
 
 typedef int (*BG_WeaponIsClipOnly_t)(unsigned int weapon);
 static const BG_WeaponIsClipOnly_t BG_WeaponIsClipOnly = (BG_WeaponIsClipOnly_t)0x080ED3E2;
-
-typedef WeaponDef_t * (*BG_GetWeaponDef_t)(unsigned int weaponIndex);
-static const BG_GetWeaponDef_t BG_GetWeaponDef = (BG_GetWeaponDef_t)0x080EB9A4;
 
 typedef weapSlot_t (*BG_GetWeaponSlotForName_t)(const char *name);
 static const BG_GetWeaponSlotForName_t BG_GetWeaponSlotForName = (BG_GetWeaponSlotForName_t)0x080F2B84;

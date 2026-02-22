@@ -15,6 +15,7 @@ extern dvar_t *bg_fallDamageMaxHeight;
 extern dvar_t *bg_fallDamageMinHeight;
 extern dvar_t *cl_allowDownload;
 extern dvar_t *cl_paused;
+extern dvar_t *cl_wwwDownload;
 extern dvar_t *com_dedicated;
 extern dvar_t *com_logfile;
 extern dvar_t *com_sv_running;
@@ -77,11 +78,10 @@ extern dvar_t *sv_showCommands;
 extern dvar_t *sv_timeout;
 extern dvar_t *sv_voice;
 extern dvar_t *sv_voiceQuality;
-extern dvar_t *sv_zombietime;
-extern dvar_t *cl_wwwDownload;
 extern dvar_t *sv_wwwBaseURL;
 extern dvar_t *sv_wwwDlDisconnected;
 extern dvar_t *sv_wwwDownload;
+extern dvar_t *sv_zombietime;
 
 // Custom dvars
 #if COMPILE_UTILS == 1
@@ -501,7 +501,7 @@ const char * custom_ClientConnect(unsigned int clientNum, unsigned int scriptPer
 	G_InitGentity(ent);
 	ent->handler = ENT_HANDLER_NULL;
 	ent->client = gclient;
-	gclient->useHoldEntity = ENTITY_NONE;
+	gclient->useHoldEntity = ENTITYNUM_NONE;
 	gclient->sess.cs.clientIndex = clientNum;
 	gclient->ps.clientNum = clientNum;
 	ClientUserinfoChanged(clientNum);
@@ -1695,7 +1695,7 @@ void custom_SV_ClipMoveToEntity(moveclip_t *clip, svEntity_t *entity, trace_t *t
 		return;
 
 	// Ignore specific entities
-	if ( touchNum != ENTITY_NONE )
+	if ( touchNum != ENTITYNUM_NONE )
 	{
 		// The specified pass entity
 		if ( touchNum == clip->passEntityNum )
@@ -1796,12 +1796,12 @@ qboolean custom_StuckInClient(gentity_t *self)
 		return qfalse;
 	/* New code end */
 
-	if ( ( ( ( self->client->ps.pm_flags & PMF_VIEWLOCKED ) != 0 ) && ( self->client->sess.sessionState == STATE_PLAYING ) ) && ( customPlayerState[id].collisionTeam != CUSTOM_TEAM_AXIS_ALLIES /* New condition */ || ( ( self->r.contents & CONTENTS_BODY ) != 0 || ( self->r.contents == CONTENTS_CORPSE ) ) ) )
+	if ( ( ( ( self->client->ps.pm_flags & PMF_PLAYER ) != 0 ) && ( self->client->sess.sessionState == STATE_PLAYING ) ) && ( customPlayerState[id].collisionTeam != CUSTOM_TEAM_AXIS_ALLIES /* New condition */ || ( ( self->r.contents & CONTENTS_BODY ) != 0 || ( self->r.contents == CONTENTS_CORPSE ) ) ) )
 	{
 		hit = g_entities;
 		for ( i = 0; i < level.maxclients; i++, hit++)
 		{
-			if ( ( ( ( ( ( hit->r.inuse != 0 ) && ( ( hit->client->ps.pm_flags & PMF_VIEWLOCKED ) != 0 ) ) && ( hit->client->sess.sessionState == STATE_PLAYING )  ) && ( ( hit != self && hit->client != NULL ) ) ) && ( 0 < hit->health && ( /* New condition */ customPlayerState[i].collisionTeam != CUSTOM_TEAM_AXIS_ALLIES || ( ( hit->r.contents & CONTENTS_BODY ) != 0 || ( hit->r.contents == CONTENTS_CORPSE ) ) ) ) ) &&
+			if ( ( ( ( ( ( hit->r.inuse != 0 ) && ( ( hit->client->ps.pm_flags & PMF_PLAYER ) != 0 ) ) && ( hit->client->sess.sessionState == STATE_PLAYING )  ) && ( ( hit != self && hit->client != NULL ) ) ) && ( 0 < hit->health && ( /* New condition */ customPlayerState[i].collisionTeam != CUSTOM_TEAM_AXIS_ALLIES || ( ( hit->r.contents & CONTENTS_BODY ) != 0 || ( hit->r.contents == CONTENTS_CORPSE ) ) ) ) ) &&
 			( hit->r.absmin[0] <= self->r.absmax[0] && ( ( ( self->r.absmin[0] <= hit->r.absmax[0] && ( hit->r.absmin[1] <= self->r.absmax[1] ) ) && ( self->r.absmin[1] <= hit->r.absmax[1] ) ) && ( hit->r.absmin[2] <= self->r.absmax[2] && ( self->r.absmin[2] <= hit->r.absmax[2] ) ) ) ) )
 			{
 				/* New code start: per-player/team collison */
@@ -1845,10 +1845,10 @@ qboolean custom_StuckInClient(gentity_t *self)
 					}
 					VectorScale2(dir, hitSpeed, hit->client->ps.velocity);
 					hit->client->ps.pm_time = g_playerCollisionEjectDuration->current.integer; // New: g_playerCollisionEjectDuration dvar
-					hit->client->ps.pm_flags = hit->client->ps.pm_flags | PMF_SLIDING;
+					hit->client->ps.pm_flags = hit->client->ps.pm_flags | PMF_TIME_SLIDE;
 					VectorScale2(dir, selfSpeed * -1, self->client->ps.velocity);
 					self->client->ps.pm_time = g_playerCollisionEjectDuration->current.integer; // New: g_playerCollisionEjectDuration dvar
-					self->client->ps.pm_flags = self->client->ps.pm_flags | PMF_SLIDING;
+					self->client->ps.pm_flags = self->client->ps.pm_flags | PMF_TIME_SLIDE;
 
 					if ( !g_playerCollisionEjectDamageAllowed->current.boolean ) // New: g_playerCollisionEjectDamageAllowed dvar
 						return qtrue;
@@ -1875,7 +1875,7 @@ gentity_t * custom_fire_grenade(gentity_t *attacker, vec3_t start, vec3_t dir, i
 
 	if ( codecallback_fire_grenade && Scr_IsSystemActive() )
 	{
-		WeaponDef_t *def = BG_WeaponDefs(weaponIndex);
+		WeaponDef_t *def = BG_GetWeaponDef(weaponIndex);
 		stackPushString(def->szInternalName);
 		stackPushEntity(grenade);
 		short ret = Scr_ExecEntThread(attacker, codecallback_fire_grenade, 2);
@@ -2215,7 +2215,7 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 
 	event = EV_ITEM_PICKUP;
 	bg_item = &bg_itemlist;
-	bg_item += item->item[0].index;
+	bg_item += item->item.index;
 	
 	if ( !BG_CanItemBeGrabbed(&item->s, &entity->client->ps, touch) )
 	{
@@ -2223,12 +2223,12 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 		{
 			if ( !COM_BitCheck(entity->client->ps.weapons, bg_item->giTag) )
 			{
-				if ( ( BG_WeaponDefs(bg_item->giTag)->weapSlot + ~WEAPSLOT_NONE ) < 2 )
+				if ( ( BG_GetWeaponDef(bg_item->giTag)->weapSlot + ~WEAPSLOT_NONE ) < 2 )
 					SV_GameSendServerCommand(entity - g_entities, SV_CMD_CAN_IGNORE, va("%c \"GAME_CANT_GET_PRIMARY_WEAP_MESSAGE\"", 0x66));
 			}
 			else
 			{
-				SV_GameSendServerCommand(entity - g_entities, SV_CMD_CAN_IGNORE, va("%c \"GAME_PICKUP_CANTCARRYMOREAMMO\x14%s\"", 0x66, BG_WeaponDefs(bg_item->giTag)->szDisplayName));
+				SV_GameSendServerCommand(entity - g_entities, SV_CMD_CAN_IGNORE, va("%c \"GAME_PICKUP_CANTCARRYMOREAMMO\x14%s\"", 0x66, BG_GetWeaponDef(bg_item->giTag)->szDisplayName));
 			}
 		}
 	}
@@ -2241,7 +2241,7 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 		if ( g_logPickup->current.boolean )
 		{
 			if ( bg_item->giType == IT_WEAPON )
-				G_LogPrintf("Weapon;%d;%d;%s;%s\n", SV_GetGuid(entity->s.number), entity->s.number, name, BG_WeaponDefs(bg_item->giTag)->szInternalName);
+				G_LogPrintf("Weapon;%d;%d;%s;%s\n", SV_GetGuid(entity->s.number), entity->s.number, name, BG_GetWeaponDef(bg_item->giTag)->szInternalName);
 			else
 				G_LogPrintf("Item;%d;%d;%s;%s\n", SV_GetGuid(entity->s.number), entity->s.number, name, bg_item->classname);
 		}
@@ -2275,7 +2275,7 @@ void custom_Touch_Item(gentity_t *item, gentity_t *entity, int touch)
 				stackPushVector(item->r.currentOrigin);
 				stackPushInt(bg_item->quantity);
 				stackPushString(bg_item->display_name);
-				stackPushString(BG_WeaponDefs(bg_item->giTag)->szInternalName);
+				stackPushString(BG_GetWeaponDef(bg_item->giTag)->szInternalName);
 				stackPushString("weapon");
 				short ret = Scr_ExecEntThread(entity, codecallback_pickup, 6);
 				Scr_FreeThread(ret);
@@ -4806,9 +4806,9 @@ void custom_ClientEndFrame(gentity_t *ent)
 		/* New code start: g_resetSlide dvar */
 		if ( g_resetSlide->current.boolean )
 		{
-			if ( ( ent->client->ps.pm_flags & PMF_SLIDING ) != 0 && ent->client->ps.pm_time == 0 )
+			if ( ( ent->client->ps.pm_flags & PMF_TIME_SLIDE ) != 0 && ent->client->ps.pm_time == 0 )
 			{
-				ent->client->ps.pm_flags &= ~PMF_SLIDING;
+				ent->client->ps.pm_flags &= ~PMF_TIME_SLIDE;
 			}
 		}
 		/* New code end */
@@ -6735,7 +6735,7 @@ void SV_RemoveEntFromPlayerSnapshots(int clientNum, int entNum)
 	{
 		if ( customPlayerState[clientNum].snapshotEntities.snapshotEntities[i] == entNum )
 		{
-			customPlayerState[clientNum].snapshotEntities.snapshotEntities[i] = ENTITY_NONE;
+			customPlayerState[clientNum].snapshotEntities.snapshotEntities[i] = ENTITYNUM_NONE;
 			customPlayerState[clientNum].snapshotEntities.numSnapshotEntities--;
 			removed = qtrue;
 		}
@@ -6910,7 +6910,7 @@ void custom_G_GetPlayerViewOrigin(gentity_t *ent, float *origin)
 
 	client = ent->client;
 
-	if ( ( client->ps.eFlags & EF_TURRET_STAND ) != 0 )
+	if ( ( client->ps.eFlags & EF_TURRET_ACTIVE ) != 0 )
 	{
 		if ( G_DObjGetWorldTagPos(&g_entities[client->ps.viewlocked_entNum], scr_const.tag_player, origin) )
 		{
@@ -6977,13 +6977,13 @@ void custom_G_ClientStopUsingTurret(gentity_t *self)
 	}
 
 	TeleportPlayer(owner, info->userOrigin, owner->r.currentAngles);
-	owner->client->ps.eFlags &= ~EF_TURRET_STAND;
+	owner->client->ps.eFlags &= ~EF_TURRET_ACTIVE;
 	owner->client->ps.viewlocked = PLAYERVIEWLOCK_NONE;
-	owner->client->ps.viewlocked_entNum = ENTITY_NONE;
+	owner->client->ps.viewlocked_entNum = ENTITYNUM_NONE;
 	owner->active = 0;
 	owner->s.otherEntityNum = 0;
 	self->active = 0;
-	self->r.ownerNum = ENTITY_NONE;
+	self->r.ownerNum = ENTITYNUM_NONE;
 	info->flags &= ~0x800u;
 
 	/* New code start: setHoldingWeaponDown script method enforcement after
@@ -7343,7 +7343,7 @@ void custom_Player_UpdateActivate(gentity_t *ent)
 	{
 		useSucceeded = 0;
 
-		if ( ent->client->useHoldEntity == ENTITY_NONE
+		if ( ent->client->useHoldEntity == ENTITYNUM_NONE
 		    || ( ent->client->oldbuttons & KEY_MASK_USERELOAD ) == 0
 		    || ( ent->client->buttons & KEY_MASK_USERELOAD ) != 0 )
 		{
@@ -7358,7 +7358,7 @@ void custom_Player_UpdateActivate(gentity_t *ent)
 					customPlayerState[id].heldUseButton = qfalse;
 				}
 
-				if ( ent->client->useHoldEntity != ENTITY_NONE || useSucceeded )
+				if ( ent->client->useHoldEntity != ENTITYNUM_NONE || useSucceeded )
 					Player_ActivateHoldCmd(ent);
 				else if ( ( ent->client->latched_buttons & KEY_MASK_USERELOAD ) != 0 )
 					ent->client->ps.pm_flags |= KEY_MASK_USE;
@@ -7369,7 +7369,7 @@ void custom_Player_UpdateActivate(gentity_t *ent)
 				if ( ( ent->client->latched_buttons & ( KEY_MASK_USE | KEY_MASK_USERELOAD ) ) != 0 )
 					useSucceeded = Player_ActivateCmd(ent);
 
-				if ( ent->client->useHoldEntity != ENTITY_NONE || useSucceeded )
+				if ( ent->client->useHoldEntity != ENTITYNUM_NONE || useSucceeded )
 				{
 					if ( ( ent->client->buttons & ( KEY_MASK_USE | KEY_MASK_USERELOAD ) ) != 0 )
 						Player_ActivateHoldCmd(ent);
@@ -7403,7 +7403,7 @@ void custom_Player_UpdateCursorHints(gentity_t *player)
 	client = player->client;
 	client->ps.cursorHint = 0;
 	client->ps.cursorHintString = -1;
-	client->ps.cursorHintEntIndex = ENTITY_NONE;
+	client->ps.cursorHintEntIndex = ENTITYNUM_NONE;
 
 	// New: sv_updateCursorHints dvar
 	if ( !sv_updateCursorHints->current.boolean )
@@ -7424,13 +7424,14 @@ void custom_Player_UpdateCursorHints(gentity_t *player)
 					temp = ent->s.eType;
 					if ( temp == ET_ITEM )
 					{
-						/* New code start: Optional hintString toggle when item pickup is disabled */
+						/* New code start: Optional hintString toggle when item
+						 pickup is disabled */
 						if ( customPlayerState[player->s.number].noPickupHintString )
 							continue;
 						/* New code end */
 
-						/* New code start: setHoldingWeaponDown script method preventing
-						 item pickup */
+						/* New code start: setHoldingWeaponDown script method
+						 preventing item pickup */
 						if ( customPlayerState[player->s.number].holdingDownWeapon )
 							continue;
 						/* New code end */
@@ -7463,7 +7464,7 @@ LAB_08121ee6:
 								{
 									return;
 								}
-								client->ps.cursorHintEntIndex = ENTITY_NONE;
+								client->ps.cursorHintEntIndex = ENTITYNUM_NONE;
 								return;
 							}
 
@@ -7476,7 +7477,7 @@ LAB_08121ee6:
 							/* New code end */
 
 							if ( ( ent->team == 0 || ent->team == player->client->sess.cs.team ) &&
-							( ent->trigger.singleUserEntIndex == ENTITY_NONE || ent->trigger.singleUserEntIndex == player->client->ps.clientNum ) )
+							( ent->trigger.singleUserEntIndex == ENTITYNUM_NONE || ent->trigger.singleUserEntIndex == player->client->ps.clientNum ) )
 							{
 								temp = ent->s.dmgFlags;
 								if ( ent->s.dmgFlags != 0 && ent->s.scale != 0xFF )
@@ -7501,7 +7502,7 @@ LAB_08121ee6:
 				}
 			}
 		}
-		else if ( ( client->ps.eFlags & EF_TURRET_STAND ) != 0 )
+		else if ( ( client->ps.eFlags & EF_TURRET_ACTIVE ) != 0 )
 		{
 			Player_SetTurretDropHint(player);
 		}
@@ -7555,7 +7556,7 @@ void custom_player_die(gentity_t *self, gentity_t *inflictor, gentity_t *attacke
 	{
 		bgs = &level_bgs;
 
-		if ( attacker->s.eType == ET_TURRET && attacker->r.ownerNum != ENTITY_NONE )
+		if ( attacker->s.eType == ET_TURRET && attacker->r.ownerNum != ENTITYNUM_NONE )
 			attacker = &g_entities[attacker->r.ownerNum];
 		
 		Scr_AddEntity(attacker);
@@ -7566,7 +7567,7 @@ void custom_player_die(gentity_t *self, gentity_t *inflictor, gentity_t *attacke
 		{
 			if ( attacker->client )
 			{
-				if ( ( attacker->client->ps.eFlags & EF_TURRET_STAND ) != 0 )
+				if ( ( attacker->client->ps.eFlags & EF_TURRET_ACTIVE ) != 0 )
 				{
 					turret = &g_entities[attacker->s.otherEntityNum];
 
@@ -7666,8 +7667,8 @@ void custom_PlayerCmd_finishPlayerDamage(scr_entref_t entref)
 	gentity_t *attacker;
 	gentity_t *inflictor;
 
-	inflictor = &g_entities[ENTITY_WORLD];
-	attacker = &g_entities[ENTITY_WORLD];
+	inflictor = &g_entities[ENTITYNUM_WORLD];
+	attacker = &g_entities[ENTITYNUM_WORLD];
 	dir = 0;
 	point = 0;
 
@@ -7752,7 +7753,7 @@ void custom_PlayerCmd_finishPlayerDamage(scr_entref_t entref)
 
 			if ( minDmg )
 			{
-				if ( ( ent->client->ps.eFlags & EF_TURRET_STAND ) == 0 )
+				if ( ( ent->client->ps.eFlags & EF_TURRET_ACTIVE ) == 0 )
 				{
 					knockback = (float)minDmg * g_knockback->current.decimal / 250.0;
 					VectorScale(localdir, knockback, velocaityScale);
@@ -7921,7 +7922,7 @@ void custom_PM_BeginWeaponChange(playerState_t *ps, unsigned int newweapon)
 	/* New code start: CodeCallback_WeaponChange */
 	if ( codecallback_weapon_change && newweapon != customPlayerState[ps->clientNum].weapon && Scr_IsSystemActive() )
 	{
-		WeaponDef_t *def = BG_WeaponDefs(newweapon);
+		WeaponDef_t *def = BG_GetWeaponDef(newweapon);
 		stackPushString(def->szInternalName);
 		stackPushInt(newweapon);
 		short ret = Scr_ExecEntThread(&g_entities[ps->clientNum], codecallback_weapon_change, 2);
@@ -8069,7 +8070,7 @@ void custom_Scr_BulletTrace(void)
 	vec3_t start;
 	vec3_t end;
 
-	passEntityNum = ENTITY_NONE;
+	passEntityNum = ENTITYNUM_NONE;
 	Scr_GetVector(0, start);
 	Scr_GetVector(1, end);
 	hitCharacters = Scr_GetInt(2);
@@ -8105,7 +8106,7 @@ void custom_Scr_BulletTrace(void)
 	Vec3Lerp(start, end, trace.fraction, position);
 	Scr_AddVector(position);
 	Scr_AddArrayStringIndexed(scr_const.position);
-	if ( trace.entityNum == ENTITY_NONE || trace.entityNum == ENTITY_WORLD )
+	if ( trace.entityNum == ENTITYNUM_NONE || trace.entityNum == ENTITYNUM_WORLD )
 	{
 		Scr_AddUndefined();
 	}
@@ -8166,7 +8167,7 @@ void custom_Scr_BulletTracePassed(void)
 	vec3_t start;
 	vec3_t end;
 
-	passEntityNum = ENTITY_NONE;
+	passEntityNum = ENTITYNUM_NONE;
 	Scr_GetVector(0, start);
 	Scr_GetVector(1, end);
 	hitCharacters = Scr_GetInt(2);
@@ -8212,7 +8213,7 @@ void custom_Scr_SightTracePassed(void)
 	vec3_t start;
 	float visibility;
 
-	passEntityNum = ENTITY_NONE;
+	passEntityNum = ENTITYNUM_NONE;
 	Scr_GetVector(0, start);
 	Scr_GetVector(1, end);
 	hitCharacters = Scr_GetInt(2);
@@ -8380,7 +8381,7 @@ void custom_GScr_Obituary(void)
 			goto LAB_081131e1;
 		}
 	}
-	ent->s.attackerEntityNum = ENTITY_WORLD;
+	ent->s.attackerEntityNum = ENTITYNUM_WORLD;
 LAB_081131e1:
 	ent->r.svFlags = SVF_BROADCAST;
 	if ( sMeansOfDeath == MOD_MELEE
@@ -8458,7 +8459,7 @@ void custom_GScr_SetHintString(scr_entref_t entref)
 	if ( ent->classname == custom_scr_const.trigger_radius )
 	{
 		Scr_SetString(&ent->classname, scr_const.trigger_use_touch);
-		ent->trigger.singleUserEntIndex = ENTITY_NONE;
+		ent->trigger.singleUserEntIndex = ENTITYNUM_NONE;
 		ent->r.contents = CONTENTS_DONOTENTER;
 		ent->r.svFlags = SVF_NOCLIENT;
 		ent->s.dmgFlags = 2;
@@ -8692,7 +8693,7 @@ void custom_G_DamageClient(gentity_t *self, gentity_t *inflictor, gentity_t *att
 		if ( inflictor )
 		{
 			/* New code start: scr_turretDamageName dvar */
-			if ( scr_turretDamageName->current.boolean && ( inflictor->s.eFlags & EF_TURRET_STAND ) )
+			if ( scr_turretDamageName->current.boolean && ( inflictor->s.eFlags & EF_TURRET_ACTIVE ) )
 			{
 				gentity_t *turret = &level.gentities[inflictor->client->ps.viewlocked_entNum];
 
@@ -8726,7 +8727,7 @@ void custom_FireWeaponMelee(gentity_t *player)
 	int id;
 	float range, width, height;
 
-	if ( ( player->client->ps.eFlags & EF_TURRET_STAND ) == 0 || player->active == 0 )
+	if ( ( player->client->ps.eFlags & EF_TURRET_ACTIVE ) == 0 || player->active == 0 )
 	{
 		id = player->client->ps.clientNum;
 		wp.weapDef = BG_GetWeaponDef(player->s.weapon);
@@ -9076,7 +9077,7 @@ qboolean custom_Bullet_Fire_Drop(droppingBullet_t *bullet, const gentity_t *infl
 	}
 
 	// Bullet did not hit anything
-	if ( trace.fraction == 1.0 && trace.entityNum == ENTITY_NONE )
+	if ( trace.fraction == 1.0 && trace.entityNum == ENTITYNUM_NONE )
 		return qfalse;
 
 	return qtrue;
@@ -9338,9 +9339,9 @@ void custom_Fire_Lead(gentity_t *ent, gentity_t *activator)
 	float spread;
 
 	spread = ent->pTurretInfo->playerSpread;
-	if ( activator == g_entities + ENTITY_NONE )
+	if ( activator == g_entities + ENTITYNUM_NONE )
 	{
-		attacker = g_entities + ENTITY_WORLD;
+		attacker = g_entities + ENTITYNUM_WORLD;
 	}
 	else
 	{
@@ -9370,7 +9371,7 @@ void custom_FireWeaponAntiLag(gentity_t *player, int time)
 	float currentAimSpreadScale;
 	weaponParms wp;
 
-	if ( ( player->client->ps.eFlags & EF_TURRET_STAND ) == 0 || player->active == 0 )
+	if ( ( player->client->ps.eFlags & EF_TURRET_ACTIVE ) == 0 || player->active == 0 )
 	{
 		wp.weapDef = BG_GetWeaponDef(player->s.weapon);
 		G_CalcMuzzlePoints(player, &wp);
@@ -9719,7 +9720,7 @@ void G_RunGravityModelWithBounce(gentity_t *ent) // G_RunMissile as base
 	vec3_t maxLerpVector;
 	qboolean bounce;
 
-	if ( ( ent->s.pos.trType == TR_STATIONARY ) && ( ent->s.groundEntityNum != ENTITY_WORLD ) )
+	if ( ( ent->s.pos.trType == TR_STATIONARY ) && ( ent->s.groundEntityNum != ENTITYNUM_WORLD ) )
 	{
 		VectorCopy(ent->r.currentOrigin, origin);
 		origin[2] = origin[2] - 1.5;
@@ -9765,7 +9766,7 @@ void G_RunGravityModelWithBounce(gentity_t *ent) // G_RunMissile as base
 		VectorCopy(ent->r.currentOrigin, origin);
 		origin[2] = origin[2] - 1.5;
 		G_MissileTrace(&trace2, ent->r.currentOrigin, origin, ent->s.number, ent->clipmask);
-		if ( ( trace2.fraction != 1.0 ) && ( trace2.entityNum == ENTITY_WORLD ) )
+		if ( ( trace2.fraction != 1.0 ) && ( trace2.entityNum == ENTITYNUM_WORLD ) )
 		{
 			trace.fraction = trace2.fraction;
 			trace.normal[0] = trace2.normal[0];
@@ -9806,7 +9807,7 @@ void G_RunGravityModelNoBounce(gentity_t *ent) // G_RunItem as base
 	vec3_t origin;
 	vec3_t maxLerpVector;
 
-	if ( ( ( ( ent->s.groundEntityNum == ENTITY_NONE ) || ( level.gentities[ent->s.groundEntityNum].s.pos.trType != TR_STATIONARY ) ) && ( ent->s.pos.trType != TR_GRAVITY ) ) &&
+	if ( ( ( ( ent->s.groundEntityNum == ENTITYNUM_NONE ) || ( level.gentities[ent->s.groundEntityNum].s.pos.trType != TR_STATIONARY ) ) && ( ent->s.pos.trType != TR_GRAVITY ) ) &&
 	( ( ( ent->spawnflags ^ 1) & 1 ) != 0 ) )
 	{
 		ent->s.pos.trType = TR_GRAVITY;
@@ -9911,7 +9912,7 @@ void custom_G_RunFrameForEntity(gentity_t *ent)
 		// New: Fixed eFlags mask check here so that the effect entities of
 		// weapons with a projExplosionEffect are cleaned up after their effect
 		// duration
-		if ( ( ent->s.eFlags & 0x10000 ) && ( ent->s.time2 < level.time ) )
+		if ( ( ent->s.eFlags & EF_TIME_EFFECT ) && ( ent->s.time2 < level.time ) )
 		{
 			G_FreeEntity(ent);
 		}
@@ -11182,7 +11183,7 @@ void custom_Scr_SetOrigin(gentity_t *ent)
 	int id = ent - g_entities;
 
 	if ( customEntityState[id].gravityType )
-		ent->s.groundEntityNum = ENTITY_NONE;
+		ent->s.groundEntityNum = ENTITYNUM_NONE;
 	/* New code end */
 }
 
@@ -11263,7 +11264,7 @@ void custom_PM_StepSlideMove(pmove_t *pm, pml_t *pml, qboolean gravity)
 		if ( !pml->groundPlane )
 		{
 			bHadGround = false;
-			if ( ( ps->pm_flags & PMF_JUMPING ) && ps->pm_time )
+			if ( ( ps->pm_flags & PMF_TIME_LAND ) && ps->pm_time )
 			{
 				Jump_ClearState(ps);
 			}
@@ -11302,13 +11303,13 @@ void custom_PM_StepSlideMove(pmove_t *pm, pml_t *pml, qboolean gravity)
 			fStepSize = 18.0;
 	}
 
-	if ( ps->groundEntityNum == ENTITY_NONE )
+	if ( ps->groundEntityNum == ENTITYNUM_NONE )
 	{
-		if ( ( ps->pm_flags & PMF_JUMPING ) && ps->pm_time )
+		if ( ( ps->pm_flags & PMF_TIME_LAND ) && ps->pm_time )
 		{
 			Jump_ClearState(ps);
 		}
-		if ( iBumps && ( ps->pm_flags & PMF_JUMPING ) && Jump_GetStepHeight(ps, start_o, &fStepSize) )
+		if ( iBumps && ( ps->pm_flags & PMF_TIME_LAND ) && Jump_GetStepHeight(ps, start_o, &fStepSize) )
 		{
 			if ( fStepSize < 1.0 )
 			{
@@ -11457,7 +11458,7 @@ void custom_PM_StepSlideMove(pmove_t *pm, pml_t *pml, qboolean gravity)
 		return;
 	}
 
-	if ( ps->groundEntityNum == ENTITY_NONE )
+	if ( ps->groundEntityNum == ENTITYNUM_NONE )
 	{
 		return;
 	}

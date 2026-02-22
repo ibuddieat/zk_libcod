@@ -94,7 +94,7 @@ void Jump_Start(pmove_t *pm, pml_t *pml, float height)
 
 	ps = pm->ps;
 	velocitySqrd = (float)(height * 2.0) * (float)ps->gravity;
-	if ( ps->pm_flags & PMF_JUMPING )
+	if ( ps->pm_flags & PMF_TIME_LAND )
 	{
 		if ( ps->pm_time <= JUMP_LAND_SLOWDOWN_TIME )
 		{
@@ -105,14 +105,14 @@ void Jump_Start(pmove_t *pm, pml_t *pml, float height)
 	pml->groundPlane = 0;
 	pml->almostGroundPlane = 0;
 	pml->walking = 0;
-	ps->groundEntityNum = ENTITY_NONE;
+	ps->groundEntityNum = ENTITYNUM_NONE;
 	ps->jumpTime = pm->cmd.serverTime;
 	ps->jumpOriginZ = ps->origin[2];
 	if ( g_resetSlide->current.boolean ) // New
 	{
 		ps->pm_flags &= 0xFFFFFE7F;
 	}
-	ps->pm_flags |= PMF_JUMPING;
+	ps->pm_flags |= PMF_TIME_LAND;
 	ps->pm_time = 0;
 	ps->velocity[2] = sqrtf(velocitySqrd);
 	ps->aimSpreadScale = ps->aimSpreadScale + jump_spreadAdd->current.decimal;
@@ -123,8 +123,8 @@ void Jump_Start(pmove_t *pm, pml_t *pml, float height)
 
 	/* New code start: jump_carryMoverVelocity dvar */
 	if ( jump_carryMoverVelocity->current.boolean &&
-		groundEntityNum != ENTITY_WORLD &&
-		groundEntityNum != ENTITY_NONE )
+		groundEntityNum != ENTITYNUM_WORLD &&
+		groundEntityNum != ENTITYNUM_NONE )
 	{
 		gentity_t *ent = &g_entities[groundEntityNum];
 
@@ -230,7 +230,7 @@ qboolean Jump_Check(pmove_t *pm, pml_t *pml)
 	{
 		return qfalse;
 	}
-	if ( PM_GetEffectiveStance(ps) && ps->groundEntityNum != ENTITY_NONE ) // New: Added ground entity check
+	if ( PM_GetEffectiveStance(ps) && ps->groundEntityNum != ENTITYNUM_NONE ) // New: Added ground entity check
 	{
 		return qfalse;
 	}

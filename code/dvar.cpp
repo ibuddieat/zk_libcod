@@ -6,6 +6,7 @@ dvar_t *bg_fallDamageMaxHeight;
 dvar_t *bg_fallDamageMinHeight;
 dvar_t *cl_allowDownload;
 dvar_t *cl_paused;
+dvar_t *cl_wwwDownload;
 dvar_t *com_dedicated;
 dvar_t *com_logfile;
 dvar_t *com_sv_running;
@@ -68,11 +69,10 @@ dvar_t *sv_showCommands;
 dvar_t *sv_timeout;
 dvar_t *sv_voice;
 dvar_t *sv_voiceQuality;
-dvar_t *sv_zombietime;
-dvar_t *cl_wwwDownload;
 dvar_t *sv_wwwBaseURL;
 dvar_t *sv_wwwDlDisconnected;
 dvar_t *sv_wwwDownload;
+dvar_t *sv_zombietime;
 
 // Custom dvars
 #if COMPILE_UTILS == 1
@@ -208,6 +208,7 @@ void hook_Com_Printf_in_Com_Init_Try_Block_Function(const char *format, ...)
 
 	// Get references to stock dvars
 	cl_allowDownload = Dvar_RegisterBool("cl_allowDownload", qtrue, DVAR_ARCHIVE | DVAR_SYSTEMINFO); // Force-enable download for clients
+	cl_wwwDownload = Dvar_RegisterBool("cl_wwwDownload", qtrue, DVAR_ARCHIVE | DVAR_SYSTEMINFO); // Force-enable wwwDownload for clients that support it
 	developer = Dvar_FindVar("developer");
 	net_ip = Dvar_FindVar("net_ip");
 	net_lanauthorize = Dvar_FindVar("net_lanauthorize");
@@ -244,11 +245,10 @@ void hook_Com_Printf_in_Com_Init_Try_Block_Function(const char *format, ...)
 	sv_timeout = Dvar_FindVar("sv_timeout");
 	sv_voice = Dvar_FindVar("sv_voice");
 	sv_voiceQuality = Dvar_FindVar("sv_voiceQuality");
-	sv_zombietime = Dvar_FindVar("sv_zombietime");
-	cl_wwwDownload = Dvar_RegisterBool("cl_wwwDownload", qtrue, DVAR_ARCHIVE | DVAR_SYSTEMINFO); // Force-enable wwwDownload for clients that support it
 	sv_wwwBaseURL = Dvar_FindVar("sv_wwwBaseURL");
 	sv_wwwDlDisconnected = Dvar_FindVar("sv_wwwDlDisconnected");
 	sv_wwwDownload = Dvar_FindVar("sv_wwwDownload");
+	sv_zombietime = Dvar_FindVar("sv_zombietime");
 
 	// Register custom dvars
 	#if COMPILE_UTILS == 1
