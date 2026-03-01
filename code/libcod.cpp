@@ -5522,7 +5522,7 @@ void custom_SV_GetChallenge(netadr_t from)
 	if ( !svs.authorizeAddress.ip[0] && svs.authorizeAddress.type != NA_BAD )
 	{
 		Com_Printf("Resolving %s\n", sv_authorizeServer->current.string);
-		if ( !NET_StringToAdr(sv_authorizeServer->current.string, &svs.authorizeAddress))
+		if ( !NET_StringToAdr(sv_authorizeServer->current.string, &svs.authorizeAddress) )
 		{
 			Com_Printf("Couldn't resolve address\n");
 			return;
@@ -5537,12 +5537,10 @@ void custom_SV_GetChallenge(netadr_t from)
 					BigShort(svs.authorizeAddress.port));
 	}
 
-	// New: The original authorize server timeout is 20 minutes. This is way
-	// too long, so we default it to a few seconds to not have the game go dead
-	// once the authorize server goes offline (again). Timeout in milliseconds.
+	// New: sv_authorizeTimeout dvar
 	if ( ( sv_authorizeTimeout->current.integer < svs.time - svs.sv_lastTimeMasterServerCommunicated ) && ( sv_authorizeTimeout->current.integer < svs.time - challenge->firstTime ) )
 	{
-		master = custom_SV_MasterAddress();
+		master = SV_MasterAddress();
 		if ( !NET_CompareAdr(from, *master) )
 		{
 			Com_DPrintf("authorize server timed out\n");

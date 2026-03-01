@@ -14,6 +14,7 @@ Script code functions:
   * `processRemoteCommand()` no longer requires any parameters to be passed in
 
 Script code methods:
+  * Removed undocumented and obsolete `getWeaponIndexOffhand()` 
   * Renamed `getLastGamestate()` to `getLastGamestateSize()`
   * `<entity> setBounds(<length>, <width>, <height>)` now requires three parameters, instead of two
   * `<player> isReloading()` no longer includes rechambering, see `isRechambering()` for that
