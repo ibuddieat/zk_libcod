@@ -186,6 +186,10 @@ cHook *hook_G_ProcessIPBans;
 cHook *hook_G_RunFrame;
 cHook *hook_G_TempEntity;
 cHook *hook_G_TryPushingEntity;
+cHook *hook_GScr_CloseFile;
+cHook *hook_GScr_FGetArg;
+cHook *hook_GScr_FPrintln;
+cHook *hook_GScr_FReadLn;
 cHook *hook_GScr_LoadConsts;
 cHook *hook_GScr_MakeDvarServerInfo;
 cHook *hook_GScr_SetDvar;
@@ -430,6 +434,70 @@ void custom_GScr_LoadConsts(void)
 	*(int *)&GScr_LoadConsts = hook_GScr_LoadConsts->from;
 	GScr_LoadConsts();
 	hook_GScr_LoadConsts->hook();
+}
+
+void custom_GScr_CloseFile(void)
+{
+	if ( Scr_GetNumParam() > 0 && Scr_GetInt(0) != 0 )
+	{
+		Com_Printf("CloseFile failed, invalid file number %i\n", Scr_GetInt(0));
+		Scr_AddInt(-1);
+		return;
+	}
+
+	hook_GScr_CloseFile->unhook();
+	void (*GScr_CloseFile)(void);
+	*(int *)&GScr_CloseFile = hook_GScr_CloseFile->from;
+	GScr_CloseFile();
+	hook_GScr_CloseFile->hook();
+}
+
+void custom_GScr_FGetArg(void)
+{
+	if ( Scr_GetNumParam() > 0 && Scr_GetInt(0) != 0 )
+	{
+		Com_Printf("freadline failed, invalid file number %i\n", Scr_GetInt(0));
+		Scr_AddString("");
+		return;
+	}
+
+	hook_GScr_FGetArg->unhook();
+	void (*GScr_FGetArg)(void);
+	*(int *)&GScr_FGetArg = hook_GScr_FGetArg->from;
+	GScr_FGetArg();
+	hook_GScr_FGetArg->hook();
+}
+
+void custom_GScr_FPrintln(void)
+{
+	if ( Scr_GetNumParam() > 0 && Scr_GetInt(0) != 0 )
+	{
+		Com_Printf("FPrintln failed, invalid file number %i\n", Scr_GetInt(0));
+		Scr_AddInt(-1);
+		return;
+	}
+
+	hook_GScr_FPrintln->unhook();
+	void (*GScr_FPrintln)(void);
+	*(int *)&GScr_FPrintln = hook_GScr_FPrintln->from;
+	GScr_FPrintln();
+	hook_GScr_FPrintln->hook();
+}
+
+void custom_GScr_FReadLn(void)
+{
+	if ( Scr_GetNumParam() > 0 && Scr_GetInt(0) != 0 )
+	{
+		Com_Printf("freadln failed, invalid file number %i\n", Scr_GetInt(0));
+		Scr_AddInt(-1);
+		return;
+	}
+
+	hook_GScr_FReadLn->unhook();
+	void (*GScr_FReadLn)(void);
+	*(int *)&GScr_FReadLn = hook_GScr_FReadLn->from;
+	GScr_FReadLn();
+	hook_GScr_FReadLn->hook();
 }
 
 void hook_Com_Printf_in_Com_ModifyMsec(const char *message, int frameTime)
@@ -11672,6 +11740,14 @@ public:
 		hook_fire_grenade->hook();
 		hook_G_TempEntity = new cHook(0x0811EFC4, (int)custom_G_TempEntity);
 		hook_G_TempEntity->hook();
+		hook_GScr_CloseFile = new cHook(0x081173B4, (int)custom_GScr_CloseFile);
+		hook_GScr_CloseFile->hook();
+		hook_GScr_FGetArg = new cHook(0x08117778, (int)custom_GScr_FGetArg);
+		hook_GScr_FGetArg->hook();
+		hook_GScr_FPrintln = new cHook(0x0811749C, (int)custom_GScr_FPrintln);
+		hook_GScr_FPrintln->hook();
+		hook_GScr_FReadLn = new cHook(0x081175C0, (int)custom_GScr_FReadLn);
+		hook_GScr_FReadLn->hook();
 		hook_GScr_LoadConsts = new cHook(0x081224F8, (int)custom_GScr_LoadConsts);
 		hook_GScr_LoadConsts->hook();
 		hook_GScr_MakeDvarServerInfo = new cHook(0x08116BFA, (int)custom_GScr_MakeDvarServerInfo);
