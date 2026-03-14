@@ -2299,8 +2299,8 @@ void gsc_player_getweaponanimation(scr_entref_t ref)
 	}
 
 	playerState_t *ps = SV_GameClientNum(id);
+	int anim = ps->weapAnim &= ~ANIM_TOGGLEBIT;
 
-	int anim = ps->weapAnim & 0xFFFFFDFF;
 	if ( ( anim == WEAP_RECHAMBER || anim == WEAP_ADS_RECHAMBER ) && ps->weaponTime == 0 )
 		anim = WEAP_IDLE;
 

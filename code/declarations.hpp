@@ -37,6 +37,8 @@
 #define VectorScale4( v, s, o )     ( ( o )[0] = ( v )[0] * ( s ),( o )[1] = ( v )[1] * ( s ),( o )[2] = ( v )[2] * ( s ),( o )[3] = ( v )[3] * ( s ) )
 #define VectorSubtract4( a, b, c )  ( ( c )[0] = ( a )[0] - ( b )[0],( c )[1] = ( a )[1] - ( b )[1],( c )[2] = ( a )[2] - ( b )[2],( c )[3] = ( a )[3] - ( b )[3] )
 
+#define ANIM_BITS                   10
+#define ANIM_TOGGLEBIT              ( 1 << ( ANIM_BITS - 1 ) )      // 0x200
 #define ARCHIVEDSSBUF_SIZE          0x2000000
 #define BIG_INFO_STRING             0x2000
 #define ENTFIELD_MASK               0xC000
@@ -63,9 +65,9 @@
 #define MAX_CLIENTS                 64
 #define MAX_CLIP_PLANES             8
 #define MAX_CONFIGSTRINGS           2048
-#define MAX_CONSOLE_PREFIX_LENGTH   64 // Should be kept somewhere below MAX_STRINGLENGTH
+#define MAX_CONSOLE_PREFIX_LENGTH   64      // Should be kept somewhere below MAX_STRINGLENGTH
 #define MAX_DOWNLOAD_BLKSIZE        2048
-#define MAX_DOWNLOAD_BLKSIZE_FAST   0x2000 // Needs to be below MAX_LEGACY_MSGLEN
+#define MAX_DOWNLOAD_BLKSIZE_FAST   0x2000  // Needs to be below MAX_LEGACY_MSGLEN
 #define MAX_DOWNLOAD_WINDOW         8
 #define MAX_DVARS                   1280
 #define MAX_ENT_CLUSTERS            16
@@ -74,7 +76,7 @@
 #define MAX_INFO_STRING             0x400
 #define MAX_IPFILTERS               1024
 #define MAX_ITEM_MODELS             2
-#define MAX_MODEL_ANIMATIONS        512 // Animations per model
+#define MAX_MODEL_ANIMATIONS        512     // Animations per model
 #define MAX_MODELS                  256
 #define MAX_MSGLEN                  0x20000 // For clients with protocol 118
 #define MAX_LEGACY_MSGLEN           0x4000  // For clients with protocol != 118
@@ -101,8 +103,8 @@
 // These are the only configstrings that the system reserves, all the
 // other ones (see cs_index_t) are strictly for servergame to clientgame
 // communication
-#define CS_SERVERINFO   0   // An info string with all the serverinfo cvars
-#define CS_SYSTEMINFO   1   // An info string for server system to client system configuration (timescale, etc.)
+#define CS_SERVERINFO 0 // An info string with all the serverinfo cvars
+#define CS_SYSTEMINFO 1 // An info string for server system to client system configuration (timescale, etc.)
 
 // dvar_t->flags
 #define DVAR_NOFLAG              0               // 0x0000
@@ -257,15 +259,15 @@
 #define CONTENTS_TELEPORTER         0x40000
 #define CONTENTS_JUMPPAD            0x80000
 #define CONTENTS_CLUSTERPORTAL      0x100000
-#define CONTENTS_DONOTENTER         0x200000 // Contents of turrets, trigger_use
+#define CONTENTS_DONOTENTER         0x200000    // Contents of turrets, trigger_use
 #define CONTENTS_DONOTENTER_LARGE   0x400000
-#define CONTENTS_CURRENT_DOWN       0x800000 // Might be named differently
+#define CONTENTS_CURRENT_DOWN       0x800000    // Might be named differently
 #define CONTENTS_MANTLE             0x1000000
 #define CONTENTS_BODY               0x2000000
 #define CONTENTS_CORPSE             0x4000000
 #define CONTENTS_DETAIL             0x8000000
 #define CONTENTS_STRUCTURAL         0x10000000
-#define CONTENTS_TRANSPARENT        0x20000000 // Contents of trigger_lookat
+#define CONTENTS_TRANSPARENT        0x20000000  // Contents of trigger_lookat
 #define CONTENTS_TRIGGER            0x40000000
 #define CONTENTS_NODROP             0x80000000
 
@@ -273,6 +275,24 @@
 #define MASK_SHOT       ( CONTENTS_SOLID | CONTENTS_GLASS | CONTENTS_WATER | CONTENTS_SKY | CONTENTS_CLIPSHOT | CONTENTS_CURRENT_DOWN | CONTENTS_BODY ) // 0x2802831
 #define MASK_OPAQUE_AI  ( CONTENTS_SOLID | CONTENTS_FOLIAGE | CONTENTS_SKY | CONTENTS_AI_NOSIGHT | CONTENTS_CURRENT_DOWN | CONTENTS_BODY ) // 0x2801803
 #define MASK_SOLID      ( CONTENTS_SOLID | CONTENTS_GLASS | CONTENTS_MISSILECLIP | CONTENTS_ITEMCLIP ) // 0x491
+
+/*
+Default trace contents:
+
+BulletTrace: MASK_SHOT = 0x2802831 (hit characters off: 0x802831 = without CONTENTS_BODY)
+BulletTracePassed: MASK_SHOT = 0x2802831 (hit characters off: 0x802831 = without CONTENTS_BODY)
+SightTracePassed: MASK_OPAQUE_AI = 0x2801803 (hit characters off: 0x801803 = without CONTENTS_BODY)
+
+Player bullets: 0x2802831 (MASK_SHOT)
+Player melee: 0x2802831 (MASK_SHOT)
+Player movement (active): 0x2810011 and 0x1000000 (CONTENTS_MANTLE)
+Player movement (spectator): 0x800811
+Radius damage obstacle check: 0x811
+Missile movement: 0x2802891 (MASK_SHOT with CONTENTS_MISSILECLIP, but without CONTENTS_WATER as that is checked separately)
+Missile damage: 0x811 (= radius damage)
+Grenade movement: 0x2802891 (MASK_SHOT with CONTENTS_MISSILECLIP, but without CONTENTS_WATER as that is checked separately)
+Grenade damage: 0x811 (= radius damage)
+*/
 
 #define SURF_NOLIGHTMAP         0x0
 #define SURF_NODAMAGE           0x1
@@ -623,9 +643,9 @@ typedef struct
 {
 	union
 	{
-		bool boolean; // Original name: enabled
+		bool boolean;   // Original name: enabled
 		int integer;
-		float decimal; // Original name: value
+		float decimal;  // Original name: value
 		vec_t *vector;
 		const char *string;
 		unsigned char color[4];
@@ -1184,7 +1204,7 @@ typedef enum
 	EV_ITEM_PICKUP,
 	EV_AMMO_PICKUP,
 	EV_NOAMMO,
-	EV_EMPTYCLIP,
+	EV_EMPTYCLIP,               // Has no function on client
 	EV_EMPTY_OFFHAND,
 	EV_RESET_ADS,
 	EV_RELOAD,                  // 150
@@ -1201,27 +1221,27 @@ typedef enum
 	EV_RECHAMBER_WEAPON,
 	EV_EJECT_BRASS,
 	EV_MELEE_SWIPE,
-	EV_FIRE_MELEE,
+	EV_FIRE_MELEE,              // Has no function on client
 	EV_PREP_OFFHAND,
 	EV_USE_OFFHAND,
 	EV_SWITCH_OFFHAND,
-	EV_BINOCULAR_ENTER,
-	EV_BINOCULAR_EXIT,
-	EV_BINOCULAR_FIRE,          // 170
-	EV_BINOCULAR_RELEASE,
-	EV_BINOCULAR_DROP,
+	EV_BINOCULAR_ENTER,         // Has no function on client
+	EV_BINOCULAR_EXIT,          // Has no function on client
+	EV_BINOCULAR_FIRE,          // 170, has no function on client
+	EV_BINOCULAR_RELEASE,       // Has no function on client
+	EV_BINOCULAR_DROP,          // Has no function on client
 	EV_MELEE_HIT,
 	EV_MELEE_MISS,
 	EV_FIRE_WEAPON_MG42,
 	EV_FIRE_QUADBARREL_1,
 	EV_FIRE_QUADBARREL_2,
-	EV_BULLET_TRACER, // Unknown at client
+	EV_BULLET_TRACER,           // Unknown at client (error)
 	EV_SOUND_ALIAS,
 	EV_SOUND_ALIAS_AS_MASTER,   // 180
 	EV_BULLET_HIT_SMALL,
 	EV_BULLET_HIT_LARGE,
 	EV_SHOTGUN_HIT,
-	EV_BULLET_HIT_AP,
+	EV_BULLET_HIT_AP,           // Unknown at client (error)
 	EV_BULLET_HIT_CLIENT_SMALL,
 	EV_BULLET_HIT_CLIENT_LARGE,
 	EV_GRENADE_BOUNCE,
@@ -1229,8 +1249,8 @@ typedef enum
 	EV_ROCKET_EXPLODE,
 	EV_ROCKET_EXPLODE_NOMARKS,  // 190
 	EV_CUSTOM_EXPLODE,
-	EV_CUSTOM_EXPLODE_NOMARKS,
-	EV_BULLET, // Unknown at client
+	EV_CUSTOM_EXPLODE_NOMARKS,  // Unknown at client (error)
+	EV_BULLET,                  // Unknown at client (error)
 	EV_PLAY_FX,
 	EV_PLAY_FX_ON_TAG,
 	EV_EARTHQUAKE,
@@ -1244,8 +1264,8 @@ typedef enum
 typedef struct nodetype
 {
 	struct nodetype *left, *right, *parent; // Tree structure
-	struct nodetype *next, *prev; // Doubly-linked list
-	struct nodetype **head; // Highest ranked node in block
+	struct nodetype *next, *prev;           // Doubly-linked list
+	struct nodetype **head;                 // Highest ranked node in block
 	int weight;
 	int symbol;
 } node_t;
@@ -1491,7 +1511,7 @@ typedef struct
 	vec3_t currentAngles;
 	int ownerNum;
 	int eventTime;
-} entityShared_t; // verified
+} entityShared_t;
 
 typedef enum
 {
@@ -1588,7 +1608,7 @@ typedef struct hudelem_s
 	int text;
 	float sort;
 	hudelem_color_t foreground;
-} hudelem_t; // verified
+} hudelem_t;
 
 typedef struct game_hudelem_s
 {
@@ -1657,7 +1677,7 @@ typedef enum
 	STAT_HEALTH = 0x0,
 	STAT_DEAD_YAW = 0x1,
 	STAT_MAX_HEALTH = 0x2,
-	STAT_IDENT_CLIENT_NUM = 0x3, // STAT_FRIENDLY_LOOKAT_CLIENTNUM
+	STAT_IDENT_CLIENT_NUM = 0x3,    // STAT_FRIENDLY_LOOKAT_CLIENTNUM
 	STAT_IDENT_CLIENT_HEALTH = 0x4, // STAT_FRIENDLY_LOOKAT_HEALTH
 	STAT_SPAWN_COUNT = 0x5,
 	MAX_STATS = 0x6,
@@ -1823,14 +1843,14 @@ struct gclient_s
 	qboolean inactivityWarning;
 	int lastVoiceTime;
 	int switchTeamTime;
-	float currentAimSpreadScale; // 10256
+	float currentAimSpreadScale;
 	gentity_t *persistantPowerup;
 	int portalID;
 	int dropWeaponTime;
 	int sniperRifleFiredTime;
 	float sniperRifleMuzzleYaw;
 	int PCSpecialPickedUpCount;
-	gentity_t *pLookatEnt; // needs a NULL check, otherwise crash.
+	gentity_t *pLookatEnt;
 	int useHoldEntity;
 	int useHoldTime;
 	int iLastCompassFriendlyInfoEnt;
@@ -1838,7 +1858,7 @@ struct gclient_s
 	int damageTime;
 	float v_dmg_roll;
 	float v_dmg_pitch;
-	vec3_t swayViewAngles; // 10316
+	vec3_t swayViewAngles;
 	vec3_t swayOffset;
 	vec3_t swayAngles;
 	vec3_t vLastMoveAng;
@@ -1848,7 +1868,7 @@ struct gclient_s
 	int weapIdleTime;
 	int lastServerTime;
 	int lastSpawnTime;
-}; // verified
+};
 
 typedef enum weapStance_t
 {
@@ -2340,7 +2360,7 @@ typedef struct
 	float ucompAve;
 	int	ucompNum;
 	char gametype[MAX_QPATH];
-} server_t; // verified
+} server_t;
 
 typedef enum weapAnimNumber_t
 {
@@ -2576,7 +2596,7 @@ struct snd_alias_list_t
 struct EffectPrimitive
 {
 	struct EffectTemplate *fx;
-	int *primTemp; // PrimitiveTemplate *
+	int *primTemp;  // PrimitiveTemplate *
 	int *boltFrame; // FxBoltFramePtr
 };
 
@@ -3039,7 +3059,7 @@ typedef struct
 	vec3_t maxs;
 	short numLods;
 	short collLod;
-	struct Material *xskins; // !!! Not loaded in server binary
+	struct Material *xskins; // Not loaded in server binary
 	int memUsage;
 	const char *name;
 	char flags;
@@ -3681,7 +3701,7 @@ typedef struct clipMap_s
 	DynEntityClient *dynEntClientList[2];
 	DynEntityColl *dynEntCollList[2];
 	unsigned int checksum;
-} clipMap_t; // verified
+} clipMap_t;
 
 enum LumpType
 {
@@ -3798,7 +3818,7 @@ typedef struct areaParms_s
 	int count;
 	int maxcount;
 	int contentmask;
-	int results; // probably not int
+	trace_t *results;
 } areaParms_t;
 
 typedef struct worldContents_s
@@ -4082,8 +4102,8 @@ typedef struct map_turret_s
 	char script_gameobjectname[MAX_QPATH];
 } map_turret_t;
 
-#define MAX_NOTIFY_DEBUG_BUFFER 4096 // Triggers cause a lot of notify (we might want to filter these to avoid lag)
-#define MAX_NOTIFY_DEBUG_PARAMS 16 // The script engine can handle hundreds of parameters, here we set a limit for CodeCallback_NotifyDebug
+#define MAX_NOTIFY_DEBUG_BUFFER 4096    // Triggers cause a lot of notify (we might want to filter these to avoid lag)
+#define MAX_NOTIFY_DEBUG_PARAMS 16      // The script engine can handle hundreds of parameters, here we set a limit for CodeCallback_NotifyDebug
 
 union SavedVariableUnion
 {
@@ -4112,9 +4132,9 @@ typedef struct scr_notify_s
 
 #if COMPILE_CUSTOM_VOICE == 1
 
-#define MAX_CUSTOMSOUNDDURATION 10 // Minutes
+#define MAX_CUSTOMSOUNDDURATION 10                              // Minutes
 #define MAX_STOREDVOICEPACKETS (MAX_CUSTOMSOUNDDURATION * 3072) // MAX_VOICEPACKETSPERFRAME * 20 * 60
-#define MAX_CUSTOMSOUNDS 64 // Consider ~8MB of memory usage per 10-minute song
+#define MAX_CUSTOMSOUNDS 64                                     // Consider ~8MB of memory usage per 10-minute song
 #define MAX_THREAD_RESULTS_BUFFER 64
 
 typedef enum
