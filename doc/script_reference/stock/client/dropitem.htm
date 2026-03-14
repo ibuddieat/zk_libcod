@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>DropItem( &lt;itemName&gt; )</H1>
+<H1>DropItem( &lt;itemName&gt;, &lt;tagName&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
@@ -28,7 +28,7 @@ MP Only<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Drop an item with the given item name</p>
+<p>Drop an item with the given item name.</p>
 
 </H3>
 </TR></TD></TABLE>
@@ -46,7 +46,7 @@ A Player
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-self DropItem( current );
+self DropItem(current);
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -55,7 +55,14 @@ self DropItem( current );
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;item name&gt; the name of the item to drop</LI>
+<LI>1 : &lt;item name&gt; The name of the item to drop</LI>
+</UL></TR></TD></TABLE>
+<BR><BR>
+<H2>Optional Args</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;tagName&gt; Player tag/bone from where to drop the item. Default: "tag_weapon_right"</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>
