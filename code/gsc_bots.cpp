@@ -431,9 +431,11 @@ void gsc_bots_setnexttestclientname()
 		return;
     }
 	
-    // original str size = 158 chars + null + 25 more free nulls after in data segment
-    // removed the "head" and "color" values so we have enough space for a full 31 character long bot name and do not risk running into an overflow when the bot id gets long
-    // the bot id that is incremented in SV_AddTestClient is dumped into the "model" value
+    // Original str size = 158 chars + null + 25 more free nulls after in data
+	// segment. Removed the "head" and "color" values so we have enough space
+	// for a full 31 character long bot name and do not risk running into an
+	// overflow when the bot id gets long. The bot id that is incremented in
+	// SV_AddTestClient is dumped into the "model" value
     snprintf(&testclient_connect_string, 184, "connect \"\\cg_predictItems\\1\\cl_punkbuster\\0\\cl_anonymous\\0\\model\\%%d\\snaps\\20\\rate\\5000\\name\\%s\\protocol\\%%d\"", str);
 
 	stackPushBool(qtrue);
