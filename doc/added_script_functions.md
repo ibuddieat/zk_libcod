@@ -63,6 +63,7 @@
   * `<player> getServerCommandQueueSize()`
   * `<player> getViewOrigin()`
   * `<player> getWeaponAnimation()`
+  * `<player> holdBreathButtonPressed()`
   * `<player> isAllowingSpectators()`
   * `<player> isChatting()`
   * `<player> isFiring()`

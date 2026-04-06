@@ -1354,6 +1354,22 @@ void gsc_player_button_smoke(scr_entref_t ref)
 	stackPushBool(client->lastUsercmd.buttons & KEY_MASK_SMOKE ? qtrue : qfalse);
 }
 
+void gsc_player_button_holdbreath(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_button_holdbreath() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	client_t *client = &svs.clients[id];
+
+	stackPushBool(client->lastUsercmd.buttons & KEY_MASK_HOLDBREATH ? qtrue : qfalse);
+}
+
 void gsc_player_getstance(scr_entref_t ref)
 {
 	int id = ref.entnum;

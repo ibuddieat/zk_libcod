@@ -11,6 +11,7 @@ void gsc_player_button_ads(scr_entref_t ref);
 void gsc_player_button_back(scr_entref_t ref);
 void gsc_player_button_forward(scr_entref_t ref);
 void gsc_player_button_frag(scr_entref_t ref);
+void gsc_player_button_holdbreath(scr_entref_t ref);
 void gsc_player_button_jump(scr_entref_t ref);
 void gsc_player_button_leanleft(scr_entref_t ref);
 void gsc_player_button_leanright(scr_entref_t ref);

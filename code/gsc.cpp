@@ -441,6 +441,7 @@ scr_method_t scriptMethods[] =
 	{"getVelocity", gsc_player_getvelocity, 0},
 	{"getViewOrigin", gsc_player_getvieworigin, 0},
 	{"getWeaponAnimation", gsc_player_getweaponanimation, 0},
+	{"holdBreathButtonPressed", gsc_player_button_holdbreath, 0},
 	{"isAllowingSpectators", gsc_player_isallowingspectators, 0},
 	{"isBot", gsc_player_isbot, 0},
 	{"isChatting", gsc_player_ischatting, 0},
