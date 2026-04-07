@@ -27,7 +27,7 @@ Module: MySQL<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Attempts to establish a connection to a MySQL database engine. Returns a connection handle if the connection was successful, otherwise 0.</p>
+<p>Attempts to establish a connection to a MySQL database engine. Returns a connection handle if the connection was successful, otherwise 0. Remember to call <a href="mysql_close.htm">mysql_close</a> once the connection is no longer required, or before a map (re)load to avoid leaking TCP sockets. Furthermore, <a href="mysql_reuse_connection.htm">mysql_reuse_connection</a> can be used instead of closing and reopening a connection on each new map.</p>
 
 </H3>
 </TR></TD></TABLE>
