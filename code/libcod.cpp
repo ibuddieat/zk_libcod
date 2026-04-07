@@ -4307,12 +4307,16 @@ void custom_SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 			if ( !cl->wwwFallback )
 			{
 				// Redirect to HTTP server
-				if ( custom_SV_WWWRedirectClient(cl, msg) )
-					return;
-			}
-			else
-			{
-				cl->wwwFallback = 0;
+				custom_SV_WWWRedirectClient(cl, msg);
+
+				// New: Return, no matter what SV_WWWRedirectClient returns and
+				// removed else branch with cl->wwwFallback = 0; in case
+				// cl->wwwFallback is true.
+				// This is to avoid a file handle (allocated below via 
+				// FS_SV_FOpenFileRead) being leaked in SV_WWWDownload_f when
+				// sv_wwwDlDisconnected is disabled and the client's WWW
+				// download fails
+				return;
 			}
 		}
 	}
