@@ -302,19 +302,19 @@
   * `sv_proxyAddress_1_0`
     * Type: String
     * Default: "0.0.0.0:28960"
-    * Effect: Hostname and port the proxy socket for game version 1.0 should listen to (see `sv_proxyEnable_1_0` dvar).
+    * Effect: Hostname and port the proxy socket for game version 1.0 should listen to (see `sv_proxyEnable_1_0` dvar). Avoid setting this to an external IP address because players connecting through this socket will then inherit that IP address at the status list (see console or rcon `status`) and the script `getIP` method, instead of their actual address.
   * `sv_proxyAddress_1_2`
     * Type: String
     * Default: "0.0.0.0:28961"
-    * Effect: Hostname and port the proxy socket for game version 1.2 should listen to (see `sv_proxyEnable_1_2` dvar).
+    * Effect: Hostname and port the proxy socket for game version 1.2 should listen to (see `sv_proxyEnable_1_2` dvar). Avoid setting this to an external IP address because players connecting through this socket will then inherit that IP address at the status list (see console or rcon `status`) and the script `getIP` method, instead of their actual address.
   * `sv_proxyAddress_1_3`
     * Type: String
     * Default: "0.0.0.0:28962"
-    * Effect: Hostname and port the proxy socket for game version 1.3 should listen to (see `sv_proxyEnable_1_3` dvar).
+    * Effect: Hostname and port the proxy socket for game version 1.3 should listen to (see `sv_proxyEnable_1_3` dvar). Avoid setting this to an external IP address because players connecting through this socket will then inherit that IP address at the status list (see console or rcon `status`) and the script `getIP` method, instead of their actual address.
   * `sv_proxyAddress_1_3_119`
     * Type: String
     * Default: "0.0.0.0:28963"
-    * Effect: Hostname and port the proxy socket for game version 1.3 (protocol 119) should listen to (see `sv_proxyEnable_1_3_119` dvar).
+    * Effect: Hostname and port the proxy socket for game version 1.3 (protocol 119) should listen to (see `sv_proxyEnable_1_3_119` dvar). Avoid setting this to an external IP address because players connecting through this socket will then inherit that IP address at the status list (see console or rcon `status`) and the script `getIP` method, instead of their actual address.
   * `sv_proxyEnable_1_0`
     * Type: Boolean
     * Default: False
