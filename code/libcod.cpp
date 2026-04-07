@@ -5605,8 +5605,8 @@ void custom_SV_GetChallenge(netadr_t from)
 					BigShort(svs.authorizeAddress.port));
 	}
 
-	// New: sv_authorizeTimeout dvar
-	if ( ( sv_authorizeTimeout->current.integer < svs.time - svs.sv_lastTimeMasterServerCommunicated ) && ( sv_authorizeTimeout->current.integer < svs.time - challenge->firstTime ) )
+	// New: sv_authorizeTimeout dvar and removed svs.sv_lastTimeMasterServerCommunicated
+	if ( svs.time - challenge->firstTime > sv_authorizeTimeout->current.integer )
 	{
 		master = SV_MasterAddress();
 		if ( !NET_CompareAdr(from, *master) )
@@ -10669,19 +10669,19 @@ void custom_SV_ConnectionlessPacket(netadr_t from, msg_t *msg)
 
 		if ( !I_stricmp(c, "getstatus") )
 		{
-			SV_UpdateLastTimeMasterServerCommunicated(from);
+			// New: Removed call to SV_UpdateLastTimeMasterServerCommunicated
 			// New: Replaced call to original SVC_Status
 			custom_SVC_Status(from);
 		}
 		else if ( !I_stricmp(c, "getinfo") )
 		{
-			SV_UpdateLastTimeMasterServerCommunicated(from);
+			// New: Removed call to SV_UpdateLastTimeMasterServerCommunicated
 			// New: Replaced call to original SVC_Info
 			custom_SVC_Info(from);
 		}
 		else if ( !I_stricmp(c, "getchallenge") )
 		{
-			SV_UpdateLastTimeMasterServerCommunicated(from);
+			// New: Removed call to SV_UpdateLastTimeMasterServerCommunicated
 			// New: Replaced call to original SV_GetChallenge
 			custom_SV_GetChallenge(from);
 		}
@@ -10700,7 +10700,7 @@ void custom_SV_ConnectionlessPacket(netadr_t from, msg_t *msg)
 		}
 		else if ( !I_stricmp(c, "ipAuthorize") )
 		{
-			SV_UpdateLastTimeMasterServerCommunicated(from);
+			// New: Removed call to SV_UpdateLastTimeMasterServerCommunicated
 			// New: Replaced call to original SV_AuthorizeIpPacket
 			custom_SV_AuthorizeIpPacket(from);
 		}
