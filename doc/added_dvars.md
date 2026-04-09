@@ -347,6 +347,12 @@
     * Type: String
     * Default: "`[net_ip]:[net_port]`"
     * Effect: Destination hostname and port the proxy socket for game version 1.3 (protocol 119) should forward packets to (see `sv_proxyAddress_1_3_119` dvar).
+  * `sv_proxyTimeout`
+    * Type: Integer
+    * Default: 240
+    * Min. Value: 0
+    * Max. Value: 1800
+    * Effect: If set to a value greater than zero, sets the proxy client connection socket timeout. Otherwise, `[sv_timeout]` is used, but with a minimum value of 10s.
   * `sv_reservedConfigstringBufferSize`
     * Type: Integer
     * Default: 0

@@ -37,6 +37,7 @@ dvar_t *sv_proxyForwardAddress_1_0;
 dvar_t *sv_proxyForwardAddress_1_2;
 dvar_t *sv_proxyForwardAddress_1_3;
 dvar_t *sv_proxyForwardAddress_1_3_119;
+dvar_t *sv_proxyTimeout;
 
 extern dvar_t *com_sv_running;
 extern dvar_t *fs_game;
@@ -65,20 +66,20 @@ va_info_t proxies_va_info[MAX_PROXIES];
 
 // These IP addresses are website server trackers
 const char *trackers[] = {
-	"208.167.241.187",
-	"108.61.78.150",
-	"108.61.78.149",
-	"149.28.43.230",
-	"45.77.96.90",
-	"159.69.0.99",
-	"178.254.22.101",
-	"63.239.170.80",
-	"63.239.170.18",
-	"63.239.170.8",
-	"159.146.13.56",
-	"217.131.98.94",
-	"78.46.106.94"
+	"159.69.0.99",      // KILLTUBE.org
+	"178.254.22.101",   // Possibly livegameserverlist.com
+	"78.46.106.94",     // cod.pm
+	"155.138.163.54",   // GameTracker.com / GameServers.com
+	"45.77.200.250",    // GameTracker.com / GameServers.com
+	"5.180.252.202",    // codservers.net / neXus
+	"51.89.216.249"     // freegamehosting.eu
 };
+
+// Master server socket address storage after hostname resolution
+struct sockaddr_in masterSockAdr;
+
+// Authorize server socket address storage after hostname resolution
+struct sockaddr_in authorizeSockAdr;
 
 unsigned long HashString(const char *str)
 {
@@ -138,9 +139,9 @@ char * VaProxies(proxy_t *proxy, const char *format, ...)
 const char * InfoValueForKey(const char *s, const char *key, proxy_t *proxy)
 {
 	char pkey[8192];
-	static char value[MAX_PROXIES][2][8192]; // Use two buffers so that
-	// comparisons that call the function twice work without stomping on each
-	// other's buffers - for each thread
+	// Use two buffers so that comparisons that call the function twice work
+	// without stomping on each other's buffers - for each thread
+	static char value[MAX_PROXIES][2][8192];
 	static int valueindex = 0; 
 	int proxyindex = proxy - &proxies[0];
 	char *o;
@@ -214,14 +215,12 @@ qboolean Sys_IsProxyAddress(netadr_t from)
 {
 	if ( initialized )
 	{
-		int i;
 		proxy_t *proxy;
-
-		for ( i = 0; i < MAX_PROXIES; i++ )
+		for ( int i = 0; i < MAX_PROXIES; i++ )
 		{
 			proxy = &proxies[i];
-			if ( proxy->enabled && proxy->started && NET_CompareBaseAdr(from, proxy->listenAdr) )
-					return qtrue;
+			if ( proxy->enabled && proxy->started && proxy->socket != -1 && NET_CompareBaseAdr(from, proxy->forwardAdr) )
+				return qtrue;
 		}
 	}
 	return qfalse;
@@ -281,6 +280,7 @@ void SV_ConfigureProxy(proxy_t *proxy, int version, const char *address, const c
 	proxy->version = version;
 	proxy->versionString = versionString;
 	proxy->bucket = (outboundLeakyBucketIndex_t)index;
+	proxy->socket = -1;
 	proxy->enabled = qtrue;
 }
 
@@ -292,6 +292,7 @@ void SV_ShutdownProxies()
 		int j;
 		proxy_t *proxy;
 		qboolean stopped = qfalse;
+		ssize_t bytes_sent;
 
 		for ( i = 0; i < MAX_PROXIES; i++ )
 		{
@@ -314,12 +315,14 @@ void SV_ShutdownProxies()
 				// Tell the master server that we've gone offline. Should fix
 				// a potential issue where this server might not show up in the
 				// ingame browser list after being restarted
-				if ( proxy->masterSockAdr )
+				if ( masterSockAdr.sin_family == AF_INET )
 				{
 					// Delay to counter rate-limiting on the master server side
 					sleep(1);
 
-					sendto(proxy->socket, HEARTBEAT_STOP_MESSAGE, strlen(HEARTBEAT_STOP_MESSAGE), 0, (struct sockaddr *)proxy->masterSockAdr, sizeof(struct sockaddr_in));
+					bytes_sent = sendto(proxy->socket, HEARTBEAT_STOP_MESSAGE, strlen(HEARTBEAT_STOP_MESSAGE), 0, (struct sockaddr *)&masterSockAdr, sizeof(struct sockaddr_in));
+					if ( bytes_sent == -1 )
+						Com_DPrintf("Proxy: Error %d on sendto when sending last heartbeat for port %hu: %s\n", errno, BigShort(proxy->listenAdr.port), strerror(errno));
 				}
 
 				// Prevent new clients from being accepted
@@ -367,6 +370,29 @@ void SV_SetupProxies()
 
 	Com_Printf("-----------------------------------\n");
 
+	// Resolve master server hostname, success required for server being listed
+	if ( !Sys_StringToSockaddr(sv_masterServer->current.string, &masterSockAdr) )
+	{
+		Com_Printf("Proxy: Failed to resolve master server %s\n", sv_masterServer->current.string);
+	}
+	else
+	{
+		masterSockAdr.sin_family = AF_INET;
+		masterSockAdr.sin_port = htons(sv_masterPort->current.integer);
+	}
+
+	// Resolve authorize server hostname, success required for server being listed
+	if ( !Sys_StringToSockaddr(sv_authorizeServer->current.string, &authorizeSockAdr) )
+	{
+		Com_Printf("Proxy: Failed to resolve authorize server %s\n", sv_masterServer->current.string);
+	}
+	else
+	{
+		authorizeSockAdr.sin_family = AF_INET;
+		authorizeSockAdr.sin_port = htons(sv_authorizePort->current.integer);
+	}
+
+	// Automatically fill forward address
 	const char *forwardAddress = va("%s:%hu", net_ip->current.string, net_port->current.integer);
 
 	sv_proxiesVisibleForTrackers = Dvar_RegisterBool("sv_proxiesVisibleForTrackers", qfalse, DVAR_ARCHIVE);
@@ -382,6 +408,7 @@ void SV_SetupProxies()
 	sv_proxyForwardAddress_1_2 = Dvar_RegisterString("sv_proxyForwardAddress_1_2", forwardAddress, DVAR_ARCHIVE);
 	sv_proxyForwardAddress_1_3 = Dvar_RegisterString("sv_proxyForwardAddress_1_3", forwardAddress, DVAR_ARCHIVE);
 	sv_proxyForwardAddress_1_3_119 = Dvar_RegisterString("sv_proxyForwardAddress_1_3_119", forwardAddress, DVAR_ARCHIVE);
+	sv_proxyTimeout = Dvar_RegisterInt("sv_proxyTimeout", 240, 0, 1800, DVAR_ARCHIVE);
 
 	SV_ResetProxiesInformation();
 
@@ -463,28 +490,40 @@ void * SV_StartProxy(void *threadArgs)
 	}
 	proxy->socket = listenerSocket;
 
-	if ( pthread_create(&masterServerThread, NULL, SV_ProxyMasterServerLoop, proxy) )
-	{
-		close(listenerSocket);
-		Com_Error(ERR_FATAL, "\x15Proxy: Failed to create master server thread for version %s (protocol %i)", proxy->versionString, proxy->version);
-	}
-	proxy->masterServerThread = &masterServerThread;
-
 	Com_Printf("Proxy server listening on port %hu for version %s (protocol %i)\n", BigShort(proxy->listenAdr.port), proxy->versionString, proxy->version);
+
+	// Announce server to master list
+	if ( masterSockAdr.sin_family == AF_INET && authorizeSockAdr.sin_family == AF_INET )
+	{
+		if ( pthread_create(&masterServerThread, NULL, SV_ProxyMasterServerLoop, proxy) )
+		{
+			close(listenerSocket);
+			Com_Error(ERR_FATAL, "\x15Proxy: Failed to create master server thread for version %s (protocol %i)", proxy->versionString, proxy->version);
+		}
+		proxy->masterServerThread = &masterServerThread;
+	}
 
 	while ( 1 )
 	{
+		ssize_t bytes_received;
 		char buffer[MAX_BUFFER_SIZE];
-		char lowerCaseBuffer[MAX_BUFFER_SIZE];
 		struct sockaddr_in addr;
-		netadr_t adr;
 		socklen_t addr_len = sizeof(addr);
+		char client_ip[INET_ADDRSTRLEN];
+		int activeClient;
+		netadr_t adr;
+		char lowerCaseBuffer[MAX_BUFFER_SIZE];
+		ssize_t bytes_sent;
 
-		ssize_t bytes_received = recvfrom(listenerSocket, buffer, sizeof(buffer) - 1, 0, (struct sockaddr *)&addr, &addr_len);
+		bytes_received = recvfrom(listenerSocket, buffer, sizeof(buffer) - 1, 0, (struct sockaddr *)&addr, &addr_len);
+		inet_ntop(AF_INET, &addr.sin_addr, client_ip, sizeof(client_ip));
+
 		if ( bytes_received >= 0 )
 		{
 			if ( (unsigned int)bytes_received < sizeof(buffer) - 1 )
+			{
 				buffer[bytes_received] = '\0';
+			}
 			else
 			{
 				Com_DPrintf("Proxy: Max. size exceeded at recvfrom on port %hu\n", BigShort(proxy->listenAdr.port));
@@ -497,10 +536,7 @@ void * SV_StartProxy(void *threadArgs)
 			continue;
 		}
 
-		int activeClient = 1;
-		char client_ip[INET_ADDRSTRLEN];
-
-		inet_ntop(AF_INET, &addr.sin_addr, client_ip, sizeof(client_ip));
+		activeClient = 1;
 		SockadrToNetadr(&addr, &adr);
 		strncpy(lowerCaseBuffer, buffer, MAX_BUFFER_SIZE);
 		ToLowerCase(lowerCaseBuffer);
@@ -533,7 +569,10 @@ void * SV_StartProxy(void *threadArgs)
 				}
 
 				// Cause disconnect on the client side
-				sendto(listenerSocket, DISCONNECT_MESSAGE, sizeof(DISCONNECT_MESSAGE), 0, (struct sockaddr *)&addr, sizeof(addr));
+				bytes_sent = sendto(listenerSocket, DISCONNECT_MESSAGE, sizeof(DISCONNECT_MESSAGE), 0, (struct sockaddr *)&addr, sizeof(addr));
+				if ( bytes_sent == -1 )
+					Com_DPrintf("Proxy: Error %d on sendto when sending disconnect to %s: %s\n", errno, inet_ntoa(addr.sin_addr), strerror(errno));
+
 				continue;
 			}
 
@@ -600,16 +639,29 @@ void * SV_StartProxy(void *threadArgs)
 			{
 				// New client connection to handle
 				int s = socket(AF_INET, SOCK_DGRAM, 0);
-
 				if ( s == -1 )
 				{
-					Com_DPrintf("Proxy: Socket error at port %hu\n", BigShort(proxy->listenAdr.port));
+					Com_DPrintf("Proxy: Socket error %d at proxy port %hu: %s\n", errno, BigShort(proxy->listenAdr.port), strerror(errno));
 					pthread_mutex_unlock(&proxy->lock);
 					continue;
 				}
 
+				// Set client connection socket timeout. By default, use the
+				// stock sv_timeout dvar to be in sync with the game, but with
+				// a minimum timeout of 10s. Otherwise, if set to a value
+				// greater than 0, the sv_proxyTimeout dvar value is used
 				struct timeval tv;
-				tv.tv_sec = sv_timeout->current.integer + 10;
+				if ( sv_proxyTimeout->current.integer > 0 )
+				{
+					tv.tv_sec = sv_proxyTimeout->current.integer;
+				}
+				else
+				{
+					if ( sv_timeout->current.integer < 10 )
+						tv.tv_sec = 10;
+					else
+						tv.tv_sec = sv_timeout->current.integer;
+				}
 				tv.tv_usec = 0;
 				setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
 
@@ -619,14 +671,20 @@ void * SV_StartProxy(void *threadArgs)
 				if ( activeClient && com_sv_running->current.boolean )
 					Com_DPrintf("Proxy: Client connecting from %s:%hu\n", client_ip, ntohs(addr.sin_port));
 
-				sendto(s, buffer, bytes_received, 0, (struct sockaddr *)&forwarderAddr, sizeof(forwarderAddr));
+				// Forward packet of new client to server
+				if ( bytes_received > 0 )
+				{
+					bytes_sent = sendto(s, buffer, bytes_received, 0, (struct sockaddr *)&forwarderAddr, sizeof(forwarderAddr));
+					if ( bytes_sent == -1 )
+						Com_DPrintf("Proxy: Error %d on sendto when forwarding packet (from new client) to main server: %s\n", errno, strerror(errno));
+				}
 
 				proxyClientThreadArgs *args = (proxyClientThreadArgs *)Z_MallocInternal(sizeof(proxyClientThreadArgs));
-				args->addr = addr;
-				args->socket = s;
-				args->src_port = ntohs(addr.sin_port);
 				args->activeClient = activeClient;
+				args->addr = addr;
+				args->clientIndex = clientIndex;
 				args->proxy = proxy;
+				args->socket = s;
 
 				int pthreadCreate = pthread_create(&clientThreadInfo->thread, NULL, SV_ProxyClientThread, args);
 				if ( pthreadCreate )
@@ -645,7 +703,12 @@ void * SV_StartProxy(void *threadArgs)
 			else
 			{
 				// Forward packets of known client to server
-				sendto(clientThreadInfo->socket, buffer, bytes_received, 0, (struct sockaddr *)&forwarderAddr, sizeof(forwarderAddr));
+				if ( bytes_received > 0 )
+				{
+					bytes_sent = sendto(clientThreadInfo->socket, buffer, bytes_received, 0, (struct sockaddr *)&forwarderAddr, sizeof(forwarderAddr));
+					if ( bytes_sent == -1 )
+						Com_DPrintf("Proxy: Error %d on sendto when forwarding packet (from known client) to main server: %s\n", errno, strerror(errno));
+				}
 			}
 		}
 		else
@@ -660,20 +723,10 @@ void * SV_ProxyMasterServerLoop(void *threadArgs)
 {
 	proxy_t *proxy = (proxy_t *)threadArgs;
 	netadr_t authorizeAdr;
-	struct sockaddr_in masterSockAdr;
-	struct sockaddr_in authorizeSockAdr;
 	qboolean startup = qtrue;
 	int proxyindex = proxy - &proxies[0];
-	ssize_t sent_bytes;
+	ssize_t bytes_sent;
 
-	Sys_StringToSockaddr(sv_masterServer->current.string, &masterSockAdr);
-	masterSockAdr.sin_family = AF_INET;
-	masterSockAdr.sin_port = htons(sv_masterPort->current.integer);
-	proxy->masterSockAdr = &masterSockAdr;
-
-	Sys_StringToSockaddr(sv_authorizeServer->current.string, &authorizeSockAdr);
-	authorizeSockAdr.sin_family = AF_INET;
-	authorizeSockAdr.sin_port = htons(sv_authorizePort->current.integer);
 	SockadrToNetadr(&authorizeSockAdr, &authorizeAdr);
 
 	while ( 1 )
@@ -693,8 +746,8 @@ void * SV_ProxyMasterServerLoop(void *threadArgs)
 		if ( sv_logHeartbeats->current.boolean )
 			Com_Printf("Sending proxy heartbeat to %s for version %s (protocol %i)\n", sv_masterServer->current.string, proxy->versionString, proxy->version);
 
-		sent_bytes = sendto(proxy->socket, HEARTBEAT_MESSAGE, strlen(HEARTBEAT_MESSAGE), 0, (struct sockaddr*)&masterSockAdr, sizeof(masterSockAdr));
-		if ( sent_bytes == -1 )
+		bytes_sent = sendto(proxy->socket, HEARTBEAT_MESSAGE, strlen(HEARTBEAT_MESSAGE), 0, (struct sockaddr*)&masterSockAdr, sizeof(masterSockAdr));
+		if ( bytes_sent == -1 )
 			Com_DPrintf("Proxy: Error on sendto when sending heartbeat to %s for version %s (protocol %i)\n", sv_masterServer->current.string, proxy->versionString, proxy->version);
 
 		if ( sv_logHeartbeats->current.boolean )
@@ -707,10 +760,11 @@ void * SV_ProxyMasterServerLoop(void *threadArgs)
 			authorizeAdr.ip[0], authorizeAdr.ip[1], authorizeAdr.ip[2], authorizeAdr.ip[3],
 			fs_game->current.string);
 
-		sent_bytes = sendto(proxy->socket, AUTHORIZE_SEND, strlen(AUTHORIZE_SEND), 0, (struct sockaddr*)&authorizeSockAdr, sizeof(authorizeSockAdr));
-		if ( sent_bytes == -1 )
+		bytes_sent = sendto(proxy->socket, AUTHORIZE_SEND, strlen(AUTHORIZE_SEND), 0, (struct sockaddr*)&authorizeSockAdr, sizeof(authorizeSockAdr));
+		if ( bytes_sent == -1 )
 			Com_DPrintf("Proxy: Error on sendto when sending getIpAuthorize to %s for version %s (protocol %i)\n", sv_masterServer->current.string, proxy->versionString, proxy->version);
 		
+		// Stock heartbeats are sent at least every 180 seconds
 		sleep(60);
 	}
 	return NULL;
@@ -727,15 +781,18 @@ void * SV_ProxyClientThread(void *threadArgs)
 		char buffer[MAX_BUFFER_SIZE];
 		struct sockaddr_in r_addr;
 		socklen_t r_len = sizeof(r_addr);
-
-		ssize_t bytes_received = recvfrom(args->socket, buffer, sizeof(buffer) - 1, 0, (struct sockaddr *)&r_addr, &r_len);
-
+		ssize_t bytes_received;
+		ssize_t bytes_sent;
+		
+		bytes_received = recvfrom(args->socket, buffer, sizeof(buffer) - 1, 0, (struct sockaddr *)&r_addr, &r_len);
 		inet_ntop(AF_INET, &args->addr.sin_addr, client_ip, sizeof(client_ip));
 
 		if ( bytes_received >= 0 )
 		{
 			if ( (unsigned int)bytes_received < sizeof(buffer) - 1 )
+			{
 				buffer[bytes_received] = '\0';
+			}
 			else
 			{
 				Com_DPrintf("Proxy: Max. size exceeded at recvfrom in client thread\n");
@@ -745,7 +802,9 @@ void * SV_ProxyClientThread(void *threadArgs)
 		else
 		{
 			if ( errno == EAGAIN || errno == EWOULDBLOCK )
+			{
 				break;
+			}
 			else
 			{
 				Com_DPrintf("Proxy: No data at recvfrom in client thread\n");
@@ -755,6 +814,7 @@ void * SV_ProxyClientThread(void *threadArgs)
 
 		if ( memcmp(buffer, "\xFF\xFF\xFF\xFFstatusResponse", 18) == 0 || memcmp(buffer, "\xFF\xFF\xFF\xFFinfoResponse", 16) == 0 )
 		{
+			// Check if server tracker requests need to be blocked
 			int is_blocked = 0;
 			for ( unsigned int i = 0; i < sizeof(trackers) / sizeof(trackers[0]); i++ )
 			{
@@ -774,11 +834,14 @@ void * SV_ProxyClientThread(void *threadArgs)
 				}
 				else
 				{
+					// Covers infoResponse
 					ReplaceProtocolString(buffer, proxy);
 				}
 			}
 			else
 			{
+				// Send disconnect to tracker. Alternatively we might just drop
+				// the request and release the connection immediately
 				strcpy(buffer, "\xFF\xFF\xFF\xFF""disconnect");
 				bytes_received = strlen(buffer);
 				buffer[bytes_received] = '\0';
@@ -786,13 +849,16 @@ void * SV_ProxyClientThread(void *threadArgs)
 		}
 
 		// Forward packets to the client
-		ssize_t sent_bytes = sendto(args->proxy->socket, buffer, bytes_received, 0, (struct sockaddr *)&args->addr, sizeof(args->addr));
-		if ( sent_bytes == -1 )
+		if ( bytes_received > 0 )
 		{
-			if ( errno == EBADF )
-				break;
-			else
-				Com_DPrintf("Proxy: Error %d on sendto when forwarding packets to client: %s\n", errno, strerror(errno));
+			bytes_sent = sendto(args->proxy->socket, buffer, bytes_received, 0, (struct sockaddr *)&args->addr, sizeof(args->addr));
+			if ( bytes_sent == -1 )
+			{
+				if ( errno == EBADF )
+					break;
+				else
+					Com_DPrintf("Proxy: Error %d on sendto when forwarding packets to client: %s\n", errno, strerror(errno));
+			}
 		}
 	}
 
@@ -802,6 +868,7 @@ void * SV_ProxyClientThread(void *threadArgs)
 	pthread_mutex_lock(&proxy->lock);
 	close(args->socket);
 	args->socket = -1;
+	proxy->clientThreadInfo[args->clientIndex].socket = -1;
 	Z_FreeInternal(args);
 	proxy->numClients--;
 	pthread_mutex_unlock(&proxy->lock);

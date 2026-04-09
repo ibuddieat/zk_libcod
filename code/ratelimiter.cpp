@@ -3,6 +3,7 @@
 
 #include "gsc.hpp"
 #include "libcod.hpp"
+#include "proxy/proxy.h"
 #include "utils.hpp"
 
 // This is deliberately quite large to make it more of an effort to DoS
@@ -120,7 +121,6 @@ bool SVC_RateLimit(leakyBucket_t *bucket, int burst, int period)
 	return true;
 }
 
-extern proxy_t proxies[MAX_PROXIES];
 bool IsProxySource(netadr_t from)
 {
 	// Requests directed to the proxy ports will pass through this twice, once
@@ -135,13 +135,7 @@ bool IsProxySource(netadr_t from)
 	// As a result, CodeCallback_CLSpam in _callbacksetup.gsc is not called
 	// when the proxy ports are attacked, but rate-limiting still applies,
 	// and rcon is protected.
-
-	proxy_t *proxy = &proxies[0];
-	for ( int i = 0; i < MAX_PROXIES; i++, proxy++ ) {
-		if ( proxy->started && !memcmp(from.ip, proxy->listenAdr.ip, 4) )
-			return qtrue;
-	}
-	return qfalse;
+	return Sys_IsProxyAddress(from);
 }
 
 bool SVC_RateLimitAddress(netadr_t from, int burst, int period)

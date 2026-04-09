@@ -4362,7 +4362,6 @@ typedef struct
 	pthread_mutex_t lock;
 	pthread_t mainThread;
 	pthread_t *masterServerThread;
-	sockaddr_in *masterSockAdr;
 	proxyClientThreadInfo clientThreadInfo[MAX_PROXY_CLIENT_THREADS];
 	int numClients;
 	int parentVersion;
@@ -4378,9 +4377,9 @@ typedef struct
 {
 	int activeClient;
 	sockaddr_in addr;
+	int clientIndex;
 	proxy_t *proxy;
 	int socket;
-	int src_port;
 } proxyClientThreadArgs;
 
 typedef enum
