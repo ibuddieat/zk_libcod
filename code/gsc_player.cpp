@@ -1677,8 +1677,10 @@ void gsc_player_renameclient(scr_entref_t ref)
 	}
 
 	client_t *client = &svs.clients[id];
+
 	Info_SetValueForKey(client->userinfo, "name", name);
 	strcpy(client->name, name);
+	ClientUserinfoChanged(id);
 
 	stackPushBool(qtrue);
 }
