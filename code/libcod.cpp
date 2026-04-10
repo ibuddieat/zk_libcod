@@ -2048,7 +2048,6 @@ void ForceServerSnapsAndRate(client_t *client)
 void ProcessClientUserinfoChange(int clientNum)
 {
 	char userinfo[MAX_STRINGLENGTH];
-	char oldname[MAX_STRINGLENGTH];
 	const char *value;
 	gentity_t *entity = &g_entities[clientNum];
 	gclient_t *client = entity->client;
@@ -2074,7 +2073,6 @@ void ProcessClientUserinfoChange(int clientNum)
 	}
 	else
 	{
-		I_strncpyz(oldname, client->sess.cs.name, MAX_STRINGLENGTH);
 		value = Info_ValueForKey(userinfo, "name");
 		ClientCleanName(value, client->sess.cs.name, 32);
 		I_strncpyz(client->sess.newnetname, client->sess.cs.name, 32);

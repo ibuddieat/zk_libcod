@@ -81,7 +81,6 @@
 #define MAX_MSGLEN                  0x20000 // For clients with protocol 118
 #define MAX_LEGACY_MSGLEN           0x4000  // For clients with protocol != 118
 #define MAX_LARGE_MSGLEN            0x20000 // For voice chat and snapshots, all protocols
-#define MAX_NETNAME                 16
 #define MAX_OSPATH                  256
 #define MAX_PACKETLEN               1400
 #define MAX_QPATH                   64
