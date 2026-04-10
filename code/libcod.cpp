@@ -11678,6 +11678,29 @@ unsigned int VM_ExecuteSaveReturnValue(unsigned int localId, const char *pos, un
 	return id;
 }
 
+void custom_HudElem_ClearTypeSettings(game_hudelem_t *hud)
+{
+	hud->elem.width = 0;
+	hud->elem.height = 0;
+	hud->elem.materialIndex = 0;
+	hud->elem.fromX = 0;
+	hud->elem.fromY = 0;
+	hud->elem.fromAlignOrg = 0;
+	hud->elem.fromAlignScreen = 0;
+	hud->elem.fromWidth = 0;
+	hud->elem.fromHeight = 0;
+	hud->elem.scaleStartTime = 0;
+	hud->elem.scaleTime = 0;
+	/* New code start: Fixed reset of values set by MoveOverTime script method */	
+	hud->elem.moveStartTime = 0;
+	hud->elem.moveTime = 0;
+	/* New code end */
+	hud->elem.time = 0;
+	hud->elem.duration = 0;
+	hud->elem.value = 0;
+	hud->elem.text = 0;
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -11945,6 +11968,7 @@ public:
 		cracking_hook_function(0x0806398C, (int)custom_Dvar_SetU_f);
 		cracking_hook_function(0x08094A10, (int)custom_SV_SendServerCommand);
 		cracking_hook_function(0x08093486, (int)custom_SV_SaveSystemInfo);
+		cracking_hook_function(0x08103210, (int)custom_HudElem_ClearTypeSettings);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC8CA, (int)Jump_ReduceFriction);
