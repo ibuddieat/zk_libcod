@@ -41,4 +41,4 @@ However, it should be noted that all custom script callback functions are disabl
 - The `getMicroseconds` and `getMilliseconds` functions (libcod only) can be used for benchmarking specific portions of code. However, keep in mind that these functions will introduce some overhead on their own.
 
 ## :question: Where's the rest?
-Got some more recommendations? We're happy to extend the list, see the contact information [here](README.md#-contact--contributing).
+Got some more recommendations? We're happy to extend the list, see the contact information [here](../README.md#-contact--contributing).
