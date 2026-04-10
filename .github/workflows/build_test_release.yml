@@ -7,7 +7,7 @@ on:
 
 jobs:
   ubuntu-mysql1-nospeex:
-    runs-on: ubuntu-22.04 # https://github.com/actions/runner-images
+    runs-on: ubuntu-24.04 # https://github.com/actions/runner-images
     steps:
     - uses: actions/checkout@v4 # https://github.com/actions/checkout
     - name: "Install Dependencies"
