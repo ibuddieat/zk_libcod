@@ -339,6 +339,15 @@ typedef struct gentity_s gentity_t;
 typedef int LargeLocal;
 typedef int clipHandle_t;
 
+enum scr_class_num_t
+{
+	CLASS_NUM_ENTITY,
+	CLASS_NUM_HUDELEM,
+	CLASS_NUM_PATHNODE,
+	CLASS_NUM_VEHICLENODE,
+	CLASS_NUM_COUNT
+};
+
 typedef struct scr_entref_s
 {
 	uint16_t entnum;

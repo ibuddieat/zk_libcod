@@ -7773,7 +7773,7 @@ void custom_PlayerCmd_finishPlayerDamage(scr_entref_t entref)
 	dir = 0;
 	point = 0;
 
-	if ( entref.classnum )
+	if ( entref.classnum != CLASS_NUM_ENTITY )
 	{
 		Scr_ObjectError("not an entity");
 		ent = 0;
@@ -7981,7 +7981,7 @@ void custom_PlayerCmd_Suicide(scr_entref_t entref)
 {
 	gentity_t *pSelf;
 
-	if ( entref.classnum )
+	if ( entref.classnum != CLASS_NUM_ENTITY )
 	{
 		Scr_ObjectError("not an entity");
 		pSelf = 0;
@@ -8132,7 +8132,7 @@ void custom_ScrCmd_IsLookingAt(scr_entref_t entref)
 	gentity_t *pSelf;
 	gentity_t *pOther;
 
-	if ( entref.classnum )
+	if ( entref.classnum != CLASS_NUM_ENTITY )
 	{
 		Scr_ObjectError("not an entity");
 		pSelf = 0;
@@ -10297,7 +10297,7 @@ void custom_PlayerCmd_DeactivateReverb(scr_entref_t entref)
 	float fadetime;
 	int priority;
 
-	if ( entref.classnum )
+	if ( entref.classnum != CLASS_NUM_ENTITY )
 	{
 		Scr_ObjectError("not an entity");
 	}
@@ -10345,7 +10345,7 @@ void custom_PlayerCmd_DeactivateChannelVolumes(scr_entref_t entref)
 	float fadetime;
 	int priority;
 
-	if ( entref.classnum )
+	if ( entref.classnum != CLASS_NUM_ENTITY )
 	{
 		Scr_ObjectError("not an entity");
 	}

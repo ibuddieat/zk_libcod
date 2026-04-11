@@ -687,7 +687,7 @@ static const Weapon_RocketLauncher_Fire_t Weapon_RocketLauncher_Fire = (Weapon_R
 typedef void (*FireWeaponAntiLag_t)(gentity_t *player, int time);
 static const FireWeaponAntiLag_t FireWeaponAntiLag = (FireWeaponAntiLag_t)0x08120870;
 
-typedef qboolean (*BG_ValidateWeaponNumber_t)(int index);
+typedef qboolean (*BG_ValidateWeaponNumber_t)(int weaponIndex);
 static const BG_ValidateWeaponNumber_t BG_ValidateWeaponNumber = (BG_ValidateWeaponNumber_t)0x080EBE8C;
 
 typedef qboolean (*COM_BitCheck_t)(unsigned int array[], int bitNum);

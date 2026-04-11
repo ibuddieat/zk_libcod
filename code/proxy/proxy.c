@@ -67,7 +67,6 @@ va_info_t proxies_va_info[MAX_PROXIES];
 // These IP addresses are website server trackers
 const char *trackers[] = {
 	"159.69.0.99",      // KILLTUBE.org
-	"178.254.22.101",   // Possibly livegameserverlist.com
 	"78.46.106.94",     // cod.pm
 	"155.138.163.54",   // GameTracker.com / GameServers.com
 	"45.77.200.250",    // GameTracker.com / GameServers.com

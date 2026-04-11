@@ -70,49 +70,49 @@ void gsc_weapons_issemiautoweapon()
 void gsc_weapons_addgrenadefusetime(scr_entref_t ref)
 {
 	int id = ref.entnum;
-    gentity_t *ent = &g_entities[id];
+	gentity_t *ent = &g_entities[id];
 
-    if ( ent->handler != ENT_HANDLER_GRENADE )
-    {
-        stackError("gsc_weapons_addgrenadefusetime() entity is not a grenade");
-    }
-    else
-    {
-        float time;
+	if ( ent->handler != ENT_HANDLER_GRENADE )
+	{
+		stackError("gsc_weapons_addgrenadefusetime() entity is not a grenade");
+	}
+	else
+	{
+		float time;
 
-        if ( !stackGetParams("f", &time) )
-        {
-            stackError("gsc_weapons_addgrenadefusetime() one or more arguments is undefined or has a wrong type");
-        }
-        else
-        {
-            ent->nextthink += (int)((time * 1000) - ((int)(time * 1000) % FRAMETIME));
-            if ( ent->nextthink < level.time )
-                ent->nextthink = level.time;
-        }
-    }
+		if ( !stackGetParams("f", &time) )
+		{
+			stackError("gsc_weapons_addgrenadefusetime() one or more arguments is undefined or has a wrong type");
+		}
+		else
+		{
+			ent->nextthink += (int)((time * 1000) - ((int)(time * 1000) % FRAMETIME));
+			if ( ent->nextthink < level.time )
+				ent->nextthink = level.time;
+		}
+	}
 
-    stackPushUndefined();
+	stackPushUndefined();
 }
 
 void gsc_weapons_getgrenadefusetime(scr_entref_t ref)
 {
 	int id = ref.entnum;
-    gentity_t *ent = &g_entities[id];
+	gentity_t *ent = &g_entities[id];
 
-    if ( ent->handler != ENT_HANDLER_GRENADE )
-    {
-        stackError("gsc_weapons_getgrenadefusetime() entity is not a grenade");
-    }
-    else
-    {
+	if ( ent->handler != ENT_HANDLER_GRENADE )
+	{
+		stackError("gsc_weapons_getgrenadefusetime() entity is not a grenade");
+	}
+	else
+	{
 		float remainingFuseTime = ent->nextthink - level.time;
 
 		if ( remainingFuseTime < 0.0 )
-        	stackPushFloat(0.0);
+			stackPushFloat(0.0);
 		else
 			stackPushFloat(remainingFuseTime / 1000.0);
-    }
+	}
 }
 
 void gsc_weapons_getweaponmaxammo()
@@ -838,10 +838,10 @@ void gsc_weapons_getmovespeedscale()
 void gsc_weapons_setmovespeedscale()
 {
 	int id;
-    char *name;
+	char *name;
 	float scale;
-    
-    if ( stackGetParams("sf", &name, &scale) ) 
+
+	if ( stackGetParams("sf", &name, &scale) ) 
 	{
 		id = BG_FindWeaponIndexForName(name);
 	}
@@ -991,123 +991,123 @@ void gsc_weapons_setdefaultweapon()
 void gsc_weapons_getweaponitemammo(scr_entref_t ref)
 {
 	int id = ref.entnum;
-    gentity_t *entity = &g_entities[id];
-    gitem_t *bg_item = &bg_itemlist;
-    
-    if ( entity->s.item < 1 || bg_numItems <= entity->s.item )
-    {
-        stackError("gsc_weapons_getitemquantity() must be called on a weapon entity");
-        stackPushUndefined();
-        return;
-    }
-    
-    bg_item += entity->s.item;
-    if ( bg_item->giType == IT_WEAPON )
-    {
-        stackPushInt(entity->count);
-    }
+	gentity_t *entity = &g_entities[id];
+	gitem_t *bg_item = &bg_itemlist;
+
+	if ( entity->s.item < 1 || bg_numItems <= entity->s.item )
+	{
+		stackError("gsc_weapons_getitemquantity() must be called on a weapon entity");
+		stackPushUndefined();
+		return;
+	}
+
+	bg_item += entity->s.item;
+	if ( bg_item->giType == IT_WEAPON )
+	{
+		stackPushInt(entity->count);
+	}
 	else
 	{
-        stackError("gsc_weapons_getitemquantity() must be called on a weapon entity");
-        stackPushUndefined();
-        return;
-    }
+		stackError("gsc_weapons_getitemquantity() must be called on a weapon entity");
+		stackPushUndefined();
+		return;
+	}
 }
 
 void gsc_weapons_getweaponitemclipammo(scr_entref_t ref)
 {
 	int id = ref.entnum;
-    gentity_t *entity = &g_entities[id];
-    gitem_t *bg_item = &bg_itemlist;
-    
-    if ( entity->s.item < 1 || bg_numItems <= entity->s.item )
-    {
-        stackError("gsc_weapons_getweaponitemclipammo() must be called on a weapon entity");
-        stackPushUndefined();
-        return;
-    }
-    
-    bg_item += entity->s.item;
-    if ( bg_item->giType == IT_WEAPON )
-    {
-        stackPushInt(entity->item.count2);
-    }
+	gentity_t *entity = &g_entities[id];
+	gitem_t *bg_item = &bg_itemlist;
+
+	if ( entity->s.item < 1 || bg_numItems <= entity->s.item )
+	{
+		stackError("gsc_weapons_getweaponitemclipammo() must be called on a weapon entity");
+		stackPushUndefined();
+		return;
+	}
+
+	bg_item += entity->s.item;
+	if ( bg_item->giType == IT_WEAPON )
+	{
+		stackPushInt(entity->item.count2);
+	}
 	else
 	{
-        stackError("gsc_weapons_getweaponitemclipammo() must be called on a weapon entity");
-        stackPushUndefined();
-        return;
-    }
+		stackError("gsc_weapons_getweaponitemclipammo() must be called on a weapon entity");
+		stackPushUndefined();
+		return;
+	}
 }
 
 void gsc_weapons_setweaponitemammo(scr_entref_t ref)
 {
 	int id = ref.entnum;
-    int ammo;
-    gentity_t *entity = &g_entities[id];
-    gitem_t *bg_item = &bg_itemlist;
+	int ammo;
+	gentity_t *entity = &g_entities[id];
+	gitem_t *bg_item = &bg_itemlist;
 
-    if ( !stackGetParams("i", &ammo) )
-    {
-        stackError("gsc_weapons_setweaponitemammo() argument is undefined or has a wrong type");
-        stackPushUndefined();
-        return;
-    }
+	if ( !stackGetParams("i", &ammo) )
+	{
+		stackError("gsc_weapons_setweaponitemammo() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
 
-    if ( entity->s.item < 1 || bg_numItems <= entity->s.item )
-    {
-        stackError("gsc_weapons_setweaponitemammo() must be called on a weapon entity");
-        stackPushUndefined();
-        return;
-    }
-    
-    bg_item += entity->s.item;
-    if ( bg_item->giType == IT_WEAPON )
-    {
-        entity->count = ammo;
-        stackPushBool(qtrue);
-    }
+	if ( entity->s.item < 1 || bg_numItems <= entity->s.item )
+	{
+		stackError("gsc_weapons_setweaponitemammo() must be called on a weapon entity");
+		stackPushUndefined();
+		return;
+	}
+
+	bg_item += entity->s.item;
+	if ( bg_item->giType == IT_WEAPON )
+	{
+		entity->count = ammo;
+		stackPushBool(qtrue);
+	}
 	else
 	{
-        stackError("gsc_weapons_setweaponitemammo() must be called on a weapon entity");
-        stackPushUndefined();
-        return;
-    }
+		stackError("gsc_weapons_setweaponitemammo() must be called on a weapon entity");
+		stackPushUndefined();
+		return;
+	}
 }
 
 void gsc_weapons_setweaponitemclipammo(scr_entref_t ref)
 {
 	int id = ref.entnum;
-    int clipammo;
-    gentity_t *entity = &g_entities[id];
-    gitem_t *bg_item = &bg_itemlist;
+	int clipammo;
+	gentity_t *entity = &g_entities[id];
+	gitem_t *bg_item = &bg_itemlist;
 
-    if ( !stackGetParams("i", &clipammo) )
-    {
-        stackError("gsc_weapons_setweaponitemclipammo() argument is undefined or has a wrong type");
-        stackPushUndefined();
-        return;
-    }
+	if ( !stackGetParams("i", &clipammo) )
+	{
+		stackError("gsc_weapons_setweaponitemclipammo() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
 
-    if ( entity->s.item < 1 || bg_numItems <= entity->s.item )
-    {
-        stackError("gsc_weapons_setweaponitemclipammo() must be called on a weapon entity");
-        stackPushUndefined();
-        return;
-    }
-    
-    bg_item += entity->s.item;
-    if ( bg_item->giType == IT_WEAPON )
-    {
-        entity->item.count2 = clipammo;
-        stackPushBool(qtrue);
-    }
+	if ( entity->s.item < 1 || bg_numItems <= entity->s.item )
+	{
+		stackError("gsc_weapons_setweaponitemclipammo() must be called on a weapon entity");
+		stackPushUndefined();
+		return;
+	}
+
+	bg_item += entity->s.item;
+	if ( bg_item->giType == IT_WEAPON )
+	{
+		entity->item.count2 = clipammo;
+		stackPushBool(qtrue);
+	}
 	else
 	{
-        stackError("gsc_weapons_setweaponitemclipammo() must be called on a weapon entity");
-        stackPushUndefined();
-        return;
-    }
+		stackError("gsc_weapons_setweaponitemclipammo() must be called on a weapon entity");
+		stackPushUndefined();
+		return;
+	}
 }
 
 void gsc_weapons_spawngrenade(scr_entref_t ref)
