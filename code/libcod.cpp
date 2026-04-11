@@ -4561,13 +4561,14 @@ void custom_SV_ResetPureClient_f(client_t *cl)
 	/* New code end */
 }
 
-// Adds bot pings and removes spam on 1.2 and 1.3
 void custom_SV_CalcPings(void)
 {
 	int i, j;
 	client_t *cl;
 	int total, count;
 	int delta;
+
+	// New: Adds bot pings and removes spam on 1.2 and 1.3
 
 	for ( i = 0 ; i < sv_maxclients->current.integer ; i++ )
 	{
@@ -4617,7 +4618,7 @@ void custom_SV_CalcPings(void)
 	}
 }
 
-void custom_SV_CheckTimeouts( void )
+void custom_SV_CheckTimeouts(void)
 {
 	int	i;
 	client_t *cl;
@@ -4629,24 +4630,24 @@ void custom_SV_CheckTimeouts( void )
 
 	for ( i = 0, cl = svs.clients; i < sv_maxclients->current.integer; i++, cl++ )
 	{
-		// Message times may be wrong across a changelevel
 		if ( cl->lastPacketTime > svs.time )
 			cl->lastPacketTime = svs.time;
 
+		// New: Removed continue here if client is a bot, so that it does not
+		// remain in zombie state indefinitely after being kicked
+
 		if ( cl->state == CS_ZOMBIE && cl->lastPacketTime < zombiepoint )
 		{
-			cl->state = CS_FREE; // Can now be reused
+			cl->state = CS_FREE;
 			continue;
 		}
 
 		if ( cl->state >= CS_CONNECTED && cl->lastPacketTime < droppoint )
 		{
-			// Wait several frames so a debugger session doesn't
-			// cause a timeout
 			if ( ++cl->timeoutCount > 5 )
 			{
 				SV_DropClient(cl, "EXE_TIMEDOUT");
-				cl->state = CS_FREE; // Don't bother with zombie state
+				cl->state = CS_FREE;
 			}
 		}
 		else
