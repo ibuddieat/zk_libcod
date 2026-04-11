@@ -11699,6 +11699,63 @@ void custom_HudElem_ClearTypeSettings(game_hudelem_t *hud)
 	hud->elem.text = 0;
 }
 
+void custom_PlayerCmd_switchToWeapon(scr_entref_t entref)
+{
+	int id = entref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("switchToWeapon() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	char *pszWeaponName;
+	int iWeaponIndex;
+
+	// New: Accept both a weapon ID or string
+	if ( !stackGetParams("s", &pszWeaponName) )
+	{
+		if ( !stackGetParams("i", &iWeaponIndex) )
+		{
+			stackError("switchToWeapon() argument is undefined or has a wrong type");
+			stackPushUndefined();
+			return;
+		}
+		if ( !BG_ValidateWeaponNumber(iWeaponIndex) ) // Allows zero
+		{
+			stackError("switchToWeapon() invalid weapon number specified");
+			stackPushUndefined();
+			return;
+		}
+	}
+	else
+	{
+		iWeaponIndex = G_GetWeaponIndexForName(pszWeaponName);
+		if ( !iWeaponIndex )
+		{
+			Scr_ParamError(0, va("unknown weapon '%s'", pszWeaponName));
+		}
+	}
+
+	gentity_t *pSelf = &g_entities[id];
+
+	if ( !COM_BitCheck(pSelf->client->ps.weapons, iWeaponIndex) )
+	{
+		Scr_AddBool(false);
+		return;
+	}
+
+	client_t *client = &svs.clients[id];
+
+	if ( client->netchan.remoteAddress.type == NA_BOT )
+		customPlayerState[id].botWeapon = iWeaponIndex; // New: Bot support
+	else
+		G_SelectWeaponIndex(id, iWeaponIndex);
+
+	Scr_AddBool(true);
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -11967,6 +12024,7 @@ public:
 		cracking_hook_function(0x08094A10, (int)custom_SV_SendServerCommand);
 		cracking_hook_function(0x08093486, (int)custom_SV_SaveSystemInfo);
 		cracking_hook_function(0x08103210, (int)custom_HudElem_ClearTypeSettings);
+		cracking_hook_function(0x080FA1B6, (int)custom_PlayerCmd_switchToWeapon);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC8CA, (int)Jump_ReduceFriction);

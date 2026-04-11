@@ -1182,6 +1182,9 @@ static const G_GetHintStringIndex_t G_GetHintStringIndex = (G_GetHintStringIndex
 typedef clientState_t * (*G_GetClientState_t)(int num);
 static const G_GetClientState_t G_GetClientState = (G_GetClientState_t)0x08108E72;
 
+typedef void (*G_SelectWeaponIndex_t)(int clientnum, int iWeaponIndex);
+static const G_SelectWeaponIndex_t G_SelectWeaponIndex = (G_SelectWeaponIndex_t)0x08120E0A;
+
 typedef qboolean (*GetFollowPlayerState_t)(int clientNum, playerState_t *ps);
 static const GetFollowPlayerState_t GetFollowPlayerState = (GetFollowPlayerState_t)0x080F6DEA;
 
