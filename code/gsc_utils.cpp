@@ -1334,6 +1334,35 @@ void gsc_utils_makestring()
 	var->type = VAR_STRING;
 }
 
+void gsc_utils_abs()
+{
+	float val;
+
+	if ( !stackGetParams("f",  &val) )
+	{
+		stackError("gsc_utils_abs() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushFloat(fabs(val));
+}
+
+void gsc_utils_atan2()
+{
+	float y;
+	float x;
+
+	if ( !stackGetParams("ff",  &y, &x) )
+	{
+		stackError("gsc_utils_atan2() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushFloat(atan2f(y, x));
+}
+
 void gsc_utils_ceil()
 {
 	float val;

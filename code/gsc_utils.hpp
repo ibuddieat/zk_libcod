@@ -53,6 +53,8 @@ void gsc_utils_makelocalizedstring();
 void gsc_utils_makeclientlocalizedstring();
 void gsc_utils_makestring();
 
+void gsc_utils_abs();
+void gsc_utils_atan2();
 void gsc_utils_ceil();
 void gsc_utils_float();
 void gsc_utils_floor();

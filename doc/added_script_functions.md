@@ -131,6 +131,8 @@
   * `<weapon> setWeaponItemClipAmmo(<value>)`
 
 🔣 New script code functions:
+  * `abs(<number>)`
+  * `atan2(<y>, <x>)`
   * `ceil(<number>)`
   * `chr(<number>)`
   * `getCallStack()`
