@@ -32,13 +32,53 @@ Module: System<BR>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
-<H2>Example:</H2>
+<H2>Example - Kick with custom message, during gameplay:</H2>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-wait 0.05; // Ensures message visibility if kicked right on connect
 kick(self getEntityNumber(), "Kicked from server");
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR>
+<H2>Example - Kick with custom message, right after connecting:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+// To be changed in _callbacksetup.gsc
+CodeCallback_PlayerConnect()
+{
+    self endon("disconnect");
+    self thread kickPlayer();
+    [[level.callbackPlayerConnect]]();
+}
+
+kickPlayer()
+{
+	// Determine reason here, then proceed with:
+	self waittill("begin"); // Necessary, otherwise message not shown
+	wait 0.05; // Necessary, otherwise message not shown
+	kick(self getEntityNumber(), "Kicked from server");
+}
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR>
+<H2>Example - Kick with default disconnect message, right after connecting:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+// To be changed in _callbacksetup.gsc
+CodeCallback_PlayerConnect()
+{
+    self endon("disconnect");
+    waittillframeend; // Necessary, otherwise crash
+    kick(self getEntityNumber());
+    [[level.callbackPlayerConnect]]();
+}
 </PRE>
 </H3>
 </TR></TD></TABLE>
