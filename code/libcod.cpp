@@ -2197,7 +2197,7 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 		// See if we already have a challenge for this ip
 		challenge = &svs.challenges[0];
 
-		for ( i = 0 ; i < MAX_CHALLENGES ; i++, challenge++ )
+		for ( i = 0; i < MAX_CHALLENGES; i++, challenge++ )
 		{
 			if ( NET_CompareAdr(drop->netchan.remoteAddress, challenge->adr) )
 			{
@@ -2241,8 +2241,8 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 		SV_SendServerCommand(drop, SV_CMD_RELIABLE, "w \"%s\"", reason);
 
 	/* If this was the last client on the server, send a heartbeat to the
-	 master so it is known the server is empty send a heartbeat now so the
-	 master will get up to date info if there is already a slot for this ip,
+	 master so it is known the server is empty. Send a heartbeat now so the
+	 master will get up to date info. If there is already a slot for this ip,
 	 reuse it */
 	for ( i = 0; i < sv_maxclients->current.integer; i++ )
 	{
