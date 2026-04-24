@@ -78,7 +78,7 @@ jobs:
       run: |
         sudo dpkg --add-architecture i386
         sudo apt-get update
-        sudo apt-get install gcc-multilib g++-multilib
+        sudo apt-get -y install gcc-multilib g++-multilib
     - name: "libstdc++5 Installation Workaround"
       run: wget http://ftp.debian.org/debian/pool/main/g/gcc-3.3/libstdc++5_3.3.6-32_i386.deb && sudo dpkg -i libstdc++5_3.3.6-32_i386.deb
     - name: "Build"
@@ -103,7 +103,7 @@ jobs:
       run: |
         sudo dpkg --add-architecture i386
         sudo apt-get update
-        sudo apt-get install gcc-multilib g++-multilib libstdc++5:i386 libmariadb-dev-compat:i386
+        sudo apt-get -y install gcc-multilib g++-multilib libmariadb-dev-compat:i386
     - name: "libstdc++5 Installation Workaround"
       run: wget http://ftp.debian.org/debian/pool/main/g/gcc-3.3/libstdc++5_3.3.6-32_i386.deb && sudo dpkg -i libstdc++5_3.3.6-32_i386.deb
     - name: "Build"
@@ -128,7 +128,7 @@ jobs:
       run: |
         sudo dpkg --add-architecture i386
         sudo apt-get update
-        sudo apt-get install gcc-multilib g++-multilib libstdc++5:i386 libmariadb-dev-compat:i386
+        sudo apt-get -y install gcc-multilib g++-multilib libmariadb-dev-compat:i386
     - name: "libstdc++5 Installation Workaround"
       run: wget http://ftp.debian.org/debian/pool/main/g/gcc-3.3/libstdc++5_3.3.6-32_i386.deb && sudo dpkg -i libstdc++5_3.3.6-32_i386.deb
     - name: "Build"
