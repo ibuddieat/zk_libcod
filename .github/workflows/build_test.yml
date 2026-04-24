@@ -72,8 +72,8 @@ jobs:
       image: debian:trixie
     steps:
     - uses: actions/checkout@v6 # https://github.com/actions/checkout
-    - name: "Install sudo package in container"
-      run: apt-get update && apt-get -y install sudo
+    - name: "Install dependencies for container"
+      run: apt-get update && apt-get -y install sudo wget
     - name: "Install Dependencies"
       run: |
         sudo dpkg --add-architecture i386
@@ -97,8 +97,8 @@ jobs:
       image: debian:trixie
     steps:
     - uses: actions/checkout@v6 # https://github.com/actions/checkout
-    - name: "Install sudo package in container"
-      run: apt-get update && apt-get -y install sudo
+    - name: "Install dependencies for container"
+      run: apt-get update && apt-get -y install sudo wget
     - name: "Install Dependencies"
       run: |
         sudo dpkg --add-architecture i386
@@ -122,8 +122,8 @@ jobs:
       image: debian:trixie
     steps:
     - uses: actions/checkout@v6 # https://github.com/actions/checkout
-    - name: "Install sudo package in container"
-      run: apt-get update && apt-get -y install sudo
+    - name: "Install dependencies for container"
+      run: apt-get update && apt-get -y install sudo wget
     - name: "Install Dependencies"
       run: |
         sudo dpkg --add-architecture i386
