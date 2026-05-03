@@ -1956,25 +1956,52 @@ gentity_t * custom_fire_grenade(gentity_t *attacker, vec3_t start, vec3_t dir, i
 
 void hook_ClientCommand(int clientNum)
 {
+	int args;
+	int i;
+	char *part;
+	unsigned int j;
+	bool chat = false;
+	
+	args = Cmd_Argc();
+	for ( i = 0; i < args; i++ )
+	{
+		part = Cmd_Argv(i);
 
-	if ( !Scr_IsSystemActive() )
-		return;
+		// Set a flag for handling "say" and "say_team" prefix
+		if ( i == 0 && !strncmp(part, "say", 3) )
+			chat = true;
 
-	if ( !codecallback_playercommand )
+		for ( j = 0; j < strlen(part); j++ )
+		{
+			// Pass through 0x15 chat prefix
+			if ( i == 1 && j == 0 && part[j] == 0x15 && chat )
+				continue;
+
+			// Convert all other control characters
+			if ( (unsigned char)part[j] < 0x20 )
+				part[j] = '.';
+		}
+	}
+
+	// CodeCallback_PlayerCommand is not setup?
+	if ( !Scr_IsSystemActive() || !codecallback_playercommand )
 	{	
 		ClientCommand(clientNum);
 		return;
 	}
 
+	// CodeCallback_PlayerCommand is setup, proceed
 	stackPushArray();
-	int args = Cmd_Argc();
-	for ( int i = 0; i < args; i++ )
+	args = Cmd_Argc();
+	for ( i = 0; i < args; i++ )
 	{
-		char tmp[MAX_STRINGLENGTH];
-		SV_Cmd_ArgvBuffer(i, tmp, sizeof(tmp));
-		if ( i == 1 && tmp[0] >= 20 && tmp[0] <= 22 )
+		char arg[MAX_STRINGLENGTH];
+		SV_Cmd_ArgvBuffer(i, arg, sizeof(arg));
+
+		// Split chat and filter out 0x15 prefix
+		if ( i == 1 && arg[0] == 0x15 )
 		{
-			char *part = strtok(tmp + 1, " ");
+			part = strtok(arg + 1, " ");
 			while ( part != NULL )
 			{
 				stackPushString(part);
@@ -1984,7 +2011,7 @@ void hook_ClientCommand(int clientNum)
 		}
 		else
 		{
-			stackPushString(tmp);
+			stackPushString(arg);
 			stackPushArrayLast();
 		}
 	}
