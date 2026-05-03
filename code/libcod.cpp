@@ -4990,14 +4990,16 @@ void custom_SVC_Info(netadr_t from)
 	privateClientCount = 0;
 	for ( i = 0; i < sv_privateClients->current.integer; ++i )
 	{
-		if ( svs.clients[i].state >= CS_CONNECTED )
+		// New: Added player status visibility
+		if ( svs.clients[i].state >= CS_CONNECTED && !customPlayerState[i].hiddenFromServerStatus )
 			++privateClientCount;
 	}
 
 	clientCount = privateClientCount;
 	for ( i = sv_privateClients->current.integer; i < sv_maxclients->current.integer; ++i )
 	{
-		if ( svs.clients[i].state >= CS_CONNECTED )
+		// New: Added player status visibility
+		if ( svs.clients[i].state >= CS_CONNECTED && !customPlayerState[i].hiddenFromServerStatus )
 			++clientCount;
 	}
 
@@ -5187,9 +5189,8 @@ void custom_SVC_Status(netadr_t from)
 		cl = svs.clients + i;
 		if ( CS_ZOMBIE < cl->state )
 		{
-			/* New code start: Ability to hide players in scoreboard is also
-			 reflected in status messages */
-			if ( customPlayerState[i].hiddenFromScoreboard )
+			/* New code start: Ability to hide players in status messages */
+			if ( customPlayerState[i].hiddenFromServerStatus )
 				continue;
 			/* New code end */
 

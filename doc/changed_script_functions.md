@@ -1,6 +1,11 @@
 > [!NOTE]
 > * Stock script functions/methods start in uppercase here, whereas libcod script functions/methods start in lowercase.
 
+# 🏗 Changed with or since release v15.0:
+
+Script code methods:
+  * `<player> setHiddenFromScoreboard(<enabled>)` no longer affects player visibility in server status responses, added `setHiddenFromServerStatus()` for that
+
 # 🏗 Changed with or since release v14.0:
 
 Script callback functions:

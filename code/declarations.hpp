@@ -4294,6 +4294,7 @@ typedef struct customPlayerState_s
 	netadr_t realAddress; // client->netchan->remoteAddress, updated for proxied clients 
 	unsigned int weapon;
 	qboolean hiddenFromScoreboard;
+	qboolean hiddenFromServerStatus;
 	qboolean notAllowingSpectators;
 	snapshotEntityNumbers_t snapshotEntities;
 	qboolean activateOnUseButtonRelease;

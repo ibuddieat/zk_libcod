@@ -3516,6 +3516,37 @@ void gsc_player_ishiddenfromscoreboard(scr_entref_t ref)
 	stackPushBool(customPlayerState[id].hiddenFromScoreboard);
 }
 
+void gsc_player_sethiddenfromserverstatus(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_sethiddenfromserverstatus() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	qboolean hidden = Scr_GetInt(0);
+	customPlayerState[id].hiddenFromServerStatus = hidden;
+
+	stackPushBool(qtrue);
+}
+
+void gsc_player_ishiddenfromserverstatus(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_ishiddenfromserverstatus() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushBool(customPlayerState[id].hiddenFromServerStatus);
+}
+
 void gsc_player_setholdingweapondown(scr_entref_t ref)
 {
 	int id = ref.entnum;
