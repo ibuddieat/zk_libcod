@@ -13,7 +13,7 @@ if [ $? -eq 1 ]; then
     fi
 fi
 
-if [ "$(pwd)" != *setup ]; then
+if [[ "$(pwd)" != *setup ]]; then
     echo "=== This script needs to be run from the repository's setup folder ==="
     exit
 fi
@@ -24,7 +24,16 @@ sudo apt update
 if [ $ubuntu -eq 1 ]; then
     sudo apt install -y gcc-multilib g++-multilib libstdc++5:i386 libmysqlclient-dev:i386 
 else
-    sudo apt install -y gcc-multilib g++-multilib libstdc++5:i386 libmariadb-dev-compat:i386
+    sudo apt install -y gcc-multilib g++-multilib libmariadb-dev-compat:i386
+    if dpkg --compare-versions $(cat /etc/debian_version) ge 13
+    then
+        sudo apt install -y wget
+        wget http://ftp.debian.org/debian/pool/main/g/gcc-3.3/libstdc++5_3.3.6-32_i386.deb
+        sudo dpkg -i libstdc++5_3.3.6-32_i386.deb
+        rm libstdc++5_3.3.6-32_i386.deb
+    else
+        sudo apt install -y libstdc++5:i386
+    fi
 fi
 
 echo === Installing Speex dependencies ===

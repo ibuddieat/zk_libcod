@@ -2,8 +2,7 @@
 
 ## Supported platforms
 - Ubuntu 24.04
-- Ubuntu 22.04
-- Debian 10
+- Debian 13
 > [!NOTE]
 > This list is not exhaustive and newer versions might work as well.
 
@@ -33,7 +32,7 @@ sudo apt install gcc-multilib g++-multilib libstdc++5:i386
 sudo apt install libmysqlclient-dev:i386
 ```
 
-**MySQL requirements installation (for 64-bit Debian 11.6)**
+**MySQL requirements installation (for 64-bit Debian 13)**
 ```
 sudo apt install libmariadb-dev-compat:i386
 ```
@@ -49,7 +48,7 @@ sudo apt install ffmpeg
 - [Speex installation](install_speex.md)
 - [Audio file conversion](convert_audio_files.md)
 > [!IMPORTANT]
-> Note: This feature is enabled by default and increases RAM usage by about 500 MB. See below for how to disable it (`nospeex`).
+> Note: This feature is enabled by default and increases RAM usage by about 500 MB per server. See below for how to disable it (`nospeex`).
 
 ### Building the binary
 ```
@@ -125,10 +124,10 @@ On success, this creates `libcod2.so` in `./code/bin`.
 - By default, the server will only be accessible from the host where WSL runs on
 - Windows 11 currently does not support UDP port forwarding via `netsh interface portproxy ...`
 - A possibility to enable LAN connectivity could be to use [NAT forwarding](https://gist.github.com/wildlarva/0539212ad6bf0bf1450b38726e1a42de), or a bridged interface mode
-- For limited connectivity, the tool [socat](http://www.dest-unreach.org/socat) suffices
+- For testing purposes, the tool [socat](http://www.dest-unreach.org/socat) suffices
   - It allows a single player to connect via LAN
   - Socat.exe in the setup folder was built from source version 1.8.1.0, using [Cygwin](https://cygwin.com/) version 3.6.6-1.x86_64
-  - The build instructions are as follows:
+  - If you want to build socat.exe yourself instead, the instructions are as follows:
     - Install Cygwin
     - Install the following packages in Cygwin:
       - gcc-g++
