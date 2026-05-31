@@ -3210,9 +3210,10 @@ void gsc_player_setoriginandangles(scr_entref_t ref)
     if ( ent->client->ps.pm_flags & PMF_PLAYER && ent->client->ps.eFlags & EF_TURRET_ACTIVE )
         G_ClientStopUsingTurret(&g_entities[ent->client->ps.viewlocked_entNum]);
 
+    // Unlink client from linkTo() stuffs
     G_EntUnlink(ent);
 
-    // Unlink client from linkTo() stuffs
+	// Temporarily remove ent from BSP-based world, collision, visibility
     if ( ent->r.linked )
     {
         SV_UnlinkEntity(ent);
@@ -3266,6 +3267,7 @@ void gsc_player_setoriginandangles(scr_entref_t ref)
     // Restore prone if any
     ent->client->ps.pm_flags = flags;
 
+	// Restore ent in world
     SV_LinkEntity(ent);
 
 	// Fix for spectators being moved into free spectate mode
