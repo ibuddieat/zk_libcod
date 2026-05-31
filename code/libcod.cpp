@@ -11785,6 +11785,25 @@ void custom_PlayerCmd_switchToWeapon(scr_entref_t entref)
 	Scr_AddBool(true);
 }
 
+void custom_ScrCmd_SetModel(scr_entref_t entref)
+{
+	gentity_t *ent = GetEntity(entref.entnum);
+
+	G_SetModel(ent, Scr_GetString(0));
+	G_DObjUpdate(ent);
+	SV_LinkEntity(ent);
+
+	/* New code start: Unlink childs since model tags may have changed. Could
+	 be improved to check if anything relevant in the tag tree actually
+	 changed, such as tag names, order and offsets/angles */
+	while ( ent->tagChildren )
+	{
+		Com_Printf("WARNING: Unlinking entity %d from entity %d when changing parent model\n", ent->tagChildren - g_entities, ent - g_entities);
+		G_EntUnlink(ent->tagChildren);
+	}
+	/* New code end */
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -12054,6 +12073,7 @@ public:
 		cracking_hook_function(0x08093486, (int)custom_SV_SaveSystemInfo);
 		cracking_hook_function(0x08103210, (int)custom_HudElem_ClearTypeSettings);
 		cracking_hook_function(0x080FA1B6, (int)custom_PlayerCmd_switchToWeapon);
+		cracking_hook_function(0x08111F12, (int)custom_ScrCmd_SetModel);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC8CA, (int)Jump_ReduceFriction);
