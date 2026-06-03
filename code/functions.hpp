@@ -1668,6 +1668,9 @@ static const unzReadCurrentFile_t unzReadCurrentFile = (unzReadCurrentFile_t)0x0
 typedef int (*unzCloseCurrentFile_t)(unzFile file);
 static const unzCloseCurrentFile_t unzCloseCurrentFile = (unzCloseCurrentFile_t)0x080D3506;
 
+typedef unsigned int (*VM_Execute_t)(unsigned int localId, const char *pos, unsigned int paramcount);
+static const VM_Execute_t VM_Execute = (VM_Execute_t)0x08083E34;
+
 typedef void (*Jump_ActivateSlowdown_t)(playerState_t *ps);
 static const Jump_ActivateSlowdown_t Jump_ActivateSlowdown = (Jump_ActivateSlowdown_t)0x080DC7EE;
 
@@ -1677,7 +1680,17 @@ static const Jump_AddSurfaceEvent_t Jump_AddSurfaceEvent = (Jump_AddSurfaceEvent
 typedef void (*Jump_ClearState_t)(playerState_t *ps);
 static const Jump_ClearState_t Jump_ClearState = (Jump_ClearState_t)0x080DC718;
 
-typedef unsigned int (*VM_Execute_t)(unsigned int localId, const char *pos, unsigned int paramcount);
-static const VM_Execute_t VM_Execute = (VM_Execute_t)0x08083E34;
+#if COMPILE_JUMP == 0
+
+typedef void (*Jump_ClampVelocity_t)(playerState_t *ps, float *vec);
+static const Jump_ClampVelocity_t Jump_ClampVelocity = (Jump_ClampVelocity_t)0x080DC95C;
+
+typedef qboolean (*Jump_GetStepHeight_t)(playerState_t *ps, const float *vec1, float *val2);
+static const Jump_GetStepHeight_t Jump_GetStepHeight = (Jump_GetStepHeight_t)0x080DC73A;
+
+typedef qboolean (*Jump_IsPlayerAboveMax_t)(playerState_t *ps);
+static const Jump_IsPlayerAboveMax_t Jump_IsPlayerAboveMax = (Jump_IsPlayerAboveMax_t)0x080DC7C8;
+
+#endif
 
 #endif

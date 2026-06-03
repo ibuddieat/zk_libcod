@@ -11506,10 +11506,14 @@ void custom_PM_StepSlideMove(pmove_t *pm, pml_t *pml, qboolean gravity)
 			}
 			Vec3Lerp(ps->origin, down, trace.fraction, ps->origin);
 
+			#if COMPILE_JUMP == 1
 			/* New code start: Replaced call to PM_ClipVelocity with this call,
 			 for the jump_bounceEnable dvar */
 			PM_ProjectVelocity(ps->velocity, trace.normal, ps->velocity);
 			/* New code end */
+			#else
+			PM_ClipVelocity(ps->velocity, trace.normal, ps->velocity);
+			#endif
 		}
 		else if ( fStepAmount != 0 )
 		{
