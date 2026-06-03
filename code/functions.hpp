@@ -114,7 +114,7 @@ static const Sys_Print_t Sys_Print = (Sys_Print_t)0x080D4AE0;
 typedef void (*Sys_SetValue_t)(int key, void *value);
 static const Sys_SetValue_t Sys_SetValue = (Sys_SetValue_t)0x080D6BAE;
 
-typedef unsigned int (*Com_AddToString_t)(const char* string, char* buffer, unsigned int current, unsigned int length, byte escapeSpaces);
+typedef unsigned int (*Com_AddToString_t)(const char *string, char *buffer, unsigned int current, unsigned int length, byte escapeSpaces);
 static const Com_AddToString_t Com_AddToString = (Com_AddToString_t)0x080629CE;
 
 typedef void (*Com_Printf_t)(const char *format, ...);
@@ -246,10 +246,10 @@ static const FS_Shutdown_t FS_Shutdown = (FS_Shutdown_t)0x080A2BA8;
 typedef void (*FS_BuildOSPath_t)(const char *base, const char *game, const char *qpath, char *ospath);
 static const FS_BuildOSPath_t FS_BuildOSPath = (FS_BuildOSPath_t)0x0809EAB0;
 
-typedef xfunction_t (*Scr_GetFunction_t)(const char** v_functionName, qboolean *v_developer);
+typedef xfunction_t (*Scr_GetFunction_t)(const char **v_functionName, qboolean *v_developer);
 static const Scr_GetFunction_t Scr_GetFunction = (Scr_GetFunction_t)0x08117CB2;
 
-typedef xmethod_t (*Scr_GetMethod_t)(const char** v_methodName, qboolean *v_developer);
+typedef xmethod_t (*Scr_GetMethod_t)(const char **v_methodName, qboolean *v_developer);
 static const Scr_GetMethod_t Scr_GetMethod = (Scr_GetMethod_t)0x08117DEA;
 
 typedef dvar_t * (*Dvar_FindVar_t)(const char *dvarName);
@@ -291,10 +291,10 @@ static const Dvar_RegisterBool_t Dvar_RegisterBool = (Dvar_RegisterBool_t)0x080B
 typedef dvar_t * (*Dvar_RegisterString_t)(const char *dvarName, const char *var_value, unsigned short flags);
 static const Dvar_RegisterString_t Dvar_RegisterString = (Dvar_RegisterString_t)0x080B4232;
 
-typedef dvar_t * (*Dvar_RegisterInt_t)(const char * dvarName, int var_value, int min_value, int max_value, unsigned short flags);
+typedef dvar_t * (*Dvar_RegisterInt_t)(const char *dvarName, int var_value, int min_value, int max_value, unsigned short flags);
 static const Dvar_RegisterInt_t Dvar_RegisterInt = (Dvar_RegisterInt_t)0x080B403A;
 
-typedef dvar_t * (*Dvar_RegisterFloat_t)(const char* dvarName, float var_value, float var_min, float var_max, unsigned short flags);
+typedef dvar_t * (*Dvar_RegisterFloat_t)(const char *dvarName, float var_value, float var_min, float var_max, unsigned short flags);
 static const Dvar_RegisterFloat_t Dvar_RegisterFloat = (Dvar_RegisterFloat_t)0x080B408C;
 
 typedef void (*Dvar_ResetScriptInfo_t)(void);
@@ -465,7 +465,7 @@ static const Info_Validate_t Info_Validate = (Info_Validate_t)0x080B857C;
 typedef short (*Scr_ExecThread_t)(int callbackHook, unsigned int numArgs);
 static const Scr_ExecThread_t Scr_ExecThread = (Scr_ExecThread_t)0x08083FD6;
 
-typedef short (*Scr_ExecEntThread_t)(gentity_t* ent, int callbackHook, unsigned int numArgs);
+typedef short (*Scr_ExecEntThread_t)(gentity_t *ent, int callbackHook, unsigned int numArgs);
 static const Scr_ExecEntThread_t Scr_ExecEntThread = (Scr_ExecEntThread_t)0x0811B284;
 
 typedef short (*Scr_FreeThread_t)(short thread_id);
@@ -852,7 +852,7 @@ static const Scr_AddUndefined_t Scr_AddUndefined = (Scr_AddUndefined_t)0x080851D
 typedef void (*Scr_AddVector_t)(vec3_t vec);
 static const Scr_AddVector_t Scr_AddVector = (Scr_AddVector_t)0x08085306;
 
-typedef void (*Scr_AddEntity_t)(gentity_t* ent);
+typedef void (*Scr_AddEntity_t)(gentity_t *ent);
 static const Scr_AddEntity_t Scr_AddEntity = (Scr_AddEntity_t)0x08117F50;
 
 typedef void (*Scr_MakeArray_t)(void);
@@ -1485,7 +1485,7 @@ static const G_crandom_t G_crandom = (G_crandom_t)0x080A3792;
 typedef float (*G_random_t)(void);
 static const G_random_t G_random = (G_random_t)0x080A3774;
 
-typedef void (*Cbuf_ExecuteText_t)(int exec_when, const char* text);
+typedef void (*Cbuf_ExecuteText_t)(int exec_when, const char *text);
 static const Cbuf_ExecuteText_t Cbuf_ExecuteText = (Cbuf_ExecuteText_t)0x0805FE3C;
 
 typedef void (*AddPointToBounds_t)(float *origin, float *mins, float *maxs);

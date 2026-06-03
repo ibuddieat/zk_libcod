@@ -19,12 +19,12 @@ extern dvar_t *jump_carryMoverVelocity;
 extern customEntityState_t customEntityState[MAX_GENTITIES];
 extern customPlayerState_t customPlayerState[MAX_CLIENTS];
 
-int playerstateToClientNum(playerState_t* ps)
+int playerstateToClientNum(playerState_t *ps)
 {
 	return (int)(((byte *)ps - (byte *)sv.gameClients) / sv.gameClientSize);
 }
 
-float getJumpHeight(playerState_t* ps)
+float getJumpHeight(playerState_t *ps)
 {
 	int id = playerstateToClientNum(ps);
 
@@ -33,7 +33,7 @@ float getJumpHeight(playerState_t* ps)
 	return jump_height->current.decimal;
 }
 
-bool getJumpSlowdownEnable(playerState_t* ps)
+bool getJumpSlowdownEnable(playerState_t *ps)
 {
 	int id = playerstateToClientNum(ps);
 
@@ -155,7 +155,7 @@ float Jump_ReduceFriction(playerState_t *ps)
 	return control;
 }
 
-void Jump_ClampVelocity(playerState_t* ps, float* vec)
+void Jump_ClampVelocity(playerState_t *ps, float *vec)
 {
 	float comp;
 	float newZVelocity;
@@ -179,7 +179,7 @@ void Jump_ClampVelocity(playerState_t* ps, float* vec)
 	}
 }
 
-qboolean Jump_IsPlayerAboveMax(playerState_t* ps)
+qboolean Jump_IsPlayerAboveMax(playerState_t *ps)
 {
 	float jumpHeight = getJumpHeight(ps); // Original: jump_height->current.decimal;
 
@@ -189,7 +189,7 @@ qboolean Jump_IsPlayerAboveMax(playerState_t* ps)
 		return qfalse;
 }
 
-qboolean Jump_GetStepHeight(playerState_t* ps, const float* vec1, float* val2)
+qboolean Jump_GetStepHeight(playerState_t *ps, const float *vec1, float *val2)
 {
 	float jumpHeight = getJumpHeight(ps); // Original: jump_height->current.decimal;
 
