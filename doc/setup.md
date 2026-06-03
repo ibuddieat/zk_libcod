@@ -6,7 +6,7 @@
 > [!NOTE]
 > This list is not exhaustive and newer versions might work as well.
 
-## 📋 Setup via install script (currently untested!)
+## 📋 Setup via install script
 - Clone the repository or unpack the manually downloaded ZIP
 - In a terminal, `cd` into the setup folder
 - Run `./install.sh` and follow the instructions
@@ -17,23 +17,31 @@
 ### Requirements / Dependencies
 - gcc and g++ (with multilib on 64-bit x86 operating systems)
 - libstdc++5
+- ffmpeg (optional, see `getSoundDuration` below)
 - MySQL client (optional, see `nomysql` below)
 - Speex 1.1.9 (optional, see `nospeex` below)
 
-**Base requirements installation (for 64-bit Ubuntu 24.04 LTS)**
+**Requirements installation for 64-bit Ubuntu 24.04 LTS**
 ```
 sudo dpkg --add-architecture i386
 sudo apt update
 sudo apt install gcc-multilib g++-multilib libstdc++5:i386
-```
 
-**MySQL requirements installation (for 64-bit Ubuntu 24.04 LTS)**
-```
+# Optional, for MySQL support:
 sudo apt install libmysqlclient-dev:i386
 ```
 
-**MySQL requirements installation (for 64-bit Debian 13)**
+**Requirements installation for 64-bit Debian 13 ("Trixie")**
 ```
+sudo dpkg --add-architecture i386
+sudo apt update
+sudo apt install gcc-multilib g++-multilib wget
+# Debian 13 and newer no longer provide libstdc++5 via apt
+wget http://ftp.debian.org/debian/pool/main/g/gcc-3.3/libstdc++5_3.3.6-32_i386.deb
+sudo dpkg -i libstdc++5_3.3.6-32_i386.deb
+rm libstdc++5_3.3.6-32_i386.deb
+
+# Optional, for MySQL support:
 sudo apt install libmariadb-dev-compat:i386
 ```
 
@@ -45,7 +53,7 @@ sudo apt install ffmpeg
 > If not installed, `getSoundDuration(<aliasname>)` always returns undefined.
 
 **Custom sound file docs (for 64-bit Ubuntu 24.04 LTS)**
-- [Speex installation](install_speex.md)
+- [Manual Speex installation](install_speex.md)
 - [Audio file conversion](convert_audio_files.md)
 > [!IMPORTANT]
 > Note: This feature is enabled by default and increases RAM usage by about 500 MB per server. See below for how to disable it (`nospeex`).
