@@ -1,0 +1,83 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>json_save_async( &lt;fs path&gt;, &lt;value&gt;, [&lt;pretty&gt;] )</H1>
+<HR>
+<BODY BGCOLOR='B0C4DE'>
+<I>
+Module: System<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Non-blocking variant of <code>json_save</code>. The cJSON tree is built from the GSC value on the main thread (this is fast for typical data; KB-scale finishes in microseconds). A detached worker thread then handles the slow parts (printing to text + writing to disk) and the call returns control to GSC immediately with a jobId.</p>
+<p>Poll <code>json_async_done()</code> for the jobId, then call <code>json_async_result(jobId)</code> to get a 1/0 success flag.</p>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+job = json_save_async("stats/match_log.json", level.matchLog, 1);
+// continue gameplay, don't block
+// ...
+done = json_async_done();
+for(i = 0; i &lt; done.size; i += 1)
+    if(done[i] == job)
+        ok = json_async_result(job); // 1 = written, 0 = error
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;fs path&gt; Path relative to the mod root. No absolute paths, no <code>..</code>, rejected at submit time.</LI>
+<LI>2 : &lt;value&gt; Any GSC value (struct, array, string, int, float, vec3).</LI>
+</UL></TR></TD></TABLE>
+<BR>
+<H2>Optional Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>3 : &lt;pretty&gt; <b>0</b> compact single-line (default), <b>1</b> indented multi-line.</LI>
+</UL></TR></TD></TABLE>
+<BR>
+<H2>Returns:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<H3>Integer jobId &gt;= 1 on successful submission, <b>0</b> on failure (invalid path, queue cap reached, value build error, thread create error).</H3>
+</TR></TD></TABLE>
+<BR>
+<H2>Notes:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>Workers use plain libc <code>fopen</code>/<code>fwrite</code> (not the engine FS; FS_* is not thread-safe). Files land under <code>fs_homepath/&lt;mod&gt;/</code>.</LI>
+<LI>The GSC value tree is materialized on the MAIN thread before submission, so any modifications made to the value after the call are not seen by the worker (snapshot semantics).</LI>
+<LI>Pending job cap: <code>scr_json_async_max_jobs</code> (default 64).</LI>
+<LI>Always call <code>json_async_result(jobId)</code> for every successfully submitted job, or the job struct leaks.</LI>
+</UL></TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>

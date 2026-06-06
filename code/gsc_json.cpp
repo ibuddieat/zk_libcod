@@ -576,3 +576,446 @@ void gsc_json_save()
 	stackPushInt(written > 0 ? 1 : 0);
 }
 
+// ===========================================================================
+// Asynchronous API
+// ===========================================================================
+// Off-loads the slow parts of json_load / json_save to a detached worker
+// thread, so big files don't hitch the main script VM. Mirrors the
+// poll-and-drain convention used by libcod's mysql_async family.
+//
+// Lifecycle:
+//   1. GSC calls  json_load_async(path)  or  json_save_async(path,value,[pretty])
+//      Returns an integer jobId (>= 1) immediately, or 0 if submission failed
+//      (bad path, too many in-flight jobs, thread create failure).
+//   2. C spawns a DETACHED pthread that does the heavy work:
+//        - load: fopen + fread + cJSON_Parse  (all in the worker)
+//        - save: cJSON_Print + fopen + fwrite (the cJSON tree is built on the
+//          main thread first, since reading GSC values needs the main VM —
+//          tree-walk is microseconds for typical data; printing and disk I/O
+//          are the slow parts and they happen in the worker).
+//   3. GSC periodically polls  json_async_done()  -> array of finished jobIds.
+//   4. For each finished id, GSC calls  json_async_result(id)  to claim the
+//      value (load) or 1/0 success flag (save). Claiming frees the job.
+//
+// Thread-safety: workers ONLY touch their own job struct (mutex-protected
+// status field) and heap data they own. They never touch GSC state. The
+// engine FS_* API is not thread-safe, so workers use plain libc fopen/fread/
+// fwrite against an absolute path resolved on the main thread using
+// fs_homepath/fs_game. Paths are sandboxed: must be relative, no ".." segments.
+//
+// Detached threads: workers are PTHREAD_CREATE_DETACHED so the OS reaps
+// them; we never pthread_join. State sync happens via the status field
+// under json_async_mutex.
+
+#define JSON_ASYNC_KIND_LOAD    0
+#define JSON_ASYNC_KIND_SAVE    1
+#define JSON_ASYNC_STATUS_PENDING 0
+#define JSON_ASYNC_STATUS_DONE    1
+#define JSON_ASYNC_STATUS_ERROR   2
+
+struct json_async_job
+{
+	int    id;
+	int    kind;       // KIND_LOAD or KIND_SAVE
+	int    status;     // STATUS_PENDING/DONE/ERROR  (mutex-guarded)
+	char  *abspath;    // resolved absolute path (owned)
+
+	// Load output (filled by worker):
+	cJSON *load_root;  // ownership transferred to caller on json_async_result
+
+	// Save input (built on main thread, consumed by worker):
+	cJSON *save_root;
+	int    save_pretty;
+	int    save_ok;    // 1 on successful write, 0 otherwise  (mutex-guarded)
+
+	struct json_async_job *next;
+};
+
+static pthread_mutex_t json_async_mutex   = PTHREAD_MUTEX_INITIALIZER;
+static json_async_job *json_async_jobs    = NULL;
+static int             json_async_next_id = 1;
+static int             json_async_pending = 0;
+
+// Build "<fs_homepath>/<fs_game-or-main>/<rel>" — main thread only.
+// Returns malloc'd string, or NULL if `rel` is empty / absolute / contains "..".
+static char * json_async_resolve_path(const char *rel)
+{
+	if ( rel == NULL || rel[0] == '\0' || rel[0] == '/' )
+		return NULL;
+	if ( strstr(rel, "..") != NULL )
+		return NULL;
+
+	dvar_t *fs_home = Dvar_FindVar("fs_homepath");
+	dvar_t *fs_game = Dvar_FindVar("fs_game");
+	if ( fs_home == NULL || fs_home->current.string == NULL || fs_home->current.string[0] == '\0' )
+		return NULL;
+
+	const char *home = fs_home->current.string;
+	const char *game = (fs_game != NULL && fs_game->current.string != NULL && fs_game->current.string[0] != '\0')
+		? fs_game->current.string : "main";
+
+	size_t need = strlen(home) + 1 + strlen(game) + 1 + strlen(rel) + 1;
+	char *abs = (char *)malloc(need);
+	if ( abs == NULL )
+		return NULL;
+	snprintf(abs, need, "%s/%s/%s", home, game, rel);
+	return abs;
+}
+
+// Free everything a job owns. Job must already be unlinked from the list.
+static void json_async_free_job(json_async_job *job)
+{
+	if ( job == NULL ) return;
+	if ( job->abspath  != NULL ) free(job->abspath);
+	if ( job->load_root != NULL ) cJSON_Delete(job->load_root);
+	if ( job->save_root != NULL ) cJSON_Delete(job->save_root);
+	free(job);
+}
+
+// Worker: read the file, parse it, store the cJSON tree.
+static void * json_async_load_worker(void *arg)
+{
+	json_async_job *job = (json_async_job *)arg;
+
+	FILE *f = fopen(job->abspath, "rb");
+	if ( f == NULL )
+	{
+		pthread_mutex_lock(&json_async_mutex);
+		job->status = JSON_ASYNC_STATUS_ERROR;
+		pthread_mutex_unlock(&json_async_mutex);
+		return NULL;
+	}
+
+	fseek(f, 0, SEEK_END);
+	long len = ftell(f);
+	fseek(f, 0, SEEK_SET);
+
+	// Defensive: refuse > 256 MB even in async path (saner upper bound).
+	if ( len <= 0 || len > 256L * 1024L * 1024L )
+	{
+		fclose(f);
+		pthread_mutex_lock(&json_async_mutex);
+		job->status = JSON_ASYNC_STATUS_ERROR;
+		pthread_mutex_unlock(&json_async_mutex);
+		return NULL;
+	}
+
+	char *buf = (char *)malloc((size_t)len + 1);
+	if ( buf == NULL )
+	{
+		fclose(f);
+		pthread_mutex_lock(&json_async_mutex);
+		job->status = JSON_ASYNC_STATUS_ERROR;
+		pthread_mutex_unlock(&json_async_mutex);
+		return NULL;
+	}
+
+	size_t got = fread(buf, 1, (size_t)len, f);
+	fclose(f);
+	if ( got > (size_t)len ) got = (size_t)len;
+	buf[got] = '\0';
+
+	cJSON *parsed = cJSON_Parse(buf);
+	free(buf);
+
+	pthread_mutex_lock(&json_async_mutex);
+	if ( parsed == NULL )
+	{
+		job->status = JSON_ASYNC_STATUS_ERROR;
+	}
+	else
+	{
+		job->load_root = parsed;
+		job->status   = JSON_ASYNC_STATUS_DONE;
+	}
+	pthread_mutex_unlock(&json_async_mutex);
+	return NULL;
+}
+
+// Worker: print the cJSON tree and write to disk.
+static void * json_async_save_worker(void *arg)
+{
+	json_async_job *job = (json_async_job *)arg;
+
+	char *text = job->save_pretty ? cJSON_Print(job->save_root) : cJSON_PrintUnformatted(job->save_root);
+	cJSON_Delete(job->save_root);
+	job->save_root = NULL;
+
+	if ( text == NULL )
+	{
+		pthread_mutex_lock(&json_async_mutex);
+		job->save_ok = 0;
+		job->status  = JSON_ASYNC_STATUS_DONE;
+		pthread_mutex_unlock(&json_async_mutex);
+		return NULL;
+	}
+
+	FILE *f = fopen(job->abspath, "wb");
+	if ( f == NULL )
+	{
+		free(text);
+		pthread_mutex_lock(&json_async_mutex);
+		job->save_ok = 0;
+		job->status  = JSON_ASYNC_STATUS_DONE;
+		pthread_mutex_unlock(&json_async_mutex);
+		return NULL;
+	}
+
+	size_t want    = strlen(text);
+	size_t written = fwrite(text, 1, want, f);
+	fclose(f);
+	free(text);
+
+	pthread_mutex_lock(&json_async_mutex);
+	job->save_ok = (written == want) ? 1 : 0;
+	job->status  = JSON_ASYNC_STATUS_DONE;
+	pthread_mutex_unlock(&json_async_mutex);
+	return NULL;
+}
+
+// Spawn the worker as a detached thread. Returns 1 on success, 0 on failure.
+// On failure the caller is expected to unlink + free the job immediately so
+// the submission can fail upfront (returning jobId 0 to GSC) rather than
+// surfacing through the poll/drain path.
+static int json_async_spawn(json_async_job *job, void *(*worker)(void *))
+{
+	pthread_t thread;
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+
+	int rc = pthread_create(&thread, &attr, worker, job);
+	pthread_attr_destroy(&attr);
+
+	return rc == 0 ? 1 : 0;
+}
+
+// Helper used by the *_async submit functions to unwind a job that was linked
+// into the global list but whose worker thread could not be created. Removes
+// the job from the head of the list (always head, since we prepended it the
+// instruction before, and GSC is single-threaded), decrements the pending
+// counter, and frees everything the job owned. Safe to call only when no
+// worker thread is running for this job.
+static void json_async_unlink_head_and_free(json_async_job *job)
+{
+	pthread_mutex_lock(&json_async_mutex);
+	if ( json_async_jobs == job )
+		json_async_jobs = job->next;
+	if ( json_async_pending > 0 )
+		json_async_pending--;
+	pthread_mutex_unlock(&json_async_mutex);
+	json_async_free_job(job);
+}
+
+// json_load_async(path) -> jobId   (0 on submission failure)
+void gsc_json_load_async()
+{
+	char *path;
+	if ( !stackGetParams("s", &path) )
+	{
+		stackError("gsc_json_load_async() requires a file path string");
+		stackPushInt(0);
+		return;
+	}
+
+	int maxJobs = dvar_int_or("scr_json_async_max_jobs", 64);
+	if ( json_async_pending >= maxJobs )
+	{
+		stackError("gsc_json_load_async() too many pending jobs (%d / %d)", json_async_pending, maxJobs);
+		stackPushInt(0);
+		return;
+	}
+
+	char *abs = json_async_resolve_path(path);
+	if ( abs == NULL )
+	{
+		stackError("gsc_json_load_async() invalid path '%s' (must be relative, no '..')", path);
+		stackPushInt(0);
+		return;
+	}
+
+	json_async_job *job = (json_async_job *)calloc(1, sizeof(json_async_job));
+	if ( job == NULL ) { free(abs); stackPushInt(0); return; }
+	job->kind    = JSON_ASYNC_KIND_LOAD;
+	job->status  = JSON_ASYNC_STATUS_PENDING;
+	job->abspath = abs;
+
+	pthread_mutex_lock(&json_async_mutex);
+	job->id   = json_async_next_id++;
+	job->next = json_async_jobs;
+	json_async_jobs = job;
+	json_async_pending++;
+	pthread_mutex_unlock(&json_async_mutex);
+
+	if ( !json_async_spawn(job, json_async_load_worker) )
+	{
+		stackError("gsc_json_load_async() failed to create worker thread");
+		json_async_unlink_head_and_free(job);
+		stackPushInt(0);
+		return;
+	}
+	stackPushInt(job->id);
+}
+
+// json_save_async(path, value, [pretty]) -> jobId   (0 on submission failure)
+void gsc_json_save_async()
+{
+	char *path;
+	if ( !stackGetParamString(0, &path) )
+	{
+		stackError("gsc_json_save_async() first argument must be a path string");
+		stackPushInt(0);
+		return;
+	}
+	if ( Scr_GetNumParam() < 2 )
+	{
+		stackError("gsc_json_save_async() requires a value to save");
+		stackPushInt(0);
+		return;
+	}
+	int pretty = 0;
+	if ( Scr_GetNumParam() > 2 )
+		pretty = Scr_GetInt(2);
+
+	int maxJobs = dvar_int_or("scr_json_async_max_jobs", 64);
+	if ( json_async_pending >= maxJobs )
+	{
+		stackError("gsc_json_save_async() too many pending jobs (%d / %d)", json_async_pending, maxJobs);
+		stackPushInt(0);
+		return;
+	}
+
+	char *abs = json_async_resolve_path(path);
+	if ( abs == NULL )
+	{
+		stackError("gsc_json_save_async() invalid path '%s' (must be relative, no '..')", path);
+		stackPushInt(0);
+		return;
+	}
+
+	// Build the cJSON tree on the MAIN thread (reading GSC state is single-
+	// threaded). Worker will print + write + free the tree.
+	cJSON *root = gsc_param_to_json(1);
+	if ( root == NULL )
+	{
+		free(abs);
+		stackPushInt(0);
+		return;
+	}
+
+	json_async_job *job = (json_async_job *)calloc(1, sizeof(json_async_job));
+	if ( job == NULL ) { free(abs); cJSON_Delete(root); stackPushInt(0); return; }
+	job->kind        = JSON_ASYNC_KIND_SAVE;
+	job->status      = JSON_ASYNC_STATUS_PENDING;
+	job->abspath     = abs;
+	job->save_root   = root;
+	job->save_pretty = pretty;
+
+	pthread_mutex_lock(&json_async_mutex);
+	job->id   = json_async_next_id++;
+	job->next = json_async_jobs;
+	json_async_jobs = job;
+	json_async_pending++;
+	pthread_mutex_unlock(&json_async_mutex);
+
+	if ( !json_async_spawn(job, json_async_save_worker) )
+	{
+		stackError("gsc_json_save_async() failed to create worker thread");
+		json_async_unlink_head_and_free(job);
+		stackPushInt(0);
+		return;
+	}
+	stackPushInt(job->id);
+}
+
+// json_async_done() -> int-indexed array of finished jobIds (may be empty)
+void gsc_json_async_done()
+{
+	stackPushArray();
+
+	pthread_mutex_lock(&json_async_mutex);
+	for ( json_async_job *j = json_async_jobs; j != NULL; j = j->next )
+	{
+		if ( j->status != JSON_ASYNC_STATUS_PENDING )
+		{
+			pthread_mutex_unlock(&json_async_mutex);
+			stackPushInt(j->id);
+			stackPushArrayLast();
+			pthread_mutex_lock(&json_async_mutex);
+		}
+	}
+	pthread_mutex_unlock(&json_async_mutex);
+}
+
+// json_async_result(jobId) -> value (load) | 1/0 (save) | undefined (bad id / still pending)
+// Successfully claiming a job (status != PENDING) UNLINKS and FREES it.
+void gsc_json_async_result()
+{
+	int jobId;
+	if ( !stackGetParams("i", &jobId) )
+	{
+		stackError("gsc_json_async_result() requires a job id (int)");
+		stackPushUndefined();
+		return;
+	}
+
+	pthread_mutex_lock(&json_async_mutex);
+
+	json_async_job *prev = NULL;
+	json_async_job *job  = json_async_jobs;
+	while ( job != NULL && job->id != jobId )
+	{
+		prev = job;
+		job  = job->next;
+	}
+
+	if ( job == NULL )
+	{
+		pthread_mutex_unlock(&json_async_mutex);
+		stackPushUndefined();   // unknown id
+		return;
+	}
+
+	if ( job->status == JSON_ASYNC_STATUS_PENDING )
+	{
+		pthread_mutex_unlock(&json_async_mutex);
+		stackPushUndefined();   // not finished yet — leave in list
+		return;
+	}
+
+	// Unlink + take ownership.
+	if ( prev != NULL ) prev->next = job->next;
+	else                json_async_jobs = job->next;
+	json_async_pending--;
+
+	int   kind   = job->kind;
+	int   status = job->status;
+	cJSON *root  = job->load_root;
+	int   sok    = job->save_ok;
+	job->load_root = NULL; // taken
+
+	pthread_mutex_unlock(&json_async_mutex);
+
+	// Push the return value while OUTSIDE the mutex (json_to_gsc_push may
+	// recurse and we don't want to hold the lock during that).
+	if ( kind == JSON_ASYNC_KIND_LOAD )
+	{
+		if ( status == JSON_ASYNC_STATUS_DONE && root != NULL )
+		{
+			json_to_gsc_push(root, 0);
+			cJSON_Delete(root);
+		}
+		else
+		{
+			stackPushUndefined();
+		}
+	}
+	else /* SAVE */
+	{
+		stackPushInt( (status == JSON_ASYNC_STATUS_DONE && sok) ? 1 : 0 );
+	}
+
+	json_async_free_job(job);
+}
+
+#endif

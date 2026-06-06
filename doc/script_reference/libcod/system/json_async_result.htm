@@ -1,0 +1,78 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>json_async_result( &lt;jobId&gt; )</H1>
+<HR>
+<BODY BGCOLOR='B0C4DE'>
+<I>
+Module: System<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Claims and frees a finished async job. For a <code>json_load_async</code> job: returns the parsed GSC value (or <b>undefined</b> if the worker errored). For a <code>json_save_async</code> job: returns <b>1</b> on a successful write, <b>0</b> otherwise.</p>
+<p>If the jobId is unknown, or the job is still pending, returns <b>undefined</b> and leaves the job in place; you can poll <code>json_async_done()</code> again.</p>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+loadJob = json_load_async("stats/big.json");
+// ... time passes, polling json_async_done() ...
+v = json_async_result(loadJob);
+if(isDefined(v))
+    iprintln("loaded " + v["records"].size + " records");
+else
+    iprintln("load failed");
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;jobId&gt; The integer returned by <code>json_load_async</code> or <code>json_save_async</code>.</LI>
+</UL></TR></TD></TABLE>
+<BR>
+<H2>Returns:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+For a load job: the parsed value (struct/array/string/number) on success, <b>undefined</b> on error.<br>
+For a save job: <b>1</b> on success, <b>0</b> on error.<br>
+For an unknown id or a still-pending job: <b>undefined</b> (the job is left in place; safe to retry later).
+</H3>
+</TR></TD></TABLE>
+<BR>
+<H2>Notes:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>A successful claim (status != PENDING) UNLINKS and FREES the job; calling again with the same id returns undefined.</LI>
+<LI>Always claim every jobId you got from <code>json_load_async</code> / <code>json_save_async</code> or the job leaks. Best practice is to drain inside a periodic polling loop.</LI>
+<LI>The GSC-value conversion (for load jobs) runs on the main thread when you call this; for very large parsed trees this is the unavoidable cost of getting the data into GSC, but it's still much faster than parsing + reading from disk.</LI>
+</UL></TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>
