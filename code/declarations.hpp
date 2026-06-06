@@ -738,6 +738,15 @@ typedef enum
 	VAR_COUNT
 } var_type_t;
 
+// Engine variable-system constants (from the reverse-engineered server,
+// Refrences/CoD2rev_Server/src/script/script_public.h). VAR_MASK extracts
+// the var_type_t from VariableValueInternal::w.type; variable names encode
+// the key kind via these thresholds: name < SL_MAX_STRING_INDEX is a string
+// key, name >= MAX_ARRAYINDEX is an integer index (= name - MAX_ARRAYINDEX).
+#define VAR_MASK            0x1F
+#define SL_MAX_STRING_INDEX 0x10000
+#define MAX_ARRAYINDEX      0x800000
+
 struct VariableStackBuffer
 {
 	const char *pos;

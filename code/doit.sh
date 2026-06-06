@@ -117,6 +117,13 @@ if grep -q "COMPILE_EXEC 1" config.hpp; then
 	$cc $debug $options $constants -c gsc_exec.cpp -o objects_$1/gsc_exec.opp
 fi
 
+if grep -q "COMPILE_JSON 1" config.hpp; then
+	echo "##### COMPILE $1 CJSON.C #####"
+	$cc $debug $options $constants -c lib/cJSON.c -o objects_$1/cjson.opp
+	echo "##### COMPILE $1 GSC_JSON.CPP #####"
+	$cc $debug $options $constants -c gsc_json.cpp -o objects_$1/gsc_json.opp
+fi
+
 if grep -q "COMPILE_LEVEL 1" config.hpp; then
 	echo "##### COMPILE $1 GSC_LEVEL.CPP #####"
 	$cc $debug $options $constants -c gsc_level.cpp -o objects_$1/gsc_level.opp
