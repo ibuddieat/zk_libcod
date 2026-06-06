@@ -1479,7 +1479,8 @@ LAB_0808ec36:
 			newcl->nextSnapshotTime = svs.time;
 			newcl->lastPacketTime = svs.time;
 			newcl->lastConnectTime = svs.time;
-
+			I_strncpyz(newcl->PBguid, PBguid, 33);
+			I_strncpyz(newcl->clientPBguid, clientPBguid, 33);
 			SV_UserinfoChanged(newcl);
 
 			svs.challenges[i].firstPing = 0;
