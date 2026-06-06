@@ -451,3 +451,128 @@ void gsc_json_stringify()
 	free(out);
 }
 
+void gsc_json_load()
+{
+	char *path;
+
+	if ( !stackGetParams("s", &path) )
+	{
+		stackError("gsc_json_load() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	JsonTimer _t("json_load", path);
+
+	fileHandle_t f;
+	int len = FS_FOpenFileByMode(path, &f, FS_READ);
+	if ( len <= 0 )
+	{
+		// File missing or empty: quiet undefined (no log spam for try-load).
+		stackPushUndefined();
+		return;
+	}
+
+	// Size guard: refuse pathologically large files outright (would block the
+	// main thread parsing). Use json_load_async for legitimately large data.
+	int maxBytes = dvar_int_or("scr_json_max_load_bytes", 8 * 1024 * 1024);
+	if ( maxBytes > 0 && len > maxBytes )
+	{
+		FS_FCloseFile(f);
+		stackError("gsc_json_load() refusing '%s' (%d bytes > scr_json_max_load_bytes %d) - use json_load_async", path, len, maxBytes);
+		stackPushUndefined();
+		return;
+	}
+
+	char *buffer = (char *)malloc(len + 1);
+	if ( buffer == NULL )
+	{
+		FS_FCloseFile(f);
+		stackPushUndefined();
+		return;
+	}
+
+	// Null-terminate at the ACTUAL read length, not the open-time length, so a
+	// short read (disk error / file truncated between open and read) doesn't
+	// leave uninitialized bytes for cJSON_Parse to scan past the data.
+	int bytesRead = FS_Read(buffer, len, f);
+	FS_FCloseFile(f);
+	if ( bytesRead < 0 )
+		bytesRead = 0;
+	if ( bytesRead > len )
+		bytesRead = len;
+	buffer[bytesRead] = '\0';
+
+	cJSON *root = cJSON_Parse(buffer);
+	free(buffer);
+
+	if ( root == NULL )
+	{
+		stackError("gsc_json_load() failed to parse JSON from '%s'", path);
+		stackPushUndefined();
+		return;
+	}
+
+	json_to_gsc_push(root, 0);
+	cJSON_Delete(root);
+}
+
+void gsc_json_save()
+{
+	char *path;
+
+	if ( !stackGetParamString(0, &path) )
+	{
+		stackError("gsc_json_save() first argument must be a file path string");
+		stackPushInt(0);
+		return;
+	}
+
+	if ( Scr_GetNumParam() < 2 )
+	{
+		stackError("gsc_json_save() requires a value to save");
+		stackPushInt(0);
+		return;
+	}
+
+	int pretty = 0;
+	if ( Scr_GetNumParam() > 2 )
+		pretty = Scr_GetInt(2);
+
+	JsonTimer _t("json_save", path);
+	cJSON *root = gsc_param_to_json(1);
+	if ( root == NULL )
+	{
+		stackPushInt(0);
+		return;
+	}
+
+	char *out;
+	if ( pretty )
+		out = cJSON_Print(root);
+	else
+		out = cJSON_PrintUnformatted(root);
+	cJSON_Delete(root);
+
+	if ( out == NULL )
+	{
+		stackPushInt(0);
+		return;
+	}
+
+	fileHandle_t f = FS_FOpenFileWrite(path);
+	if ( f == 0 )
+	{
+		free(out);
+		stackError("gsc_json_save() could not open '%s' for writing", path);
+		stackPushInt(0);
+		return;
+	}
+
+	int written = FS_Write(out, strlen(out), f);
+	FS_FCloseFile(f);
+	free(out);
+
+	stackPushInt(written > 0 ? 1 : 0);
+}
+

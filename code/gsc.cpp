@@ -167,6 +167,8 @@ scr_function_t scriptFunctions[] =
 	#if COMPILE_JSON == 1
 	{"json_parse", gsc_json_parse, 0},
 	{"json_stringify", gsc_json_stringify, 0},
+	{"json_load", gsc_json_load, 0},
+	{"json_save", gsc_json_save, 0},
 	#endif
 
 	#if COMPILE_LEVEL == 1

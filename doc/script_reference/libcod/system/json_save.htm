@@ -1,0 +1,79 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>json_save( &lt;fs path&gt;, &lt;value&gt;, [&lt;pretty&gt;] )</H1>
+<HR>
+<BODY BGCOLOR='B0C4DE'>
+<I>
+Module: System<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Serializes a GSC value to JSON and writes it to the engine filesystem under <b>fs_homepath/&lt;mod&gt;/</b>. <b>pretty</b> = 1 produces indented multi-line JSON; default 0 is compact. Intermediate directories in the path are created by the engine if missing. Returns 1 on success, 0 on failure.</p>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+stats = [];
+stats["Alice"] = makeStat(42, 17);
+stats["Bob"]   = makeStat(11, 30);
+ok = json_save("stats/players.json", stats, 1);
+if(!ok)
+    logPrintConsole("could not write players.json\n");
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;fs path&gt; Destination path relative to the mod root (fs_homepath/fs_game).</LI>
+<LI>2 : &lt;value&gt; Any GSC value to serialize (struct, array, string, int, float, vec3).</LI>
+</UL></TR></TD></TABLE>
+<BR>
+<H2>Optional Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>3 : &lt;pretty&gt; <b>0</b> = compact single-line (default), <b>1</b> = indented multi-line.</LI>
+</UL></TR></TD></TABLE>
+<BR>
+<H2>Returns:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<H3><b>1</b> on a successful write, <b>0</b> on any failure (open / write error, allocation failure). On open failure, a stackError is also logged.</H3>
+</TR></TD></TABLE>
+<BR>
+<H2>Notes:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>Writes through the engine FS, so the file always lands inside the mod's fs_homepath sandbox.</LI>
+<LI>Synchronous, blocks the script thread until the file is fully written. Keep individual files modest.</LI>
+</UL></TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>
