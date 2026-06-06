@@ -4358,8 +4358,21 @@ struct leakyBucket_s
 
 typedef struct
 {
+	qboolean valid;
+	char infoResponse[MAX_INFO_STRING];
+	int infoResponseLen;
+	char statusResponse[BIG_INFO_STRING];
+	int statusResponseLen;
+	uint64_t lastUpdate;
+} proxyQueryCache_t;
+
+typedef struct
+{
 	int socket;
 	pthread_t thread;
+	uint64_t identifier;
+    struct sockaddr_in clientAddr;
+    volatile uint32_t generation;
 } proxyClientThreadInfo;
 
 typedef struct
@@ -4370,7 +4383,12 @@ typedef struct
 	netadr_t forwardAdr;
 	pthread_mutex_t lock;
 	pthread_t mainThread;
-	pthread_t *masterServerThread;
+	pthread_t masterServerThread;
+	qboolean masterServerThreadStarted;
+	pthread_t queryCacheThread;
+	qboolean queryCacheThreadStarted;
+	pthread_mutex_t queryCacheLock;
+	proxyQueryCache_t queryCache;
 	proxyClientThreadInfo clientThreadInfo[MAX_PROXY_CLIENT_THREADS];
 	int numClients;
 	int parentVersion;
@@ -4389,6 +4407,8 @@ typedef struct
 	int clientIndex;
 	proxy_t *proxy;
 	int socket;
+	uint32_t generation;
+	netadr_t forwardAdr;
 } proxyClientThreadArgs;
 
 typedef enum

@@ -347,6 +347,12 @@
     * Type: String
     * Default: "`[net_ip]:[net_port]`"
     * Effect: Destination hostname and port the proxy socket for game version 1.3 (protocol 119) should forward packets to (see `sv_proxyAddress_1_3_119` dvar).
+  * `sv_proxyQueryCacheRefreshTime`
+    * Type: Integer
+    * Default: 1000
+    * Min. Value: 100
+    * Max. Value: 60000
+    * Effect: Defines the time in ms after which the proxy server status cache is refreshed. For example, a value of 1000 means that the data returned in `getinfo` and `getstatus` responses is no older than 1 second. Applies to all proxy servers. The main server port still always returns realtime data.
   * `sv_proxyTimeout`
     * Type: Integer
     * Default: 240
