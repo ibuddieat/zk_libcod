@@ -205,6 +205,10 @@
     * Type: Boolean
     * Default: False
     * Effect: Toggle whether bots should be notified when triggers of type trigger_use or trigger_use_touch are nearby (i.e., when the hint string appears). Once available, the bot entity will be notified with a "bot_trigger" notify where the trigger entity is the first and only argument.
+  * `sv_cod2x_require_hwid`
+    * Type: Boolean
+    * Default: False
+    * Effect: When true, only genuine CoD2x clients may connect, mirroring CoD2x's own server-side check: the client must present a CoD2x protocol version (`protocol_cod2x` userinfo key) and a well-formed 32-character hex `cl_hwid2`. Stock / 1.x and non-CoD2x clients are rejected. Bots and local/listen-server connections are exempt. Related methods: `getHWID()`, `getHWID2()`, `getCod2xProtocol()`.
   * `sv_disconnectMessages`
     * Type: Boolean
     * Default: True

@@ -67,6 +67,12 @@ void gsc_player_getspectatorclient(scr_entref_t ref);
 void gsc_player_getspeed(scr_entref_t ref);
 void gsc_player_getstance(scr_entref_t ref);
 void gsc_player_getuserinfo(scr_entref_t ref);
+#if COMPILE_HWID == 1
+qboolean cod2x_hwid2_is_valid(const char *hwid2);
+void gsc_player_gethwid(scr_entref_t ref);
+void gsc_player_gethwid2(scr_entref_t ref);
+void gsc_player_getcod2xprotocol(scr_entref_t ref);
+#endif
 void gsc_player_getvelocity(scr_entref_t ref);
 void gsc_player_getvieworigin(scr_entref_t ref);
 void gsc_player_getweaponanimation(scr_entref_t ref);

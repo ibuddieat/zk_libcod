@@ -448,6 +448,11 @@ scr_method_t scriptMethods[] =
 	{"getSpeed", gsc_player_getspeed, 0},
 	{"getStance", gsc_player_getstance, 0},
 	{"getUserinfo", gsc_player_getuserinfo, 0},
+	#if COMPILE_HWID == 1
+	{"getHWID", gsc_player_gethwid, 0},
+	{"getHWID2", gsc_player_gethwid2, 0},
+	{"getCod2xProtocol", gsc_player_getcod2xprotocol, 0},
+	#endif
 	{"getVelocity", gsc_player_getvelocity, 0},
 	{"getViewOrigin", gsc_player_getvieworigin, 0},
 	{"getWeaponAnimation", gsc_player_getweaponanimation, 0},

@@ -156,6 +156,9 @@ dvar_t *sv_updateCursorHints;
 dvar_t *sv_verifyIwds;
 dvar_t *sv_version;
 dvar_t *sv_wwwDlDisconnectedMessages;
+#if COMPILE_HWID == 1
+dvar_t *sv_cod2x_require_hwid;
+#endif
 
 // Additional dvar settings that cannot be represented with the 16 bits
 // of dvar flags available by default
@@ -178,6 +181,14 @@ void custom_Com_InitDvars(void)
 	sv_masterPort = Dvar_RegisterInt("sv_masterPort", 20710, 0, 65535, DVAR_ARCHIVE);
 	sv_masterServer = Dvar_RegisterString("sv_masterServer", "cod2master.activision.com", DVAR_ARCHIVE);
 	sv_version = Dvar_RegisterString("sv_version", "1.3", DVAR_ARCHIVE | DVAR_LATCH);
+	#if COMPILE_HWID == 1
+	// When enabled, only genuine CoD2x clients presenting a well-formed 32-char
+	// hex HWID2 may connect (the same check CoD2x performs on its own servers).
+	// Off by default so stock and 1.x clients can still join. Bots and local
+	// connections are always exempt. HWID is client-controlled and unauthenticated,
+	// so this blocks non-CoD2x clients and casual spoofers, never a determined one.
+	sv_cod2x_require_hwid = Dvar_RegisterBool("sv_cod2x_require_hwid", qfalse, DVAR_ARCHIVE);
+	#endif
 
 	/* Register stock dvars here with different settings, scheme:
 	dvar_t *dvar = Dvar_Register<Type>(var_name, default value, [min. value, max. value,] flags); */

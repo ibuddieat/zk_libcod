@@ -51,9 +51,12 @@
   * `<player> getCollisionTeam()`
   * `<player> getCurrentWeaponAmmo()`
   * `<player> getCurrentWeaponClipAmmo()`
+  * `<player> getCod2xProtocol()`
   * `<player> getCurrentWeaponSlot()`
   * `<player> getEnterTime()`
   * `<player> getGroundEntity()`
+  * `<player> getHWID()`
+  * `<player> getHWID2()`
   * `<player> getInactivityTime()`
   * `<player> getNumberOfEntsInSnapshot()`
   * `<player> getPlayerstateFlags()`
@@ -171,6 +174,10 @@
   * `setSavePersist(<save persistent>)`
   * `setWeaponRaiseTime(<weapon name>, <raise time>)`
   * `toHex(<number>)`
+  * `httpFetch(<url>, <method>, <data>, <headers>, <timeout ms>, <onDone>, <onError>)` (ported from CoD2x; `onDone(status, body, headers)`, `onError(error)`)
+  * `webSocketConnect(<url>, <headers>, <onConnect>, <onMessage>, <onClose>, <onError>, [<reconnectDelayMs>], [<pingIntervalMs>])` (ported from CoD2x; returns connection id or -1)
+  * `webSocketSendText(<connectionId>, <message>)` (ported from CoD2x)
+  * `webSocketClose(<connectionId>)` (ported from CoD2x)
 
 🔀 New script code callback functions:
   * `CodeCallback_EntityEvent`

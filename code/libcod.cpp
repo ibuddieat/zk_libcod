@@ -1,6 +1,8 @@
 #include "dvar.hpp"
 #include "gsc.hpp"
 #include "gsc_entity.hpp"
+#include "gsc_http.hpp"
+#include "gsc_websocket.hpp"
 #include "libcod.hpp"
 #include "proxy/proxy.h"
 #include "ratelimiter.hpp"
@@ -165,6 +167,9 @@ extern dvar_t *sv_updateCursorHints;
 extern dvar_t *sv_verifyIwds;
 extern dvar_t *sv_version;
 extern dvar_t *sv_wwwDlDisconnectedMessages;
+#if COMPILE_HWID == 1
+extern dvar_t *sv_cod2x_require_hwid;
+#endif
 
 cHook *hook_AddOpcodePos;
 cHook *hook_BG_PlayAnim;
@@ -1248,6 +1253,12 @@ void custom_Sys_Quit(void)
 	// Any proxy threads to cleanup?
 	SV_ShutdownProxies();
 
+	// Drain and release HTTP/WebSocket clients (per-frame poll no longer runs here)
+	#if COMPILE_HTTP == 1
+	gsc_http_shutdown();
+	gsc_websocket_shutdown();
+	#endif
+
 	// Continue exit routines
 	hook_Sys_Quit->unhook();
 	void (*Sys_Quit)(void);
@@ -1303,6 +1314,40 @@ void custom_SV_DirectConnect(netadr_t from)
 		Com_DPrintf("    rejected connect from protocol version %i (should be between %i and %i)\n", version, 115, 119);
 		return;
 	}
+
+	/* New code start: Optional CoD2x client gate. When sv_cod2x_require_hwid is
+	 enabled, only genuine CoD2x clients presenting a well-formed HWID2 may
+	 connect, mirroring CoD2x's own server-side check (src/shared/server.cpp).
+	 This ensures a CoD2x identity (protocol_cod2x + cl_hwid2) is actually
+	 present before scripts rely on it; bots and local/listen-server connections
+	 are exempt. Note the HWID itself stays client-controlled and unauthenticated
+	 (no authority can validate it — see doc/security_features.md), so this stops
+	 non-CoD2x and casual spoofers, not a determined attacker forging a CoD2x
+	 client's HWID. It is a best-effort identity gate, not authentication. */
+	#if COMPILE_HWID == 1
+	if ( sv_cod2x_require_hwid->current.boolean && from.type != NA_BOT && !NET_IsLocalAddress(from) )
+	{
+		int cod2xProtocol = atoi(Info_ValueForKey(userinfo, "protocol_cod2x"));
+		const char *hwid2 = Info_ValueForKey(userinfo, "cl_hwid2");
+
+		// Not a CoD2x client (stock 1.x sends no protocol_cod2x key).
+		if ( cod2xProtocol == 0 )
+		{
+			NET_OutOfBandPrint(NS_SERVER, from, "error\n\x15This server requires the CoD2x client.\nDownload it at https://cod2x.me");
+			Com_DPrintf("    rejected connect: not a CoD2x client (sv_cod2x_require_hwid)\n");
+			return;
+		}
+
+		// HWID2 must be a well-formed 32-char hex string.
+		if ( !cod2x_hwid2_is_valid(hwid2) )
+		{
+			NET_OutOfBandPrint(NS_SERVER, from, "error\n\x15Your client did not provide a valid HWID.");
+			Com_DPrintf("    rejected connect: invalid or missing HWID2 (sv_cod2x_require_hwid)\n");
+			return;
+		}
+	}
+	#endif
+	/* New code end */
 
 	challenge = atoi(Info_ValueForKey(userinfo, "challenge"));
 	qport = atoi(Info_ValueForKey(userinfo, "qport"));

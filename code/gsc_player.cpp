@@ -1153,6 +1153,97 @@ void gsc_player_getuserinfo(scr_entref_t ref)
 		stackPushString("");
 }
 
+#if COMPILE_HWID == 1
+/*
+ * CoD2x HWID helpers.
+ *
+ * A CoD2x client reports its hardware id in two userinfo dvars: cl_hwid2 (a
+ * 32-char hex MD5) and cl_hwid (a 32-bit integer). Both are client-controlled
+ * and carry no cryptographic authority — a modified client can send any value
+ * (see doc/security_features.md). getHWID()/getHWID2() expose them as the
+ * client reports them; the connect gate only validates the HWID2 format below.
+ */
+
+// True only for an exactly-32-character hex string (lower or upper case).
+qboolean cod2x_hwid2_is_valid(const char *hwid2)
+{
+	int i;
+
+	if ( !hwid2 || strlen(hwid2) != 32 )
+		return qfalse;
+
+	for ( i = 0; i < 32; i++ )
+	{
+		char c = hwid2[i];
+		if ( !( (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F') ) )
+			return qfalse;
+	}
+	return qtrue;
+}
+
+/*
+ * getHWID() - the 32-bit integer hardware id a CoD2x client reports in its
+ * cl_hwid userinfo dvar (the same value the player sees as `cl_hwid` in their
+ * own console). Returns 0 for stock / 1.x clients and bots, which send no
+ * cl_hwid. Like cl_hwid2 this is client-supplied and unauthenticated — a
+ * best-effort identity signal only, never a trust anchor
+ * (see doc/security_features.md).
+ */
+void gsc_player_gethwid(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_gethwid() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	client_t *client = &svs.clients[id];
+	stackPushInt(atoi(Info_ValueForKey(client->userinfo, "cl_hwid")));
+}
+
+/*
+ * getHWID2() - the 32-char hex hardware id (MD5) reported by a CoD2x client.
+ * Same trust caveats as getHWID(). Empty for stock/1.x clients and bots.
+ */
+void gsc_player_gethwid2(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_gethwid2() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	client_t *client = &svs.clients[id];
+	stackPushString(Info_ValueForKey(client->userinfo, "cl_hwid2"));
+}
+
+/*
+ * getCod2xProtocol() - the CoD2x version a client advertises via the
+ * protocol_cod2x userinfo key. Returns 0 for non-CoD2x clients (stock, 1.0)
+ * and bots. Useful to gate logic on "is this a CoD2x client".
+ */
+void gsc_player_getcod2xprotocol(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_getcod2xprotocol() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	client_t *client = &svs.clients[id];
+	stackPushInt(atoi(Info_ValueForKey(client->userinfo, "protocol_cod2x")));
+}
+#endif
+
 void gsc_player_setuserinfo(scr_entref_t ref)
 {
 	int id = ref.entnum;

@@ -17,6 +17,9 @@
 // HTTP/WebSocket client (ported from CoD2x, uses vendored Mongoose + OpenSSL)
 #define COMPILE_HTTP 1
 
+// CoD2x HWID readers + optional connect-time gate (sv_cod2x_require_hwid)
+#define COMPILE_HWID 1
+
 #if ENABLE_UNSAFE == 1
 #define COMPILE_EXEC 1
 #define COMPILE_MEMORY 1
