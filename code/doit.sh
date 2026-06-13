@@ -152,6 +152,27 @@ if grep -q "COMPILE_WEAPONS 1" config.hpp; then
 	$cc $debug $options $constants -c gsc_weapons.cpp -o objects_$1/gsc_weapons.opp
 fi
 
+if grep -q "COMPILE_HTTP 1" config.hpp; then
+	# Mongoose needs OpenSSL TLS and no POSIX filesystem layer
+	mongoose_defines="-DMG_TLS=MG_TLS_OPENSSL -DMG_ENABLE_POSIX_FS=0"
+	# Statically link OpenSSL so the .so carries no runtime libssl.so.3 dependency.
+	# This keeps it loadable in server containers that lack 32-bit OpenSSL.
+	# Uses -l:lib*.a to make only OpenSSL static while pthread/dl stay dynamic.
+	http_link="-l:libssl.a -l:libcrypto.a"
+
+	echo "##### COMPILE $1 MONGOOSE.C #####"
+	$cc $debug $options $constants $mongoose_defines -c mongoose/mongoose.c -o objects_$1/mongoose.opp
+
+	echo "##### COMPILE $1 GSC_HTTP.CPP #####"
+	$cc $debug $options $constants $mongoose_defines -c gsc_http.cpp -o objects_$1/gsc_http.opp
+
+	echo "##### COMPILE $1 GSC_WEBSOCKET.CPP #####"
+	$cc $debug $options $constants $mongoose_defines -c gsc_websocket.cpp -o objects_$1/gsc_websocket.opp
+
+	echo "##### COMPILE $1 GSC_EXTRA.CPP #####"
+	$cc $debug $options $constants -c gsc_extra.cpp -o objects_$1/gsc_extra.opp
+fi
+
 if [ "$(< config.hpp grep '#define COMPILE_BSP' | grep -o '[0-9]')" == "1" ]; then
 	echo "##### COMPILE $1 BSP.CPP #####"
 	$cc $debug $options $constants -c bsp.cpp -o objects_"$1"/bsp.opp
@@ -196,7 +217,7 @@ fi
 
 echo "##### LINKING lib$1.so #####"
 objects="$(ls objects_$1/*.opp)"
-$cc -m32 -shared -L/lib32 -o bin/lib$1.so -ldl $objects -lpthread $mysql_link $speex_link
+$cc -m32 -shared -L/lib32 -o bin/lib$1.so -ldl $objects -lpthread $mysql_link $speex_link $http_link
 rm objects_$1 -r
 
 if [ mysql_variant > 0 ]; then

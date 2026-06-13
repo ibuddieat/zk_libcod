@@ -1,0 +1,76 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>webSocketConnect( &lt;url&gt;, &lt;headers&gt;, &lt;onConnect&gt;, &lt;onMessage&gt;, &lt;onClose&gt;, &lt;onError&gt;, [&lt;reconnectMs&gt;], [&lt;pingMs&gt;] )</H1>
+<HR>
+<BODY BGCOLOR='B0C4DE'>
+<I>
+Module: WebSocket<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Opens a WebSocket connection to a ws:// or wss:// URL and returns the connection id (0 or greater), or -1 if no slot is free or an argument is invalid. Up to 16 connections can be open at once. The connection is driven on the main thread, so the callbacks run on the server thread and may safely use the script engine.</p>
+<p>The &lt;onConnect&gt; callback is called once the handshake completes. &lt;onMessage&gt; is called for every text frame received, with the message as its argument. &lt;onClose&gt; is called when the connection closes, with two booleans (closed by remote, fully disconnected). &lt;onError&gt; is called with a message on any error. By default the connection reconnects automatically after a drop and sends periodic pings to keep itself alive; pass a reconnect delay of 0 to connect only once and a ping interval of 0 to disable pings.</p>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+id = webSocketConnect("wss://example.com/ws", "", ::onConnect, ::onMessage, ::onClose, ::onError);
+
+onConnect()
+{
+    webSocketSendText(level.wsId, "hello");
+}
+
+onMessage(message)
+{
+    logPrintConsole("ws: " + message + "\n");
+}
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;url&gt; Target URL, ws:// or wss://</LI>
+<LI>2 : &lt;headers&gt; Extra handshake headers separated by \r\n, or an empty string for none</LI>
+<LI>3 : &lt;onConnect&gt; Script callback called once connected, no arguments</LI>
+<LI>4 : &lt;onMessage&gt; Script callback called per text frame, with (message)</LI>
+<LI>5 : &lt;onClose&gt; Script callback called on close, with (closedByRemote, fullyDisconnected)</LI>
+<LI>6 : &lt;onError&gt; Script callback called on error, with (error)</LI>
+</UL></TR></TD></TABLE>
+<BR>
+<H2>Optional Args</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;reconnectMs&gt; Delay in milliseconds before reconnecting after a drop. Default 2000. 0 disables auto-reconnect</LI>
+<LI>2 : &lt;pingMs&gt; Interval in milliseconds between keepalive pings. Default 15000. 0 disables pings</LI>
+</UL></TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>

@@ -13,6 +13,10 @@
 #define COMPILE_PLAYER 1
 #define COMPILE_UTILS 1
 #define COMPILE_WEAPONS 1
+
+// HTTP/WebSocket client (ported from CoD2x, uses vendored Mongoose + OpenSSL)
+#define COMPILE_HTTP 1
+
 #if ENABLE_UNSAFE == 1
 #define COMPILE_EXEC 1
 #define COMPILE_MEMORY 1

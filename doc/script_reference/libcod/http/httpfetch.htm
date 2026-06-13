@@ -1,0 +1,69 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>httpFetch( &lt;url&gt;, &lt;method&gt;, &lt;data&gt;, &lt;headers&gt;, &lt;timeout&gt;, &lt;onDone&gt;, &lt;onError&gt; )</H1>
+<HR>
+<BODY BGCOLOR='B0C4DE'>
+<I>
+Module: Http<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Sends an HTTP or HTTPS request and returns once the response arrives, without blocking the server. The connection is closed after the response is received. The request is driven on the main thread, so the callbacks run on the server thread and may safely use the script engine. Multiple requests can be in flight at the same time.</p>
+<p>On completion the &lt;onDone&gt; callback is called with the status code, the response body and an array of response headers (keyed by header name). If the request fails (invalid URL, connection error, timeout) the &lt;onError&gt; callback is called with a descriptive message instead. Either callback may be passed as an undefined function to be ignored.</p>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+httpFetch("https://example.com/api", "POST", "{\"a\":1}", "Content-Type: application/json", 8000, ::onDone, ::onError);
+
+onDone(status, body, headers)
+{
+    logPrintConsole("HTTP " + status + ": " + body + "\n");
+}
+
+onError(error)
+{
+    logPrintConsole("HTTP error: " + error + "\n");
+}
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;url&gt; Target URL, http:// or https://</LI>
+<LI>2 : &lt;method&gt; HTTP method, e.g. "GET" or "POST"</LI>
+<LI>3 : &lt;data&gt; Request body, or an empty string for none</LI>
+<LI>4 : &lt;headers&gt; Extra request headers separated by \r\n, or an empty string for none</LI>
+<LI>5 : &lt;timeout&gt; Overall request timeout in milliseconds</LI>
+<LI>6 : &lt;onDone&gt; Script callback called on success with (status, body, headers)</LI>
+<LI>7 : &lt;onError&gt; Script callback called on failure with (error)</LI>
+</UL></TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>
