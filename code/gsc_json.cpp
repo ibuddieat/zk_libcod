@@ -34,6 +34,12 @@
 
 #define JSON_MAX_DEPTH 64
 
+// The engine's script string allocator (MT_AllocIndex / MEMORY_NODE_COUNT) caps a
+// single string at 64 KB; handing it a larger one triggers Scr_TerminalError and
+// drops the server. Guard every string we push to the VM (parsed values and the
+// stringify result) under that ceiling. File writes (json_save) are unaffected.
+#define JSON_MAX_STRING 65000
+
 // ===========================================================================
 // Production hardening helpers
 // ===========================================================================
@@ -137,7 +143,15 @@ static void json_to_gsc_push(cJSON *node, int depth)
 
 	if ( cJSON_IsString(node) )
 	{
-		stackPushString(node->valuestring ? node->valuestring : "");
+		const char *s = node->valuestring ? node->valuestring : "";
+		if ( strlen(s) >= JSON_MAX_STRING )
+		{
+			// Pushing a >64 KB string would terminate the VM; drop to undefined.
+			Com_Printf("[JSON] WARN: string value >= %d bytes replaced with undefined\n", JSON_MAX_STRING);
+			stackPushUndefined();
+		}
+		else
+			stackPushString(s);
 		return;
 	}
 
@@ -159,7 +173,14 @@ static void json_to_gsc_push(cJSON *node, int depth)
 		{
 			json_to_gsc_push(c, depth + 1);
 			if ( c->string )
-				Scr_AddArrayStringIndexed(SL_GetString(c->string, 0));
+			{
+				// Scr_AddArrayStringIndexed adds the array's own ref to the key,
+				// so release the temporary ref SL_GetString handed us - otherwise
+				// every object key leaks one string-table slot.
+				unsigned int k = SL_GetString(c->string, 0);
+				Scr_AddArrayStringIndexed(k);
+				SL_RemoveRefToString(k);
+			}
 			else
 				stackPushArrayLast();
 		}
@@ -249,23 +270,36 @@ static cJSON * gsc_object_to_json(unsigned int objectId, int depth)
 	if ( depth > JSON_MAX_DEPTH || objectId == 0 )
 		return cJSON_CreateNull();
 
-	unsigned int size = GetArraySize(objectId);
-	if ( size == 0 )
+	// Count entries by walking the sibling ring - size-independent. GetArraySize
+	// only maintains a count for VAR_ARRAY; a VAR_OBJECT struct (spawnstruct,
+	// level, self) leaves u.o.u.size uninitialized, so we never trust it and walk
+	// to the ring terminator instead. The 0x10000 cap (max string-table entries)
+	// guards a malformed ring. This makes struct serialization correct too.
+	unsigned int total = 0;
+	unsigned int it = objectId;
+	while ( total < 0x10000 )
+	{
+		it = FindNextSibling(it);
+		if ( it == 0 )
+			break;
+		total++;
+	}
+	if ( total == 0 )
 		return cJSON_CreateObject(); // empty -> {} (documented limitation)
 
-	json_kv *items = (json_kv *)malloc(sizeof(json_kv) * size);
+	json_kv *items = (json_kv *)malloc(sizeof(json_kv) * total);
 	if ( items == NULL )
 		return cJSON_CreateNull(); // OOM (practically unreachable at GSC limits)
 
 	unsigned int count = 0;
 	bool hasStringKey = false;
-	unsigned int it = objectId;
+	it = objectId;
 
-	for ( unsigned int i = 0; i < size; i++ )
+	for ( unsigned int i = 0; i < total; i++ )
 	{
 		it = FindNextSibling(it);
 		if ( it == 0 )
-			break; // engine returned fewer siblings than GetArraySize claimed
+			break;
 
 		unsigned int name = GetVariableName(it);
 
@@ -332,7 +366,15 @@ static cJSON * gsc_param_to_json(int param)
 {
 	unsigned int objectId;
 	if ( stackGetParamObject(param, &objectId) )
-		return gsc_object_to_json(objectId, 0);
+	{
+		// stackGetParamObject also accepts entities/threads (all stored as a
+		// pointer on the stack). Only arrays and structs have a JSON form; walking
+		// an entity reads a bogus size and emits garbage, so gate the type here.
+		int t = Scr_GetPointerType(param);
+		if ( t == VAR_ARRAY || t == VAR_STRUCT )
+			return gsc_object_to_json(objectId, 0);
+		return cJSON_CreateNull();
+	}
 
 	switch ( stackGetParamType(param) )
 	{
@@ -447,6 +489,14 @@ void gsc_json_stringify()
 		return;
 	}
 
+	if ( strlen(out) >= JSON_MAX_STRING )
+	{
+		stackError("gsc_json_stringify() result (%u bytes) exceeds the engine %d-byte string limit - use json_save", (unsigned)strlen(out), JSON_MAX_STRING);
+		free(out);
+		stackPushUndefined();
+		return;
+	}
+
 	stackPushString(out);
 	free(out);
 }
@@ -469,6 +519,10 @@ void gsc_json_load()
 	if ( len <= 0 )
 	{
 		// File missing or empty: quiet undefined (no log spam for try-load).
+		// A missing file leaves f == 0, but an existing 0-byte file still has an
+		// open handle (only ~50 exist engine-wide) - close it so we don't leak.
+		if ( f != 0 )
+			FS_FCloseFile(f);
 		stackPushUndefined();
 		return;
 	}
