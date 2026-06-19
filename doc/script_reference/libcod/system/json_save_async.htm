@@ -27,7 +27,7 @@ Module: System<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Non-blocking variant of <code>json_save</code>. The cJSON tree is built from the GSC value on the main thread (this is fast for typical data; KB-scale finishes in microseconds). A detached worker thread then handles the slow parts (printing to text + writing to disk) and the call returns control to GSC immediately with a jobId.</p>
+<p>Non-blocking variant of <code>json_save</code>. The yyjson mutable doc is built from the GSC value on the main thread (this is fast for typical data; KB-scale finishes in microseconds). A detached worker thread then handles the slow parts (printing to text + writing to disk) and the call returns control to GSC immediately with a jobId.</p>
 <p>Poll <code>json_async_done()</code> for the jobId, then call <code>json_async_result(jobId)</code> to get a 1/0 success flag.</p>
 </H3>
 </TR></TD></TABLE>
