@@ -37,6 +37,9 @@
 
 #include <climits>
 #include <pthread.h>
+#include <sys/stat.h>
+#include <errno.h>
+#include <string.h>
 
 #define JSON_MAX_DEPTH 64
 
@@ -911,6 +914,45 @@ static void * json_async_load_worker(void *arg)
 	return NULL;
 }
 
+// mkdir -p equivalent for the parent directory of an absolute path. Sync
+// json_save goes through FS_FOpenFileWrite which calls FS_CreatePath, but
+// async json_save uses plain fopen() and would otherwise silently fail when
+// a caller writes the first file under a fresh subdirectory.
+//
+// Walks the path, creates each intermediate component with 0755. Treats
+// EEXIST as success. Returns 0 on full success, -1 on the first failure.
+static int json_async_mkdir_parents(const char *abspath)
+{
+	if ( abspath == NULL || abspath[0] != '/' )
+		return -1;
+
+	char buf[PATH_MAX];
+	size_t n = strlen(abspath);
+	if ( n >= sizeof(buf) )
+		return -1;
+	memcpy(buf, abspath, n + 1);
+
+	// Trim the trailing component (the file itself).
+	char *last_slash = strrchr(buf, '/');
+	if ( last_slash == NULL || last_slash == buf )
+		return 0;
+	*last_slash = '\0';
+
+	// Walk each "/" and mkdir the prefix. Start past the leading "/".
+	for ( char *p = buf + 1; *p != '\0'; ++p )
+	{
+		if ( *p != '/' )
+			continue;
+		*p = '\0';
+		if ( mkdir(buf, 0755) != 0 && errno != EEXIST )
+			return -1;
+		*p = '/';
+	}
+	if ( mkdir(buf, 0755) != 0 && errno != EEXIST )
+		return -1;
+	return 0;
+}
+
 // Worker: print the yyjson doc and write to disk.
 static void * json_async_save_worker(void *arg)
 {
@@ -933,6 +975,8 @@ static void * json_async_save_worker(void *arg)
 		pthread_mutex_unlock(&json_async_mutex);
 		return NULL;
 	}
+
+	json_async_mkdir_parents(job->abspath);
 
 	FILE *f = fopen(job->abspath, "wb");
 	if ( f == NULL )
