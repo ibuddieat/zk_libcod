@@ -11820,13 +11820,17 @@ void custom_PlayerCmd_switchToWeapon(scr_entref_t entref)
 		return;
 	}
 
+	#if COMPILE_BOTS == 1
 	client_t *client = &svs.clients[id];
 
 	if ( client->netchan.remoteAddress.type == NA_BOT )
 		customPlayerState[id].botWeapon = iWeaponIndex; // New: Bot support
 	else
 		G_SelectWeaponIndex(id, iWeaponIndex);
-
+	#else
+	G_SelectWeaponIndex(id, iWeaponIndex);
+	#endif
+	
 	Scr_AddBool(true);
 }
 
