@@ -3606,7 +3606,7 @@ void gsc_player_setholdingweapondown(scr_entref_t ref)
 		}
 
 		// Reset grenade state
-		if ( ps->pm_flags | PMF_FRAG )
+		if ( ps->pm_flags & PMF_FRAG )
 		{
 			ps->grenadeTimeLeft = 0;
 			ps->pm_flags &= ~PMF_FRAG;
