@@ -2197,7 +2197,7 @@ void gsc_player_setnorthyawforplayer(scr_entref_t ref)
 	}
 
 	Com_sprintf(cmd, MAX_STRINGLENGTH, "d 11 %g", fYaw);
-	SV_SendServerCommand(client, SV_CMD_RELIABLE, cmd);
+	SV_SendServerCommand(client, SV_CMD_RELIABLE, "%s", cmd);
 
 	stackPushBool(qtrue);
 }
@@ -3315,7 +3315,7 @@ void gsc_player_setconfigstringforplayer(scr_entref_t ref)
 	char cmd[MAX_STRINGLENGTH];
 
 	Com_sprintf(cmd, MAX_STRINGLENGTH, "d %i %s", index, value);
-	SV_SendServerCommand(client, SV_CMD_RELIABLE, cmd);
+	SV_SendServerCommand(client, SV_CMD_RELIABLE, "%s", cmd);
 
 	stackPushBool(qtrue);
 }
@@ -3751,7 +3751,7 @@ void Scr_SetFogForPlayer(const char *cmd, float start, float density, float heig
 	char configstring[MAX_STRINGLENGTH];
 
 	Com_sprintf(configstring, MAX_STRINGLENGTH, "d 12 %s", va("%g %g %g %g %g %g %.0f", start, density, heightDensity, r, g, b, (float)(time * 1000.0)));
-	SV_SendServerCommand(client, SV_CMD_RELIABLE, configstring);
+	SV_SendServerCommand(client, SV_CMD_RELIABLE, "%s", configstring);
 }
 
 void gsc_player_setcullfogforplayer(scr_entref_t ref)
