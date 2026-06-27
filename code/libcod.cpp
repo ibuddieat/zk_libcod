@@ -6430,11 +6430,13 @@ void custom_G_RunFrame(int levelTime)
 				durationSinceLastTalk = level.time - gclient->lastVoiceTime;
 				if ( durationSinceLastTalk >= 0 && g_voiceChatTalkingDuration->current.integer > durationSinceLastTalk )
 					continue;
-#if COMPILE_CUSTOM_VOICE == 1
+
+				#if COMPILE_CUSTOM_VOICE == 1
 				// No fake voice data if the player is streaming sound already
 				if ( customPlayerState[i].currentSoundIndex && customPlayerState[i].currentSoundTalker == j )
 					continue;
-#endif
+				#endif
+
 				fakeVoicePacket.talkerNum = j;
 				SV_QueueVoicePacket(j, i, &fakeVoicePacket);
 			}
@@ -10744,20 +10746,17 @@ void custom_SV_ConnectionlessPacket(netadr_t from, msg_t *msg)
 		if ( !I_stricmp(c, "getstatus") )
 		{
 			// New: Removed call to SV_UpdateLastTimeMasterServerCommunicated
-			// New: Replaced call to original SVC_Status
-			custom_SVC_Status(from);
+			SVC_Status(from);
 		}
 		else if ( !I_stricmp(c, "getinfo") )
 		{
 			// New: Removed call to SV_UpdateLastTimeMasterServerCommunicated
-			// New: Replaced call to original SVC_Info
-			custom_SVC_Info(from);
+			SVC_Info(from);
 		}
 		else if ( !I_stricmp(c, "getchallenge") )
 		{
 			// New: Removed call to SV_UpdateLastTimeMasterServerCommunicated
-			// New: Replaced call to original SV_GetChallenge
-			custom_SV_GetChallenge(from);
+			SV_GetChallenge(from);
 		}
 		else if ( !I_stricmp(c, "connect") )
 		{
@@ -10769,8 +10768,7 @@ void custom_SV_ConnectionlessPacket(netadr_t from, msg_t *msg)
 			{
 				PbPassConnectString("localhost", msg->data);
 			}
-			// New: Replaced call to original SV_DirectConnect
-			custom_SV_DirectConnect(from);
+			SV_DirectConnect(from);
 		}
 		else if ( !I_stricmp(c, "ipAuthorize") )
 		{
@@ -10789,13 +10787,13 @@ void custom_SV_ConnectionlessPacket(netadr_t from, msg_t *msg)
 		}
 		else if ( !I_stricmp(c, "disconnect") )
 		{
-			// if a client starts up a local server, we may see some spurious
+			// If a client starts up a local server, we may see some spurious
 			// server disconnect messages when their new server sees our final
 			// sequenced messages to the old client
 		}
 		else
 		{
-			// bad connectionless packet
+			// Bad connectionless packet
 		}
 	}
 }
@@ -12070,6 +12068,7 @@ public:
 		cracking_hook_function(0x080F8E7A, (int)custom_ClientConnect);
 		cracking_hook_function(0x080F8916, (int)custom_G_GetPlayerViewOrigin);
 		cracking_hook_function(0x08094C84, (int)custom_SVC_Status);
+		cracking_hook_function(0x0808D18E, (int)custom_SV_GetChallenge);
 		cracking_hook_function(0x0810B9A4, (int)custom_G_ClientStopUsingTurret);
 		cracking_hook_function(0x0810175A, (int)custom_player_die);
 		cracking_hook_function(0x0808E2AA, (int)custom_SV_DirectConnect);

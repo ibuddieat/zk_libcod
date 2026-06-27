@@ -244,9 +244,9 @@ qboolean Sys_IsProxyAddress(netadr_t from)
 		{
 			proxy = &proxies[i];
 			if ( proxy->enabled &&
-				 proxy->started &&
-				 proxy->socket != -1 &&
-				 NET_CompareBaseAdr(from, proxy->forwardAdr) )
+			     proxy->started &&
+			     proxy->socket != -1 &&
+			     NET_CompareBaseAdr(from, proxy->forwardAdr) )
 				return qtrue;
 		}
 	}
@@ -739,7 +739,7 @@ void * SV_StartProxy(void *threadArgs)
 
 			// Prevent IP spoofing via userinfo IP client dvar
 			if ( strlen(InfoValueForKey(lowerCaseBuffer + 11, "ip", proxy)) ||
-				 strlen(InfoValueForKey(lowerCaseBuffer + 11, "port", proxy)) )
+			     strlen(InfoValueForKey(lowerCaseBuffer + 11, "port", proxy)) )
 			{
 				Com_Printf(
 					"Proxy: Potential IP spoofing attempt from %s\n",
@@ -1496,7 +1496,7 @@ void * SV_ProxyClientThread(void *threadArgs)
 		}
 
 		if ( memcmp(buffer, "\xFF\xFF\xFF\xFFstatusResponse", 18) == 0 ||
-			 memcmp(buffer, "\xFF\xFF\xFF\xFFinfoResponse", 16) == 0 )
+		     memcmp(buffer, "\xFF\xFF\xFF\xFFinfoResponse", 16) == 0 )
 		{
 			// Check if server tracker requests need to be blocked
 			int is_blocked = 0;
