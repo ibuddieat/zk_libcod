@@ -175,7 +175,7 @@ void custom_Com_InitDvars(void)
 	sv_reservedConfigstringBufferSize = Dvar_RegisterInt("sv_reservedConfigstringBufferSize", 0, 0, 8192, DVAR_ARCHIVE);
 	sv_authorizePort = Dvar_RegisterInt("sv_authorizePort", 20700, 0, 65535, DVAR_ARCHIVE | DVAR_INIT);
 	sv_authorizeServer = Dvar_RegisterString("sv_authorizeServer", "cod2master.activision.com", DVAR_ARCHIVE | DVAR_INIT);
-	sv_authorizeTimeout = Dvar_RegisterInt("sv_authorizeTimeout", 3000, 0, 1200000, DVAR_ARCHIVE);
+	sv_authorizeTimeout = Dvar_RegisterInt("sv_authorizeTimeout", 5000, 0, 1200000, DVAR_ARCHIVE);
 	sv_masterPort = Dvar_RegisterInt("sv_masterPort", 20710, 0, 65535, DVAR_ARCHIVE | DVAR_INIT);
 	sv_masterServer = Dvar_RegisterString("sv_masterServer", "cod2master.activision.com", DVAR_ARCHIVE | DVAR_INIT);
 	sv_noMaster = Dvar_RegisterInt("sv_noMaster", 0, 0, 2, DVAR_ARCHIVE | DVAR_INIT);

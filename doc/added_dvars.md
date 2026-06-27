@@ -187,7 +187,7 @@
     * Effect: Hostname of the authorize server (for player GUID calculation) to communicate to. Needs to be set on server startup via command line.
   * `sv_authorizeTimeout`
     * Type: Integer
-    * Default: 3000
+    * Default: 5000
     * Min. Value: 0
     * Max. Value: 1200000
     * Effect: Defines the time to wait for an answer of the authorize server (see `[sv_authorizeServer]` dvar) on player connect, so that a GUID can be assigned to the connecting player. The original authorize server timeout is 20 minutes. Libcod changes this to a few seconds by default to not have the players wait those 20 minutes on connect once the authorize server goes offline (again). Setting this timeout too low will make players with a valid CD key connect with a zero GUID too. The timeout is defined in milliseconds.
