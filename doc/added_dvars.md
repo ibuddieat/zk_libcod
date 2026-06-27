@@ -66,7 +66,11 @@
     * Min. Value: 0 (disabled)
     * Min. Effective Value: 1
     * Max. Value: 30
-    * Effect: Forces every client's snaps. Does not update the snaps dvar value on the client side. 
+    * Effect: Forces every client's snaps. Does not update the snaps dvar value on the client side.
+  * `g_forceUnlink`
+    * Type: Boolean
+    * Default: False
+    * Effect: If true, all (child) entities are unlinked from the parent entity if the `SetModel` script method is called on the parent entity and a warning stating the entity IDs is logged.
   * `g_logPickup`
     * Type: Boolean
     * Default: True

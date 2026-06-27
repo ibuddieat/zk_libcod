@@ -94,6 +94,7 @@ dvar_t *g_debugStaticModels;
 dvar_t *g_droppedWeaponsNeglectBots;
 dvar_t *g_forceRate;
 dvar_t *g_forceSnaps;
+dvar_t *g_forceUnlink;
 dvar_t *g_logPickup;
 dvar_t *g_mantleBlockEnable;
 dvar_t *g_noMoverBlockage;
@@ -273,6 +274,7 @@ void hook_Com_Printf_in_Com_Init_Try_Block_Function(const char *format, ...)
 	g_droppedWeaponsNeglectBots = Dvar_RegisterBool("g_droppedWeaponsNeglectBots", qfalse, DVAR_ARCHIVE);
 	g_forceRate = Dvar_RegisterInt("g_forceRate", 0, 0, 25000, DVAR_ARCHIVE);
 	g_forceSnaps = Dvar_RegisterInt("g_forceSnaps", 0, 0, 30, DVAR_ARCHIVE);
+	g_forceUnlink = Dvar_RegisterBool("g_forceUnlink", qfalse, DVAR_ARCHIVE);
 	g_logPickup = Dvar_RegisterBool("g_logPickup", qtrue, DVAR_ARCHIVE);
 	g_mantleBlockEnable = Dvar_RegisterBool("g_mantleBlockEnable", qtrue, DVAR_ARCHIVE);
 	g_noMoverBlockage = Dvar_RegisterBool("g_noMoverBlockage", qfalse, DVAR_ARCHIVE);

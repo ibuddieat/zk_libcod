@@ -103,6 +103,7 @@ extern dvar_t *g_debugStaticModels;
 extern dvar_t *g_droppedWeaponsNeglectBots;
 extern dvar_t *g_forceRate;
 extern dvar_t *g_forceSnaps;
+extern dvar_t *g_forceUnlink;
 extern dvar_t *g_logPickup;
 extern dvar_t *g_mantleBlockEnable;
 extern dvar_t *g_noMoverBlockage;
@@ -11853,16 +11854,18 @@ void custom_ScrCmd_SetModel(scr_entref_t entref)
 	G_DObjUpdate(ent);
 	SV_LinkEntity(ent);
 
-	/* New code start: Unlink childs since model tags may have changed. Could
-	 be improved to check if anything relevant in the tag tree actually
-	 changed, such as tag names, order and offsets/angles */
-	while ( ent->tagChildren )
+	/* New code start: g_forceUnlink dvar: Force-unlink child entities since
+	 the parent model tags may have changed */
+	if ( g_forceUnlink->current.boolean )
 	{
-		Com_Printf(
-			"WARNING: Unlinking entity %d from entity %d when changing parent model\n",
-			ent->tagChildren - g_entities,
-			ent - g_entities);
-		G_EntUnlink(ent->tagChildren);
+		while ( ent->tagChildren )
+		{
+			Com_Printf(
+				"WARNING: Unlinking entity %d from entity %d when changing parent model\n",
+				ent->tagChildren - g_entities,
+				ent - g_entities);
+			G_EntUnlink(ent->tagChildren);
+		}
 	}
 	/* New code end */
 }
