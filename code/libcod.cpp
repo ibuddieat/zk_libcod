@@ -11847,10 +11847,45 @@ void custom_ScrCmd_SetModel(scr_entref_t entref)
 	 changed, such as tag names, order and offsets/angles */
 	while ( ent->tagChildren )
 	{
-		Com_Printf("WARNING: Unlinking entity %d from entity %d when changing parent model\n", ent->tagChildren - g_entities, ent - g_entities);
+		Com_Printf(
+			"WARNING: Unlinking entity %d from entity %d when changing parent model\n",
+			ent->tagChildren - g_entities,
+			ent - g_entities);
 		G_EntUnlink(ent->tagChildren);
 	}
 	/* New code end */
+}
+
+void custom_G_RunMover(gentity_t *ent)
+{
+	/* New code start: Unlink entity if the parent entity's DObj is invalid */
+	tagInfo_t *tagInfo = ent->tagInfo;
+	qboolean invalidParentDObj = qfalse;
+
+	if ( tagInfo != NULL && tagInfo->index >= 0 && !Com_GetServerDObj(tagInfo->parent->s.number) )
+	{
+		Com_Printf(
+			"WARNING: Unlinking entity %d from entity %d due to invalid parent model\n",
+			ent - g_entities,
+			tagInfo->parent - g_entities);
+		G_EntUnlink(ent);
+		invalidParentDObj = qtrue;
+	}
+	/* New code end */
+
+	if ( tagInfo == NULL || invalidParentDObj )
+	{
+		if ( ent->s.pos.trType != TR_STATIONARY || ent->s.apos.trType != TR_STATIONARY )
+		{
+			G_MoverTeam(ent);
+		}
+	}
+	else
+	{
+		G_GeneralLink(ent);
+	}
+
+	G_RunThink(ent);
 }
 
 class cCallOfDuty2Pro
@@ -12124,6 +12159,7 @@ public:
 		cracking_hook_function(0x08111F12, (int)custom_ScrCmd_SetModel);
 		cracking_hook_function(0x08096FD0, (int)custom_SV_MasterGameCompleteStatus);
 		cracking_hook_function(0x08096ED6, (int)custom_SV_MasterHeartbeat);
+		cracking_hook_function(0x0810FDFE, (int)custom_G_RunMover);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC8CA, (int)Jump_ReduceFriction);

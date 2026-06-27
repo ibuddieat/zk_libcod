@@ -1470,6 +1470,9 @@ static const G_MissileTrace_t G_MissileTrace = (G_MissileTrace_t)0x0810DD2C;
 typedef void (*Missile_TraceNoContents_t)(trace_t *results, int passentitynum, gentity_t *ent, float *origin);
 static const Missile_TraceNoContents_t Missile_TraceNoContents = (Missile_TraceNoContents_t)0x0810DDA6;
 
+typedef void (*G_MoverTeam_t)(gentity_t *ent);
+static const G_MoverTeam_t G_MoverTeam = (G_MoverTeam_t)0x0810FB0A;
+
 typedef void (*BG_EvaluateTrajectory_t)(const trajectory_t *tr, int atTime, float *result);
 static const BG_EvaluateTrajectory_t BG_EvaluateTrajectory = (BG_EvaluateTrajectory_t)0x080DF5D4;
 
