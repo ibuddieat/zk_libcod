@@ -981,6 +981,9 @@ static const G_GetPlayerViewOrigin_t G_GetPlayerViewOrigin = (G_GetPlayerViewOri
 typedef void (*G_GetPlayerViewDirection_t)(gentity_t *ent, float *forward, float *right, float *up);
 static const G_GetPlayerViewDirection_t G_GetPlayerViewDirection = (G_GetPlayerViewDirection_t)0x080F8AF8;
 
+typedef qboolean (*G_DObjGetWorldTagMatrix_t)(gentity_t *ent, unsigned int tagName, float tagMat[4][3]);
+static const G_DObjGetWorldTagMatrix_t G_DObjGetWorldTagMatrix = (G_DObjGetWorldTagMatrix_t)0x0811E542;
+
 typedef qboolean (*G_DObjGetWorldTagPos_t)(gentity_t *ent, unsigned int tagName, float *pos);
 static const G_DObjGetWorldTagPos_t G_DObjGetWorldTagPos = (G_DObjGetWorldTagPos_t)0x0811E5FA;
 
