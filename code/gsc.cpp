@@ -783,7 +783,7 @@ int stackGetParamFunction(int param, int *value)
 	return 1;
 }
 
-int stackGetParamString(int param, char **value)
+int stackGetParamString(int param, const char **value)
 {
 	if ( param >= Scr_GetNumParam() )
 		return 0;
@@ -815,7 +815,7 @@ int stackGetParamConstString(int param, unsigned int *value)
 	return 1;
 }
 
-int stackGetParamLocalizedString(int param, char **value)
+int stackGetParamLocalizedString(int param, const char **value)
 {
 	if ( param >= Scr_GetNumParam() )
 		return 0;

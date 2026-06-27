@@ -24,7 +24,7 @@ static const GetArraySize_t GetArraySize = (GetArraySize_t)0x0807CFFC;
 typedef void (*SL_AddRefToString_t)(unsigned int stringValue);
 static const SL_AddRefToString_t SL_AddRefToString = (SL_AddRefToString_t)0x08079B6E;
 
-typedef char * (*SL_ConvertToString_t)(unsigned int index);
+typedef const char * (*SL_ConvertToString_t)(unsigned int index);
 static const SL_ConvertToString_t SL_ConvertToString = (SL_ConvertToString_t)0x08078EE6;
 
 typedef unsigned int (*SL_GetString_t)(const char *str, int type);

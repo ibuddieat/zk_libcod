@@ -188,7 +188,7 @@ void gsc_entity_hastag(scr_entref_t ref)
 	int id = ref.entnum;
 	gentity_t *ent = &g_entities[id];
 	unsigned int tagId;
-	char *tagName;
+	const char *tagName;
 
 	tagId = Scr_GetConstLowercaseString(0);
 	tagName = SL_ConvertToString(tagId);

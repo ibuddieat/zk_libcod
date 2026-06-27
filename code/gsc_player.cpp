@@ -860,7 +860,7 @@ void gsc_player_isrechambering(scr_entref_t ref)
 	else
 	{
 		unsigned short index = Scr_GetConstString(0);
-		char *slotName = SL_ConvertToString(index);
+		const char *slotName = SL_ConvertToString(index);
 		slot = BG_GetWeaponSlotForName(slotName);
 	}
 
@@ -887,7 +887,7 @@ void gsc_player_setrechambering(scr_entref_t ref)
 	if ( args > 1 )
 	{
 		unsigned short index = Scr_GetConstString(1);
-		char *slotName = SL_ConvertToString(index);
+		const char *slotName = SL_ConvertToString(index);
 		selectedSlot = BG_GetWeaponSlotForName(slotName);
 	}
 
@@ -2725,7 +2725,7 @@ void gsc_player_playfxontagforplayer(scr_entref_t ref)
 	int index;
 	gentity_t *ent;
 	unsigned int tag_id;
-	char *tag_name;
+	const char *tag_name;
 
 	if ( id >= MAX_CLIENTS )
 	{

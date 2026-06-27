@@ -8683,11 +8683,11 @@ void Scr_QueueNotifyDebugForCallback(unsigned int entId, unsigned int constStrin
 {
 	if ( scr_notify_index < MAX_NOTIFY_DEBUG_BUFFER )
 	{
-		char *message = SL_ConvertToString(constString);
+		const char *message = SL_ConvertToString(constString);
 		VariableValue *arg;
 		SavedVariableValue *savedArg;
 		unsigned int argc = 0;
-		char *stringValueSrc;
+		const char *stringValueSrc;
 
 		AddRefToObject(entId);
 		scr_notify[scr_notify_index].entId = entId;
@@ -8738,10 +8738,10 @@ void custom_VM_Notify(unsigned int entId, unsigned int constString, VariableValu
 
 void custom_Scr_Notify(gentity_t *ent, unsigned short constString, unsigned int numArgs)
 {
-	char *message = SL_ConvertToString(constString);
+	const char *message = SL_ConvertToString(constString);
 	char messageStr[MAX_STRINGLENGTH] = {0};
 	SavedVariableValue savedArgs[numArgs];
-	char *stringValueSrc;
+	const char *stringValueSrc;
 
 	if ( codecallback_notify && Scr_IsSystemActive() )
 	{
@@ -11733,7 +11733,7 @@ void VM_ClearSavedReturnValue(void)
 void VM_SaveReturnValue(VariableValue *arg)
 {
 	SavedVariableValue *ret = &scriptHandleReturnValue;
-	char *stringValueSrc;
+	const char *stringValueSrc;
 
 	switch ( arg->type )
 	{
