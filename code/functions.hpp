@@ -486,6 +486,9 @@ static const SV_GetChallenge_t SV_GetChallenge = (SV_GetChallenge_t)0x0808D18E;
 typedef void (*SV_DirectConnect_t)(netadr_t from);
 static const SV_DirectConnect_t SV_DirectConnect = (SV_DirectConnect_t)0x0808E2AA;
 
+typedef void (*SVC_GameCompleteStatus_t)(netadr_t to);
+static const SVC_GameCompleteStatus_t SVC_GameCompleteStatus = (SVC_GameCompleteStatus_t)0x080950D0;
+
 typedef void (*SVC_Info_t)(netadr_t from);
 static const SVC_Info_t SVC_Info = (SVC_Info_t)0x0809537C;
 

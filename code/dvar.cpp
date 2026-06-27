@@ -149,7 +149,8 @@ dvar_t *sv_masterPort;
 dvar_t *sv_masterServer;
 dvar_t *sv_maxSnapshotEntities;
 dvar_t *sv_minimizeSysteminfo;
-dvar_t *sv_noauthorize;
+dvar_t *sv_noAuthorize;
+dvar_t *sv_noMaster;
 dvar_t *sv_reservedConfigstringBufferSize;
 dvar_t *sv_timeoutMessages;
 dvar_t *sv_updateCursorHints;
@@ -172,11 +173,12 @@ void custom_Com_InitDvars(void)
 	logTimestamps = Dvar_RegisterBool("logTimestamps", qfalse, DVAR_ARCHIVE);
 	sv_autoAddSnapshotEntities = Dvar_RegisterBool("sv_autoAddSnapshotEntities", qtrue, DVAR_ARCHIVE | DVAR_LATCH);
 	sv_reservedConfigstringBufferSize = Dvar_RegisterInt("sv_reservedConfigstringBufferSize", 0, 0, 8192, DVAR_ARCHIVE);
-	sv_authorizePort = Dvar_RegisterInt("sv_authorizePort", 20700, 0, 65535, DVAR_ARCHIVE);
-	sv_authorizeServer = Dvar_RegisterString("sv_authorizeServer", "cod2master.activision.com", DVAR_ARCHIVE);
+	sv_authorizePort = Dvar_RegisterInt("sv_authorizePort", 20700, 0, 65535, DVAR_ARCHIVE | DVAR_INIT);
+	sv_authorizeServer = Dvar_RegisterString("sv_authorizeServer", "cod2master.activision.com", DVAR_ARCHIVE | DVAR_INIT);
 	sv_authorizeTimeout = Dvar_RegisterInt("sv_authorizeTimeout", 3000, 0, 1200000, DVAR_ARCHIVE);
-	sv_masterPort = Dvar_RegisterInt("sv_masterPort", 20710, 0, 65535, DVAR_ARCHIVE);
-	sv_masterServer = Dvar_RegisterString("sv_masterServer", "cod2master.activision.com", DVAR_ARCHIVE);
+	sv_masterPort = Dvar_RegisterInt("sv_masterPort", 20710, 0, 65535, DVAR_ARCHIVE | DVAR_INIT);
+	sv_masterServer = Dvar_RegisterString("sv_masterServer", "cod2master.activision.com", DVAR_ARCHIVE | DVAR_INIT);
+	sv_noMaster = Dvar_RegisterInt("sv_noMaster", 0, 0, 2, DVAR_ARCHIVE | DVAR_INIT);
 	sv_version = Dvar_RegisterString("sv_version", "1.3", DVAR_ARCHIVE | DVAR_LATCH);
 
 	/* Register stock dvars here with different settings, scheme:
@@ -311,7 +313,7 @@ void hook_Com_Printf_in_Com_Init_Try_Block_Function(const char *format, ...)
 	sv_logHeartbeats = Dvar_RegisterBool("sv_logHeartbeats", qtrue, DVAR_ARCHIVE);
 	sv_logRcon = Dvar_RegisterBool("sv_logRcon", qtrue, DVAR_ARCHIVE);
 	sv_maxSnapshotEntities = Dvar_RegisterInt("sv_maxSnapshotEntities", 1024, 64, 1024, DVAR_ARCHIVE);
-	sv_noauthorize = Dvar_RegisterBool("sv_noauthorize", qfalse, DVAR_ARCHIVE);
+	sv_noAuthorize = Dvar_RegisterBool("sv_noAuthorize", qfalse, DVAR_ARCHIVE);
 	sv_timeoutMessages = Dvar_RegisterBool("sv_timeoutMessages", qtrue, DVAR_ARCHIVE);
 	sv_updateCursorHints = Dvar_RegisterBool("sv_updateCursorHints", qtrue, DVAR_ARCHIVE);
 	sv_verifyIwds = Dvar_RegisterBool("sv_verifyIwds", qtrue, DVAR_ARCHIVE);

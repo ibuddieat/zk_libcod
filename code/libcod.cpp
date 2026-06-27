@@ -158,7 +158,8 @@ extern dvar_t *sv_masterPort;
 extern dvar_t *sv_masterServer;
 extern dvar_t *sv_maxSnapshotEntities;
 extern dvar_t *sv_minimizeSysteminfo;
-extern dvar_t *sv_noauthorize;
+extern dvar_t *sv_noAuthorize;
+extern dvar_t *sv_noMaster;
 extern dvar_t *sv_reservedConfigstringBufferSize;
 extern dvar_t *sv_timeoutMessages;
 extern dvar_t *sv_updateCursorHints;
@@ -209,7 +210,6 @@ cHook *hook_ScriptMover_Rotate;
 cHook *hook_ScriptMover_RotateSpeed;
 cHook *hook_SV_ClientThink;
 cHook *hook_SV_FinalMessage;
-cHook *hook_SV_MasterHeartbeat;
 cHook *hook_SV_VerifyIwds_f;
 cHook *hook_Sys_Print;
 cHook *hook_Sys_Quit;
@@ -1533,30 +1533,62 @@ LAB_0808ec36:
 	}
 }
 
+void custom_SV_MasterGameCompleteStatus()
+{
+	netadr_t *adr;
+
+	if ( !com_dedicated ||
+	     com_dedicated->current.integer != 2 ||
+	     sv_noMaster->current.integer ) // New: sv_noMaster dvar
+	{
+		return;
+	}
+
+	adr = SV_MasterAddress();
+	if ( adr->type != NA_BAD )
+	{
+		// New: sv_masterServer dvar
+		Com_Printf("Sending gameCompleteStatus to %s\n", sv_masterServer->current.string);
+		SVC_GameCompleteStatus(*adr);
+	}
+}
+
 void custom_SV_MasterHeartbeat(const char *hbname)
 {
-	int sending_heartbeat_string_offset = 0x0814BBC0;
+	netadr_t *adr;
 
-	if ( logHeartbeat && !sv_logHeartbeats->current.boolean )
+	if ( !com_dedicated ||
+	     com_dedicated->current.integer != 2 ||
+	     sv_noMaster->current.integer ) // New: sv_noMaster dvar
 	{
-		byte disable = 0;
-		memcpy((void *)sending_heartbeat_string_offset, &disable, 1);
-		logHeartbeat = qfalse;
-		Com_DPrintf("Disabled heartbeat logging\n");
-	}
-	else if ( !logHeartbeat && sv_logHeartbeats->current.boolean )
-	{
-		byte enable = 0x53; // "S"
-		memcpy((void *)sending_heartbeat_string_offset, &enable, 1);
-		logHeartbeat = qtrue;
-		Com_DPrintf("Enabled heartbeat logging\n");
+		return;
 	}
 
-	hook_SV_MasterHeartbeat->unhook();
-	void (*SV_MasterHeartbeat)(const char *hbname);
-	*(int *)&SV_MasterHeartbeat = hook_SV_MasterHeartbeat->from;
-	SV_MasterHeartbeat(hbname);
-	hook_SV_MasterHeartbeat->hook();
+	if ( svs.time >= svs.nextHeartbeatTime )
+	{
+		svs.nextHeartbeatTime = svs.time + 180000;
+
+		adr = SV_MasterAddress();
+		if ( adr->type != NA_BAD )
+		{
+			// New: sv_masterServer and sv_logHeartbeats dvars
+			if ( sv_logHeartbeats->current.boolean )
+				Com_Printf("Sending heartbeat to %s\n", sv_masterServer->current.string);
+
+			NET_OutOfBandPrint(NS_SERVER, *adr, va("heartbeat %s\n", hbname));
+		}
+	}
+
+	if ( svs.time >= svs.nextStatusResponseTime )
+	{
+		svs.nextStatusResponseTime = svs.time + 600000;
+
+		adr = SV_MasterAddress();
+		if ( adr->type != NA_BAD )
+		{
+			SVC_Status(*adr);
+		}
+	}
 }
 
 void custom_Scr_ParseGameTypeList(void)
@@ -4983,6 +5015,11 @@ void custom_SVC_Info(netadr_t from)
 	char *iwd;
 	char infosend[MAX_INFO_STRING];
 
+	/* New code start: sv_noMaster dvar */
+	if ( sv_noMaster->current.integer > 1 )
+		return;
+	/* New code end */
+
 	/* New code start: Rate limiting */
 	if ( SVC_ApplyInfoLimit(from, OUTBOUND_BUCKET_MAIN) )
 		return;
@@ -5165,6 +5202,11 @@ void custom_SVC_Status(netadr_t from)
 	int count;
 	char *iwd;
 	char msg[BIG_INFO_STRING];
+
+	/* New code start: sv_noMaster dvar */
+	if ( sv_noMaster->current.integer > 1 )
+		return;
+	/* New code end */
 
 	/* New code start: Rate limiting */
 	if ( SVC_ApplyStatusLimit(from, OUTBOUND_BUCKET_MAIN) )
@@ -5544,7 +5586,7 @@ void custom_SVC_RemoteCommand(netadr_t from, msg_t *msg, qboolean from_script)
 
 netadr_t * custom_SV_MasterAddress(void)
 {
-	if ( sv_masterAddress.type == NA_BOT )
+	if ( !sv_noMaster->current.integer && sv_masterAddress.type == NA_BOT )
 	{
 		Com_Printf("Resolving %s\n", sv_masterServer->current.string);
 		if ( !NET_StringToAdr(sv_masterServer->current.string, &sv_masterAddress) )
@@ -5575,7 +5617,6 @@ void custom_SV_GetChallenge(netadr_t from)
 	int oldest;
 	int oldestTime;
 	challenge_t *challenge;
-	netadr_t *master;
 
 	/* New code start: Rate limiting */
 	if ( SVC_ApplyChallengeLimit(from, OUTBOUND_BUCKET_MAIN) )
@@ -5611,8 +5652,10 @@ void custom_SV_GetChallenge(netadr_t from)
 		i = oldest;
 	}
 
-	// New: sv_noauthorize dvar
-	if ( sv_noauthorize->current.boolean || ( !net_lanauthorize->current.boolean && Sys_IsLANAddress(from) ) )
+	// New: sv_noAuthorize and sv_authorizeServer dvars
+	if ( sv_noAuthorize->current.boolean ||
+	     ( !net_lanauthorize->current.boolean && Sys_IsLANAddress(from) ) ||
+		 !strlen(sv_authorizeServer->current.string) )
 	{
 		challenge->pingTime = svs.time;
 		NET_OutOfBandPrint(NS_SERVER, from, va("challengeResponse %i", challenge->challenge));
@@ -5640,8 +5683,7 @@ void custom_SV_GetChallenge(netadr_t from)
 	// New: sv_authorizeTimeout dvar and removed svs.sv_lastTimeMasterServerCommunicated
 	if ( svs.time - challenge->firstTime > sv_authorizeTimeout->current.integer )
 	{
-		master = SV_MasterAddress();
-		if ( !NET_CompareAdr(from, *master) )
+		if ( !NET_CompareAdr(from, svs.authorizeAddress) )
 		{
 			Com_DPrintf("authorize server timed out\n");
 			challenge->pingTime = svs.time;
@@ -11889,8 +11931,6 @@ public:
 		hook_GScr_MakeDvarServerInfo->hook();
 		hook_GScr_SetDvar = new cHook(0x08110E46, (int)custom_GScr_SetDvar);
 		hook_GScr_SetDvar->hook();
-		hook_SV_MasterHeartbeat = new cHook(0x08096ED6, (int)custom_SV_MasterHeartbeat);
-		hook_SV_MasterHeartbeat->hook();
 		hook_G_RunFrame = new cHook(0x0810A13A, (int)custom_G_RunFrame);
 		hook_G_RunFrame->hook();
 		hook_VM_Notify = new cHook(0x0808359E, (int)custom_VM_Notify);
@@ -12079,6 +12119,8 @@ public:
 		cracking_hook_function(0x08103210, (int)custom_HudElem_ClearTypeSettings);
 		cracking_hook_function(0x080FA1B6, (int)custom_PlayerCmd_switchToWeapon);
 		cracking_hook_function(0x08111F12, (int)custom_ScrCmd_SetModel);
+		cracking_hook_function(0x08096FD0, (int)custom_SV_MasterGameCompleteStatus);
+		cracking_hook_function(0x08096ED6, (int)custom_SV_MasterHeartbeat);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC8CA, (int)Jump_ReduceFriction);

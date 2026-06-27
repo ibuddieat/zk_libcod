@@ -180,11 +180,11 @@
     * Default: 20700
     * Min. Value: 0
     * Max. Value: 65535
-    * Effect: Port to use for communication to the authorize server (for player GUID calculation).
+    * Effect: Port to use for communication to the authorize server (for player GUID calculation). Needs to be set on server startup via command line.
   * `sv_authorizeServer`
     * Type: String
     * Default: "cod2master.activision.com"
-    * Effect: Hostname of the authorize server (for player GUID calculation) to communicate to.
+    * Effect: Hostname of the authorize server (for player GUID calculation) to communicate to. Needs to be set on server startup via command line.
   * `sv_authorizeTimeout`
     * Type: Integer
     * Default: 3000
@@ -270,11 +270,11 @@
     * Default: 20710
     * Min. Value: 0
     * Max. Value: 65535
-    * Effect: Port to use for communication to the master server (for the ingame server browser).
+    * Effect: Port to use for communication to the master server (for the ingame server browser). Needs to be set on server startup via command line.
   * `sv_masterServer`
     * Type: String
     * Default: "cod2master.activision.com"
-    * Effect: Hostname of the master server (for the ingame server browser) to communicate to.
+    * Effect: Hostname of the master server (for the ingame server browser) to communicate to. Needs to be set on server startup via command line.
   * `sv_maxSnapshotEntities`
     * Type: Integer
     * Default: 1024
@@ -295,6 +295,12 @@
         * and the jump_... dvars if jump.cpp is compiled.
       * If set to 2 or greater, also overrides jump-related dvars set in jump.cpp.
       * If set to 3, also overrides download-related dvars set in libcod.cpp. Note that sending these dvars this way is too late to auto-enable downloading right on a client's first connect. Instead, a reconnect is necessary for the client then, if downloading was not enabled already in the first place.
+  * `sv_noMaster`
+    * Type: Integer
+    * Default: 0
+    * Min. Value: 0
+    * Max. Value: 2
+    * Effect: If set to 1 or higher, the server will not be announced to the master server and therefore not be listed in the ingame server browser. If set to 2, the server will not respond to `getinfo` and `getstatus` requests, in addition to the effects when set to 1. Also affects proxy servers. Needs to be set on server startup via command line.
   * `sv_proxiesVisibleForTrackers`
     * Type: Boolean
     * Default: False
@@ -420,7 +426,7 @@ Other dvars (e.g., from legacy versions of libcod or other repositories):
     * Type: String
     * Default: ""
     * Effect: If set to a non-empty string, players that attempt to download a file on connect are disconnected from the server, with the specified message displayed after disconnect. Applies to all game versions. Related dvar: `sv_downloadMessageAtMap`.
-  * `sv_noauthorize`
+  * `sv_noAuthorize`
     * Type: Boolean
     * Default: False
     * Effect: If true, the server will not go through the authorization process for connecting players, thus yielding a zero GUID for those players. Recommended to be enabled in case the master server returns incorrect GUIDs.

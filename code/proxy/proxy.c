@@ -55,6 +55,7 @@ extern dvar_t *sv_authorizeServer;
 extern dvar_t *sv_logHeartbeats;
 extern dvar_t *sv_masterPort;
 extern dvar_t *sv_masterServer;
+extern dvar_t *sv_noMaster;
 extern dvar_t *sv_timeout;
 extern dvar_t *sv_version;
 
@@ -364,7 +365,7 @@ void SV_ShutdownProxies()
 				// Tell the master server that we've gone offline. Should fix
 				// a potential issue where this server might not show up in the
 				// ingame browser list after being restarted
-				if ( masterSockAdr.sin_family == AF_INET )
+				if ( !sv_noMaster->current.integer && masterSockAdr.sin_family == AF_INET )
 				{
 					// Delay to counter rate-limiting on the master server side
 					sleep(1);
@@ -460,21 +461,24 @@ void SV_SetupProxies()
 
 	Com_Printf("-----------------------------------\n");
 
-	// Resolve master server hostname, success required for server being listed
-	if ( !Sys_StringToSockaddr(sv_masterServer->current.string, &masterSockAdr) )
+	if ( !sv_noMaster->current.integer )
 	{
-		Com_Printf("Proxy: Failed to resolve master server %s\n", sv_masterServer->current.string);
-	}
-	else
-	{
-		masterSockAdr.sin_family = AF_INET;
-		masterSockAdr.sin_port = htons(sv_masterPort->current.integer);
+		// Resolve master server hostname, success required for server being listed
+		if ( !Sys_StringToSockaddr(sv_masterServer->current.string, &masterSockAdr) )
+		{
+			Com_Printf("Proxy: Failed to resolve master server %s\n", sv_masterServer->current.string);
+		}
+		else
+		{
+			masterSockAdr.sin_family = AF_INET;
+			masterSockAdr.sin_port = htons(sv_masterPort->current.integer);
+		}
 	}
 
 	// Resolve authorize server hostname, success required for server being listed
 	if ( !Sys_StringToSockaddr(sv_authorizeServer->current.string, &authorizeSockAdr) )
 	{
-		Com_Printf("Proxy: Failed to resolve authorize server %s\n", sv_masterServer->current.string);
+		Com_Printf("Proxy: Failed to resolve authorize server %s\n", sv_authorizeServer->current.string);
 	}
 	else
 	{
@@ -646,7 +650,7 @@ void * SV_StartProxy(void *threadArgs)
 		proxy->version);
 
 	// Announce server to master list
-	if ( masterSockAdr.sin_family == AF_INET && authorizeSockAdr.sin_family == AF_INET )
+	if ( !sv_noMaster->current.integer && masterSockAdr.sin_family == AF_INET && authorizeSockAdr.sin_family == AF_INET )
 	{
 		if ( pthread_create(&proxy->masterServerThread, NULL, SV_ProxyMasterServerLoop, proxy) )
 		{
@@ -661,19 +665,22 @@ void * SV_StartProxy(void *threadArgs)
 	}
 
 	// Startup info/status request caching thread
-	pthread_mutex_init(&proxy->queryCacheLock, NULL);
-	if ( pthread_create(&proxy->queryCacheThread, NULL, SV_ProxyQueryCacheLoop, proxy) )
+	if ( sv_noMaster->current.integer < 2 )
 	{
-		close(listenerSocket);
-		pthread_cancel(proxy->masterServerThread);
-		pthread_join(proxy->masterServerThread, NULL);
-		Com_Error(
-			ERR_FATAL,
-			"\x15Proxy: Failed to create caching thread for version %s (protocol %i)",
-			proxy->versionString,
-			proxy->version);
+		pthread_mutex_init(&proxy->queryCacheLock, NULL);
+		if ( pthread_create(&proxy->queryCacheThread, NULL, SV_ProxyQueryCacheLoop, proxy) )
+		{
+			close(listenerSocket);
+			pthread_cancel(proxy->masterServerThread);
+			pthread_join(proxy->masterServerThread, NULL);
+			Com_Error(
+				ERR_FATAL,
+				"\x15Proxy: Failed to create caching thread for version %s (protocol %i)",
+				proxy->versionString,
+				proxy->version);
+		}
+		proxy->queryCacheThreadStarted = qtrue;
 	}
-	proxy->queryCacheThreadStarted = qtrue;
 
 	while ( 1 )
 	{
@@ -821,14 +828,14 @@ void * SV_StartProxy(void *threadArgs)
 		// Stateless messages
 		else if ( memcmp(lowerCaseBuffer, "\xFF\xFF\xFF\xFFgetstatus", 13) == 0 )
 		{
-			if ( !SVC_ApplyStatusLimit(adr, proxy->bucket) )
+			if ( !SVC_ApplyStatusLimit(adr, proxy->bucket) && sv_noMaster->current.integer < 2 )
 				SV_SendCachedStatusResponse(proxy, buffer, bytes_received, &addr);
 
 			continue;
 		}
 		else if ( memcmp(lowerCaseBuffer, "\xFF\xFF\xFF\xFFgetinfo", 11) == 0 )
 		{
-			if ( !SVC_ApplyInfoLimit(adr, proxy->bucket) )
+			if ( !SVC_ApplyInfoLimit(adr, proxy->bucket) && sv_noMaster->current.integer < 2 )
 				SV_SendCachedInfoResponse(proxy, buffer, bytes_received, &addr);
 			
 			continue;
