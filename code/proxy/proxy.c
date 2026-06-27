@@ -498,10 +498,10 @@ void SV_SetupProxies()
 	sv_proxyEnable_1_2 = Dvar_RegisterBool("sv_proxyEnable_1_2", qfalse, DVAR_ARCHIVE);
 	sv_proxyEnable_1_3 = Dvar_RegisterBool("sv_proxyEnable_1_3", qfalse, DVAR_ARCHIVE);
 	sv_proxyEnable_1_3_119 = Dvar_RegisterBool("sv_proxyEnable_1_3_119", qfalse, DVAR_ARCHIVE);
-	sv_proxyForwardAddress_1_0 = Dvar_RegisterString("sv_proxyForwardAddress_1_0", forwardAddress, DVAR_ARCHIVE);
-	sv_proxyForwardAddress_1_2 = Dvar_RegisterString("sv_proxyForwardAddress_1_2", forwardAddress, DVAR_ARCHIVE);
-	sv_proxyForwardAddress_1_3 = Dvar_RegisterString("sv_proxyForwardAddress_1_3", forwardAddress, DVAR_ARCHIVE);
-	sv_proxyForwardAddress_1_3_119 = Dvar_RegisterString("sv_proxyForwardAddress_1_3_119", forwardAddress, DVAR_ARCHIVE);
+	sv_proxyForwardAddress_1_0 = Dvar_RegisterString("sv_proxyForwardAddress_1_0", forwardAddress, DVAR_NOFLAG);
+	sv_proxyForwardAddress_1_2 = Dvar_RegisterString("sv_proxyForwardAddress_1_2", forwardAddress, DVAR_NOFLAG);
+	sv_proxyForwardAddress_1_3 = Dvar_RegisterString("sv_proxyForwardAddress_1_3", forwardAddress, DVAR_NOFLAG);
+	sv_proxyForwardAddress_1_3_119 = Dvar_RegisterString("sv_proxyForwardAddress_1_3_119", forwardAddress, DVAR_NOFLAG);
 	sv_proxyQueryCacheRefreshTime = Dvar_RegisterInt("sv_proxyQueryCacheRefreshTime", 1000, 100, 60000, DVAR_ARCHIVE);
 	sv_proxyTimeout = Dvar_RegisterInt("sv_proxyTimeout", 240, 0, 1800, DVAR_ARCHIVE);
 
