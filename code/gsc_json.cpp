@@ -57,11 +57,16 @@
 // ===========================================================================
 // Production hardening helpers
 // ===========================================================================
-// Tunable via dvars set from cfg or the console (no registerCvar needed; we
-// just look them up each call and use the documented defaults if absent):
+// Tuning dvars, registered in gsc_json_register_dvars() so they show up in
+// dvarlist with defaults and bounds. Read per-call via dvar_int_or(), which
+// falls back to the same defaults if the dvar is ever missing:
 //   scr_json_max_load_bytes   default 8 MB   (json_load refuses larger files)
 //   scr_json_slow_warn_ms     default 25 ms  (any sync json_* slower logs WARN)
 //   scr_json_async_max_jobs   default 64     (async submission cap)
+#define JSON_DEF_MAX_LOAD_BYTES  (8 * 1024 * 1024)    // 8 MB
+#define JSON_DEF_SLOW_WARN_MS    25
+#define JSON_DEF_ASYNC_MAX_JOBS  64
+#define JSON_HARD_MAX_LOAD_BYTES (32 * 1024 * 1024)   // i386 absolute ceiling
 
 static long now_ms()
 {
@@ -104,6 +109,15 @@ static int dvar_int_or(const char *name, int fallback)
 	return fallback;
 }
 
+// Register the JSON tuning dvars at engine dvar-init so they appear in dvarlist
+// with their defaults and min/max. Called once from custom_Com_InitDvars.
+void gsc_json_register_dvars(void)
+{
+	Dvar_RegisterInt("scr_json_max_load_bytes", JSON_DEF_MAX_LOAD_BYTES, 1, JSON_HARD_MAX_LOAD_BYTES, DVAR_ARCHIVE);
+	Dvar_RegisterInt("scr_json_slow_warn_ms", JSON_DEF_SLOW_WARN_MS, 1, 60000, DVAR_ARCHIVE);
+	Dvar_RegisterInt("scr_json_async_max_jobs", JSON_DEF_ASYNC_MAX_JOBS, 1, 1024, DVAR_ARCHIVE);
+}
+
 // RAII timer: logs a single WARN line on scope exit if the elapsed wall time
 // exceeded scr_json_slow_warn_ms. Cheap (one clock_gettime at ctor/dtor).
 class JsonTimer
@@ -115,7 +129,7 @@ public:
 	JsonTimer(const char *f, const char *d) : func(f), detail(d ? d : ""), t0(now_ms()) {}
 	~JsonTimer()
 	{
-		int threshold = dvar_int_or("scr_json_slow_warn_ms", 25);
+		int threshold = dvar_int_or("scr_json_slow_warn_ms", JSON_DEF_SLOW_WARN_MS);
 		long elapsed = now_ms() - t0;
 		if ( threshold > 0 && elapsed > threshold )
 			Com_Printf("[JSON] WARN: %s took %ld ms (%s)\n", func, elapsed, detail);
@@ -629,7 +643,7 @@ void gsc_json_load()
 
 	// Size guard: refuse pathologically large files outright (would block the
 	// main thread parsing). Use json_load_async for legitimately large data.
-	int maxBytes = dvar_int_or("scr_json_max_load_bytes", 8 * 1024 * 1024);
+	int maxBytes = dvar_int_or("scr_json_max_load_bytes", JSON_DEF_MAX_LOAD_BYTES);
 	if ( maxBytes > 0 && len > maxBytes )
 	{
 		FS_FCloseFile(f);
@@ -812,30 +826,29 @@ static json_async_job *json_async_jobs    = NULL;
 static int             json_async_next_id = 1;
 static int             json_async_pending = 0;
 
-// Build "<fs_homepath>/<fs_game-or-main>/<rel>" -- main thread only.
-// Returns malloc'd string, or NULL if `rel` is empty / absolute / contains "..".
+// Resolve "<fs_homepath>/<fs_gamedir>/<rel>" via FS_BuildOSPath, same as
+// gsc_utils_loadsoundfile. Main thread only. Returns malloc'd, NULL on reject.
 static char * json_async_resolve_path(const char *rel)
 {
 	if ( rel == NULL || rel[0] == '\0' || rel[0] == '/' )
 		return NULL;
-	if ( strstr(rel, "..") != NULL )
-		return NULL;
 
 	dvar_t *fs_home = Dvar_FindVar("fs_homepath");
-	dvar_t *fs_game = Dvar_FindVar("fs_game");
 	if ( fs_home == NULL || fs_home->current.string == NULL || fs_home->current.string[0] == '\0' )
 		return NULL;
 
-	const char *home = fs_home->current.string;
-	const char *game = (fs_game != NULL && fs_game->current.string != NULL && fs_game->current.string[0] != '\0')
-		? fs_game->current.string : "main";
-
-	size_t need = strlen(home) + 1 + strlen(game) + 1 + strlen(rel) + 1;
-	char *abs = (char *)malloc(need);
-	if ( abs == NULL )
+	// Pre-check length: FS_BuildOSPath ERR_FATALs on MAX_OSPATH overflow.
+	if ( strlen(fs_home->current.string) + strlen(rel) + 64 >= MAX_OSPATH )
 		return NULL;
-	snprintf(abs, need, "%s/%s/%s", home, game, rel);
-	return abs;
+
+	// Empty game -> engine uses fs_gamedir, so async matches sync FS scope.
+	char osPath[MAX_OSPATH];
+	FS_BuildOSPath(fs_home->current.string, "", rel, osPath);
+
+	if ( strstr(osPath, "..") != NULL )
+		return NULL;
+
+	return strdup(osPath);
 }
 
 // Free everything a job owns. Job must already be unlinked from the list.
@@ -867,10 +880,10 @@ static void * json_async_load_worker(void *arg)
 	fseek(f, 0, SEEK_SET);
 
 	// Honor scr_json_max_load_bytes snapshotted at submit time; fall back to
-	// 32 MB hard cap on i386 as the upper bound. Operator sets the dvar; we
-	// don't read the live dvar here because that would require main-thread
+	// the i386 hard cap as the upper bound. Operator sets the dvar; we don't
+	// read the live dvar here because that would require main-thread
 	// serialization and the snapshot is cheap.
-	long hard_cap = 32L * 1024L * 1024L;
+	long hard_cap = (long)JSON_HARD_MAX_LOAD_BYTES;
 	if ( job->max_bytes > 0 && (long)job->max_bytes < hard_cap )
 		hard_cap = (long)job->max_bytes;
 	if ( len <= 0 || len > hard_cap )
@@ -1052,7 +1065,7 @@ void gsc_json_load_async()
 		return;
 	}
 
-	int maxJobs = dvar_int_or("scr_json_async_max_jobs", 64);
+	int maxJobs = dvar_int_or("scr_json_async_max_jobs", JSON_DEF_ASYNC_MAX_JOBS);
 	if ( json_async_pending >= maxJobs )
 	{
 		stackError("gsc_json_load_async() too many pending jobs (%d / %d)", json_async_pending, maxJobs);
@@ -1073,7 +1086,7 @@ void gsc_json_load_async()
 	job->kind      = JSON_ASYNC_KIND_LOAD;
 	job->status    = JSON_ASYNC_STATUS_PENDING;
 	job->abspath   = abs;
-	job->max_bytes = dvar_int_or("scr_json_max_load_bytes", 8 * 1024 * 1024);
+	job->max_bytes = dvar_int_or("scr_json_max_load_bytes", JSON_DEF_MAX_LOAD_BYTES);
 
 	pthread_mutex_lock(&json_async_mutex);
 	job->id   = json_async_next_id++;
@@ -1120,7 +1133,7 @@ void gsc_json_save_async()
 	if ( Scr_GetNumParam() > 2 )
 		pretty = Scr_GetInt(2);
 
-	int maxJobs = dvar_int_or("scr_json_async_max_jobs", 64);
+	int maxJobs = dvar_int_or("scr_json_async_max_jobs", JSON_DEF_ASYNC_MAX_JOBS);
 	if ( json_async_pending >= maxJobs )
 	{
 		stackError("gsc_json_save_async() too many pending jobs (%d / %d)", json_async_pending, maxJobs);
