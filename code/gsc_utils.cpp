@@ -23,119 +23,6 @@ struct encoder_async_task
 
 #if COMPILE_UTILS == 1
 
-/*
-=================
-Sys_AnsiColorPrint
-Transform Q3 colour codes to ANSI escape sequences
-=================
-*/
-#define MAXPRINTMSG 1024
-#define ColorIndex(c)	(((c) - '0') & 0x07)
-#define Q_COLOR_ESCAPE	'^'
-#define Q_IsColorString(p)	((p) && *(p) == Q_COLOR_ESCAPE && *((p)+1) && isdigit(*((p)+1))) // ^[0-9]
-void Sys_AnsiColorPrint(const char *msg)
-{
-	static char buffer[ MAXPRINTMSG ];
-	int         length = 0;
-	static int  q3ToAnsi[8] =
-	{
-		30, // COLOR_BLACK
-		31, // COLOR_RED
-		32, // COLOR_GREEN
-		33, // COLOR_YELLOW
-		34, // COLOR_BLUE
-		36, // COLOR_CYAN
-		35, // COLOR_MAGENTA
-		0   // COLOR_WHITE
-	};
-
-	while ( *msg )
-	{
-		if ( Q_IsColorString(msg) || *msg == '\n' )
-		{
-			// First empty the buffer
-			if ( length > 0 )
-			{
-				buffer[length] = '\0';
-				fputs(buffer, stdout);
-				length = 0;
-			}
-
-			if ( *msg == '\n' )
-			{
-				// Issue a reset and then the newline
-				fputs("\033[0m\n", stdout);
-				msg++;
-			}
-			else
-			{
-				// Print the color code
-				snprintf(buffer, sizeof(buffer), "\033[1;%dm", q3ToAnsi[ColorIndex(*(msg + 1))]);
-				fputs(buffer, stdout);
-				msg += 2;
-			}
-		}
-		else
-		{
-			if ( length >= MAXPRINTMSG - 1 )
-				break;
-
-			buffer[length] = *msg;
-			length++;
-			msg++;
-		}
-	}
-
-	// Empty anything still left in the buffer
-	if ( length > 0 )
-	{
-		buffer[length] = '\0';
-		fputs(buffer, stdout);
-		// Issue a reset at the end
-		fputs("\033[0m", stdout);
-	}
-}
-
-extern dvar_t *con_coloredPrints;
-int stackPrintParam(int param)
-{
-	if ( param >= Scr_GetNumParam() )
-		return 0;
-
-	switch ( stackGetParamType(param) )
-	{
-	case VAR_STRING:
-		char *str;
-		stackGetParamString(param, &str); // No error checking, since we know it's a string
-		if ( con_coloredPrints->current.boolean )
-			Sys_AnsiColorPrint(str);
-		else
-			printf("%s", str);
-		return 1;
-
-	case VAR_VECTOR:
-		float vec[3];
-		stackGetParamVector(param, vec);
-		printf("(%.2f, %.2f, %.2f)", vec[0], vec[1], vec[2]);
-		return 1;
-
-	case VAR_FLOAT:
-		float tmp_float;
-		stackGetParamFloat(param, &tmp_float);
-		printf("%.3f", tmp_float); // Need a way to define precision
-		return 1;
-
-	case VAR_INTEGER:
-		int tmp_int;
-		stackGetParamInt(param, &tmp_int);
-		printf("%d", tmp_int);
-		return 1;
-	}
-
-	printf("(%s)", stackGetParamTypeAsString(param));
-	return 0;
-}
-
 extern snd_alias_build_s *customSoundAliasInfo;
 void gsc_utils_getsoundaliasesfromfile()
 {
@@ -648,7 +535,7 @@ void gsc_utils_sprintf()
 				switch ( stackGetParamType(param) )
 				{
 				case VAR_STRING:
-					char *tmp_str;
+					const char *tmp_str;
 					stackGetParamString(param, &tmp_str); // No error checking, since we know it's a string
 					num += snprintf(&(result[num]), MAX_STRINGLENGTH - num, "%s", tmp_str);
 					break;
@@ -1389,7 +1276,7 @@ void gsc_utils_float()
 	switch ( stackGetParamType(0) )
 	{
 	case VAR_STRING:
-		char *asstring;
+		const char *asstring;
 		stackGetParamString(0, &asstring);
 		stackPushFloat( atof(asstring) );
 		return;
@@ -1874,7 +1761,7 @@ void * Encode_Async(void *newtask)
 
 void gsc_utils_getsoundfileduration()
 {
-	char *filePath;
+	const char *filePath;
 	int overrideLimit;
 
 	if ( !stackGetParamString(0, &filePath) )
@@ -1941,7 +1828,7 @@ void gsc_utils_getsoundfileduration()
 
 void gsc_utils_loadsoundfile()
 {
-	char *filePath;
+	const char *filePath;
 	int callback;
 	float volume;
 	int soundIndex;
@@ -2056,7 +1943,7 @@ void gsc_utils_loadsoundfile()
 
 void gsc_utils_loadspeexfile()
 {
-	char *filePath;
+	const char *filePath;
 	int soundIndex;
 
 	if ( !stackGetParamString(0, &filePath) )
@@ -2130,7 +2017,7 @@ void gsc_utils_loadspeexfile()
 void gsc_utils_savespeexfile()
 {
 	int soundIndex;
-	char *filePath;
+	const char *filePath;
 
 	if ( !stackGetParamInt(0, &soundIndex) )
 	{

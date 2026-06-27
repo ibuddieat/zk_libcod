@@ -703,7 +703,7 @@ int stackGetParams(const char *params, ...)
 
 		case 's':
 		{
-			char **tmp = va_arg(args, char **);
+			const char **tmp = va_arg(args, const char **);
 			if ( !stackGetParamString(i, tmp) )
 			{
 				Com_DPrintf("\nstackGetParams() Param %i is not a string\n", i);
@@ -725,7 +725,7 @@ int stackGetParams(const char *params, ...)
 
 		case 'l':
 		{
-			char **tmp = va_arg(args, char **);
+			const char **tmp = va_arg(args, const char **);
 			if ( !stackGetParamLocalizedString(i, tmp) )
 			{
 				Com_DPrintf("\nstackGetParams() Param %i is not a localized string\n", i);
@@ -900,4 +900,44 @@ void stackError(const char *format, ...)
 	s[len + 1] = '\0';
 	Com_PrintMessage(0, s);
 	Scr_CodeCallback_Error(qfalse, qfalse, "stackError", s);
+}
+
+extern dvar_t *con_coloredPrints;
+int stackPrintParam(int param)
+{
+	if ( param >= Scr_GetNumParam() )
+		return 0;
+
+	switch ( stackGetParamType(param) )
+	{
+	case VAR_STRING:
+		const char *str;
+		stackGetParamString(param, &str); // No error checking, since we know it's a string
+		if ( con_coloredPrints->current.boolean )
+			Sys_AnsiColorPrint(str);
+		else
+			printf("%s", str);
+		return 1;
+
+	case VAR_VECTOR:
+		float vec[3];
+		stackGetParamVector(param, vec);
+		printf("(%.2f, %.2f, %.2f)", vec[0], vec[1], vec[2]);
+		return 1;
+
+	case VAR_FLOAT:
+		float tmp_float;
+		stackGetParamFloat(param, &tmp_float);
+		printf("%.3f", tmp_float); // Need a way to define precision
+		return 1;
+
+	case VAR_INTEGER:
+		int tmp_int;
+		stackGetParamInt(param, &tmp_int);
+		printf("%d", tmp_int);
+		return 1;
+	}
+
+	printf("(%s)", stackGetParamTypeAsString(param));
+	return 0;
 }

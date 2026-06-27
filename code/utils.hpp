@@ -29,4 +29,6 @@ int GetAnimationId(const char *string);
 
 qboolean IsValidWeaponId(int id);
 
+void Sys_AnsiColorPrint(const char *msg);
+
 #endif

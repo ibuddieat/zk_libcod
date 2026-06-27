@@ -74,6 +74,7 @@
 #include "gsc_extra.hpp"
 
 void Scr_AddFunc(const char *value);
+
 void Scr_PushConstString(unsigned int value);
 void Scr_PushString(const char *value);
 
@@ -97,14 +98,15 @@ int stackGetParams(const char *params, ...);
 
 int stackGetParamInt(int param, int *value);
 int stackGetParamFunction(int param, int *value);
-int stackGetParamString(int param, char **value);
+int stackGetParamString(int param, const char **value);
 int stackGetParamConstString(int param, unsigned int *value);
-int stackGetParamLocalizedString(int param, char **value);
+int stackGetParamLocalizedString(int param, const char **value);
 int stackGetParamVector(int param, vec3_t value);
 int stackGetParamFloat(int param, float *value);
 int stackGetParamObject(int param, unsigned int *value);
 
 void stackError(const char *format, ...);
+int stackPrintParam(int param);
 
 xfunction_t Scr_GetCustomFunction(const char **fname, qboolean *fdev);
 xmethod_t Scr_GetCustomMethod(const char **fname, qboolean *fdev);
