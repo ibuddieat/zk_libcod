@@ -168,9 +168,11 @@
     * Default: False
     * Effect: If true, the server will send out all pending network fragments instead of a single fragment per server frame. This can improve lag in busy game conditions (i.e., many players and many entities updated at a time), while also increasing server load (higher network I/O).
   * `scr_turretDamageName`
-    * Type: Boolean
-    * Default: False
-    * Effect: If true, turret weapon names are passed to `Callback_PlayerDamage` when using a turret, instead of the player's current weapon slot's weapon. Also fixes the game issue where grenade (and other) kills are shown as turret kills while the player is using a turret.
+    * Type: Integer
+    * Default: 0
+    * Min. Value: 0
+    * Max. Value: 2
+    * Effect: If set to 1 or higher, turret weapon names are passed to `Callback_PlayerDamage` when using a turret, instead of the player's current weapon slot's weapon. Also fixes the game issue where grenade (and other) kills are shown as turret kills while the player is using a turret. If set to 2, the damage location table from the `info/mp_lochit_dmgtable` file is used instead of the turret's own damage location table (which is all zero by default).
   * `sv_autoAddSnapshotEntities`
     * Type: Boolean
     * Default: True

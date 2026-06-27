@@ -7738,7 +7738,7 @@ void custom_player_die(gentity_t *self, gentity_t *inflictor, gentity_t *attacke
 		Scr_Notify(self, scr_const.death, 1);
 
 		// New: scr_turretDamageName dvar condition
-		if ( !scr_turretDamageName->current.boolean && iWeapon )
+		if ( !scr_turretDamageName->current.integer && iWeapon )
 		{
 			if ( attacker->client )
 			{
@@ -8868,11 +8868,22 @@ void custom_G_DamageClient(gentity_t *self, gentity_t *inflictor, gentity_t *att
 		if ( inflictor )
 		{
 			/* New code start: scr_turretDamageName dvar */
-			if ( scr_turretDamageName->current.boolean && ( inflictor->s.eFlags & EF_TURRET_ACTIVE ) )
+			if ( scr_turretDamageName->current.integer && ( inflictor->s.eFlags & EF_TURRET_ACTIVE ) )
 			{
 				gentity_t *turret = &level.gentities[inflictor->client->ps.viewlocked_entNum];
 
 				iWeapon = turret->s.weapon;
+
+				// Use settings from info/mp_lochit_dmgtable
+				if ( scr_turretDamageName->current.integer > 1 )
+				{
+					dmg = (int)(g_fHitLocDamageMult[hitLoc] * (float)damage);
+					if ( dmg > 0 )
+					{
+						Scr_PlayerDamage(self, inflictor, attacker, dmg, dFlags, meansOfDeath, iWeapon, vPoint, vDir, hitLoc, timeOffset);
+					}
+					return;
+				}
 			}
 			else
 			/* New code end */

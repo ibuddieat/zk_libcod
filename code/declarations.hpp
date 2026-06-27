@@ -3977,6 +3977,7 @@ static const int sortedDvars_offset = 0x085ABE00;
 static const int dvarCount_offset = 0x085ABE08;
 static const int pmoveHandlers_offset = 0x081869C0;
 static const int globalScriptData_offset = 0x0860B424;
+static const int g_fHitLocDamageMult_offset = 0x08628EE0;
 
 #define g_entities ((gentity_t*)(gentities_offset))
 #define g_clients ((gclient_t*)(gclients_offset))
@@ -4051,6 +4052,7 @@ static const int globalScriptData_offset = 0x0860B424;
 #define dvarCount (*((int*)( dvarCount_offset )))
 #define pmoveHandlers (*((pmoveHandler_t*)( pmoveHandlers_offset )))
 #define globalScriptData (*((animScriptData_t**)( globalScriptData_offset )))
+#define g_fHitLocDamageMult ((float*)( g_fHitLocDamageMult_offset ))
 
 // Check for critical structure sizes and fail if not match
 #if __GNUC__ >= 6

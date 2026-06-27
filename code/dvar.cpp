@@ -291,7 +291,7 @@ void hook_Com_Printf_in_Com_Init_Try_Block_Function(const char *format, ...)
 	loc_loadLocalizedMods = Dvar_RegisterBool("loc_loadLocalizedMods", qfalse, DVAR_ARCHIVE);
 	logErrors = Dvar_RegisterBool("logErrors", qfalse, DVAR_ARCHIVE);
 	net_noFragmentationDelay = Dvar_RegisterBool("net_noFragmentationDelay", qfalse, DVAR_ARCHIVE);
-	scr_turretDamageName = Dvar_RegisterBool("scr_turretDamageName", qfalse, DVAR_ARCHIVE);
+	scr_turretDamageName = Dvar_RegisterInt("scr_turretDamageName", 0, 0, 2, DVAR_ARCHIVE);
 	sv_allowRcon = Dvar_RegisterBool("sv_allowRcon", qtrue, DVAR_ARCHIVE);
 	sv_botKickMessages = Dvar_RegisterBool("sv_botKickMessages", qtrue, DVAR_ARCHIVE);
 	sv_botReconnectMode = Dvar_RegisterInt("sv_botReconnectMode", 0, 0, 2, DVAR_ARCHIVE);
