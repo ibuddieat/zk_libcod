@@ -230,7 +230,7 @@ void gsc_async_mysql_create_query()
 
 	int valueInt;
 	float valueFloat;
-	char *valueString;
+	const char *valueString;
 	vec3_t valueVector;
 	unsigned int valueObject;
 
@@ -326,7 +326,7 @@ void gsc_async_mysql_create_query_nosave()
 
 	int valueInt;
 	float valueFloat;
-	char *valueString;
+	const char *valueString;
 	vec3_t valueVector;
 	unsigned int valueObject;
 
@@ -422,7 +422,7 @@ void gsc_async_mysql_create_entity_query(scr_entref_t entref)
 
 	int valueInt;
 	float valueFloat;
-	char *valueString;
+	const char *valueString;
 	vec3_t valueVector;
 	unsigned int valueObject;
 
@@ -518,7 +518,7 @@ void gsc_async_mysql_create_entity_query_nosave(scr_entref_t entref)
 
 	int valueInt;
 	float valueFloat;
-	char *valueString;
+	const char *valueString;
 	vec3_t valueVector;
 	unsigned int valueObject;
 
