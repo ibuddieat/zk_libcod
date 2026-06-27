@@ -171,6 +171,24 @@
     * Type: Boolean
     * Default: False
     * Effect: If true, the server will send out all pending network fragments instead of a single fragment per server frame. This can improve lag in busy game conditions (i.e., many players and many entities updated at a time), while also increasing server load (higher network I/O).
+  * `scr_json_async_max_jobs`
+    * Type: Integer
+    * Default: 64
+    * Min. Value: 1
+    * Max. Value: 1024
+    * Effect: Maximum number of asynchronous JSON jobs (started via the `json_load_async` and `json_save_async` script functions) that may be pending at the same time. Submissions beyond this limit fail and return a job id of 0.
+  * `scr_json_max_load_bytes`
+    * Type: Integer
+    * Default: 8388608 (8 MB)
+    * Min. Value: 1
+    * Max. Value: 33554432 (32 MB)
+    * Effect: Maximum size in bytes of a JSON file that the synchronous `json_load` script function will read. Larger files are refused with a script error (use `json_load_async` for those). The asynchronous loader honors this value as well, but is additionally capped at 32 MB (33554432 bytes) regardless of this dvar.
+  * `scr_json_slow_warn_ms`
+    * Type: Integer
+    * Default: 25
+    * Min. Value: 1
+    * Max. Value: 60000
+    * Effect: Threshold in milliseconds above which a synchronous `json_*` script function logs a single warning to the console, so that JSON work blocking the main thread for too long becomes visible.
   * `scr_turretDamageName`
     * Type: Integer
     * Default: 0

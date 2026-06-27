@@ -1,0 +1,62 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>json_save_async( &lt;fs path&gt;, &lt;value&gt;, [&lt;pretty&gt;] )</H1>
+<HR>
+<BODY BGCOLOR='B0C4DE'>
+<I>
+Module: JSON<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Like <code>json_save</code>, but it does not freeze the server while the file writes. Your data is copied right away, then the writing happens in the background and you get a jobId back. Keep checking <code>json_async_done()</code> until your jobId shows up, then <code>json_async_result()</code> tells you if it worked (1) or not (0). Returns a jobId (1 or higher), or <b>0</b> if it could not start.</p>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+job = json_save_async("stats/match.json", level.matchLog, 1);
+// later, once done[i] == job:
+ok = json_async_result(job);
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;fs path&gt; Where to write the file, relative to the mod folder. No leading <code>/</code> and no <code>..</code>.</LI>
+<LI>2 : &lt;value&gt; The GSC data to save (struct, array, string, int, float, vec3).</LI>
+</UL></TR></TD></TABLE>
+<BR>
+<H2>Optional Args</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>3 : &lt;pretty&gt; <b>0</b> compact single-line (default), <b>1</b> readable multi-line.</LI>
+</UL></TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>
