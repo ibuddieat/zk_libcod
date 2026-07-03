@@ -48,12 +48,14 @@
   * `<player> forceShot([<include client>])`
   * `<player> getBulletMask()`
   * `<player> getClientHudElemCount()`
+  * `<player> getCod2xProtocol()`
   * `<player> getCollisionTeam()`
   * `<player> getCurrentWeaponAmmo()`
   * `<player> getCurrentWeaponClipAmmo()`
   * `<player> getCurrentWeaponSlot()`
   * `<player> getEnterTime()`
   * `<player> getGroundEntity()`
+  * `<player> getHWID()`
   * `<player> getInactivityTime()`
   * `<player> getNumberOfEntsInSnapshot()`
   * `<player> getPlayerstateFlags()`

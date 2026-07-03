@@ -1153,6 +1153,49 @@ void gsc_player_getuserinfo(scr_entref_t ref)
 		stackPushString("");
 }
 
+/*
+ * getHWID() - the player's CoD2x hardware id: the cl_hwid2 the client reports,
+ * a 32-char hex MD5 of its hardware. Empty for stock / 1.x clients and bots, which report no
+ * cl_hwid2.
+ *
+ * CoD2x generates cl_hwid2 here:
+ *   https://github.com/callofduty2x/CoD2x/blob/d8c54695a5239ac99d1dfe96212b809b1a54bfee/src/mss32/hwid.cpp#L1046
+ */
+void gsc_player_gethwid(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_gethwid() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	client_t *client = &svs.clients[id];
+	stackPushString(Info_ValueForKey(client->userinfo, "cl_hwid2"));
+}
+
+/*
+ * getCod2xProtocol() - the CoD2x version a client tells via the
+ * protocol_cod2x userinfo key. Returns 0 for non-CoD2x clients (stock, 1.x)
+ * and bots, so it can be used to tell whether a player is on a CoD2x client.
+ */
+void gsc_player_getcod2xprotocol(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_getcod2xprotocol() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	client_t *client = &svs.clients[id];
+	stackPushInt(atoi(Info_ValueForKey(client->userinfo, "protocol_cod2x")));
+}
+
 void gsc_player_setuserinfo(scr_entref_t ref)
 {
 	int id = ref.entnum;
