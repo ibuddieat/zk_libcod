@@ -490,7 +490,7 @@ static yyjson_mut_val * gsc_param_to_json(yyjson_mut_doc *doc, int param)
 
 	case VAR_STRING:
 	{
-		char *v = NULL;
+		const char *v = NULL;
 		if ( !stackGetParamString(param, &v) || v == NULL )
 			return yyjson_mut_null(doc);
 		return yyjson_mut_strcpy(doc, v);
@@ -498,7 +498,7 @@ static yyjson_mut_val * gsc_param_to_json(yyjson_mut_doc *doc, int param)
 
 	case VAR_ISTRING:
 	{
-		char *v = NULL;
+		const char *v = NULL;
 		if ( !stackGetParamLocalizedString(param, &v) || v == NULL )
 			return yyjson_mut_null(doc);
 		return yyjson_mut_strcpy(doc, v);
@@ -687,7 +687,7 @@ void gsc_json_load()
 
 void gsc_json_save()
 {
-	char *path;
+	const char *path;
 
 	if ( !stackGetParamString(0, &path) )
 	{
@@ -1108,7 +1108,7 @@ void gsc_json_load_async()
 // json_save_async(path, value, [pretty]) -> jobId   (0 on submission failure)
 void gsc_json_save_async()
 {
-	char *path;
+	const char *path;
 	if ( !stackGetParamString(0, &path) )
 	{
 		stackError("gsc_json_save_async() first argument must be a path string");
