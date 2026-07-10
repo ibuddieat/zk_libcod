@@ -6,6 +6,8 @@
 #include "proxy/proxy.h"
 #include "utils.hpp"
 
+#include <pthread.h>
+
 // This is deliberately quite large to make it more of an effort to DoS
 #define MAX_BUCKETS	16384
 #define MAX_HASHES 1024
@@ -13,6 +15,19 @@
 leakyBucket_t buckets[MAX_BUCKETS];
 leakyBucket_t* bucketHashes[MAX_HASHES];
 leakyBucket_t outboundLeakyBuckets[OUTBOUND_BUCKET_MAX]; // One for each game version/server
+
+struct RateLimitLock
+{
+	RateLimitLock()
+	{
+		Sys_EnterCriticalSection(CRITSECT_RATELIMITER);
+	}
+
+	~RateLimitLock()
+	{
+		Sys_LeaveCriticalSection(CRITSECT_RATELIMITER);
+	}
+};
 
 long SVC_HashForAddress(netadr_t address)
 {
@@ -33,6 +48,8 @@ long SVC_HashForAddress(netadr_t address)
 
 leakyBucket_t * SVC_BucketForAddress(netadr_t address, int burst, int period)
 {
+	RateLimitLock rateLimitLock;
+
 	leakyBucket_t *bucket = NULL;
 	int i;
 	long hash = SVC_HashForAddress(address);
@@ -93,6 +110,8 @@ leakyBucket_t * SVC_BucketForAddress(netadr_t address, int burst, int period)
 
 bool SVC_RateLimit(leakyBucket_t *bucket, int burst, int period)
 {
+	RateLimitLock rateLimitLock;
+
 	if ( bucket != NULL )
 	{
 		uint64_t now = Sys_Milliseconds64();
@@ -140,6 +159,8 @@ bool IsProxySource(netadr_t from)
 
 bool SVC_RateLimitAddress(netadr_t from, int burst, int period)
 {
+	RateLimitLock rateLimitLock;
+
 	leakyBucket_t *bucket = SVC_BucketForAddress(from, burst, period);
 
 	return SVC_RateLimit(bucket, burst, period);

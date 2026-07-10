@@ -384,6 +384,7 @@ typedef enum
 #if COMPILE_CUSTOM_VOICE == 1
 	CRITSECT_LOAD_SOUND_FILE,
 #endif
+	CRITSECT_RATELIMITER,
 	CRITSECT_COUNT
 } criticalSection_t;
 
