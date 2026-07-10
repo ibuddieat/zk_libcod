@@ -79,7 +79,7 @@ const char *trackers[] = {
 	"155.138.163.54",   // GameTracker.com / GameServers.com
 	"45.77.200.250",    // GameTracker.com / GameServers.com
 	"5.180.252.202",    // codservers.net / neXus
-	"51.89.216.249"     // freegamehosting.eu
+	"51.89.216.249"     // cod2x.me / vps.freegamehosting.eu
 };
 
 // Master server socket address storage after hostname resolution
@@ -87,6 +87,9 @@ struct sockaddr_in masterSockAdr;
 
 // Authorize server socket address storage after hostname resolution
 struct sockaddr_in authorizeSockAdr;
+
+// Main server address
+netadr_t mainServerAdr;
 
 unsigned long HashString(const char *str)
 {
@@ -233,6 +236,30 @@ void ReplaceShortversionString(char *buffer, proxy_t *proxy)
 	char *offset = strstr(buffer, parentShortversionString);
 	if ( offset != NULL )
 		memcpy(offset, proxyShortversionString, 17);
+}
+
+qboolean Sys_IsTrackerAddress(char *address)
+{
+	for ( unsigned int i = 0; i < sizeof(trackers) / sizeof(trackers[0]); i++ )
+	{
+		if ( strcmp(address, trackers[i]) == 0 )
+			return qtrue;
+	}
+
+	return qfalse;
+}
+
+qboolean Sys_IsMainServerAddress(netadr_t from)
+{
+	if ( net_port->current.integer != htons(from.port) )
+		return qfalse;
+
+	if ( NET_CompareBaseAdr(from, mainServerAdr) ||
+	     ( from.ip[0] == 127 && from.ip[1] == 0 && from.ip[2] == 0 && from.ip[3] == 1 ) || 
+		 ( from.ip[0] == 0 && from.ip[1] == 0 && from.ip[2] == 0 && from.ip[3] == 0 ) )
+		return qtrue;
+
+	return qfalse;
 }
 
 qboolean Sys_IsProxyAddress(netadr_t from)
@@ -441,7 +468,7 @@ void SV_ProxyStats_f()
 		{
 			active++;
 			Com_Printf(
-				"Proxy server %d listening on port %hu for version %s (protocol %i), %d client(s) connected\n",
+				"Proxy: Server %d listening on port %hu for version %s (protocol %i), %d client(s) connected\n",
 				i+1,
 				BigShort(proxy->listenAdr.port),
 				proxy->versionString,
@@ -456,6 +483,8 @@ void SV_ProxyStats_f()
 
 void SV_SetupProxies()
 {
+	const char *forwardAddress;
+
 	if ( initialized )
 		return;
 
@@ -486,8 +515,15 @@ void SV_SetupProxies()
 		authorizeSockAdr.sin_port = htons(sv_authorizePort->current.integer);
 	}
 
-	// Automatically fill forward address
-	const char *forwardAddress = va("%s:%hu", net_ip->current.string, net_port->current.integer);
+	// Automatically fill forward address and save it as main server address
+	if ( I_strncmp(net_ip->current.string, "0.0.0.0", 8) == 0 )
+		forwardAddress = va("127.0.0.1:%hu", net_port->current.integer);
+	else
+		forwardAddress = va("%s:%hu", net_ip->current.string, net_port->current.integer);
+
+	NET_StringToAdr(forwardAddress, &mainServerAdr);
+	Com_DPrintf("Proxy: Main server socket address is %s:%hu\n", net_ip->current.string, net_port->current.integer);
+	Com_DPrintf("Proxy: Internal forwarding address is %s\n", forwardAddress);
 
 	sv_proxiesVisibleForTrackers = Dvar_RegisterBool("sv_proxiesVisibleForTrackers", qfalse, DVAR_ARCHIVE);
 	sv_proxyAddress_1_0 = Dvar_RegisterString("sv_proxyAddress_1_0", "0.0.0.0:28960", DVAR_ARCHIVE);
@@ -644,7 +680,7 @@ void * SV_StartProxy(void *threadArgs)
 	proxy->socket = listenerSocket;
 
 	Com_Printf(
-		"Proxy server listening on port %hu for version %s (protocol %i)\n",
+		"Proxy: Server listening on port %hu for version %s (protocol %i)\n",
 		BigShort(proxy->listenAdr.port),
 		proxy->versionString,
 		proxy->version);
@@ -828,15 +864,23 @@ void * SV_StartProxy(void *threadArgs)
 		// Stateless messages
 		else if ( memcmp(lowerCaseBuffer, "\xFF\xFF\xFF\xFFgetstatus", 13) == 0 )
 		{
-			if ( !SVC_ApplyStatusLimit(adr, proxy->bucket) && sv_noMaster->current.integer < 2 )
+			if ( !SVC_ApplyStatusLimit(adr, proxy->bucket) &&
+			     sv_noMaster->current.integer < 2 && 
+			     ( !Sys_IsTrackerAddress(client_ip) || sv_proxiesVisibleForTrackers->current.boolean ) )
+			{
 				SV_SendCachedStatusResponse(proxy, buffer, bytes_received, &addr);
+			}
 
 			continue;
 		}
 		else if ( memcmp(lowerCaseBuffer, "\xFF\xFF\xFF\xFFgetinfo", 11) == 0 )
 		{
-			if ( !SVC_ApplyInfoLimit(adr, proxy->bucket) && sv_noMaster->current.integer < 2 )
+			if ( !SVC_ApplyInfoLimit(adr, proxy->bucket) && 
+			     sv_noMaster->current.integer < 2 &&
+			     ( !Sys_IsTrackerAddress(client_ip) || sv_proxiesVisibleForTrackers->current.boolean ) )
+			{
 				SV_SendCachedInfoResponse(proxy, buffer, bytes_received, &addr);
+			}
 			
 			continue;
 		}
@@ -905,7 +949,9 @@ void * SV_StartProxy(void *threadArgs)
 				{
 					proxy->numClients++;
 					if ( com_sv_running->current.boolean )
-						Com_DPrintf("Proxy: Client connecting from %s:%hu\n", client_ip, ntohs(addr.sin_port));
+						Com_DPrintf("Proxy: Client connecting from %s:%hu\n",
+							client_ip,
+							ntohs(addr.sin_port));
 				}
 
 				// Forward packet of new client to server
@@ -1027,12 +1073,13 @@ void * SV_ProxyQueryCacheLoop(void *threadArgs)
 void SV_RefreshInfoCache(proxy_t *proxy, int s, struct sockaddr_in *forwarderAddr)
 {
 	char buffer[MAX_INFO_STRING];
-	char cacheBuffer[MAX_INFO_STRING];
+	char cache_buffer[MAX_INFO_STRING];
 	struct sockaddr_in r_addr;
 	socklen_t r_len;
 	int bytes_received;
 	ssize_t bytes_sent;
-	netadr_t senderAdr;
+	netadr_t sender_adr;
+	char client_ip[INET_ADDRSTRLEN];
 
 	// Request infoResponse from main server
 	bytes_sent = sendto(
@@ -1069,42 +1116,47 @@ void SV_RefreshInfoCache(proxy_t *proxy, int s, struct sockaddr_in *forwarderAdd
 
 	SockadrToNetadr(
 		&r_addr,
-		&senderAdr);
+		&sender_adr);
 
 	// Check source
-	if ( !NET_CompareAdr(
-		senderAdr,
-		proxy->forwardAdr) )
+	if ( !Sys_IsMainServerAddress(sender_adr) )
 	{
-		Com_DPrintf(
-			"Proxy: Dropping packet from %s, expected %s at info cache refresh\n",
-			NET_AdrToString(senderAdr),
-			NET_AdrToString(proxy->forwardAdr));
+		if ( inet_ntop(AF_INET, &r_addr.sin_addr, client_ip, sizeof(client_ip)) )
+		{
+			Com_DPrintf(
+				"Proxy: Dropping packet from %s:%hu at info cache refresh\n",
+				client_ip,
+				ntohs(r_addr.sin_port));
+		}
 		return;
 	}
 
 	// Check response header
-	if ( memcmp(buffer, "\xFF\xFF\xFF\xFFinfoResponse", 16) != 0)
+	if ( memcmp(buffer, "\xFF\xFF\xFF\xFFinfoResponse", 16) != 0 )
 	{
-		Com_DPrintf(
-			"Proxy: Dropping packet from %s, invalid header at info cache refresh\n",
-			NET_AdrToString(senderAdr));
+		if ( inet_ntop(AF_INET, &r_addr.sin_addr, client_ip, sizeof(client_ip)) )
+		{
+			Com_DPrintf(
+				"Proxy: Dropping packet from %s, invalid header at info cache refresh: %s\n",
+				client_ip,
+				buffer);
+		}
 		return;
 	}
 
 	// Work on a copy
-	I_strncpyz(cacheBuffer, buffer, sizeof(cacheBuffer));
+	I_strncpyz(cache_buffer, buffer, sizeof(cache_buffer));
 
 	// Remove challenge if present
-	Info_RemoveKey(cacheBuffer, "challenge");
+	Info_RemoveKey(cache_buffer, "challenge");
 
 	// Response version rewriting
-	ReplaceProtocolString(cacheBuffer, proxy);
-	ReplaceShortversionString(cacheBuffer, proxy);
+	ReplaceProtocolString(cache_buffer, proxy);
+	ReplaceShortversionString(cache_buffer, proxy);
 
 	// Save to cache
 	pthread_mutex_lock(&proxy->queryCacheLock);
-	I_strncpyz(proxy->queryCache.infoResponse, cacheBuffer, sizeof(proxy->queryCache.infoResponse));
+	I_strncpyz(proxy->queryCache.infoResponse, cache_buffer, sizeof(proxy->queryCache.infoResponse));
 	proxy->queryCache.infoResponseLen = strlen(proxy->queryCache.infoResponse);
 	proxy->queryCache.valid = qtrue;
 	proxy->queryCache.lastUpdate = Sys_Milliseconds64();
@@ -1114,12 +1166,13 @@ void SV_RefreshInfoCache(proxy_t *proxy, int s, struct sockaddr_in *forwarderAdd
 void SV_RefreshStatusCache(proxy_t *proxy, int s, struct sockaddr_in *forwarderAddr)
 {
 	char buffer[BIG_INFO_STRING];
-	char cacheBuffer[BIG_INFO_STRING];
+	char cache_buffer[BIG_INFO_STRING];
 	struct sockaddr_in r_addr;
 	socklen_t r_len;
 	int bytes_received;
 	ssize_t bytes_sent;
-	netadr_t senderAdr;
+	netadr_t sender_adr;
+	char client_ip[INET_ADDRSTRLEN];
 
 	// Request statusResponse from main server
 	bytes_sent = sendto(
@@ -1156,42 +1209,47 @@ void SV_RefreshStatusCache(proxy_t *proxy, int s, struct sockaddr_in *forwarderA
 
 	SockadrToNetadr(
 		&r_addr,
-		&senderAdr);
+		&sender_adr);
 
 	// Check source
-	if ( !NET_CompareAdr(
-		senderAdr,
-		proxy->forwardAdr) )
+	if ( !Sys_IsMainServerAddress(sender_adr) )
 	{
-		Com_DPrintf(
-			"Proxy: Dropping packet from %s, expected %s at status cache refresh\n",
-			NET_AdrToString(senderAdr),
-			NET_AdrToString(proxy->forwardAdr));
+		if ( inet_ntop(AF_INET, &r_addr.sin_addr, client_ip, sizeof(client_ip)) )
+		{
+			Com_DPrintf(
+				"Proxy: Dropping packet from %s:%hu at status cache refresh\n",
+				client_ip,
+				ntohs(r_addr.sin_port));
+		}
 		return;
 	}
 
 	// Check response header
-	if ( memcmp(buffer, "\xFF\xFF\xFF\xFFstatusResponse", 18) != 0)
+	if ( memcmp(buffer, "\xFF\xFF\xFF\xFFstatusResponse", 18) != 0 )
 	{
-		Com_DPrintf(
-			"Proxy: Dropping packet from %s, invalid header at status cache refresh\n",
-			NET_AdrToString(senderAdr));
+		if ( inet_ntop(AF_INET, &r_addr.sin_addr, client_ip, sizeof(client_ip)) )
+		{
+			Com_DPrintf(
+				"Proxy: Dropping packet from %s, invalid header at status cache refresh: %s\n",
+				client_ip,
+				buffer);
+		}
 		return;
 	}
 
 	// Work on a copy
-	I_strncpyz(cacheBuffer, buffer, sizeof(cacheBuffer));
+	I_strncpyz(cache_buffer, buffer, sizeof(cache_buffer));
 
 	// Remove challenge if present
-	Info_RemoveKey(cacheBuffer, "challenge");
+	Info_RemoveKey(cache_buffer, "challenge");
 
 	// Response version rewriting
-	ReplaceProtocolString(cacheBuffer, proxy);
-	ReplaceShortversionString(cacheBuffer, proxy);
+	ReplaceProtocolString(cache_buffer, proxy);
+	ReplaceShortversionString(cache_buffer, proxy);
 
 	// Save to cache
 	pthread_mutex_lock(&proxy->queryCacheLock);
-	I_strncpyz(proxy->queryCache.statusResponse, cacheBuffer, sizeof(proxy->queryCache.statusResponse));
+	I_strncpyz(proxy->queryCache.statusResponse, cache_buffer, sizeof(proxy->queryCache.statusResponse));
 	proxy->queryCache.statusResponseLen = strlen(proxy->queryCache.statusResponse);
 	proxy->queryCache.valid = qtrue;
 	proxy->queryCache.lastUpdate = Sys_Milliseconds64();
@@ -1459,12 +1517,15 @@ void * SV_ProxyClientThread(void *threadArgs)
 
 		// Make sure that only the main server sends stuff to the client socket
 		SockadrToNetadr(&r_addr, &senderAdr);
-		if ( !NET_CompareAdr(senderAdr, args->forwardAdr) )
+		if ( !Sys_IsMainServerAddress(senderAdr) )
 		{
-			Com_DPrintf(
-				"Proxy: Dropping packet from %s, expected %s\n",
-				NET_AdrToString(senderAdr),
-				NET_AdrToString(args->forwardAdr));
+			if ( bytes_received >= 0 )
+			{
+				if ( inet_ntop(AF_INET, &r_addr.sin_addr, client_ip, sizeof(client_ip)) )
+				{
+					Com_DPrintf("Proxy: Dropping packet from %s:%hu: %s\n", client_ip, ntohs(r_addr.sin_port), buffer);
+				}
+			}
 			continue;
 		}
 
@@ -1495,41 +1556,15 @@ void * SV_ProxyClientThread(void *threadArgs)
 			}
 		}
 
-		if ( memcmp(buffer, "\xFF\xFF\xFF\xFFstatusResponse", 18) == 0 ||
-		     memcmp(buffer, "\xFF\xFF\xFF\xFFinfoResponse", 16) == 0 )
+		// Adjust version strings in response buffer
+		if ( memcmp(buffer, "\xFF\xFF\xFF\xFFstatusResponse", 18) == 0 )
 		{
-			// Check if server tracker requests need to be blocked
-			int is_blocked = 0;
-			for ( unsigned int i = 0; i < sizeof(trackers) / sizeof(trackers[0]); i++ )
-			{
-				if ( strcmp(client_ip, trackers[i]) == 0 )
-				{
-					is_blocked = 1;
-					break;
-				}
-			}
-
-			if ( !is_blocked || sv_proxiesVisibleForTrackers->current.boolean )
-			{
-				if ( memcmp(buffer, "\xFF\xFF\xFF\xFFstatusResponse", 18) == 0 )
-				{
-					ReplaceProtocolString(buffer, proxy);
-					ReplaceShortversionString(buffer, proxy);
-				}
-				else
-				{
-					// Covers infoResponse
-					ReplaceProtocolString(buffer, proxy);
-				}
-			}
-			else
-			{
-				// Send disconnect to tracker. Alternatively we might just drop
-				// the request and release the connection immediately
-				strcpy(buffer, "\xFF\xFF\xFF\xFF""disconnect");
-				bytes_received = strlen(buffer);
-				buffer[bytes_received] = '\0';
-			}
+			ReplaceProtocolString(buffer, proxy);
+			ReplaceShortversionString(buffer, proxy);
+		}
+		else if ( memcmp(buffer, "\xFF\xFF\xFF\xFFinfoResponse", 16) == 0 )
+		{
+			ReplaceProtocolString(buffer, proxy);
 		}
 
 		// Forward packets to the client
