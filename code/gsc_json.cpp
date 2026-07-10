@@ -8,16 +8,19 @@
  * Native JSON support for GSC, backed by yyjson (code/lib/yyjson.[ch]).
  *
  * Value mapping (see doc/added_script_functions.md):
- *   JSON object   <-> GSC struct (string-keyed array)
- *   JSON array    <-> GSC array  (integer-indexed)
+ *   JSON object   <-> GSC string-keyed array
+ *   JSON array    <-> GSC integer-indexed array
  *   JSON string   <-> GSC string
  *   JSON number   <-> GSC int (when integral and 32-bit) else float
  *   JSON true/false -> GSC 1 / 0      (GSC has no bool type)
  *   JSON null     <-> GSC undefined
+ *   struct/entity/thread/function -> null (no JSON form; see below)
  *
- * GSC arrays and structs are the same underlying associative array, so on
- * serialize we decide array-vs-object from the key types: an array iff every
- * key is an integer index. Empty arrays serialize as {} (documented default).
+ * On serialize an array becomes a JSON array iff every key is an integer index,
+ * else a JSON object. Empty arrays serialize as {} (documented default). Only
+ * VAR_ARRAY is walked: struct (spawnstruct/level) field names are canonical
+ * strings, a separate index space with no reverse lookup exposed, so structs
+ * emit null rather than garbage keys.
  *
  * Engine internals are read exactly as the reverse-engineered server does
  * (Refrences/CoD2rev_Server/src/script/scr_variable.cpp): for a variable id,
@@ -40,8 +43,18 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <string.h>
+#include <unistd.h>
 
 #define JSON_MAX_DEPTH 64
+
+// Total values one serialization may visit. Shared subtrees are re-walked per
+// reference, so aliased/cyclic graphs multiply; the budget bounds the blowup.
+#define JSON_MAX_NODES 100000
+
+// Max parsed JSON values pushed to the VM per parse/load. Each value consumes
+// a script variable; the engine pool holds 0xFFFE total, and exhausting it is
+// a Scr_TerminalError (server drop). Half the pool is the safe ceiling.
+#define JSON_MAX_VALUES 32768
 
 // The engine's script string allocator (MT_AllocIndex / MEMORY_NODE_COUNT) caps a
 // single string at 64 KB; handing it a larger one triggers Scr_TerminalError and
@@ -68,11 +81,12 @@
 #define JSON_DEF_ASYNC_MAX_JOBS  64
 #define JSON_HARD_MAX_LOAD_BYTES (32 * 1024 * 1024)   // i386 absolute ceiling
 
-static long now_ms()
+// long long: on i386 a 32-bit long overflows tv_sec * 1000 after ~24.8 days.
+static long long now_ms()
 {
 	struct timespec ts;
 	clock_gettime(CLOCK_MONOTONIC, &ts);
-	return ts.tv_sec * 1000L + ts.tv_nsec / 1000000L;
+	return (long long)ts.tv_sec * 1000LL + ts.tv_nsec / 1000000L;
 }
 
 static int dvar_int_or(const char *name, int fallback)
@@ -109,6 +123,16 @@ static int dvar_int_or(const char *name, int fallback)
 	return fallback;
 }
 
+// GSC floats are 32-bit; printing the promoted double turns 3.1415f into
+// 3.1414999961853027. %.9g (FLT_DECIMAL_DIG digits) round-trips to the
+// identical float32.
+static double json_double_from_float(float f)
+{
+	char buf[32];
+	snprintf(buf, sizeof(buf), "%.9g", (double)f);
+	return strtod(buf, NULL);
+}
+
 // Register the JSON tuning dvars at engine dvar-init so they appear in dvarlist
 // with their defaults and min/max. Called once from custom_Com_InitDvars.
 void gsc_json_register_dvars(void)
@@ -124,15 +148,15 @@ class JsonTimer
 {
 	const char *func;
 	const char *detail;
-	long t0;
+	long long t0;
 public:
 	JsonTimer(const char *f, const char *d) : func(f), detail(d ? d : ""), t0(now_ms()) {}
 	~JsonTimer()
 	{
 		int threshold = dvar_int_or("scr_json_slow_warn_ms", JSON_DEF_SLOW_WARN_MS);
-		long elapsed = now_ms() - t0;
+		long long elapsed = now_ms() - t0;
 		if ( threshold > 0 && elapsed > threshold )
-			Com_Printf("[JSON] WARN: %s took %ld ms (%s)\n", func, elapsed, detail);
+			Com_Printf("[JSON] WARN: %s took %lld ms (%s)\n", func, elapsed, detail);
 	}
 };
 
@@ -302,9 +326,23 @@ static int json_kv_cmp(const void *a, const void *b)
 
 static yyjson_mut_val * gsc_object_to_json(yyjson_mut_doc *doc, unsigned int objectId, int depth);
 
+// Serialization walk state (main thread only). The node budget bounds aliased
+// subtree re-walks; the ancestor stack turns reference cycles into null.
+// A NULL return from the walk means "budget exhausted, abort the whole call".
+static long json_walk_nodes;
+static unsigned int json_walk_ancestors[JSON_MAX_DEPTH];
+
 // Convert a single variable entry (by id) to a yyjson mutable node.
 static yyjson_mut_val * gsc_entry_to_json(yyjson_mut_doc *doc, unsigned int id, int depth)
 {
+	json_walk_nodes--;
+	if ( json_walk_nodes < 0 )
+	{
+		if ( json_walk_nodes == -1 )
+			stackError("json serialization aborted: value graph exceeds %d nodes (too large or cyclic)", JSON_MAX_NODES);
+		return NULL;
+	}
+
 	VariableValueInternal *entry = &scrVarGlob[id];
 	int type = entry->w.type & VAR_MASK;
 
@@ -314,7 +352,7 @@ static yyjson_mut_val * gsc_entry_to_json(yyjson_mut_doc *doc, unsigned int id, 
 		return yyjson_mut_int(doc, entry->u.u.intValue);
 
 	case VAR_FLOAT:
-		return yyjson_mut_real(doc, (double)entry->u.u.floatValue);
+		return yyjson_mut_real(doc, json_double_from_float(entry->u.u.floatValue));
 
 	case VAR_STRING:
 	case VAR_ISTRING:
@@ -326,9 +364,9 @@ static yyjson_mut_val * gsc_entry_to_json(yyjson_mut_doc *doc, unsigned int id, 
 		yyjson_mut_val *arr = yyjson_mut_arr(doc);
 		if ( v != NULL )
 		{
-			yyjson_mut_arr_append(arr, yyjson_mut_real(doc, (double)v[0]));
-			yyjson_mut_arr_append(arr, yyjson_mut_real(doc, (double)v[1]));
-			yyjson_mut_arr_append(arr, yyjson_mut_real(doc, (double)v[2]));
+			yyjson_mut_arr_append(arr, yyjson_mut_real(doc, json_double_from_float(v[0])));
+			yyjson_mut_arr_append(arr, yyjson_mut_real(doc, json_double_from_float(v[1])));
+			yyjson_mut_arr_append(arr, yyjson_mut_real(doc, json_double_from_float(v[2])));
 		}
 		return arr;
 	}
@@ -336,7 +374,19 @@ static yyjson_mut_val * gsc_entry_to_json(yyjson_mut_doc *doc, unsigned int id, 
 	case VAR_OBJECT:
 	case VAR_STRUCT:
 	case VAR_ARRAY:
-		return gsc_object_to_json(doc, entry->u.u.pointerValue, depth + 1);
+	{
+		// Only arrays serialize. Struct field names (spawnstruct/level) are
+		// canonical strings - a separate index space from regular string keys,
+		// with no reverse-lookup exposed - so they cannot be resolved and are
+		// emitted as null. Entities/threads have no JSON form either.
+		unsigned int objId = entry->u.u.pointerValue;
+		if ( objId == 0 )
+			return yyjson_mut_null(doc);
+		int objType = scrVarGlob[objId].w.type & VAR_MASK;
+		if ( objType == VAR_ARRAY )
+			return gsc_object_to_json(doc, objId, depth + 1);
+		return yyjson_mut_null(doc);
+	}
 
 	default:
 		// entities, threads, functions, undefined etc. have no JSON form.
@@ -353,6 +403,15 @@ static yyjson_mut_val * gsc_object_to_json(yyjson_mut_doc *doc, unsigned int obj
 {
 	if ( depth >= JSON_MAX_DEPTH || objectId == 0 )
 		return yyjson_mut_null(doc);
+
+	// Reference cycle (object is its own ancestor): emit null instead of
+	// re-walking it to the depth cap.
+	for ( int i = 0; i < depth; i++ )
+	{
+		if ( json_walk_ancestors[i] == objectId )
+			return yyjson_mut_null(doc);
+	}
+	json_walk_ancestors[depth] = objectId;
 
 	// Count entries by walking the sibling ring - size-independent. GetArraySize
 	// only maintains a count for VAR_ARRAY; a VAR_OBJECT struct (spawnstruct,
@@ -415,7 +474,15 @@ static yyjson_mut_val * gsc_object_to_json(yyjson_mut_doc *doc, unsigned int obj
 
 		yyjson_mut_val *arr = yyjson_mut_arr(doc);
 		for ( unsigned int i = 0; i < count; i++ )
-			yyjson_mut_arr_append(arr, gsc_entry_to_json(doc, items[i].id, depth));
+		{
+			yyjson_mut_val *elem = gsc_entry_to_json(doc, items[i].id, depth);
+			if ( elem == NULL )
+			{
+				free(items);
+				return NULL;
+			}
+			yyjson_mut_arr_append(arr, elem);
+		}
 
 		free(items);
 		return arr;
@@ -427,6 +494,11 @@ static yyjson_mut_val * gsc_object_to_json(yyjson_mut_doc *doc, unsigned int obj
 	{
 		unsigned int name = items[i].name;
 		yyjson_mut_val *child = gsc_entry_to_json(doc, items[i].id, depth);
+		if ( child == NULL )
+		{
+			free(items);
+			return NULL;
+		}
 
 		// yyjson_mut_obj_add_val BORROWS the key pointer (doesn't copy). The
 		// pointer returned by SL_ConvertToString is only valid until the next
@@ -457,15 +529,17 @@ static yyjson_mut_val * gsc_object_to_json(yyjson_mut_doc *doc, unsigned int obj
 // undefined param degrades to JSON null instead of using uninitialized memory.
 static yyjson_mut_val * gsc_param_to_json(yyjson_mut_doc *doc, int param)
 {
+	json_walk_nodes = JSON_MAX_NODES;
+
 	unsigned int objectId;
 	if ( stackGetParamObject(param, &objectId) )
 	{
-		// stackGetParamObject also accepts entities/threads (all stored as a
-		// pointer on the stack). Only arrays and structs have a JSON form;
-		// walking an entity reads a bogus size and emits garbage, so gate the
-		// type here.
+		// stackGetParamObject also accepts structs/entities/threads (all stored
+		// as a pointer on the stack). Only arrays serialize: struct field names
+		// are canonical strings (no reverse-lookup exposed), entities emit
+		// garbage. Gate to VAR_ARRAY here.
 		int t = Scr_GetPointerType(param);
-		if ( t == VAR_ARRAY || t == VAR_STRUCT )
+		if ( t == VAR_ARRAY )
 			return gsc_object_to_json(doc, objectId, 0);
 		return yyjson_mut_null(doc);
 	}
@@ -485,7 +559,7 @@ static yyjson_mut_val * gsc_param_to_json(yyjson_mut_doc *doc, int param)
 		float v;
 		if ( !stackGetParamFloat(param, &v) )
 			return yyjson_mut_null(doc);
-		return yyjson_mut_real(doc, (double)v);
+		return yyjson_mut_real(doc, json_double_from_float(v));
 	}
 
 	case VAR_STRING:
@@ -510,9 +584,9 @@ static yyjson_mut_val * gsc_param_to_json(yyjson_mut_doc *doc, int param)
 		if ( !stackGetParamVector(param, v) )
 			return yyjson_mut_null(doc);
 		yyjson_mut_val *arr = yyjson_mut_arr(doc);
-		yyjson_mut_arr_append(arr, yyjson_mut_real(doc, (double)v[0]));
-		yyjson_mut_arr_append(arr, yyjson_mut_real(doc, (double)v[1]));
-		yyjson_mut_arr_append(arr, yyjson_mut_real(doc, (double)v[2]));
+		yyjson_mut_arr_append(arr, yyjson_mut_real(doc, json_double_from_float(v[0])));
+		yyjson_mut_arr_append(arr, yyjson_mut_real(doc, json_double_from_float(v[1])));
+		yyjson_mut_arr_append(arr, yyjson_mut_real(doc, json_double_from_float(v[2])));
 		return arr;
 	}
 
@@ -541,6 +615,14 @@ void gsc_json_parse()
 	if ( doc == NULL )
 	{
 		stackError("gsc_json_parse() failed to parse JSON input");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( yyjson_doc_get_val_count(doc) > JSON_MAX_VALUES )
+	{
+		stackError("gsc_json_parse() input has %u values, max is %d (script variable pool)", (unsigned)yyjson_doc_get_val_count(doc), JSON_MAX_VALUES);
+		yyjson_doc_free(doc);
 		stackPushUndefined();
 		return;
 	}
@@ -677,6 +759,14 @@ void gsc_json_load()
 	if ( doc == NULL )
 	{
 		stackError("gsc_json_load() failed to parse JSON from '%s'", path);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( yyjson_doc_get_val_count(doc) > JSON_MAX_VALUES )
+	{
+		stackError("gsc_json_load() '%s' has %u values, max is %d (script variable pool)", path, (unsigned)yyjson_doc_get_val_count(doc), JSON_MAX_VALUES);
+		yyjson_doc_free(doc);
 		stackPushUndefined();
 		return;
 	}
@@ -913,6 +1003,15 @@ static void * json_async_load_worker(void *arg)
 	yyjson_doc *parsed = yyjson_read(buf, got, YYJSON_READ_ALLOW_BOM);
 	free(buf);
 
+	// Same script-variable-pool guard as sync json_load. Fail the job here;
+	// the worker cannot stackError (wrong thread).
+	if ( parsed != NULL && yyjson_doc_get_val_count(parsed) > JSON_MAX_VALUES )
+	{
+		Com_Printf("[JSON] WARN: async load '%s' has %u values, max is %d - job failed\n", job->abspath, (unsigned)yyjson_doc_get_val_count(parsed), JSON_MAX_VALUES);
+		yyjson_doc_free(parsed);
+		parsed = NULL;
+	}
+
 	pthread_mutex_lock(&json_async_mutex);
 	if ( parsed == NULL )
 	{
@@ -991,7 +1090,12 @@ static void * json_async_save_worker(void *arg)
 
 	json_async_mkdir_parents(job->abspath);
 
-	FILE *f = fopen(job->abspath, "wb");
+	// Write to a job-unique temp file and rename() into place: readers never
+	// see a truncated file and same-path saves cannot interleave.
+	char tmpPath[MAX_OSPATH + 16];
+	snprintf(tmpPath, sizeof(tmpPath), "%s.tmp%d", job->abspath, job->id);
+
+	FILE *f = fopen(tmpPath, "wb");
 	if ( f == NULL )
 	{
 		free(text);
@@ -1006,8 +1110,14 @@ static void * json_async_save_worker(void *arg)
 	fclose(f);
 	free(text);
 
+	int ok = (written == want) ? 1 : 0;
+	if ( ok && rename(tmpPath, job->abspath) != 0 )
+		ok = 0;
+	if ( !ok )
+		unlink(tmpPath);
+
 	pthread_mutex_lock(&json_async_mutex);
-	job->save_ok = (written == want) ? 1 : 0;
+	job->save_ok = ok;
 	job->status  = JSON_ASYNC_STATUS_DONE;
 	pthread_mutex_unlock(&json_async_mutex);
 	return NULL;

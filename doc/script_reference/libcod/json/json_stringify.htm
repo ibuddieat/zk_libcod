@@ -27,7 +27,8 @@ Module: JSON<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Turns GSC data back into a JSON string. A numbered array becomes a JSON list; anything else becomes a JSON object. Pass <b>pretty</b> = 1 for readable multi-line output, or leave it out for a compact one-liner.</p>
+<p>Turns GSC data back into a JSON string. A numbered array becomes a JSON list; a string-keyed array becomes a JSON object. Pass <b>pretty</b> = 1 for readable multi-line output, or leave it out for a compact one-liner.</p>
+<p>Only arrays, strings, numbers and booleans have a JSON form. Structs (<code>spawnStruct</code>, <code>level</code>), entities, threads and function pointers are written as <b>null</b>. A value graph that is cyclic or larger than 100000 nodes is refused with a script error.</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>

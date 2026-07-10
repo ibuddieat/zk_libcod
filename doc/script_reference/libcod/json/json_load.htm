@@ -27,7 +27,7 @@ Module: JSON<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Reads a JSON file and turns it into GSC data. Returns <b>undefined</b> if the file is missing or the JSON is broken, so check with <code>isDefined()</code> before using it. The server waits while the file loads, so keep files small (use <code>json_load_async</code> for big ones).</p>
+<p>Reads a JSON file and turns it into GSC data. Returns <b>undefined</b> if the file is missing, the JSON is broken, or it holds more than 32768 values (the script variable pool cannot hold more), so check with <code>isDefined()</code> before using it. The server waits while the file loads, so keep files small (use <code>json_load_async</code> for big ones).</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>

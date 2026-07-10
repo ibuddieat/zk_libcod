@@ -27,7 +27,7 @@ Module: JSON<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Reads JSON text and turns it into GSC data. A JSON object comes back as an array you index by name (like <code>v["hp"]</code>); a JSON list comes back as an array you index by number (like <code>v[0]</code>). Returns <b>undefined</b> if the text is not valid JSON.</p>
+<p>Reads JSON text and turns it into GSC data. A JSON object comes back as an array you index by name (like <code>v["hp"]</code>); a JSON list comes back as an array you index by number (like <code>v[0]</code>). Returns <b>undefined</b> if the text is not valid JSON, or if it holds more than 32768 values (the script variable pool cannot hold more).</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
