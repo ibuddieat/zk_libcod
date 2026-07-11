@@ -54,6 +54,7 @@ function collapseAll()
 	collapse("entity");
 	collapse("exec");
 	collapse("hud");
+	collapse("json");
 	collapse("level");
 	collapse("math");
 	collapse("memory");
@@ -115,6 +116,7 @@ function expandAll()
 	expand("entity");
 	expand("exec");
 	expand("hud");
+	expand("json");
 	expand("level");
 	expand("math");
 	expand("memory");
@@ -292,6 +294,17 @@ function expandAll()
 <div id='hud' CLASS='cmdlist'>
 <A HREF="libcod/hud/getclienthudelemcount.htm" TARGET="main" >getClientHudElemCount</a><br>
 <A HREF="libcod/hud/obituary.htm" TARGET="main" >obituary</a><br>
+</div>
+<SPAN CLASS='class1'><a href="" onClick="switchMenu('json'); return false;" title='Expand/Collapse JSON'>JSON</a><br></SPAN>
+<div id='json' CLASS='cmdlist'>
+<A HREF="libcod/json/json_async_done.htm" TARGET="main" >json_async_done</a><br>
+<A HREF="libcod/json/json_async_result.htm" TARGET="main" >json_async_result</a><br>
+<A HREF="libcod/json/json_load.htm" TARGET="main" >json_load</a><br>
+<A HREF="libcod/json/json_load_async.htm" TARGET="main" >json_load_async</a><br>
+<A HREF="libcod/json/json_parse.htm" TARGET="main" >json_parse</a><br>
+<A HREF="libcod/json/json_save.htm" TARGET="main" >json_save</a><br>
+<A HREF="libcod/json/json_save_async.htm" TARGET="main" >json_save_async</a><br>
+<A HREF="libcod/json/json_stringify.htm" TARGET="main" >json_stringify</a><br>
 </div>
 <SPAN CLASS='class1'><a href="" onClick="switchMenu('level'); return false;" title='Expand/Collapse Level'>Level</a><br></SPAN>
 <div id='level' CLASS='cmdlist'>

@@ -155,6 +155,14 @@
   * `getSoundFileDuration(<file path>)`
   * `getWeaponRaiseTime(<weapon name>)`
   * `isSemiAutoWeapon(<weapon name>)`
+  * `json_async_done()`
+  * `json_async_result(<jobId>)`
+  * `json_load(<fs path>)`
+  * `json_load_async(<fs path>)`
+  * `json_parse(<json string>)`
+  * `json_save(<fs path>, <value>, [<pretty>])`
+  * `json_save_async(<fs path>, <value>, [<pretty>])`
+  * `json_stringify(<value>, [<pretty>])`
   * `loadSoundFile(<file path>, <callback function>, [<volume>], [<sound index>])`
   * `loadSpeexFile(<file path>, [<sound index>])`
   * `logPrintConsole(<message>)`

@@ -1,0 +1,63 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>json_stringify( &lt;value&gt;, [&lt;pretty&gt;] )</H1>
+<HR>
+<BODY BGCOLOR='B0C4DE'>
+<I>
+Module: JSON<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Turns GSC data back into a JSON string. A numbered array becomes a JSON list; a string-keyed array becomes a JSON object. Pass <b>pretty</b> = 1 for readable multi-line output, or leave it out for a compact one-liner.</p>
+<p>Only arrays, strings, numbers and booleans have a JSON form. Structs (<code>spawnStruct</code>, <code>level</code>), entities, threads and function pointers are written as <b>null</b>. A value graph that is cyclic or larger than 100000 nodes is refused with a script error.</p>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+a = [];
+a["name"] = "bot1";
+a["pos"]  = (12.5, 34.0, 56.0);
+s = json_stringify(a, 1);
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;value&gt; Any GSC value: struct, array, string, int, float, or vec3.</LI>
+</UL></TR></TD></TABLE>
+<BR>
+<H2>Optional Args</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>2 : &lt;pretty&gt; <b>0</b> compact single-line (default), <b>1</b> readable multi-line.</LI>
+</UL></TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>

@@ -1,0 +1,56 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>json_async_result( &lt;jobId&gt; )</H1>
+<HR>
+<BODY BGCOLOR='B0C4DE'>
+<I>
+Module: JSON<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Collects the result of a finished job. For a load job you get your data back (or <b>undefined</b> if it failed); for a save job you get <b>1</b> (worked) or <b>0</b> (failed). If the job is not done yet you get <b>undefined</b> and it stays in the queue, so you can check again later. Always collect every job you start, or it stays in memory.</p>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+job = json_load_async("stats/big.json");
+// ... checking json_async_done() each tick ...
+v = json_async_result(job);
+if(isDefined(v))
+    iprintln("loaded " + v["records"].size + " records");
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;jobId&gt; The number you got back from <code>json_load_async</code> or <code>json_save_async</code>.</LI>
+</UL></TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>

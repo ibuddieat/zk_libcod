@@ -117,6 +117,14 @@ if grep -q "COMPILE_EXEC 1" config.hpp; then
 	$cc $debug $options $constants -c gsc_exec.cpp -o objects_$1/gsc_exec.opp
 fi
 
+if grep -q "COMPILE_JSON 1" config.hpp; then
+	# yyjson: i386 SSE math, drop incremental reader + utils, hide symbols.
+	echo "##### COMPILE $1 YYJSON.C #####"
+	$cc $debug $options $constants -mfpmath=sse -msse2 -DYYJSON_DISABLE_INCR_READER=1 -DYYJSON_DISABLE_UTILS=1 -fvisibility=hidden -w -c lib/yyjson.c -o objects_$1/yyjson.opp
+	echo "##### COMPILE $1 GSC_JSON.CPP #####"
+	$cc $debug $options $constants -c gsc_json.cpp -o objects_$1/gsc_json.opp
+fi
+
 if grep -q "COMPILE_LEVEL 1" config.hpp; then
 	echo "##### COMPILE $1 GSC_LEVEL.CPP #####"
 	$cc $debug $options $constants -c gsc_level.cpp -o objects_$1/gsc_level.opp
