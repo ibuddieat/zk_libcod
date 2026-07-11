@@ -316,6 +316,14 @@ scr_function_t scriptFunctions[] =
 	{"ignoreWeapon", gsc_weapons_ignoreweapon, 0},
 	{"setDefaultWeapon", gsc_weapons_setdefaultweapon, 0},
 	#endif
+	#if COMPILE_HTTP == 1
+	{"httpFetch", gsc_http_fetch, 0},
+	#endif
+	#if COMPILE_WEBSOCKET == 1
+	{"webSocketConnect", gsc_websocket_connect, 0},
+	{"webSocketSendText", gsc_websocket_sendtext, 0},
+	{"webSocketClose", gsc_websocket_close, 0},
+	#endif
 	{NULL, NULL, 0} // Terminator
 };
 
