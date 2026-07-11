@@ -1137,9 +1137,8 @@ void SV_RefreshInfoCache(proxy_t *proxy, int s, struct sockaddr_in *forwarderAdd
 		if ( inet_ntop(AF_INET, &r_addr.sin_addr, client_ip, sizeof(client_ip)) )
 		{
 			Com_DPrintf(
-				"Proxy: Dropping packet from %s, invalid header at info cache refresh: %s\n",
-				client_ip,
-				buffer);
+				"Proxy: Dropping packet from %s, invalid header at info cache refresh\n",
+				client_ip);
 		}
 		return;
 	}
@@ -1230,9 +1229,8 @@ void SV_RefreshStatusCache(proxy_t *proxy, int s, struct sockaddr_in *forwarderA
 		if ( inet_ntop(AF_INET, &r_addr.sin_addr, client_ip, sizeof(client_ip)) )
 		{
 			Com_DPrintf(
-				"Proxy: Dropping packet from %s, invalid header at status cache refresh: %s\n",
-				client_ip,
-				buffer);
+				"Proxy: Dropping packet from %s, invalid header at status cache refresh\n",
+				client_ip);
 		}
 		return;
 	}
