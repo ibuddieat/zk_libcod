@@ -10,7 +10,7 @@ void gsc_level_getmovers()
 	stackPushArray();
 	for ( i = 0; i < level.num_entities; i++, ent++ )
 	{
-		if ( ent->s.eType == ET_SCRIPTMOVER )
+		if ( ent->s.eType == ET_SCRIPTMOVER && ent->r.bmodel )
 		{
 			stackPushEntity(ent);
 			stackPushArrayLast();
