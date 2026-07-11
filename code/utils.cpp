@@ -148,6 +148,37 @@ qboolean IsValidWeaponId(int id)
 	return qtrue;
 }
 
+qboolean ContainsMapCommand(const char *string)
+{
+	const char *p = string;
+
+	while ( *p )
+	{
+		// Skip leading whitespace(s)
+		while ( *p == ' ' || *p == '\t' || *p == '\r' || *p == '\n' )
+			p++;
+
+		if ( !I_strnicmp(p, "map ", 4) ||
+		     !I_strnicmp(p, "devmap ", 7) ||
+		     !I_strnicmp(p, "fast_restart", 12) ||
+		     !I_strnicmp(p, "map_restart", 11) ||
+		     !I_strnicmp(p, "map_rotate", 10) )
+		{
+			return qtrue;
+		}
+
+		// Find next command separator
+		while ( *p && *p != ';' && *p != '\r' && *p != '\n' )
+			p++;
+
+		// Skip separator(s)
+		while ( *p == ';' || *p == '\r' || *p == '\n' )
+			p++;
+	}
+
+	return qfalse;
+}
+
 /*
 =================
 Sys_AnsiColorPrint

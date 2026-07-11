@@ -3,6 +3,7 @@
 
 #include "gsc.hpp"
 #include "libcod.hpp"
+#include "utils.hpp"
 
 void Sys_AnsiColorPrint(const char *msg);
 

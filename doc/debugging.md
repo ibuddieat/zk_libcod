@@ -1,8 +1,7 @@
 ## Known issues
 - Known issues that can lead to a server crash:
   - Using `wait` functions within callback functions where this is advised against, see [added script callback functions](doc/added_script_callback_functions.md)
-  - Using `executeCommand()` with map commands (e.g., map_rotate)
-  - Removing a turret in a script callback function, if the damage comes from said turret
+  - Removing a turret in a script callback function, if the damage comes from the same turret
   - Changing the `sv_maxclients` dvar during active gameplay (e.g., by using `SetCvar()` in script code)
   - Kicking players in the connect script callback function, without delay
   - Using the custom notify script callback functions without a `waittillframeend` before calling `Spawn()` on a player

@@ -429,7 +429,15 @@ void gsc_utils_executecommand()
 		return;
 	}
 
-	Cmd_ExecuteString(str);
+	if ( ContainsMapCommand(str) )
+	{
+		Cbuf_ExecuteText(2, str);
+	}
+	else
+	{
+		Cmd_ExecuteString(str);
+	}
+
 	stackPushBool(qtrue);
 }
 

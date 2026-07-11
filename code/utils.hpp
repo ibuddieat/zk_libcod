@@ -29,6 +29,8 @@ int GetAnimationId(const char *string);
 
 qboolean IsValidWeaponId(int id);
 
+qboolean ContainsMapCommand(const char *string);
+
 void Sys_AnsiColorPrint(const char *msg);
 
 #endif
