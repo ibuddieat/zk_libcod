@@ -9,7 +9,8 @@
 #include <cstring>
 #include <cstdint>
 
-#include "gsc_maxstring.hpp"
+// Frame size ceiling before the VM string intern would fatally error (see http_client.hpp).
+#define GSC_MAX_STRING_BYTES 65000
 
 // Driven in embedded (external-poll) mode, exactly like http_client.hpp: lws hands
 // us its sockets via ADD/DEL/CHANGE_MODE_POLL_FD and we run a non-blocking poll()

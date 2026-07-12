@@ -10,7 +10,11 @@
 #include <cstring>
 #include <cstdint>
 #include <cctype>
-#include "gsc_maxstring.hpp"
+
+// Max size of a string handed to the VM. The engine interns strings in a memory
+// tree that fatally errors past ~0x10000 bytes, so remote data (bodies, headers,
+// frames) is rejected past this bound instead of crashing the server.
+#define GSC_MAX_STRING_BYTES 65000
 
 // The server frame drives lws in embedded (external-poll) mode: lws hands us the
 // sockets to watch via ADD/DEL/CHANGE_MODE_POLL_FD, and we run a non-blocking

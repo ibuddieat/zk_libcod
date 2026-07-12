@@ -7,7 +7,6 @@
 // otherwise corrupt identifiers named `level` inside the STL headers.
 #include "websocket.hpp"
 
-#include "gsc_maxstring.hpp"
 #include "gsc_websocket.hpp"
 
 // Maximum number of simultaneous websocket clients

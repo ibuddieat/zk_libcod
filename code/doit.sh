@@ -10,6 +10,10 @@
 # ./doit.sh mysql1 nospeex debug
 # ./doit.sh mysql2
 # ./doit.sh http             (httpFetch + webSocket; needs cmake + libmbedtls-dev:i386)
+# ./doit.sh http debug
+# ./doit.sh mysql1 http
+# ./doit.sh mysql2 http nospeex
+# ./doit.sh mysql1 http nospeex debug
 
 # Exit on compiler error, with non-zero exit code
 set -e

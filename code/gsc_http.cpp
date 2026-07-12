@@ -7,7 +7,6 @@
 // otherwise corrupt identifiers named `level` inside the STL headers.
 #include "http_client.hpp"
 
-#include "gsc_maxstring.hpp"
 #include "gsc_http.hpp"
 
 static HttpClient *http_client = NULL;
