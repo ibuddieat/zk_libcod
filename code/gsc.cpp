@@ -102,6 +102,8 @@ scr_function_t scriptFunctions[] =
 
 	#if COMPILE_GRAPH == 1
 	{"graphCreate", gsc_graph_create, 0},
+	{"graphFindPath", gsc_graph_find_path, 0},
+	{"graphFindClosestNode", gsc_graph_find_closest_node, 0},
 	{"graphRemove", gsc_graph_remove, 0},
 	{"graphRemoveAll", gsc_graph_removeall, 0},
 	{"graphAddNode", gsc_graph_add_node, 0},

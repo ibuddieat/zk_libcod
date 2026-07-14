@@ -5,12 +5,18 @@
 
 #if COMPILE_GRAPH == 1
 
-// Waypoint-graph subsystem with A* pathfinding for server-side AI.
-// From-scratch implementation; the A* shape (binary heap + lazy deletion)
-// follows the approach popularized by Justin Heyes-Jones' astar-algorithm-cpp.
-// All state is owned by the main server thread - no locking, by design.
+/*
+ * Waypoint-graph subsystem with A* pathfinding for server-side AI.
+ * The A* shape (binary-heap open list with lazy deletion) follows the approach
+ * popularized by Justin Heyes-Jones' astar-algorithm-cpp:
+ * https://github.com/justinhj/astar-algorithm-cpp
+ *
+ * All graph state is owned by the main server thread - no locking, by design.
+ */
 
 void gsc_graph_create();
+void gsc_graph_find_path();
+void gsc_graph_find_closest_node();
 void gsc_graph_remove();
 void gsc_graph_removeall();
 void gsc_graph_add_node();
