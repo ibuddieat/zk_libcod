@@ -99,6 +99,17 @@ scr_function_t scriptFunctions[] =
 	{"setNextTestClientName", gsc_bots_setnexttestclientname, 0},
 	{"resetTestClientNaming", gsc_bots_resettestclientnaming, 0},
 	#endif
+
+	#if COMPILE_GRAPH == 1
+	{"graphCreate", gsc_graph_create, 0},
+	{"graphRemove", gsc_graph_remove, 0},
+	{"graphRemoveAll", gsc_graph_removeall, 0},
+	{"graphAddNode", gsc_graph_add_node, 0},
+	{"graphAddEdge", gsc_graph_add_edge, 0},
+	{"graphGetNodeOrigin", gsc_graph_get_node_origin, 0},
+	{"graphGetNodeCount", gsc_graph_get_node_count, 0},
+	{"graphGetEdgeCount", gsc_graph_get_edge_count, 0},
+	#endif
 		
 	#if COMPILE_MYSQL_DEFAULT == 1
 	{"mysql_init", gsc_mysql_init, 0},

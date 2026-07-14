@@ -886,6 +886,10 @@ void custom_SV_SpawnServer(char *server)
 	Scr_ParseGameTypeList();
 	SV_SetGametype();
 
+	#if COMPILE_GRAPH == 1
+	gsc_graph_cleanup_on_spawn_server();
+	#endif
+
 	if ( com_sv_running->current.boolean )
 	{
 		persist = G_GetSavePersist();

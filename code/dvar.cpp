@@ -82,6 +82,11 @@ dvar_t *con_coloredPrints;
 dvar_t *fs_callbacks;
 dvar_t *fs_gametypes;
 dvar_t *fs_library;
+#if COMPILE_GRAPH == 1
+dvar_t *graph_debug;
+dvar_t *graph_max_graphs;
+dvar_t *graph_max_nodes;
+#endif
 dvar_t *fs_mapScriptDirectories;
 dvar_t *fs_replaceStockMaps;
 dvar_t *g_brushModelCollisionTweaks;
@@ -266,6 +271,11 @@ void hook_Com_Printf_in_Com_Init_Try_Block_Function(const char *format, ...)
 	fs_callbacks = Dvar_RegisterString("fs_callbacks", "", DVAR_ARCHIVE);
 	fs_gametypes = Dvar_RegisterString("fs_gametypes", "", DVAR_ARCHIVE);
 	fs_library = Dvar_RegisterString("fs_library", "", DVAR_ARCHIVE);
+	#if COMPILE_GRAPH == 1
+	graph_debug = Dvar_RegisterBool("graph_debug", qfalse, DVAR_ARCHIVE);
+	graph_max_graphs = Dvar_RegisterInt("graph_max_graphs", 8, 1, 64, DVAR_ARCHIVE);
+	graph_max_nodes = Dvar_RegisterInt("graph_max_nodes", 8192, 64, 65535, DVAR_ARCHIVE);
+	#endif
 	fs_mapScriptDirectories = Dvar_RegisterInt("fs_mapScriptDirectories", 0, 0, 2, DVAR_ARCHIVE);
 	fs_replaceStockMaps = Dvar_RegisterBool("fs_replaceStockMaps", qfalse, DVAR_ARCHIVE);
 	g_brushModelCollisionTweaks = Dvar_RegisterBool("g_brushModelCollisionTweaks", qfalse, DVAR_ARCHIVE);
