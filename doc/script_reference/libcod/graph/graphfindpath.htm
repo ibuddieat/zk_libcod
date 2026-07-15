@@ -1,0 +1,59 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>graphFindPath( &lt;graph id&gt;, &lt;start&gt;, &lt;goal&gt;, [&lt;skip nodes&gt;], [&lt;skip node types&gt;], [&lt;skip edge types&gt;], [&lt;max expansions&gt;] )</H1>
+<HR>
+<BODY BGCOLOR="B0C4DE">
+<I>
+Module: Graph<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Runs A* and returns an array of node ids from start to goal. If the goal cannot be reached (or a budget is hit) it returns a best-effort <b>partial</b> path - check whether the last element equals the goal. Returns <b>undefined</b> for invalid arguments.</p>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+path = graphFindPath(g, start, goal);
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;graph id&gt; The graph.</LI><LI>2 : &lt;start&gt; Start node id.</LI><LI>3 : &lt;goal&gt; Goal node id.</LI>
+</UL></TR></TD></TABLE>
+<BR>
+<H2>Optional Args</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>4 : &lt;skip nodes&gt; Array of node ids to treat as blocked.</LI><LI>5 : &lt;skip node types&gt; Bitmask; nodes whose type matches are skipped.</LI><LI>6 : &lt;skip edge types&gt; Bitmask; edges whose type matches are skipped.</LI><LI>7 : &lt;max expansions&gt; Per-call ceiling on nodes explored (partial path if hit).</LI>
+</UL></TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>

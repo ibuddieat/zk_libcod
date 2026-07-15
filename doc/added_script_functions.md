@@ -154,6 +154,34 @@
   * `getSoundAliasesFromFile(<filename>)`
   * `getSoundFileDuration(<file path>)`
   * `getWeaponRaiseTime(<weapon name>)`
+  * `graphAddEdge(<graph id>, <from>, <to>, [<type>], [<cost>])`
+  * `graphAddNode(<graph id>, <origin>, [<type>], [<node id>])`
+  * `graphAutodiscover(<graph id>, <seed origin>, [<grid step>], [<max nodes>])`
+  * `graphCreate([<persist>], [<reserve>])`
+  * `graphFindClosestEdge(<graph id>, <origin>)`
+  * `graphFindClosestNode(<graph id>, <origin>, [<content mask>])`
+  * `graphFindPath(<graph id>, <start>, <goal>, [<skip nodes>], [<skip node types>], [<skip edge types>], [<max expansions>])`
+  * `graphGetAllEdges(<graph id>)`
+  * `graphGetAllNodes(<graph id>, [<origin>], [<max dist sq>])`
+  * `graphGetEdgeCount(<graph id>)`
+  * `graphGetEdgeProperties(<graph id>, <from>, <to>)`
+  * `graphGetNodeCount(<graph id>)`
+  * `graphGetNodeIdsAccessibleFrom(<graph id>, <node id>)`
+  * `graphGetNodeIdsAccessibleTo(<graph id>, <node id>)`
+  * `graphGetNodeOrigin(<graph id>, <node id>)`
+  * `graphGetNodeProperties(<graph id>, <node id>)`
+  * `graphGetStats(<graph id>, [<reset>])`
+  * `graphLoad(<fs path>, [<persist>])`
+  * `graphPrecomputePathsToNode(<graph id>, <goal>, [<skip node types>], [<skip edge types>])`
+  * `graphRemove(<graph id>)`
+  * `graphRemoveAll()`
+  * `graphRemoveEdge(<graph id>, <from>, <to>)`
+  * `graphRemoveNode(<graph id>, <node id>)`
+  * `graphSave(<graph id>, <fs path>)`
+  * `graphSetEdgeCost(<graph id>, <from>, <to>, <cost>)`
+  * `graphSetEdgeType(<graph id>, <from>, <to>, <type>)`
+  * `graphSetNodeOrigin(<graph id>, <node id>, <origin>)`
+  * `graphSetNodeType(<graph id>, <node id>, <type>)`
   * `isSemiAutoWeapon(<weapon name>)`
   * `json_async_done()`
   * `json_async_result(<jobId>)`
