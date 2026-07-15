@@ -28,6 +28,10 @@ void gsc_graph_get_stats();
 void gsc_graph_find_closest_edge();
 void gsc_graph_get_all_nodes();
 void gsc_graph_get_all_edges();
+void gsc_graph_get_edge_properties();
+void gsc_graph_set_edge_cost();
+void gsc_graph_set_edge_type();
+void gsc_graph_remove_edge();
 
 void gsc_graph_cleanup_on_spawn_server(void);
 

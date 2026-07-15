@@ -97,6 +97,23 @@ static AStarGraph *graphById(int id)
 	return NULL;
 }
 
+// Index of the directed from->to edge within node `from`'s edge list, or -1.
+static int graphFindEdgeIndex(AStarGraph *graph, int from, int to)
+{
+	if ( from < 0 || from >= (int)graph->nodes.size() )
+		return -1;
+
+	std::vector<GraphEdge> &edges = graph->nodes[from].edges;
+
+	for ( size_t i = 0; i < edges.size(); i++ )
+	{
+		if ( edges[i].to == (unsigned int)to )
+			return (int)i;
+	}
+
+	return -1;
+}
+
 static float edgeDistance(const vec3_t a, const vec3_t b)
 {
 	float dx = b[0] - a[0];
@@ -988,6 +1005,183 @@ void gsc_graph_add_edge()
 	graph->nodes[from].edges.push_back(edge);
 	graph->edgeCount++;
 
+	stackPushBool(qtrue);
+}
+
+/*
+ * graphGetEdgeProperties(<graph id>, <from>, <to>) -> [type, cost], or
+ * undefined when there is no such directed edge.
+ */
+void gsc_graph_get_edge_properties()
+{
+	int id;
+	int from;
+	int to;
+	AStarGraph *graph;
+	int idx;
+
+	if ( !stackGetParams("iii", &id, &from, &to) )
+	{
+		stackError("gsc_graph_get_edge_properties() one or more arguments are undefined or have a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	graph = graphById(id);
+
+	if ( !graph )
+	{
+		stackError("gsc_graph_get_edge_properties() graph %i does not exist", id);
+		stackPushUndefined();
+		return;
+	}
+
+	idx = graphFindEdgeIndex(graph, from, to);
+
+	if ( idx < 0 )
+	{
+		stackPushUndefined();
+		return;
+	}
+
+	GraphEdge &edge = graph->nodes[from].edges[idx];
+
+	stackPushArray();
+	stackPushInt(edge.type);
+	stackPushArrayLast();
+	stackPushFloat(edge.cost);
+	stackPushArrayLast();
+}
+
+// graphSetEdgeCost(<graph id>, <from>, <to>, <cost>) -> true, or false if the edge is missing
+void gsc_graph_set_edge_cost()
+{
+	int id;
+	int from;
+	int to;
+	float cost;
+	AStarGraph *graph;
+	int idx;
+
+	if ( !stackGetParams("iii", &id, &from, &to) )
+	{
+		stackError("gsc_graph_set_edge_cost() one or more arguments are undefined or have a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( !stackGetParamFloat(3, &cost) )
+	{
+		stackError("gsc_graph_set_edge_cost() cost argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	// A* requires non-negative edge costs; a negative one would break the search
+	if ( cost < 0 )
+	{
+		stackError("gsc_graph_set_edge_cost() cost must be non-negative");
+		stackPushUndefined();
+		return;
+	}
+
+	graph = graphById(id);
+
+	if ( !graph )
+	{
+		stackError("gsc_graph_set_edge_cost() graph %i does not exist", id);
+		stackPushUndefined();
+		return;
+	}
+
+	idx = graphFindEdgeIndex(graph, from, to);
+
+	if ( idx < 0 )
+	{
+		stackPushBool(qfalse);
+		return;
+	}
+
+	graph->nodes[from].edges[idx].cost = cost;
+	stackPushBool(qtrue);
+}
+
+// graphSetEdgeType(<graph id>, <from>, <to>, <type>) -> true, or false if the edge is missing
+void gsc_graph_set_edge_type()
+{
+	int id;
+	int from;
+	int to;
+	int type;
+	AStarGraph *graph;
+	int idx;
+
+	if ( !stackGetParams("iiii", &id, &from, &to, &type) )
+	{
+		stackError("gsc_graph_set_edge_type() one or more arguments are undefined or have a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	graph = graphById(id);
+
+	if ( !graph )
+	{
+		stackError("gsc_graph_set_edge_type() graph %i does not exist", id);
+		stackPushUndefined();
+		return;
+	}
+
+	idx = graphFindEdgeIndex(graph, from, to);
+
+	if ( idx < 0 )
+	{
+		stackPushBool(qfalse);
+		return;
+	}
+
+	graph->nodes[from].edges[idx].type = type;
+	stackPushBool(qtrue);
+}
+
+/*
+ * graphRemoveEdge(<graph id>, <from>, <to>) -> true, or false when there is no
+ * such directed edge. Only this one direction is removed.
+ */
+void gsc_graph_remove_edge()
+{
+	int id;
+	int from;
+	int to;
+	AStarGraph *graph;
+	int idx;
+
+	if ( !stackGetParams("iii", &id, &from, &to) )
+	{
+		stackError("gsc_graph_remove_edge() one or more arguments are undefined or have a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	graph = graphById(id);
+
+	if ( !graph )
+	{
+		stackError("gsc_graph_remove_edge() graph %i does not exist", id);
+		stackPushUndefined();
+		return;
+	}
+
+	idx = graphFindEdgeIndex(graph, from, to);
+
+	if ( idx < 0 )
+	{
+		stackPushBool(qfalse);
+		return;
+	}
+
+	graph->nodes[from].edges.erase(graph->nodes[from].edges.begin() + idx);
+	graph->edgeCount--;
 	stackPushBool(qtrue);
 }
 

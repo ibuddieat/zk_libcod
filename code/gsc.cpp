@@ -115,6 +115,10 @@ scr_function_t scriptFunctions[] =
 	{"graphFindClosestEdge", gsc_graph_find_closest_edge, 0},
 	{"graphGetAllNodes", gsc_graph_get_all_nodes, 0},
 	{"graphGetAllEdges", gsc_graph_get_all_edges, 0},
+	{"graphGetEdgeProperties", gsc_graph_get_edge_properties, 0},
+	{"graphSetEdgeCost", gsc_graph_set_edge_cost, 0},
+	{"graphSetEdgeType", gsc_graph_set_edge_type, 0},
+	{"graphRemoveEdge", gsc_graph_remove_edge, 0},
 	#endif
 		
 	#if COMPILE_MYSQL_DEFAULT == 1
