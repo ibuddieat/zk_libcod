@@ -186,6 +186,10 @@ static unsigned int graphCrc32(const unsigned char *data, size_t len)
 #define GRAPH_TRACE_MASK   (CONTENTS_SOLID | CONTENTS_PLAYERCLIP)
 #define GRAPH_STEP_UP      18.0f
 #define GRAPH_SLOPE_MIN_Z  0.7f
+#define GRAPH_FLAT_DZ      8.0f
+#define GRAPH_MAX_DROP     128.0f
+#define GRAPH_EDGE_STEP    1
+#define GRAPH_EDGE_DROP    2
 
 /*
  * Drop a line trace from just above (x,y,z) to well below it and, if it lands on
@@ -240,6 +244,79 @@ static bool graphWalkable(const vec3_t a, const vec3_t b, const vec3_t mins, con
 	SV_Trace(&tr, start, (float *)mins, (float *)maxs, end, ENTITYNUM_NONE, GRAPH_TRACE_MASK, 1, NULL, 1);
 
 	return tr.fraction >= 0.99f && !tr.startsolid;
+}
+
+/*
+ * Add the typed, directional link(s) between two nodes for autodiscoverEx: flat
+ * and step links (within the step height) go both ways; a drop is a one-way
+ * higher->lower edge (a bot can fall but not climb); a gap over GRAPH_MAX_DROP is
+ * not linked. Any direction that already exists is left alone.
+ */
+static void graphLinkNodesTyped(AStarGraph *graph, int a, int b, const vec3_t mins, const vec3_t maxs)
+{
+	float dz = graph->nodes[b].origin[2] - graph->nodes[a].origin[2];
+	float adz = (dz < 0) ? -dz : dz;
+	float cost = edgeDistance(graph->nodes[a].origin, graph->nodes[b].origin);
+	int walkType = (adz <= GRAPH_FLAT_DZ) ? 0 : GRAPH_EDGE_STEP;
+	int ab = graphWalkable(graph->nodes[a].origin, graph->nodes[b].origin, mins, maxs);
+	int ba = graphWalkable(graph->nodes[b].origin, graph->nodes[a].origin, mins, maxs);
+
+	// Walkable both ways (flat, step or a ramp) -> a two-way link.
+	if ( ab && ba )
+	{
+		if ( graphFindEdgeIndex(graph, a, b) < 0 )
+		{
+			GraphEdge e;
+
+			e.to = (unsigned int)b;
+			e.type = walkType;
+			e.cost = cost;
+			graph->nodes[a].edges.push_back(e);
+			graph->edgeCount++;
+		}
+		if ( graphFindEdgeIndex(graph, b, a) < 0 )
+		{
+			GraphEdge e;
+
+			e.to = (unsigned int)a;
+			e.type = walkType;
+			e.cost = cost;
+			graph->nodes[b].edges.push_back(e);
+			graph->edgeCount++;
+		}
+		return;
+	}
+
+	// Only one direction walks -> a drop (fall down, cannot climb back). Cap the fall.
+	if ( adz > GRAPH_MAX_DROP )
+		return;
+
+	if ( ab )
+	{
+		if ( graphFindEdgeIndex(graph, a, b) < 0 )
+		{
+			GraphEdge e;
+
+			e.to = (unsigned int)b;
+			e.type = GRAPH_EDGE_DROP;
+			e.cost = cost;
+			graph->nodes[a].edges.push_back(e);
+			graph->edgeCount++;
+		}
+	}
+	else if ( ba )
+	{
+		if ( graphFindEdgeIndex(graph, b, a) < 0 )
+		{
+			GraphEdge e;
+
+			e.to = (unsigned int)a;
+			e.type = GRAPH_EDGE_DROP;
+			e.cost = cost;
+			graph->nodes[b].edges.push_back(e);
+			graph->edgeCount++;
+		}
+	}
 }
 
 /* Squared distance from point p to the segment ab, with the projection clamped
@@ -587,7 +664,7 @@ void gsc_graph_find_path()
 				guard++;
 			}
 
-			graphDebugPrint("findPath g%i %i -> %i: cached, %u hops", id, start, goal, guard + 1);
+			graphDebugPrint("findPath graph %i: %i -> %i FROM CACHE (%u waypoints)", id, start, goal, guard + 1);
 			graphRecordSearch(graph, started, 0);
 			return;
 		}
@@ -646,7 +723,7 @@ void gsc_graph_find_path()
 		{
 			unsigned int len = graphPushPath(graph, cur, (unsigned int)start);
 
-			graphDebugPrint("findPath g%i %i -> %i: reached, len %u, cost %.0f, %u expansions", id, start, goal, len, s.gScore[cur], expansions);
+			graphDebugPrint("findPath graph %i: %i -> %i FOUND (path %u waypoints, total cost %.0f, searched %u nodes)", id, start, goal, len, s.gScore[cur], expansions);
 			goto done;
 		}
 
@@ -700,7 +777,7 @@ void gsc_graph_find_path()
 	{
 		unsigned int len = graphPushPath(graph, bestNode, (unsigned int)start);
 
-		graphDebugPrint("findPath g%i %i -> %i: PARTIAL to %u, len %u, %u expansions", id, start, goal, bestNode, len, expansions);
+		graphDebugPrint("findPath graph %i: %i -> %i NO FULL PATH (closest node %u, %u waypoints so far, searched %u nodes)", id, start, goal, bestNode, len, expansions);
 	}
 
 done:
@@ -2210,7 +2287,193 @@ void gsc_graph_autodiscover()
 	{
 		unsigned int elapsed = graphMicroseconds() - started;
 
-		graphDebugPrint("autodiscover: added %i nodes, %u edges in %u us (grid %i, seed component)", added, graph->edgeCount, elapsed, gridStep);
+		graphDebugPrint("autodiscover: built %i nodes and %u edges in %u microseconds (grid spacing %i)", added, graph->edgeCount, elapsed, gridStep);
+	}
+
+	stackPushInt(added);
+}
+
+/*
+ * graphAutodiscoverEx(<graph id>, <seed origin>, [<grid step>], [<max nodes>])
+ * -> nodes added. Enhanced autodiscover: it seeds the grid from the graph's
+ * EXISTING nodes too, so calling it once per spawn point extends one graph and
+ * covers disconnected areas a single seed misses; and its links are typed and
+ * directional - flat and step edges go both ways, a drop (up to GRAPH_MAX_DROP)
+ * is a one-way higher->lower edge, a bigger gap is not linked. Edge types
+ * (STEP 1, DROP 2) feed graphFindPath's skipEdgeTypes.
+ */
+void gsc_graph_autodiscover_ex()
+{
+	int id;
+	vec3_t seed;
+	int gridStep = 48;
+	int maxNodes;
+	AStarGraph *graph;
+	float step;
+	vec3_t playerMins = { -15, -15, 0 };
+	vec3_t playerMaxs = { 15, 15, 72 };
+	vec3_t ground;
+	std::map<long long, int> cellToNode;
+	std::vector<unsigned int> queue;
+	size_t head;
+	int added = 0;
+	unsigned int started;
+	long long cellKey;
+
+	if ( !stackGetParams("iv", &id, seed) )
+	{
+		stackError("gsc_graph_autodiscover_ex() one or more arguments are undefined or have a wrong type");
+		stackPushInt(0);
+		return;
+	}
+
+	if ( Scr_GetNumParam() >= 3 && !stackGetParamInt(2, &gridStep) )
+	{
+		stackError("gsc_graph_autodiscover_ex() grid step argument has a wrong type");
+		stackPushInt(0);
+		return;
+	}
+
+	graph = graphById(id);
+
+	if ( !graph )
+	{
+		stackError("gsc_graph_autodiscover_ex() graph %i does not exist", id);
+		stackPushInt(0);
+		return;
+	}
+
+	maxNodes = sv_graphMaxNodes->current.integer;
+	if ( Scr_GetNumParam() >= 4 )
+	{
+		int mn;
+
+		if ( !stackGetParamInt(3, &mn) )
+		{
+			stackError("gsc_graph_autodiscover_ex() max nodes argument has a wrong type");
+			stackPushInt(0);
+			return;
+		}
+		if ( mn > 0 && mn < maxNodes )
+			maxNodes = mn;
+	}
+
+	if ( gridStep < 8 )
+		gridStep = 8;
+	step = (float)gridStep;
+
+	started = graphMicroseconds();
+
+	// Seed the cell map from the graph's existing live nodes so repeated calls
+	// (one per spawn point) extend and link into one graph, not duplicate it.
+	for ( size_t i = 0; i < graph->nodes.size(); i++ )
+	{
+		if ( graph->nodes[i].removed )
+			continue;
+
+		cellKey = ((long long)(int)floorf(graph->nodes[i].origin[0] / step) << 32) | ((int)floorf(graph->nodes[i].origin[1] / step) & 0xFFFFFFFFLL);
+		if ( cellToNode.find(cellKey) == cellToNode.end() )
+			cellToNode[cellKey] = (int)i;
+	}
+
+	if ( !graphTraceGround(seed[0], seed[1], seed[2], ground) || !graphPlayerFits(ground, playerMins, playerMaxs) )
+	{
+		graphDebugPrint("autodiscoverEx: seed (%.0f %.0f %.0f) is not on walkable ground", seed[0], seed[1], seed[2]);
+		stackPushInt(0);
+		return;
+	}
+
+	cellKey = ((long long)(int)floorf(ground[0] / step) << 32) | ((int)floorf(ground[1] / step) & 0xFFFFFFFFLL);
+
+	if ( cellToNode.find(cellKey) == cellToNode.end() )
+	{
+		GraphNode node;
+
+		VectorCopy(ground, node.origin);
+		node.type = 0;
+		node.removed = false;
+		graph->nodes.push_back(node);
+		cellToNode[cellKey] = (int)graph->nodes.size() - 1;
+		queue.push_back((unsigned int)graph->nodes.size() - 1);
+		added = 1;
+	}
+	else
+	{
+		// Seed cell already covered by an earlier pass - flood out from that node
+		queue.push_back((unsigned int)cellToNode[cellKey]);
+	}
+
+	head = 0;
+	while ( head < queue.size() && (int)graph->nodes.size() < maxNodes )
+	{
+		unsigned int cur = queue[head++];
+		vec3_t curOrigin;
+		int dx;
+		int dy;
+
+		VectorCopy(graph->nodes[cur].origin, curOrigin);
+
+		for ( dy = -1; dy <= 1; dy++ )
+		{
+			for ( dx = -1; dx <= 1; dx++ )
+			{
+				float nx;
+				float ny;
+				std::map<long long, int>::iterator it;
+
+				if ( dx == 0 && dy == 0 )
+					continue;
+
+				nx = curOrigin[0] + dx * step;
+				ny = curOrigin[1] + dy * step;
+				cellKey = ((long long)(int)floorf(nx / step) << 32) | ((int)floorf(ny / step) & 0xFFFFFFFFLL);
+
+				it = cellToNode.find(cellKey);
+				if ( it != cellToNode.end() )
+				{
+					int other = it->second;
+
+					if ( other != (int)cur )
+						graphLinkNodesTyped(graph, (int)cur, other, playerMins, playerMaxs);
+					continue;
+				}
+
+				if ( (int)graph->nodes.size() >= maxNodes )
+					continue;
+
+				if ( !graphTraceGround(nx, ny, curOrigin[2], ground) )
+					continue;
+				if ( !graphPlayerFits(ground, playerMins, playerMaxs) )
+					continue;
+				if ( !graphWalkable(curOrigin, ground, playerMins, playerMaxs) )
+					continue;
+
+				{
+					GraphNode node;
+					int nid;
+
+					VectorCopy(ground, node.origin);
+					node.type = 0;
+					node.removed = false;
+					graph->nodes.push_back(node);
+					nid = (int)graph->nodes.size() - 1;
+					cellToNode[cellKey] = nid;
+
+					graphLinkNodesTyped(graph, (int)cur, nid, playerMins, playerMaxs);
+
+					queue.push_back((unsigned int)nid);
+					added++;
+				}
+			}
+		}
+	}
+
+	graphInvalidatePrecompute(graph);
+
+	{
+		unsigned int elapsed = graphMicroseconds() - started;
+
+		graphDebugPrint("autodiscoverEx: built %i new nodes, %u edges total in %u microseconds (grid %i)", added, graph->edgeCount, elapsed, gridStep);
 	}
 
 	stackPushInt(added);

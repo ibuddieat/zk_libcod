@@ -157,6 +157,7 @@
   * `graphAddEdge(<graph id>, <from>, <to>, [<type>], [<cost>])`
   * `graphAddNode(<graph id>, <origin>, [<type>], [<node id>])`
   * `graphAutodiscover(<graph id>, <seed origin>, [<grid step>], [<max nodes>])`
+  * `graphAutodiscoverEx(<graph id>, <seed origin>, [<grid step>], [<max nodes>])`
   * `graphCreate([<persist>], [<reserve>])`
   * `graphFindClosestEdge(<graph id>, <origin>)`
   * `graphFindClosestNode(<graph id>, <origin>, [<content mask>])`

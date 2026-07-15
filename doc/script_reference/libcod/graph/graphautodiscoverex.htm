@@ -1,0 +1,61 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>graphAutodiscoverEx( &lt;graph id&gt;, &lt;seed origin&gt;, [&lt;grid step&gt;], [&lt;max nodes&gt;] )</H1>
+<HR>
+<BODY BGCOLOR="B0C4DE">
+<I>
+Module: Graph<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Enhanced <code>graphAutodiscover</code>. Two upgrades: (1) it seeds the grid from the graph's EXISTING nodes as well, so calling it once per spawn point extends one graph and covers separated areas (other floors, behind doors) that a single seed misses; (2) its links are typed and directional - where a player can walk both ways you get a two-way edge (type <b>0</b> flat or <b>1</b> step), where a player can only fall one way you get a one-way <b>drop</b> edge (type <b>2</b>), and a gap too big to fall is not linked. The edge types feed <code>graphFindPath</code>'s skip edge types so a bot can be told to avoid drops. Returns the number of new nodes added. Runs on the main thread - meant for one-time generation, then <code>graphSave</code>.</p>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+n = graphAutodiscoverEx(g, self.origin, 48);
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;graph id&gt; The graph to fill (empty, or extended by an earlier call).</LI>
+<LI>2 : &lt;seed origin&gt; A world position on walkable ground to start from.</LI>
+</UL></TR></TD></TABLE>
+<BR>
+<H2>Optional Args</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>3 : &lt;grid step&gt; Spacing between nodes in units (default <b>48</b>; larger = fewer, coarser nodes).</LI>
+<LI>4 : &lt;max nodes&gt; Stop after the graph reaches this many nodes (default <code>sv_graphMaxNodes</code>).</LI>
+</UL></TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>
