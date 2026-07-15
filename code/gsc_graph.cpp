@@ -1324,6 +1324,142 @@ void gsc_graph_set_node_origin()
 	stackPushBool(qtrue);
 }
 
+/*
+ * graphGetNodeIdsAccessibleFrom(<graph id>, <node id>) -> array of every node
+ * reachable from it by following edges forward (includes the node itself), or
+ * undefined for an invalid node. A breadth-first walk of the component.
+ */
+void gsc_graph_get_node_ids_accessible_from()
+{
+	int id;
+	int nodeId;
+	AStarGraph *graph;
+	size_t head;
+
+	if ( !stackGetParams("ii", &id, &nodeId) )
+	{
+		stackError("gsc_graph_get_node_ids_accessible_from() one or more arguments are undefined or have a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	graph = graphById(id);
+
+	if ( !graph )
+	{
+		stackError("gsc_graph_get_node_ids_accessible_from() graph %i does not exist", id);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( nodeId < 0 || nodeId >= (int)graph->nodes.size() )
+	{
+		stackPushUndefined();
+		return;
+	}
+
+	std::vector<char> visited(graph->nodes.size(), 0);
+	std::vector<unsigned int> queue;
+
+	visited[nodeId] = 1;
+	queue.push_back((unsigned int)nodeId);
+
+	stackPushArray();
+
+	head = 0;
+	while ( head < queue.size() )
+	{
+		unsigned int cur = queue[head++];
+
+		stackPushInt((int)cur);
+		stackPushArrayLast();
+
+		GraphNode &node = graph->nodes[cur];
+		for ( size_t e = 0; e < node.edges.size(); e++ )
+		{
+			unsigned int to = node.edges[e].to;
+
+			if ( !visited[to] )
+			{
+				visited[to] = 1;
+				queue.push_back(to);
+			}
+		}
+	}
+}
+
+/*
+ * graphGetNodeIdsAccessibleTo(<graph id>, <node id>) -> array of every node
+ * that can reach it by following edges forward (includes the node itself), or
+ * undefined for an invalid node. BFS over a temporary reverse adjacency.
+ */
+void gsc_graph_get_node_ids_accessible_to()
+{
+	int id;
+	int nodeId;
+	AStarGraph *graph;
+	size_t head;
+
+	if ( !stackGetParams("ii", &id, &nodeId) )
+	{
+		stackError("gsc_graph_get_node_ids_accessible_to() one or more arguments are undefined or have a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	graph = graphById(id);
+
+	if ( !graph )
+	{
+		stackError("gsc_graph_get_node_ids_accessible_to() graph %i does not exist", id);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( nodeId < 0 || nodeId >= (int)graph->nodes.size() )
+	{
+		stackPushUndefined();
+		return;
+	}
+
+	// Reverse adjacency: for each node, the list of nodes with an edge into it
+	std::vector< std::vector<unsigned int> > incoming(graph->nodes.size());
+	for ( size_t i = 0; i < graph->nodes.size(); i++ )
+	{
+		for ( size_t e = 0; e < graph->nodes[i].edges.size(); e++ )
+			incoming[graph->nodes[i].edges[e].to].push_back((unsigned int)i);
+	}
+
+	std::vector<char> visited(graph->nodes.size(), 0);
+	std::vector<unsigned int> queue;
+
+	visited[nodeId] = 1;
+	queue.push_back((unsigned int)nodeId);
+
+	stackPushArray();
+
+	head = 0;
+	while ( head < queue.size() )
+	{
+		unsigned int cur = queue[head++];
+
+		stackPushInt((int)cur);
+		stackPushArrayLast();
+
+		std::vector<unsigned int> &in = incoming[cur];
+		for ( size_t k = 0; k < in.size(); k++ )
+		{
+			unsigned int from = in[k];
+
+			if ( !visited[from] )
+			{
+				visited[from] = 1;
+				queue.push_back(from);
+			}
+		}
+	}
+}
+
 // graphGetNodeOrigin(<graph id>, <node id>) -> origin vector
 void gsc_graph_get_node_origin()
 {

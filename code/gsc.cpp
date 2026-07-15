@@ -122,6 +122,8 @@ scr_function_t scriptFunctions[] =
 	{"graphGetNodeProperties", gsc_graph_get_node_properties, 0},
 	{"graphSetNodeType", gsc_graph_set_node_type, 0},
 	{"graphSetNodeOrigin", gsc_graph_set_node_origin, 0},
+	{"graphGetNodeIdsAccessibleFrom", gsc_graph_get_node_ids_accessible_from, 0},
+	{"graphGetNodeIdsAccessibleTo", gsc_graph_get_node_ids_accessible_to, 0},
 	#endif
 		
 	#if COMPILE_MYSQL_DEFAULT == 1
