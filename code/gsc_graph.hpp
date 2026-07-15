@@ -38,6 +38,7 @@ void gsc_graph_set_node_origin();
 void gsc_graph_get_node_ids_accessible_from();
 void gsc_graph_get_node_ids_accessible_to();
 void gsc_graph_remove_node();
+void gsc_graph_precompute_paths_to_node();
 
 void gsc_graph_cleanup_on_spawn_server(void);
 

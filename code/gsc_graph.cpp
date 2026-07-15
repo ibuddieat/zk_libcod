@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <math.h>
+#include <float.h>
 
 extern dvar_t *sv_graphMaxNodes;
 extern dvar_t *sv_graphMaxGraphs;
@@ -59,6 +60,20 @@ struct GraphStats
 	unsigned int usTotal;
 };
 
+/*
+ * A cached single-destination shortest-path tree (reverse Dijkstra from a goal):
+ * for every node, the cost to reach the goal and the next hop toward it. Valid
+ * for one (goal, skip-mask) combination until any mutation invalidates it.
+ */
+struct GraphPrecompute
+{
+	int goal;
+	int skipNodeTypes;
+	int skipEdgeTypes;
+	std::vector<float> costToGoal;
+	std::vector<int> nextHop;
+};
+
 struct AStarGraph
 {
 	int id;
@@ -67,6 +82,7 @@ struct AStarGraph
 	std::vector<GraphNode> nodes;
 	GraphScratch scratch;
 	GraphStats stats;
+	std::vector<GraphPrecompute> precomputes;
 };
 
 // All graph state lives on the main server thread - no locking, by design.
@@ -93,6 +109,27 @@ static AStarGraph *graphById(int id)
 	{
 		if ( graphs[i].id == id )
 			return &graphs[i];
+	}
+
+	return NULL;
+}
+
+// Drops every cached shortest-path tree - called after any change to the graph
+// so a stale precompute can never be consulted.
+static void graphInvalidatePrecompute(AStarGraph *graph)
+{
+	graph->precomputes.clear();
+}
+
+// The cached shortest-path tree matching a goal and skip-mask combination, or NULL.
+static GraphPrecompute *findPrecompute(AStarGraph *graph, int goal, int skipNodeTypes, int skipEdgeTypes)
+{
+	for ( size_t i = 0; i < graph->precomputes.size(); i++ )
+	{
+		GraphPrecompute &pc = graph->precomputes[i];
+
+		if ( pc.goal == goal && pc.skipNodeTypes == skipNodeTypes && pc.skipEdgeTypes == skipEdgeTypes )
+			return &graph->precomputes[i];
 	}
 
 	return NULL;
@@ -168,6 +205,23 @@ static unsigned int graphMicroseconds()
 
 	gettimeofday(&tv, NULL);
 	return (unsigned int)(tv.tv_sec * 1000000 + tv.tv_usec);
+}
+
+// Fold one completed search into the per-graph stats (shared by the A* path and
+// the precompute fast path so both are measured identically).
+static void graphRecordSearch(AStarGraph *graph, unsigned int started, unsigned int expansions)
+{
+	unsigned int elapsed = graphMicroseconds() - started;
+
+	graph->stats.searches++;
+	graph->stats.expansionsTotal += expansions;
+	if ( expansions > graph->stats.expansionsMax )
+		graph->stats.expansionsMax = expansions;
+	if ( graph->stats.searches == 1 || elapsed < graph->stats.usMin )
+		graph->stats.usMin = elapsed;
+	if ( elapsed > graph->stats.usMax )
+		graph->stats.usMax = elapsed;
+	graph->stats.usTotal += elapsed;
 }
 
 static void heapSiftUp(std::vector<GraphHeapEntry> &heap, size_t i)
@@ -424,6 +478,40 @@ void gsc_graph_find_path()
 	}
 
 	started = graphMicroseconds();
+
+	// A precomputed shortest-path tree answers instantly when there is no
+	// per-call skip-node list and the goal + masks match a cached tree.
+	if ( numParam < 4 || stackGetParamType(3) == VAR_UNDEFINED )
+	{
+		GraphPrecompute *pc = findPrecompute(graph, goal, skipNodeTypes, skipEdgeTypes);
+
+		if ( pc && pc->costToGoal[start] < FLT_MAX )
+		{
+			unsigned int cur = (unsigned int)start;
+			unsigned int guard = 0;
+			unsigned int safety = (unsigned int)graph->nodes.size() + 1;
+
+			stackPushArray();
+			while ( guard < safety )
+			{
+				stackPushInt((int)cur);
+				stackPushArrayLast();
+
+				if ( cur == (unsigned int)goal )
+					break;
+				if ( pc->nextHop[cur] < 0 )
+					break;
+
+				cur = (unsigned int)pc->nextHop[cur];
+				guard++;
+			}
+
+			graphDebugPrint("findPath g%i %i -> %i: cached, %u hops", id, start, goal, guard + 1);
+			graphRecordSearch(graph, started, 0);
+			return;
+		}
+	}
+
 	scratchBegin(graph);
 
 	if ( numParam >= 4 && !graphMarkSkippedNodes(graph, 3) )
@@ -535,19 +623,7 @@ void gsc_graph_find_path()
 	}
 
 done:
-	{
-		unsigned int elapsed = graphMicroseconds() - started;
-
-		graph->stats.searches++;
-		graph->stats.expansionsTotal += expansions;
-		if ( expansions > graph->stats.expansionsMax )
-			graph->stats.expansionsMax = expansions;
-		if ( graph->stats.searches == 1 || elapsed < graph->stats.usMin )
-			graph->stats.usMin = elapsed;
-		if ( elapsed > graph->stats.usMax )
-			graph->stats.usMax = elapsed;
-		graph->stats.usTotal += elapsed;
-	}
+	graphRecordSearch(graph, started, expansions);
 }
 
 /*
@@ -936,6 +1012,7 @@ void gsc_graph_add_node()
 	node.removed = false;
 
 	graph->nodes.push_back(node);
+	graphInvalidatePrecompute(graph);
 
 	stackPushInt((int)graph->nodes.size() - 1);
 }
@@ -1026,6 +1103,7 @@ void gsc_graph_add_edge()
 
 	graph->nodes[from].edges.push_back(edge);
 	graph->edgeCount++;
+	graphInvalidatePrecompute(graph);
 
 	stackPushBool(qtrue);
 }
@@ -1125,6 +1203,7 @@ void gsc_graph_set_edge_cost()
 	}
 
 	graph->nodes[from].edges[idx].cost = cost;
+	graphInvalidatePrecompute(graph);
 	stackPushBool(qtrue);
 }
 
@@ -1163,6 +1242,7 @@ void gsc_graph_set_edge_type()
 	}
 
 	graph->nodes[from].edges[idx].type = type;
+	graphInvalidatePrecompute(graph);
 	stackPushBool(qtrue);
 }
 
@@ -1204,6 +1284,7 @@ void gsc_graph_remove_edge()
 
 	graph->nodes[from].edges.erase(graph->nodes[from].edges.begin() + idx);
 	graph->edgeCount--;
+	graphInvalidatePrecompute(graph);
 	stackPushBool(qtrue);
 }
 
@@ -1283,6 +1364,7 @@ void gsc_graph_set_node_type()
 	}
 
 	graph->nodes[nodeId].type = type;
+	graphInvalidatePrecompute(graph);
 	stackPushBool(qtrue);
 }
 
@@ -1349,6 +1431,7 @@ void gsc_graph_set_node_origin()
 		}
 	}
 
+	graphInvalidatePrecompute(graph);
 	stackPushBool(qtrue);
 }
 
@@ -1559,6 +1642,149 @@ void gsc_graph_remove_node()
 	}
 
 	graph->nodes[nodeId].removed = true;
+	graphInvalidatePrecompute(graph);
+	stackPushBool(qtrue);
+}
+
+/*
+ * graphPrecomputePathsToNode(<graph id>, <goal>, [skip node types], [skip edge
+ * types]) -> true, or false for an invalid/removed goal. Runs one reverse
+ * Dijkstra from the goal and caches, for every node, the cost to reach it and
+ * the next hop toward it. graphFindPath then answers any start -> this goal
+ * (same masks, no per-call skip-node list) by walking the cached hops with no
+ * search. Any mutation to the graph invalidates every cache.
+ */
+void gsc_graph_precompute_paths_to_node()
+{
+	int id;
+	int goal;
+	int skipNodeTypes = 0;
+	int skipEdgeTypes = 0;
+	AStarGraph *graph;
+	int numParam;
+	size_t n;
+	GraphPrecompute *pc;
+
+	if ( !stackGetParams("ii", &id, &goal) )
+	{
+		stackError("gsc_graph_precompute_paths_to_node() one or more arguments are undefined or have a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	numParam = Scr_GetNumParam();
+
+	if ( numParam >= 3 && stackGetParamType(2) != VAR_UNDEFINED && !stackGetParamInt(2, &skipNodeTypes) )
+	{
+		stackError("gsc_graph_precompute_paths_to_node() skip node types argument has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( numParam >= 4 && stackGetParamType(3) != VAR_UNDEFINED && !stackGetParamInt(3, &skipEdgeTypes) )
+	{
+		stackError("gsc_graph_precompute_paths_to_node() skip edge types argument has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	graph = graphById(id);
+
+	if ( !graph )
+	{
+		stackError("gsc_graph_precompute_paths_to_node() graph %i does not exist", id);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( goal < 0 || goal >= (int)graph->nodes.size() || graph->nodes[goal].removed )
+	{
+		stackPushBool(qfalse);
+		return;
+	}
+
+	n = graph->nodes.size();
+
+	// Reverse adjacency with costs: for each node, the (predecessor, cost) of
+	// every edge pointing into it, honouring the edge-type skip mask. GraphHeapEntry
+	// is reused as the pair - f holds the edge cost, node holds the predecessor.
+	std::vector< std::vector<GraphHeapEntry> > incoming(n);
+	for ( size_t i = 0; i < n; i++ )
+	{
+		if ( graph->nodes[i].removed )
+			continue;
+
+		GraphNode &node = graph->nodes[i];
+		for ( size_t e = 0; e < node.edges.size(); e++ )
+		{
+			GraphHeapEntry ie;
+
+			if ( skipEdgeTypes && (node.edges[e].type & skipEdgeTypes) )
+				continue;
+
+			ie.f = node.edges[e].cost;
+			ie.node = (unsigned int)i;
+			incoming[node.edges[e].to].push_back(ie);
+		}
+	}
+
+	std::vector<float> dist(n, FLT_MAX);
+	std::vector<int> nextHop(n, -1);
+	std::vector<char> settled(n, 0);
+	std::vector<GraphHeapEntry> heap;
+
+	dist[goal] = 0;
+	heapPush(heap, 0, (unsigned int)goal);
+
+	while ( !heap.empty() )
+	{
+		GraphHeapEntry top = heapPop(heap);
+		unsigned int cur = top.node;
+
+		if ( settled[cur] || top.f != dist[cur] )
+			continue;
+
+		settled[cur] = 1;
+
+		// A skip-typed node may be a query's start but can never be routed
+		// through, so keep its own cost yet do not expand its predecessors.
+		if ( skipNodeTypes && (graph->nodes[cur].type & skipNodeTypes) )
+			continue;
+
+		std::vector<GraphHeapEntry> &in = incoming[cur];
+		for ( size_t k = 0; k < in.size(); k++ )
+		{
+			unsigned int from = in[k].node;
+			float tentative = dist[cur] + in[k].f;
+
+			if ( tentative < dist[from] )
+			{
+				dist[from] = tentative;
+				nextHop[from] = (int)cur;
+				heapPush(heap, tentative, from);
+			}
+		}
+	}
+
+	// Store (or refresh) the cache entry for this goal + mask combination
+	pc = findPrecompute(graph, goal, skipNodeTypes, skipEdgeTypes);
+	if ( !pc )
+	{
+		if ( graph->precomputes.size() >= 8 )
+			graph->precomputes.erase(graph->precomputes.begin());
+
+		GraphPrecompute fresh;
+		graph->precomputes.push_back(fresh);
+		pc = &graph->precomputes.back();
+	}
+
+	pc->goal = goal;
+	pc->skipNodeTypes = skipNodeTypes;
+	pc->skipEdgeTypes = skipEdgeTypes;
+	pc->costToGoal.swap(dist);
+	pc->nextHop.swap(nextHop);
+
+	graphDebugPrint("precomputed paths to node %i (skipNode %i, skipEdge %i)", goal, skipNodeTypes, skipEdgeTypes);
 	stackPushBool(qtrue);
 }
 
