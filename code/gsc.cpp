@@ -119,6 +119,9 @@ scr_function_t scriptFunctions[] =
 	{"graphSetEdgeCost", gsc_graph_set_edge_cost, 0},
 	{"graphSetEdgeType", gsc_graph_set_edge_type, 0},
 	{"graphRemoveEdge", gsc_graph_remove_edge, 0},
+	{"graphGetNodeProperties", gsc_graph_get_node_properties, 0},
+	{"graphSetNodeType", gsc_graph_set_node_type, 0},
+	{"graphSetNodeOrigin", gsc_graph_set_node_origin, 0},
 	#endif
 		
 	#if COMPILE_MYSQL_DEFAULT == 1

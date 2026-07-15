@@ -32,6 +32,9 @@ void gsc_graph_get_edge_properties();
 void gsc_graph_set_edge_cost();
 void gsc_graph_set_edge_type();
 void gsc_graph_remove_edge();
+void gsc_graph_get_node_properties();
+void gsc_graph_set_node_type();
+void gsc_graph_set_node_origin();
 
 void gsc_graph_cleanup_on_spawn_server(void);
 

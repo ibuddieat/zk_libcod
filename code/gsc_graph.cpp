@@ -1185,6 +1185,145 @@ void gsc_graph_remove_edge()
 	stackPushBool(qtrue);
 }
 
+/*
+ * graphGetNodeProperties(<graph id>, <node id>) -> [type, outgoing edge count],
+ * or undefined for an invalid node. Use graphGetNodeOrigin for the position.
+ */
+void gsc_graph_get_node_properties()
+{
+	int id;
+	int nodeId;
+	AStarGraph *graph;
+
+	if ( !stackGetParams("ii", &id, &nodeId) )
+	{
+		stackError("gsc_graph_get_node_properties() one or more arguments are undefined or have a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	graph = graphById(id);
+
+	if ( !graph )
+	{
+		stackError("gsc_graph_get_node_properties() graph %i does not exist", id);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( nodeId < 0 || nodeId >= (int)graph->nodes.size() )
+	{
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushArray();
+	stackPushInt(graph->nodes[nodeId].type);
+	stackPushArrayLast();
+	stackPushInt((int)graph->nodes[nodeId].edges.size());
+	stackPushArrayLast();
+}
+
+// graphSetNodeType(<graph id>, <node id>, <type>) -> true, or false for an invalid node
+void gsc_graph_set_node_type()
+{
+	int id;
+	int nodeId;
+	int type;
+	AStarGraph *graph;
+
+	if ( !stackGetParams("iii", &id, &nodeId, &type) )
+	{
+		stackError("gsc_graph_set_node_type() one or more arguments are undefined or have a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	graph = graphById(id);
+
+	if ( !graph )
+	{
+		stackError("gsc_graph_set_node_type() graph %i does not exist", id);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( nodeId < 0 || nodeId >= (int)graph->nodes.size() )
+	{
+		stackPushBool(qfalse);
+		return;
+	}
+
+	graph->nodes[nodeId].type = type;
+	stackPushBool(qtrue);
+}
+
+/*
+ * graphSetNodeOrigin(<graph id>, <node id>, <origin>) -> true, or false for an
+ * invalid node. Recomputes the distance cost of every edge touching the node
+ * (both directions), so any manually-set costs on those edges are reset.
+ */
+void gsc_graph_set_node_origin()
+{
+	int id;
+	int nodeId;
+	vec3_t origin;
+	AStarGraph *graph;
+
+	if ( !stackGetParams("ii", &id, &nodeId) )
+	{
+		stackError("gsc_graph_set_node_origin() one or more arguments are undefined or have a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( !stackGetParamVector(2, origin) )
+	{
+		stackError("gsc_graph_set_node_origin() origin argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	graph = graphById(id);
+
+	if ( !graph )
+	{
+		stackError("gsc_graph_set_node_origin() graph %i does not exist", id);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( nodeId < 0 || nodeId >= (int)graph->nodes.size() )
+	{
+		stackPushBool(qfalse);
+		return;
+	}
+
+	VectorCopy(origin, graph->nodes[nodeId].origin);
+
+	// Outgoing edges from the moved node
+	for ( size_t e = 0; e < graph->nodes[nodeId].edges.size(); e++ )
+	{
+		GraphEdge &edge = graph->nodes[nodeId].edges[e];
+		edge.cost = edgeDistance(graph->nodes[nodeId].origin, graph->nodes[edge.to].origin);
+	}
+
+	// Incoming edges from any other node to the moved node
+	for ( size_t i = 0; i < graph->nodes.size(); i++ )
+	{
+		if ( (int)i == nodeId )
+			continue;
+
+		for ( size_t e = 0; e < graph->nodes[i].edges.size(); e++ )
+		{
+			if ( graph->nodes[i].edges[e].to == (unsigned int)nodeId )
+				graph->nodes[i].edges[e].cost = edgeDistance(graph->nodes[i].origin, graph->nodes[nodeId].origin);
+		}
+	}
+
+	stackPushBool(qtrue);
+}
+
 // graphGetNodeOrigin(<graph id>, <node id>) -> origin vector
 void gsc_graph_get_node_origin()
 {
