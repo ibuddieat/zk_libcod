@@ -31,9 +31,11 @@ struct GraphHeapEntry
 	unsigned int node;
 };
 
-// Search scratch is kept per graph and never cleared: a slot is only valid
-// when its stamp equals the current search id, so starting a new search is an
-// O(1) counter bump and the hot loop never allocates after warmup.
+/*
+ * Search scratch is kept per graph and never cleared: a slot is only valid
+ * when its stamp equals the current search id, so starting a new search is an
+ * O(1) counter bump and the hot loop never allocates after warmup.
+ */
 struct GraphScratch
 {
 	std::vector<float> gScore;
@@ -175,8 +177,10 @@ static GraphHeapEntry heapPop(std::vector<GraphHeapEntry> &heap)
 	return top;
 }
 
-// Prepare the per-graph scratch for a new search: size the arrays once,
-// invalidate everything else by bumping the search id.
+/*
+ * Prepare the per-graph scratch for a new search: size the arrays once,
+ * invalidate everything else by bumping the search id.
+ */
 static void scratchBegin(AStarGraph *graph)
 {
 	GraphScratch &s = graph->scratch;
@@ -206,8 +210,10 @@ static void scratchBegin(AStarGraph *graph)
 	}
 }
 
-// Walk a GSC array parameter of node ids and mark each as closed for this
-// search. Returns qfalse only on a malformed (non-array) parameter.
+/*
+ * Walk a GSC array parameter of node ids and mark each as closed for this
+ * search. Returns qfalse only on a malformed (non-array) parameter.
+ */
 static qboolean graphMarkSkippedNodes(AStarGraph *graph, int param)
 {
 	unsigned int objectId;
@@ -244,8 +250,10 @@ static qboolean graphMarkSkippedNodes(AStarGraph *graph, int param)
 	return qtrue;
 }
 
-// Walk parent links back from a node and push the path (start..node) as a GSC
-// array of node ids. Returns the path length.
+/*
+ * Walk parent links back from a node and push the path (start..node) as a GSC
+ * array of node ids. Returns the path length.
+ */
 static unsigned int graphPushPath(AStarGraph *graph, unsigned int node, unsigned int start)
 {
 	GraphScratch &s = graph->scratch;
@@ -282,12 +290,14 @@ static unsigned int graphPushPath(AStarGraph *graph, unsigned int node, unsigned
 	return count;
 }
 
-// graphFindPath(<graph id>, <start node>, <goal node>, [skip nodes array],
-//               [skip node types mask], [skip edge types mask], [max expansions])
-//   -> array of node ids from start to goal
-// A budget-capped search returns a best-effort partial path instead: the last
-// element not being the goal is the caller's signal. Invalid arguments return
-// undefined. skip masks are AND-tested against node/edge type bits.
+/*
+ * graphFindPath(<graph id>, <start node>, <goal node>, [skip nodes array],
+ *               [skip node types mask], [skip edge types mask], [max expansions])
+ *   -> array of node ids from start to goal
+ * A budget-capped search returns a best-effort partial path instead: the last
+ * element not being the goal is the caller's signal. Invalid arguments return
+ * undefined. skip masks are AND-tested against node/edge type bits.
+ */
 void gsc_graph_find_path()
 {
 	int id;
@@ -450,8 +460,10 @@ void gsc_graph_find_path()
 		}
 	}
 
-	// Budget hit or frontier exhausted: return the closest we got (the caller
-	// detects a partial path by its last element not being the goal)
+	/*
+	 * Budget hit or frontier exhausted: return the closest we got (the caller
+	 * detects a partial path by its last element not being the goal)
+	 */
 	graph->stats.partials++;
 	{
 		unsigned int len = graphPushPath(graph, bestNode, (unsigned int)start);
@@ -475,10 +487,12 @@ done:
 	}
 }
 
-// graphFindClosestNode(<graph id>, <origin>, [content mask]) -> node id
-// With a content mask the closest node with a passing locational trace wins
-// (line of sight for MASK_SHOT-style masks) - much more expensive, and returns
-// undefined when no node passes.
+/*
+ * graphFindClosestNode(<graph id>, <origin>, [content mask]) -> node id
+ * With a content mask the closest node with a passing locational trace wins
+ * (line of sight for MASK_SHOT-style masks) - much more expensive, and returns
+ * undefined when no node passes.
+ */
 void gsc_graph_find_closest_node()
 {
 	int id;
@@ -621,9 +635,11 @@ void gsc_graph_removeall()
 	stackPushBool(qtrue);
 }
 
-// graphAddNode(<graph id>, <origin>, [type], [node id]) -> node id
-// Node ids are the vector index and must be added sequentially (0, 1, 2, ...),
-// so a script array index and its native node id are always the same value.
+/*
+ * graphAddNode(<graph id>, <origin>, [type], [node id]) -> node id
+ * Node ids are the vector index and must be added sequentially (0, 1, 2, ...),
+ * so a script array index and its native node id are always the same value.
+ */
 void gsc_graph_add_node()
 {
 	int id;
@@ -685,9 +701,11 @@ void gsc_graph_add_node()
 	stackPushInt((int)graph->nodes.size() - 1);
 }
 
-// graphAddEdge(<graph id>, <from node>, <to node>, [type], [cost]) -> true/false
-// Edges are directed; add both directions for a two-way link. Cost defaults to
-// the distance between the node origins. Adding a duplicate returns false.
+/*
+ * graphAddEdge(<graph id>, <from node>, <to node>, [type], [cost]) -> true/false
+ * Edges are directed; add both directions for a two-way link. Cost defaults to
+ * the distance between the node origins. Adding a duplicate returns false.
+ */
 void gsc_graph_add_edge()
 {
 	int id;
@@ -849,8 +867,74 @@ void gsc_graph_get_edge_count()
 	stackPushInt((int)graph->edgeCount);
 }
 
-// Erases non-persistent graphs on map change / map_restart. Wired from
-// custom_SV_SpawnServer so per-map graphs never leak across loads.
+/*
+ * graphGetStats(<graph id>, [reset]) -> int array:
+ *   [0] nodes  [1] edges  [2] searches  [3] partials  [4] expansionsTotal
+ *   [5] expansionsMax  [6] usMin  [7] usAvg  [8] usMax
+ * Counters accumulate per graph since creation (or the last reset); pass a
+ * truthy second argument to reset them after reading.
+ */
+void gsc_graph_get_stats()
+{
+	int id;
+	int reset = 0;
+	AStarGraph *graph;
+	unsigned int usAvg = 0;
+
+	if ( !stackGetParams("i", &id) )
+	{
+		stackError("gsc_graph_get_stats() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( Scr_GetNumParam() >= 2 && !stackGetParamInt(1, &reset) )
+	{
+		stackError("gsc_graph_get_stats() reset argument has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	graph = graphById(id);
+
+	if ( !graph )
+	{
+		stackError("gsc_graph_get_stats() graph %i does not exist", id);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( graph->stats.searches )
+		usAvg = graph->stats.usTotal / graph->stats.searches;
+
+	stackPushArray();
+	stackPushInt((int)graph->nodes.size());
+	stackPushArrayLast();
+	stackPushInt((int)graph->edgeCount);
+	stackPushArrayLast();
+	stackPushInt((int)graph->stats.searches);
+	stackPushArrayLast();
+	stackPushInt((int)graph->stats.partials);
+	stackPushArrayLast();
+	stackPushInt((int)graph->stats.expansionsTotal);
+	stackPushArrayLast();
+	stackPushInt((int)graph->stats.expansionsMax);
+	stackPushArrayLast();
+	stackPushInt((int)graph->stats.usMin);
+	stackPushArrayLast();
+	stackPushInt((int)usAvg);
+	stackPushArrayLast();
+	stackPushInt((int)graph->stats.usMax);
+	stackPushArrayLast();
+
+	if ( reset )
+		memset(&graph->stats, 0, sizeof(graph->stats));
+}
+
+/*
+ * Erases non-persistent graphs on map change / map_restart. Wired from
+ * custom_SV_SpawnServer so per-map graphs never leak across loads.
+ */
 void gsc_graph_cleanup_on_spawn_server(void)
 {
 	size_t i = 0;

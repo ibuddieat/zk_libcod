@@ -111,6 +111,7 @@ scr_function_t scriptFunctions[] =
 	{"graphGetNodeOrigin", gsc_graph_get_node_origin, 0},
 	{"graphGetNodeCount", gsc_graph_get_node_count, 0},
 	{"graphGetEdgeCount", gsc_graph_get_edge_count, 0},
+	{"graphGetStats", gsc_graph_get_stats, 0},
 	#endif
 		
 	#if COMPILE_MYSQL_DEFAULT == 1
