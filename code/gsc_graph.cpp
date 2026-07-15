@@ -5,6 +5,10 @@
 #include <vector>
 #include <math.h>
 #include <float.h>
+#include <string.h>
+#include <stdlib.h>
+
+#define GRAPH_MAX_PATH 64
 
 extern dvar_t *sv_graphMaxNodes;
 extern dvar_t *sv_graphMaxGraphs;
@@ -159,6 +163,23 @@ static float edgeDistance(const vec3_t a, const vec3_t b)
 	float dz = b[2] - a[2];
 
 	return sqrtf(dx * dx + dy * dy + dz * dz);
+}
+
+// Standard bit-serial CRC-32 (poly 0xEDB88320) for the save-file integrity check.
+static unsigned int graphCrc32(const unsigned char *data, size_t len)
+{
+	unsigned int crc = 0xFFFFFFFF;
+	size_t i;
+	int k;
+
+	for ( i = 0; i < len; i++ )
+	{
+		crc ^= data[i];
+		for ( k = 0; k < 8; k++ )
+			crc = (crc >> 1) ^ (0xEDB88320 & (0 - (crc & 1)));
+	}
+
+	return ~crc;
 }
 
 /* Squared distance from point p to the segment ab, with the projection clamped
@@ -1939,6 +1960,358 @@ void gsc_graph_get_stats()
 
 	if ( reset )
 		memset(&graph->stats, 0, sizeof(graph->stats));
+}
+
+/*
+ * graphSave(<graph id>, <relative path>) -> true/false. Writes the graph as a
+ * binary G2G1 file through the engine FS (sandboxed to fs_homepath/fs_gamedir,
+ * with ".." rejected and the path under 64 bytes). Layout: 20-byte header
+ * (magic|version|flags|nodeCount|edgeCount|crc32) then nodeCount node records
+ * {origin[3], type, removed} then edgeCount edge records {from, to, type, cost}.
+ */
+void gsc_graph_save()
+{
+	int id;
+	const char *path;
+	AStarGraph *graph;
+	unsigned char *buffer;
+	unsigned char *p;
+	unsigned char *crcField;
+	size_t nodeCount;
+	size_t edgeCount;
+	size_t total;
+	unsigned int crc;
+	unsigned short version = 1;
+	unsigned short flags = 0;
+	fileHandle_t f;
+	int written;
+
+	if ( !stackGetParams("is", &id, &path) )
+	{
+		stackError("gsc_graph_save() one or more arguments are undefined or have a wrong type");
+		stackPushBool(qfalse);
+		return;
+	}
+
+	if ( strlen(path) >= GRAPH_MAX_PATH )
+	{
+		stackError("gsc_graph_save() path '%s' exceeds %d bytes (engine MAX_QPATH)", path, GRAPH_MAX_PATH);
+		stackPushBool(qfalse);
+		return;
+	}
+
+	graph = graphById(id);
+
+	if ( !graph )
+	{
+		stackError("gsc_graph_save() graph %i does not exist", id);
+		stackPushBool(qfalse);
+		return;
+	}
+
+	nodeCount = graph->nodes.size();
+	edgeCount = graph->edgeCount;
+	total = 20 + nodeCount * 20 + edgeCount * 16;
+
+	buffer = (unsigned char *)malloc(total);
+
+	if ( !buffer )
+	{
+		stackError("gsc_graph_save() out of memory for %u bytes", (unsigned int)total);
+		stackPushBool(qfalse);
+		return;
+	}
+
+	p = buffer;
+	memcpy(p, "G2G1", 4);
+	p += 4;
+	memcpy(p, &version, 2);
+	p += 2;
+	memcpy(p, &flags, 2);
+	p += 2;
+	{
+		unsigned int nc = (unsigned int)nodeCount;
+		unsigned int ec = (unsigned int)edgeCount;
+
+		memcpy(p, &nc, 4);
+		p += 4;
+		memcpy(p, &ec, 4);
+		p += 4;
+	}
+	crcField = p;
+	p += 4;
+
+	for ( size_t i = 0; i < nodeCount; i++ )
+	{
+		GraphNode &node = graph->nodes[i];
+		int removed = node.removed ? 1 : 0;
+
+		memcpy(p, node.origin, 12);
+		p += 12;
+		memcpy(p, &node.type, 4);
+		p += 4;
+		memcpy(p, &removed, 4);
+		p += 4;
+	}
+
+	for ( size_t i = 0; i < nodeCount; i++ )
+	{
+		GraphNode &node = graph->nodes[i];
+
+		for ( size_t e = 0; e < node.edges.size(); e++ )
+		{
+			unsigned int from = (unsigned int)i;
+			unsigned int to = node.edges[e].to;
+
+			memcpy(p, &from, 4);
+			p += 4;
+			memcpy(p, &to, 4);
+			p += 4;
+			memcpy(p, &node.edges[e].type, 4);
+			p += 4;
+			memcpy(p, &node.edges[e].cost, 4);
+			p += 4;
+		}
+	}
+
+	crc = graphCrc32(buffer + 20, total - 20);
+	memcpy(crcField, &crc, 4);
+
+	f = FS_FOpenFileWrite(path);
+
+	if ( f == 0 )
+	{
+		free(buffer);
+		stackError("gsc_graph_save() could not open '%s' for writing", path);
+		stackPushBool(qfalse);
+		return;
+	}
+
+	written = FS_Write(buffer, (int)total, f);
+	FS_FCloseFile(f);
+	free(buffer);
+
+	graphDebugPrint("saved graph %i to '%s' (%u nodes, %u edges, %u bytes)", id, path, (unsigned int)nodeCount, (unsigned int)edgeCount, (unsigned int)total);
+	stackPushBool(written == (int)total ? qtrue : qfalse);
+}
+
+/*
+ * graphLoad(<relative path>, [persist]) -> new graph id, or undefined. Reads a
+ * G2G1 file through the engine FS and validates magic, version, node cap, exact
+ * file size, crc32 and every edge id before building anything - on any failure
+ * it returns undefined and creates no graph (never a partial load).
+ */
+void gsc_graph_load()
+{
+	const char *path;
+	int persist = 0;
+	fileHandle_t f;
+	int len;
+	int bytesRead;
+	unsigned char *buffer;
+	unsigned char *p;
+	unsigned int nodeCount;
+	unsigned int edgeCount;
+	unsigned int fileCrc;
+	unsigned int calcCrc;
+	unsigned short version;
+	unsigned short flags;
+	size_t expected;
+	int id;
+	AStarGraph graph;
+
+	if ( !stackGetParams("s", &path) )
+	{
+		stackError("gsc_graph_load() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( Scr_GetNumParam() >= 2 && !stackGetParamInt(1, &persist) )
+	{
+		stackError("gsc_graph_load() persist argument has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( strlen(path) >= GRAPH_MAX_PATH )
+	{
+		stackError("gsc_graph_load() path '%s' exceeds %d bytes (engine MAX_QPATH)", path, GRAPH_MAX_PATH);
+		stackPushUndefined();
+		return;
+	}
+
+	len = FS_FOpenFileByMode(path, &f, FS_READ);
+
+	if ( len <= 0 )
+	{
+		// Missing or empty file: quiet undefined (supports try-load), but still
+		// close a stray handle from an existing 0-byte file so it does not leak.
+		if ( f != 0 )
+			FS_FCloseFile(f);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( len < 20 )
+	{
+		FS_FCloseFile(f);
+		stackError("gsc_graph_load() '%s' is too small to be a graph file", path);
+		stackPushUndefined();
+		return;
+	}
+
+	buffer = (unsigned char *)malloc(len);
+
+	if ( !buffer )
+	{
+		FS_FCloseFile(f);
+		stackError("gsc_graph_load() out of memory reading '%s'", path);
+		stackPushUndefined();
+		return;
+	}
+
+	bytesRead = FS_Read(buffer, len, f);
+	FS_FCloseFile(f);
+
+	if ( bytesRead != len )
+	{
+		free(buffer);
+		stackError("gsc_graph_load() short read on '%s'", path);
+		stackPushUndefined();
+		return;
+	}
+
+	p = buffer;
+
+	if ( memcmp(p, "G2G1", 4) != 0 )
+	{
+		free(buffer);
+		stackError("gsc_graph_load() '%s' has a bad magic (not a G2G1 graph file)", path);
+		stackPushUndefined();
+		return;
+	}
+
+	p += 4;
+	memcpy(&version, p, 2);
+	p += 2;
+	memcpy(&flags, p, 2);
+	p += 2;
+	memcpy(&nodeCount, p, 4);
+	p += 4;
+	memcpy(&edgeCount, p, 4);
+	p += 4;
+	memcpy(&fileCrc, p, 4);
+	p += 4;
+
+	if ( version != 1 )
+	{
+		free(buffer);
+		stackError("gsc_graph_load() '%s' has unsupported version %u", path, version);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( (int)nodeCount > sv_graphMaxNodes->current.integer )
+	{
+		free(buffer);
+		stackError("gsc_graph_load() '%s' has %u nodes, over sv_graphMaxNodes %i", path, nodeCount, sv_graphMaxNodes->current.integer);
+		stackPushUndefined();
+		return;
+	}
+
+	expected = 20 + (size_t)nodeCount * 20 + (size_t)edgeCount * 16;
+
+	if ( (size_t)len != expected )
+	{
+		free(buffer);
+		stackError("gsc_graph_load() '%s' size mismatch (%d bytes, expected %u)", path, len, (unsigned int)expected);
+		stackPushUndefined();
+		return;
+	}
+
+	calcCrc = graphCrc32(buffer + 20, (size_t)len - 20);
+
+	if ( calcCrc != fileCrc )
+	{
+		free(buffer);
+		stackError("gsc_graph_load() '%s' checksum mismatch - file is corrupt", path);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( (int)graphs.size() >= sv_graphMaxGraphs->current.integer )
+	{
+		free(buffer);
+		stackError("gsc_graph_load() graph limit reached (sv_graphMaxGraphs is %i)", sv_graphMaxGraphs->current.integer);
+		stackPushUndefined();
+		return;
+	}
+
+	// Everything validated: build the graph into a local, only publish on success
+	id = 0;
+	while ( graphById(id) )
+		id++;
+
+	graph.id = id;
+	graph.persist = persist != 0;
+	graph.edgeCount = 0;
+	graph.scratch.searchId = 0;
+	memset(&graph.stats, 0, sizeof(graph.stats));
+	graph.nodes.reserve(nodeCount);
+
+	for ( unsigned int i = 0; i < nodeCount; i++ )
+	{
+		GraphNode node;
+		int removed;
+
+		memcpy(node.origin, p, 12);
+		p += 12;
+		memcpy(&node.type, p, 4);
+		p += 4;
+		memcpy(&removed, p, 4);
+		p += 4;
+		node.removed = removed != 0;
+		graph.nodes.push_back(node);
+	}
+
+	for ( unsigned int e = 0; e < edgeCount; e++ )
+	{
+		unsigned int from;
+		unsigned int to;
+		int type;
+		float cost;
+		GraphEdge edge;
+
+		memcpy(&from, p, 4);
+		p += 4;
+		memcpy(&to, p, 4);
+		p += 4;
+		memcpy(&type, p, 4);
+		p += 4;
+		memcpy(&cost, p, 4);
+		p += 4;
+
+		if ( from >= nodeCount || to >= nodeCount )
+		{
+			free(buffer);
+			stackError("gsc_graph_load() '%s' edge %u references an out-of-range node - load aborted", path, e);
+			stackPushUndefined();
+			return;
+		}
+
+		edge.to = to;
+		edge.type = type;
+		edge.cost = cost;
+		graph.nodes[from].edges.push_back(edge);
+		graph.edgeCount++;
+	}
+
+	free(buffer);
+
+	graphs.push_back(graph);
+	graphDebugPrint("loaded graph %i from '%s' (%u nodes, %u edges, persist %i)", id, path, nodeCount, edgeCount, persist);
+	stackPushInt(id);
 }
 
 /*
