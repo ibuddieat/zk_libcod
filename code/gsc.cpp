@@ -112,6 +112,9 @@ scr_function_t scriptFunctions[] =
 	{"graphGetNodeCount", gsc_graph_get_node_count, 0},
 	{"graphGetEdgeCount", gsc_graph_get_edge_count, 0},
 	{"graphGetStats", gsc_graph_get_stats, 0},
+	{"graphFindClosestEdge", gsc_graph_find_closest_edge, 0},
+	{"graphGetAllNodes", gsc_graph_get_all_nodes, 0},
+	{"graphGetAllEdges", gsc_graph_get_all_edges, 0},
 	#endif
 		
 	#if COMPILE_MYSQL_DEFAULT == 1

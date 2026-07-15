@@ -106,6 +106,44 @@ static float edgeDistance(const vec3_t a, const vec3_t b)
 	return sqrtf(dx * dx + dy * dy + dz * dz);
 }
 
+/* Squared distance from point p to the segment ab, with the projection clamped
+ * to the segment ends. */
+static float pointSegmentDistSq(const vec3_t p, const vec3_t a, const vec3_t b)
+{
+	float abx = b[0] - a[0];
+	float aby = b[1] - a[1];
+	float abz = b[2] - a[2];
+	float apx = p[0] - a[0];
+	float apy = p[1] - a[1];
+	float apz = p[2] - a[2];
+	float abLen2 = abx * abx + aby * aby + abz * abz;
+	float t = 0;
+	float cx;
+	float cy;
+	float cz;
+	float dx;
+	float dy;
+	float dz;
+
+	if ( abLen2 > 0 )
+		t = (apx * abx + apy * aby + apz * abz) / abLen2;
+
+	if ( t < 0 )
+		t = 0;
+	if ( t > 1 )
+		t = 1;
+
+	cx = a[0] + abx * t;
+	cy = a[1] + aby * t;
+	cz = a[2] + abz * t;
+
+	dx = p[0] - cx;
+	dy = p[1] - cy;
+	dz = p[2] - cz;
+
+	return dx * dx + dy * dy + dz * dz;
+}
+
 static unsigned int graphMicroseconds()
 {
 	struct timeval tv;
@@ -549,6 +587,175 @@ void gsc_graph_find_closest_node()
 	}
 
 	stackPushInt(best);
+}
+
+/*
+ * graphFindClosestEdge(<graph id>, <origin>) -> [from, to] of the nearest edge
+ * by point-to-segment distance, or undefined when the graph has no edges.
+ */
+void gsc_graph_find_closest_edge()
+{
+	int id;
+	vec3_t origin;
+	AStarGraph *graph;
+	int bestFrom = -1;
+	int bestTo = -1;
+	float bestD = 0;
+
+	if ( !stackGetParams("iv", &id, origin) )
+	{
+		stackError("gsc_graph_find_closest_edge() one or more arguments are undefined or have a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	graph = graphById(id);
+
+	if ( !graph )
+	{
+		stackError("gsc_graph_find_closest_edge() graph %i does not exist", id);
+		stackPushUndefined();
+		return;
+	}
+
+	for ( size_t i = 0; i < graph->nodes.size(); i++ )
+	{
+		GraphNode &node = graph->nodes[i];
+
+		for ( size_t e = 0; e < node.edges.size(); e++ )
+		{
+			unsigned int to = node.edges[e].to;
+			float d = pointSegmentDistSq(origin, node.origin, graph->nodes[to].origin);
+
+			if ( bestFrom >= 0 && d >= bestD )
+				continue;
+
+			bestFrom = (int)i;
+			bestTo = (int)to;
+			bestD = d;
+		}
+	}
+
+	if ( bestFrom < 0 )
+	{
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushArray();
+	stackPushInt(bestFrom);
+	stackPushArrayLast();
+	stackPushInt(bestTo);
+	stackPushArrayLast();
+}
+
+/*
+ * graphGetAllNodes(<graph id>, [origin], [max dist sq]) -> array of node ids.
+ * With an origin and a squared radius, only nodes within that radius are
+ * returned - a cheap spatial filter for viz and "nodes near me" queries.
+ */
+void gsc_graph_get_all_nodes()
+{
+	int id;
+	vec3_t origin;
+	float maxDistSq = -1;
+	int haveOrigin = 0;
+	AStarGraph *graph;
+
+	if ( !stackGetParams("i", &id) )
+	{
+		stackError("gsc_graph_get_all_nodes() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( Scr_GetNumParam() >= 2 && stackGetParamType(1) != VAR_UNDEFINED )
+	{
+		if ( !stackGetParamVector(1, origin) )
+		{
+			stackError("gsc_graph_get_all_nodes() origin argument has a wrong type");
+			stackPushUndefined();
+			return;
+		}
+
+		haveOrigin = 1;
+	}
+
+	if ( Scr_GetNumParam() >= 3 && !stackGetParamFloat(2, &maxDistSq) )
+	{
+		stackError("gsc_graph_get_all_nodes() max dist sq argument has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	graph = graphById(id);
+
+	if ( !graph )
+	{
+		stackError("gsc_graph_get_all_nodes() graph %i does not exist", id);
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushArray();
+
+	for ( size_t i = 0; i < graph->nodes.size(); i++ )
+	{
+		if ( haveOrigin && maxDistSq >= 0 )
+		{
+			float dx = graph->nodes[i].origin[0] - origin[0];
+			float dy = graph->nodes[i].origin[1] - origin[1];
+			float dz = graph->nodes[i].origin[2] - origin[2];
+
+			if ( dx * dx + dy * dy + dz * dz > maxDistSq )
+				continue;
+		}
+
+		stackPushInt((int)i);
+		stackPushArrayLast();
+	}
+}
+
+/*
+ * graphGetAllEdges(<graph id>) -> flat array of directed edges as
+ * [from0, to0, from1, to1, ...]. Read two ids per edge; a two-way link shows
+ * up as two entries because each direction is stored separately.
+ */
+void gsc_graph_get_all_edges()
+{
+	int id;
+	AStarGraph *graph;
+
+	if ( !stackGetParams("i", &id) )
+	{
+		stackError("gsc_graph_get_all_edges() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	graph = graphById(id);
+
+	if ( !graph )
+	{
+		stackError("gsc_graph_get_all_edges() graph %i does not exist", id);
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushArray();
+
+	for ( size_t i = 0; i < graph->nodes.size(); i++ )
+	{
+		GraphNode &node = graph->nodes[i];
+
+		for ( size_t e = 0; e < node.edges.size(); e++ )
+		{
+			stackPushInt((int)i);
+			stackPushArrayLast();
+			stackPushInt((int)node.edges[e].to);
+			stackPushArrayLast();
+		}
+	}
 }
 
 // graphCreate([persist], [reserve]) -> graph id

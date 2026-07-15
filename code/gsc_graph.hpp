@@ -25,6 +25,9 @@ void gsc_graph_get_node_origin();
 void gsc_graph_get_node_count();
 void gsc_graph_get_edge_count();
 void gsc_graph_get_stats();
+void gsc_graph_find_closest_edge();
+void gsc_graph_get_all_nodes();
+void gsc_graph_get_all_edges();
 
 void gsc_graph_cleanup_on_spawn_server(void);
 
