@@ -324,22 +324,28 @@ void SV_ConfigureProxy(proxy_t *proxy, int version, const char *address, const c
 
 	NET_StringToAdr(address, &proxy->listenAdr);
 	if ( proxy->listenAdr.type == NA_BAD )
+	{
 		Com_Error(
 			ERR_FATAL,
 			"\x15""Failed to parse listen address for proxy with version %s",
 			versionString);
+	}
 
 	NET_StringToAdr(forwardAddress, &proxy->forwardAdr);
 	if ( proxy->forwardAdr.type == NA_BAD )
+	{
 		Com_Error(
 			ERR_FATAL,
 			"\x15""Failed to parse forward address for proxy with version %s",
 			versionString);
+	}
 
 	pthread_mutex_init(&proxy->lock, NULL);
 	proxy->numClients = 0;
 	proxy->masterServerThreadStarted = qfalse;
 	memset(proxy->clientThreadInfo, 0, sizeof(proxyClientThreadInfo) * MAX_PROXY_CLIENT_THREADS);
+	for ( int i = 0; i < MAX_PROXY_CLIENT_THREADS; i++ )
+		proxy->clientThreadInfo[i].socket = -1;
 	proxy->parentVersion = parentVersion;
 	proxy->parentVersionString = GetShortVersionFromProtocol(parentVersion);
 	proxy->version = version;
@@ -403,7 +409,7 @@ void SV_ShutdownProxies()
 						strlen(HEARTBEAT_STOP_MESSAGE),
 						0,
 						(struct sockaddr *)&masterSockAdr,
-						sizeof(struct sockaddr_in));
+						sizeof(masterSockAdr));
 
 					if ( bytes_sent == -1 )
 						Com_DPrintf(
@@ -496,6 +502,7 @@ void SV_SetupProxies()
 		if ( !Sys_StringToSockaddr(sv_masterServer->current.string, &masterSockAdr) )
 		{
 			Com_Printf("Proxy: Failed to resolve master server %s\n", sv_masterServer->current.string);
+			masterSockAdr.sin_family = AF_UNSPEC;
 		}
 		else
 		{
@@ -508,6 +515,7 @@ void SV_SetupProxies()
 	if ( !Sys_StringToSockaddr(sv_authorizeServer->current.string, &authorizeSockAdr) )
 	{
 		Com_Printf("Proxy: Failed to resolve authorize server %s\n", sv_authorizeServer->current.string);
+		authorizeSockAdr.sin_family = AF_UNSPEC;
 	}
 	else
 	{
@@ -685,21 +693,6 @@ void * SV_StartProxy(void *threadArgs)
 		proxy->versionString,
 		proxy->version);
 
-	// Announce server to master list
-	if ( !sv_noMaster->current.integer && masterSockAdr.sin_family == AF_INET && authorizeSockAdr.sin_family == AF_INET )
-	{
-		if ( pthread_create(&proxy->masterServerThread, NULL, SV_ProxyMasterServerLoop, proxy) )
-		{
-			close(listenerSocket);
-			Com_Error(
-				ERR_FATAL,
-				"\x15Proxy: Failed to create master server thread for version %s (protocol %i)",
-				proxy->versionString,
-				proxy->version);
-		}
-		proxy->masterServerThreadStarted = qtrue;
-	}
-
 	// Startup info/status request caching thread
 	if ( sv_noMaster->current.integer < 2 )
 	{
@@ -716,6 +709,21 @@ void * SV_StartProxy(void *threadArgs)
 				proxy->version);
 		}
 		proxy->queryCacheThreadStarted = qtrue;
+	}
+
+	// Announce server to master list
+	if ( !sv_noMaster->current.integer && masterSockAdr.sin_family == AF_INET && authorizeSockAdr.sin_family == AF_INET )
+	{
+		if ( pthread_create(&proxy->masterServerThread, NULL, SV_ProxyMasterServerLoop, proxy) )
+		{
+			close(listenerSocket);
+			Com_Error(
+				ERR_FATAL,
+				"\x15Proxy: Failed to create master server thread for version %s (protocol %i)",
+				proxy->versionString,
+				proxy->version);
+		}
+		proxy->masterServerThreadStarted = qtrue;
 	}
 
 	while ( 1 )
@@ -1056,10 +1064,17 @@ void * SV_ProxyQueryCacheLoop(void *threadArgs)
 	{
 		if ( com_sv_running->current.boolean )
 		{
-			/* On success, cache.valid is set to true. Assumes, that both
-			 succeed if one succeeds */
-			SV_RefreshInfoCache(proxy, s, &forwarderAddr);
-			SV_RefreshStatusCache(proxy, s, &forwarderAddr);
+			// Only update the status cache if updating the info cache
+			// succeeded to cover the case where one of those two runs into the
+			// socket timeout of 1s. This can happen during map load where one
+			// of the requests would be answered too late, thus putting the
+			// response into the buffer meant of the subsequent request. We
+			// keep the short timeout to have a quick cache update once the
+			// server responds again
+			if ( SV_RefreshInfoCache(proxy, s, &forwarderAddr) )
+			{
+				SV_RefreshStatusCache(proxy, s, &forwarderAddr);
+			}
 		}
 
 		usleep(sv_proxyQueryCacheRefreshTime->current.integer * 1000);
@@ -1070,7 +1085,7 @@ void * SV_ProxyQueryCacheLoop(void *threadArgs)
 	return NULL;
 }
 
-void SV_RefreshInfoCache(proxy_t *proxy, int s, struct sockaddr_in *forwarderAddr)
+qboolean SV_RefreshInfoCache(proxy_t *proxy, int s, struct sockaddr_in *forwarderAddr)
 {
 	char buffer[MAX_INFO_STRING];
 	char cache_buffer[MAX_INFO_STRING];
@@ -1093,7 +1108,7 @@ void SV_RefreshInfoCache(proxy_t *proxy, int s, struct sockaddr_in *forwarderAdd
 	if ( bytes_sent == -1 )
 	{
 		Com_DPrintf("Proxy: No data sent at info cache refresh\n");
-		return;
+		return qfalse;
 	}
 
 	r_len = sizeof(r_addr);
@@ -1108,8 +1123,8 @@ void SV_RefreshInfoCache(proxy_t *proxy, int s, struct sockaddr_in *forwarderAdd
 
 	if ( bytes_received <= 0 )
 	{
-		Com_DPrintf("Proxy: No data at recvfrom at info cache refresh\n");
-		return;
+		Com_DPrintf("Proxy: No data at recvfrom at info cache refresh, check the sv_proxyForwardAddress dvars for validity at runtime\n");
+		return qfalse;
 	}
 
 	buffer[bytes_received] = '\0';
@@ -1128,7 +1143,7 @@ void SV_RefreshInfoCache(proxy_t *proxy, int s, struct sockaddr_in *forwarderAdd
 				client_ip,
 				ntohs(r_addr.sin_port));
 		}
-		return;
+		return qfalse;
 	}
 
 	// Check response header
@@ -1140,7 +1155,7 @@ void SV_RefreshInfoCache(proxy_t *proxy, int s, struct sockaddr_in *forwarderAdd
 				"Proxy: Dropping packet from %s, invalid header at info cache refresh\n",
 				client_ip);
 		}
-		return;
+		return qfalse;
 	}
 
 	// Work on a copy
@@ -1157,12 +1172,13 @@ void SV_RefreshInfoCache(proxy_t *proxy, int s, struct sockaddr_in *forwarderAdd
 	pthread_mutex_lock(&proxy->queryCacheLock);
 	I_strncpyz(proxy->queryCache.infoResponse, cache_buffer, sizeof(proxy->queryCache.infoResponse));
 	proxy->queryCache.infoResponseLen = strlen(proxy->queryCache.infoResponse);
-	proxy->queryCache.valid = qtrue;
-	proxy->queryCache.lastUpdate = Sys_Milliseconds64();
+	proxy->queryCache.infoResponseValid = qtrue;
 	pthread_mutex_unlock(&proxy->queryCacheLock);
+
+	return qtrue;
 }
 
-void SV_RefreshStatusCache(proxy_t *proxy, int s, struct sockaddr_in *forwarderAddr)
+qboolean SV_RefreshStatusCache(proxy_t *proxy, int s, struct sockaddr_in *forwarderAddr)
 {
 	char buffer[BIG_INFO_STRING];
 	char cache_buffer[BIG_INFO_STRING];
@@ -1185,7 +1201,7 @@ void SV_RefreshStatusCache(proxy_t *proxy, int s, struct sockaddr_in *forwarderA
 	if ( bytes_sent == -1 )
 	{
 		Com_DPrintf("Proxy: No data sent at status cache refresh\n");
-		return;
+		return qfalse;
 	}
 
 	r_len = sizeof(r_addr);
@@ -1200,8 +1216,8 @@ void SV_RefreshStatusCache(proxy_t *proxy, int s, struct sockaddr_in *forwarderA
 
 	if ( bytes_received <= 0 )
 	{
-		Com_DPrintf("Proxy: No data at recvfrom at status cache refresh\n");
-		return;
+		Com_DPrintf("Proxy: No data at recvfrom at status cache refresh, check the sv_proxyForwardAddress dvars for validity at runtime\n");
+		return qfalse;
 	}
 
 	buffer[bytes_received] = '\0';
@@ -1220,7 +1236,7 @@ void SV_RefreshStatusCache(proxy_t *proxy, int s, struct sockaddr_in *forwarderA
 				client_ip,
 				ntohs(r_addr.sin_port));
 		}
-		return;
+		return qfalse;
 	}
 
 	// Check response header
@@ -1232,7 +1248,7 @@ void SV_RefreshStatusCache(proxy_t *proxy, int s, struct sockaddr_in *forwarderA
 				"Proxy: Dropping packet from %s, invalid header at status cache refresh\n",
 				client_ip);
 		}
-		return;
+		return qfalse;
 	}
 
 	// Work on a copy
@@ -1249,9 +1265,10 @@ void SV_RefreshStatusCache(proxy_t *proxy, int s, struct sockaddr_in *forwarderA
 	pthread_mutex_lock(&proxy->queryCacheLock);
 	I_strncpyz(proxy->queryCache.statusResponse, cache_buffer, sizeof(proxy->queryCache.statusResponse));
 	proxy->queryCache.statusResponseLen = strlen(proxy->queryCache.statusResponse);
-	proxy->queryCache.valid = qtrue;
-	proxy->queryCache.lastUpdate = Sys_Milliseconds64();
+	proxy->queryCache.statusResponseValid = qtrue;
 	pthread_mutex_unlock(&proxy->queryCacheLock);
+
+	return qtrue;
 }
 
 void SV_SendCachedInfoResponse(proxy_t *proxy, const char *requestBuffer, int requestLen, struct sockaddr_in *addr)
@@ -1274,7 +1291,7 @@ void SV_SendCachedInfoResponse(proxy_t *proxy, const char *requestBuffer, int re
 	pthread_mutex_lock(&proxy->queryCacheLock);
 	cache = proxy->queryCache;
 	pthread_mutex_unlock(&proxy->queryCacheLock);
-	if ( !cache.valid )
+	if ( !cache.infoResponseValid )
 	{
 		Com_DPrintf("Proxy: Cached info response requested but cache is not valid\n");
 		return;
@@ -1330,7 +1347,7 @@ void SV_SendCachedStatusResponse(proxy_t *proxy, const char *requestBuffer, int 
 	pthread_mutex_lock(&proxy->queryCacheLock);
 	cache = proxy->queryCache;
 	pthread_mutex_unlock(&proxy->queryCacheLock);
-	if ( !cache.valid )
+	if ( !cache.statusResponseValid )
 	{
 		Com_DPrintf("Proxy: Cached status response requested but cache is not valid\n");
 		return;
@@ -1408,7 +1425,7 @@ void * SV_ProxyMasterServerLoop(void *threadArgs)
 	proxy_t *proxy = (proxy_t *)threadArgs;
 	netadr_t authorizeAdr;
 	qboolean startup = qtrue;
-	int proxyindex = proxy - &proxies[0];
+	int proxyIndex = proxy - &proxies[0];
 	ssize_t bytes_sent;
 
 	SockadrToNetadr(&authorizeSockAdr, &authorizeAdr);
@@ -1418,21 +1435,29 @@ void * SV_ProxyMasterServerLoop(void *threadArgs)
 		// Delay on startup to counter rate-limiting on the master server side
 		if ( startup )
 		{
-			sleep(proxyindex + 1);
+			sleep(proxyIndex + 1);
 			startup = qfalse;
 		}
 
 		// Do not continue heartbeats while the server is at rest (e.g., map
-		// load error), but the process is still up
-		while ( !com_sv_running->current.boolean )
+		// load error), but the process is still up. Also wait until the info
+		// and status request buffers contain valid data
+		while ( !com_sv_running->current.boolean ||
+		        !proxy->queryCache.infoResponseValid || 
+		        !proxy->queryCache.statusResponseValid )
+		{
+
 			sleep(1);
+		}
 
 		if ( sv_logHeartbeats->current.boolean )
+		{
 			Com_Printf(
 				"Sending proxy heartbeat to %s for version %s (protocol %i)\n",
 				sv_masterServer->current.string,
 				proxy->versionString,
 				proxy->version);
+		}
 
 		bytes_sent = sendto(
 			proxy->socket,
@@ -1443,18 +1468,22 @@ void * SV_ProxyMasterServerLoop(void *threadArgs)
 			sizeof(masterSockAdr));
 		
 		if ( bytes_sent == -1 )
+		{
 			Com_DPrintf(
 				"Proxy: Error on sendto when sending heartbeat to %s for version %s (protocol %i)\n",
 				sv_masterServer->current.string,
 				proxy->versionString,
 				proxy->version);
+		}
 
 		if ( sv_logHeartbeats->current.boolean )
+		{
 			Com_Printf(
 				"Sending proxy getIpAuthorize to %s for version %s (protocol %i)\n",
 				sv_authorizeServer->current.string,
 				proxy->versionString,
 				proxy->version);
+		}
 
 		char AUTHORIZE_SEND[MAX_BUFFER_SIZE];
 		snprintf(
@@ -1478,11 +1507,13 @@ void * SV_ProxyMasterServerLoop(void *threadArgs)
 			sizeof(authorizeSockAdr));
 
 		if ( bytes_sent == -1 )
+		{
 			Com_DPrintf(
 				"Proxy: Error on sendto when sending getIpAuthorize to %s for version %s (protocol %i)\n",
 				sv_masterServer->current.string,
 				proxy->versionString,
 				proxy->version);
+		}
 		
 		// Stock heartbeats are sent at least every 180 seconds
 		sleep(60);

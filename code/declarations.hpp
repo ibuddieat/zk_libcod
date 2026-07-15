@@ -4370,12 +4370,12 @@ struct leakyBucket_s
 
 typedef struct
 {
-	qboolean valid;
+	qboolean infoResponseValid;
 	char infoResponse[MAX_INFO_STRING];
 	int infoResponseLen;
+	qboolean statusResponseValid;
 	char statusResponse[BIG_INFO_STRING];
 	int statusResponseLen;
-	uint64_t lastUpdate;
 } proxyQueryCache_t;
 
 typedef struct
@@ -4415,7 +4415,7 @@ typedef struct
 typedef struct
 {
 	int activeClient;
-	sockaddr_in addr;
+	struct sockaddr_in addr;
 	int clientIndex;
 	proxy_t *proxy;
 	int socket;
