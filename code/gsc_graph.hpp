@@ -41,6 +41,7 @@ void gsc_graph_remove_node();
 void gsc_graph_precompute_paths_to_node();
 void gsc_graph_save();
 void gsc_graph_load();
+void gsc_graph_autodiscover();
 
 void gsc_graph_cleanup_on_spawn_server(void);
 

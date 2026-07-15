@@ -3,6 +3,7 @@
 #if COMPILE_GRAPH == 1
 
 #include <vector>
+#include <map>
 #include <math.h>
 #include <float.h>
 #include <string.h>
@@ -180,6 +181,65 @@ static unsigned int graphCrc32(const unsigned char *data, size_t len)
 	}
 
 	return ~crc;
+}
+
+#define GRAPH_TRACE_MASK   (CONTENTS_SOLID | CONTENTS_PLAYERCLIP)
+#define GRAPH_STEP_UP      18.0f
+#define GRAPH_SLOPE_MIN_Z  0.7f
+
+/*
+ * Drop a line trace from just above (x,y,z) to well below it and, if it lands on
+ * ground shallow enough to stand on, write the ground point to `out`. Used by
+ * autodiscover to snap a grid sample onto the floor.
+ */
+static bool graphTraceGround(float x, float y, float z, vec3_t out)
+{
+	trace_t tr;
+	vec3_t start;
+	vec3_t end;
+	vec3_t zero = { 0, 0, 0 };
+
+	start[0] = x; start[1] = y; start[2] = z + 40.0f;
+	end[0] = x; end[1] = y; end[2] = z - 128.0f;
+
+	SV_Trace(&tr, start, zero, zero, end, ENTITYNUM_NONE, GRAPH_TRACE_MASK, 1, NULL, 1);
+
+	if ( tr.startsolid || tr.allsolid || tr.fraction >= 1.0f )
+		return false;
+	if ( tr.normal[2] < GRAPH_SLOPE_MIN_Z )
+		return false;
+
+	Vec3Lerp(start, end, tr.fraction, out);
+	return true;
+}
+
+/* True when a standing player box fits at the ground point (not embedded in solid). */
+static bool graphPlayerFits(const vec3_t ground, const vec3_t mins, const vec3_t maxs)
+{
+	trace_t tr;
+	vec3_t at;
+
+	at[0] = ground[0]; at[1] = ground[1]; at[2] = ground[2] + 2.0f;
+
+	SV_Trace(&tr, at, (float *)mins, (float *)maxs, at, ENTITYNUM_NONE, GRAPH_TRACE_MASK, 1, NULL, 1);
+
+	return !tr.startsolid && !tr.allsolid;
+}
+
+/* True when a player box can travel from a to b unobstructed (both lifted by the
+ * step height so small ledges do not block the link). */
+static bool graphWalkable(const vec3_t a, const vec3_t b, const vec3_t mins, const vec3_t maxs)
+{
+	trace_t tr;
+	vec3_t start;
+	vec3_t end;
+
+	start[0] = a[0]; start[1] = a[1]; start[2] = a[2] + GRAPH_STEP_UP;
+	end[0] = b[0]; end[1] = b[1]; end[2] = b[2] + GRAPH_STEP_UP;
+
+	SV_Trace(&tr, start, (float *)mins, (float *)maxs, end, ENTITYNUM_NONE, GRAPH_TRACE_MASK, 1, NULL, 1);
+
+	return tr.fraction >= 0.99f && !tr.startsolid;
 }
 
 /* Squared distance from point p to the segment ab, with the projection clamped
@@ -1960,6 +2020,200 @@ void gsc_graph_get_stats()
 
 	if ( reset )
 		memset(&graph->stats, 0, sizeof(graph->stats));
+}
+
+/*
+ * graphAutodiscover(<graph id>, <seed origin>, [grid step], [max nodes]) ->
+ * nodes added. Grid flood-fill from the seed: snap the seed to the floor, then
+ * BFS outward on a grid, adding a node wherever a player fits on walkable ground
+ * and can travel there from its neighbour, linking walkable grid-neighbours both
+ * ways. Every added node is reachable from the seed by construction (one
+ * connected component). Runs on the main thread - meant for one-time generation
+ * (then graphSave it). Nodes append with sequential ids (id==index preserved).
+ */
+void gsc_graph_autodiscover()
+{
+	int id;
+	vec3_t seed;
+	int gridStep = 48;
+	int maxNodes;
+	AStarGraph *graph;
+	float step;
+	vec3_t playerMins = { -15, -15, 0 };
+	vec3_t playerMaxs = { 15, 15, 72 };
+	vec3_t ground;
+	std::map<long long, int> cellToNode;
+	std::vector<unsigned int> queue;
+	size_t head;
+	int added = 0;
+	unsigned int started;
+	long long cellKey;
+
+	if ( !stackGetParams("iv", &id, seed) )
+	{
+		stackError("gsc_graph_autodiscover() one or more arguments are undefined or have a wrong type");
+		stackPushInt(0);
+		return;
+	}
+
+	if ( Scr_GetNumParam() >= 3 && !stackGetParamInt(2, &gridStep) )
+	{
+		stackError("gsc_graph_autodiscover() grid step argument has a wrong type");
+		stackPushInt(0);
+		return;
+	}
+
+	graph = graphById(id);
+
+	if ( !graph )
+	{
+		stackError("gsc_graph_autodiscover() graph %i does not exist", id);
+		stackPushInt(0);
+		return;
+	}
+
+	maxNodes = sv_graphMaxNodes->current.integer;
+	if ( Scr_GetNumParam() >= 4 )
+	{
+		int mn;
+
+		if ( !stackGetParamInt(3, &mn) )
+		{
+			stackError("gsc_graph_autodiscover() max nodes argument has a wrong type");
+			stackPushInt(0);
+			return;
+		}
+		if ( mn > 0 && mn < maxNodes )
+			maxNodes = mn;
+	}
+
+	if ( gridStep < 8 )
+		gridStep = 8;
+	step = (float)gridStep;
+
+	started = graphMicroseconds();
+
+	if ( !graphTraceGround(seed[0], seed[1], seed[2], ground) || !graphPlayerFits(ground, playerMins, playerMaxs) )
+	{
+		graphDebugPrint("autodiscover: seed (%.0f %.0f %.0f) is not on walkable ground", seed[0], seed[1], seed[2]);
+		stackPushInt(0);
+		return;
+	}
+
+	cellKey = ((long long)(int)floorf(ground[0] / step) << 32) | ((int)floorf(ground[1] / step) & 0xFFFFFFFFLL);
+	{
+		GraphNode node;
+
+		VectorCopy(ground, node.origin);
+		node.type = 0;
+		node.removed = false;
+		graph->nodes.push_back(node);
+		cellToNode[cellKey] = (int)graph->nodes.size() - 1;
+		queue.push_back((unsigned int)graph->nodes.size() - 1);
+		added = 1;
+	}
+
+	head = 0;
+	while ( head < queue.size() && (int)graph->nodes.size() < maxNodes )
+	{
+		unsigned int cur = queue[head++];
+		vec3_t curOrigin;
+		int dx;
+		int dy;
+
+		VectorCopy(graph->nodes[cur].origin, curOrigin);
+
+		for ( dy = -1; dy <= 1; dy++ )
+		{
+			for ( dx = -1; dx <= 1; dx++ )
+			{
+				float nx;
+				float ny;
+				std::map<long long, int>::iterator it;
+
+				if ( dx == 0 && dy == 0 )
+					continue;
+
+				nx = curOrigin[0] + dx * step;
+				ny = curOrigin[1] + dy * step;
+				cellKey = ((long long)(int)floorf(nx / step) << 32) | ((int)floorf(ny / step) & 0xFFFFFFFFLL);
+
+				it = cellToNode.find(cellKey);
+				if ( it != cellToNode.end() )
+				{
+					int other = it->second;
+
+					// Existing node in that cell: add the cross-link if walkable
+					if ( other != (int)cur && graphFindEdgeIndex(graph, (int)cur, other) < 0 && graphWalkable(curOrigin, graph->nodes[other].origin, playerMins, playerMaxs) )
+					{
+						GraphEdge e1;
+						GraphEdge e2;
+						float c = edgeDistance(curOrigin, graph->nodes[other].origin);
+
+						e1.to = (unsigned int)other;
+						e1.type = 0;
+						e1.cost = c;
+						e2.to = cur;
+						e2.type = 0;
+						e2.cost = c;
+						graph->nodes[cur].edges.push_back(e1);
+						graph->nodes[other].edges.push_back(e2);
+						graph->edgeCount += 2;
+					}
+					continue;
+				}
+
+				if ( (int)graph->nodes.size() >= maxNodes )
+					continue;
+
+				if ( !graphTraceGround(nx, ny, curOrigin[2], ground) )
+					continue;
+				if ( !graphPlayerFits(ground, playerMins, playerMaxs) )
+					continue;
+				if ( !graphWalkable(curOrigin, ground, playerMins, playerMaxs) )
+					continue;
+
+				{
+					GraphNode node;
+					GraphEdge e1;
+					GraphEdge e2;
+					int nid;
+					float c;
+
+					VectorCopy(ground, node.origin);
+					node.type = 0;
+					node.removed = false;
+					graph->nodes.push_back(node);
+					nid = (int)graph->nodes.size() - 1;
+					cellToNode[cellKey] = nid;
+
+					c = edgeDistance(curOrigin, ground);
+					e1.to = (unsigned int)nid;
+					e1.type = 0;
+					e1.cost = c;
+					e2.to = cur;
+					e2.type = 0;
+					e2.cost = c;
+					graph->nodes[cur].edges.push_back(e1);
+					graph->nodes[nid].edges.push_back(e2);
+					graph->edgeCount += 2;
+
+					queue.push_back((unsigned int)nid);
+					added++;
+				}
+			}
+		}
+	}
+
+	graphInvalidatePrecompute(graph);
+
+	{
+		unsigned int elapsed = graphMicroseconds() - started;
+
+		graphDebugPrint("autodiscover: added %i nodes, %u edges in %u us (grid %i, seed component)", added, graph->edgeCount, elapsed, gridStep);
+	}
+
+	stackPushInt(added);
 }
 
 /*

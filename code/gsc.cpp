@@ -128,6 +128,7 @@ scr_function_t scriptFunctions[] =
 	{"graphPrecomputePathsToNode", gsc_graph_precompute_paths_to_node, 0},
 	{"graphSave", gsc_graph_save, 0},
 	{"graphLoad", gsc_graph_load, 0},
+	{"graphAutodiscover", gsc_graph_autodiscover, 0},
 	#endif
 		
 	#if COMPILE_MYSQL_DEFAULT == 1
