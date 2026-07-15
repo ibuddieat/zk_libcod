@@ -1438,7 +1438,7 @@ void gsc_graph_set_node_type()
 		return;
 	}
 
-	if ( nodeId < 0 || nodeId >= (int)graph->nodes.size() )
+	if ( nodeId < 0 || nodeId >= (int)graph->nodes.size() || graph->nodes[nodeId].removed )
 	{
 		stackPushBool(qfalse);
 		return;
@@ -1484,7 +1484,7 @@ void gsc_graph_set_node_origin()
 		return;
 	}
 
-	if ( nodeId < 0 || nodeId >= (int)graph->nodes.size() )
+	if ( nodeId < 0 || nodeId >= (int)graph->nodes.size() || graph->nodes[nodeId].removed )
 	{
 		stackPushBool(qfalse);
 		return;
