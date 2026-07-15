@@ -124,6 +124,7 @@ scr_function_t scriptFunctions[] =
 	{"graphSetNodeOrigin", gsc_graph_set_node_origin, 0},
 	{"graphGetNodeIdsAccessibleFrom", gsc_graph_get_node_ids_accessible_from, 0},
 	{"graphGetNodeIdsAccessibleTo", gsc_graph_get_node_ids_accessible_to, 0},
+	{"graphRemoveNode", gsc_graph_remove_node, 0},
 	#endif
 		
 	#if COMPILE_MYSQL_DEFAULT == 1

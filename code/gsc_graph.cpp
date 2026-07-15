@@ -22,6 +22,7 @@ struct GraphNode
 {
 	vec3_t origin;
 	int type;
+	bool removed;
 	std::vector<GraphEdge> edges;
 };
 
@@ -415,6 +416,13 @@ void gsc_graph_find_path()
 		return;
 	}
 
+	if ( graph->nodes[start].removed || graph->nodes[goal].removed )
+	{
+		stackError("gsc_graph_find_path() start or goal node has been removed");
+		stackPushUndefined();
+		return;
+	}
+
 	started = graphMicroseconds();
 	scratchBegin(graph);
 
@@ -582,6 +590,9 @@ void gsc_graph_find_closest_node()
 
 	for ( size_t i = 0; i < graph->nodes.size(); i++ )
 	{
+		if ( graph->nodes[i].removed )
+			continue;
+
 		float dx = graph->nodes[i].origin[0] - origin[0];
 		float dy = graph->nodes[i].origin[1] - origin[1];
 		float dz = graph->nodes[i].origin[2] - origin[2];
@@ -718,6 +729,9 @@ void gsc_graph_get_all_nodes()
 
 	for ( size_t i = 0; i < graph->nodes.size(); i++ )
 	{
+		if ( graph->nodes[i].removed )
+			continue;
+
 		if ( haveOrigin && maxDistSq >= 0 )
 		{
 			float dx = graph->nodes[i].origin[0] - origin[0];
@@ -919,6 +933,7 @@ void gsc_graph_add_node()
 
 	VectorCopy(origin, node.origin);
 	node.type = type;
+	node.removed = false;
 
 	graph->nodes.push_back(node);
 
@@ -980,6 +995,13 @@ void gsc_graph_add_edge()
 	if ( from == to )
 	{
 		stackError("gsc_graph_add_edge() cannot add an edge from node %i to itself", from);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( graph->nodes[from].removed || graph->nodes[to].removed )
+	{
+		stackError("gsc_graph_add_edge() cannot add an edge touching a removed node");
 		stackPushUndefined();
 		return;
 	}
@@ -1217,6 +1239,12 @@ void gsc_graph_get_node_properties()
 		return;
 	}
 
+	if ( graph->nodes[nodeId].removed )
+	{
+		stackPushUndefined();
+		return;
+	}
+
 	stackPushArray();
 	stackPushInt(graph->nodes[nodeId].type);
 	stackPushArrayLast();
@@ -1358,6 +1386,12 @@ void gsc_graph_get_node_ids_accessible_from()
 		return;
 	}
 
+	if ( graph->nodes[nodeId].removed )
+	{
+		stackPushUndefined();
+		return;
+	}
+
 	std::vector<char> visited(graph->nodes.size(), 0);
 	std::vector<unsigned int> queue;
 
@@ -1422,6 +1456,12 @@ void gsc_graph_get_node_ids_accessible_to()
 		return;
 	}
 
+	if ( graph->nodes[nodeId].removed )
+	{
+		stackPushUndefined();
+		return;
+	}
+
 	// Reverse adjacency: for each node, the list of nodes with an edge into it
 	std::vector< std::vector<unsigned int> > incoming(graph->nodes.size());
 	for ( size_t i = 0; i < graph->nodes.size(); i++ )
@@ -1460,6 +1500,68 @@ void gsc_graph_get_node_ids_accessible_to()
 	}
 }
 
+/*
+ * graphRemoveNode(<graph id>, <node id>) -> true, or false for an invalid or
+ * already-removed node. A tombstone delete: the slot stays so existing node ids
+ * keep their meaning (the id==index contract holds), but the node is flagged
+ * removed, its outgoing edges are dropped, and every edge into it is removed.
+ * All queries then skip it.
+ */
+void gsc_graph_remove_node()
+{
+	int id;
+	int nodeId;
+	AStarGraph *graph;
+
+	if ( !stackGetParams("ii", &id, &nodeId) )
+	{
+		stackError("gsc_graph_remove_node() one or more arguments are undefined or have a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	graph = graphById(id);
+
+	if ( !graph )
+	{
+		stackError("gsc_graph_remove_node() graph %i does not exist", id);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( nodeId < 0 || nodeId >= (int)graph->nodes.size() || graph->nodes[nodeId].removed )
+	{
+		stackPushBool(qfalse);
+		return;
+	}
+
+	// Drop its outgoing edges
+	graph->edgeCount -= (unsigned int)graph->nodes[nodeId].edges.size();
+	graph->nodes[nodeId].edges.clear();
+
+	// Drop every edge pointing to it
+	for ( size_t i = 0; i < graph->nodes.size(); i++ )
+	{
+		std::vector<GraphEdge> &edges = graph->nodes[i].edges;
+
+		for ( size_t e = 0; e < edges.size(); )
+		{
+			if ( edges[e].to == (unsigned int)nodeId )
+			{
+				edges.erase(edges.begin() + e);
+				graph->edgeCount--;
+			}
+			else
+			{
+				e++;
+			}
+		}
+	}
+
+	graph->nodes[nodeId].removed = true;
+	stackPushBool(qtrue);
+}
+
 // graphGetNodeOrigin(<graph id>, <node id>) -> origin vector
 void gsc_graph_get_node_origin()
 {
@@ -1486,6 +1588,12 @@ void gsc_graph_get_node_origin()
 	if ( nodeId < 0 || nodeId >= (int)graph->nodes.size() )
 	{
 		stackError("gsc_graph_get_node_origin() node id %i is out of range (graph %i has %i nodes)", nodeId, id, (int)graph->nodes.size());
+		stackPushUndefined();
+		return;
+	}
+
+	if ( graph->nodes[nodeId].removed )
+	{
 		stackPushUndefined();
 		return;
 	}
