@@ -8,136 +8,73 @@ on:
     branches: [ "dev" ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
-  ubuntu-nomysql-nospeex:
+  build-test:
     runs-on: ubuntu-24.04 # https://github.com/actions/runner-images
-    steps:
-    - uses: actions/checkout@v6 # https://github.com/actions/checkout
-    - name: "Install Dependencies"
-      run: |
-        sudo dpkg --add-architecture i386
-        sudo apt-get update
-        sudo apt-get install gcc-multilib g++-multilib libstdc++5:i386
-    - name: "Build"
-      run: |
-        cd code
-        ./doit.sh nomysql nospeex
-    - name: "Test"
-      run: if ! OUTPUT=$({ LD_PRELOAD=./code/bin/libcod2.so ./cod2_lnxded 1>&2; } 2>&1) && echo $OUTPUT | grep 'Unloaded extension' > /dev/null; then (exit 0); else (exit 1); fi
-    - uses: actions/upload-artifact@v7 # https://github.com/actions/upload-artifact
-      with:
-        name: libcod2_ubuntu_no_mysql
-        path: ./code/bin/libcod2.so
-  ubuntu-mysql1-nospeex:
-    runs-on: ubuntu-24.04 # https://github.com/actions/runner-images
-    steps:
-    - uses: actions/checkout@v6 # https://github.com/actions/checkout
-    - name: "Install Dependencies"
-      run: |
-        sudo dpkg --add-architecture i386
-        sudo apt-get update
-        sudo apt-get install gcc-multilib g++-multilib libstdc++5:i386 libmysqlclient-dev:i386
-    - name: "Build"
-      run: |
-        cd code
-        ./doit.sh mysql1 nospeex
-    - name: "Test"
-      run: if ! OUTPUT=$({ LD_PRELOAD=./code/bin/libcod2.so ./cod2_lnxded 1>&2; } 2>&1) && echo $OUTPUT | grep 'Unloaded extension' > /dev/null; then (exit 0); else (exit 1); fi
-    - uses: actions/upload-artifact@v7 # https://github.com/actions/upload-artifact
-      with:
-        name: libcod2_ubuntu_mysql1
-        path: ./code/bin/libcod2.so
-  ubuntu-mysql2-nospeex:
-    runs-on: ubuntu-24.04 # https://github.com/actions/runner-images
-    steps:
-    - uses: actions/checkout@v6 # https://github.com/actions/checkout
-    - name: "Install Dependencies"
-      run: |
-        sudo dpkg --add-architecture i386
-        sudo apt-get update
-        sudo apt-get install gcc-multilib g++-multilib libstdc++5:i386 libmysqlclient-dev:i386
-    - name: "Build"
-      run: |
-        cd code
-        ./doit.sh mysql2 nospeex
-    - name: "Test"
-      run: if ! OUTPUT=$({ LD_PRELOAD=./code/bin/libcod2.so ./cod2_lnxded 1>&2; } 2>&1) && echo $OUTPUT | grep 'Unloaded extension' > /dev/null; then (exit 0); else (exit 1); fi
-    - uses: actions/upload-artifact@v7 # https://github.com/actions/upload-artifact
-      with:
-        name: libcod2_ubuntu_mysql2
-        path: ./code/bin/libcod2.so
-  debian-nomysql-nospeex:
-    runs-on: ubuntu-24.04 # https://github.com/actions/runner-images
-    container:
-      image: debian:trixie
+    container: ${{ matrix.container }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os_name: ubuntu
+            variant: nomysql
+            container: ""
+            packages: "gcc-multilib g++-multilib libstdc++5:i386"
+            artifact_name: libcod2_ubuntu_no_mysql
+            is_debian: false
+          - os_name: ubuntu
+            variant: mysql1
+            container: ""
+            packages: "gcc-multilib g++-multilib libstdc++5:i386 libmysqlclient-dev:i386"
+            artifact_name: libcod2_ubuntu_mysql1
+            is_debian: false
+          - os_name: ubuntu
+            variant: mysql2
+            container: ""
+            packages: "gcc-multilib g++-multilib libstdc++5:i386 libmysqlclient-dev:i386"
+            artifact_name: libcod2_ubuntu_mysql2
+            is_debian: false
+          - os_name: debian
+            variant: nomysql
+            container: "debian:trixie"
+            packages: "gcc-multilib g++-multilib libc6:i386 libgcc-s1:i386"
+            artifact_name: libcod2_debian_no_mysql
+            is_debian: true
+          - os_name: debian
+            variant: mysql1
+            container: "debian:trixie"
+            packages: "gcc-multilib g++-multilib libmariadb-dev-compat:i386"
+            artifact_name: libcod2_debian_mysql1
+            is_debian: true
+          - os_name: debian
+            variant: mysql2
+            container: "debian:trixie"
+            packages: "gcc-multilib g++-multilib libmariadb-dev-compat:i386"
+            artifact_name: libcod2_debian_mysql2
+            is_debian: true
     steps:
     - uses: actions/checkout@v6 # https://github.com/actions/checkout
     - name: "Install dependencies for container"
+      if: matrix.is_debian
       run: apt-get update && apt-get -y install sudo wget
     - name: "Install Dependencies"
       run: |
         sudo dpkg --add-architecture i386
         sudo apt-get update
-        sudo apt-get -y install gcc-multilib g++-multilib libc6:i386 libgcc-s1:i386
+        sudo apt-get -y install ${{ matrix.packages }}
     - name: "libstdc++5 Installation Workaround"
+      if: matrix.is_debian
       run: wget http://ftp.debian.org/debian/pool/main/g/gcc-3.3/libstdc++5_3.3.6-32_i386.deb && sudo dpkg -i libstdc++5_3.3.6-32_i386.deb
     - name: "Build"
       run: |
         cd code
-        ./doit.sh nomysql nospeex
+        ./doit.sh ${{ matrix.variant }} nospeex
     - name: "Test"
       run: if ! OUTPUT=$({ LD_PRELOAD=./code/bin/libcod2.so ./cod2_lnxded 1>&2; } 2>&1) && echo $OUTPUT | grep 'Unloaded extension' > /dev/null; then (exit 0); else (exit 1); fi
     - uses: actions/upload-artifact@v7 # https://github.com/actions/upload-artifact
       with:
-        name: libcod2_debian_no_mysql
-        path: ./code/bin/libcod2.so
-  debian-mysql1-nospeex:
-    runs-on: ubuntu-24.04 # https://github.com/actions/runner-images
-    container:
-      image: debian:trixie
-    steps:
-    - uses: actions/checkout@v6 # https://github.com/actions/checkout
-    - name: "Install dependencies for container"
-      run: apt-get update && apt-get -y install sudo wget
-    - name: "Install Dependencies"
-      run: |
-        sudo dpkg --add-architecture i386
-        sudo apt-get update
-        sudo apt-get -y install gcc-multilib g++-multilib libmariadb-dev-compat:i386
-    - name: "libstdc++5 Installation Workaround"
-      run: wget http://ftp.debian.org/debian/pool/main/g/gcc-3.3/libstdc++5_3.3.6-32_i386.deb && sudo dpkg -i libstdc++5_3.3.6-32_i386.deb
-    - name: "Build"
-      run: |
-        cd code
-        ./doit.sh mysql1 nospeex
-    - name: "Test"
-      run: if ! OUTPUT=$({ LD_PRELOAD=./code/bin/libcod2.so ./cod2_lnxded 1>&2; } 2>&1) && echo $OUTPUT | grep 'Unloaded extension' > /dev/null; then (exit 0); else (exit 1); fi
-    - uses: actions/upload-artifact@v7 # https://github.com/actions/upload-artifact
-      with:
-        name: libcod2_debian_mysql1
-        path: ./code/bin/libcod2.so
-  debian-mysql2-nospeex:
-    runs-on: ubuntu-24.04 # https://github.com/actions/runner-images
-    container:
-      image: debian:trixie
-    steps:
-    - uses: actions/checkout@v6 # https://github.com/actions/checkout
-    - name: "Install dependencies for container"
-      run: apt-get update && apt-get -y install sudo wget
-    - name: "Install Dependencies"
-      run: |
-        sudo dpkg --add-architecture i386
-        sudo apt-get update
-        sudo apt-get -y install gcc-multilib g++-multilib libmariadb-dev-compat:i386
-    - name: "libstdc++5 Installation Workaround"
-      run: wget http://ftp.debian.org/debian/pool/main/g/gcc-3.3/libstdc++5_3.3.6-32_i386.deb && sudo dpkg -i libstdc++5_3.3.6-32_i386.deb
-    - name: "Build"
-      run: |
-        cd code
-        ./doit.sh mysql2 nospeex
-    - name: "Test"
-      run: if ! OUTPUT=$({ LD_PRELOAD=./code/bin/libcod2.so ./cod2_lnxded 1>&2; } 2>&1) && echo $OUTPUT | grep 'Unloaded extension' > /dev/null; then (exit 0); else (exit 1); fi
-    - uses: actions/upload-artifact@v7 # https://github.com/actions/upload-artifact
-      with:
-        name: libcod2_debian_mysql2
+        name: ${{ matrix.artifact_name }}
         path: ./code/bin/libcod2.so

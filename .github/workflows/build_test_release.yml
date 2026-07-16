@@ -5,24 +5,78 @@ on:
   push:
     tags: [ "v*.*" ]
 
+permissions:
+  contents: write
+
 jobs:
-  ubuntu-mysql1-nospeex:
+  build-test-release:
     runs-on: ubuntu-24.04 # https://github.com/actions/runner-images
+    container: ${{ matrix.container }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os_name: ubuntu
+            variant: nomysql
+            container: ""
+            packages: "gcc-multilib g++-multilib libstdc++5:i386"
+            asset_name: libcod2_ubuntu_nomysql_nospeex.so
+            is_debian: false
+          - os_name: ubuntu
+            variant: mysql1
+            container: ""
+            packages: "gcc-multilib g++-multilib libstdc++5:i386 libmysqlclient-dev:i386"
+            asset_name: libcod2_ubuntu_mysql1_nospeex.so
+            is_debian: false
+          - os_name: ubuntu
+            variant: mysql2
+            container: ""
+            packages: "gcc-multilib g++-multilib libstdc++5:i386 libmysqlclient-dev:i386"
+            asset_name: libcod2_ubuntu_mysql2_nospeex.so
+            is_debian: false
+          - os_name: debian
+            variant: nomysql
+            container: "debian:trixie"
+            packages: "gcc-multilib g++-multilib libc6:i386 libgcc-s1:i386"
+            asset_name: libcod2_debian_nomysql_nospeex.so
+            is_debian: true
+          - os_name: debian
+            variant: mysql1
+            container: "debian:trixie"
+            packages: "gcc-multilib g++-multilib libmariadb-dev-compat:i386"
+            asset_name: libcod2_debian_mysql1_nospeex.so
+            is_debian: true
+          - os_name: debian
+            variant: mysql2
+            container: "debian:trixie"
+            packages: "gcc-multilib g++-multilib libmariadb-dev-compat:i386"
+            asset_name: libcod2_debian_mysql2_nospeex.so
+            is_debian: true
     steps:
     - uses: actions/checkout@v6 # https://github.com/actions/checkout
+    - name: "Install dependencies for container"
+      if: matrix.is_debian
+      run: apt-get update && apt-get -y install sudo wget
     - name: "Install Dependencies"
       run: |
         sudo dpkg --add-architecture i386
         sudo apt-get update
-        sudo apt-get install gcc-multilib g++-multilib libstdc++5:i386 libmysqlclient-dev:i386
+        sudo apt-get -y install ${{ matrix.packages }}
+    - name: "libstdc++5 Installation Workaround"
+      if: matrix.is_debian
+      run: wget http://ftp.debian.org/debian/pool/main/g/gcc-3.3/libstdc++5_3.3.6-32_i386.deb && sudo dpkg -i libstdc++5_3.3.6-32_i386.deb
     - name: "Build"
       run: |
         cd code
-        ./doit.sh mysql1 nospeex
+        ./doit.sh ${{ matrix.variant }} nospeex
     - name: "Test"
       run: if ! OUTPUT=$({ LD_PRELOAD=./code/bin/libcod2.so ./cod2_lnxded 1>&2; } 2>&1) && echo $OUTPUT | grep 'Unloaded extension' > /dev/null; then (exit 0); else (exit 1); fi
+    - name: "Prepare Release Asset"
+      run: |
+        cp ./code/bin/libcod2.so ./${{ matrix.asset_name }}
     - name: "Release"
-      uses: softprops/action-gh-release@v2 # https://github.com/softprops/action-gh-release
+      uses: softprops/action-gh-release@v3 # https://github.com/softprops/action-gh-release
       if: startsWith(github.ref, 'refs/tags/')
       with:
-        files: ./code/bin/libcod2.so
+        files: ./${{ matrix.asset_name }}
+        overwrite_files: true
