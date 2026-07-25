@@ -2287,6 +2287,30 @@ void gsc_player_getplayerweaponfusetime(scr_entref_t ref)
 	stackPushInt(customPlayerState[id].playerWeaponFuseTime[weaponId]);
 }
 
+void gsc_player_setplayerweaponraisetime(scr_entref_t ref)
+{
+	int id, weaponId, time;
+
+	if ( !resolvePlayerWeaponTime(ref, "setPlayerWeaponRaiseTime", qtrue, &id, &weaponId, &time) )
+		return;
+
+	if ( time < 0 )
+		time = 0;
+	customPlayerState[id].playerWeaponRaiseTime[weaponId] = time;
+
+	stackPushBool(qtrue);
+}
+
+void gsc_player_getplayerweaponraisetime(scr_entref_t ref)
+{
+	int id, weaponId, time;
+
+	if ( !resolvePlayerWeaponTime(ref, "getPlayerWeaponRaiseTime", qfalse, &id, &weaponId, &time) )
+		return;
+
+	stackPushInt(customPlayerState[id].playerWeaponRaiseTime[weaponId]);
+}
+
 // Per-player mirror of the global setWeaponDamage: sets the (max) bullet damage for one weapon on
 // this player only. Covers hitscan bullet weapons; damage <= 0 clears. Reuses the int resolver.
 void gsc_player_setplayerweapondamage(scr_entref_t ref)

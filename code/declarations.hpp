@@ -4308,6 +4308,7 @@ typedef struct customPlayerState_s
 	int playerWeaponReloadTime[MAX_WEAPONS]; // per-weapon reload-time override in ms, 0 = off
 	int playerWeaponReloadEmptyTime[MAX_WEAPONS]; // per-weapon empty-reload-time override in ms, 0 = off
 	int playerWeaponFuseTime[MAX_WEAPONS]; // per-weapon fuse-time override in ms, 0 = off
+	int playerWeaponRaiseTime[MAX_WEAPONS]; // per-weapon raise (weapon-switch) time override in ms, 0 = off
 	int playerWeaponDamage[MAX_WEAPONS]; // per-weapon (max) damage override, 0 = off
 	int playerWeaponMeleeDamage[MAX_WEAPONS]; // per-weapon melee-damage override, 0 = off
 	float playerWeaponMoveSpeedScale[MAX_WEAPONS]; // per-weapon move-speed-scale override, 0 = off

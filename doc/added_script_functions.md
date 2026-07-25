@@ -66,6 +66,7 @@
   * `<player> getPlayerWeaponReloadTime(<weapon name|id>)`
   * `<player> getPlayerWeaponReloadEmptyTime(<weapon name|id>)`
   * `<player> getPlayerWeaponFuseTime(<weapon name|id>)`
+  * `<player> getPlayerWeaponRaiseTime(<weapon name|id>)`
   * `<player> getPlayerWeaponDamage(<weapon name|id>)`
   * `<player> getPlayerWeaponMeleeDamage(<weapon name|id>)`
   * `<player> getPlayerWeaponMoveSpeedScale(<weapon name|id>)`
@@ -138,6 +139,7 @@
   * `<player> setPlayerWeaponReloadTime(<weapon name|id>, <reload time>)`
   * `<player> setPlayerWeaponReloadEmptyTime(<weapon name|id>, <reload empty time>)`
   * `<player> setPlayerWeaponFuseTime(<weapon name|id>, <fuse time>)`
+  * `<player> setPlayerWeaponRaiseTime(<weapon name|id>, <raise time>)`
   * `<player> setPlayerWeaponDamage(<weapon name|id>, <damage>)`
   * `<player> setPlayerWeaponMeleeDamage(<weapon name|id>, <damage>)`
   * `<player> setPlayerWeaponMoveSpeedScale(<weapon name|id>, <scale>)`

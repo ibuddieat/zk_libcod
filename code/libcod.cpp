@@ -8460,6 +8460,23 @@ void custom_PM_Weapon(pmove_t *pm, pml_t *pml)
 			ohDef->iFuseTime = ps->playerWeaponFuseTime[ohWeapon];
 		}
 	}
+
+	// Raise time is read for the weapon being switched TO (newweapon = pm->cmd.weapon) in
+	// PM_Weapon_FinishWeaponChange, not the current weapon, so key it on cmd.weapon. iRaiseTime only,
+	// matching the global setWeaponRaiseTime (alt-weapon raises use a separate altRaiseTime field).
+	int rtWeapon = pm->cmd.weapon;
+	WeaponDef_t *rtDef = NULL;
+	int savedRaiseTime = 0;
+
+	if ( rtWeapon > 0 && rtWeapon < MAX_WEAPONS && ps->playerWeaponRaiseTime[rtWeapon] > 0 )
+	{
+		rtDef = BG_GetWeaponDef(rtWeapon);
+		if ( rtDef )
+		{
+			savedRaiseTime = rtDef->iRaiseTime;
+			rtDef->iRaiseTime = ps->playerWeaponRaiseTime[rtWeapon];
+		}
+	}
 	/* New code end */
 
 	hook_PM_Weapon->unhook();
@@ -8480,6 +8497,10 @@ void custom_PM_Weapon(pmove_t *pm, pml_t *pml)
 	if ( ohDef )
 	{
 		ohDef->iFuseTime = savedOhFuseTime;
+	}
+	if ( rtDef )
+	{
+		rtDef->iRaiseTime = savedRaiseTime;
 	}
 	/* New code end */
 }
