@@ -124,6 +124,8 @@ void gsc_player_setcurrentweaponclipammo(scr_entref_t ref);
 void gsc_player_setexpfogforplayer(scr_entref_t ref);
 void gsc_player_setfirethroughwalls(scr_entref_t ref);
 void gsc_player_setfirerangescale(scr_entref_t ref);
+void gsc_player_setplayerweaponfiretime(scr_entref_t ref);
+void gsc_player_getplayerweaponfiretime(scr_entref_t ref);
 void gsc_player_setgravity(scr_entref_t ref);
 void gsc_player_setguid(scr_entref_t ref);
 void gsc_player_sethiddenfromscoreboard(scr_entref_t ref);

@@ -8402,11 +8402,37 @@ void custom_PM_Weapon(pmove_t *pm, pml_t *pml)
 	}
 	/* New code end */
 
+	/* New code start: per-player setPlayerWeaponFireTime
+	 * Swap the current weapon's iFireTime to this player's override around the stock PM_Weapon
+	 * call, then restore. Pmove is single-threaded, so mutate-and-restore within one call cannot
+	 * race another player. iFireTime only, matching the global setWeaponFireTime. */
+	int ftWeapon = pm->ps->weapon;
+	WeaponDef_t *ftDef = NULL;
+	int ftSaved = 0;
+
+	if ( ftWeapon > 0 && ftWeapon < MAX_WEAPONS && customPlayerState[id].playerWeaponFireTime[ftWeapon] > 0 )
+	{
+		ftDef = BG_GetWeaponDef(ftWeapon);
+		if ( ftDef )
+		{
+			ftSaved = ftDef->iFireTime;
+			ftDef->iFireTime = customPlayerState[id].playerWeaponFireTime[ftWeapon];
+		}
+	}
+	/* New code end */
+
 	hook_PM_Weapon->unhook();
 	void (*PM_Weapon)(pmove_t *pm, pml_t *pml);
 	*(int *)&PM_Weapon = hook_PM_Weapon->from;
 	PM_Weapon(pm, pml);
 	hook_PM_Weapon->hook();
+
+	/* New code start: restore shared WeaponDef fire time */
+	if ( ftDef )
+	{
+		ftDef->iFireTime = ftSaved;
+	}
+	/* New code end */
 }
 
 void hook_Player_UpdateLookAtEntity(gentity_t *player)

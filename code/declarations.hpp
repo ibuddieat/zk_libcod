@@ -4078,6 +4078,7 @@ static const int g_fHitLocDamageMult_offset = 0x08628EE0;
 #define sv_masterAddress (*((netadr_t*)( sv_masterAddress_offset )))
 #define bg_iNumWeapons (*((int*)( bg_iNumWeapons_offset )))
 #define bg_weaponDefs (*((WeaponDef_t**)( bg_weaponDefs_offset )))
+#define MAX_WEAPONS 128 // Engine weapon-def table capacity (CoD2rev game/g_shared.h). Used to size per-player
 #define dvar_modifiedFlags (*((int*)( dvar_modifiedFlags_offset )))
 #define ipFilterList ((ipFilterList_t*)( ipFilterList_offset ))
 #define g_sv_skel_memory_start ((char**)( g_sv_skel_memory_start_offset ))
@@ -4302,6 +4303,7 @@ typedef struct customPlayerState_s
 	int previousButtons;
 	float turretSpreadScale;
 	float weaponSpreadScale;
+	int playerWeaponFireTime[MAX_WEAPONS]; // per-weapon fire-time override in ms, 0 = off
 	#if COMPILE_BOTS == 1
 	int botButtons;
 	int botWeapon;

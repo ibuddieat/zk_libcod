@@ -2107,6 +2107,83 @@ void gsc_player_setfirerangescale(scr_entref_t ref)
 	stackPushFloat(old_scale);
 }
 
+// Per-player mirror of the global setWeaponFireTime: sets iFireTime (ms) for one weapon on this
+// player only. Same dual arg form (name or id) + absolute ms. time <= 0 clears the override.
+void gsc_player_setplayerweaponfiretime(scr_entref_t ref)
+{
+	int id = ref.entnum;
+	int weaponId;
+	char *name;
+	int time;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_setplayerweaponfiretime() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( stackGetParams("si", &name, &time) )
+	{
+		weaponId = BG_FindWeaponIndexForName(name);
+	}
+	else if ( !stackGetParams("ii", &weaponId, &time) )
+	{
+		stackError("gsc_player_setplayerweaponfiretime() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( weaponId <= 0 || weaponId >= MAX_WEAPONS || weaponId > bg_iNumWeapons )
+	{
+		stackPushUndefined();
+		return;
+	}
+
+	if ( time < 0 )
+	{
+		time = 0;
+	}
+	customPlayerState[id].playerWeaponFireTime[weaponId] = time;
+
+	stackPushBool(qtrue);
+}
+
+// Reads back this player's per-weapon fire-time override (ms). Returns 0 when there is no override
+// (i.e. the weapon uses its global/default fire time). Dual arg form (name or id).
+void gsc_player_getplayerweaponfiretime(scr_entref_t ref)
+{
+	int id = ref.entnum;
+	int weaponId;
+	char *name;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_getplayerweaponfiretime() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( stackGetParams("s", &name) )
+	{
+		weaponId = BG_FindWeaponIndexForName(name);
+	}
+	else if ( !stackGetParams("i", &weaponId) )
+	{
+		stackError("gsc_player_getplayerweaponfiretime() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( weaponId <= 0 || weaponId >= MAX_WEAPONS || weaponId > bg_iNumWeapons )
+	{
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushInt(customPlayerState[id].playerWeaponFireTime[weaponId]);
+}
+
 void gsc_player_setweaponfiremeleedelay(scr_entref_t ref)
 {
 	int id = ref.entnum;
