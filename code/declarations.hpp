@@ -4303,6 +4303,7 @@ typedef struct customPlayerState_s
 	int previousButtons;
 	float turretSpreadScale;
 	float weaponSpreadScale;
+	int nameMode; // per-player name mode: 0 = default (follow global), 1 = auto, 2 = manual
 	int playerWeaponFireTime[MAX_WEAPONS]; // per-weapon fire-time override in ms, 0 = off
 	int playerWeaponMeleeTime[MAX_WEAPONS]; // per-weapon melee-time override in ms, 0 = off
 	int playerWeaponReloadTime[MAX_WEAPONS]; // per-weapon reload-time override in ms, 0 = off

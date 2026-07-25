@@ -2311,6 +2311,72 @@ void gsc_player_getplayerweaponraisetime(scr_entref_t ref)
 	stackPushInt(customPlayerState[id].playerWeaponRaiseTime[weaponId]);
 }
 
+static const char *playerNameModeToString(int mode)
+{
+	if ( mode == 1 )
+		return "auto";
+	if ( mode == 2 )
+		return "manual";
+	return "default";
+}
+
+// Per-player name mode. Overrides the global setClientNameMode for THIS player: "manual" holds the
+// player's name changes (staged, not applied) so their name can be locked while others are normal;
+// "auto" applies their name changes immediately; "default" follows the global mode. Returns the
+// previous mode as a string.
+void gsc_player_setplayernamemode(scr_entref_t ref)
+{
+	int id = ref.entnum;
+	char *mode;
+	int newMode, oldMode;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_setplayernamemode() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( !stackGetParams("s", &mode) )
+	{
+		stackError("gsc_player_setplayernamemode() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( !strcmp(mode, "auto") )
+		newMode = 1;
+	else if ( !strcmp(mode, "manual") )
+		newMode = 2;
+	else if ( !strcmp(mode, "default") )
+		newMode = 0;
+	else
+	{
+		stackError("gsc_player_setplayernamemode() mode must be \"auto\", \"manual\" or \"default\"");
+		stackPushUndefined();
+		return;
+	}
+
+	oldMode = customPlayerState[id].nameMode;
+	customPlayerState[id].nameMode = newMode;
+
+	stackPushString(playerNameModeToString(oldMode));
+}
+
+void gsc_player_getplayernamemode(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_getplayernamemode() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushString(playerNameModeToString(customPlayerState[id].nameMode));
+}
+
 // Per-player mirror of the global setWeaponDamage: sets the (max) bullet damage for one weapon on
 // this player only. Covers hitscan bullet weapons; damage <= 0 clears. Reuses the int resolver.
 void gsc_player_setplayerweapondamage(scr_entref_t ref)

@@ -2181,7 +2181,18 @@ void ProcessClientUserinfoChange(int clientNum)
 	else
 		client->sess.predictItemPickup = 0;
 
-	if ( client->sess.connected == CON_CONNECTED && level.manualNameChange )
+	/* New code start: per-player setPlayerNameMode
+	 * Stock uses the single global level.manualNameChange to decide whether an incoming name is
+	 * staged (held in newnetname) or applied immediately. Let a per-player mode override it:
+	 * 1 = auto (apply now), 2 = manual (stage), 0 = default (follow the global flag). */
+	qboolean useManual = level.manualNameChange;
+	if ( customPlayerState[clientNum].nameMode == 1 )
+		useManual = qfalse;
+	else if ( customPlayerState[clientNum].nameMode == 2 )
+		useManual = qtrue;
+	/* New code end */
+
+	if ( client->sess.connected == CON_CONNECTED && useManual )
 	{
 		value = Info_ValueForKey(userinfo, "name");
 		ClientCleanName(value, client->sess.newnetname, 32);

@@ -136,6 +136,8 @@ void gsc_player_setplayerweaponfusetime(scr_entref_t ref);
 void gsc_player_getplayerweaponfusetime(scr_entref_t ref);
 void gsc_player_setplayerweaponraisetime(scr_entref_t ref);
 void gsc_player_getplayerweaponraisetime(scr_entref_t ref);
+void gsc_player_setplayernamemode(scr_entref_t ref);
+void gsc_player_getplayernamemode(scr_entref_t ref);
 void gsc_player_setplayerweapondamage(scr_entref_t ref);
 void gsc_player_getplayerweapondamage(scr_entref_t ref);
 void gsc_player_setplayerweaponmeleedamage(scr_entref_t ref);
