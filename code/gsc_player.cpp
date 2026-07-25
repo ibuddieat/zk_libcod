@@ -2287,6 +2287,123 @@ void gsc_player_getplayerweaponfusetime(scr_entref_t ref)
 	stackPushInt(customPlayerState[id].playerWeaponFuseTime[weaponId]);
 }
 
+// Per-player mirror of the global setWeaponDamage: sets the (max) bullet damage for one weapon on
+// this player only. Covers hitscan bullet weapons; damage <= 0 clears. Reuses the int resolver.
+void gsc_player_setplayerweapondamage(scr_entref_t ref)
+{
+	int id, weaponId, damage;
+
+	if ( !resolvePlayerWeaponTime(ref, "setPlayerWeaponDamage", qtrue, &id, &weaponId, &damage) )
+		return;
+
+	if ( damage < 0 )
+		damage = 0;
+	customPlayerState[id].playerWeaponDamage[weaponId] = damage;
+
+	stackPushBool(qtrue);
+}
+
+void gsc_player_getplayerweapondamage(scr_entref_t ref)
+{
+	int id, weaponId, unused;
+
+	if ( !resolvePlayerWeaponTime(ref, "getPlayerWeaponDamage", qfalse, &id, &weaponId, &unused) )
+		return;
+
+	stackPushInt(customPlayerState[id].playerWeaponDamage[weaponId]);
+}
+
+// Per-player mirror of the global setWeaponMeleeDamage: sets the melee (bash) damage for one weapon
+// on this player only. damage <= 0 clears. Reuses the int resolver.
+void gsc_player_setplayerweaponmeleedamage(scr_entref_t ref)
+{
+	int id, weaponId, damage;
+
+	if ( !resolvePlayerWeaponTime(ref, "setPlayerWeaponMeleeDamage", qtrue, &id, &weaponId, &damage) )
+		return;
+
+	if ( damage < 0 )
+		damage = 0;
+	customPlayerState[id].playerWeaponMeleeDamage[weaponId] = damage;
+
+	stackPushBool(qtrue);
+}
+
+void gsc_player_getplayerweaponmeleedamage(scr_entref_t ref)
+{
+	int id, weaponId, unused;
+
+	if ( !resolvePlayerWeaponTime(ref, "getPlayerWeaponMeleeDamage", qfalse, &id, &weaponId, &unused) )
+		return;
+
+	stackPushInt(customPlayerState[id].playerWeaponMeleeDamage[weaponId]);
+}
+
+// Float resolver for the per-player weapon scale natives: parses (weapon, value) as (name|id, float).
+// Returns qtrue with outputs set on success; on failure it has already pushed the error + undefined.
+static qboolean resolvePlayerWeaponFloat(scr_entref_t ref, const char *fn, int *outId, int *outWeaponId, float *outValue)
+{
+	int id = ref.entnum;
+	int weaponId;
+	char *name;
+	float value;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("%s() entity %i is not a player", fn, id);
+		stackPushUndefined();
+		return qfalse;
+	}
+
+	if ( stackGetParams("sf", &name, &value) )
+		weaponId = BG_FindWeaponIndexForName(name);
+	else if ( !stackGetParams("if", &weaponId, &value) )
+	{
+		stackError("%s() one or more arguments is undefined or has a wrong type", fn);
+		stackPushUndefined();
+		return qfalse;
+	}
+
+	if ( weaponId <= 0 || weaponId >= MAX_WEAPONS || weaponId > bg_iNumWeapons )
+	{
+		stackPushUndefined();
+		return qfalse;
+	}
+
+	*outId = id;
+	*outWeaponId = weaponId;
+	*outValue = value;
+
+	return qtrue;
+}
+
+// Per-player mirror of the global setWeaponMoveSpeedScale: scales this player's move speed while
+// holding the given weapon. scale <= 0 clears the override.
+void gsc_player_setplayerweaponmovespeedscale(scr_entref_t ref)
+{
+	int id, weaponId;
+	float scale;
+
+	if ( !resolvePlayerWeaponFloat(ref, "setPlayerWeaponMoveSpeedScale", &id, &weaponId, &scale) )
+		return;
+
+	if ( scale < 0 )
+		scale = 0;
+	customPlayerState[id].playerWeaponMoveSpeedScale[weaponId] = scale;
+
+	stackPushBool(qtrue);
+}
+
+void gsc_player_getplayerweaponmovespeedscale(scr_entref_t ref)
+{
+	int id, weaponId, unused;
+
+	if ( !resolvePlayerWeaponTime(ref, "getPlayerWeaponMoveSpeedScale", qfalse, &id, &weaponId, &unused) )
+		return;
+
+	stackPushFloat(customPlayerState[id].playerWeaponMoveSpeedScale[weaponId]);
+}
+
 void gsc_player_setweaponfiremeleedelay(scr_entref_t ref)
 {
 	int id = ref.entnum;

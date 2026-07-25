@@ -9285,7 +9285,28 @@ void custom_FireWeaponMelee(gentity_t *player)
 		height = player_meleeHeight->current.decimal * customPlayerState[id].meleeHeightScale;
 		/* New code end */
 
+		/* New code start: per-player setPlayerWeaponMeleeDamage
+		 * Weapon_Melee reads meleeDamage for the attacker's weapon (wp.weapDef). Swap this player's
+		 * override around the call, then restore. Main-thread melee, so no race. */
+		int meleeWeapon = player->s.weapon;
+		int savedMeleeDamage = 0;
+		qboolean swappedMeleeDamage = qfalse;
+
+		if ( meleeWeapon > 0 && meleeWeapon < MAX_WEAPONS && wp.weapDef
+		  && customPlayerState[id].playerWeaponMeleeDamage[meleeWeapon] > 0 )
+		{
+			savedMeleeDamage = wp.weapDef->iMeleeDamage;
+			wp.weapDef->iMeleeDamage = customPlayerState[id].playerWeaponMeleeDamage[meleeWeapon];
+			swappedMeleeDamage = qtrue;
+		}
+		/* New code end */
+
 		Weapon_Melee(player, &wp, range, width, height);
+
+		/* New code start: restore shared WeaponDef melee damage */
+		if ( swappedMeleeDamage )
+			wp.weapDef->iMeleeDamage = savedMeleeDamage;
+		/* New code end */
 	}
 }
 
@@ -9792,6 +9813,34 @@ void custom_Bullet_Fire(gentity_t *inflictor, float spread, weaponParms *wp, con
 	int id;
 
 	G_AntiLagRewindClientPos(offset, &antilagStore);
+
+	/* New code start: per-player setPlayerWeaponDamage
+	 * Bullet_GetDamage reads wp->weapDef->damage for the attacker's weapon. custom_Bullet_Fire is
+	 * the single per-shot entry for BOTH spread (shotgun) and non-spread (rifle/SMG) bullets, so
+	 * swap this attacker's override here (not in Bullet_Fire_Spread, which only runs for shotguns),
+	 * then restore at every exit. Main-thread fire = no race. Deferred bullet-drop shots keep the
+	 * default (documented limitation). inflictor->client is guarded (turret fire can be worldspawn). */
+	WeaponDef_t *dmgDef = NULL;
+	int dmgSaved = 0;
+
+	if ( inflictor->client )
+	{
+		int dmgId = inflictor->client->ps.clientNum;
+		int dmgWeapon = inflictor->client->ps.weapon;
+
+		if ( dmgId >= 0 && dmgId < MAX_CLIENTS && dmgWeapon > 0 && dmgWeapon < MAX_WEAPONS
+		  && customPlayerState[dmgId].playerWeaponDamage[dmgWeapon] > 0 )
+		{
+			dmgDef = BG_GetWeaponDef(dmgWeapon);
+			if ( dmgDef )
+			{
+				dmgSaved = dmgDef->damage;
+				dmgDef->damage = customPlayerState[dmgId].playerWeaponDamage[dmgWeapon];
+			}
+		}
+	}
+	/* New code end */
+
 	if ( wp->weapDef->weapClass == WEAPCLASS_SPREAD )
 	{
 		custom_Bullet_Fire_Spread(source, inflictor, wp, offset, spread);
@@ -9806,6 +9855,8 @@ void custom_Bullet_Fire(gentity_t *inflictor, float spread, weaponParms *wp, con
 			if ( customPlayerState[id].droppingBulletsCount >= MAX_DROPPING_BULLETS )
 			{
 				Com_DPrintf("Bullet_Fire: Too many bullets still on their way for player %d, bullet aborted\n", id);
+				if ( dmgDef ) // restore damage before the early return (this path also skips antilag restore)
+					dmgDef->damage = dmgSaved;
 				return;
 			}
 
@@ -9868,6 +9919,12 @@ void custom_Bullet_Fire(gentity_t *inflictor, float spread, weaponParms *wp, con
 			custom_Bullet_Fire_Extended(source, inflictor, wp->muzzleTrace, end, 1.0, 0, wp, source, offset);
 		}
 	}
+
+	/* New code start: restore shared WeaponDef damage */
+	if ( dmgDef )
+		dmgDef->damage = dmgSaved;
+	/* New code end */
+
 	G_AntiLag_RestoreClientPos(&antilagStore);
 }
 
@@ -11480,11 +11537,36 @@ void custom_Pmove(pmove_t *pm)
 		playerMovementTrace = qtrue;
 	/* New code end */
 
+	/* New code start: per-player setPlayerWeaponMoveSpeedScale
+	 * moveSpeedScale is read for pm->ps->weapon in PM_CmdScale_Walk inside stock Pmove. Swap this
+	 * player's override around the stock call, then restore. Single-threaded pmove = safe. */
+	int msWeapon = pm->ps->weapon;
+	int msClient = pm->ps->clientNum;
+	WeaponDef_t *msDef = NULL;
+	float msSaved = 0;
+
+	if ( msClient >= 0 && msClient < MAX_CLIENTS && msWeapon > 0 && msWeapon < MAX_WEAPONS
+	  && customPlayerState[msClient].playerWeaponMoveSpeedScale[msWeapon] > 0 )
+	{
+		msDef = BG_GetWeaponDef(msWeapon);
+		if ( msDef )
+		{
+			msSaved = msDef->fMoveSpeedScale;
+			msDef->fMoveSpeedScale = customPlayerState[msClient].playerWeaponMoveSpeedScale[msWeapon];
+		}
+	}
+	/* New code end */
+
 	hook_Pmove->unhook();
 	void (*Pmove)(pmove_t *pm);
 	*(int *)&Pmove = hook_Pmove->from;
 	Pmove(pm);
 	hook_Pmove->hook();
+
+	/* New code start: restore move-speed scale */
+	if ( msDef )
+		msDef->fMoveSpeedScale = msSaved;
+	/* New code end */
 
 	// New: (not)SolidForPlayer
 	if ( updateBrushModelContents )

@@ -15,11 +15,11 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>getWeaponDamageMelee( &lt;weapon name&gt; )</H1>
+<H1>getPlayerWeaponDamage( &lt;weapon name&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
-Module: Weapons<BR>
+Module: Player<BR>
 </I>
 
 <BR>
@@ -27,8 +27,16 @@ Module: Weapons<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Returns the weapon's melee damage.</p>
+<p>Returns this player's per-weapon damage override (set by <a href="setplayerweapondamage.htm">setPlayerWeaponDamage</a>), or 0 when no override is set (the weapon uses its default/global damage).</p>
 
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Call this on:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+The player
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -37,7 +45,7 @@ Module: Weapons<BR>
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-dmg = getWeaponDamageMelee(weaponName);
+mine = player getPlayerWeaponDamage("mp44_mp");
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -53,7 +61,7 @@ dmg = getWeaponDamageMelee(weaponName);
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;id&gt; Weapon ID (available for backwards compatibility). You can get it with <a href="getloadedweapons.htm">getLoadedWeapons</a></LI>
+<LI>1 : &lt;id&gt; Weapon ID (available for backwards compatibility)</LI>
 </UL>
 </TR></TD></TABLE>
 <BR>
