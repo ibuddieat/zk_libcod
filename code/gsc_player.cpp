@@ -2107,81 +2107,184 @@ void gsc_player_setfirerangescale(scr_entref_t ref)
 	stackPushFloat(old_scale);
 }
 
-// Per-player mirror of the global setWeaponFireTime: sets iFireTime (ms) for one weapon on this
-// player only. Same dual arg form (name or id) + absolute ms. time <= 0 clears the override.
-void gsc_player_setplayerweaponfiretime(scr_entref_t ref)
+// Shared resolver for the per-player weapon-time natives. With wantTime it parses (weapon, time);
+// without, it parses (weapon). Weapon accepts a name or, for backwards compatibility, an id.
+// Returns qtrue with *outId / *outWeaponId (and *outTime) set on success; on failure it has already
+// pushed the error and an undefined return value, so the caller just returns.
+static qboolean resolvePlayerWeaponTime(scr_entref_t ref, const char *fn, qboolean wantTime, int *outId, int *outWeaponId, int *outTime)
 {
 	int id = ref.entnum;
 	int weaponId;
 	char *name;
-	int time;
+	int time = 0;
 
 	if ( id >= MAX_CLIENTS )
 	{
-		stackError("gsc_player_setplayerweaponfiretime() entity %i is not a player", id);
+		stackError("%s() entity %i is not a player", fn, id);
 		stackPushUndefined();
-		return;
+		return qfalse;
 	}
 
-	if ( stackGetParams("si", &name, &time) )
+	if ( wantTime )
 	{
-		weaponId = BG_FindWeaponIndexForName(name);
+		if ( stackGetParams("si", &name, &time) )
+			weaponId = BG_FindWeaponIndexForName(name);
+		else if ( !stackGetParams("ii", &weaponId, &time) )
+		{
+			stackError("%s() one or more arguments is undefined or has a wrong type", fn);
+			stackPushUndefined();
+			return qfalse;
+		}
 	}
-	else if ( !stackGetParams("ii", &weaponId, &time) )
+	else
 	{
-		stackError("gsc_player_setplayerweaponfiretime() one or more arguments is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
+		if ( stackGetParams("s", &name) )
+			weaponId = BG_FindWeaponIndexForName(name);
+		else if ( !stackGetParams("i", &weaponId) )
+		{
+			stackError("%s() argument is undefined or has a wrong type", fn);
+			stackPushUndefined();
+			return qfalse;
+		}
 	}
 
 	if ( weaponId <= 0 || weaponId >= MAX_WEAPONS || weaponId > bg_iNumWeapons )
 	{
 		stackPushUndefined();
-		return;
+		return qfalse;
 	}
 
+	*outId = id;
+	*outWeaponId = weaponId;
+	if ( wantTime )
+		*outTime = time;
+
+	return qtrue;
+}
+
+// Per-player mirrors of the global weapon-time setters (setWeaponFireTime and siblings): each sets
+// one WeaponDef timing field (ms) for a single weapon on this player only. Same dual arg form
+// (name or id) + absolute ms. time <= 0 clears the override (0 is the "no override" sentinel).
+// The paired getters return the stored override, or 0 when none is set (weapon uses its default).
+
+void gsc_player_setplayerweaponfiretime(scr_entref_t ref)
+{
+	int id, weaponId, time;
+
+	if ( !resolvePlayerWeaponTime(ref, "setPlayerWeaponFireTime", qtrue, &id, &weaponId, &time) )
+		return;
+
 	if ( time < 0 )
-	{
 		time = 0;
-	}
 	customPlayerState[id].playerWeaponFireTime[weaponId] = time;
 
 	stackPushBool(qtrue);
 }
 
-// Reads back this player's per-weapon fire-time override (ms). Returns 0 when there is no override
-// (i.e. the weapon uses its global/default fire time). Dual arg form (name or id).
 void gsc_player_getplayerweaponfiretime(scr_entref_t ref)
 {
-	int id = ref.entnum;
-	int weaponId;
-	char *name;
+	int id, weaponId, time;
 
-	if ( id >= MAX_CLIENTS )
-	{
-		stackError("gsc_player_getplayerweaponfiretime() entity %i is not a player", id);
-		stackPushUndefined();
+	if ( !resolvePlayerWeaponTime(ref, "getPlayerWeaponFireTime", qfalse, &id, &weaponId, &time) )
 		return;
-	}
-
-	if ( stackGetParams("s", &name) )
-	{
-		weaponId = BG_FindWeaponIndexForName(name);
-	}
-	else if ( !stackGetParams("i", &weaponId) )
-	{
-		stackError("gsc_player_getplayerweaponfiretime() argument is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-
-	if ( weaponId <= 0 || weaponId >= MAX_WEAPONS || weaponId > bg_iNumWeapons )
-	{
-		stackPushUndefined();
-		return;
-	}
 
 	stackPushInt(customPlayerState[id].playerWeaponFireTime[weaponId]);
+}
+
+void gsc_player_setplayerweaponmeleetime(scr_entref_t ref)
+{
+	int id, weaponId, time;
+
+	if ( !resolvePlayerWeaponTime(ref, "setPlayerWeaponMeleeTime", qtrue, &id, &weaponId, &time) )
+		return;
+
+	if ( time < 0 )
+		time = 0;
+	customPlayerState[id].playerWeaponMeleeTime[weaponId] = time;
+
+	stackPushBool(qtrue);
+}
+
+void gsc_player_getplayerweaponmeleetime(scr_entref_t ref)
+{
+	int id, weaponId, time;
+
+	if ( !resolvePlayerWeaponTime(ref, "getPlayerWeaponMeleeTime", qfalse, &id, &weaponId, &time) )
+		return;
+
+	stackPushInt(customPlayerState[id].playerWeaponMeleeTime[weaponId]);
+}
+
+void gsc_player_setplayerweaponreloadtime(scr_entref_t ref)
+{
+	int id, weaponId, time;
+
+	if ( !resolvePlayerWeaponTime(ref, "setPlayerWeaponReloadTime", qtrue, &id, &weaponId, &time) )
+		return;
+
+	if ( time < 0 )
+		time = 0;
+	customPlayerState[id].playerWeaponReloadTime[weaponId] = time;
+
+	stackPushBool(qtrue);
+}
+
+void gsc_player_getplayerweaponreloadtime(scr_entref_t ref)
+{
+	int id, weaponId, time;
+
+	if ( !resolvePlayerWeaponTime(ref, "getPlayerWeaponReloadTime", qfalse, &id, &weaponId, &time) )
+		return;
+
+	stackPushInt(customPlayerState[id].playerWeaponReloadTime[weaponId]);
+}
+
+void gsc_player_setplayerweaponreloademptytime(scr_entref_t ref)
+{
+	int id, weaponId, time;
+
+	if ( !resolvePlayerWeaponTime(ref, "setPlayerWeaponReloadEmptyTime", qtrue, &id, &weaponId, &time) )
+		return;
+
+	if ( time < 0 )
+		time = 0;
+	customPlayerState[id].playerWeaponReloadEmptyTime[weaponId] = time;
+
+	stackPushBool(qtrue);
+}
+
+void gsc_player_getplayerweaponreloademptytime(scr_entref_t ref)
+{
+	int id, weaponId, time;
+
+	if ( !resolvePlayerWeaponTime(ref, "getPlayerWeaponReloadEmptyTime", qfalse, &id, &weaponId, &time) )
+		return;
+
+	stackPushInt(customPlayerState[id].playerWeaponReloadEmptyTime[weaponId]);
+}
+
+void gsc_player_setplayerweaponfusetime(scr_entref_t ref)
+{
+	int id, weaponId, time;
+
+	if ( !resolvePlayerWeaponTime(ref, "setPlayerWeaponFuseTime", qtrue, &id, &weaponId, &time) )
+		return;
+
+	if ( time < 0 )
+		time = 0;
+	customPlayerState[id].playerWeaponFuseTime[weaponId] = time;
+
+	stackPushBool(qtrue);
+}
+
+void gsc_player_getplayerweaponfusetime(scr_entref_t ref)
+{
+	int id, weaponId, time;
+
+	if ( !resolvePlayerWeaponTime(ref, "getPlayerWeaponFuseTime", qfalse, &id, &weaponId, &time) )
+		return;
+
+	stackPushInt(customPlayerState[id].playerWeaponFuseTime[weaponId]);
 }
 
 void gsc_player_setweaponfiremeleedelay(scr_entref_t ref)

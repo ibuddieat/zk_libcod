@@ -62,6 +62,10 @@
   * `<player> getNumberOfEntsInSnapshot()`
   * `<player> getPlayerstateFlags()`
   * `<player> getPlayerWeaponFireTime(<weapon name|id>)`
+  * `<player> getPlayerWeaponMeleeTime(<weapon name|id>)`
+  * `<player> getPlayerWeaponReloadTime(<weapon name|id>)`
+  * `<player> getPlayerWeaponReloadEmptyTime(<weapon name|id>)`
+  * `<player> getPlayerWeaponFuseTime(<weapon name|id>)`
   * `<player> getProtocol()`
   * `<player> getProtocolString()`
   * `<player> getRemainingSoundFileDuration()`
@@ -127,6 +131,10 @@
   * `<player> setWeaponSpreadScale(<scale>)`
   * `<player> setPing(<ingame value>, [<status value>])`
   * `<player> setPlayerWeaponFireTime(<weapon name|id>, <fire time>)`
+  * `<player> setPlayerWeaponMeleeTime(<weapon name|id>, <melee time>)`
+  * `<player> setPlayerWeaponReloadTime(<weapon name|id>, <reload time>)`
+  * `<player> setPlayerWeaponReloadEmptyTime(<weapon name|id>, <reload empty time>)`
+  * `<player> setPlayerWeaponFuseTime(<weapon name|id>, <fuse time>)`
   * `<player> stopSoundFile()`
   * `<player> stopUseTurret()`
   * `<player> unmuteClient(<player id>)`

@@ -4304,6 +4304,10 @@ typedef struct customPlayerState_s
 	float turretSpreadScale;
 	float weaponSpreadScale;
 	int playerWeaponFireTime[MAX_WEAPONS]; // per-weapon fire-time override in ms, 0 = off
+	int playerWeaponMeleeTime[MAX_WEAPONS]; // per-weapon melee-time override in ms, 0 = off
+	int playerWeaponReloadTime[MAX_WEAPONS]; // per-weapon reload-time override in ms, 0 = off
+	int playerWeaponReloadEmptyTime[MAX_WEAPONS]; // per-weapon empty-reload-time override in ms, 0 = off
+	int playerWeaponFuseTime[MAX_WEAPONS]; // per-weapon fuse-time override in ms, 0 = off
 	#if COMPILE_BOTS == 1
 	int botButtons;
 	int botWeapon;

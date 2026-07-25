@@ -8402,21 +8402,62 @@ void custom_PM_Weapon(pmove_t *pm, pml_t *pml)
 	}
 	/* New code end */
 
-	/* New code start: per-player setPlayerWeaponFireTime
-	 * Swap the current weapon's iFireTime to this player's override around the stock PM_Weapon
-	 * call, then restore. Pmove is single-threaded, so mutate-and-restore within one call cannot
-	 * race another player. iFireTime only, matching the global setWeaponFireTime. */
-	int ftWeapon = pm->ps->weapon;
-	WeaponDef_t *ftDef = NULL;
-	int ftSaved = 0;
+	/* New code start: per-player weapon-time overrides (setPlayerWeaponFireTime and siblings)
+	 * Swap the affected weapon's timing fields to this player's overrides around the stock PM_Weapon
+	 * call, then restore. fire/melee/reload/reloadEmpty are read for pm->ps->weapon inside the
+	 * PM_Weapon chain. Fuse is read for pm->ps->weapon when a grenade is the current weapon, but for
+	 * a normal thrown grenade it is read for pm->ps->offHandIndex (PM_Weapon_OffHandHold) -- so the
+	 * offhand weapon's fuse is patched separately below. Pmove is single-threaded, so
+	 * mutate-and-restore within one call cannot race another player. 0 = no override for that field. */
+	customPlayerState_t *ps = &customPlayerState[id];
 
-	if ( ftWeapon > 0 && ftWeapon < MAX_WEAPONS && customPlayerState[id].playerWeaponFireTime[ftWeapon] > 0 )
+	int ptWeapon = pm->ps->weapon;
+	WeaponDef_t *ptDef = NULL;
+	int savedFireTime = 0, savedMeleeTime = 0, savedReloadTime = 0, savedReloadEmptyTime = 0, savedFuseTime = 0;
+
+	if ( ptWeapon > 0 && ptWeapon < MAX_WEAPONS )
 	{
-		ftDef = BG_GetWeaponDef(ftWeapon);
-		if ( ftDef )
+		if ( ps->playerWeaponFireTime[ptWeapon] > 0 || ps->playerWeaponMeleeTime[ptWeapon] > 0
+		  || ps->playerWeaponReloadTime[ptWeapon] > 0 || ps->playerWeaponReloadEmptyTime[ptWeapon] > 0
+		  || ps->playerWeaponFuseTime[ptWeapon] > 0 )
 		{
-			ftSaved = ftDef->iFireTime;
-			ftDef->iFireTime = customPlayerState[id].playerWeaponFireTime[ftWeapon];
+			ptDef = BG_GetWeaponDef(ptWeapon);
+			if ( ptDef )
+			{
+				savedFireTime = ptDef->iFireTime;
+				savedMeleeTime = ptDef->iMeleeTime;
+				savedReloadTime = ptDef->iReloadTime;
+				savedReloadEmptyTime = ptDef->iReloadEmptyTime;
+				savedFuseTime = ptDef->iFuseTime;
+
+				if ( ps->playerWeaponFireTime[ptWeapon] > 0 )
+					ptDef->iFireTime = ps->playerWeaponFireTime[ptWeapon];
+				if ( ps->playerWeaponMeleeTime[ptWeapon] > 0 )
+					ptDef->iMeleeTime = ps->playerWeaponMeleeTime[ptWeapon];
+				if ( ps->playerWeaponReloadTime[ptWeapon] > 0 )
+					ptDef->iReloadTime = ps->playerWeaponReloadTime[ptWeapon];
+				if ( ps->playerWeaponReloadEmptyTime[ptWeapon] > 0 )
+					ptDef->iReloadEmptyTime = ps->playerWeaponReloadEmptyTime[ptWeapon];
+				if ( ps->playerWeaponFuseTime[ptWeapon] > 0 )
+					ptDef->iFuseTime = ps->playerWeaponFuseTime[ptWeapon];
+			}
+		}
+	}
+
+	// Thrown grenades read fuse from the offhand weapon, not the current weapon. Patch its fuse
+	// separately (skip when it is the same def already handled above, to keep save/restore correct).
+	int ohWeapon = pm->ps->offHandIndex;
+	WeaponDef_t *ohDef = NULL;
+	int savedOhFuseTime = 0;
+
+	if ( ohWeapon > 0 && ohWeapon < MAX_WEAPONS && ohWeapon != ptWeapon
+	  && ps->playerWeaponFuseTime[ohWeapon] > 0 )
+	{
+		ohDef = BG_GetWeaponDef(ohWeapon);
+		if ( ohDef )
+		{
+			savedOhFuseTime = ohDef->iFuseTime;
+			ohDef->iFuseTime = ps->playerWeaponFuseTime[ohWeapon];
 		}
 	}
 	/* New code end */
@@ -8427,10 +8468,18 @@ void custom_PM_Weapon(pmove_t *pm, pml_t *pml)
 	PM_Weapon(pm, pml);
 	hook_PM_Weapon->hook();
 
-	/* New code start: restore shared WeaponDef fire time */
-	if ( ftDef )
+	/* New code start: restore the shared WeaponDef timing fields */
+	if ( ptDef )
 	{
-		ftDef->iFireTime = ftSaved;
+		ptDef->iFireTime = savedFireTime;
+		ptDef->iMeleeTime = savedMeleeTime;
+		ptDef->iReloadTime = savedReloadTime;
+		ptDef->iReloadEmptyTime = savedReloadEmptyTime;
+		ptDef->iFuseTime = savedFuseTime;
+	}
+	if ( ohDef )
+	{
+		ohDef->iFuseTime = savedOhFuseTime;
 	}
 	/* New code end */
 }
