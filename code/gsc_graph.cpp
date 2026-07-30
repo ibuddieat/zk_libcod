@@ -10,6 +10,7 @@
 #include <stdlib.h>
 
 #define GRAPH_MAX_PATH 64
+#define GRAPH_MAX_SCRIPT_VALUES 32768 // https://github.com/voron00/CoD2rev_Server/blob/master/src/script/scr_variable.cpp#L3834
 
 extern dvar_t *sv_graphMaxNodes;
 extern dvar_t *sv_graphMaxGraphs;
@@ -183,6 +184,8 @@ static unsigned int graphCrc32(const unsigned char *data, size_t len)
 	return ~crc;
 }
 
+// Movement trace flags follow G_TraceCapsule
+// https://github.com/voron00/CoD2rev_Server/blob/master/src/game/g_main_mp.cpp#L685
 #define GRAPH_TRACE_MASK   (CONTENTS_SOLID | CONTENTS_PLAYERCLIP)
 #define GRAPH_STEP_UP      18.0f
 #define GRAPH_SLOPE_MIN_Z  0.7f
@@ -206,7 +209,7 @@ static bool graphTraceGround(float x, float y, float z, vec3_t out)
 	start[0] = x; start[1] = y; start[2] = z + 40.0f;
 	end[0] = x; end[1] = y; end[2] = z - 128.0f;
 
-	SV_Trace(&tr, start, zero, zero, end, ENTITYNUM_NONE, GRAPH_TRACE_MASK, 1, NULL, 1);
+	SV_Trace(&tr, start, zero, zero, end, ENTITYNUM_NONE, GRAPH_TRACE_MASK, 0, NULL, 0);
 
 	if ( tr.startsolid || tr.allsolid || tr.fraction >= 1.0f )
 		return false;
@@ -225,7 +228,7 @@ static bool graphPlayerFits(const vec3_t ground, const vec3_t mins, const vec3_t
 
 	at[0] = ground[0]; at[1] = ground[1]; at[2] = ground[2] + 2.0f;
 
-	SV_Trace(&tr, at, (float *)mins, (float *)maxs, at, ENTITYNUM_NONE, GRAPH_TRACE_MASK, 1, NULL, 1);
+	SV_Trace(&tr, at, (float *)mins, (float *)maxs, at, ENTITYNUM_NONE, GRAPH_TRACE_MASK, 0, NULL, 0);
 
 	return !tr.startsolid && !tr.allsolid;
 }
@@ -241,7 +244,7 @@ static bool graphWalkable(const vec3_t a, const vec3_t b, const vec3_t mins, con
 	start[0] = a[0]; start[1] = a[1]; start[2] = a[2] + GRAPH_STEP_UP;
 	end[0] = b[0]; end[1] = b[1]; end[2] = b[2] + GRAPH_STEP_UP;
 
-	SV_Trace(&tr, start, (float *)mins, (float *)maxs, end, ENTITYNUM_NONE, GRAPH_TRACE_MASK, 1, NULL, 1);
+	SV_Trace(&tr, start, (float *)mins, (float *)maxs, end, ENTITYNUM_NONE, GRAPH_TRACE_MASK, 0, NULL, 0);
 
 	return tr.fraction >= 0.99f && !tr.startsolid;
 }
@@ -357,12 +360,13 @@ static float pointSegmentDistSq(const vec3_t p, const vec3_t a, const vec3_t b)
 	return dx * dx + dy * dy + dz * dz;
 }
 
+// Monotonic, and widened before scaling: tv_sec * 1000000 overflows on 32-bit
 static unsigned int graphMicroseconds()
 {
-	struct timeval tv;
+	struct timespec ts;
 
-	gettimeofday(&tv, NULL);
-	return (unsigned int)(tv.tv_sec * 1000000 + tv.tv_usec);
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	return (unsigned int)( (unsigned long long)ts.tv_sec * 1000000ULL + (unsigned long long)( ts.tv_nsec / 1000 ) );
 }
 
 // Fold one completed search into the per-graph stats (shared by the A* path and
@@ -504,9 +508,16 @@ static qboolean graphMarkSkippedNodes(AStarGraph *graph, int param)
 
 		VariableValueInternal *entry = &scrVarGlob[it];
 
-		if ( (entry->w.type & VAR_MASK) == VAR_INTEGER )
+		// Floats accepted too, as stackGetParamInt does - script arithmetic
+		// yields them and dropping them would silently shrink the skip list
+		if ( (entry->w.type & VAR_MASK) == VAR_INTEGER || (entry->w.type & VAR_MASK) == VAR_FLOAT )
 		{
-			int nodeId = entry->u.u.intValue;
+			int nodeId;
+
+			if ( (entry->w.type & VAR_MASK) == VAR_FLOAT )
+				nodeId = (int)entry->u.u.floatValue;
+			else
+				nodeId = entry->u.u.intValue;
 
 			if ( nodeId >= 0 && nodeId < (int)graph->nodes.size() )
 				graph->scratch.closedStamp[nodeId] = graph->scratch.searchId;
@@ -959,6 +970,36 @@ void gsc_graph_get_all_nodes()
 		return;
 	}
 
+	// Counted first so a small radius query still works on a large graph
+	{
+		size_t matches = 0;
+
+		for ( size_t i = 0; i < graph->nodes.size(); i++ )
+		{
+			if ( graph->nodes[i].removed )
+				continue;
+
+			if ( haveOrigin && maxDistSq >= 0 )
+			{
+				float dx = graph->nodes[i].origin[0] - origin[0];
+				float dy = graph->nodes[i].origin[1] - origin[1];
+				float dz = graph->nodes[i].origin[2] - origin[2];
+
+				if ( dx * dx + dy * dy + dz * dz > maxDistSq )
+					continue;
+			}
+
+			matches++;
+		}
+
+		if ( matches > GRAPH_MAX_SCRIPT_VALUES )
+		{
+			stackError("gsc_graph_get_all_nodes() %u nodes match, over the %i value limit - pass an origin and max dist sq to narrow it", (unsigned int)matches, GRAPH_MAX_SCRIPT_VALUES);
+			stackPushUndefined();
+			return;
+		}
+	}
+
 	stackPushArray();
 
 	for ( size_t i = 0; i < graph->nodes.size(); i++ )
@@ -1003,6 +1044,14 @@ void gsc_graph_get_all_edges()
 	if ( !graph )
 	{
 		stackError("gsc_graph_get_all_edges() graph %i does not exist", id);
+		stackPushUndefined();
+		return;
+	}
+
+	// Two values per edge, and an autodiscovered graph holds tens of thousands
+	if ( (unsigned long long)graph->edgeCount * 2 > GRAPH_MAX_SCRIPT_VALUES )
+	{
+		stackError("gsc_graph_get_all_edges() graph %i has %u edges, over the %i value limit - query per node with graphGetNodeProperties instead", id, graph->edgeCount, GRAPH_MAX_SCRIPT_VALUES / 2);
 		stackPushUndefined();
 		return;
 	}
@@ -1639,15 +1688,11 @@ void gsc_graph_get_node_ids_accessible_from()
 	visited[nodeId] = 1;
 	queue.push_back((unsigned int)nodeId);
 
-	stackPushArray();
-
+	// Walk completed first so the result is size-checked before it reaches script
 	head = 0;
 	while ( head < queue.size() )
 	{
 		unsigned int cur = queue[head++];
-
-		stackPushInt((int)cur);
-		stackPushArrayLast();
 
 		GraphNode &node = graph->nodes[cur];
 		for ( size_t e = 0; e < node.edges.size(); e++ )
@@ -1660,6 +1705,21 @@ void gsc_graph_get_node_ids_accessible_from()
 				queue.push_back(to);
 			}
 		}
+	}
+
+	if ( queue.size() > GRAPH_MAX_SCRIPT_VALUES )
+	{
+		stackError("gsc_graph_get_node_ids_accessible_from() %u nodes are reachable, over the %i value limit", (unsigned int)queue.size(), GRAPH_MAX_SCRIPT_VALUES);
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushArray();
+
+	for ( head = 0; head < queue.size(); head++ )
+	{
+		stackPushInt((int)queue[head]);
+		stackPushArrayLast();
 	}
 }
 
@@ -1717,15 +1777,11 @@ void gsc_graph_get_node_ids_accessible_to()
 	visited[nodeId] = 1;
 	queue.push_back((unsigned int)nodeId);
 
-	stackPushArray();
-
+	// As in accessible_from: complete the walk, size-check it, then push
 	head = 0;
 	while ( head < queue.size() )
 	{
 		unsigned int cur = queue[head++];
-
-		stackPushInt((int)cur);
-		stackPushArrayLast();
 
 		std::vector<unsigned int> &in = incoming[cur];
 		for ( size_t k = 0; k < in.size(); k++ )
@@ -1738,6 +1794,21 @@ void gsc_graph_get_node_ids_accessible_to()
 				queue.push_back(from);
 			}
 		}
+	}
+
+	if ( queue.size() > GRAPH_MAX_SCRIPT_VALUES )
+	{
+		stackError("gsc_graph_get_node_ids_accessible_to() %u nodes can reach it, over the %i value limit", (unsigned int)queue.size(), GRAPH_MAX_SCRIPT_VALUES);
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushArray();
+
+	for ( head = 0; head < queue.size(); head++ )
+	{
+		stackPushInt((int)queue[head]);
+		stackPushArrayLast();
 	}
 }
 
@@ -2633,7 +2704,7 @@ void gsc_graph_load()
 	unsigned int calcCrc;
 	unsigned short version;
 	unsigned short flags;
-	size_t expected;
+	unsigned long long expected;
 	int id;
 	AStarGraph graph;
 
@@ -2729,7 +2800,10 @@ void gsc_graph_load()
 		return;
 	}
 
-	if ( (int)nodeCount > sv_graphMaxNodes->current.integer )
+	// The counts are ahead of the crc's range, so they are validated here.
+	// Unsigned compare and 64-bit products: an int cast passes the cap on the
+	// top bit, and size_t is 32-bit on this build
+	if ( nodeCount > (unsigned int)sv_graphMaxNodes->current.integer )
 	{
 		free(buffer);
 		stackError("gsc_graph_load() '%s' has %u nodes, over sv_graphMaxNodes %i", path, nodeCount, sv_graphMaxNodes->current.integer);
@@ -2737,12 +2811,20 @@ void gsc_graph_load()
 		return;
 	}
 
-	expected = 20 + (size_t)nodeCount * 20 + (size_t)edgeCount * 16;
-
-	if ( (size_t)len != expected )
+	if ( edgeCount > ( (unsigned int)len - 20 ) / 16 )
 	{
 		free(buffer);
-		stackError("gsc_graph_load() '%s' size mismatch (%d bytes, expected %u)", path, len, (unsigned int)expected);
+		stackError("gsc_graph_load() '%s' claims %u edges, more than %d bytes can hold", path, edgeCount, len);
+		stackPushUndefined();
+		return;
+	}
+
+	expected = 20ULL + (unsigned long long)nodeCount * 20ULL + (unsigned long long)edgeCount * 16ULL;
+
+	if ( (unsigned long long)len != expected )
+	{
+		free(buffer);
+		stackError("gsc_graph_load() '%s' size mismatch (%d bytes, expected %llu)", path, len, expected);
 		stackPushUndefined();
 		return;
 	}
@@ -2813,6 +2895,15 @@ void gsc_graph_load()
 		{
 			free(buffer);
 			stackError("gsc_graph_load() '%s' edge %u references an out-of-range node - load aborted", path, e);
+			stackPushUndefined();
+			return;
+		}
+
+		// Removed nodes carry no edges by invariant, which pathfinding relies on
+		if ( graph.nodes[from].removed || graph.nodes[to].removed )
+		{
+			free(buffer);
+			stackError("gsc_graph_load() '%s' edge %u touches a removed node - load aborted", path, e);
 			stackPushUndefined();
 			return;
 		}
