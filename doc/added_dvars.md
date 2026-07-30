@@ -292,7 +292,7 @@
     * Default: 8192
     * Min. Value: 64
     * Max. Value: 65535
-    * Effect: Maximum nodes per graph. Caps `graphAddNode`, `graphLoad` and `graphAutodiscover`.
+    * Effect: Maximum nodes per graph. Caps `graphAddNode`, `graphLoad`, `graphAutodiscover` and `graphAutodiscoverEx`.
   * `sv_isLookingAtOnDemand`
     * Type: Boolean
     * Default: False

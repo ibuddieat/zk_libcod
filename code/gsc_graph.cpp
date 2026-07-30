@@ -184,9 +184,14 @@ static unsigned int graphCrc32(const unsigned char *data, size_t len)
 	return ~crc;
 }
 
-// Movement trace flags follow G_TraceCapsule
+// Contents and trace flags follow player movement: MASK_PLAYERSOLID minus
+// CONTENTS_BODY, and G_TraceCapsule passes locational and staticmodels false
+// https://github.com/voron00/CoD2rev_Server/blob/master/src/universal/surfaceflags.h#L120
 // https://github.com/voron00/CoD2rev_Server/blob/master/src/game/g_main_mp.cpp#L685
-#define GRAPH_TRACE_MASK   (CONTENTS_SOLID | CONTENTS_PLAYERCLIP)
+#define GRAPH_TRACE_MASK   (CONTENTS_SOLID | CONTENTS_PLAYERCLIP | CONTENTS_GLASS)
+// STEPSIZE and MIN_WALK_NORMAL, so a link is one the engine would also allow
+// https://github.com/voron00/CoD2rev_Server/blob/master/src/bgame/bg_public.h#L1300
+// https://github.com/voron00/CoD2rev_Server/blob/master/src/bgame/bg_public.h#L1298
 #define GRAPH_STEP_UP      18.0f
 #define GRAPH_SLOPE_MIN_Z  0.7f
 #define GRAPH_FLAT_DZ      8.0f
@@ -255,6 +260,52 @@ static bool graphWalkable(const vec3_t a, const vec3_t b, const vec3_t mins, con
  * higher->lower edge (a bot can fall but not climb); a gap over GRAPH_MAX_DROP is
  * not linked. Any direction that already exists is left alone.
  */
+// True when the ground follows the segment. graphWalkable only proves the space
+// above is clear, so a trench or a hole in a roof otherwise links as a walk edge
+static bool graphSegmentSupported(const vec3_t a, const vec3_t b)
+{
+	float t;
+
+	for ( t = 0.25f; t <= 0.751f; t += 0.25f )
+	{
+		vec3_t at;
+		vec3_t ground;
+		float drop;
+
+		at[0] = a[0] + ( b[0] - a[0] ) * t;
+		at[1] = a[1] + ( b[1] - a[1] ) * t;
+		at[2] = a[2] + ( b[2] - a[2] ) * t;
+
+		if ( !graphTraceGround(at[0], at[1], at[2] + GRAPH_STEP_UP, ground) )
+			return false;
+
+		drop = ground[2] - at[2];
+		if ( drop < 0 )
+			drop = -drop;
+
+		if ( drop > GRAPH_STEP_UP )
+			return false;
+	}
+
+	return true;
+}
+
+// True when the player box can move horizontally off a ledge at its own level,
+// which is what walking off it requires before the fall
+static bool graphStepOffClear(const vec3_t from, const vec3_t to, const vec3_t mins, const vec3_t maxs)
+{
+	trace_t tr;
+	vec3_t start;
+	vec3_t end;
+
+	start[0] = from[0]; start[1] = from[1]; start[2] = from[2] + GRAPH_STEP_UP;
+	end[0] = to[0]; end[1] = to[1]; end[2] = from[2] + GRAPH_STEP_UP;
+
+	SV_Trace(&tr, start, (float *)mins, (float *)maxs, end, ENTITYNUM_NONE, GRAPH_TRACE_MASK, 0, NULL, 0);
+
+	return tr.fraction >= 0.99f && !tr.startsolid;
+}
+
 static void graphLinkNodesTyped(AStarGraph *graph, int a, int b, const vec3_t mins, const vec3_t maxs)
 {
 	float dz = graph->nodes[b].origin[2] - graph->nodes[a].origin[2];
@@ -264,8 +315,10 @@ static void graphLinkNodesTyped(AStarGraph *graph, int a, int b, const vec3_t mi
 	int ab = graphWalkable(graph->nodes[a].origin, graph->nodes[b].origin, mins, maxs);
 	int ba = graphWalkable(graph->nodes[b].origin, graph->nodes[a].origin, mins, maxs);
 
-	// Walkable both ways (flat, step or a ramp) -> a two-way link.
-	if ( ab && ba )
+	// Walkable both ways (flat, step or a ramp) -> a two-way link, but only where
+	// the ground carries it: a walk edge is type 0, which skipEdgeTypes cannot
+	// filter, so one over a void leaves a bot no way around it
+	if ( ab && ba && graphSegmentSupported(graph->nodes[a].origin, graph->nodes[b].origin) )
 	{
 		if ( graphFindEdgeIndex(graph, a, b) < 0 )
 		{
@@ -290,35 +343,29 @@ static void graphLinkNodesTyped(AStarGraph *graph, int a, int b, const vec3_t mi
 		return;
 	}
 
-	// Only one direction walks -> a drop (fall down, cannot climb back). Cap the fall.
-	if ( adz > GRAPH_MAX_DROP )
+	// A fall is taken from the height difference, not from the two sweeps
+	// disagreeing: a box swept over the same segment both ways fails
+	// symmetrically, so ab != ba never happens and ledges went unlinked
+	if ( adz <= GRAPH_FLAT_DZ || adz > GRAPH_MAX_DROP )
 		return;
 
-	if ( ab )
 	{
-		if ( graphFindEdgeIndex(graph, a, b) < 0 )
-		{
-			GraphEdge e;
+		int high = ( dz > 0 ) ? b : a;
+		int low = ( dz > 0 ) ? a : b;
 
-			e.to = (unsigned int)b;
-			e.type = GRAPH_EDGE_DROP;
-			e.cost = cost;
-			graph->nodes[a].edges.push_back(e);
-			graph->edgeCount++;
-		}
-	}
-	else if ( ba )
-	{
-		if ( graphFindEdgeIndex(graph, b, a) < 0 )
-		{
-			GraphEdge e;
+		if ( graphFindEdgeIndex(graph, high, low) >= 0 )
+			return;
 
-			e.to = (unsigned int)a;
-			e.type = GRAPH_EDGE_DROP;
-			e.cost = cost;
-			graph->nodes[b].edges.push_back(e);
-			graph->edgeCount++;
-		}
+		if ( !graphStepOffClear(graph->nodes[high].origin, graph->nodes[low].origin, mins, maxs) )
+			return;
+
+		GraphEdge e;
+
+		e.to = (unsigned int)low;
+		e.type = GRAPH_EDGE_DROP;
+		e.cost = cost;
+		graph->nodes[high].edges.push_back(e);
+		graph->edgeCount++;
 	}
 }
 
@@ -649,8 +696,15 @@ void gsc_graph_find_path()
 	started = graphMicroseconds();
 
 	// A precomputed shortest-path tree answers instantly when there is no
-	// per-call skip-node list and the goal + masks match a cached tree.
-	if ( numParam < 4 || stackGetParamType(3) == VAR_UNDEFINED )
+	// per-call skip-node list and the goal + masks match a cached tree. A
+	// per-call budget or a weighted heuristic skips it: the tree models neither,
+	// so it would answer differently from the search it stands in for
+	// A goal whose own type is in skipNodeTypes is skipped as well: the tree keeps
+	// its cost, while the search filters successors and can never relax into it
+	if ( ( numParam < 4 || stackGetParamType(3) == VAR_UNDEFINED )
+		&& maxExpansions <= 0
+		&& sv_graphAstarWeight->current.decimal <= 1.0f
+		&& !( skipNodeTypes && ( graph->nodes[goal].type & skipNodeTypes ) ) )
 	{
 		GraphPrecompute *pc = findPrecompute(graph, goal, skipNodeTypes, skipEdgeTypes);
 
@@ -708,6 +762,7 @@ void gsc_graph_find_path()
 		stackPushArray();
 		stackPushInt(start);
 		stackPushArrayLast();
+		graphRecordSearch(graph, started, 0);
 		return;
 	}
 
@@ -957,6 +1012,15 @@ void gsc_graph_get_all_nodes()
 	if ( Scr_GetNumParam() >= 3 && !stackGetParamFloat(2, &maxDistSq) )
 	{
 		stackError("gsc_graph_get_all_nodes() max dist sq argument has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	// Rejected rather than read as "no filter", which silently returned the
+	// whole graph to a caller that asked for a radius
+	if ( Scr_GetNumParam() >= 3 && maxDistSq < 0 )
+	{
+		stackError("gsc_graph_get_all_nodes() max dist sq is negative");
 		stackPushUndefined();
 		return;
 	}
@@ -1714,6 +1778,10 @@ void gsc_graph_get_node_ids_accessible_from()
 		return;
 	}
 
+	// Released before the push loop: exhausting the variable pool leaves the VM
+	// by longjmp, which does not run destructors
+	std::vector<char>().swap(visited);
+
 	stackPushArray();
 
 	for ( head = 0; head < queue.size(); head++ )
@@ -1802,6 +1870,11 @@ void gsc_graph_get_node_ids_accessible_to()
 		stackPushUndefined();
 		return;
 	}
+
+	// Released before the push loop: exhausting the variable pool leaves the VM
+	// by longjmp, which does not run destructors
+	std::vector<char>().swap(visited);
+	std::vector< std::vector<unsigned int> >().swap(incoming);
 
 	stackPushArray();
 

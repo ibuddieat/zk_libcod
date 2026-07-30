@@ -28,6 +28,7 @@ Module: Graph<BR>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
 <p>Returns an array of every node reachable from the given node by following edges forward (includes the node itself) - a breadth-first walk of its connected component. Handy for finding stranded islands. Returns <b>undefined</b> for an invalid or removed node.</p>
+<p>Returns <b>undefined</b> when the result would exceed the script variable limit (32768 values). Every array element occupies a slot in the engine's global variable pool, and exhausting that pool is a terminal error, so an oversized query is refused rather than served. A large connected component can exceed it.</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
