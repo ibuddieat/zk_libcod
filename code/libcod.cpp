@@ -11902,6 +11902,79 @@ void custom_G_RunMover(gentity_t *ent)
 	G_RunThink(ent);
 }
 
+void custom_Info_SetValueForKey_Big(char *s, const char *key, const char *value)
+{
+	int j;
+	char c;
+	char cleanValue[BIG_INFO_STRING];
+	int len;
+	char newi[BIG_INFO_STRING];
+	int i;
+
+	if ( strlen(s) >= BIG_INFO_STRING )
+	{
+		Com_Printf("Info_SetValueForKey: oversize infostring");
+		return;
+	}
+
+	j = 0;
+	for ( i = 0; i < BIG_INFO_STRING - 1; ++i )
+	{
+		c = value[i];
+		if ( !c )
+		{
+			break;
+		}
+		if ( c != '\\' && c != ';' && c != '\"' )
+		{
+			cleanValue[j++] = c;
+		}
+	}
+
+	cleanValue[j] = 0;
+
+	if ( strchr(key, '\\') )
+	{
+		Com_Printf("Can\'t use keys with a \\\nkey: '%s'\nvalue: '%s'", key, value);
+		return;
+	}
+
+	if ( strchr(key, ';') )
+	{
+		Com_Printf("Can\'t use keys with a semicolon\nkey: '%s'\nvalue: '%s'", key, value);
+		return;
+	}
+
+	if ( strchr(key, '\"') )
+	{
+		Com_Printf("Can\'t use keys with a \"\nkey: '%s'\nvalue: '%s'", key, value);
+		return;
+	}
+
+	Info_RemoveKey_Big(s, key);
+	if ( !cleanValue[0] )
+	{
+		return;
+	}
+
+	len = Com_sprintf(newi, sizeof(newi), "\\%s\\%s", key, cleanValue);
+	if ( len <= 0 )
+	{
+		Com_Printf("Info buffer length exceeded, not including key/value pair in response\n");
+		return;
+	}
+
+	// New: Using BIG_INFO_STRING instead of (too short) MAX_INFO_STRING
+	if ( strlen(newi) + strlen(s) > BIG_INFO_STRING )
+	{
+		Com_Printf("Info string length exceeded\nkey: '%s'\nvalue: '%s'\nInfo string:\n%s\n",
+		           key, value, s);
+		return;
+	}
+
+	strcat(s, newi);
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -12174,6 +12247,7 @@ public:
 		cracking_hook_function(0x08096FD0, (int)custom_SV_MasterGameCompleteStatus);
 		cracking_hook_function(0x08096ED6, (int)custom_SV_MasterHeartbeat);
 		cracking_hook_function(0x0810FDFE, (int)custom_G_RunMover);
+		cracking_hook_function(0x080B8802, (int)custom_Info_SetValueForKey_Big);
 
 		#if COMPILE_JUMP == 1
 		cracking_hook_function(0x080DC8CA, (int)Jump_ReduceFriction);
