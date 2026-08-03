@@ -1364,7 +1364,7 @@ void SV_SendCachedStatusResponse(proxy_t *proxy, const char *requestBuffer, int 
 	// Add challenge, if there is
 	if ( challenge[0] )
 	{
-		Info_SetValueForKey(statusString, "challenge", challenge);
+		Info_SetValueForKey_Big(statusString, "challenge", challenge);
 	}
 
 	// Send back to client
