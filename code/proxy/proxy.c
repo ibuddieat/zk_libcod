@@ -1255,7 +1255,7 @@ qboolean SV_RefreshStatusCache(proxy_t *proxy, int s, struct sockaddr_in *forwar
 	I_strncpyz(cache_buffer, buffer, sizeof(cache_buffer));
 
 	// Remove challenge if present
-	Info_RemoveKey(cache_buffer, "challenge");
+	Info_RemoveKey_Big(cache_buffer, "challenge");
 
 	// Response version rewriting
 	ReplaceProtocolString(cache_buffer, proxy);

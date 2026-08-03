@@ -459,6 +459,9 @@ static const Info_ValueForKey_t Info_ValueForKey = (Info_ValueForKey_t)0x080B810
 typedef void (*Info_RemoveKey_t)(char *s, const char *key);
 static const Info_RemoveKey_t Info_RemoveKey = (Info_RemoveKey_t)0x080B8318;
 
+typedef void (*Info_RemoveKey_Big_t)(char *s, const char *key);
+static const Info_RemoveKey_Big_t Info_RemoveKey_Big = (Info_RemoveKey_Big_t)0x080B844A;
+
 typedef qboolean (*Info_Validate_t)(const char *s); 
 static const Info_Validate_t Info_Validate = (Info_Validate_t)0x080B857C;
 
