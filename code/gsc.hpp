@@ -39,6 +39,10 @@
 #include "gsc_exec.hpp"
 #endif
 
+#if COMPILE_GRAPH == 1
+#include "gsc_graph.hpp"
+#endif
+
 #if COMPILE_JSON == 1
 #include "gsc_json.hpp"
 #endif

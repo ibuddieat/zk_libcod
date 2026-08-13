@@ -45,6 +45,10 @@
     * Type: Boolean
     * Default: False
     * Effect: Toggle debug logging of events such as player footsteps, spawn of temporary entities etc.
+  * `g_debugGraph`
+    * Type: Boolean
+    * Default: False
+    * Effect: Toggle `[GRAPH]` diagnostic logging from the graph pathfinding module (per-search results, precompute-cache use, autodiscover and save/load). Printed to the server console when enabled.
   * `g_debugStaticModels`
     * Type: Boolean
     * Default: False
@@ -265,6 +269,30 @@
     * Type: Boolean
     * Default: True
     * Effect: If enabled, clients will get a generic message (EXE_SERVERKILLED) on a server crash instead of the server's stock behavior of leaking error details like internal file paths, line numbers and the error reason. The message written to server console (and log, if enabled) is not changed, no matter the setting.
+  * `sv_graphAstarMaxIterations`
+    * Type: Integer
+    * Default: 0
+    * Min. Value: 0
+    * Max. Value: 100000
+    * Effect: Server-wide ceiling on how many nodes a single `graphFindPath` search may expand. 0 means unlimited. A per-call limit passed to `graphFindPath` can tighten it further; when the ceiling is hit the search returns a best-effort partial path.
+  * `sv_graphAstarWeight`
+    * Type: Float
+    * Default: 1.0
+    * Min. Value: 1.0
+    * Max. Value: 2.0
+    * Effect: Weighted A* heuristic multiplier for `graphFindPath`. 1.0 is optimal (default). Values above 1.0 explore fewer nodes (faster searches) at the risk of slightly longer paths.
+  * `sv_graphMaxGraphs`
+    * Type: Integer
+    * Default: 8
+    * Min. Value: 1
+    * Max. Value: 64
+    * Effect: Maximum number of graphs that can exist at once. `graphCreate` and `graphLoad` fail past this limit.
+  * `sv_graphMaxNodes`
+    * Type: Integer
+    * Default: 8192
+    * Min. Value: 64
+    * Max. Value: 65535
+    * Effect: Maximum nodes per graph. Caps `graphAddNode`, `graphLoad`, `graphAutodiscover` and `graphAutodiscoverEx`.
   * `sv_isLookingAtOnDemand`
     * Type: Boolean
     * Default: False

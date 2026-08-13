@@ -117,6 +117,11 @@ if grep -q "COMPILE_EXEC 1" config.hpp; then
 	$cc $debug $options $constants -c gsc_exec.cpp -o objects_$1/gsc_exec.opp
 fi
 
+if grep -q "COMPILE_GRAPH 1" config.hpp; then
+	echo "##### COMPILE $1 GSC_GRAPH.CPP #####"
+	$cc $debug $options $constants -c gsc_graph.cpp -o objects_$1/gsc_graph.opp
+fi
+
 if grep -q "COMPILE_JSON 1" config.hpp; then
 	# yyjson: i386 SSE math, drop incremental reader + utils, hide symbols.
 	echo "##### COMPILE $1 YYJSON.C #####"

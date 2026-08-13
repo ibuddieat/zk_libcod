@@ -90,6 +90,9 @@ dvar_t *g_bulletDropMaxTime;
 dvar_t *g_corpseHit;
 dvar_t *g_debugCallbacks;
 dvar_t *g_debugEvents;
+#if COMPILE_GRAPH == 1
+dvar_t *g_debugGraph;
+#endif
 dvar_t *g_debugStaticModels;
 dvar_t *g_droppedWeaponsNeglectBots;
 dvar_t *g_forceRate;
@@ -140,6 +143,12 @@ dvar_t *sv_downloadRetransmitTimeout;
 dvar_t *sv_fastDownload;
 dvar_t *sv_fastDownloadSpeed;
 dvar_t *sv_genericServerErrorMessage;
+#if COMPILE_GRAPH == 1
+dvar_t *sv_graphAstarMaxIterations;
+dvar_t *sv_graphAstarWeight;
+dvar_t *sv_graphMaxGraphs;
+dvar_t *sv_graphMaxNodes;
+#endif
 dvar_t *sv_isLookingAtOnDemand;
 dvar_t *sv_kickGamestateLimitedClients;
 dvar_t *sv_kickMessages;
@@ -274,6 +283,9 @@ void hook_Com_Printf_in_Com_Init_Try_Block_Function(const char *format, ...)
 	g_corpseHit = Dvar_RegisterBool("g_corpseHit", qtrue, DVAR_ARCHIVE);
 	g_debugCallbacks = Dvar_RegisterBool("g_debugCallbacks", qfalse, DVAR_ARCHIVE);
 	g_debugEvents = Dvar_RegisterBool("g_debugEvents", qfalse, DVAR_ARCHIVE);
+	#if COMPILE_GRAPH == 1
+	g_debugGraph = Dvar_RegisterBool("g_debugGraph", qfalse, DVAR_ARCHIVE);
+	#endif
 	g_debugStaticModels = Dvar_RegisterBool("g_debugStaticModels", qfalse, DVAR_ARCHIVE);
 	g_droppedWeaponsNeglectBots = Dvar_RegisterBool("g_droppedWeaponsNeglectBots", qfalse, DVAR_ARCHIVE);
 	g_forceRate = Dvar_RegisterInt("g_forceRate", 0, 0, 25000, DVAR_ARCHIVE);
@@ -312,6 +324,12 @@ void hook_Com_Printf_in_Com_Init_Try_Block_Function(const char *format, ...)
 	sv_fastDownload = Dvar_RegisterBool("sv_fastDownload", qfalse, DVAR_ARCHIVE);
 	sv_fastDownloadSpeed = Dvar_RegisterInt("sv_fastDownloadSpeed", MAX_DOWNLOAD_WINDOW, 1, MAX_DOWNLOAD_WINDOW, DVAR_ARCHIVE);
 	sv_genericServerErrorMessage = Dvar_RegisterBool("sv_genericServerErrorMessage", qtrue, DVAR_ARCHIVE);
+	#if COMPILE_GRAPH == 1
+	sv_graphAstarMaxIterations = Dvar_RegisterInt("sv_graphAstarMaxIterations", 0, 0, 100000, DVAR_ARCHIVE);
+	sv_graphAstarWeight = Dvar_RegisterFloat("sv_graphAstarWeight", 1.0, 1.0, 2.0, DVAR_ARCHIVE);
+	sv_graphMaxGraphs = Dvar_RegisterInt("sv_graphMaxGraphs", 8, 1, 64, DVAR_ARCHIVE);
+	sv_graphMaxNodes = Dvar_RegisterInt("sv_graphMaxNodes", 8192, 64, 65535, DVAR_ARCHIVE);
+	#endif
 	sv_isLookingAtOnDemand = Dvar_RegisterBool("sv_isLookingAtOnDemand", qfalse, DVAR_ARCHIVE);
 	sv_kickGamestateLimitedClients = Dvar_RegisterBool("sv_kickGamestateLimitedClients", qtrue, DVAR_ARCHIVE);
 	sv_kickMessages = Dvar_RegisterBool("sv_kickMessages", qtrue, DVAR_ARCHIVE);

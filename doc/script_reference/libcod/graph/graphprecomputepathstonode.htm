@@ -1,0 +1,59 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>graphPrecomputePathsToNode( &lt;graph id&gt;, &lt;goal&gt;, [&lt;skip node types&gt;], [&lt;skip edge types&gt;] )</H1>
+<HR>
+<BODY BGCOLOR="B0C4DE">
+<I>
+Module: Graph<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Runs one reverse search from a goal and caches, for every node, the cost to reach it and the next hop toward it. Afterwards <code>graphFindPath</code> answers any start-to-this-goal (with the same skip masks and no per-call skip-node list) by following the cached hops - no search. Any change to the graph invalidates every cache. Returns <b>true</b>, or <b>false</b> for an invalid or removed goal.</p>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+graphPrecomputePathsToNode(g, flagNode);
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;graph id&gt; The graph.</LI><LI>2 : &lt;goal&gt; The shared goal node.</LI>
+</UL></TR></TD></TABLE>
+<BR>
+<H2>Optional Args</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>3 : &lt;skip node types&gt; Must match the mask you pass to graphFindPath.</LI><LI>4 : &lt;skip edge types&gt; Must match the mask you pass to graphFindPath.</LI>
+</UL></TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>

@@ -99,6 +99,38 @@ scr_function_t scriptFunctions[] =
 	{"setNextTestClientName", gsc_bots_setnexttestclientname, 0},
 	{"resetTestClientNaming", gsc_bots_resettestclientnaming, 0},
 	#endif
+
+	#if COMPILE_GRAPH == 1
+	{"graphCreate", gsc_graph_create, 0},
+	{"graphFindPath", gsc_graph_find_path, 0},
+	{"graphFindClosestNode", gsc_graph_find_closest_node, 0},
+	{"graphRemove", gsc_graph_remove, 0},
+	{"graphRemoveAll", gsc_graph_removeall, 0},
+	{"graphAddNode", gsc_graph_add_node, 0},
+	{"graphAddEdge", gsc_graph_add_edge, 0},
+	{"graphGetNodeOrigin", gsc_graph_get_node_origin, 0},
+	{"graphGetNodeCount", gsc_graph_get_node_count, 0},
+	{"graphGetEdgeCount", gsc_graph_get_edge_count, 0},
+	{"graphGetStats", gsc_graph_get_stats, 0},
+	{"graphFindClosestEdge", gsc_graph_find_closest_edge, 0},
+	{"graphGetAllNodes", gsc_graph_get_all_nodes, 0},
+	{"graphGetAllEdges", gsc_graph_get_all_edges, 0},
+	{"graphGetEdgeProperties", gsc_graph_get_edge_properties, 0},
+	{"graphSetEdgeCost", gsc_graph_set_edge_cost, 0},
+	{"graphSetEdgeType", gsc_graph_set_edge_type, 0},
+	{"graphRemoveEdge", gsc_graph_remove_edge, 0},
+	{"graphGetNodeProperties", gsc_graph_get_node_properties, 0},
+	{"graphSetNodeType", gsc_graph_set_node_type, 0},
+	{"graphSetNodeOrigin", gsc_graph_set_node_origin, 0},
+	{"graphGetNodeIdsAccessibleFrom", gsc_graph_get_node_ids_accessible_from, 0},
+	{"graphGetNodeIdsAccessibleTo", gsc_graph_get_node_ids_accessible_to, 0},
+	{"graphRemoveNode", gsc_graph_remove_node, 0},
+	{"graphPrecomputePathsToNode", gsc_graph_precompute_paths_to_node, 0},
+	{"graphSave", gsc_graph_save, 0},
+	{"graphLoad", gsc_graph_load, 0},
+	{"graphAutodiscover", gsc_graph_autodiscover, 0},
+	{"graphAutodiscoverEx", gsc_graph_autodiscover_ex, 0},
+	#endif
 		
 	#if COMPILE_MYSQL_DEFAULT == 1
 	{"mysql_init", gsc_mysql_init, 0},
