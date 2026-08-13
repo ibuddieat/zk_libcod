@@ -26,6 +26,12 @@ jobs:
             artifact_name: libcod2_ubuntu_no_mysql
             is_debian: false
           - os_name: ubuntu
+            variant: nomysql unsafe
+            container: ""
+            packages: "gcc-multilib g++-multilib libstdc++5:i386"
+            artifact_name: libcod2_ubuntu_no_mysql_unsafe
+            is_debian: false
+          - os_name: ubuntu
             variant: mysql1
             container: ""
             packages: "gcc-multilib g++-multilib libstdc++5:i386 libmysqlclient-dev:i386"
@@ -42,6 +48,12 @@ jobs:
             container: "debian:trixie"
             packages: "gcc-multilib g++-multilib libc6:i386 libgcc-s1:i386"
             artifact_name: libcod2_debian_no_mysql
+            is_debian: true
+          - os_name: debian
+            variant: nomysql unsafe
+            container: "debian:trixie"
+            packages: "gcc-multilib g++-multilib libc6:i386 libgcc-s1:i386"
+            artifact_name: libcod2_debian_no_mysql_unsafe
             is_debian: true
           - os_name: debian
             variant: mysql1

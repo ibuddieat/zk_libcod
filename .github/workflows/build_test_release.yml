@@ -20,7 +20,13 @@ jobs:
             variant: nomysql
             container: ""
             packages: "gcc-multilib g++-multilib libstdc++5:i386"
-            asset_name: libcod2_ubuntu_nomysql_nospeex.so
+            asset_name: libcod2_ubuntu_no_mysql_nospeex.so
+            is_debian: false
+          - os_name: ubuntu
+            variant: nomysql unsafe
+            container: ""
+            packages: "gcc-multilib g++-multilib libstdc++5:i386"
+            asset_name: libcod2_ubuntu_no_mysql_unsafe
             is_debian: false
           - os_name: ubuntu
             variant: mysql1
@@ -38,7 +44,13 @@ jobs:
             variant: nomysql
             container: "debian:trixie"
             packages: "gcc-multilib g++-multilib libc6:i386 libgcc-s1:i386"
-            asset_name: libcod2_debian_nomysql_nospeex.so
+            asset_name: libcod2_debian_no_mysql_nospeex.so
+            is_debian: true
+          - os_name: debian
+            variant: nomysql unsafe
+            container: "debian:trixie"
+            packages: "gcc-multilib g++-multilib libc6:i386 libgcc-s1:i386"
+            asset_name: libcod2_debian_no_mysql_unsafe
             is_debian: true
           - os_name: debian
             variant: mysql1
