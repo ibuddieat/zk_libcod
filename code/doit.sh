@@ -9,6 +9,11 @@
 # ./doit.sh nomysql nospeex debug
 # ./doit.sh mysql1 nospeex debug
 # ./doit.sh mysql2
+# ./doit.sh http             (httpFetch + webSocket; needs cmake + libmbedtls-dev:i386)
+# ./doit.sh http debug
+# ./doit.sh mysql1 http
+# ./doit.sh mysql2 http nospeex
+# ./doit.sh mysql1 http nospeex debug
 
 # Exit on compiler error, with non-zero exit code
 set -e
@@ -83,6 +88,19 @@ else
 		sed -i "/#define ENABLE_UNSAFE 0/c\#define ENABLE_UNSAFE 1" config.hpp
 	else
 		sed -i "/#define ENABLE_UNSAFE 1/c\#define ENABLE_UNSAFE 0" config.hpp
+	fi
+
+	# httpFetch and webSocket share one libwebsockets/mbedTLS build, so a single
+	# "http" flag enables both (reset to off after linking).
+	net_flag=0
+	for a in "$1" "$2" "$3" "$4"; do
+		if [ "$a" == "http" ]; then
+			net_flag=1
+		fi
+	done
+	if [ "$net_flag" == "1" ]; then
+		sed -i "/#define COMPILE_HTTP 0/c\#define COMPILE_HTTP 1" config.hpp
+		sed -i "/#define COMPILE_WEBSOCKET 0/c\#define COMPILE_WEBSOCKET 1" config.hpp
 	fi
 
 	if [ "$1" == "debug" ] || [ "$2" == "debug" ] || [ "$3" == "debug" ]; then
@@ -160,6 +178,64 @@ if grep -q "COMPILE_WEAPONS 1" config.hpp; then
 	$cc $debug $options $constants -c gsc_weapons.cpp -o objects_$1/gsc_weapons.opp
 fi
 
+http_on=0; ws_on=0
+grep -q "COMPILE_HTTP 1" config.hpp && http_on=1
+grep -q "COMPILE_WEBSOCKET 1" config.hpp && ws_on=1
+
+if [ "$http_on" = "1" ] || [ "$ws_on" = "1" ]; then
+	# TLS backend: mbedTLS 2.28 from the Ubuntu package (libmbedtls-dev:i386), linked
+	# statically (-m32). mbedTLS is ~10x smaller than OpenSSL and has none of OpenSSL
+	# 3.x's provider machinery (which crashed in this 32-bit static build). TLS is
+	# encrypt-only (no CA), so the .so needs no system cert file. CDN-fronted servers
+	# (Cloudflare etc.) work because the client keeps TLS SNI on (LCCSCF_ALLOW_INSECURE,
+	# not SKIP_SERVER_CERT_HOSTNAME_CHECK - see http_client.hpp). The libwebsockets .a
+	# is cached; remove lib/libwebsockets/_build to force a rebuild.
+	lws_src=lib/libwebsockets
+	lws_build=$lws_src/_build
+	lws_a=$lws_build/lib/libwebsockets.a
+	# If a plain `git clone` skipped the submodule, fetch it now so no manual step
+	# is needed.
+	if [ ! -f "$lws_src/CMakeLists.txt" ]; then
+		echo "##### INIT LIBWEBSOCKETS SUBMODULE #####"
+		git -C "$(git rev-parse --show-toplevel)" submodule update --init --recursive code/lib/libwebsockets
+	fi
+	if [ ! -f "$lws_a" ]; then
+		echo "##### CMAKE-BUILD LIBWEBSOCKETS (static, -m32, mbedTLS pkg) #####"
+		cmake -S "$lws_src" -B "$lws_build" \
+			-DCMAKE_BUILD_TYPE=Release \
+			-DCMAKE_C_FLAGS="-m32 -fPIC" \
+			-DLWS_WITH_STATIC=ON \
+			-DLWS_WITH_SHARED=OFF \
+			-DLWS_WITHOUT_SERVER=ON \
+			-DLWS_WITHOUT_TESTAPPS=ON \
+			-DLWS_WITH_MINIMAL_EXAMPLES=OFF \
+			-DLWS_WITH_SSL=ON \
+			-DLWS_WITH_MBEDTLS=ON \
+			-DLWS_MBEDTLS_INCLUDE_DIRS="/usr/include" \
+			-DLWS_MBEDTLS_LIBRARIES="/usr/lib/i386-linux-gnu/libmbedtls.a;/usr/lib/i386-linux-gnu/libmbedx509.a;/usr/lib/i386-linux-gnu/libmbedcrypto.a" \
+			-DLWS_WITH_HTTP2=OFF \
+			-DLWS_WITH_ZLIB=OFF \
+			-DLWS_WITHOUT_EXTENSIONS=ON \
+			-DLWS_WITH_EXTERNAL_POLL=ON
+		cmake --build "$lws_build" --target websockets -j"$(nproc)"
+	fi
+	lws_inc="-I$lws_src/include -I$lws_build"
+	lws_link="$lws_a -l:libmbedtls.a -l:libmbedx509.a -l:libmbedcrypto.a"
+
+	echo "##### COMPILE $1 GSC_EXTRA.CPP #####"
+	$cc $debug $options $constants -c gsc_extra.cpp -o objects_$1/gsc_extra.opp
+fi
+
+if [ "$http_on" = "1" ]; then
+	echo "##### COMPILE $1 GSC_HTTP.CPP #####"
+	$cc $debug $options $constants $lws_inc -c gsc_http.cpp -o objects_$1/gsc_http.opp
+fi
+
+if [ "$ws_on" = "1" ]; then
+	echo "##### COMPILE $1 GSC_WEBSOCKET.CPP #####"
+	$cc $debug $options $constants $lws_inc -c gsc_websocket.cpp -o objects_$1/gsc_websocket.opp
+fi
+
 if [ "$(< config.hpp grep '#define COMPILE_BSP' | grep -o '[0-9]')" == "1" ]; then
 	echo "##### COMPILE $1 BSP.CPP #####"
 	$cc $debug $options $constants -c bsp.cpp -o objects_"$1"/bsp.opp
@@ -204,12 +280,18 @@ fi
 
 echo "##### LINKING lib$1.so #####"
 objects="$(ls objects_$1/*.opp)"
-$cc -m32 -shared -L/lib32 -o bin/lib$1.so -ldl $objects -lpthread $mysql_link $speex_link
+$cc -m32 -shared -L/lib32 -o bin/lib$1.so -ldl $objects -lpthread $mysql_link $speex_link $lws_link
 rm objects_$1 -r
 
 if [ mysql_variant > 0 ]; then
 	sed -i "/#define COMPILE_MYSQL_DEFAULT 1/c\#define COMPILE_MYSQL_DEFAULT 0" config.hpp
 	sed -i "/#define COMPILE_MYSQL_VORON 1/c\#define COMPILE_MYSQL_VORON 0" config.hpp
+fi
+
+# Reset the opt-in http/ws flags so the repo's config.hpp stays default-off.
+if [ "$net_flag" == "1" ]; then
+	sed -i "/#define COMPILE_HTTP 1/c\#define COMPILE_HTTP 0" config.hpp
+	sed -i "/#define COMPILE_WEBSOCKET 1/c\#define COMPILE_WEBSOCKET 0" config.hpp
 fi
 
 # Read leftover

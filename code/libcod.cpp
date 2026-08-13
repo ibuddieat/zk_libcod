@@ -1249,6 +1249,14 @@ void custom_Sys_Quit(void)
 	// Any proxy threads to cleanup?
 	SV_ShutdownProxies();
 
+	// release connections
+	#if COMPILE_HTTP == 1
+	gsc_http_shutdown();
+	#endif
+	#if COMPILE_WEBSOCKET == 1
+	gsc_websocket_shutdown();
+	#endif
+
 	// Continue exit routines
 	hook_Sys_Quit->unhook();
 	void (*Sys_Quit)(void);

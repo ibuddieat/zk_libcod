@@ -1,0 +1,4 @@
+[submodule "code/lib/libwebsockets"]
+	path = code/lib/libwebsockets
+	url = https://github.com/warmcat/libwebsockets.git
+	ignore = untracked

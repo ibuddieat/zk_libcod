@@ -1,0 +1,68 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>httpFetch( &lt;url&gt;, &lt;method&gt;, &lt;data&gt;, &lt;extra headers&gt;, &lt;timeout seconds&gt;, &lt;onDone function&gt;, &lt;onError function&gt; )</H1>
+<HR>
+<BODY BGCOLOR='B0C4DE'>
+<I>
+Module: Network<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Performs one asynchronous, non-blocking HTTP or HTTPS request and closes the connection once the response arrives. Exactly one callback runs exactly once: <code>onDone(status, body, headers)</code> on any reply (4xx/5xx included), or <code>onError(error)</code> on a network, DNS, TLS, timeout, invalid-URL or oversized-body failure. <code>headers</code> is an array indexed by lowercased name (e.g. <code>headers["content-type"]</code>); pair it with <code>json_parse</code> to read a JSON body. <code>https://</code> is encrypted but the server certificate is not verified, so no system cert file is needed. Only the common standard response headers are returned (most APIs put their data in the body). A body larger than 65000 bytes - the biggest string GSC can hold - is refused with <code>onError("response body too large")</code>. An in-flight request finishes and frees itself even across a map change; its callback is dropped if the level that issued it has unloaded.</p>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+httpFetch("https://api.example.com/thing", "GET", "", "", 10, ::onDone, ::onError);
+
+onDone(status, body, headers)
+{
+    data = json_parse(body);
+    iprintln("status " + status);
+}
+onError(error)
+{
+    iprintln("request failed: " + error);
+}
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;url&gt; The http:// or https:// URL. A missing port defaults to 80/443.</LI>
+<LI>2 : &lt;method&gt; "GET", "POST", etc. An empty string defaults to GET.</LI>
+<LI>3 : &lt;data&gt; The request body as text (a JSON string for example). GSC strings cannot carry an embedded NUL, so no binary body.</LI>
+<LI>4 : &lt;extra headers&gt; Extra request headers separated by \r\n, e.g. "Content-Type: application/json".</LI>
+<LI>5 : &lt;timeout seconds&gt; Whole-request timeout in seconds; 0 disables it.</LI>
+<LI>6 : &lt;onDone function&gt; Called as onDone(status, body, headers) on any reply.</LI>
+<LI>7 : &lt;onError function&gt; Called as onError(error) on failure.</LI>
+</UL></TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>
