@@ -43,6 +43,20 @@ jobs:
             packages: "gcc-multilib g++-multilib libstdc++5:i386 libmysqlclient-dev:i386"
             artifact_name: libcod2_ubuntu_mysql2
             is_debian: false
+          - os_name: ubuntu
+            variant: nomysql http
+            container: ""
+            packages: "gcc-multilib g++-multilib libstdc++5:i386 cmake libmbedtls-dev:i386"
+            artifact_name: libcod2_ubuntu_no_mysql_http
+            is_debian: false
+            needs_lws: true
+          - os_name: ubuntu
+            variant: mysql1 http
+            container: ""
+            packages: "gcc-multilib g++-multilib libstdc++5:i386 libmysqlclient-dev:i386 cmake libmbedtls-dev:i386"
+            artifact_name: libcod2_ubuntu_mysql1_http
+            is_debian: false
+            needs_lws: true
           - os_name: debian
             variant: nomysql
             container: "debian:trixie"
@@ -67,7 +81,17 @@ jobs:
             packages: "gcc-multilib g++-multilib libmariadb-dev-compat:i386"
             artifact_name: libcod2_debian_mysql2
             is_debian: true
+          - os_name: debian
+            variant: nomysql http
+            container: "debian:trixie"
+            packages: "gcc-multilib g++-multilib libc6:i386 libgcc-s1:i386 cmake libmbedtls-dev:i386"
+            artifact_name: libcod2_debian_no_mysql_http
+            is_debian: true
+            needs_lws: true
     steps:
+    - name: "Install git before checkout"
+      if: matrix.is_debian && matrix.needs_lws
+      run: apt-get update && apt-get -y install git
     - uses: actions/checkout@v6 # https://github.com/actions/checkout
     - name: "Install dependencies for container"
       if: matrix.is_debian
@@ -77,6 +101,11 @@ jobs:
         sudo dpkg --add-architecture i386
         sudo apt-get update
         sudo apt-get -y install ${{ matrix.packages }}
+    - name: "Init libwebsockets submodule"
+      if: matrix.needs_lws
+      run: |
+        git config --global --add safe.directory "$GITHUB_WORKSPACE"
+        git submodule update --init --recursive code/lib/libwebsockets
     - name: "libstdc++5 Installation Workaround"
       if: matrix.is_debian
       run: wget http://ftp.debian.org/debian/pool/main/g/gcc-3.3/libstdc++5_3.3.6-32_i386.deb && sudo dpkg -i libstdc++5_3.3.6-32_i386.deb
