@@ -1527,6 +1527,10 @@ void * SV_ProxyClientThread(void *threadArgs)
 	proxy_t *proxy = args->proxy;
 	char client_ip[INET_ADDRSTRLEN];
 
+	// Filled once up front: The exit path logs it even if no packet arrived
+	if ( !inet_ntop(AF_INET, &args->addr.sin_addr, client_ip, sizeof(client_ip)) )
+		client_ip[0] = '\0';
+
 	while ( 1 )
 	{
 		char buffer[MAX_BUFFER_SIZE];
@@ -1544,35 +1548,47 @@ void * SV_ProxyClientThread(void *threadArgs)
 			(struct sockaddr *)&r_addr,
 			&r_len);
 
+		// r_addr is only written on success, so handle errors before the
+		// sender check. Otherwise a timeout never ends the thread
+		if ( bytes_received < 0 )
+		{
+			// SO_RCVTIMEO expired without a reply from the main server
+			if ( errno == EAGAIN || errno == EWOULDBLOCK )
+				break;
+
+			if ( errno == EINTR )
+				continue;
+
+			Com_DPrintf("Proxy: Error %d at recvfrom in client thread: %s\n", errno, strerror(errno));
+			break;
+		}
+
+		// Socket was shut down by SV_ShutdownProxies, or an empty datagram
+		if ( bytes_received == 0 )
+		{
+			qboolean stopped;
+
+			pthread_mutex_lock(&proxy->lock);
+			stopped = proxy->stopped;
+			pthread_mutex_unlock(&proxy->lock);
+
+			if ( stopped )
+				break;
+
+			continue;
+		}
+
+		if ( (unsigned int)bytes_received >= sizeof(buffer) - 1 )
+		{
+			Com_DPrintf("Proxy: Max. size exceeded at recvfrom in client thread\n");
+			continue;
+		}
+		buffer[bytes_received] = '\0';
+
 		// Make sure that only the main server sends stuff to the client socket
 		SockadrToNetadr(&r_addr, &senderAdr);
 		if ( !Sys_IsMainServerAddress(senderAdr) )
 			continue;
-
-		if ( bytes_received >= 0 )
-		{
-			if ( (unsigned int)bytes_received < sizeof(buffer) - 1 )
-			{
-				buffer[bytes_received] = '\0';
-			}
-			else
-			{
-				Com_DPrintf("Proxy: Max. size exceeded at recvfrom in client thread\n");
-				continue;
-			}
-		}
-		else
-		{
-			if ( errno == EAGAIN || errno == EWOULDBLOCK )
-			{
-				break;
-			}
-			else
-			{
-				Com_DPrintf("Proxy: No data at recvfrom in client thread\n");
-				continue;
-			}
-		}
 
 		// Adjust version strings in response buffer
 		if ( memcmp(buffer, "\xFF\xFF\xFF\xFFstatusResponse", 18) == 0 )
@@ -1622,7 +1638,6 @@ void * SV_ProxyClientThread(void *threadArgs)
 	if ( args->activeClient )
 	{
 		proxy->numClients--;
-		inet_ntop(AF_INET, &args->addr.sin_addr, client_ip, sizeof(client_ip));
 		if ( strlen(client_ip) && com_sv_running->current.boolean )
 		{
 			Com_DPrintf(
