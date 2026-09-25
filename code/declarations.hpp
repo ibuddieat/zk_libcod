@@ -72,6 +72,7 @@
 #define MAX_DVARS                   1280
 #define MAX_ENT_CLUSTERS            16
 #define MAX_EVENTS                  4
+#define MAX_GAMETYPE_SCRIPTS        32
 #define MAX_GENTITIES               ( 1 << GENTITYNUM_BITS ) // 0x400
 #define MAX_INFO_STRING             0x400
 #define MAX_IPFILTERS               1024
@@ -102,7 +103,7 @@
 // These are the only configstrings that the system reserves, all the
 // other ones (see cs_index_t) are strictly for servergame to clientgame
 // communication
-#define CS_SERVERINFO 0 // An info string with all the serverinfo cvars
+#define CS_SERVERINFO 0 // An info string with all the serverinfo dvars
 #define CS_SYSTEMINFO 1 // An info string for server system to client system configuration (timescale, etc.)
 
 // dvar_t->flags
@@ -144,7 +145,7 @@
 // entityShared_t->svFlags
 #define SVF_NOCLIENT  0x1   // Don't send entity to clients, even if it has effects
 #define SVF_BODY      0x2   // Player or corpse
-#define SVF_DOBJ      0x4   // Dobj model, can be player model, script model, item.
+#define SVF_DOBJ      0x4   // Dobj model, can be player model, script model, item
 #define SVF_BROADCAST 0x8   // Send to all connected clients
 #define SVF_OBJECTIVE 0x10  // Added to snapshots, even if not nearby or behind fog
 #define SVF_RADIUS    0x20  // For trigger_radius and few other things
@@ -1502,8 +1503,13 @@ typedef struct entityState_s
 	{
 		int scale;
 		int eventParm2;
+		int hintString;
 	};
-	int dmgFlags;
+	union
+	{
+		int dmgFlags;
+		int hintType;
+	};
 	int animMovetype;
 	float fTorsoHeight;
 	float fTorsoPitch;
@@ -4095,8 +4101,8 @@ static const int g_fHitLocDamageMult_offset = 0x08628EE0;
 
 typedef struct src_error_s
 {
-	char internal_function[64];
-	char message[1024];
+	char internal_function[128]; // Over 64 for long level script path in GScr_LoadLevelScript
+	char message[MAX_STRINGLENGTH];
 } scr_error_t;
 
 typedef struct map_weapon_s

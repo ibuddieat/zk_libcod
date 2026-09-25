@@ -1620,7 +1620,7 @@ void custom_Scr_ParseGameTypeList(void)
 	memset(buffer, 0, sizeof(buffer));
 	count = 0;
 	memset(g_scr_data.gametype.list, 0, sizeof(g_scr_data.gametype.list));
-	list = FS_GetFileList(path_to_gametypes, "gsc", FS_LIST_PURE_ONLY, listbuf, 4096);
+	list = FS_GetFileList(path_to_gametypes, "gsc", FS_LIST_PURE_ONLY, listbuf, sizeof(listbuf));
 	filename = listbuf;
 	i = 0;
 	do
@@ -1638,17 +1638,17 @@ void custom_Scr_ParseGameTypeList(void)
 			{
 				filename[fileLength - 4] = '\0';
 			}
-			if ( count == 32 )
+			if ( count == MAX_GAMETYPE_SCRIPTS )
 			{
-				Com_Printf("Too many game type scripts found! Only loading the first %i\n", 31);
+				Com_Printf("Too many game type scripts found! Only loading the first %i\n", MAX_GAMETYPE_SCRIPTS - 1);
 				g_scr_data.gametype.iNumGameTypes = count;
 				return;
 			}
-			I_strncpyz(script->pszScript, filename, 64);
+			I_strncpyz(script->pszScript, filename, sizeof(script->pszScript));
 			I_strlwr(script->pszScript);
 			path = va("%s/%s.txt", path_to_gametypes, filename);
 			len = FS_FOpenFileByMode(path, &f, FS_READ);
-			if ( len < 1 || 1023 < len )
+			if ( len < 1 || len >= (int)sizeof(buffer) )
 			{
 				if ( len < 1 )
 				{
@@ -1668,7 +1668,7 @@ void custom_Scr_ParseGameTypeList(void)
 				FS_Read(buffer, len, f);
 				data = buffer;
 				token = Com_Parse(&data);
-				I_strncpyz(script->pszName, token, 64);
+				I_strncpyz(script->pszName, token, sizeof(script->pszScript));
 				token = Com_Parse(&data);
 				script->bTeamBased = token && !I_stricmp(token, "team");
 			}
@@ -5930,7 +5930,7 @@ void custom_GScr_LoadLevelScript()
 	dvar_t *sv_mapname;
 	char s[128]; // New: Original size was 64 chars
 
-	sv_mapname = Dvar_RegisterString("mapname", "", DVAR_SERVERINFO | DVAR_ROM);
+	sv_mapname = Dvar_RegisterString("mapname", "", DVAR_SERVERINFO | DVAR_ROM | DVAR_INTERNAL);
 
 	/* New code start: Logic for fs_mapScriptDirectories dvar */
 	switch ( fs_mapScriptDirectories->current.integer )
@@ -7655,10 +7655,10 @@ LAB_08121ee6:
 							if ( ( ent->team == 0 || ent->team == player->client->sess.cs.team ) &&
 							( ent->trigger.singleUserEntIndex == ENTITYNUM_NONE || ent->trigger.singleUserEntIndex == player->client->ps.clientNum ) )
 							{
-								temp = ent->s.dmgFlags;
-								if ( ent->s.dmgFlags != 0 && ent->s.scale != 0xFF )
+								temp = ent->s.hintType;
+								if ( ent->s.hintType != 0 && ent->s.hintString != 0xFF )
 								{
-									cursorHintString = ent->s.scale;
+									cursorHintString = ent->s.hintString;
 								}
 								goto LAB_08121ee6;
 							}
@@ -7827,7 +7827,7 @@ void custom_PlayerCmd_finishPlayerDamage(scr_entref_t entref)
 	int bodyBulletImpacts;
 	int psOffsetTime;
 	int maxDmg;
-	vec3_t velocaityScale;
+	vec3_t velocityScale;
 	vec3_t localdir;
 	float dmgRange;
 	int minDmg;
@@ -7932,8 +7932,8 @@ void custom_PlayerCmd_finishPlayerDamage(scr_entref_t entref)
 				if ( ( ent->client->ps.eFlags & EF_TURRET_ACTIVE ) == 0 )
 				{
 					knockback = (float)minDmg * g_knockback->current.decimal / 250.0;
-					VectorScale(localdir, knockback, velocaityScale);
-					VectorAdd(ent->client->ps.velocity, velocaityScale, ent->client->ps.velocity);
+					VectorScale(localdir, knockback, velocityScale);
+					VectorAdd(ent->client->ps.velocity, velocityScale, ent->client->ps.velocity);
 
 					if ( !ent->client->ps.pm_time )
 					{
@@ -8619,7 +8619,7 @@ void custom_GScr_SetHintString(scr_entref_t entref)
 	{
 		if ( I_stricmp(Scr_GetString(0), "") == 0 )
 		{
-			ent->s.scale = 0xFF;
+			ent->s.hintString = 0xFF;
 			return;
 		}
 	}
@@ -8629,7 +8629,7 @@ void custom_GScr_SetHintString(scr_entref_t entref)
 	{
 		Scr_Error(va("Too many different hintstring values. Max allowed is %i different strings", 0x20));
 	}
-	ent->s.scale = index;
+	ent->s.hintString = index;
 
 	// New: Added trigger_radius support by converting it to a trigger_use_touch
 	if ( ent->classname == custom_scr_const.trigger_radius )
