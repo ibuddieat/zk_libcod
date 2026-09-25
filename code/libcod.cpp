@@ -11277,6 +11277,11 @@ char * hook_strcpy_in_SV_ConTell_f(char *dst, const char *src)
 	return strcpy(dst, consolePrefix);
 }
 
+void hook_strcpy_in_CM_LoadStaticModels(char *dst, const char *src)
+{
+	I_strncpyz(dst, src, MAX_QPATH);
+}
+
 void custom_Scr_MoveGravity(gentity_t *ent, float *velocity, float time)
 {
 	/* New code start: Disable custom gravity */
@@ -12026,7 +12031,13 @@ public:
 		cracking_hook_call(0x080840C0, (int)VM_ExecuteSaveReturnValue); // Scr_ExecEntThreadNum
 		cracking_hook_call(0x08084141, (int)VM_ExecuteSaveReturnValue); // Scr_AddExecThread
 		cracking_hook_call(0x080841BA, (int)VM_ExecuteSaveReturnValue); // Scr_AddExecEntThreadNum
-		cracking_hook_call(0x0808BF55, (int)hook_Dvar_SetInt_in_SV_MapRestart);		
+		cracking_hook_call(0x0808BF55, (int)hook_Dvar_SetInt_in_SV_MapRestart);
+		cracking_hook_call(0x0805885E, (int)hook_strcpy_in_CM_LoadStaticModels);
+		cracking_hook_call(0x0805888C, (int)hook_strcpy_in_CM_LoadStaticModels);
+		cracking_hook_call(0x08058902, (int)hook_strcpy_in_CM_LoadStaticModels);
+		cracking_hook_call(0x08058689, (int)hook_strcpy_in_CM_LoadStaticModels);
+		cracking_hook_call(0x080586B7, (int)hook_strcpy_in_CM_LoadStaticModels);
+		cracking_hook_call(0x08058731, (int)hook_strcpy_in_CM_LoadStaticModels);
 
 		hook_Com_DPrintf = new cHook(0x08060E3A, (int)custom_Com_DPrintf);
 		#if COMPILE_UTILS == 1
