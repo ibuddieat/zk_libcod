@@ -1249,7 +1249,7 @@ void custom_Sys_Quit(void)
 	// Any proxy threads to cleanup?
 	SV_ShutdownProxies();
 
-	// release connections
+	// Release connections
 	#if COMPILE_HTTP == 1
 	gsc_http_shutdown();
 	#endif
@@ -1284,6 +1284,8 @@ void custom_SV_DirectConnect(netadr_t from)
 	int guid;
 	char PBguid[33];
 	char clientPBguid[33];
+	customPlayerState_t *cps;
+	const char *cod2xHwid2;
 
 	/* New code start: Rate-limiting */
 	if ( !from.type == NA_BOT && SVC_ApplyConnectLimit(from, OUTBOUND_BUCKET_MAIN) )
@@ -1464,10 +1466,19 @@ LAB_0808ec36:
 		newcl->gentity = ent;
 		newcl->clscriptid = Scr_AllocArray();
 		newcl->challenge = challenge;
+		cps = &customPlayerState[clientNum]; // New
 
 		/* New code start: Save client protocol version */
-		customPlayerState[clientNum].protocolVersion = version;
+		cps->protocolVersion = version;
 		Com_Printf("Connecting player #%i runs on version %s (protocol %i)\n", clientNum, GetShortVersionFromProtocol(version), version);
+		/* New code end */
+
+		/* New code start: Collect and validate CoD2x data */
+		cps->cod2xProtocol = atoi(Info_ValueForKey(userinfo, "protocol_cod2x"));
+		memset(cps->cod2xHwid2, 0, sizeof(cps->cod2xHwid2));
+		cod2xHwid2 = Info_ValueForKey(userinfo, "cl_hwid2");
+		if ( IsMD5String(cod2xHwid2) )
+			I_strncpyz(cps->cod2xHwid2, cod2xHwid2, sizeof(cps->cod2xHwid2));
 		/* New code end */
 
 		if ( guid == 0 )
@@ -1519,7 +1530,7 @@ LAB_0808ec36:
 			/* New code start: Free realAddress as we skip SV_DropClient here.
 			 Covers the case where a banned player is rejected after populating
 			 realAddress */
-			memset(&customPlayerState[clientNum].realAddress, 0, sizeof(netadr_t));
+			memset(&cps->realAddress, 0, sizeof(netadr_t));
 			/* New code end */
 
 			/* New code start: Remove rejected client from scoreboard. This
@@ -1730,6 +1741,16 @@ void custom_GScr_LoadGameTypeScript(void)
 	g_scr_data.gametype.playerdamage = Scr_GetFunctionHandle(path_to_callbacks, "CodeCallback_PlayerDamage", 1);
 	g_scr_data.gametype.playerdisconnect = Scr_GetFunctionHandle(path_to_callbacks, "CodeCallback_PlayerDisconnect", 1);
 	g_scr_data.gametype.playerkilled = Scr_GetFunctionHandle(path_to_callbacks, "CodeCallback_PlayerKilled", 1);
+
+	/* New code start: WebSocket cleanup */
+	#if COMPILE_WEBSOCKET == 1
+	// WebSocket connections are owned by the level that opened them: their
+	// script callback handles died with the previous level, so close them
+	// before the new level's scripts run. In-flight HTTP requests self-expire
+	// via their level-id guard and need no reset here.
+	gsc_websocket_shutdown();
+	#endif
+	/* New code end */
 
 	// Possible extra functionality to call after successful player connect
 	if ( extra_GScr_LoadGameTypeScript_After )
@@ -6590,6 +6611,16 @@ void custom_G_RunFrame(int levelTime)
 	hook_G_RunFrame->unhook();
 	G_RunFrame(levelTime);
 	hook_G_RunFrame->hook();
+
+	/* New code start: HTTP and WebSocket polling */
+	#if COMPILE_HTTP == 1
+	gsc_http_poll();
+	#endif
+
+	#if COMPILE_WEBSOCKET == 1
+	gsc_websocket_poll();
+	#endif
+	/* New code end */
 
 	/* New code start: Possible extra functionality to call after each server frame */
 	if ( extra_G_RunFrame_After )

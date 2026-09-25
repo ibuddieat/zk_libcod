@@ -13,7 +13,7 @@
 #include <sys/mman.h> // mprotect
 #include <execinfo.h> // stacktrace
 #include <stddef.h> // offsetof
-#include <ctype.h> // toupper
+#include <ctype.h> // isxdigit, toupper
 #include <sys/time.h> // milliseconds
 #include <sys/stat.h> // fsize
 #include <time.h>  // getsystemtime

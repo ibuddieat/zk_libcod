@@ -4317,6 +4317,8 @@ typedef struct customPlayerState_s
 	float proneStepSize;
 	qboolean downloadTimedOut;
 	int holdingDownWeapon;
+	int cod2xProtocol;
+	char cod2xHwid2[33];
 } customPlayerState_t;
 
 typedef struct callback_s

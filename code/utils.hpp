@@ -33,4 +33,6 @@ qboolean ContainsMapCommand(const char *string);
 
 void Sys_AnsiColorPrint(const char *msg);
 
+qboolean IsMD5String(const char *string);
+
 #endif

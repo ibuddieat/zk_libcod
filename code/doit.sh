@@ -221,9 +221,6 @@ if [ "$http_on" = "1" ] || [ "$ws_on" = "1" ]; then
 	fi
 	lws_inc="-I$lws_src/include -I$lws_build"
 	lws_link="$lws_a -l:libmbedtls.a -l:libmbedx509.a -l:libmbedcrypto.a"
-
-	echo "##### COMPILE $1 GSC_EXTRA.CPP #####"
-	$cc $debug $options $constants -c gsc_extra.cpp -o objects_$1/gsc_extra.opp
 fi
 
 if [ "$http_on" = "1" ]; then
