@@ -6,6 +6,9 @@
 Script code methods:
   * `<player> setHiddenFromScoreboard(<enabled>)` no longer affects player visibility in server status responses, added `setHiddenFromServerStatus()` for that
 
+Dvars:
+  * Added an option to `scr_turretDamageName` to support the `info/mp_lochit_dmgtable` file
+
 # 🏗 Changed with or since release v14.0:
 
 Script callback functions:
