@@ -75,6 +75,14 @@
 #include "gsc_weapons.hpp"
 #endif
 
+#if COMPILE_HTTP == 1
+#include "gsc_http.hpp"
+#endif
+
+#if COMPILE_WEBSOCKET == 1
+#include "gsc_websocket.hpp"
+#endif
+
 #include "gsc_extra.hpp"
 
 void Scr_AddFunc(const char *value);

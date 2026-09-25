@@ -26,5 +26,7 @@
 #define COMPILE_BSP 0
 #define COMPILE_JUMP 1
 #define COMPILE_CUSTOM_VOICE 1
+#define COMPILE_HTTP 0
+#define COMPILE_WEBSOCKET 0
 
 #endif

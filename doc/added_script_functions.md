@@ -48,12 +48,14 @@
   * `<player> forceShot([<include client>])`
   * `<player> getBulletMask()`
   * `<player> getClientHudElemCount()`
+  * `<player> getCod2xProtocol()`
   * `<player> getCollisionTeam()`
   * `<player> getCurrentWeaponAmmo()`
   * `<player> getCurrentWeaponClipAmmo()`
   * `<player> getCurrentWeaponSlot()`
   * `<player> getEnterTime()`
   * `<player> getGroundEntity()`
+  * `<player> getHWID()`
   * `<player> getInactivityTime()`
   * `<player> getNumberOfEntsInSnapshot()`
   * `<player> getPlayerstateFlags()`
@@ -154,6 +156,7 @@
   * `getSoundAliasesFromFile(<filename>)`
   * `getSoundFileDuration(<file path>)`
   * `getWeaponRaiseTime(<weapon name>)`
+  * `httpFetch(<url>, <method>, <data>, <extra headers>, <timeout seconds>, <onDone function>, <onError function>)`
   * `isSemiAutoWeapon(<weapon name>)`
   * `json_async_done()`
   * `json_async_result(<jobId>)`
@@ -179,6 +182,9 @@
   * `setSavePersist(<save persistent>)`
   * `setWeaponRaiseTime(<weapon name>, <raise time>)`
   * `toHex(<number>)`
+  * `webSocketClose(<connectionId>)`
+  * `webSocketConnect(<url>, <extra headers>, <onConnect function>, <onMessage function>, <onClose function>, <onError function>, [<reconnectDelayMs>], [<pingIntervalMs>])`
+  * `webSocketSendText(<connectionId>, <message>)`
 
 🔀 New script code callback functions:
   * `CodeCallback_EntityEvent`

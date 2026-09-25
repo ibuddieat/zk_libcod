@@ -1,0 +1,70 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>webSocketConnect( &lt;url&gt;, &lt;extra headers&gt;, &lt;onConnect function&gt;, &lt;onMessage function&gt;, &lt;onClose function&gt;, &lt;onError function&gt;, [&lt;reconnectDelayMs&gt;], [&lt;pingIntervalMs&gt;] )</H1>
+<HR>
+<BODY BGCOLOR='B0C4DE'>
+<I>
+Module: Network<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Opens an asynchronous <code>ws://</code> or <code>wss://</code> WebSocket connection and returns a connection id (a slot index, 0..15) or <b>-1</b> on error. Up to 16 connections may be open at once. Your callbacks run on the main thread: <code>onConnect()</code> when the handshake completes, <code>onMessage(text)</code> for each TEXT frame (binary frames are ignored), <code>onClose(closedByRemote, fullyDisconnected)</code>, and <code>onError(error)</code>. <code>wss://</code> is encrypted but the certificate is not verified, so no system cert file is needed. Incoming messages larger than 65000 bytes (the max GSC string) are dropped. On an unexpected drop the client auto-reconnects after <code>reconnectDelayMs</code>, and a ping/pong watchdog closes a silently-dead link. All connections are closed automatically on map change or restart, so open them again from the new level's init.</p>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+id = webSocketConnect("wss://example.com/socket", "", ::onOpen, ::onMsg, ::onClose, ::onErr, 2000, 15000);
+
+onOpen()          { webSocketSendText(level.wsId, "hello"); }
+onMsg(text)       { iprintln("got: " + text); }
+onClose(a, b)     {}
+onErr(error)      { iprintln("ws error: " + error); }
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;url&gt; The ws:// or wss:// URL. A missing port defaults to 80/443.</LI>
+<LI>2 : &lt;extra headers&gt; Extra handshake headers separated by \r\n (empty for none).</LI>
+<LI>3 : &lt;onConnect function&gt; Called as onConnect() when connected.</LI>
+<LI>4 : &lt;onMessage function&gt; Called as onMessage(text) for each TEXT frame.</LI>
+<LI>5 : &lt;onClose function&gt; Called as onClose(closedByRemote, fullyDisconnected).</LI>
+<LI>6 : &lt;onError function&gt; Called as onError(error).</LI>
+</UL></TR></TD></TABLE>
+<BR>
+<H2>Optional Args</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>7 : &lt;reconnectDelayMs&gt; Delay before auto-reconnect after a drop. Default 2000; 0 = connect once, no retry.</LI>
+<LI>8 : &lt;pingIntervalMs&gt; Keepalive ping interval. Default 15000; 0 = disabled.</LI>
+</UL></TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>
