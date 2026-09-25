@@ -1547,18 +1547,7 @@ void * SV_ProxyClientThread(void *threadArgs)
 		// Make sure that only the main server sends stuff to the client socket
 		SockadrToNetadr(&r_addr, &senderAdr);
 		if ( !Sys_IsMainServerAddress(senderAdr) )
-		{
-			if ( bytes_received >= 0 )
-			{
-				if ( inet_ntop(AF_INET, &r_addr.sin_addr, client_ip, sizeof(client_ip)) )
-				{
-					Com_DPrintf("Proxy: Dropping packet from %s:%hu: %s\n", client_ip, ntohs(r_addr.sin_port), buffer);
-				}
-			}
 			continue;
-		}
-
-		inet_ntop(AF_INET, &args->addr.sin_addr, client_ip, sizeof(client_ip));
 
 		if ( bytes_received >= 0 )
 		{
@@ -1633,6 +1622,7 @@ void * SV_ProxyClientThread(void *threadArgs)
 	if ( args->activeClient )
 	{
 		proxy->numClients--;
+		inet_ntop(AF_INET, &args->addr.sin_addr, client_ip, sizeof(client_ip));
 		if ( strlen(client_ip) && com_sv_running->current.boolean )
 		{
 			Com_DPrintf(
