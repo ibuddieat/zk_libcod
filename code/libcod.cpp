@@ -209,6 +209,7 @@ cHook *hook_Scr_Notify;
 cHook *hook_ScriptMover_Move;
 cHook *hook_ScriptMover_Rotate;
 cHook *hook_ScriptMover_RotateSpeed;
+cHook *hook_SV_AddOperatorCommands;
 cHook *hook_SV_ClientThink;
 cHook *hook_SV_FinalMessage;
 cHook *hook_SV_VerifyIwds_f;
@@ -11941,6 +11942,52 @@ void custom_G_RunMover(gentity_t *ent)
 	G_RunThink(ent);
 }
 
+inline std::string GetBuildConfigString()
+{
+    std::ostringstream ss;
+
+    ss << "  COMPILE_BOTS         : " << (COMPILE_BOTS ? "ON" : "OFF") << "\n";
+    ss << "  COMPILE_ENTITY       : " << (COMPILE_ENTITY ? "ON" : "OFF") << "\n";
+    ss << "  COMPILE_JSON         : " << (COMPILE_JSON ? "ON" : "OFF") << "\n";
+    ss << "  COMPILE_LEVEL        : " << (COMPILE_LEVEL ? "ON" : "OFF") << "\n";
+    ss << "  COMPILE_MYSQL_DEFAULT: " << (COMPILE_MYSQL_DEFAULT ? "ON" : "OFF") << "\n";
+    ss << "  COMPILE_MYSQL_VORON  : " << (COMPILE_MYSQL_VORON ? "ON" : "OFF") << "\n";
+    ss << "  COMPILE_PLAYER       : " << (COMPILE_PLAYER ? "ON" : "OFF") << "\n";
+    ss << "  COMPILE_UTILS        : " << (COMPILE_UTILS ? "ON" : "OFF") << "\n";
+    ss << "  COMPILE_WEAPONS      : " << (COMPILE_WEAPONS ? "ON" : "OFF") << "\n";
+
+    // Gated by ENABLE_UNSAFE
+    ss << "  COMPILE_EXEC         : " << (COMPILE_EXEC ? "ON" : "OFF") << "\n";
+    ss << "  COMPILE_MEMORY       : " << (COMPILE_MEMORY ? "ON" : "OFF") << "\n";
+
+    // Experimental features
+    ss << "  COMPILE_BSP          : " << (COMPILE_BSP ? "ON" : "OFF") << "\n";
+    ss << "  COMPILE_CUSTOM_VOICE : " << (COMPILE_CUSTOM_VOICE ? "ON" : "OFF") << "\n";
+    ss << "  COMPILE_JUMP         : " << (COMPILE_JUMP ? "ON" : "OFF") << "\n";
+    ss << "  COMPILE_HTTP         : " << (COMPILE_HTTP ? "ON" : "OFF") << "\n";
+    ss << "  COMPILE_WEBSOCKET    : " << (COMPILE_WEBSOCKET ? "ON" : "OFF") << "\n";
+
+    return ss.str();
+}
+
+#ifndef GIT_HASH
+#define GIT_HASH "unknown"
+#endif
+void SV_LibcodContext_f(void)
+{
+	Com_Printf("> [LIBCOD] Built from commit:\n  %s\n", GIT_HASH);
+	Com_Printf("> [LIBCOD] Built with features:\n%s\n", GetBuildConfigString().c_str());
+}
+
+void custom_SV_AddOperatorCommands(void)
+{
+	hook_SV_AddOperatorCommands->unhook();
+	SV_AddOperatorCommands();
+	hook_SV_AddOperatorCommands->hook();
+
+	Cmd_AddCommand("libcodContext", SV_LibcodContext_f);
+}
+
 class cCallOfDuty2Pro
 {
 public:
@@ -12085,6 +12132,8 @@ public:
 		hook_SV_FinalMessage->hook();
 		hook_PM_Weapon = new cHook(0x080F066E, (int)custom_PM_Weapon);
 		hook_PM_Weapon->hook();
+		hook_SV_AddOperatorCommands = new cHook(0x0808CCA6, (int)custom_SV_AddOperatorCommands);
+		hook_SV_AddOperatorCommands->hook();
 		#if COMPILE_PLAYER == 1
 		hook_SV_ClientThink = new cHook(0x08090DAC, (int)custom_SV_ClientThink);
 		hook_SV_ClientThink->hook();

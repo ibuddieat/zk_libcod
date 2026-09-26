@@ -18,6 +18,17 @@
 # Exit on compiler error, with non-zero exit code
 set -e
 
+# Obtain commit hash
+if command -v git >/dev/null 2>&1 && git rev-parse --git-dir >/dev/null 2>&1; then
+    GIT_HASH=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+	# Mark hash if there are uncommitted changes
+    if ! git diff --quiet 2>/dev/null; then
+        GIT_HASH="${GIT_HASH}-dirty"
+    fi
+else
+    GIT_HASH="unknown"
+fi
+
 # Compiler options
 cc="g++"
 options="-I. -m32 -fPIC -Wall"
@@ -247,7 +258,7 @@ echo "##### COMPILE $1 DVAR.CPP #####"
 $cc $debug $options $constants -c dvar.cpp -o objects_$1/dvar.opp
 
 echo "##### COMPILE $1 LIBCOD.CPP #####"
-$cc $debug $options $constants -c libcod.cpp -o objects_$1/libcod.opp
+$cc $debug $options $constants -DGIT_HASH=\"${GIT_HASH}\" -c libcod.cpp -o objects_$1/libcod.opp
 
 echo "##### COMPILE $1 PROXY.C #####"
 $cc $debug $options $constants -c proxy/proxy.c -o objects_"$1"/proxy.opp

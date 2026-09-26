@@ -17,6 +17,7 @@
 #include <sys/time.h> // milliseconds
 #include <sys/stat.h> // fsize
 #include <time.h>  // getsystemtime
+#include <sstream> // std::ostringstream
 
 #include "config.hpp"
 #include "declarations.hpp"
