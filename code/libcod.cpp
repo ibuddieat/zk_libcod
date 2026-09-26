@@ -6099,7 +6099,7 @@ scr_error_t scr_errors[MAX_ERROR_BUFFER];
 int scr_errors_index = 0;
 void Scr_CodeCallback_Error(qboolean terminal, qboolean emit, const char *internal_function, char *message)
 {
-	if ( codecallback_error && Scr_IsSystemActive() && !com_errorEntered )
+	if ( codecallback_error && Scr_IsSystemActive() && Sys_IsMainThread() )
 	{
 		if ( !strncmp(message, "exceeded maximum number of script variables", 43) )
 		{
