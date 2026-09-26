@@ -406,8 +406,8 @@ void SV_ShutdownProxies()
 						sizeof(struct sockaddr_in));
 
 					if ( bytes_sent == -1 )
-						Com_DPrintf(
-							"Proxy: Error %d on sendto when sending last heartbeat for port %hu: %s\n",
+						printf(
+							"> [LIBCOD] Proxy: Error %d on sendto when sending last heartbeat for port %hu: %s\n",
 							errno,
 							BigShort(proxy->listenAdr.port),
 							strerror(errno));
