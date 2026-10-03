@@ -4241,6 +4241,7 @@ typedef struct
 	float zVelocity;
 } droppingBullet_t;
 
+#define MAX_AUTHORIZATION_STATE_STRING_LENGTH 23 // CLIENT_UNKNOWN_TO_AUTH as reference for longest value
 typedef struct customPlayerState_s
 {
 	qboolean overrideContents;
@@ -4319,6 +4320,7 @@ typedef struct customPlayerState_s
 	int holdingDownWeapon;
 	int cod2xProtocol;
 	char cod2xHwid2[33];
+	char authorizationStatus[MAX_AUTHORIZATION_STATE_STRING_LENGTH];
 } customPlayerState_t;
 
 typedef struct callback_s

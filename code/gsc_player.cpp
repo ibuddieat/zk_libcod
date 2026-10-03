@@ -1169,6 +1169,36 @@ void gsc_player_gethwid(scr_entref_t ref)
 	stackPushString(customPlayerState[id].cod2xHwid2);
 }
 
+void gsc_player_getcdkeyhash(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_getcdkeyhash() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	client_t *client = &svs.clients[id];
+
+	stackPushString(client->clientPBguid);
+}
+
+void gsc_player_getauthorizationstatus(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_getauthorizationstatus() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushString(customPlayerState[id].authorizationStatus);
+}
+
 void gsc_player_getcod2xprotocol(scr_entref_t ref)
 {
 	int id = ref.entnum;

@@ -408,6 +408,10 @@ char openLogfileName[MAX_OSPATH];
 // Storage for return value of script callback calls
 SavedVariableValue scriptHandleReturnValue;
 
+// Storing key status from authorization server responses for CoD2x
+// compatibility
+char authorizationStates[MAX_CHALLENGES][MAX_AUTHORIZATION_STATE_STRING_LENGTH];
+
 void custom_GScr_LoadConsts(void)
 {
 	/* Allocate custom strings for Scr_Notify() here, scheme:
@@ -1283,18 +1287,16 @@ void custom_SV_DirectConnect(netadr_t from)
 	const char *denied;
 	int count;
 	int guid;
-	char PBguid[33];
-	char clientPBguid[33];
+	char PBguid[33] = {0};
+	char clientPBguid[33] = {0};
 	customPlayerState_t *cps;
 	const char *cod2xHwid2;
+	char authorizationStatus[MAX_AUTHORIZATION_STATE_STRING_LENGTH] = {0};
 
 	/* New code start: Rate-limiting */
 	if ( !from.type == NA_BOT && SVC_ApplyConnectLimit(from, OUTBOUND_BUCKET_MAIN) )
 		return;
 	/* New code end */
-
-	memset(PBguid, 0, sizeof(PBguid));
-	memset(clientPBguid, 0, sizeof(clientPBguid));
 
 	Com_DPrintf("SV_DirectConnect()\n");
 
@@ -1352,6 +1354,8 @@ void custom_SV_DirectConnect(netadr_t from)
 					if ( Sys_IsLANAddress(from) && SV_IsAnyProxyStarted() )
 						break;
 					/* New code end */
+
+					I_strncpyz(authorizationStatus, authorizationStates[i], MAX_AUTHORIZATION_STATE_STRING_LENGTH); // New
 
 					guid = svs.challenges[i].guid;
 					I_strncpyz(PBguid, svs.challenges[i].PBguid, sizeof(PBguid));
@@ -1500,6 +1504,7 @@ LAB_0808ec36:
 			newcl->nextSnapshotTime = svs.time;
 			newcl->lastPacketTime = svs.time;
 			newcl->lastConnectTime = svs.time;
+			I_strncpyz(cps->authorizationStatus, authorizationStatus, MAX_AUTHORIZATION_STATE_STRING_LENGTH); // New
 			I_strncpyz(newcl->PBguid, PBguid, 33);
 			I_strncpyz(newcl->clientPBguid, clientPBguid, 33);
 			SV_UserinfoChanged(newcl);
@@ -4048,7 +4053,8 @@ void custom_SV_SendClientGameState(client_t *client)
 	int protocolVersion;
 	netadr_t realAddress;
 	int cod2xProtocol;
-	char cod2xHwid2[33];
+	char cod2xHwid2[33] = {0};
+	char authorizationStatus[MAX_AUTHORIZATION_STATE_STRING_LENGTH] = {0};
 	int currentConfigstringSize = 0;
 	int clientGamestateDataCount = 1;
 	char *configstring;
@@ -4077,7 +4083,8 @@ void custom_SV_SendClientGameState(client_t *client)
 	protocolVersion = cps->protocolVersion;
 	memcpy(&realAddress, &cps->realAddress, sizeof(realAddress));
 	cod2xProtocol = cps->cod2xProtocol;
-	memcpy(&cod2xHwid2, &cps->cod2xHwid2, sizeof(cod2xHwid2));
+	memcpy(cod2xHwid2, cps->cod2xHwid2, sizeof(cod2xHwid2));
+	memcpy(authorizationStatus, cps->authorizationStatus, sizeof(authorizationStatus));
 
 	// Reset custom player state to default values
 	memset(cps, 0, sizeof(customPlayerState_t));
@@ -4095,7 +4102,8 @@ void custom_SV_SendClientGameState(client_t *client)
 	cps->protocolVersion = protocolVersion;
 	memcpy(&cps->realAddress, &realAddress, sizeof(realAddress));
 	cps->cod2xProtocol = cod2xProtocol;
-	memcpy(&cps->cod2xHwid2, &cod2xHwid2, sizeof(cod2xHwid2));
+	memcpy(cps->cod2xHwid2, cod2xHwid2, sizeof(cod2xHwid2));
+	memcpy(cps->authorizationStatus, authorizationStatus, sizeof(authorizationStatus));
 
 	// Restore user-provided rate and snaps after download
 	SV_UserinfoChanged(client);
@@ -5028,9 +5036,47 @@ bool SVC_SpamCallback(const char *str, const char *ip)
 
 void custom_SV_AuthorizeIpPacket(netadr_t from)
 {
+	int challenge;
+	int i;
+	const char *authorizationState;
+
 	/* New code start: Rate limiting */
 	if ( SVC_ApplyAuthorizeIpPacketLimit(from, OUTBOUND_BUCKET_MAIN) )
 		return;
+	/* New code end */
+
+	if ( !NET_CompareBaseAdr(from, svs.authorizeAddress) )
+	{
+		Com_Printf("SV_AuthorizeIpPacket: not from authorize server\n");
+		return;
+	}
+
+	challenge = atoi(SV_Cmd_Argv(1));
+
+	for ( i = 0; i < MAX_CHALLENGES; i++ )
+	{
+		if ( svs.challenges[i].challenge == challenge )
+		{
+			break;
+		}
+	}
+
+	if ( i == MAX_CHALLENGES )
+	{
+		Com_Printf("SV_AuthorizeIpPacket: challenge not found\n");
+		return;
+	}
+
+	/* New code start: Store authorization state response for CoD2x
+	 compatibility. Known stock values:
+	    BAD_CDKEY
+	    BANNED_CDKEY
+	    CLIENT_UNKNOWN_TO_AUTH
+	    INVALID_CDKEY
+	    KEY_IS_GOOD
+	*/
+	authorizationState = Cmd_Argv(3);
+	I_strncpyz(authorizationStates[i], authorizationState, MAX_AUTHORIZATION_STATE_STRING_LENGTH);
 	/* New code end */
 
 	SV_AuthorizeIpPacket(from);
@@ -5690,6 +5736,15 @@ void custom_SV_GetChallenge(netadr_t from)
 		i = oldest;
 	}
 
+	// New: Save clientPBguid here for CoD2x, instead of doing that only right
+	// before the call to SV_AuthorizeRequest
+	const char *clientPBguid = NULL;
+	if ( SV_Cmd_Argc() == 3 )
+	{
+		clientPBguid = SV_Cmd_Argv(2);
+		I_strncpyz(svs.challenges[i].clientPBguid, clientPBguid, sizeof(svs.challenges[i].clientPBguid));
+	}
+
 	// New: sv_noAuthorize and sv_authorizeServer dvars
 	if ( sv_noAuthorize->current.boolean ||
 	     ( !net_lanauthorize->current.boolean && Sys_IsLANAddress(from) ) ||
@@ -5730,12 +5785,7 @@ void custom_SV_GetChallenge(netadr_t from)
 		}
 	}
 
-	const char *clientPBguid = NULL;
-	if ( SV_Cmd_Argc() == 3 )
-	{
-		clientPBguid = SV_Cmd_Argv(2);
-		I_strncpyz(svs.challenges[i].clientPBguid, clientPBguid, sizeof(svs.challenges[i].clientPBguid));
-	}
+	// clientPBguid was saved here in stock code
 
 	SV_AuthorizeRequest(from, svs.challenges[i].challenge, clientPBguid);
 }

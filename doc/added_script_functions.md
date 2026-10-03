@@ -46,7 +46,9 @@
   * `<player> enableTalkerIcon(<player>)`
   * `<player> executeClientCommand(<command>)`
   * `<player> forceShot([<include client>])`
+  * `<player> getAuthorizationStatus()`
   * `<player> getBulletMask()`
+  * `<player> getCDKeyHash()`
   * `<player> getClientHudElemCount()`
   * `<player> getCod2xProtocol()`
   * `<player> getCollisionTeam()`

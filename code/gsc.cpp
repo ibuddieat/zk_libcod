@@ -318,11 +318,15 @@ scr_function_t scriptFunctions[] =
 	#endif
 	#if COMPILE_HTTP == 1
 	{"httpFetch", gsc_http_fetch, 0},
+	{"http_fetch", gsc_http_fetch, 0}, // CoD2x alias
 	#endif
 	#if COMPILE_WEBSOCKET == 1
 	{"webSocketConnect", gsc_websocket_connect, 0},
+	{"websocket_connect", gsc_websocket_connect, 0}, // CoD2x alias
 	{"webSocketSendText", gsc_websocket_sendtext, 0},
+	{"websocket_sendText", gsc_websocket_sendText, 0}, // CoD2x alias
 	{"webSocketClose", gsc_websocket_close, 0},
+	{"websocket_close", gsc_websocket_close, 0}, // CoD2x alias
 	#endif
 	{NULL, NULL, 0} // Terminator
 };
@@ -431,7 +435,9 @@ scr_method_t scriptMethods[] =
 	{"forwardButtonPressed", gsc_player_button_forward, 0},
 	{"fragButtonPressed", gsc_player_button_frag, 0},
 	{"getAddressType", gsc_player_addresstype, 0},
+	{"getAuthorizationStatus", gsc_player_getauthorizationstatus, 0},
 	{"getBulletMask", gsc_player_getbulletmask, 0},
+	{"getCDKeyHash", gsc_player_getcdkeyhash, 0},
 	{"getClientConnectState", gsc_player_getclientconnectstate, 0},
 	{"getClientHudElemCount", gsc_player_getclienthudelemcount, 0},
 	{"getCod2xProtocol", gsc_player_getcod2xprotocol, 0},
