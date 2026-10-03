@@ -27,8 +27,8 @@ Module: JSON<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Turns GSC data back into a JSON string. A numbered array becomes a JSON list; a string-keyed array becomes a JSON object. Pass <b>pretty</b> = 1 for readable multi-line output, or leave it out for a compact one-liner.</p>
-<p>Only arrays, strings, numbers and booleans have a JSON form. Structs (<code>spawnStruct</code>, <code>level</code>), entities, threads and function pointers are written as <b>null</b>. A value graph that is cyclic or larger than 100000 nodes is refused with a script error.</p>
+<p>Turns GSC data back into a JSON string. A numbered array becomes a JSON list; a string-keyed array becomes a JSON object. Pass pretty = 1 for human-readable multi-line output, or leave it out for a compact one-liner.</p>
+<p>Only arrays, strings, numbers and booleans have a JSON form. Structs like level or those returned by <a href="../../stock/spawn/spawnstruct.htm">SpawnStruct</a>, entities, threads and function pointers are written as null. A value graph that is cyclic or larger than 100000 nodes is refused with a script error.</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -49,14 +49,14 @@ s = json_stringify(a, 1);
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;value&gt; Any GSC value: struct, array, string, int, float, or vec3.</LI>
+<LI>1 : &lt;value&gt; Any GSC value of type struct, array, string, integer, float, or vector</LI>
 </UL></TR></TD></TABLE>
 <BR>
 <H2>Optional Args</H2>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>2 : &lt;pretty&gt; <b>0</b> compact single-line (default), <b>1</b> readable multi-line.</LI>
+<LI>2 : &lt;pretty&gt; Output style: 0 = compact single-line (default), 1 = human-readable multi-line</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>
