@@ -89,10 +89,10 @@ else
 
 	if [ "$1" == "nospeex" ] || [ "$2" == "nospeex" ] || [ "$3" == "nospeex" ] || [ "$4" == "nospeex" ]; then
 		speex_link=""
-		sed -i "/#define COMPILE_CUSTOM_VOICE 1/c\#define COMPILE_CUSTOM_VOICE 0" config.hpp
+		sed -i "/#define COMPILE_SPEEX 1/c\#define COMPILE_SPEEX 0" config.hpp
 	else
 		speex_link="-lspeex"
-		sed -i "/#define COMPILE_CUSTOM_VOICE 0/c\#define COMPILE_CUSTOM_VOICE 1" config.hpp
+		sed -i "/#define COMPILE_SPEEX 0/c\#define COMPILE_SPEEX 1" config.hpp
 	fi
 
 	if [ "$1" == "unsafe" ] || [ "$2" == "unsafe" ] || [ "$3" == "unsafe" ] || [ "$4" == "unsafe" ]; then
