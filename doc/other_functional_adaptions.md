@@ -28,3 +28,6 @@
 - Disabled broken HTTP download for protocol version 119 (1.3 via Game Pass)
 - Effect entities from weapons with a `projExplosionEffect` are now properly cleaned up after their effect duration
 - Added a plugin-like [extra interface](../code/gsc_extra.hpp) with frequently used hooks, for libcod developers
+- Added operator/console commands:
+  - `libcodContext`: Prints some information about the current libcod build
+  - `proxyStats`: Lists currently active libcod proxies and the number of connected clients each

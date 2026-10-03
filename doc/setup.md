@@ -20,6 +20,7 @@
 - ffmpeg (optional, see `getSoundDuration` below)
 - MySQL client (optional, see `nomysql` below)
 - Speex 1.1.9 (optional, see `nospeex` below)
+- cmake + mbedTLS (optional, for httpFetch / webSocket - see `http` below)
 
 **Requirements installation for 64-bit Ubuntu 24.04 LTS**
 ```
@@ -29,6 +30,9 @@ sudo apt install gcc-multilib g++-multilib libstdc++5:i386
 
 # Optional, for MySQL support:
 sudo apt install libmysqlclient-dev:i386
+
+# Optional, for httpFetch / webSocket support:
+sudo apt install cmake libmbedtls-dev:i386
 ```
 
 **Requirements installation for 64-bit Debian 13 ("Trixie")**
@@ -43,6 +47,9 @@ rm libstdc++5_3.3.6-32_i386.deb
 
 # Optional, for MySQL support:
 sudo apt install libmariadb-dev-compat:i386
+
+# Optional, for httpFetch / webSocket support:
+sudo apt install cmake libmbedtls-dev:i386
 ```
 
 **Sound alias duration support requirements installation**
@@ -74,6 +81,9 @@ cd code
 
 # Alternative: Debug build with Speex
 ./doit.sh debug
+
+# Alternative: With httpFetch + webSocket (needs cmake + libmbedtls-dev:i386; see http_websocket.md)
+./doit.sh http
 ```
 On success, this creates `libcod2.so` in `./code/bin`.
 

@@ -251,3 +251,17 @@ void Sys_AnsiColorPrint(const char *msg)
 		fputs("\033[0m", stdout);
 	}
 }
+
+qboolean IsMD5String(const char *string)
+{
+    if ( strlen(string) != 32 )
+        return qfalse;
+
+    for ( int i = 0; i < 32; i++ )
+	{
+        if ( !isxdigit((unsigned char)string[i]) )
+            return qfalse;
+    }
+
+    return qtrue;
+}
