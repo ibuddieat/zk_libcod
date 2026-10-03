@@ -4044,15 +4044,18 @@ void custom_SV_SendClientGameState(client_t *client)
 	byte *data;
 	LargeLocal buf;
 	int id = client - svs.clients;
+	customPlayerState_t *cps = &customPlayerState[id];
 	int protocolVersion;
 	netadr_t realAddress;
+	int cod2xProtocol;
+	char cod2xHwid2[33];
 	int currentConfigstringSize = 0;
 	int clientGamestateDataCount = 1;
 	char *configstring;
 	int msglen = MAX_MSGLEN;
 
 	/* New code start: Multi version support */
-	if ( customPlayerState[id].protocolVersion != 118 )
+	if ( cps->protocolVersion != 118 )
 		msglen = MAX_LEGACY_MSGLEN;
 	/* New code end */
 
@@ -4071,24 +4074,28 @@ void custom_SV_SendClientGameState(client_t *client)
 	/* New code start: libcod client state */
 
 	// Save relevant data before clearing custom player state
-	protocolVersion = customPlayerState[id].protocolVersion;
-	memcpy(&realAddress, &customPlayerState[id].realAddress, sizeof(realAddress));
+	protocolVersion = cps->protocolVersion;
+	memcpy(&realAddress, &cps->realAddress, sizeof(realAddress));
+	cod2xProtocol = cps->cod2xProtocol;
+	memcpy(&cod2xHwid2, &cps->cod2xHwid2, sizeof(cod2xHwid2));
 
 	// Reset custom player state to default values
-	memset(&customPlayerState[id], 0, sizeof(customPlayerState_t));
-	customPlayerState[id].collisionTeam = CUSTOM_TEAM_AXIS_ALLIES;
-	customPlayerState[id].meleeHeightScale = 1.0;
-	customPlayerState[id].meleeRangeScale = 1.0;
-	customPlayerState[id].meleeWidthScale = 1.0;
-	customPlayerState[id].fireRangeScale = 1.0;
-	customPlayerState[id].turretSpreadScale = 1.0;
-	customPlayerState[id].weaponSpreadScale = 1.0;
-	customPlayerState[id].droppingBulletDrag = 0.01; // 20% drag per second @ 20 server FPS
-	customPlayerState[id].droppingBulletVelocity = 31500.0; // About 800 m/s
+	memset(cps, 0, sizeof(customPlayerState_t));
+	cps->collisionTeam = CUSTOM_TEAM_AXIS_ALLIES;
+	cps->meleeHeightScale = 1.0;
+	cps->meleeRangeScale = 1.0;
+	cps->meleeWidthScale = 1.0;
+	cps->fireRangeScale = 1.0;
+	cps->turretSpreadScale = 1.0;
+	cps->weaponSpreadScale = 1.0;
+	cps->droppingBulletDrag = 0.01; // 20% drag per second @ 20 server FPS
+	cps->droppingBulletVelocity = 31500.0; // About 800 m/s
 
 	// Restore previously saved values
-	customPlayerState[id].protocolVersion = protocolVersion;
-	memcpy(&customPlayerState[id].realAddress, &realAddress, sizeof(realAddress));
+	cps->protocolVersion = protocolVersion;
+	memcpy(&cps->realAddress, &realAddress, sizeof(realAddress));
+	cps->cod2xProtocol = cod2xProtocol;
+	memcpy(&cps->cod2xHwid2, &cod2xHwid2, sizeof(cod2xHwid2));
 
 	// Restore user-provided rate and snaps after download
 	SV_UserinfoChanged(client);
@@ -4156,7 +4163,7 @@ void custom_SV_SendClientGameState(client_t *client)
 				if ( ( msg.cursize + currentConfigstringSize + 3 + 10 ) > 0x4000 )
 				{
 					Com_Printf("Connecting player #%i ran into gamestate limit at configstring %i\n", id, start);
-					customPlayerState[id].resourceLimitedState = LIMITED_GAMESTATE;
+					cps->resourceLimitedState = LIMITED_GAMESTATE;
 					break;
 				}
 
@@ -4172,7 +4179,7 @@ void custom_SV_SendClientGameState(client_t *client)
 				if ( ( clientGamestateDataCount + currentConfigstringSize + 1 ) > ( 16000 - remainingReservedBuffer ) )
 				{
 					Com_Printf("Connecting player #%i ran into configstring limit at configstring %i\n", id, start);
-					customPlayerState[id].resourceLimitedState = LIMITED_CONFIGSTRING;
+					cps->resourceLimitedState = LIMITED_CONFIGSTRING;
 					break;
 				}
 			}
@@ -4193,13 +4200,13 @@ void custom_SV_SendClientGameState(client_t *client)
 	
 	Com_DPrintf("Sending %i bytes in gamestate to client: %i\n", msg.cursize, id);
 	
-	customPlayerState[id].gamestateSize = msg.cursize; // New code
+	cps->gamestateSize = msg.cursize; // New code
 	
 	SV_SendMessageToClient(&msg, client);
 	LargeLocalDestructor(&buf);
 
 	/* New code start: Gamestate splitting for multi version support */
-	if ( start != MAX_CONFIGSTRINGS && customPlayerState[id].resourceLimitedState == LIMITED_GAMESTATE )
+	if ( start != MAX_CONFIGSTRINGS && cps->resourceLimitedState == LIMITED_GAMESTATE )
 	{
 		// Reliable commands are limited to MAX_STRINGLENGTH
 		char cmd[MAX_STRINGLENGTH];
@@ -4221,7 +4228,7 @@ void custom_SV_SendClientGameState(client_t *client)
 				if ( ( clientGamestateDataCount + currentConfigstringSize + 1 ) > ( 16000 - remainingReservedBuffer ) )
 				{
 					Com_Printf("WARNING: Aborting configstring queue at %i as client %i ran into configstring limit\n", start, id);
-					customPlayerState[id].resourceLimitedState = LIMITED_CONFIGSTRING;
+					cps->resourceLimitedState = LIMITED_CONFIGSTRING;
 					return;
 				}
 
@@ -4232,7 +4239,7 @@ void custom_SV_SendClientGameState(client_t *client)
 					// This could potentially be delayed further, to avoid
 					// filling up the command queue at once
 					Com_Printf("WARNING: Aborting configstring queue at %i as client %i command queue is full\n", start, id);
-					customPlayerState[id].resourceLimitedState = LIMITED_CONFIGSTRING;
+					cps->resourceLimitedState = LIMITED_CONFIGSTRING;
 					return;
 				}
 
@@ -4242,10 +4249,10 @@ void custom_SV_SendClientGameState(client_t *client)
 				clientGamestateDataCount += strlen(sv.configstrings[start]) + 1;
 
 				// Update gamestate size: Size of byte + size of byte + length of configstring
-				customPlayerState[id].gamestateSize += ( 3 + strlen(sv.configstrings[start]) );
+				cps->gamestateSize += ( 3 + strlen(sv.configstrings[start]) );
 			}
 		}
-		Com_DPrintf("Sending another %i bytes in gamestate as reliable commands to client: %i\n", customPlayerState[id].gamestateSize - msg.cursize, id);
+		Com_DPrintf("Sending another %i bytes in gamestate as reliable commands to client: %i\n", cps->gamestateSize - msg.cursize, id);
 	}
 	/* New code end */
 }
