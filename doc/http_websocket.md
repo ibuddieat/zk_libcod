@@ -67,8 +67,8 @@ Makes one HTTP(S) request and closes the connection when the reply arrives. Eith
 |------------------|-------|
 | `url`            | `http://` or `https://`. Missing port defaults to 80/443. |
 | `method`         | `"GET"`, `"POST"`, ... (empty defaults to `GET`). |
-| `data`           | Request body (e.g. a JSON string). Text only - a GSC string cannot hold a NUL, so no binary body. |
-| `extra headers`  | Extra request headers separated by `\r\n`, e.g. `"Content-Type: application/json"`. |
+| `data`           | Request body (e.g., a JSON string). Text only - a GSC string cannot hold a NUL, so no binary body. |
+| `extra headers`  | Extra request headers separated by `\r\n`, e.g., `"Content-Type: application/json"`. |
 | `timeout seconds`| Whole-request timeout; `0` disables it. |
 | `onDone`         | `onDone(<status>, <body>, <headers>)`. |
 | `onError`        | `onError(<error string>)`. |
@@ -80,7 +80,7 @@ onDone( status, body, headers )
 {
     // status  = HTTP status code (200, 404, 500, ...). 4xx/5xx come here, not onError.
     // body    = response body string
-    // headers = array keyed by name, e.g. headers["content-type"]
+    // headers = array keyed by name, e.g., headers["content-type"]
     data = json_parse( body );
 }
 

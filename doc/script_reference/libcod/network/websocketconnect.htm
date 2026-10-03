@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>webSocketConnect( &lt;url&gt;, &lt;extra headers&gt;, &lt;onConnect function&gt;, &lt;onMessage function&gt;, &lt;onClose function&gt;, &lt;onError function&gt;, [&lt;reconnectDelayMs&gt;], [&lt;pingIntervalMs&gt;] )</H1>
+<H1>webSocketConnect( &lt;url&gt;, &lt;extra headers&gt;, &lt;onConnect function&gt;, &lt;onMessage function&gt;, &lt;onClose function&gt;, &lt;onError function&gt;, [&lt;reconnectDelayMs&gt;], [&lt;pingIntervalMs&gt;], [&lt;allow insecure&gt;] )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
@@ -27,7 +27,7 @@ Module: Network<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Opens an asynchronous <code>ws://</code> or <code>wss://</code> WebSocket connection and returns a connection id (a slot index, 0..15) or <b>-1</b> on error. Up to 16 connections may be open at once. Your callbacks run on the main thread: <code>onConnect()</code> when the handshake completes, <code>onMessage(text)</code> for each TEXT frame (binary frames are ignored), <code>onClose(closedByRemote, fullyDisconnected)</code>, and <code>onError(error)</code>. <code>wss://</code> is encrypted but the certificate is not verified, so no system cert file is needed. Incoming messages larger than 65000 bytes (the max GSC string) are dropped. On an unexpected drop the client auto-reconnects after <code>reconnectDelayMs</code>, and a ping/pong watchdog closes a silently-dead link. All connections are closed automatically on map change or restart, so open them again from the new level's init.</p>
+<p>Opens an asynchronous ws:// or wss:// WebSocket connection and returns a connection id (a slot index, 0..15) or -1 on error. Up to 16 connections may be open at once. The callbacks run on the main thread: onConnect() when the handshake completes, onMessage(text) for each TEXT frame (binary frames are ignored), onClose(closedByRemote, fullyDisconnected), and onError(error). wss://is encrypted and the server certificate is verified using the default system cert file located at /etc/ssl/certs/ca-certificates.crt. Certificate checks can be disabled using the allow insecure flag. Incoming messages larger than 65000 bytes are dropped. On an unexpected drop the client auto-reconnects after reconnectDelayMs, and a ping/pong watchdog closes a silently-dead link. All connections are closed automatically on map change or restart.</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -62,8 +62,9 @@ onErr(error)      { iprintln("ws error: " + error); }
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>7 : &lt;reconnectDelayMs&gt; Delay before auto-reconnect after a drop. Default 2000; 0 = connect once, no retry.</LI>
-<LI>8 : &lt;pingIntervalMs&gt; Keepalive ping interval. Default 15000; 0 = disabled.</LI>
+<LI>7 : &lt;reconnectDelayMs&gt; Delay before auto-reconnect after a drop. Default: 2000; 0 = connect once, no retry.</LI>
+<LI>8 : &lt;pingIntervalMs&gt; Keepalive ping interval. Default: 15000; 0 = disabled.</LI>
+<LI>9 : &lt;allow insecure&gt; Boolean flag defining whether to skip TLS certificate checks. Default: False</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>

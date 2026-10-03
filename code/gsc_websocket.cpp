@@ -42,12 +42,13 @@ void gsc_websocket_connect()
 	int onErrorCallback;
 	int reconnectDelayMs = 2000;
 	int pingIntervalMs = 15000;
+	qboolean allowInsecure = qfalse;
 	int idx;
 	int i;
 
 	if ( Scr_GetNumParam() < 6 )
 	{
-		stackError("webSocketConnect() takes at least 6 arguments: url, headers, onConnect, onMessage, onClose, onError");
+		stackError("webSocketConnect() takes at least 6 arguments: url, headers, onConnect, onMessage, onClose, onError, [reconnectDelayMs], [pingIntervalMs], [allowInsecure]");
 		stackPushInt(-1);
 		return;
 	}
@@ -78,6 +79,13 @@ void gsc_websocket_connect()
 		return;
 	}
 
+	if ( Scr_GetNumParam() >= 9 && !stackGetParamInt(8, &allowInsecure) )
+	{
+		stackError("webSocketConnect() allowInsecure must be an integer");
+		stackPushInt(-1);
+		return;
+	}
+
 	// The client stores these as unsigned; a negative value would wrap to a
 	// near-infinite delay, leaving a failed connection unreapable. Clamp to 0
 	// (0 = disable auto-reconnect / disable pings).
@@ -102,7 +110,7 @@ void gsc_websocket_connect()
 		return;
 	}
 
-	WebSocketClient *client = new WebSocketClient(headers, reconnectDelayMs, pingIntervalMs);
+	WebSocketClient *client = new WebSocketClient(headers, reconnectDelayMs, pingIntervalMs, (bool)allowInsecure);
 
 	// Callback function handles belong to the level's loaded scripts; remember
 	// which level opened the connection so events arriving after a map change

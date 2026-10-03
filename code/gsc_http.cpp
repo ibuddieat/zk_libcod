@@ -22,7 +22,7 @@ static int http_pending_requests = 0;
  * response is received. Exactly one script callback is invoked:
  *   onDone(status, body, headers)  - headers is a string-keyed array
  *   onError(error)                 - error is a descriptive string
- * Request headers are separated by \r\n, e.g. "Content-Type: application/json".
+ * Request headers are separated by \r\n, e.g., "Content-Type: application/json".
  *
  * A response whose body exceeds GSC_MAX_STRING_BYTES is routed to onError
  * instead of onDone, so a remote peer cannot crash the server with an oversized
@@ -38,10 +38,11 @@ void gsc_http_fetch()
 	int timeout;
 	int onDoneCallback;
 	int onErrorCallback;
+	qboolean allowInsecure = qfalse;
 
-	if ( Scr_GetNumParam() != 7 )
+	if ( Scr_GetNumParam() < 7 )
 	{
-		stackError("httpFetch() takes 7 arguments: url, method, data, headers, timeout, onDone, onError");
+		stackError("httpFetch() takes at least 7 arguments: url, method, data, headers, timeout, onDone, onError, [allowInsecure]");
 		stackPushUndefined();
 		return;
 	}
@@ -59,6 +60,16 @@ void gsc_http_fetch()
 		return;
 	}
 
+	if ( Scr_GetNumParam() == 8 )
+	{
+		if ( !stackGetParamInt(7, &allowInsecure) )
+		{
+			stackError("httpFetch() has an undefined or wrong-typed argument");
+			stackPushUndefined();
+			return;
+		}
+	}
+
 	if ( !http_client )
 		http_client = new HttpClient();
 
@@ -70,7 +81,7 @@ void gsc_http_fetch()
 
 	// strlen is the true body length: script strings are NUL-terminated and
 	// cannot carry an embedded NUL, so no binary body is possible here.
-	http_client->request(method, url, data, strlen(data), headers,
+	http_client->request(method, url, data, strlen(data), headers, allowInsecure,
 		[onDoneCallback, onErrorCallback, levelId](const HttpClient::Response &res)
 		{
 			http_pending_requests--;

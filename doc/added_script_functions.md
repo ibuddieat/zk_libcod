@@ -156,7 +156,7 @@
   * `getSoundAliasesFromFile(<filename>)`
   * `getSoundFileDuration(<file path>)`
   * `getWeaponRaiseTime(<weapon name>)`
-  * `httpFetch(<url>, <method>, <data>, <extra headers>, <timeout seconds>, <onDone function>, <onError function>)`
+  * `httpFetch(<url>, <method>, <data>, <extra headers>, <timeout seconds>, <onDone function>, <onError function>, [allowInsecure])`
   * `isSemiAutoWeapon(<weapon name>)`
   * `json_async_done()`
   * `json_async_result(<jobId>)`
@@ -183,7 +183,7 @@
   * `setWeaponRaiseTime(<weapon name>, <raise time>)`
   * `toHex(<number>)`
   * `webSocketClose(<connectionId>)`
-  * `webSocketConnect(<url>, <extra headers>, <onConnect function>, <onMessage function>, <onClose function>, <onError function>, [<reconnectDelayMs>], [<pingIntervalMs>])`
+  * `webSocketConnect(<url>, <extra headers>, <onConnect function>, <onMessage function>, <onClose function>, <onError function>, [<reconnectDelayMs>], [<pingIntervalMs>], [allowInsecure])`
   * `webSocketSendText(<connectionId>, <message>)`
 
 🔀 New script code callback functions:

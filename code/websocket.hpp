@@ -50,12 +50,14 @@ class WebSocketClient
 	 * interval; disabled when pings are disabled).
 	 */
 	WebSocketClient(std::string headers = "", unsigned reconnect_delay_ms = 2000,
-	                unsigned ping_interval_ms = 15000, unsigned pong_timeout_ms = 0)
+	                unsigned ping_interval_ms = 15000, unsigned pong_timeout_ms = 0,
+	                bool allow_insecure = false)
 	{
 		m_headers = std::move(headers);
 		m_reconnect_ms = reconnect_delay_ms;
 		m_ping_interval_ms = ping_interval_ms;
 		m_pong_timeout_ms = pong_timeout_ms ? pong_timeout_ms : ( ping_interval_ms ? ping_interval_ms / 2 : 0 );
+		m_allow_insecure = allow_insecure;
 
 		lws_set_log_level(0, NULL);
 
@@ -230,10 +232,16 @@ class WebSocketClient
 		i.pwsi = &m_wsi;
 		i.userdata = this;
 		if ( ssl )
+		{
 			// Encrypt-only but keep SNI on (see http_client.hpp) - ALLOW_INSECURE
 			// skips verification without disabling the SNI hostname that SNI-strict
 			// servers require.
-			i.ssl_connection = LCCSCF_USE_SSL | LCCSCF_ALLOW_INSECURE;
+			if ( m_allow_insecure )
+				i.ssl_connection = LCCSCF_USE_SSL | LCCSCF_ALLOW_INSECURE;
+			else
+				i.ssl_connection = LCCSCF_USE_SSL;
+		}
+
 		// No i.method -> lws performs a WebSocket upgrade, not a plain HTTP request.
 
 		// lws_client_connect_via_info may fire CLIENT_CONNECTION_ERROR synchronously
@@ -599,6 +607,7 @@ class WebSocketClient
 	uint64_t m_nextPing = 0;
 	bool m_waitingPong = false;
 	uint64_t m_pongDeadline = 0;
+	bool m_allow_insecure = false;
 
 	OnOpen m_onOpen;
 	OnMessage m_onMessage;

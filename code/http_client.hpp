@@ -30,12 +30,6 @@
  * per request, closed once the response is received. poll() must be called
  * regularly (once per server frame) to drive I/O; callbacks fire from within
  * poll(), on the calling thread.
- *
- * TLS uses mbedTLS in encrypt-only mode: the connection is encrypted but the
- * server certificate is not verified (no CA trust store), so the .so stays fully
- * self-contained - it needs no system cert file at runtime. This matches round-1
- * Mongoose's built-in TLS. libwebsockets and mbedTLS are both permissively
- * licensed (MIT / Apache-2.0).
  */
 class HttpClient
 {
@@ -62,10 +56,8 @@ class HttpClient
 		info.port = CONTEXT_PORT_NO_LISTEN;
 		info.protocols = protocols;
 		info.options = LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
-		// No CA trust store: TLS is encrypt-only (see request(), where the client
-		// connection flags skip certificate verification). This keeps the .so fully
-		// self-contained - no system cert file - matching the round-1 Mongoose build.
-		//
+		info.client_ssl_ca_filepath = "/etc/ssl/certs/ca-certificates.crt";
+
 		// Advertise no ALPN. lws otherwise auto-fills the HTTP client's ALPN with
 		// "http/1.1"; with mbedTLS 2.28 that extension is malformed enough that peers
 		// reject the TLS handshake with a fatal alert (https fails while wss - which
@@ -170,13 +162,13 @@ class HttpClient
 
 	/*
 	 * Sends an HTTP request. headers are extra request headers separated by \r\n
-	 * (e.g. "Content-Type: application/json"). timeout_ms bounds the whole
+	 * (e.g., "Content-Type: application/json"). timeout_ms bounds the whole
 	 * request; connect_timeout_ms bounds the initial connect; timeout_ms <= 0
 	 * disables both. Exactly one of onDone/onError is invoked exactly once.
 	 */
 	void request(const char *method, const char *url, const char *data, size_t data_length,
-	             const char *headers, Callback onDone, ErrorCallback onError,
-	             int timeout_ms = 60000, int connect_timeout_ms = 5000)
+	             const char *headers, int allowInsecure, Callback onDone, ErrorCallback onError,
+	             int timeout_ms = 60000, int connect_timeout_ms = 5000 )
 	{
 		if ( !is_valid_url(url) )
 		{
@@ -211,7 +203,7 @@ class HttpClient
 		}
 		bool ssl = ( prot && ( strcmp(prot, "https") == 0 || strcmp(prot, "wss") == 0 ) );
 		rc->host = address ? address : "";
-		rc->path = "/";                 // lws_parse_uri strips the leading slash
+		rc->path = "/"; // lws_parse_uri strips the leading slash
 		if ( path )
 			rc->path += path;
 
@@ -237,11 +229,16 @@ class HttpClient
 		i.userdata = rc;
 		i.pwsi = &rc->wsi;
 		if ( ssl )
+		{
 			// Encrypt-only: ALLOW_INSECURE sets verify=NONE (no cert check) but,
 			// unlike SKIP_SERVER_CERT_HOSTNAME_CHECK, still lets lws set the TLS SNI
 			// hostname - which SNI-strict servers (Cloudflare etc.) require or they
 			// abort the handshake with a fatal alert.
-			i.ssl_connection = LCCSCF_USE_SSL | LCCSCF_ALLOW_INSECURE;
+			if ( allowInsecure )
+				i.ssl_connection = LCCSCF_USE_SSL | LCCSCF_ALLOW_INSECURE;
+			else
+				i.ssl_connection = LCCSCF_USE_SSL;
+		}
 
 		active.push_back(rc);
 
