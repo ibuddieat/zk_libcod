@@ -324,7 +324,7 @@ scr_function_t scriptFunctions[] =
 	{"webSocketConnect", gsc_websocket_connect, 0},
 	{"websocket_connect", gsc_websocket_connect, 0}, // CoD2x alias
 	{"webSocketSendText", gsc_websocket_sendtext, 0},
-	{"websocket_sendText", gsc_websocket_sendText, 0}, // CoD2x alias
+	{"websocket_sendText", gsc_websocket_sendtext, 0}, // CoD2x alias
 	{"webSocketClose", gsc_websocket_close, 0},
 	{"websocket_close", gsc_websocket_close, 0}, // CoD2x alias
 	#endif
