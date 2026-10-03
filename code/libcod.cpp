@@ -382,7 +382,7 @@ scr_notify_t scr_notify[MAX_NOTIFY_DEBUG_BUFFER];
 int scr_notify_index = 0;
 
 // Data storage for multi-threaded sound encoding and realtime sound streaming
-#if COMPILE_CUSTOM_VOICE == 1
+#if COMPILE_SPEEX == 1
 loadSoundFileResult_t loadSoundFileResults[MAX_THREAD_RESULTS_BUFFER];
 int loadSoundFileResultsIndex = 0;
 int currentMaxSoundIndex = 0;
@@ -428,7 +428,7 @@ void custom_GScr_LoadConsts(void)
 	custom_scr_const.flags = GScr_AllocString("flags");
 	custom_scr_const.land = GScr_AllocString("land");
 	custom_scr_const.material = GScr_AllocString("material");
-	#if COMPILE_CUSTOM_VOICE == 1
+	#if COMPILE_SPEEX == 1
 	custom_scr_const.sound_file_done = GScr_AllocString("sound_file_done");
 	custom_scr_const.sound_file_stop = GScr_AllocString("sound_file_stop");
 	#endif
@@ -6519,7 +6519,7 @@ void custom_G_RunFrame(int levelTime)
 				if ( durationSinceLastTalk >= 0 && g_voiceChatTalkingDuration->current.integer > durationSinceLastTalk )
 					continue;
 
-				#if COMPILE_CUSTOM_VOICE == 1
+				#if COMPILE_SPEEX == 1
 				// No fake voice data if the player is streaming sound already
 				if ( customPlayerState[i].currentSoundIndex && customPlayerState[i].currentSoundTalker == j )
 					continue;
@@ -6532,7 +6532,7 @@ void custom_G_RunFrame(int levelTime)
 	}
 	/* New code end */
 
-#if COMPILE_CUSTOM_VOICE == 1
+	#if COMPILE_SPEEX == 1
 	/* New code start: Try process results from Speex encoder tasks */
 	if ( Scr_IsSystemActive() && loadSoundFileResultsIndex > 0 )
 	{
@@ -6615,7 +6615,7 @@ void custom_G_RunFrame(int levelTime)
 		}
 	}
 	/* New code end */
-#endif
+	#endif
 
 	/* New code start: Process bullet drop */
 	if ( g_bulletDrop->current.boolean )
@@ -12097,9 +12097,9 @@ inline std::string GetBuildConfigString()
 
     // Experimental features
     ss << "  COMPILE_BSP          : " << (COMPILE_BSP ? "ON" : "OFF") << "\n";
-    ss << "  COMPILE_CUSTOM_VOICE : " << (COMPILE_CUSTOM_VOICE ? "ON" : "OFF") << "\n";
-    ss << "  COMPILE_JUMP         : " << (COMPILE_JUMP ? "ON" : "OFF") << "\n";
     ss << "  COMPILE_HTTP         : " << (COMPILE_HTTP ? "ON" : "OFF") << "\n";
+    ss << "  COMPILE_JUMP         : " << (COMPILE_JUMP ? "ON" : "OFF") << "\n";
+    ss << "  COMPILE_SPEEX        : " << (COMPILE_SPEEX ? "ON" : "OFF") << "\n";
     ss << "  COMPILE_WEBSOCKET    : " << (COMPILE_WEBSOCKET ? "ON" : "OFF") << "\n";
 
     return ss.str();

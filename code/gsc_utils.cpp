@@ -1,6 +1,6 @@
 #include "gsc_utils.hpp"
 
-#if COMPILE_CUSTOM_VOICE == 1
+#if COMPILE_SPEEX == 1
 #include <speex/speex.h>
 #include <pthread.h>
 
@@ -1599,7 +1599,7 @@ void gsc_utils_error()
 #endif
 
 
-#if COMPILE_CUSTOM_VOICE == 1
+#if COMPILE_SPEEX == 1
 
 extern VoicePacket_t voiceDataStore[MAX_CUSTOMSOUNDS][MAX_STOREDVOICEPACKETS];
 extern dvar_t *sv_voiceQuality;

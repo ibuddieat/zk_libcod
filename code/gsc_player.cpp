@@ -1,6 +1,6 @@
 #include "gsc_player.hpp"
 
-#if COMPILE_CUSTOM_VOICE == 1
+#if COMPILE_SPEEX == 1
 #include <speex/speex.h>
 #endif
 
@@ -3954,7 +3954,7 @@ void gsc_player_isusetouching(scr_entref_t ref)
 	stackPushBool(client->ps.pm_type != PM_INTERMISSION && ( client->ps.pm_flags & PMF_SPECTATING ) == 0 && client->ps.cursorHintEntIndex != ENTITYNUM_NONE);
 }
 
-#if COMPILE_CUSTOM_VOICE == 1
+#if COMPILE_SPEEX == 1
 
 extern VoicePacket_t voiceDataStore[MAX_CUSTOMSOUNDS][MAX_STOREDVOICEPACKETS];
 

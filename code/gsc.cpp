@@ -275,7 +275,7 @@ scr_function_t scriptFunctions[] =
 	{"error", gsc_utils_error, 0},
 	#endif
 
-	#if COMPILE_CUSTOM_VOICE == 1
+	#if COMPILE_SPEEX == 1
 	{"getSoundFileDuration", gsc_utils_getsoundfileduration, 0},
 	{"loadSoundFile", gsc_utils_loadsoundfile, 0},
 	{"loadSpeexFile", gsc_utils_loadspeexfile, 0},
@@ -553,7 +553,7 @@ scr_method_t scriptMethods[] =
 	{"unmuteClient", gsc_player_unmuteclient, 0},
 	{"useEntity", gsc_player_useentity, 0},
 	{"useTurret", gsc_player_useturret, 0},
-	#if COMPILE_CUSTOM_VOICE == 1
+	#if COMPILE_SPEEX == 1
 	{"getRemainingSoundFileDuration", gsc_player_getremainingsoundfileduration, 0},
 	{"isPlayingSoundFile", gsc_player_isplayingsoundfile, 0},
 	{"playSoundFile", gsc_player_playsoundfile, 0},

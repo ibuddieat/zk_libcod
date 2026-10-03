@@ -79,7 +79,7 @@ void gsc_utils_getdvarflags();
 
 void gsc_utils_error();
 
-#if COMPILE_CUSTOM_VOICE == 1
+#if COMPILE_SPEEX == 1
 void gsc_utils_getsoundfileduration();
 void gsc_utils_loadsoundfile();
 void gsc_utils_loadspeexfile();

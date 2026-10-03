@@ -382,7 +382,7 @@ typedef enum
 	CRITSECT_DVAR = 4,
 	CRITSECT_RD_BUFFER = 5,
 	CRITSECT_PRINT, // New from here on
-#if COMPILE_CUSTOM_VOICE == 1
+#if COMPILE_SPEEX == 1
 	CRITSECT_LOAD_SOUND_FILE,
 #endif
 	CRITSECT_RATELIMITER,
@@ -4156,7 +4156,7 @@ typedef struct scr_notify_s
 	SavedVariableValue arguments[MAX_NOTIFY_DEBUG_PARAMS];
 } scr_notify_t;
 
-#if COMPILE_CUSTOM_VOICE == 1
+#if COMPILE_SPEEX == 1
 
 #define MAX_CUSTOMSOUNDDURATION 10                              // Minutes
 #define MAX_STOREDVOICEPACKETS (MAX_CUSTOMSOUNDDURATION * 3072) // MAX_VOICEPACKETSPERFRAME * 20 * 60
@@ -4288,7 +4288,7 @@ typedef struct customPlayerState_s
 	char botForwardMove;
 	char botRightMove;
 	#endif
-	#if COMPILE_CUSTOM_VOICE == 1
+	#if COMPILE_SPEEX == 1
 	float pendingVoiceDataFrames;
 	int currentSoundTalker;
 	int currentSoundIndex;
@@ -4347,7 +4347,7 @@ typedef struct
 	unsigned short flags;
 	unsigned short land;
 	unsigned short material;
-	#if COMPILE_CUSTOM_VOICE == 1
+	#if COMPILE_SPEEX == 1
 	unsigned short sound_file_done;
 	unsigned short sound_file_stop;
 	#endif

@@ -149,7 +149,7 @@ void gsc_player_stopuseturret(scr_entref_t ref);
 void gsc_player_unmuteclient(scr_entref_t ref);
 void gsc_player_useentity(scr_entref_t ref);
 void gsc_player_useturret(scr_entref_t ref);
-#if COMPILE_CUSTOM_VOICE == 1
+#if COMPILE_SPEEX == 1
 void gsc_player_getremainingsoundfileduration(scr_entref_t ref);
 void gsc_player_isplayingsoundfile(scr_entref_t ref);
 void gsc_player_playsoundfile(scr_entref_t ref);
