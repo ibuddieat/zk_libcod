@@ -331,11 +331,8 @@ static void json_push_doc(yyjson_doc *doc, const char *func, const char *what)
 // GSC -> JSON : walk the engine variable tree and build a yyjson mutable tree.
 // ===========================================================================
 
-// One slot per child collected during the single sibling walk. The raw
-// `name` is enough for both decisions: name < SL_MAX_STRING_INDEX is a
-// string key, name >= MAX_ARRAYINDEX is an integer index, and because
-// name = index + MAX_ARRAYINDEX for integer keys, sorting by raw `name`
-// sorts by index.
+// Child names: < SL_MAX_STRING_INDEX string key, < MAX_ARRAYINDEX object key, else index + MAX_ARRAYINDEX:
+// https://github.com/voron00/CoD2rev_Server/blob/11c40a5/src/script/scr_variable.cpp#L354
 struct json_kv
 {
 	unsigned int name;
@@ -356,20 +353,31 @@ static int json_kv_cmp(const void *a, const void *b)
 
 static yyjson_mut_val * gsc_object_to_json(yyjson_mut_doc *doc, unsigned int objectId, int depth);
 
-// Serialization walk state (main thread only). The node budget bounds aliased
-// subtree re-walks; the ancestor stack turns reference cycles into null.
-// A NULL return from the walk means "budget exhausted, abort the whole call".
+// Walk state, main thread only. Shared subtrees and strings are copied per reference,
+// so both budgets are needed. A NULL return aborts the whole call.
 static long json_walk_nodes;
-static unsigned int json_walk_ancestors[JSON_MAX_DEPTH];
+static long json_walk_bytes;
+static int json_walk_max_bytes;
+static unsigned int json_walk_ancestors[JSON_MAX_DEPTH];  // reference cycles become null
 
-// Convert a single variable entry (by id) to a yyjson mutable node.
+// Copies s into the doc; NULL once the copied string bytes pass the cap
+// ponytail: raw bytes, escapes can grow the written text up to 6x before the caller's exact output check
+static yyjson_mut_val * json_walk_str(yyjson_mut_doc *doc, const char *s)
+{
+	json_walk_bytes -= strlen(s);
+	if ( json_walk_bytes < 0 )
+	{
+		stackError("json: serialization aborted, strings exceed %d bytes", json_walk_max_bytes);
+		return NULL;
+	}
+	return yyjson_mut_strcpy(doc, s);
+}
+
 static yyjson_mut_val * gsc_entry_to_json(yyjson_mut_doc *doc, unsigned int id, int depth)
 {
-	json_walk_nodes--;
-	if ( json_walk_nodes < 0 )
+	if ( --json_walk_nodes < 0 )
 	{
-		if ( json_walk_nodes == -1 )
-			stackError("json serialization aborted: value graph exceeds %d nodes (too large or cyclic)", JSON_MAX_NODES);
+		stackError("json: serialization aborted, more than %d values (too large or cyclic)", JSON_MAX_NODES);
 		return NULL;
 	}
 
@@ -386,7 +394,7 @@ static yyjson_mut_val * gsc_entry_to_json(yyjson_mut_doc *doc, unsigned int id, 
 
 	case VAR_STRING:
 	case VAR_ISTRING:
-		return yyjson_mut_strcpy(doc, SL_ConvertToString(entry->u.u.stringValue));
+		return json_walk_str(doc, SL_ConvertToString(entry->u.u.stringValue));
 
 	case VAR_VECTOR:
 	{
@@ -405,37 +413,25 @@ static yyjson_mut_val * gsc_entry_to_json(yyjson_mut_doc *doc, unsigned int id, 
 	case VAR_STRUCT:
 	case VAR_ARRAY:
 	{
-		// Only arrays serialize. Struct field names (spawnstruct/level) are
-		// canonical strings - a separate index space from regular string keys,
-		// with no reverse-lookup exposed - so they cannot be resolved and are
-		// emitted as null. Entities/threads have no JSON form either.
+		// Only arrays serialize: struct field names are canonical ids, not script strings
+		// (https://github.com/voron00/CoD2rev_Server/blob/11c40a5/src/script/scr_main.cpp#L108)
 		unsigned int objId = entry->u.u.pointerValue;
-		if ( objId == 0 )
-			return yyjson_mut_null(doc);
-		int objType = scrVarGlob[objId].w.type & VAR_MASK;
-		if ( objType == VAR_ARRAY )
+		if ( objId != 0 && (scrVarGlob[objId].w.type & VAR_MASK) == VAR_ARRAY )
 			return gsc_object_to_json(doc, objId, depth + 1);
 		return yyjson_mut_null(doc);
 	}
 
 	default:
-		// entities, threads, functions, undefined etc. have no JSON form.
-		return yyjson_mut_null(doc);
+		return yyjson_mut_null(doc);  // entities, threads, functions, undefined
 	}
 }
 
-// Convert an array/struct object (by object id) to a yyjson mutable
-// array or object. Single sibling walk: collect (name,id) once, decide
-// array-vs-object from the collected keys, then build. Pointer-range
-// names (engine-internal entries that have no script-visible key) are
-// skipped during collection.
+// All index keys -> sorted JSON array, any string key -> JSON object
 static yyjson_mut_val * gsc_object_to_json(yyjson_mut_doc *doc, unsigned int objectId, int depth)
 {
 	if ( depth >= JSON_MAX_DEPTH || objectId == 0 )
 		return yyjson_mut_null(doc);
 
-	// Reference cycle (object is its own ancestor): emit null instead of
-	// re-walking it to the depth cap.
 	for ( int i = 0; i < depth; i++ )
 	{
 		if ( json_walk_ancestors[i] == objectId )
@@ -443,12 +439,7 @@ static yyjson_mut_val * gsc_object_to_json(yyjson_mut_doc *doc, unsigned int obj
 	}
 	json_walk_ancestors[depth] = objectId;
 
-	// Count entries by walking the sibling ring - size-independent. GetArraySize
-	// only maintains a count for VAR_ARRAY; a VAR_OBJECT struct (spawnstruct,
-	// level, self) leaves u.o.u.size uninitialized, so we never trust it and walk
-	// to the ring terminator instead. The SL_MAX_STRING_INDEX cap (max string-
-	// table entries) guards a malformed ring. This makes struct serialization
-	// correct too.
+	// Count by walking the sibling ring; the cap guards a malformed ring
 	unsigned int total = 0;
 	unsigned int it = objectId;
 	while ( total < SL_MAX_STRING_INDEX )
@@ -459,11 +450,11 @@ static yyjson_mut_val * gsc_object_to_json(yyjson_mut_doc *doc, unsigned int obj
 		total++;
 	}
 	if ( total == 0 )
-		return yyjson_mut_obj(doc); // empty -> {} (documented limitation)
+		return yyjson_mut_obj(doc);  // empty -> {} (documented)
 
 	json_kv *items = (json_kv *)malloc(sizeof(json_kv) * total);
 	if ( items == NULL )
-		return yyjson_mut_null(doc); // OOM (practically unreachable at GSC limits)
+		return yyjson_mut_null(doc);
 
 	unsigned int count = 0;
 	bool hasStringKey = false;
@@ -476,10 +467,8 @@ static yyjson_mut_val * gsc_object_to_json(yyjson_mut_doc *doc, unsigned int obj
 			break;
 
 		unsigned int name = GetVariableName(it);
-
-		// Skip engine-internal pointer-range entries (no script-visible key).
 		if ( name >= SL_MAX_STRING_INDEX && name < MAX_ARRAYINDEX )
-			continue;
+			continue;  // object keys, and negative indices which encode into this range
 
 		items[count].name = name;
 		items[count].id   = it;
@@ -488,16 +477,13 @@ static yyjson_mut_val * gsc_object_to_json(yyjson_mut_doc *doc, unsigned int obj
 		count++;
 	}
 
-	// Every entry was filtered out (only engine-internal pointer-range names).
-	// Treat the same as the zero-size case so empty containers always emit `{}`.
 	if ( count == 0 )
 	{
 		free(items);
 		return yyjson_mut_obj(doc);
 	}
 
-	// All integer-indexed -> JSON array, sorted ascending by index. Sorting
-	// the raw `name` works because name = index + MAX_ARRAYINDEX (monotonic).
+	// Sorting raw names sorts indices, name = index + MAX_ARRAYINDEX
 	if ( !hasStringKey )
 	{
 		qsort(items, count, sizeof(json_kv), json_kv_cmp);
@@ -518,11 +504,9 @@ static yyjson_mut_val * gsc_object_to_json(yyjson_mut_doc *doc, unsigned int obj
 		return arr;
 	}
 
-	// Mixed/string keys -> JSON object. Integer keys are stringified.
 	yyjson_mut_val *obj = yyjson_mut_obj(doc);
 	for ( unsigned int i = 0; i < count; i++ )
 	{
-		unsigned int name = items[i].name;
 		yyjson_mut_val *child = gsc_entry_to_json(doc, items[i].id, depth);
 		if ( child == NULL )
 		{
@@ -530,22 +514,20 @@ static yyjson_mut_val * gsc_object_to_json(yyjson_mut_doc *doc, unsigned int obj
 			return NULL;
 		}
 
-		// yyjson_mut_obj_add_val BORROWS the key pointer (doesn't copy). The
-		// pointer returned by SL_ConvertToString is only valid until the next
-		// string-table mutation (other JSON ops, GSC assignments...), and the
-		// SL pointer also lives outside the mut_doc allocator entirely, so
-		// async save would dangle it across the worker handoff. Always copy
-		// the key into the doc so its lifetime tracks yyjson_mut_doc_free.
-		yyjson_mut_val *key;
+		// Keys are copied, the async worker writes the doc after scripts may free the string
+		unsigned int name = items[i].name;
+		char keybuf[16];
+		const char *keystr = keybuf;
 		if ( name < SL_MAX_STRING_INDEX )
-		{
-			key = yyjson_mut_strcpy(doc, SL_ConvertToString(name));
-		}
+			keystr = SL_ConvertToString(name);
 		else
-		{
-			char keybuf[32];
 			snprintf(keybuf, sizeof(keybuf), "%u", name - MAX_ARRAYINDEX);
-			key = yyjson_mut_strcpy(doc, keybuf);
+
+		yyjson_mut_val *key = json_walk_str(doc, keystr);
+		if ( key == NULL )
+		{
+			free(items);
+			return NULL;
 		}
 		yyjson_mut_obj_add(obj, key, child);
 	}
@@ -553,23 +535,17 @@ static yyjson_mut_val * gsc_object_to_json(yyjson_mut_doc *doc, unsigned int obj
 	return obj;
 }
 
-// Convert a top-level script function parameter to a yyjson mutable node.
-// Unlike nested entries (read via scrVarGlob), params are read through the
-// public stack API. All accessor return values are checked so a mismatched/
-// undefined param degrades to JSON null instead of using uninitialized memory.
-static yyjson_mut_val * gsc_param_to_json(yyjson_mut_doc *doc, int param)
+// Top-level param via the stack API; a failed accessor degrades to null
+static yyjson_mut_val * gsc_param_to_json(yyjson_mut_doc *doc, int param, int maxBytes)
 {
 	json_walk_nodes = JSON_MAX_NODES;
+	json_walk_bytes = json_walk_max_bytes = maxBytes;
 
 	unsigned int objectId;
 	if ( stackGetParamObject(param, &objectId) )
 	{
-		// stackGetParamObject also accepts structs/entities/threads (all stored
-		// as a pointer on the stack). Only arrays serialize: struct field names
-		// are canonical strings (no reverse-lookup exposed), entities emit
-		// garbage. Gate to VAR_ARRAY here.
-		int t = Scr_GetPointerType(param);
-		if ( t == VAR_ARRAY )
+		// Also true for structs and entities, only arrays serialize
+		if ( Scr_GetPointerType(param) == VAR_ARRAY )
 			return gsc_object_to_json(doc, objectId, 0);
 		return yyjson_mut_null(doc);
 	}
@@ -597,7 +573,7 @@ static yyjson_mut_val * gsc_param_to_json(yyjson_mut_doc *doc, int param)
 		const char *v = NULL;
 		if ( !stackGetParamString(param, &v) || v == NULL )
 			return yyjson_mut_null(doc);
-		return yyjson_mut_strcpy(doc, v);
+		return json_walk_str(doc, v);
 	}
 
 	case VAR_ISTRING:
@@ -605,7 +581,7 @@ static yyjson_mut_val * gsc_param_to_json(yyjson_mut_doc *doc, int param)
 		const char *v = NULL;
 		if ( !stackGetParamLocalizedString(param, &v) || v == NULL )
 			return yyjson_mut_null(doc);
-		return yyjson_mut_strcpy(doc, v);
+		return json_walk_str(doc, v);
 	}
 
 	case VAR_VECTOR:
@@ -623,6 +599,35 @@ static yyjson_mut_val * gsc_param_to_json(yyjson_mut_doc *doc, int param)
 	default:
 		return yyjson_mut_null(doc);
 	}
+}
+
+// NULL if the walk aborted
+static yyjson_mut_doc * gsc_param_to_doc(int param, int maxBytes)
+{
+	yyjson_mut_doc *doc = yyjson_mut_doc_new(NULL);
+	if ( doc == NULL )
+		return NULL;
+
+	yyjson_mut_val *root = gsc_param_to_json(doc, param, maxBytes);
+	if ( root == NULL )
+	{
+		yyjson_mut_doc_free(doc);
+		return NULL;
+	}
+	yyjson_mut_doc_set_root(doc, root);
+	return doc;
+}
+
+// Writes and frees the doc. NaN and inf become null, as cJSON did
+static char * json_write_doc(yyjson_mut_doc *doc, int pretty, size_t *len)
+{
+	yyjson_write_flag flags = YYJSON_WRITE_INF_AND_NAN_AS_NULL;
+	if ( pretty )
+		flags |= YYJSON_WRITE_PRETTY;
+
+	char *out = yyjson_mut_write(doc, flags, len);
+	yyjson_mut_doc_free(doc);
+	return out;
 }
 
 // ===========================================================================
@@ -667,32 +672,9 @@ void gsc_json_stringify()
 		pretty = Scr_GetInt(1);
 
 	JsonTimer _t("json_stringify", "");
-	yyjson_mut_doc *doc = yyjson_mut_doc_new(NULL);
-	if ( doc == NULL )
-	{
-		stackPushUndefined();
-		return;
-	}
-
-	yyjson_mut_val *root = gsc_param_to_json(doc, 0);
-	if ( root == NULL )
-	{
-		yyjson_mut_doc_free(doc);
-		stackPushUndefined();
-		return;
-	}
-	yyjson_mut_doc_set_root(doc, root);
-
-	// INF_AND_NAN_AS_NULL matches cJSON's silent NaN->null behavior so a
-	// stray non-finite float does not fail the entire stringify.
-	yyjson_write_flag flags = YYJSON_WRITE_INF_AND_NAN_AS_NULL;
-	if ( pretty )
-		flags |= YYJSON_WRITE_PRETTY;
-
+	yyjson_mut_doc *doc = gsc_param_to_doc(0, JSON_MAX_STRING);
 	size_t out_len = 0;
-	char *out = yyjson_mut_write(doc, flags, &out_len);
-	yyjson_mut_doc_free(doc);
-
+	char *out = doc ? json_write_doc(doc, pretty, &out_len) : NULL;
 	if ( out == NULL )
 	{
 		stackPushUndefined();
@@ -817,35 +799,22 @@ void gsc_json_save()
 	if ( Scr_GetNumParam() > 2 )
 		pretty = Scr_GetInt(2);
 
+	// Never save a file that json_load would refuse
 	JsonTimer _t("json_save", path);
-	yyjson_mut_doc *doc = yyjson_mut_doc_new(NULL);
-	if ( doc == NULL )
-	{
-		stackPushInt(0);
-		return;
-	}
-
-	yyjson_mut_val *root = gsc_param_to_json(doc, 1);
-	if ( root == NULL )
-	{
-		yyjson_mut_doc_free(doc);
-		stackPushInt(0);
-		return;
-	}
-	yyjson_mut_doc_set_root(doc, root);
-
-	// INF_AND_NAN_AS_NULL matches cJSON's silent NaN->null behavior so a
-	// stray non-finite float does not fail the entire stringify.
-	yyjson_write_flag flags = YYJSON_WRITE_INF_AND_NAN_AS_NULL;
-	if ( pretty )
-		flags |= YYJSON_WRITE_PRETTY;
-
+	int maxBytes = dvar_int_or("scr_json_max_load_bytes", JSON_DEF_MAX_LOAD_BYTES);
+	yyjson_mut_doc *doc = gsc_param_to_doc(1, maxBytes);
 	size_t out_len = 0;
-	char *out = yyjson_mut_write(doc, flags, &out_len);
-	yyjson_mut_doc_free(doc);
-
+	char *out = doc ? json_write_doc(doc, pretty, &out_len) : NULL;
 	if ( out == NULL )
 	{
+		stackPushInt(0);
+		return;
+	}
+
+	if ( out_len > (size_t)maxBytes )
+	{
+		stackError("json: save output of %u bytes exceeds scr_json_max_load_bytes %d", (unsigned)out_len, maxBytes);
+		free(out);
 		stackPushInt(0);
 		return;
 	}
@@ -911,7 +880,7 @@ struct json_async_job
 	int    id;
 	int    kind;       // KIND_LOAD or KIND_SAVE
 	int    status;     // STATUS_PENDING/DONE/ERROR  (mutex-guarded)
-	int    max_bytes;  // snapshot of scr_json_max_load_bytes at submit (load only)
+	int    max_bytes;  // snapshot of scr_json_max_load_bytes at submit
 	char  *abspath;    // resolved absolute path (owned)
 
 	// Load output (filled by worker):
@@ -1085,14 +1054,16 @@ static void * json_async_save_worker(void *arg)
 {
 	json_async_job *job = (json_async_job *)arg;
 
-	yyjson_write_flag flags = YYJSON_WRITE_INF_AND_NAN_AS_NULL;
-	if ( job->save_pretty )
-		flags |= YYJSON_WRITE_PRETTY;
-
 	size_t want = 0;
-	char *text = yyjson_mut_write(job->save_doc, flags, &want);
-	yyjson_mut_doc_free(job->save_doc);
+	char *text = json_write_doc(job->save_doc, job->save_pretty, &want);
 	job->save_doc = NULL;
+
+	// Same cap as json_save
+	if ( text != NULL && want > (size_t)job->max_bytes )
+	{
+		free(text);
+		text = NULL;
+	}
 
 	if ( text == NULL )
 	{
@@ -1308,30 +1279,22 @@ void gsc_json_save_async()
 		return;
 	}
 
-	// Build the mutable doc on the MAIN thread (reading GSC state is single-
-	// threaded). Worker will print + write + free the doc.
-	yyjson_mut_doc *doc = yyjson_mut_doc_new(NULL);
+	// The walk reads script state, so it runs here; the worker writes and frees the doc
+	int maxBytes = dvar_int_or("scr_json_max_load_bytes", JSON_DEF_MAX_LOAD_BYTES);
+	yyjson_mut_doc *doc = gsc_param_to_doc(1, maxBytes);
 	if ( doc == NULL )
 	{
 		free(abs);
 		stackPushInt(0);
 		return;
 	}
-	yyjson_mut_val *root = gsc_param_to_json(doc, 1);
-	if ( root == NULL )
-	{
-		yyjson_mut_doc_free(doc);
-		free(abs);
-		stackPushInt(0);
-		return;
-	}
-	yyjson_mut_doc_set_root(doc, root);
 
 	json_async_job *job = (json_async_job *)calloc(1, sizeof(json_async_job));
 	if ( job == NULL ) { free(abs); yyjson_mut_doc_free(doc); stackPushInt(0); return; }
 	job->kind        = JSON_ASYNC_KIND_SAVE;
 	job->status      = JSON_ASYNC_STATUS_PENDING;
 	job->abspath     = abs;
+	job->max_bytes   = maxBytes;
 	job->save_doc    = doc;
 	job->save_pretty = pretty;
 
