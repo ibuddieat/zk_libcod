@@ -711,6 +711,28 @@ struct scrStringGlob_t
 	HashEntry *nextFreeEntry;
 };
 
+// Script string memory, 1.3 layout of CoD2rev scrMemTreeGlob_t (head[size] = tree of free 2^size-node blocks):
+// https://github.com/voron00/CoD2rev_Server/blob/11c40a5/src/script/script_public.h#L33
+// https://github.com/voron00/CoD2rev_Server/blob/11c40a5/src/script/script_public.h#L44
+struct MemoryNode
+{
+	unsigned short prev;
+	unsigned short next;
+	int pad;
+};
+
+struct scrMemTreeGlob_t
+{
+	MemoryNode nodes[0x10000];
+	char leftBits[256];
+	char numBits[256];
+	char logBits[256];
+	unsigned short head[17];
+	int totalAlloc;
+	int totalAllocBuckets;
+	byte pad[0x54];
+};
+
 typedef enum
 {
 	VAR_UNDEFINED,
@@ -3926,6 +3948,7 @@ static const int gclients_offset = 0x087A2500;
 static const int varpub_offset = 0x08397500;
 static const int varglob_offset = 0x08297500;
 static const int stringglob_offset = 0x08287400;
+static const int memtreeglob_offset = 0x08206F80;
 static const int vmpub_offset = 0x083D8A80;
 static const int compilepub_offset = 0x08205C80;
 static const int vmglob_offset = 0x083DCE80;
@@ -4002,6 +4025,7 @@ static const int g_fHitLocDamageMult_offset = 0x08628EE0;
 #define scrVarGlob (((VariableValueInternal*)( varglob_offset )))
 #define scrVarGlob_high ((VariableValueInternal*)( varglob_offset + 16 * 32770 ))
 #define scrStringGlob (*((scrStringGlob_t*)( stringglob_offset )))
+#define scrMemTreeGlob (*((scrMemTreeGlob_t*)( memtreeglob_offset )))
 #define scrCompilePub (*((scrCompilePub_t*)( compilepub_offset )))
 #define scrVmGlob (*((scrVmGlob_t*)( vmglob_offset )))
 #define scrParserPub (*((scrParserPub_t*)( scrParserPub_offset )))
@@ -4081,6 +4105,7 @@ static const int g_fHitLocDamageMult_offset = 0x08628EE0;
  static_assert((sizeof(gitem_t) == 44), "ERROR: gitem_t size is invalid!");
  static_assert((sizeof(XModel) == 144), "ERROR: XModel size is invalid!");
  static_assert((sizeof(scrStringGlob_t) == 65544), "ERROR: scrStringGlob_t size is invalid!");
+ static_assert((sizeof(scrMemTreeGlob_t) == 0x80380), "ERROR: scrMemTreeGlob_t size is invalid!");
  static_assert((sizeof(worldContents_s) == 12), "ERROR: worldContents_s size is invalid!");
  static_assert((sizeof(worldTree_t) == 12), "ERROR: worldTree_t size is invalid!");
  static_assert((sizeof(worldSector_t) == 24), "ERROR: worldSector_t size is invalid!");

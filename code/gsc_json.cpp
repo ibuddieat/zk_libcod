@@ -4,93 +4,45 @@
 
 #include "lib/yyjson.h"
 
-/*
- * Native JSON support for GSC, backed by yyjson (code/lib/yyjson.[ch]).
- *
- * Value mapping (see doc/added_script_functions.md):
- *   JSON object   <-> GSC string-keyed array
- *   JSON array    <-> GSC integer-indexed array
- *   JSON string   <-> GSC string
- *   JSON number   <-> GSC int (when integral and 32-bit) else float
- *   JSON true/false -> GSC 1 / 0      (GSC has no bool type)
- *   JSON null     <-> GSC undefined
- *   struct/entity/thread/function -> null (no JSON form; see below)
- *
- * On serialize an array becomes a JSON array iff every key is an integer index,
- * else a JSON object. Empty arrays serialize as {} (documented default). Only
- * VAR_ARRAY is walked: struct (spawnstruct/level) field names are canonical
- * strings, a separate index space with no reverse lookup exposed, so structs
- * emit null rather than garbage keys.
- *
- * Engine internals are read exactly as the reverse-engineered server does
- * (Refrences/CoD2rev_Server/src/script/scr_variable.cpp): for a variable id,
- * scrVarGlob[id].w.type & VAR_MASK is the type and scrVarGlob[id].u.u is the
- * value union. Key encoding (scr_variable.cpp): name < SL_MAX_STRING_INDEX is a
- * string key; name >= MAX_ARRAYINDEX is an integer index (index = name -
- * MAX_ARRAYINDEX). The live gsc_utils_getarraykeys() uses the same iteration.
- *
- * Backend swap (cJSON -> yyjson, audit 2026-06): yyjson has no mutable parser
- * globals (cJSON's global_error / global_hooks raced with our async workers),
- * tracks string length natively (so embedded NULs are detected on push, not
- * silently truncated), and parses 5-10x faster on adversarial inputs.
+/* 	Native JSON for GSC on yyjson. Mapping (doc/added_script_functions.md):
+	object <-> string-keyed array, array <-> int-indexed array, number <-> int if
+	integral and 32-bit else float, true/false -> 1/0, null <-> undefined.
+	Serialize: an array with only int keys is a JSON array, else an object ({} if empty).
+	Structs, entities, threads and functions serialize as null.
  */
-
-// VAR_MASK / SL_MAX_STRING_INDEX / MAX_ARRAYINDEX come from declarations.hpp
-// (engine variable-system constants).
-
 #include <climits>
 #include <pthread.h>
 #include <sys/stat.h>
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
+#include <string>
+#include <unordered_set>
+#include <vector>
 
-// Module cap, not an engine constant: kept well under yyjson's reader
-// recursion limit (1024) and the VM operand stack. Deeper levels emit null.
-#define JSON_MAX_DEPTH 64
+#define JSON_MAX_DEPTH 64      // deeper values become undefined / null
+#define JSON_MAX_NODES 100000  // serialize walk budget; shared subtrees re-walk per reference
+#define JSON_MAX_VALUES 32768  // async worker early reject on the yyjson value count
+#define JSON_MAX_STRING 65000 // One script string holds < 65531 bytes: https://github.com/voron00/CoD2rev_Server/blob/11c40a5/src/script/scr_memorytree.cpp#L630
+#define JSON_MAX_PATH 64 // MAX_QPATH: https://github.com/voron00/CoD2rev_Server/blob/11c40a5/src/universal/q_shared.h#L176
 
-// Module policy cap, not an engine constant: total values one serialization
-// may visit. Shared subtrees are re-walked per reference, so aliased/cyclic
-// graphs multiply; without the budget a player sized cycle can grow the
-// process to 3.4 GB (reproduced live).
-#define JSON_MAX_NODES 100000
+// One push (json_push_doc) may use at most the cap and must leave the reserve free.
+// 65533 variables: https://github.com/voron00/CoD2rev_Server/blob/11c40a5/src/script/scr_variable.cpp#L3834
+// 16384 strings: https://github.com/voron00/CoD2rev_Server/blob/11c40a5/src/script/scr_stringlist.cpp#L871
+// 65536 8-byte string memory nodes: https://github.com/voron00/CoD2rev_Server/blob/11c40a5/src/script/scr_memorytree.cpp#L160
+#define JSON_MAX_VARS 32768
+#define JSON_MAX_STRINGS 4096
+#define JSON_MAX_MT_NODES 16384
+#define JSON_RESERVE_VARS 4096
+#define JSON_RESERVE_STRINGS 1024
+#define JSON_RESERVE_MT_NODES 4096
+#define MT_SIZES 17                 // block sizes 2^0..2^16 nodes
 
-// Max parsed JSON values pushed to the VM per parse/load. Each value consumes
-// a script variable from the fixed pool; exhausting it drops the server.
-// Pool size: https://github.com/voron00/CoD2rev_Server/blob/master/src/script/script_public.h#L926
-// Terminal error: https://github.com/voron00/CoD2rev_Server/blob/master/src/script/scr_variable.cpp#L3834
-// Half the pool is the safe ceiling.
-#define JSON_MAX_VALUES 32768
-
-// The engine's script string allocator caps a single string at 64 KB.
-// Allocator bound: https://github.com/voron00/CoD2rev_Server/blob/master/src/script/scr_memorytree.cpp#L160
-// String list drop: https://github.com/voron00/CoD2rev_Server/blob/master/src/script/scr_stringlist.cpp#L871
-// Note GSC string CONCAT is far tighter still - Scr_EvalPlus uses a fixed 8 KB
-// buffer: https://github.com/voron00/CoD2rev_Server/blob/master/src/script/scr_variable.cpp#L2622
-// Guard every string we push to the VM (parsed values and the stringify
-// result) under the 64 KB ceiling. File writes (json_save) are unaffected.
-#define JSON_MAX_STRING 65000
-
-// Engine MAX_QPATH = 64:
-// https://github.com/voron00/CoD2rev_Server/blob/master/src/universal/q_shared.h#L168
-// Path strings passed to FS_FOpen* longer than this are either truncated by
-// the FS layer (silent data loss) or trip the BG sanitizer. Refuse before we
-// ever hit the FS.
-#define JSON_MAX_PATH 64
-
-// ===========================================================================
-// Production hardening helpers
-// ===========================================================================
-// Tuning dvars, registered in gsc_json_register_dvars() so they show up in
-// dvarlist with defaults and bounds. Read per-call via dvar_int_or(), which
-// falls back to the same defaults if the dvar is ever missing:
-//   scr_json_max_load_bytes   default 8 MB   (json_load refuses larger files)
-//   scr_json_slow_warn_ms     default 25 ms  (any sync json_* slower logs WARN)
-//   scr_json_async_max_jobs   default 64     (async submission cap)
-#define JSON_DEF_MAX_LOAD_BYTES  (8 * 1024 * 1024)    // 8 MB
-#define JSON_DEF_SLOW_WARN_MS    25
-#define JSON_DEF_ASYNC_MAX_JOBS  64
-#define JSON_HARD_MAX_LOAD_BYTES (32 * 1024 * 1024)   // i386 absolute ceiling
+// Dvar defaults, read per call via dvar_int_or()
+#define JSON_DEF_MAX_LOAD_BYTES  (8 * 1024 * 1024)    // scr_json_max_load_bytes
+#define JSON_DEF_SLOW_WARN_MS    25                   // scr_json_slow_warn_ms
+#define JSON_DEF_ASYNC_MAX_JOBS  64                   // scr_json_async_max_jobs
+#define JSON_HARD_MAX_LOAD_BYTES (32 * 1024 * 1024)   // i386 ceiling
 
 // long long: on i386 a 32-bit long overflows tv_sec * 1000 after ~24.8 days.
 static long long now_ms()
@@ -172,140 +124,207 @@ public:
 };
 
 // ===========================================================================
-// JSON -> GSC : push the converted value onto the script (out-param) stack.
-// Each call leaves exactly one value on the stack, so recursion composes the
-// same way gsc_utils_getarraykeys() builds its result.
+// JSON -> GSC
 // ===========================================================================
 
+// Script strings are C strings under 64 KB: a NUL would truncate, a longer one drops the server
+static bool json_str_ok(yyjson_val *v)
+{
+	const char *s = yyjson_get_str(v);
+	size_t len = yyjson_get_len(v);
+	return s != NULL && len < JSON_MAX_STRING && memchr(s, '\0', len) == NULL;
+}
+
+// Pushes one value onto the script stack; json_cost() must mirror every branch
 static void json_to_gsc_push(yyjson_val *node, int depth)
 {
-	if ( depth >= JSON_MAX_DEPTH || node == NULL || yyjson_is_null(node) )
+	size_t i, n;
+	yyjson_val *key, *val;
+
+	if ( depth >= JSON_MAX_DEPTH || node == NULL )
+		stackPushUndefined();
+	else if ( yyjson_is_bool(node) )
+		stackPushInt(yyjson_is_true(node));
+	else if ( yyjson_is_sint(node) && yyjson_get_sint(node) >= INT_MIN && yyjson_get_sint(node) <= INT_MAX )
+		stackPushInt((int)yyjson_get_sint(node));
+	else if ( yyjson_is_uint(node) && yyjson_get_uint(node) <= INT_MAX )
+		stackPushInt((int)yyjson_get_uint(node));
+	else if ( yyjson_is_num(node) )
+		stackPushFloat((float)yyjson_get_num(node));  // real, or int beyond 32 bits
+	else if ( yyjson_is_str(node) && json_str_ok(node) )
+		stackPushString(yyjson_get_str(node));
+	else if ( yyjson_is_str(node) )
 	{
+		Com_Printf("json: string of %u bytes or with a NUL replaced with undefined\n", (unsigned)yyjson_get_len(node));
+		stackPushUndefined();
+	}
+	else if ( yyjson_is_arr(node) )
+	{
+		stackPushArray();
+		yyjson_arr_foreach(node, i, n, val)
+		{
+			json_to_gsc_push(val, depth + 1);
+			stackPushArrayLast();
+		}
+	}
+	else if ( yyjson_is_obj(node) )
+	{
+		stackPushArray();
+		yyjson_obj_foreach(node, i, n, key, val)
+		{
+			if ( !json_str_ok(key) )
+			{
+				Com_Printf("json: key of %u bytes or with a NUL skipped\n", (unsigned)yyjson_get_len(key));
+				continue;
+			}
+			json_to_gsc_push(val, depth + 1);
+			unsigned int k = SL_GetString(yyjson_get_str(key), 0);
+			Scr_AddArrayStringIndexed(k);
+			SL_RemoveRefToString(k);  // the array holds its own ref
+		}
+	}
+	else
+		stackPushUndefined();  // null
+}
+
+// VM cost of one push, counted in push order without touching the VM
+struct JsonCost
+{
+	int vars = 0;                          // Scr_MakeArray + one per element or member
+	int mtNodes = 0;                       // string memory of the distinct strings
+	std::unordered_set<std::string> seen;  // distinct strings
+	std::vector<int> newSizes;             // block size of each string not interned yet
+};
+
+// A new string takes one 2^size-node block of MT_AllocIndex(len + 1 + 4):
+// https://github.com/voron00/CoD2rev_Server/blob/11c40a5/src/script/scr_stringlist.cpp#L874
+// https://github.com/voron00/CoD2rev_Server/blob/11c40a5/src/script/scr_memorytree.cpp#L622
+static int json_mt_size(size_t len)
+{
+	int nodes = (int)((len + 1 + 4 + 7) / 8), size = 0;
+	while ( (1 << size) < nodes )
+		size++;
+	return size;
+}
+
+static void json_cost_str(yyjson_val *v, JsonCost &c)
+{
+	const char *s = yyjson_get_str(v);
+	size_t len = yyjson_get_len(v);
+	if ( !c.seen.emplace(s, len).second )
+		return;
+	c.mtNodes += 1 << json_mt_size(len);
+	if ( !SL_FindStringOfLen(s, len + 1) )
+		c.newSizes.push_back(json_mt_size(len));
+}
+
+static void json_cost(yyjson_val *node, int depth, JsonCost &c)
+{
+	size_t i, n;
+	yyjson_val *key, *val;
+
+	if ( depth >= JSON_MAX_DEPTH || node == NULL )
+		return;
+	if ( yyjson_is_str(node) && json_str_ok(node) )
+		json_cost_str(node, c);
+	if ( !yyjson_is_ctn(node) )
+		return;
+	c.vars++;
+	if ( yyjson_is_arr(node) )
+	{
+		yyjson_arr_foreach(node, i, n, val)
+		{
+			c.vars++;
+			json_cost(val, depth + 1, c);
+		}
+		return;
+	}
+	yyjson_obj_foreach(node, i, n, key, val)
+	{
+		if ( !json_str_ok(key) )
+			continue;
+		c.vars++;
+		json_cost(val, depth + 1, c);
+		json_cost_str(key, c);
+	}
+}
+
+// Free list walks, stopped at limit. Free variables chain from entry 0 (AllocVariable):
+// https://github.com/voron00/CoD2rev_Server/blob/11c40a5/src/script/scr_variable.cpp#L3824
+// Free string slots chain from hashTable[0] (SL_Init, SL_GetStringOfLen):
+// https://github.com/voron00/CoD2rev_Server/blob/11c40a5/src/script/scr_stringlist.cpp#L405
+// https://github.com/voron00/CoD2rev_Server/blob/11c40a5/src/script/scr_stringlist.cpp#L865
+static int json_free_vars(int limit)
+{
+	int n = 0;
+	for ( unsigned int i = scrVarGlob[0].u.next; i && n < limit; i = scrVarGlob[scrVarGlob[i].hash.id].u.next )
+		n++;
+	return n;
+}
+
+static int json_free_strings(int limit)
+{
+	int n = 0;
+	for ( unsigned int i = scrStringGlob.hashTable[0].status_next & HASH_NEXT_MASK; i && n < limit; i = scrStringGlob.hashTable[i].status_next & HASH_NEXT_MASK )
+		n++;
+	return n;
+}
+
+// Counts free blocks per size, then replays the MT_AllocIndex best fit on them:
+// https://github.com/voron00/CoD2rev_Server/blob/11c40a5/src/script/scr_memorytree.cpp#L160
+static bool json_mt_fits(const std::vector<int> &sizes, int reserve)
+{
+	int blocks[MT_SIZES], nodes = 0;
+	for ( int s = 0; s < MT_SIZES; s++ )
+		blocks[s] = MT_GetSubTreeSize(scrMemTreeGlob.head[s]);
+	for ( int size : sizes )
+	{
+		int t = size;
+		while ( t < MT_SIZES && blocks[t] == 0 )
+			t++;
+		if ( t == MT_SIZES )
+			return false;
+		blocks[t]--;
+		while ( --t >= size )
+			blocks[t]++;  // split halves stay free
+	}
+	for ( int s = 0; s < MT_SIZES; s++ )
+		nodes += blocks[s] << s;
+	return nodes >= reserve;
+}
+
+// Pushes the doc root if it fits the caps and the live headroom, else undefined and one error
+static void json_push_doc(yyjson_doc *doc, const char *func, const char *what)
+{
+	yyjson_val *root = yyjson_doc_get_root(doc);
+	char why[96] = "";
+
+	{  // containers die here: a script error in the push longjmps past destructors
+		JsonCost c;
+		json_cost(root, 0, c);
+		int strings = (int)c.seen.size(), fresh = (int)c.newSizes.size();
+
+		if ( c.vars > JSON_MAX_VARS )
+			snprintf(why, sizeof(why), "%d script variables, cap %d", c.vars, JSON_MAX_VARS);
+		else if ( strings > JSON_MAX_STRINGS )
+			snprintf(why, sizeof(why), "%d strings, cap %d", strings, JSON_MAX_STRINGS);
+		else if ( c.mtNodes > JSON_MAX_MT_NODES )
+			snprintf(why, sizeof(why), "%d KB of string memory, cap %d KB", c.mtNodes / 128, JSON_MAX_MT_NODES / 128);
+		else if ( json_free_vars(c.vars + JSON_RESERVE_VARS) < c.vars + JSON_RESERVE_VARS )
+			snprintf(why, sizeof(why), "%d script variables, too few free", c.vars);
+		else if ( json_free_strings(fresh + JSON_RESERVE_STRINGS) < fresh + JSON_RESERVE_STRINGS )
+			snprintf(why, sizeof(why), "%d new strings, too few free", fresh);
+		else if ( !json_mt_fits(c.newSizes, JSON_RESERVE_MT_NODES) )
+			snprintf(why, sizeof(why), "string memory for %d new strings, too little free", fresh);
+	}
+
+	if ( why[0] )
+	{
+		stackError("%s() %s needs %s", func, what, why);
 		stackPushUndefined();
 		return;
 	}
-
-	if ( yyjson_is_bool(node) )
-	{
-		stackPushInt(yyjson_is_true(node) ? 1 : 0);
-		return;
-	}
-
-	if ( yyjson_is_num(node) )
-	{
-		// yyjson_is_int matches BOTH SINT and UINT subtypes; reading the wrong
-		// half of the union via the other accessor reinterprets a 20-digit
-		// unsigned as a negative i64. Branch on the actual subtype first.
-		if ( yyjson_is_sint(node) )
-		{
-			int64_t v = yyjson_get_sint(node);
-			if ( v >= INT_MIN && v <= INT_MAX )
-			{
-				stackPushInt((int)v);
-				return;
-			}
-		}
-		else if ( yyjson_is_uint(node) )
-		{
-			uint64_t u = yyjson_get_uint(node);
-			if ( u <= (uint64_t)INT_MAX )
-			{
-				stackPushInt((int)u);
-				return;
-			}
-		}
-		// Real OR int out-of-32-bit-range -> float.
-		stackPushFloat((float)yyjson_get_num(node));
-		return;
-	}
-
-	if ( yyjson_is_str(node) )
-	{
-		const char *s = yyjson_get_str(node);
-		size_t len = yyjson_get_len(node);
-		if ( s == NULL )
-		{
-			stackPushUndefined();
-			return;
-		}
-		if ( len >= JSON_MAX_STRING )
-		{
-			// Pushing a >=64 KB string would terminate the VM; drop to undefined.
-			Com_Printf("[JSON] WARN: string value >= %d bytes replaced with undefined\n", JSON_MAX_STRING);
-			stackPushUndefined();
-			return;
-		}
-		// yyjson tracks length explicitly, so a JSON "\0" inside a string
-		// stays as a NUL in `s`. The engine string allocator is C-string based
-		// and would truncate at the NUL silently - reject so callers don't
-		// silently lose data.
-		if ( memchr(s, '\0', len) != NULL )
-		{
-			Com_Printf("[JSON] WARN: string value contains embedded NUL, replaced with undefined\n");
-			stackPushUndefined();
-			return;
-		}
-		stackPushString(s);
-		return;
-	}
-
-	if ( yyjson_is_arr(node) )
-	{
-		stackPushArray();
-		yyjson_val *elem;
-		yyjson_arr_iter iter;
-		yyjson_arr_iter_init(node, &iter);
-		while ( (elem = yyjson_arr_iter_next(&iter)) != NULL )
-		{
-			json_to_gsc_push(elem, depth + 1);
-			stackPushArrayLast();
-		}
-		return;
-	}
-
-	if ( yyjson_is_obj(node) )
-	{
-		stackPushArray();
-		yyjson_val *key, *val;
-		yyjson_obj_iter iter;
-		yyjson_obj_iter_init(node, &iter);
-		while ( (key = yyjson_obj_iter_next(&iter)) != NULL )
-		{
-			val = yyjson_obj_iter_get_val(key);
-			const char *kstr = yyjson_get_str(key);
-			size_t klen = yyjson_get_len(key);
-
-			if ( kstr == NULL )
-				continue;
-
-			// Same engine string-table cap as values - a >= 64 KB key would
-			// terminate the VM inside SL_GetString. Skip the entry so the
-			// parse stays alive.
-			if ( klen >= JSON_MAX_STRING )
-			{
-				Com_Printf("[JSON] WARN: object key >= %d bytes skipped\n", JSON_MAX_STRING);
-				continue;
-			}
-			// Same embedded-NUL guard as values - the engine string table is
-			// C-string indexed and would silently truncate.
-			if ( memchr(kstr, '\0', klen) != NULL )
-			{
-				Com_Printf("[JSON] WARN: object key contains embedded NUL, skipped\n");
-				continue;
-			}
-
-			json_to_gsc_push(val, depth + 1);
-			// Scr_AddArrayStringIndexed adds the array's own ref to the key,
-			// so release the temporary ref SL_GetString handed us - otherwise
-			// every object key leaks one string-table slot.
-			unsigned int k = SL_GetString(kstr, 0);
-			Scr_AddArrayStringIndexed(k);
-			SL_RemoveRefToString(k);
-		}
-		return;
-	}
-
-	stackPushUndefined();
+	json_to_gsc_push(root, 0);
 }
 
 // ===========================================================================
@@ -630,16 +649,7 @@ void gsc_json_parse()
 		return;
 	}
 
-	if ( yyjson_doc_get_val_count(doc) > JSON_MAX_VALUES )
-	{
-		stackError("gsc_json_parse() input has %u values, max is %d (script variable pool)", (unsigned)yyjson_doc_get_val_count(doc), JSON_MAX_VALUES);
-		yyjson_doc_free(doc);
-		stackPushUndefined();
-		return;
-	}
-
-	yyjson_val *root = yyjson_doc_get_root(doc);
-	json_to_gsc_push(root, 0);
+	json_push_doc(doc, "gsc_json_parse", "input");
 	yyjson_doc_free(doc);
 }
 
@@ -774,15 +784,7 @@ void gsc_json_load()
 		return;
 	}
 
-	if ( yyjson_doc_get_val_count(doc) > JSON_MAX_VALUES )
-	{
-		stackError("gsc_json_load() '%s' has %u values, max is %d (script variable pool)", path, (unsigned)yyjson_doc_get_val_count(doc), JSON_MAX_VALUES);
-		yyjson_doc_free(doc);
-		stackPushUndefined();
-		return;
-	}
-
-	json_to_gsc_push(yyjson_doc_get_root(doc), 0);
+	json_push_doc(doc, "gsc_json_load", path);
 	yyjson_doc_free(doc);
 }
 
@@ -1418,13 +1420,12 @@ void gsc_json_async_result()
 
 	pthread_mutex_unlock(&json_async_mutex);
 
-	// Push the return value while OUTSIDE the mutex (json_to_gsc_push may
-	// recurse and we don't want to hold the lock during that).
+	// Push outside the mutex
 	if ( kind == JSON_ASYNC_KIND_LOAD )
 	{
 		if ( status == JSON_ASYNC_STATUS_DONE && doc != NULL )
 		{
-			json_to_gsc_push(yyjson_doc_get_root(doc), 0);
+			json_push_doc(doc, "gsc_json_async_result", job->abspath);
 			yyjson_doc_free(doc);
 		}
 		else
