@@ -27,7 +27,8 @@ Module: JSON<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Reads JSON text and turns it into GSC data. Returns a JSON object as an array that is indexed by name like v["hp"]; a JSON list comes back as an array indexed by number like v[0]. Returns undefined if the text is not valid JSON, or if it holds more than 32768 values.</p>
+<p>Reads JSON text and returns it as GSC data. Objects become arrays indexed by name like v["hp"], lists become arrays indexed by number like v[0], and true/false become 1/0. Returns undefined if the text is not valid JSON or too big for the script engine.</p>
+<p>Note: Floats keep about 7 digits, so pass long numbers like player IDs as strings. JSON null comes back as undefined but still counts in .size.</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>

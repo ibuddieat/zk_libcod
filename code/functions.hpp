@@ -1340,6 +1340,12 @@ static const RemoveRefToValue_t RemoveRefToValue = (RemoveRefToValue_t)0x08075DF
 typedef unsigned int (*FindVariable_t)(unsigned int parentId, unsigned int unsignedValue);
 static const FindVariable_t FindVariable = (FindVariable_t)0x0807C184;
 
+typedef void (*RemoveVariable_t)(unsigned int parentId, unsigned int name);
+static const RemoveVariable_t RemoveVariable = (RemoveVariable_t)0x0807C7BE;
+
+typedef void (*Scr_EndLoadEvaluate_t)(void);
+static const Scr_EndLoadEvaluate_t Scr_EndLoadEvaluate = (Scr_EndLoadEvaluate_t)0x08076014;
+
 typedef unsigned int (*FindObject_t)(unsigned int id);
 static const FindObject_t FindObject = (FindObject_t)0x0807D16E;
 

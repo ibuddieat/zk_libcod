@@ -27,7 +27,8 @@ Module: JSON<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Behaves like <a href="json_save.htm">json_save</a>, but does not freeze the server while the file writes. Returns a job ID (1 or higher), or 0 if it could not start. Keep checking <a href="json_async_done.htm">json_async_done</a> until the returned job ID shows up, then <a href="json_async_result.htm">json_async_result</a> returns whether it worked (1) or not (0).</p>
+<p>Behaves like <a href="json_save.htm">json_save</a>, but writes the file in the background. Returns a job ID, or 0 if the job could not start. Keep checking <a href="json_async_done.htm">json_async_done</a> until the job ID shows up, then <a href="json_async_result.htm">json_async_result</a> returns 1 (saved) or 0 (failed).</p>
+<p>Claiming the result is optional. Only the newest 1024 finished saves are kept; an older unclaimed one is dropped (a failed one prints why to the console first). On server quit, saves still running are finished first (up to 5 seconds).</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -36,9 +37,7 @@ Module: JSON<BR>
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-job = json_save_async("stats/match.json", level.matchLog, 1);
-// later, once done[i] == job:
-ok = json_async_result(job);
+job = json_save_async("stats/match.json", level.matchLog);
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -47,15 +46,15 @@ ok = json_async_result(job);
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;fs path&gt; Where to write the file, a path relative to the mod folder. Avoid a leading slash and dot-dot sequences</LI>
-<LI>2 : &lt;value&gt; The GSC data to save. Supported types are: struct, array, string, integer, float, vector</LI>
+<LI>1 : &lt;fs path&gt; Path relative to the mod folder</LI>
+<LI>2 : &lt;value&gt; The data to save</LI>
 </UL></TR></TD></TABLE>
 <BR>
 <H2>Optional Args</H2>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>3 : &lt;pretty&gt; Output style: 0 = compact single-line (default), 1 = human-readable multi-line</LI>
+<LI>3 : &lt;pretty&gt; 1 for readable multi-line output, 0 (default) for one line</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>

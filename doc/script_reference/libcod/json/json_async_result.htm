@@ -27,7 +27,8 @@ Module: JSON<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Collects the result of a finished <a href="json_load_async.htm">json_load_async</a> or <a href="json_save_async.htm">json_save_async</a> job. For a load job, the loaded data or undefined (on fail) is returned; for a save job, 1 (success) or 0 (fail) is returned. If the job is not done yet, undefined is returned and the job stays in the queue. Always collect every started job, or it stays in memory.</p>
+<p>Collects the result of a finished <a href="json_load_async.htm">json_load_async</a> or <a href="json_save_async.htm">json_save_async</a> job. A load returns the data or undefined, a save returns 1 or 0. Returns undefined if the job is not finished yet or the ID is unknown.</p>
+<p>Note: Collect every load you start, unclaimed results stay in memory until the next map load or fast_restart. Save results are kept for the newest 1024 finished saves only, so an old save ID can become unknown.</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -36,11 +37,9 @@ Module: JSON<BR>
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-job = json_load_async("stats/big.json");
-// ... checking json_async_done() each tick ...
-v = json_async_result(job);
-if(IsDefined(v))
-    IPrintLn("loaded " + v["records"].size + " records");
+data = json_async_result(job);
+if(IsDefined(data))
+    IPrintLn(data.size + " entries loaded");
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -49,7 +48,7 @@ if(IsDefined(v))
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;jobId&gt; The numeric job ID returned from <a href="json_load_async.htm">json_load_async</a> or <a href="json_save_async.htm">json_save_async</a></LI>
+<LI>1 : &lt;jobId&gt; Job ID from <a href="json_load_async.htm">json_load_async</a> or <a href="json_save_async.htm">json_save_async</a></LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>
