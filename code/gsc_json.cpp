@@ -20,6 +20,8 @@
 #include <unordered_set>
 #include <vector>
 
+extern dvar_t *fs_debug;
+
 #define JSON_MAX_DEPTH 64      // deeper values become undefined / null
 #define JSON_MAX_NODES 100000  // serialize walk budget; shared subtrees re-walk per reference
 #define JSON_MAX_VALUES 32768  // async worker early reject on the yyjson value count
@@ -37,6 +39,10 @@
 #define JSON_RESERVE_STRINGS 1024
 #define JSON_RESERVE_MT_NODES 4096
 #define MT_SIZES 17                 // block sizes 2^0..2^16 nodes
+
+// Script strings are bytes in the client's codepage, not UTF-8, so pass them through as is
+#define JSON_READ_FLAGS (YYJSON_READ_ALLOW_BOM | YYJSON_READ_ALLOW_INVALID_UNICODE)
+#define JSON_WRITE_FLAGS (YYJSON_WRITE_ALLOW_INVALID_UNICODE | YYJSON_WRITE_INF_AND_NAN_AS_NULL)
 
 // Dvar defaults, read per call via dvar_int_or()
 #define JSON_DEF_MAX_LOAD_BYTES  (8 * 1024 * 1024)    // scr_json_max_load_bytes
@@ -105,8 +111,7 @@ void gsc_json_register_dvars(void)
 	Dvar_RegisterInt("scr_json_async_max_jobs", JSON_DEF_ASYNC_MAX_JOBS, 1, 1024, DVAR_ARCHIVE);
 }
 
-// RAII timer: logs a single WARN line on scope exit if the elapsed wall time
-// exceeded scr_json_slow_warn_ms. Cheap (one clock_gettime at ctor/dtor).
+// Prints one line on scope exit if the call took longer than scr_json_slow_warn_ms
 class JsonTimer
 {
 	const char *func;
@@ -119,7 +124,7 @@ public:
 		int threshold = dvar_int_or("scr_json_slow_warn_ms", JSON_DEF_SLOW_WARN_MS);
 		long long elapsed = now_ms() - t0;
 		if ( threshold > 0 && elapsed > threshold )
-			Com_Printf("[JSON] WARN: %s took %lld ms (%s)\n", func, elapsed, detail);
+			Com_Printf("%s took %lld ms %s\n", func, elapsed, detail);
 	}
 };
 
@@ -355,6 +360,7 @@ static yyjson_mut_val * gsc_object_to_json(yyjson_mut_doc *doc, unsigned int obj
 
 // Walk state, main thread only. Shared subtrees and strings are copied per reference,
 // so both budgets are needed. A NULL return aborts the whole call.
+static const char *json_walk_func;
 static long json_walk_nodes;
 static long json_walk_bytes;
 static int json_walk_max_bytes;
@@ -367,7 +373,7 @@ static yyjson_mut_val * json_walk_str(yyjson_mut_doc *doc, const char *s)
 	json_walk_bytes -= strlen(s);
 	if ( json_walk_bytes < 0 )
 	{
-		stackError("json: serialization aborted, strings exceed %d bytes", json_walk_max_bytes);
+		stackError("%s() value has more than %d bytes of strings", json_walk_func, json_walk_max_bytes);
 		return NULL;
 	}
 	return yyjson_mut_strcpy(doc, s);
@@ -377,7 +383,7 @@ static yyjson_mut_val * gsc_entry_to_json(yyjson_mut_doc *doc, unsigned int id, 
 {
 	if ( --json_walk_nodes < 0 )
 	{
-		stackError("json: serialization aborted, more than %d values (too large or cyclic)", JSON_MAX_NODES);
+		stackError("%s() value has more than %d entries (too large or cyclic)", json_walk_func, JSON_MAX_NODES);
 		return NULL;
 	}
 
@@ -536,11 +542,8 @@ static yyjson_mut_val * gsc_object_to_json(yyjson_mut_doc *doc, unsigned int obj
 }
 
 // Top-level param via the stack API; a failed accessor degrades to null
-static yyjson_mut_val * gsc_param_to_json(yyjson_mut_doc *doc, int param, int maxBytes)
+static yyjson_mut_val * gsc_param_to_json(yyjson_mut_doc *doc, int param)
 {
-	json_walk_nodes = JSON_MAX_NODES;
-	json_walk_bytes = json_walk_max_bytes = maxBytes;
-
 	unsigned int objectId;
 	if ( stackGetParamObject(param, &objectId) )
 	{
@@ -602,13 +605,16 @@ static yyjson_mut_val * gsc_param_to_json(yyjson_mut_doc *doc, int param, int ma
 }
 
 // NULL if the walk aborted
-static yyjson_mut_doc * gsc_param_to_doc(int param, int maxBytes)
+static yyjson_mut_doc * gsc_param_to_doc(int param, int maxBytes, const char *func)
 {
 	yyjson_mut_doc *doc = yyjson_mut_doc_new(NULL);
 	if ( doc == NULL )
 		return NULL;
 
-	yyjson_mut_val *root = gsc_param_to_json(doc, param, maxBytes);
+	json_walk_func = func;
+	json_walk_nodes = JSON_MAX_NODES;
+	json_walk_bytes = json_walk_max_bytes = maxBytes;
+	yyjson_mut_val *root = gsc_param_to_json(doc, param);
 	if ( root == NULL )
 	{
 		yyjson_mut_doc_free(doc);
@@ -618,16 +624,29 @@ static yyjson_mut_doc * gsc_param_to_doc(int param, int maxBytes)
 	return doc;
 }
 
-// Writes and frees the doc. NaN and inf become null, as cJSON did
-static char * json_write_doc(yyjson_mut_doc *doc, int pretty, size_t *len)
+// Writes and frees the doc. NaN and inf become null, as cJSON did. func NULL = worker thread, no print
+static char * json_write_doc(yyjson_mut_doc *doc, int pretty, size_t *len, const char *func)
 {
-	yyjson_write_flag flags = YYJSON_WRITE_INF_AND_NAN_AS_NULL;
+	yyjson_write_flag flags = JSON_WRITE_FLAGS;
 	if ( pretty )
 		flags |= YYJSON_WRITE_PRETTY;
 
-	char *out = yyjson_mut_write(doc, flags, len);
+	yyjson_write_err err;
+	char *out = yyjson_mut_write_opts(doc, flags, NULL, len, &err);
 	yyjson_mut_doc_free(doc);
+	if ( out == NULL && func != NULL )
+		stackError("%s() could not write JSON: %s", func, err.msg);
 	return out;
+}
+
+// func NULL = worker thread, no print
+static yyjson_doc * json_read(char *buf, size_t len, const char *func, const char *what)
+{
+	yyjson_read_err err;
+	yyjson_doc *doc = yyjson_read_opts(buf, len, JSON_READ_FLAGS, NULL, &err);
+	if ( doc == NULL && func != NULL )
+		stackError("%s() invalid JSON in %s at byte %u: %s", func, what, (unsigned)err.pos, err.msg);
+	return doc;
 }
 
 // ===========================================================================
@@ -646,10 +665,9 @@ void gsc_json_parse()
 	}
 
 	JsonTimer _t("json_parse", "");
-	yyjson_doc *doc = yyjson_read(str, strlen(str), YYJSON_READ_ALLOW_BOM);
+	yyjson_doc *doc = json_read(str, strlen(str), "gsc_json_parse", "input");
 	if ( doc == NULL )
 	{
-		stackError("gsc_json_parse() failed to parse JSON input");
 		stackPushUndefined();
 		return;
 	}
@@ -672,9 +690,9 @@ void gsc_json_stringify()
 		pretty = Scr_GetInt(1);
 
 	JsonTimer _t("json_stringify", "");
-	yyjson_mut_doc *doc = gsc_param_to_doc(0, JSON_MAX_STRING);
+	yyjson_mut_doc *doc = gsc_param_to_doc(0, JSON_MAX_STRING, "gsc_json_stringify");
 	size_t out_len = 0;
-	char *out = doc ? json_write_doc(doc, pretty, &out_len) : NULL;
+	char *out = doc ? json_write_doc(doc, pretty, &out_len, "gsc_json_stringify") : NULL;
 	if ( out == NULL )
 	{
 		stackPushUndefined();
@@ -756,18 +774,90 @@ void gsc_json_load()
 		bytesRead = len;
 	buffer[bytesRead] = '\0';
 
-	yyjson_doc *doc = yyjson_read(buffer, bytesRead, YYJSON_READ_ALLOW_BOM);
+	yyjson_doc *doc = json_read(buffer, bytesRead, "gsc_json_load", path);
 	free(buffer);
-
 	if ( doc == NULL )
 	{
-		stackError("gsc_json_load() failed to parse JSON from '%s'", path);
 		stackPushUndefined();
 		return;
 	}
 
 	json_push_doc(doc, "gsc_json_load", path);
 	yyjson_doc_free(doc);
+}
+
+// "<fs_homepath>/<fs_gamedir>/<rel>", the path FS_FOpenFileWrite uses. Main thread only. Returns malloc'd, NULL on reject
+static char * json_os_path(const char *rel)
+{
+	if ( rel == NULL || rel[0] == '\0' || rel[0] == '/' )
+		return NULL;
+
+	dvar_t *fs_home = Dvar_FindVar("fs_homepath");
+	if ( fs_home == NULL || fs_home->current.string == NULL || fs_home->current.string[0] == '\0' )
+		return NULL;
+
+	// FS_BuildOSPath Sys_Errors past MAX_OSPATH; the margin covers "/" + fs_gamedir + "/" + NUL
+	if ( strlen(fs_home->current.string) + strlen(rel) + MAX_QPATH + 3 >= MAX_OSPATH )
+		return NULL;
+
+	// An empty game makes FS_BuildOSPath use fs_gamedir
+	char osPath[MAX_OSPATH];
+	FS_BuildOSPath(fs_home->current.string, "", rel, osPath);
+	if ( fs_debug->current.integer )
+		Com_Printf("json (fs_homepath) : %s\n", osPath);
+
+	// Same refusal as the engine's FS_CreatePath:
+	// https://github.com/voron00/CoD2rev_Server/blob/11c40a5/src/universal/com_files.cpp#L557
+	if ( strstr(osPath, "..") != NULL || strstr(osPath, "::") != NULL )
+		return NULL;
+
+	return strdup(osPath);
+}
+
+// mkdir -p of the parent dirs, like FS_CreatePath. Errors show up at fopen
+static void json_mkdir_parents(const char *path)
+{
+	char buf[MAX_OSPATH + 16];
+	snprintf(buf, sizeof(buf), "%s", path);
+
+	for ( char *p = buf + 1; *p != '\0'; p++ )
+	{
+		if ( *p != '/' )
+			continue;
+		*p = '\0';
+		mkdir(buf, 0755);
+		*p = '/';
+	}
+}
+
+// Writes path.tmpN and renames it over path, so a failed write keeps the old file. Returns 0 or an errno
+// ponytail: no fsync, a server crash keeps the page cache; only power loss can lose the last save
+static int json_write_file(const char *path, int tmpId, const char *text, size_t len)
+{
+	char tmp[MAX_OSPATH + 16];
+	snprintf(tmp, sizeof(tmp), "%s.tmp%d", path, tmpId);
+
+	json_mkdir_parents(path);
+	FILE *f = fopen(tmp, "wb");
+	if ( f == NULL )
+		return errno;
+
+	int err = 0;
+	errno = 0;
+	if ( fwrite(text, 1, len, f) != len )
+		err = errno ? errno : EIO;
+
+	// A full disk often shows only here, when the buffer is flushed
+	if ( fclose(f) != 0 && err == 0 )
+		err = errno;
+
+	if ( err == 0 && rename(tmp, path) != 0 )
+		err = errno;
+
+	if ( err != 0 )
+		unlink(tmp);
+
+	return err;
 }
 
 void gsc_json_save()
@@ -799,41 +889,44 @@ void gsc_json_save()
 	if ( Scr_GetNumParam() > 2 )
 		pretty = Scr_GetInt(2);
 
+	char *osPath = json_os_path(path);
+	if ( osPath == NULL )
+	{
+		stackError("gsc_json_save() invalid path '%s' (must be relative, no '..')", path);
+		stackPushInt(0);
+		return;
+	}
+
 	// Never save a file that json_load would refuse
 	JsonTimer _t("json_save", path);
 	int maxBytes = dvar_int_or("scr_json_max_load_bytes", JSON_DEF_MAX_LOAD_BYTES);
-	yyjson_mut_doc *doc = gsc_param_to_doc(1, maxBytes);
+	yyjson_mut_doc *doc = gsc_param_to_doc(1, maxBytes, "gsc_json_save");
 	size_t out_len = 0;
-	char *out = doc ? json_write_doc(doc, pretty, &out_len) : NULL;
+	char *out = doc ? json_write_doc(doc, pretty, &out_len, "gsc_json_save") : NULL;
 	if ( out == NULL )
 	{
+		free(osPath);
 		stackPushInt(0);
 		return;
 	}
 
 	if ( out_len > (size_t)maxBytes )
 	{
-		stackError("json: save output of %u bytes exceeds scr_json_max_load_bytes %d", (unsigned)out_len, maxBytes);
+		stackError("gsc_json_save() output of %u bytes exceeds scr_json_max_load_bytes %d", (unsigned)out_len, maxBytes);
 		free(out);
+		free(osPath);
 		stackPushInt(0);
 		return;
 	}
 
-	fileHandle_t f = FS_FOpenFileWrite(path);
-	if ( f == 0 )
-	{
-		free(out);
-		stackError("gsc_json_save() could not open '%s' for writing", path);
-		stackPushInt(0);
-		return;
-	}
-
-	int written = FS_Write(out, (int)out_len, f);
-	FS_FCloseFile(f);
+	// Async job ids start at 1, so tmp id 0 never collides with a worker
+	int err = json_write_file(osPath, 0, out, out_len);
 	free(out);
+	free(osPath);
+	if ( err != 0 )
+		stackError("gsc_json_save() could not write '%s': %s", path, strerror(err));
 
-	// Full write or failure - a partial write (disk full) must not report 1.
-	stackPushInt(written == (int)out_len ? 1 : 0);
+	stackPushInt(err == 0 ? 1 : 0);
 }
 
 // ===========================================================================
@@ -899,32 +992,6 @@ static json_async_job *json_async_jobs    = NULL;
 static int             json_async_next_id = 1;
 static int             json_async_pending = 0;
 
-// Resolve "<fs_homepath>/<fs_gamedir>/<rel>" via FS_BuildOSPath, same as
-// gsc_utils_loadsoundfile. Main thread only. Returns malloc'd, NULL on reject.
-static char * json_async_resolve_path(const char *rel)
-{
-	if ( rel == NULL || rel[0] == '\0' || rel[0] == '/' )
-		return NULL;
-
-	dvar_t *fs_home = Dvar_FindVar("fs_homepath");
-	if ( fs_home == NULL || fs_home->current.string == NULL || fs_home->current.string[0] == '\0' )
-		return NULL;
-
-	// Pre-check length: FS_BuildOSPath Sys_Errors on MAX_OSPATH overflow. The
-	// margin must cover "/" + fs_gamedir (up to MAX_QPATH) + "/" + NUL.
-	if ( strlen(fs_home->current.string) + strlen(rel) + MAX_QPATH + 3 >= MAX_OSPATH )
-		return NULL;
-
-	// Empty game -> engine uses fs_gamedir, so async matches sync FS scope.
-	char osPath[MAX_OSPATH];
-	FS_BuildOSPath(fs_home->current.string, "", rel, osPath);
-
-	if ( strstr(osPath, "..") != NULL )
-		return NULL;
-
-	return strdup(osPath);
-}
-
 // Free everything a job owns. Job must already be unlinked from the list.
 static void json_async_free_job(json_async_job *job)
 {
@@ -984,14 +1051,13 @@ static void * json_async_load_worker(void *arg)
 	if ( got > (size_t)len ) got = (size_t)len;
 	buf[got] = '\0';
 
-	yyjson_doc *parsed = yyjson_read(buf, got, YYJSON_READ_ALLOW_BOM);
+	yyjson_doc *parsed = json_read(buf, got, NULL, NULL);
 	free(buf);
 
-	// Same script-variable-pool guard as sync json_load. Fail the job here;
-	// the worker cannot stackError (wrong thread).
+	// Early reject of docs no push could take
 	if ( parsed != NULL && yyjson_doc_get_val_count(parsed) > JSON_MAX_VALUES )
 	{
-		Com_Printf("[JSON] WARN: async load '%s' has %u values, max is %d - job failed\n", job->abspath, (unsigned)yyjson_doc_get_val_count(parsed), JSON_MAX_VALUES);
+		Com_Printf("json_load_async: %s has %u values, cap %d, job failed\n", job->abspath, (unsigned)yyjson_doc_get_val_count(parsed), JSON_MAX_VALUES);
 		yyjson_doc_free(parsed);
 		parsed = NULL;
 	}
@@ -1010,97 +1076,18 @@ static void * json_async_load_worker(void *arg)
 	return NULL;
 }
 
-// mkdir -p equivalent for the parent directory of an absolute path. Sync
-// json_save goes through FS_FOpenFileWrite which calls FS_CreatePath, but
-// async json_save uses plain fopen() and would otherwise silently fail when
-// a caller writes the first file under a fresh subdirectory.
-//
-// Walks the path, creates each intermediate component with 0755. Treats
-// EEXIST as success. Returns 0 on full success, -1 on the first failure.
-static int json_async_mkdir_parents(const char *abspath)
-{
-	if ( abspath == NULL || abspath[0] != '/' )
-		return -1;
-
-	char buf[PATH_MAX];
-	size_t n = strlen(abspath);
-	if ( n >= sizeof(buf) )
-		return -1;
-	memcpy(buf, abspath, n + 1);
-
-	// Trim the trailing component (the file itself).
-	char *last_slash = strrchr(buf, '/');
-	if ( last_slash == NULL || last_slash == buf )
-		return 0;
-	*last_slash = '\0';
-
-	// Walk each "/" and mkdir the prefix. Start past the leading "/".
-	for ( char *p = buf + 1; *p != '\0'; ++p )
-	{
-		if ( *p != '/' )
-			continue;
-		*p = '\0';
-		if ( mkdir(buf, 0755) != 0 && errno != EEXIST )
-			return -1;
-		*p = '/';
-	}
-	if ( mkdir(buf, 0755) != 0 && errno != EEXIST )
-		return -1;
-	return 0;
-}
-
-// Worker: print the yyjson doc and write to disk.
+// Worker: write the doc to disk. The job-unique tmp file keeps same-path saves apart
 static void * json_async_save_worker(void *arg)
 {
 	json_async_job *job = (json_async_job *)arg;
 
 	size_t want = 0;
-	char *text = json_write_doc(job->save_doc, job->save_pretty, &want);
+	char *text = json_write_doc(job->save_doc, job->save_pretty, &want, NULL);
 	job->save_doc = NULL;
 
 	// Same cap as json_save
-	if ( text != NULL && want > (size_t)job->max_bytes )
-	{
-		free(text);
-		text = NULL;
-	}
-
-	if ( text == NULL )
-	{
-		pthread_mutex_lock(&json_async_mutex);
-		job->save_ok = 0;
-		job->status  = JSON_ASYNC_STATUS_DONE;
-		pthread_mutex_unlock(&json_async_mutex);
-		return NULL;
-	}
-
-	json_async_mkdir_parents(job->abspath);
-
-	// Write to a job-unique temp file and rename() into place: readers never
-	// see a truncated file and same-path saves cannot interleave.
-	char tmpPath[MAX_OSPATH + 16];
-	snprintf(tmpPath, sizeof(tmpPath), "%s.tmp%d", job->abspath, job->id);
-
-	FILE *f = fopen(tmpPath, "wb");
-	if ( f == NULL )
-	{
-		free(text);
-		pthread_mutex_lock(&json_async_mutex);
-		job->save_ok = 0;
-		job->status  = JSON_ASYNC_STATUS_DONE;
-		pthread_mutex_unlock(&json_async_mutex);
-		return NULL;
-	}
-
-	size_t written = fwrite(text, 1, want, f);
-	fclose(f);
+	int ok = text != NULL && want <= (size_t)job->max_bytes && json_write_file(job->abspath, job->id, text, want) == 0;
 	free(text);
-
-	int ok = (written == want) ? 1 : 0;
-	if ( ok && rename(tmpPath, job->abspath) != 0 )
-		ok = 0;
-	if ( !ok )
-		unlink(tmpPath);
 
 	pthread_mutex_lock(&json_async_mutex);
 	job->save_ok = ok;
@@ -1174,7 +1161,7 @@ void gsc_json_cleanup_on_spawn_server(void)
 	pthread_mutex_unlock(&json_async_mutex);
 
 	if ( reaped > 0 )
-		Com_Printf("[JSON] reaped %d unclaimed async job(s) on map change\n", reaped);
+		Com_Printf("json: reaped %d unclaimed async jobs on map change\n", reaped);
 }
 
 // json_load_async(path) -> jobId   (0 on submission failure)
@@ -1203,7 +1190,7 @@ void gsc_json_load_async()
 		return;
 	}
 
-	char *abs = json_async_resolve_path(path);
+	char *abs = json_os_path(path);
 	if ( abs == NULL )
 	{
 		stackError("gsc_json_load_async() invalid path '%s' (must be relative, no '..')", path);
@@ -1271,7 +1258,7 @@ void gsc_json_save_async()
 		return;
 	}
 
-	char *abs = json_async_resolve_path(path);
+	char *abs = json_os_path(path);
 	if ( abs == NULL )
 	{
 		stackError("gsc_json_save_async() invalid path '%s' (must be relative, no '..')", path);
@@ -1281,7 +1268,7 @@ void gsc_json_save_async()
 
 	// The walk reads script state, so it runs here; the worker writes and frees the doc
 	int maxBytes = dvar_int_or("scr_json_max_load_bytes", JSON_DEF_MAX_LOAD_BYTES);
-	yyjson_mut_doc *doc = gsc_param_to_doc(1, maxBytes);
+	yyjson_mut_doc *doc = gsc_param_to_doc(1, maxBytes, "gsc_json_save_async");
 	if ( doc == NULL )
 	{
 		free(abs);
