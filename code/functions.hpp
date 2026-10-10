@@ -30,6 +30,14 @@ static const SL_ConvertToString_t SL_ConvertToString = (SL_ConvertToString_t)0x0
 typedef unsigned int (*SL_GetString_t)(const char *str, int type);
 static const SL_GetString_t SL_GetString = (SL_GetString_t)0x080798E0;
 
+// Lookup only, returns 0 if not interned: https://github.com/voron00/CoD2rev_Server/blob/11c40a5/src/script/scr_stringlist.cpp#L68
+typedef unsigned int (*SL_FindStringOfLen_t)(const char *str, unsigned int len);
+static const SL_FindStringOfLen_t SL_FindStringOfLen = (SL_FindStringOfLen_t)0x08079138;
+
+// Node count of one free block tree: https://github.com/voron00/CoD2rev_Server/blob/11c40a5/src/script/scr_memorytree.cpp#L305
+typedef int (*MT_GetSubTreeSize_t)(int nodeNum);
+static const MT_GetSubTreeSize_t MT_GetSubTreeSize = (MT_GetSubTreeSize_t)0x08076628;
+
 typedef void (*SL_RemoveRefToString_t)(unsigned int stringValue);
 static const SL_RemoveRefToString_t SL_RemoveRefToString = (SL_RemoveRefToString_t)0x08079CF2;
 
@@ -1331,6 +1339,12 @@ static const RemoveRefToValue_t RemoveRefToValue = (RemoveRefToValue_t)0x08075DF
 
 typedef unsigned int (*FindVariable_t)(unsigned int parentId, unsigned int unsignedValue);
 static const FindVariable_t FindVariable = (FindVariable_t)0x0807C184;
+
+typedef void (*RemoveVariable_t)(unsigned int parentId, unsigned int name);
+static const RemoveVariable_t RemoveVariable = (RemoveVariable_t)0x0807C7BE;
+
+typedef void (*Scr_EndLoadEvaluate_t)(void);
+static const Scr_EndLoadEvaluate_t Scr_EndLoadEvaluate = (Scr_EndLoadEvaluate_t)0x08076014;
 
 typedef unsigned int (*FindObject_t)(unsigned int id);
 static const FindObject_t FindObject = (FindObject_t)0x0807D16E;

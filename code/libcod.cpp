@@ -435,6 +435,11 @@ void custom_GScr_LoadConsts(void)
 	custom_scr_const.title = GScr_AllocString("title");
 	custom_scr_const.trigger_radius = GScr_AllocString("trigger_radius");
 
+	// Runs on every level load, fast restart included
+	#if COMPILE_JSON == 1
+	gsc_json_cleanup_on_level_load();
+	#endif
+
 	hook_GScr_LoadConsts->unhook();
 	void (*GScr_LoadConsts)(void);
 	*(int *)&GScr_LoadConsts = hook_GScr_LoadConsts->from;
@@ -895,10 +900,6 @@ void custom_SV_SpawnServer(char *server)
 	gsc_graph_cleanup_on_spawn_server();
 	#endif
 
-	#if COMPILE_JSON == 1
-	gsc_json_cleanup_on_spawn_server();
-	#endif
-
 	if ( com_sv_running->current.boolean )
 	{
 		persist = G_GetSavePersist();
@@ -1216,6 +1217,16 @@ void hook_Com_MakeSoundAliasesPermanent(snd_alias_list_t *aliasList, SoundFileIn
 	Com_MakeSoundAliasesPermanent(aliasList, fileInfo);
 }
 
+void hook_Scr_EndLoadEvaluate(void)
+{
+	// Last point where struct field ids still map to names
+	#if COMPILE_JSON == 1
+	gsc_json_keep_field_names();
+	#endif
+
+	Scr_EndLoadEvaluate();
+}
+
 void custom_Sys_InitializeCriticalSections(void)
 {
 	int i;
@@ -1258,6 +1269,11 @@ void custom_Sys_Quit(void)
 
 	// Remove existing links to map library
 	manymaps_cleanup();
+
+	// Let async JSON saves finish writing, exit would kill their threads
+	#if COMPILE_JSON == 1
+	gsc_json_shutdown();
+	#endif
 
 	// Any proxy threads to cleanup?
 	SV_ShutdownProxies();
@@ -12158,6 +12174,7 @@ public:
 		cracking_hook_call(0x08090BA0, (int)hook_ClientCommand);
 		cracking_hook_call(0x080AD1FE, (int)hook_Com_MakeSoundAliasesPermanent);
 		cracking_hook_call(0x080622F9, (int)hook_Com_Printf_in_Com_Init_Try_Block_Function);
+		cracking_hook_call(0x08076466, (int)hook_Scr_EndLoadEvaluate); // Scr_EndLoadScripts
 		cracking_hook_call(0x08062644, (int)hook_Com_Printf_in_Com_ModifyMsec);
 		cracking_hook_call(0x0806B24F, (int)hook_Com_sprintf_in_NET_AdrToString_IP);
 		cracking_hook_call(0x0806B2CE, (int)hook_Com_sprintf_in_NET_AdrToString_IPX);

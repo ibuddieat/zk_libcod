@@ -27,8 +27,7 @@ Module: JSON<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Behaves like <a href="json_load.htm">json_load</a>, but does not freeze the server while the file loads. Returns a numeric job ID (1 or higher), or 0 if it could not start due to a bad path or too many jobs running in parallel. Keep checking <a href="json_async_done.htm">json_async_done</a> until the returned job ID shows up, then grab the data with <a href="json_async_result.htm">json_async_result</a>.</p>
-<p>Use this for big files. It only reads plain files in the mod folder, not files packed inside .iwd archives, for those use <a href="json_load.htm">json_load</a>. A file holding more than 32768 values fails the job, in that case <a href="json_async_result.htm">json_async_result</a> returns undefined.</p>
+<p>Behaves like <a href="json_load.htm">json_load</a>, but loads the file in the background. Returns a job ID, or 0 if the job could not start. Keep checking <a href="json_async_done.htm">json_async_done</a> until the job ID shows up, then get the data with <a href="json_async_result.htm">json_async_result</a>.</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -37,11 +36,7 @@ Module: JSON<BR>
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-job = json_load_async("stats/big.json");
-if(job == 0)
-    return;
-// later, once done[i] == job:
-value = json_async_result(job);
+job = json_load_async("stats/players.json");
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -50,7 +45,7 @@ value = json_async_result(job);
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;fs path&gt; Path to the file, relative to the mod folder. Avoid a leading slash and dot-dot sequences</LI>
+<LI>1 : &lt;fs path&gt; Path relative to the mod folder</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>

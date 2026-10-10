@@ -27,7 +27,7 @@ Module: JSON<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Saves GSC data to a JSON file inside the mod folder. Any missing folders in the provided path are created automatically as far as permissions allow. Returns 1 on success, otherwise 0. The server waits while the file writes, so keep the files small or use the non-blocking alternative <a href="json_save_async.htm">json_save_async</a> instead.</p>
+<p>Saves GSC data to a JSON file in the mod folder, like <a href="json_stringify.htm">json_stringify</a>. Missing folders are created, and the old file stays intact if the save fails. Returns 1 on success, otherwise 0. The server waits while the file writes, use <a href="json_save_async.htm">json_save_async</a> for big files.</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -45,15 +45,15 @@ ok = json_save("stats/players.json", stats, 1);
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;fs path&gt; Where to write the file, a path relative to the mod folder</LI>
-<LI>2 : &lt;value&gt; The GSC data to save. Supported types are: struct, array, string, integer, float, vector</LI>
+<LI>1 : &lt;fs path&gt; Path relative to the mod folder</LI>
+<LI>2 : &lt;value&gt; The data to save</LI>
 </UL></TR></TD></TABLE>
 <BR>
 <H2>Optional Args</H2>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>3 : &lt;pretty&gt; Output style: 0 = compact single-line (default), 1 = human-readable multi-line</LI>
+<LI>3 : &lt;pretty&gt; 1 for readable multi-line output, 0 (default) for one line</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>

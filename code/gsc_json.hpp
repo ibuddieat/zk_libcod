@@ -4,7 +4,9 @@
 #include "gsc.hpp"
 
 void gsc_json_register_dvars(void);
-void gsc_json_cleanup_on_spawn_server(void);
+void gsc_json_cleanup_on_level_load(void);
+void gsc_json_shutdown(void);
+void gsc_json_keep_field_names(void);
 
 void gsc_json_parse();
 void gsc_json_stringify();
