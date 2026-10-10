@@ -1,4 +1,10 @@
 [submodule "code/lib/libwebsockets"]
 	path = code/lib/libwebsockets
 	url = https://github.com/warmcat/libwebsockets.git
+	branch = v5.0-stable
+	ignore = untracked
+[submodule "code/lib/mbedtls"]
+	path = code/lib/mbedtls
+	url = https://github.com/Mbed-TLS/mbedtls.git
+	branch = mbedtls-4.1
 	ignore = untracked
