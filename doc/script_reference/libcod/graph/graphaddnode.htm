@@ -27,7 +27,7 @@ Module: Graph<BR>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Adds a node at a world position and returns its id. Nodes must be added in order (0, 1, 2 ...), so a GSC array index and its native node id are always the same number. Returns <b>undefined</b> past <code>sv_graphMaxNodes</code>.</p>
+<p>Adds a node at a world position and returns its id. Nodes must be added in order (0, 1, 2 ...), so a GSC array index and its native node id are always the same number. Returns undefined past sv_graphMaxNodes.</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -45,14 +45,16 @@ n = graphAddNode(g, (100, 0, 32), 1);
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;graph id&gt; The graph.</LI><LI>2 : &lt;origin&gt; World position vector.</LI>
+<LI>1 : &lt;graph id&gt; The graph</LI>
+<LI>2 : &lt;origin&gt; World position vector</LI>
 </UL></TR></TD></TABLE>
 <BR>
 <H2>Optional Args</H2>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>3 : &lt;type&gt; A type bitmask you define (default <b>0</b>).</LI><LI>4 : &lt;node id&gt; The expected next id, checked against the sequential contract.</LI>
+<LI>3 : &lt;type&gt; A type bitmask you define (default0)</LI>
+<LI>4 : &lt;node id&gt; The expected next id, checked against the sequential contract</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>

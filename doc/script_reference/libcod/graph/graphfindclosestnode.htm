@@ -27,7 +27,7 @@ Module: Graph<BR>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Returns the id of the node nearest a world position, or <b>undefined</b> if none qualifies. With a content mask, only nodes with a clear locational trace (line of sight) to the position are considered - more expensive.</p>
+<p>Returns the id of the node nearest a world position, or undefined if none qualifies. With a content mask, only nodes with a clear locational trace (line of sight) to the position are considered - more expensive.</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -45,14 +45,15 @@ n = graphFindClosestNode(g, self.origin);
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;graph id&gt; The graph.</LI><LI>2 : &lt;origin&gt; World position vector.</LI>
+<LI>1 : &lt;graph id&gt; The graph</LI>
+<LI>2 : &lt;origin&gt; World position vector</LI>
 </UL></TR></TD></TABLE>
 <BR>
 <H2>Optional Args</H2>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>3 : &lt;content mask&gt; Trace content mask (e.g. MASK_SHOT) for a line-of-sight check.</LI>
+<LI>3 : &lt;content mask&gt; Trace content mask (e.g., MASK_SHOT) for a line-of-sight check. Default: 0</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>

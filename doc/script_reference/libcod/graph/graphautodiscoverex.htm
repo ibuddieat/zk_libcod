@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>graphAutodiscoverEx( &lt;graph id&gt;, &lt;seed origin&gt;, [&lt;grid step&gt;], [&lt;max nodes&gt;] )</H1>
+<H1>graphAutodiscoverEx( &lt;graph id&gt;, &lt;seed origin&gt;, [&lt;grid step&gt;], [&lt;max. nodes&gt;] )</H1>
 <HR>
 <BODY BGCOLOR="B0C4DE">
 <I>
@@ -27,7 +27,7 @@ Module: Graph<BR>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Enhanced <code>graphAutodiscover</code>. Two upgrades: (1) it seeds the grid from the graph's EXISTING nodes as well, so calling it once per spawn point extends one graph and covers separated areas (other floors, behind doors) that a single seed misses; (2) its links are typed and directional - where a player can walk both ways you get a two-way edge (type <b>0</b> flat or <b>1</b> step), where a player can only fall one way you get a one-way <b>drop</b> edge (type <b>2</b>), and a gap too big to fall is not linked. The edge types feed <code>graphFindPath</code>'s skip edge types so a bot can be told to avoid drops. Returns the number of new nodes added. Runs on the main thread - meant for one-time generation, then <code>graphSave</code>.</p>
+<p>Enhances <a href="graphautodiscover.htm">graphAutoDiscover</a>. Two upgrades: (1) it seeds the grid from the graph's existing nodes as well, so calling it once per spawn point extends one graph and covers separated areas (other floors, behind doors) that a single seed misses; (2) its links are typed and directional - where a player can walk both ways you get a two-way edge (type 0 flat or 1 step), where a player can only fall one way you get a one-way drop edge (type 2), and a gap too big to fall is not linked. The edge types feed <a href="graphfindpath.htm">graphFindPath</a>'s skip edge types so a bot can be told to avoid drops. Returns the number of new nodes added. Runs on the main thread - meant for one-time generation and for calling <a href="graphsave.htm">graphSave</a> afterwards for persistence.</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -45,16 +45,16 @@ n = graphAutodiscoverEx(g, self.origin, 48);
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;graph id&gt; The graph to fill (empty, or extended by an earlier call).</LI>
-<LI>2 : &lt;seed origin&gt; A world position on walkable ground to start from. The call is refused if the seed is not standable.</LI>
+<LI>1 : &lt;graph id&gt; The graph to fill (empty, or extended by an earlier call)</LI>
+<LI>2 : &lt;seed origin&gt; A world position on walkable ground to start from. The call is refused if the seed is not standable</LI>
 </UL></TR></TD></TABLE>
 <BR>
 <H2>Optional Args</H2>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>3 : &lt;grid step&gt; Spacing between nodes in units (default <b>48</b>; larger = fewer, coarser nodes).</LI>
-<LI>4 : &lt;max nodes&gt; Stop after the graph reaches this many nodes (default <code>sv_graphMaxNodes</code>).</LI>
+<LI>3 : &lt;grid step&gt; Spacing between nodes in units (default: 48; larger = fewer, coarser nodes)</LI>
+<LI>4 : &lt;max nodes&gt; Stop after the graph reaches this many nodes (default: sv_graphMaxNodes)</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>

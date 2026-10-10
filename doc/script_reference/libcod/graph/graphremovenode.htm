@@ -27,7 +27,7 @@ Module: Graph<BR>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Removes a node using a tombstone: the slot stays (so existing node ids keep their meaning), the node is flagged removed, its outgoing edges are dropped and every edge pointing to it is removed. All queries then skip it. Returns <b>true</b>, or <b>false</b> for an invalid or already-removed node.</p>
+<p>Removes a node using a tombstone: the slot stays (so existing node ids keep their meaning), the node is flagged removed, its outgoing edges are dropped and every edge pointing to it is removed. All queries then skip it. Returns true, or false for an invalid or already-removed node.</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -45,7 +45,8 @@ graphRemoveNode(g, 5);
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;graph id&gt; The graph.</LI><LI>2 : &lt;node id&gt; The node to remove.</LI>
+<LI>1 : &lt;graph id&gt; The graph</LI>
+<LI>2 : &lt;node id&gt; The node to remove</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>

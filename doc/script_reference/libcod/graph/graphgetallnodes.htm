@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>graphGetAllNodes( &lt;graph id&gt;, [&lt;origin&gt;], [&lt;max dist sq&gt;] )</H1>
+<H1>graphGetAllNodes( &lt;graph id&gt;, [&lt;origin&gt;], [&lt;max. distance squared&gt;] )</H1>
 <HR>
 <BODY BGCOLOR="B0C4DE">
 <I>
@@ -28,7 +28,7 @@ Module: Graph<BR>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
 <p>Returns an array of node ids. With an origin and a squared radius, only nodes within that radius are returned - a cheap spatial filter. Removed nodes are excluded.</p>
-<p>Returns <b>undefined</b> when the result would exceed the script variable limit (32768 values). Every array element occupies a slot in the engine's global variable pool, and exhausting that pool is a terminal error, so an oversized query is refused rather than served. An autodiscovered map graph can exceed it: pass an origin and max dist sq to narrow it.</p>
+<p>Returns undefined when the result would exceed the script variable limit (32768 values). An auto-discovered map graph can exceed this, pass an origin and a maximum distance squared to narrow it in that case.</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -46,14 +46,15 @@ near = graphGetAllNodes(g, self.origin, 500 * 500);
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;graph id&gt; The graph.</LI>
+<LI>1 : &lt;graph id&gt; The graph</LI>
 </UL></TR></TD></TABLE>
 <BR>
 <H2>Optional Args</H2>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>2 : &lt;origin&gt; Filter centre (world position).</LI><LI>3 : &lt;max dist sq&gt; Squared radius; nodes farther than this are dropped.</LI>
+<LI>2 : &lt;origin&gt; Filter center (world position)</LI>
+<LI>3 : &lt;max. distance squared&gt; Squared radius around origin; nodes farther than this are dropped</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>

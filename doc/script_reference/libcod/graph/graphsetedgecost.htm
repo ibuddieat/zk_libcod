@@ -27,7 +27,7 @@ Module: Graph<BR>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Sets the traversal cost of a directed edge - the main hook for danger-weighting. Returns <b>true</b>, or <b>false</b> if the edge does not exist. Cost must be non-negative; keep it at or above the physical distance so the A* heuristic stays admissible.</p>
+<p>Sets the traversal cost of a directed edge - the main hook for danger-weighting. Returns true, or false if the edge does not exist. Cost must be non-negative; keep it at or above the physical distance so the A* heuristic stays admissible.</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -45,7 +45,10 @@ graphSetEdgeCost(g, 0, 1, 9999);
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;graph id&gt; The graph.</LI><LI>2 : &lt;from&gt; Source node.</LI><LI>3 : &lt;to&gt; Destination node.</LI><LI>4 : &lt;cost&gt; New non-negative cost.</LI>
+<LI>1 : &lt;graph id&gt; The graph</LI>
+<LI>2 : &lt;from&gt; Source node</LI>
+<LI>3 : &lt;to&gt; Destination node</LI>
+<LI>4 : &lt;cost&gt; New, non-negative cost of type float</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>

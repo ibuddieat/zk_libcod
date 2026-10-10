@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>graphAutodiscover( &lt;graph id&gt;, &lt;seed origin&gt;, [&lt;grid step&gt;], [&lt;max nodes&gt;] )</H1>
+<H1>graphAutodiscover( &lt;graph id&gt;, &lt;seed origin&gt;, [&lt;grid step&gt;], [&lt;max. nodes&gt;] )</H1>
 <HR>
 <BODY BGCOLOR="B0C4DE">
 <I>
@@ -27,7 +27,7 @@ Module: Graph<BR>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Generates a walkable graph with no hand-placed waypoints. Starting at the seed it flood-fills outward on a grid, adding a node wherever a player fits on walkable ground and can reach it from a neighbour, and links walkable grid-neighbours both ways. Every node is reachable from the seed. Returns the number of nodes added. Runs on the main thread - meant for one-time generation, then <code>graphSave</code>.</p>
+<p>Generates a walkable graph with no hand-placed waypoints. Starting at the seed it flood-fills outward on a grid, adding a node wherever a player fits on walkable ground and can reach it from a neighbour, and links walkable grid-neighbours both ways. Every node is reachable from the seed. Returns the number of nodes added. Runs on the main thread - meant for one-time generation and for calling <a href="graphsave.htm">graphSave</a> afterwards for persistence.</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -45,14 +45,16 @@ n = graphAutodiscover(g, self.origin, 48);
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;graph id&gt; The graph to fill (usually empty).</LI><LI>2 : &lt;seed origin&gt; A world position on walkable ground to start from. The call is refused if the seed is not standable.</LI>
+<LI>1 : &lt;graph id&gt; The graph to fill (usually empty to start with)</LI>
+<LI>2 : &lt;seed origin&gt; A world position on walkable ground to start from. The call is refused if the seed is not standable</LI>
 </UL></TR></TD></TABLE>
 <BR>
 <H2>Optional Args</H2>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>3 : &lt;grid step&gt; Spacing between nodes in units (default <b>48</b>; larger = fewer, coarser nodes).</LI><LI>4 : &lt;max nodes&gt; Stop after this many nodes (default <code>sv_graphMaxNodes</code>).</LI>
+<LI>3 : &lt;grid step&gt; Spacing between nodes in units (default: 48; larger = fewer, coarser nodes)</LI>
+<LI>4 : &lt;max nodes&gt; Stop after this many nodes (default: sv_graphMaxNodes)</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>

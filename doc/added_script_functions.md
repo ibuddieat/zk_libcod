@@ -160,14 +160,14 @@
   * `getWeaponRaiseTime(<weapon name>)`
   * `graphAddEdge(<graph id>, <from>, <to>, [<type>], [<cost>])`
   * `graphAddNode(<graph id>, <origin>, [<type>], [<node id>])`
-  * `graphAutodiscover(<graph id>, <seed origin>, [<grid step>], [<max nodes>])`
-  * `graphAutodiscoverEx(<graph id>, <seed origin>, [<grid step>], [<max nodes>])`
+  * `graphAutodiscover(<graph id>, <seed origin>, [<grid step>], [<max. nodes>])`
+  * `graphAutodiscoverEx(<graph id>, <seed origin>, [<grid step>], [<max. nodes>])`
   * `graphCreate([<persist>], [<reserve>])`
   * `graphFindClosestEdge(<graph id>, <origin>)`
   * `graphFindClosestNode(<graph id>, <origin>, [<content mask>])`
-  * `graphFindPath(<graph id>, <start>, <goal>, [<skip nodes>], [<skip node types>], [<skip edge types>], [<max expansions>])`
+  * `graphFindPath(<graph id>, <start>, <goal>, [<skip nodes>], [<skip node types>], [<skip edge types>], [<max. expansions>])`
   * `graphGetAllEdges(<graph id>)`
-  * `graphGetAllNodes(<graph id>, [<origin>], [<max dist sq>])`
+  * `graphGetAllNodes(<graph id>, [<origin>], [<max. distance squared>])`
   * `graphGetEdgeCount(<graph id>)`
   * `graphGetEdgeProperties(<graph id>, <from>, <to>)`
   * `graphGetNodeCount(<graph id>)`

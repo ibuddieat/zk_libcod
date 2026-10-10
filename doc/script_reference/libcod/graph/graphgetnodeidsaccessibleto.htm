@@ -27,8 +27,8 @@ Module: Graph<BR>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Returns an array of every node that can reach the given node by following edges forward (includes the node itself). The reverse of <code>graphGetNodeIdsAccessibleFrom</code>. Returns <b>undefined</b> for an invalid or removed node.</p>
-<p>Returns <b>undefined</b> when the result would exceed the script variable limit (32768 values). Every array element occupies a slot in the engine's global variable pool, and exhausting that pool is a terminal error, so an oversized query is refused rather than served. A large connected component can exceed it.</p>
+<p>Returns an array of every node that can reach the given node by following edges forward (includes the node itself). The reverse of <a href="graphgetnodeidsaccessiblefrom.htm">graphGetNodeIdsAccessibleFrom</a>. Returns undefined for an invalid or removed node.</p>
+<p>Returns undefined when the result would exceed the script variable limit (32768 values). A large connected component can exceed this.</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -46,7 +46,8 @@ comp = graphGetNodeIdsAccessibleTo(g, goal);
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;graph id&gt; The graph.</LI><LI>2 : &lt;node id&gt; The target node.</LI>
+<LI>1 : &lt;graph id&gt; The graph</LI>
+<LI>2 : &lt;node id&gt; The target node</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>

@@ -27,7 +27,7 @@ Module: Graph<BR>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Creates a new empty graph and returns its id (0, 1, 2 ...). Ids stay stable for the life of the graph. Returns <b>undefined</b> once <code>sv_graphMaxGraphs</code> graphs already exist.</p>
+<p>Creates a new empty graph and returns its id (0, 1, 2 ...). Ids stay stable for the life of the graph. Returns undefined once sv_graphMaxGraphs graphs already exist.</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -45,7 +45,8 @@ g = graphCreate();
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;persist&gt; If <b>1</b>, the graph survives map changes; default <b>0</b> (wiped on every map load).</LI><LI>2 : &lt;reserve&gt; Pre-allocate room for this many nodes to avoid re-allocations.</LI>
+<LI>1 : &lt;persist&gt; If 1, the graph survives map changes; default 0 (wiped on every map load)</LI>
+<LI>2 : &lt;reserve&gt; Pre-allocate room for this many nodes to avoid memory re-allocations</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>

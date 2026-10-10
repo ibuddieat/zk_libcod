@@ -27,7 +27,7 @@ Module: Graph<BR>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Returns per-graph counters as an array: <code>[0]</code> nodes, <code>[1]</code> edges, <code>[2]</code> searches, <code>[3]</code> partials, <code>[4]</code> expansions total, <code>[5]</code> expansions max, <code>[6]</code> us min, <code>[7]</code> us avg, <code>[8]</code> us max. Timings are microseconds per search.</p>
+<p>Returns per-graph counters as an array: [0] nodes, [1] edges, [2] searches, [3] partials, [4] expansions total, [5] max. expansions, [6] us min, [7] us avg, [8] us max. Timings are microseconds (us) per search.</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -45,14 +45,14 @@ s = graphGetStats(g);
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;graph id&gt; The graph.</LI>
+<LI>1 : &lt;graph id&gt; The graph</LI>
 </UL></TR></TD></TABLE>
 <BR>
 <H2>Optional Args</H2>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>2 : &lt;reset&gt; If truthy, zero the counters after reading.</LI>
+<LI>2 : &lt;reset&gt; If true, zero the counters after reading. Default: False</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>

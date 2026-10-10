@@ -27,7 +27,7 @@ Module: Graph<BR>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Runs one reverse search from a goal and caches, for every node, the cost to reach it and the next hop toward it. Afterwards <code>graphFindPath</code> answers any start-to-this-goal (with the same skip masks and no per-call skip-node list) by following the cached hops - no search. Any change to the graph invalidates every cache. Returns <b>true</b>, or <b>false</b> for an invalid or removed goal.</p>
+<p>Runs one reverse search from a goal and caches, for every node, the cost to reach it and the next hop toward it. Afterwards <a href="graphfindpath.htm">graphFindPath</a> answers any start-to-this-goal (with the same skip masks and no per-call skip-node list) by following the cached hops - no search. Any change to the graph invalidates every cache. Returns true, or false for an invalid or removed goal.</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -45,14 +45,16 @@ graphPrecomputePathsToNode(g, flagNode);
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;graph id&gt; The graph.</LI><LI>2 : &lt;goal&gt; The shared goal node.</LI>
+<LI>1 : &lt;graph id&gt; The graph</LI>
+<LI>2 : &lt;goal&gt; The shared goal node</LI>
 </UL></TR></TD></TABLE>
 <BR>
 <H2>Optional Args</H2>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>3 : &lt;skip node types&gt; Must match the mask you pass to graphFindPath.</LI><LI>4 : &lt;skip edge types&gt; Must match the mask you pass to graphFindPath.</LI>
+<LI>3 : &lt;skip node types&gt; Must match the mask passed to <a href="graphfindpath.htm">graphFindPath</a></LI>
+<LI>4 : &lt;skip edge types&gt; Must match the mask passed to <a href="graphfindpath.htm">graphFindPath</a></LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>
