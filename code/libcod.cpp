@@ -893,6 +893,8 @@ void custom_SV_SpawnServer(char *server)
 
 	#if COMPILE_GRAPH == 1
 	gsc_graph_cleanup_on_spawn_server();
+	#endif
+
 	#if COMPILE_JSON == 1
 	gsc_json_cleanup_on_spawn_server();
 	#endif
