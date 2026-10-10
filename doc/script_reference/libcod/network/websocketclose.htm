@@ -27,7 +27,7 @@ Module: Network<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Requests a graceful close of a connection opened by <code>webSocketConnect</code> and disables its auto-reconnect until you connect again. Returns <b>true</b> if the id was valid, <b>false</b> otherwise. The <code>onClose</code> callback fires once the close frame is exchanged.</p>
+<p>Requests a graceful close of a connection opened by <code>webSocketConnect</code> and disables its auto-reconnect until you connect again. Returns <b>true</b> if the id was valid, <b>false</b> otherwise. The <code>onClose(false, true)</code> callback follows on a later frame.</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>

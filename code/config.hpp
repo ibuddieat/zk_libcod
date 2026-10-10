@@ -28,6 +28,5 @@
 #define COMPILE_HTTP 0
 #define COMPILE_JUMP 1
 #define COMPILE_SPEEX 1
-#define COMPILE_WEBSOCKET 0
 
 #endif

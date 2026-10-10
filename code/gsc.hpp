@@ -81,11 +81,7 @@
 #endif
 
 #if COMPILE_HTTP == 1
-#include "gsc_http.hpp"
-#endif
-
-#if COMPILE_WEBSOCKET == 1
-#include "gsc_websocket.hpp"
+#include "gsc_http_ws.hpp"
 #endif
 
 #include "gsc_extra.hpp"
