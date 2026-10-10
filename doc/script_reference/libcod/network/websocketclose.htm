@@ -15,11 +15,11 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>json_async_result( &lt;jobId&gt; )</H1>
+<H1>webSocketClose( &lt;connectionId&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
-Module: JSON<BR>
+Module: Network<BR>
 </I>
 
 <BR>
@@ -27,7 +27,7 @@ Module: JSON<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Collects the result of a finished <a href="json_load_async.htm">json_load_async</a> or <a href="json_save_async.htm">json_save_async</a> job. For a load job, the loaded data or undefined (on fail) is returned; for a save job, 1 (success) or 0 (fail) is returned. If the job is not done yet, undefined is returned and the job stays in the queue. Always collect every started job, or it stays in memory.</p>
+<p>Requests a graceful close of a connection opened by <code>webSocketConnect</code> and disables its auto-reconnect until you connect again. Returns <b>true</b> if the id was valid, <b>false</b> otherwise. The <code>onClose</code> callback fires once the close frame is exchanged.</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -36,11 +36,7 @@ Module: JSON<BR>
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-job = json_load_async("stats/big.json");
-// ... checking json_async_done() each tick ...
-v = json_async_result(job);
-if(IsDefined(v))
-    IPrintLn("loaded " + v["records"].size + " records");
+webSocketClose(id);
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -49,7 +45,7 @@ if(IsDefined(v))
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;jobId&gt; The numeric job ID returned from <a href="json_load_async.htm">json_load_async</a> or <a href="json_save_async.htm">json_save_async</a></LI>
+<LI>1 : &lt;connectionId&gt; The id returned by webSocketConnect.</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>

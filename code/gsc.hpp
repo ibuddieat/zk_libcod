@@ -13,10 +13,11 @@
 #include <sys/mman.h> // mprotect
 #include <execinfo.h> // stacktrace
 #include <stddef.h> // offsetof
-#include <ctype.h> // toupper
+#include <ctype.h> // isxdigit, toupper
 #include <sys/time.h> // milliseconds
 #include <sys/stat.h> // fsize
 #include <time.h>  // getsystemtime
+#include <sstream> // std::ostringstream
 
 #include "config.hpp"
 #include "declarations.hpp"
@@ -77,6 +78,14 @@
 
 #if COMPILE_WEAPONS == 1
 #include "gsc_weapons.hpp"
+#endif
+
+#if COMPILE_HTTP == 1
+#include "gsc_http.hpp"
+#endif
+
+#if COMPILE_WEBSOCKET == 1
+#include "gsc_websocket.hpp"
 #endif
 
 #include "gsc_extra.hpp"

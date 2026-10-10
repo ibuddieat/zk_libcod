@@ -44,7 +44,7 @@ exec_async_task *first_exec_async_task = NULL;
 
 void gsc_exec()
 {
-	char *command;
+	const char *command;
 
 	if ( !stackGetParamString(0, &command) )
 	{
@@ -163,7 +163,7 @@ void * Exec_Async(void *input_c)
 
 void gsc_exec_async_create()
 {
-	char *command;
+	const char *command;
 	int callback;
 	
 	if ( !stackGetParamString(0, &command) )
@@ -199,7 +199,7 @@ void gsc_exec_async_create()
 
 	int valueInt;
 	float valueFloat;
-	char *valueString;
+	const char *valueString;
 	vec3_t valueVector;
 	unsigned int valueObject;
 
@@ -265,7 +265,7 @@ void gsc_exec_async_create()
 
 void gsc_exec_async_create_nosave()
 {
-	char *command;
+	const char *command;
 	int callback;
 
 	if ( !stackGetParamString(0, &command) )
@@ -301,7 +301,7 @@ void gsc_exec_async_create_nosave()
 
 	int valueInt;
 	float valueFloat;
-	char *valueString;
+	const char *valueString;
 	vec3_t valueVector;
 	unsigned int valueObject;
 

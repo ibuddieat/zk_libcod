@@ -27,7 +27,7 @@ Module: JSON<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Reads a JSON file and turns it into GSC data. Returns <b>undefined</b> if the file is missing, the JSON is broken, or it holds more than 32768 values (the script variable pool cannot hold more), so check with <code>isDefined()</code> before using it. The server waits while the file loads, so keep files small (use <code>json_load_async</code> for big ones).</p>
+<p>Reads a JSON file and turns it into GSC data. Returns undefined if the file is missing, the JSON is broken, or it holds more than 32768 values, so it is advised to apply an <a href="../../stock/variables/isdefined.htm">IsDefined</a> check before use. The server waits while the file loads, so keep the loaded files small to avoid server lag or use the non-blocking alternative <a href="json_load_async.htm">json_load_async</a> instead.</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -37,8 +37,8 @@ Module: JSON<BR>
 <H3>
 <PRE>
 wp = json_load("waypoints/mp_carentan.json");
-if(isDefined(wp))
-    iprintln(wp["nodes"].size + " nodes loaded");
+if(IsDefined(wp))
+    IPrintLn(wp["nodes"].size + " nodes loaded");
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -47,7 +47,7 @@ if(isDefined(wp))
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;fs path&gt; Path to the file, relative to the mod folder.</LI>
+<LI>1 : &lt;fs path&gt; Path to the file, relative to the mod folder</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>

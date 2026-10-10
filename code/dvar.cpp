@@ -199,9 +199,9 @@ void custom_Com_InitDvars(void)
 	// sv_proxyEnable_1_3_119 dvar
 	Dvar_RegisterInt("protocol", 118, 115, 118, DVAR_INTERNAL | DVAR_ROM | DVAR_SERVERINFO);
 
-#if COMPILE_JSON == 1
+	#if COMPILE_JSON == 1
 	gsc_json_register_dvars();
-#endif
+	#endif
 
 	hook_Com_InitDvars->unhook();
 	void (*Com_InitDvars)(void);

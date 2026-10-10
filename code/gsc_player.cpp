@@ -1,6 +1,6 @@
 #include "gsc_player.hpp"
 
-#if COMPILE_CUSTOM_VOICE == 1
+#if COMPILE_SPEEX == 1
 #include <speex/speex.h>
 #endif
 
@@ -1151,6 +1151,66 @@ void gsc_player_getuserinfo(scr_entref_t ref)
 		stackPushString(val);
 	else
 		stackPushString("");
+}
+
+void gsc_player_gethwid(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_gethwid() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	// CoD2x generates cl_hwid2 here:
+	// https://github.com/callofduty2x/CoD2x/blob/d8c54695a5239ac99d1dfe96212b809b1a54bfee/src/mss32/hwid.cpp#L1046
+	stackPushString(customPlayerState[id].cod2xHwid2);
+}
+
+void gsc_player_getcdkeyhash(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_getcdkeyhash() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	client_t *client = &svs.clients[id];
+
+	stackPushString(client->clientPBguid);
+}
+
+void gsc_player_getauthorizationstatus(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_getauthorizationstatus() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushString(customPlayerState[id].authorizationStatus);
+}
+
+void gsc_player_getcod2xprotocol(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_getcod2xprotocol() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushInt(customPlayerState[id].cod2xProtocol);
 }
 
 void gsc_player_setuserinfo(scr_entref_t ref)
@@ -3894,7 +3954,7 @@ void gsc_player_isusetouching(scr_entref_t ref)
 	stackPushBool(client->ps.pm_type != PM_INTERMISSION && ( client->ps.pm_flags & PMF_SPECTATING ) == 0 && client->ps.cursorHintEntIndex != ENTITYNUM_NONE);
 }
 
-#if COMPILE_CUSTOM_VOICE == 1
+#if COMPILE_SPEEX == 1
 
 extern VoicePacket_t voiceDataStore[MAX_CUSTOMSOUNDS][MAX_STOREDVOICEPACKETS];
 

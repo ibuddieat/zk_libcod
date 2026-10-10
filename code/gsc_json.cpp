@@ -45,26 +45,37 @@
 #include <string.h>
 #include <unistd.h>
 
+// Module cap, not an engine constant: kept well under yyjson's reader
+// recursion limit (1024) and the VM operand stack. Deeper levels emit null.
 #define JSON_MAX_DEPTH 64
 
-// Total values one serialization may visit. Shared subtrees are re-walked per
-// reference, so aliased/cyclic graphs multiply; the budget bounds the blowup.
+// Module policy cap, not an engine constant: total values one serialization
+// may visit. Shared subtrees are re-walked per reference, so aliased/cyclic
+// graphs multiply; without the budget a player sized cycle can grow the
+// process to 3.4 GB (reproduced live).
 #define JSON_MAX_NODES 100000
 
 // Max parsed JSON values pushed to the VM per parse/load. Each value consumes
-// a script variable; the engine pool holds 0xFFFE total, and exhausting it is
-// a Scr_TerminalError (server drop). Half the pool is the safe ceiling.
+// a script variable from the fixed pool; exhausting it drops the server.
+// Pool size: https://github.com/voron00/CoD2rev_Server/blob/master/src/script/script_public.h#L926
+// Terminal error: https://github.com/voron00/CoD2rev_Server/blob/master/src/script/scr_variable.cpp#L3834
+// Half the pool is the safe ceiling.
 #define JSON_MAX_VALUES 32768
 
-// The engine's script string allocator (MT_AllocIndex / MEMORY_NODE_COUNT) caps a
-// single string at 64 KB; handing it a larger one triggers Scr_TerminalError and
-// drops the server. Guard every string we push to the VM (parsed values and the
-// stringify result) under that ceiling. File writes (json_save) are unaffected.
+// The engine's script string allocator caps a single string at 64 KB.
+// Allocator bound: https://github.com/voron00/CoD2rev_Server/blob/master/src/script/scr_memorytree.cpp#L160
+// String list drop: https://github.com/voron00/CoD2rev_Server/blob/master/src/script/scr_stringlist.cpp#L871
+// Note GSC string CONCAT is far tighter still - Scr_EvalPlus uses a fixed 8 KB
+// buffer: https://github.com/voron00/CoD2rev_Server/blob/master/src/script/scr_variable.cpp#L2622
+// Guard every string we push to the VM (parsed values and the stringify
+// result) under the 64 KB ceiling. File writes (json_save) are unaffected.
 #define JSON_MAX_STRING 65000
 
-// Engine MAX_QPATH = 64. Path strings passed to FS_FOpen* longer than this are
-// either truncated by the FS layer (silent data loss) or trip the BG sanitizer.
-// Refuse with a clear error before we ever hit the FS.
+// Engine MAX_QPATH = 64:
+// https://github.com/voron00/CoD2rev_Server/blob/master/src/universal/q_shared.h#L168
+// Path strings passed to FS_FOpen* longer than this are either truncated by
+// the FS layer (silent data loss) or trip the BG sanitizer. Refuse before we
+// ever hit the FS.
 #define JSON_MAX_PATH 64
 
 // ===========================================================================
@@ -850,7 +861,8 @@ void gsc_json_save()
 	FS_FCloseFile(f);
 	free(out);
 
-	stackPushInt(written > 0 ? 1 : 0);
+	// Full write or failure - a partial write (disk full) must not report 1.
+	stackPushInt(written == (int)out_len ? 1 : 0);
 }
 
 // ===========================================================================
@@ -927,8 +939,9 @@ static char * json_async_resolve_path(const char *rel)
 	if ( fs_home == NULL || fs_home->current.string == NULL || fs_home->current.string[0] == '\0' )
 		return NULL;
 
-	// Pre-check length: FS_BuildOSPath ERR_FATALs on MAX_OSPATH overflow.
-	if ( strlen(fs_home->current.string) + strlen(rel) + 64 >= MAX_OSPATH )
+	// Pre-check length: FS_BuildOSPath Sys_Errors on MAX_OSPATH overflow. The
+	// margin must cover "/" + fs_gamedir (up to MAX_QPATH) + "/" + NUL.
+	if ( strlen(fs_home->current.string) + strlen(rel) + MAX_QPATH + 3 >= MAX_OSPATH )
 		return NULL;
 
 	// Empty game -> engine uses fs_gamedir, so async matches sync FS scope.
@@ -1155,6 +1168,40 @@ static void json_async_unlink_head_and_free(json_async_job *job)
 		json_async_pending--;
 	pthread_mutex_unlock(&json_async_mutex);
 	json_async_free_job(job);
+}
+
+// Reap finished jobs that were never claimed. A job queued right before a map
+// change survives the VM reset, but the script-side jobId does not, so the job
+// can never be claimed and would sit in the list forever (counting against
+// scr_json_async_max_jobs). Called from custom_SV_SpawnServer on every map
+// load, main thread. PENDING jobs still belong to their worker and are left
+// alone; once finished they are reaped on the next map load.
+void gsc_json_cleanup_on_spawn_server(void)
+{
+	int reaped = 0;
+
+	pthread_mutex_lock(&json_async_mutex);
+	json_async_job **link = &json_async_jobs;
+	while ( *link != NULL )
+	{
+		json_async_job *job = *link;
+		if ( job->status != JSON_ASYNC_STATUS_PENDING )
+		{
+			*link = job->next;
+			if ( json_async_pending > 0 )
+				json_async_pending--;
+			json_async_free_job(job);
+			reaped++;
+		}
+		else
+		{
+			link = &job->next;
+		}
+	}
+	pthread_mutex_unlock(&json_async_mutex);
+
+	if ( reaped > 0 )
+		Com_Printf("[JSON] reaped %d unclaimed async job(s) on map change\n", reaped);
 }
 
 // json_load_async(path) -> jobId   (0 on submission failure)

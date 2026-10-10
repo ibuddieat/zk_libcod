@@ -307,7 +307,7 @@ scr_function_t scriptFunctions[] =
 	{"error", gsc_utils_error, 0},
 	#endif
 
-	#if COMPILE_CUSTOM_VOICE == 1
+	#if COMPILE_SPEEX == 1
 	{"getSoundFileDuration", gsc_utils_getsoundfileduration, 0},
 	{"loadSoundFile", gsc_utils_loadsoundfile, 0},
 	{"loadSpeexFile", gsc_utils_loadspeexfile, 0},
@@ -347,6 +347,18 @@ scr_function_t scriptFunctions[] =
 	{"resetIgnoredWeapons", gsc_weapons_resetignoredweapons, 0},
 	{"ignoreWeapon", gsc_weapons_ignoreweapon, 0},
 	{"setDefaultWeapon", gsc_weapons_setdefaultweapon, 0},
+	#endif
+	#if COMPILE_HTTP == 1
+	{"httpFetch", gsc_http_fetch, 0},
+	{"http_fetch", gsc_http_fetch, 0}, // CoD2x alias
+	#endif
+	#if COMPILE_WEBSOCKET == 1
+	{"webSocketConnect", gsc_websocket_connect, 0},
+	{"websocket_connect", gsc_websocket_connect, 0}, // CoD2x alias
+	{"webSocketSendText", gsc_websocket_sendtext, 0},
+	{"websocket_sendText", gsc_websocket_sendtext, 0}, // CoD2x alias
+	{"webSocketClose", gsc_websocket_close, 0},
+	{"websocket_close", gsc_websocket_close, 0}, // CoD2x alias
 	#endif
 	{NULL, NULL, 0} // Terminator
 };
@@ -455,9 +467,12 @@ scr_method_t scriptMethods[] =
 	{"forwardButtonPressed", gsc_player_button_forward, 0},
 	{"fragButtonPressed", gsc_player_button_frag, 0},
 	{"getAddressType", gsc_player_addresstype, 0},
+	{"getAuthorizationStatus", gsc_player_getauthorizationstatus, 0},
 	{"getBulletMask", gsc_player_getbulletmask, 0},
+	{"getCDKeyHash", gsc_player_getcdkeyhash, 0},
 	{"getClientConnectState", gsc_player_getclientconnectstate, 0},
 	{"getClientHudElemCount", gsc_player_getclienthudelemcount, 0},
+	{"getCod2xProtocol", gsc_player_getcod2xprotocol, 0},
 	{"getCollisionTeam", gsc_player_getcollisionteam, 0},
 	{"getCookTime", gsc_player_getcooktime, 0},
 	{"getCurrentOffhandSlotAmmo", gsc_player_getcurrentoffhandslotammo, 0},
@@ -468,6 +483,7 @@ scr_method_t scriptMethods[] =
 	{"getFPS", gsc_player_getfps, 0},
 	{"getGravity", gsc_player_getgravity, 0},
 	{"getGroundEntity", gsc_player_getgroundentity, 0},
+	{"getHWID", gsc_player_gethwid, 0},
 	{"getInactivityTime", gsc_player_getinactivitytime, 0},
 	{"getIP", gsc_player_getip, 0},
 	{"getLastConnectTime", gsc_player_getlastconnecttime, 0},
@@ -569,7 +585,7 @@ scr_method_t scriptMethods[] =
 	{"unmuteClient", gsc_player_unmuteclient, 0},
 	{"useEntity", gsc_player_useentity, 0},
 	{"useTurret", gsc_player_useturret, 0},
-	#if COMPILE_CUSTOM_VOICE == 1
+	#if COMPILE_SPEEX == 1
 	{"getRemainingSoundFileDuration", gsc_player_getremainingsoundfileduration, 0},
 	{"isPlayingSoundFile", gsc_player_isplayingsoundfile, 0},
 	{"playSoundFile", gsc_player_playsoundfile, 0},

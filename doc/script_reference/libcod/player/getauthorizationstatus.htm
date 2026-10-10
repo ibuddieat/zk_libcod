@@ -15,11 +15,11 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>json_parse( &lt;json string&gt; )</H1>
+<H1>getAuthorizationStatus()</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
-Module: JSON<BR>
+Module: Player<BR>
 </I>
 
 <BR>
@@ -27,7 +27,22 @@ Module: JSON<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Reads JSON text and turns it into GSC data. Returns a JSON object as an array that is indexed by name like v["hp"]; a JSON list comes back as an array indexed by number like v[0]. Returns undefined if the text is not valid JSON, or if it holds more than 32768 values.</p>
+<p>Gets the player's key code authorization status. Always returns an empty string for a player connecting through a libcod proxy. Known stock values are:</p>
+<UL>
+<LI>BAD_CDKEY</LI>
+<LI>BANNED_CDKEY</LI>
+<LI>CLIENT_UNKNOWN_TO_AUTH</LI>
+<LI>INVALID_CDKEY</LI>
+<LI>KEY_IS_GOOD</LI>
+</UL>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Call this on:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+The player
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -36,18 +51,10 @@ Module: JSON<BR>
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-v = json_parse("{\"name\":\"bot1\",\"hp\":100}");
-IPrintLn(v["name"] + " has " + v["hp"] + " hp");
+if ( player getAuthorizationStatus() == "KEY_IS_GOOD" ) ...
 </PRE>
 </H3>
 </TR></TD></TABLE>
-<BR><BR>
-<H2>Required Args:</H2>
-<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
-<TR><TD BGCOLOR="C0D4EE">
-<UL>
-<LI>1 : &lt;json string&gt; A string containing valid JSON</LI>
-</UL></TR></TD></TABLE>
 <BR>
 </BODY>
 </HTML>

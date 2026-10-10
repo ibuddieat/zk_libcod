@@ -181,7 +181,7 @@ void gsc_binarybuffer_write()
 	}
 	case 's':
 	{
-		char *tmp_str;
+		const char *tmp_str;
 		stackGetParamString(2, &tmp_str);
 		char *copy = (char *)malloc(strlen(tmp_str) + 1);
 		strcpy(copy, tmp_str);
@@ -192,7 +192,7 @@ void gsc_binarybuffer_write()
 	}
 	case 'c':
 	{
-		char *tmp_str;
+		const char *tmp_str;
 		stackGetParamString(2, &tmp_str);
 		*(char *)(bb->address + bb->pos) = tmp_str[0];
 		bb->pos += 1;

@@ -72,6 +72,7 @@
 #define MAX_DVARS                   1280
 #define MAX_ENT_CLUSTERS            16
 #define MAX_EVENTS                  4
+#define MAX_GAMETYPE_SCRIPTS        32
 #define MAX_GENTITIES               ( 1 << GENTITYNUM_BITS ) // 0x400
 #define MAX_INFO_STRING             0x400
 #define MAX_IPFILTERS               1024
@@ -102,7 +103,7 @@
 // These are the only configstrings that the system reserves, all the
 // other ones (see cs_index_t) are strictly for servergame to clientgame
 // communication
-#define CS_SERVERINFO 0 // An info string with all the serverinfo cvars
+#define CS_SERVERINFO 0 // An info string with all the serverinfo dvars
 #define CS_SYSTEMINFO 1 // An info string for server system to client system configuration (timescale, etc.)
 
 // dvar_t->flags
@@ -144,7 +145,7 @@
 // entityShared_t->svFlags
 #define SVF_NOCLIENT  0x1   // Don't send entity to clients, even if it has effects
 #define SVF_BODY      0x2   // Player or corpse
-#define SVF_DOBJ      0x4   // Dobj model, can be player model, script model, item.
+#define SVF_DOBJ      0x4   // Dobj model, can be player model, script model, item
 #define SVF_BROADCAST 0x8   // Send to all connected clients
 #define SVF_OBJECTIVE 0x10  // Added to snapshots, even if not nearby or behind fog
 #define SVF_RADIUS    0x20  // For trigger_radius and few other things
@@ -381,7 +382,7 @@ typedef enum
 	CRITSECT_DVAR = 4,
 	CRITSECT_RD_BUFFER = 5,
 	CRITSECT_PRINT, // New from here on
-#if COMPILE_CUSTOM_VOICE == 1
+#if COMPILE_SPEEX == 1
 	CRITSECT_LOAD_SOUND_FILE,
 #endif
 	CRITSECT_RATELIMITER,
@@ -1502,8 +1503,13 @@ typedef struct entityState_s
 	{
 		int scale;
 		int eventParm2;
+		int hintString;
 	};
-	int dmgFlags;
+	union
+	{
+		int dmgFlags;
+		int hintType;
+	};
 	int animMovetype;
 	float fTorsoHeight;
 	float fTorsoPitch;
@@ -4095,8 +4101,8 @@ static const int g_fHitLocDamageMult_offset = 0x08628EE0;
 
 typedef struct src_error_s
 {
-	char internal_function[64];
-	char message[1024];
+	char internal_function[128]; // Over 64 for long level script path in GScr_LoadLevelScript
+	char message[MAX_STRINGLENGTH];
 } scr_error_t;
 
 typedef struct map_weapon_s
@@ -4150,7 +4156,7 @@ typedef struct scr_notify_s
 	SavedVariableValue arguments[MAX_NOTIFY_DEBUG_PARAMS];
 } scr_notify_t;
 
-#if COMPILE_CUSTOM_VOICE == 1
+#if COMPILE_SPEEX == 1
 
 #define MAX_CUSTOMSOUNDDURATION 10                              // Minutes
 #define MAX_STOREDVOICEPACKETS (MAX_CUSTOMSOUNDDURATION * 3072) // MAX_VOICEPACKETSPERFRAME * 20 * 60
@@ -4241,6 +4247,7 @@ typedef struct
 	float zVelocity;
 } droppingBullet_t;
 
+#define MAX_AUTHORIZATION_STATE_STRING_LENGTH 23 // CLIENT_UNKNOWN_TO_AUTH as reference for longest value
 typedef struct customPlayerState_s
 {
 	qboolean overrideContents;
@@ -4281,7 +4288,7 @@ typedef struct customPlayerState_s
 	char botForwardMove;
 	char botRightMove;
 	#endif
-	#if COMPILE_CUSTOM_VOICE == 1
+	#if COMPILE_SPEEX == 1
 	float pendingVoiceDataFrames;
 	int currentSoundTalker;
 	int currentSoundIndex;
@@ -4317,6 +4324,9 @@ typedef struct customPlayerState_s
 	float proneStepSize;
 	qboolean downloadTimedOut;
 	int holdingDownWeapon;
+	int cod2xProtocol;
+	char cod2xHwid2[33];
+	char authorizationStatus[MAX_AUTHORIZATION_STATE_STRING_LENGTH];
 } customPlayerState_t;
 
 typedef struct callback_s
@@ -4337,7 +4347,7 @@ typedef struct
 	unsigned short flags;
 	unsigned short land;
 	unsigned short material;
-	#if COMPILE_CUSTOM_VOICE == 1
+	#if COMPILE_SPEEX == 1
 	unsigned short sound_file_done;
 	unsigned short sound_file_stop;
 	#endif
@@ -4370,12 +4380,12 @@ struct leakyBucket_s
 
 typedef struct
 {
-	qboolean valid;
+	qboolean infoResponseValid;
 	char infoResponse[MAX_INFO_STRING];
 	int infoResponseLen;
+	qboolean statusResponseValid;
 	char statusResponse[BIG_INFO_STRING];
 	int statusResponseLen;
-	uint64_t lastUpdate;
 } proxyQueryCache_t;
 
 typedef struct
@@ -4415,7 +4425,7 @@ typedef struct
 typedef struct
 {
 	int activeClient;
-	sockaddr_in addr;
+	struct sockaddr_in addr;
 	int clientIndex;
 	proxy_t *proxy;
 	int socket;

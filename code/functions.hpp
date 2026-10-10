@@ -453,11 +453,17 @@ static const SV_ClientHasClientMuted_t SV_ClientHasClientMuted = (SV_ClientHasCl
 typedef void (*Info_SetValueForKey_t)(char *s, const char *key, const char *value);
 static const Info_SetValueForKey_t Info_SetValueForKey = (Info_SetValueForKey_t)0x080B85CE;
 
+typedef void (*Info_SetValueForKey_Big_t)(char *s, const char *key, const char *value);
+static const Info_SetValueForKey_Big_t Info_SetValueForKey_Big = (Info_SetValueForKey_Big_t)0x080B8802;
+
 typedef char * (*Info_ValueForKey_t)(const char *s, const char *key);
 static const Info_ValueForKey_t Info_ValueForKey = (Info_ValueForKey_t)0x080B8108;
 
 typedef void (*Info_RemoveKey_t)(char *s, const char *key);
 static const Info_RemoveKey_t Info_RemoveKey = (Info_RemoveKey_t)0x080B8318;
+
+typedef void (*Info_RemoveKey_Big_t)(char *s, const char *key);
+static const Info_RemoveKey_Big_t Info_RemoveKey_Big = (Info_RemoveKey_Big_t)0x080B844A;
 
 typedef qboolean (*Info_Validate_t)(const char *s); 
 static const Info_Validate_t Info_Validate = (Info_Validate_t)0x080B857C;
@@ -1211,6 +1217,9 @@ static const SV_AddCachedEntitiesVisibleFromPoint_t SV_AddCachedEntitiesVisibleF
 
 typedef void (*SV_AddEntToSnapshot_t)(int entNum, snapshotEntityNumbers_t *eNums);
 static const SV_AddEntToSnapshot_t SV_AddEntToSnapshot = (SV_AddEntToSnapshot_t)0x08098B4C;
+
+typedef void (*SV_AddOperatorCommands_t)(void);
+static const SV_AddOperatorCommands_t SV_AddOperatorCommands = (SV_AddOperatorCommands_t)0x0808CCA6;
 
 typedef void (*SV_AddServerCommand_t)(client_t *client, svscmd_type type, const char *cmd);
 static const SV_AddServerCommand_t SV_AddServerCommand = (SV_AddServerCommand_t)0x08094750;
