@@ -43,14 +43,14 @@ jobs:
           - os_name: ubuntu
             variant: nomysql http
             container: ""
-            packages: "gcc-multilib g++-multilib libstdc++5:i386 cmake libmbedtls-dev:i386"
+            packages: "gcc-multilib g++-multilib libstdc++5:i386 cmake python3-jinja2 python3-jsonschema"
             asset_name: libcod2_ubuntu_no_mysql_http_nospeex.so
             is_debian: false
             needs_lws: true
           - os_name: ubuntu
             variant: mysql1 http
             container: ""
-            packages: "gcc-multilib g++-multilib libstdc++5:i386 libmysqlclient-dev:i386 cmake libmbedtls-dev:i386"
+            packages: "gcc-multilib g++-multilib libstdc++5:i386 libmysqlclient-dev:i386 cmake python3-jinja2 python3-jsonschema"
             asset_name: libcod2_ubuntu_mysql1_http_nospeex.so
             is_debian: false
             needs_lws: true
@@ -81,7 +81,7 @@ jobs:
           - os_name: debian
             variant: nomysql http
             container: "debian:trixie"
-            packages: "gcc-multilib g++-multilib libc6:i386 libgcc-s1:i386 cmake libmbedtls-dev:i386"
+            packages: "gcc-multilib g++-multilib libc6:i386 libgcc-s1:i386 cmake python3 python3-jinja2 python3-jsonschema"
             asset_name: libcod2_debian_no_mysql_http_nospeex.so
             is_debian: true
             needs_lws: true
