@@ -351,8 +351,6 @@ scr_function_t scriptFunctions[] =
 	#if COMPILE_HTTP == 1
 	{"httpFetch", gsc_http_fetch, 0},
 	{"http_fetch", gsc_http_fetch, 0}, // CoD2x alias
-	#endif
-	#if COMPILE_WEBSOCKET == 1
 	{"webSocketConnect", gsc_websocket_connect, 0},
 	{"websocket_connect", gsc_websocket_connect, 0}, // CoD2x alias
 	{"webSocketSendText", gsc_websocket_sendtext, 0},

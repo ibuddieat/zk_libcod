@@ -445,6 +445,13 @@ void custom_GScr_LoadConsts(void)
 	*(int *)&GScr_LoadConsts = hook_GScr_LoadConsts->from;
 	GScr_LoadConsts();
 	hook_GScr_LoadConsts->hook();
+
+	/* New code start: HTTP/WebSocket reset */
+	#if COMPILE_HTTP == 1
+	// Every level load and map_restart: drop the old level's callbacks and WebSockets
+	gsc_http_level_changed();
+	#endif
+	/* New code end */
 }
 
 void custom_GScr_CloseFile(void)
@@ -1278,12 +1285,9 @@ void custom_Sys_Quit(void)
 	// Any proxy threads to cleanup?
 	SV_ShutdownProxies();
 
-	// Release connections
+	// Release HTTP and WebSocket connections
 	#if COMPILE_HTTP == 1
 	gsc_http_shutdown();
-	#endif
-	#if COMPILE_WEBSOCKET == 1
-	gsc_websocket_shutdown();
 	#endif
 
 	// Continue exit routines
@@ -1771,16 +1775,6 @@ void custom_GScr_LoadGameTypeScript(void)
 	g_scr_data.gametype.playerdamage = Scr_GetFunctionHandle(path_to_callbacks, "CodeCallback_PlayerDamage", 1);
 	g_scr_data.gametype.playerdisconnect = Scr_GetFunctionHandle(path_to_callbacks, "CodeCallback_PlayerDisconnect", 1);
 	g_scr_data.gametype.playerkilled = Scr_GetFunctionHandle(path_to_callbacks, "CodeCallback_PlayerKilled", 1);
-
-	/* New code start: WebSocket cleanup */
-	#if COMPILE_WEBSOCKET == 1
-	// WebSocket connections are owned by the level that opened them: their
-	// script callback handles died with the previous level, so close them
-	// before the new level's scripts run. In-flight HTTP requests self-expire
-	// via their level-id guard and need no reset here.
-	gsc_websocket_shutdown();
-	#endif
-	/* New code end */
 
 	// Possible extra functionality to call after successful player connect
 	if ( extra_GScr_LoadGameTypeScript_After )
@@ -6697,10 +6691,6 @@ void custom_G_RunFrame(int levelTime)
 	/* New code start: HTTP and WebSocket polling */
 	#if COMPILE_HTTP == 1
 	gsc_http_poll();
-	#endif
-
-	#if COMPILE_WEBSOCKET == 1
-	gsc_websocket_poll();
 	#endif
 	/* New code end */
 
@@ -12124,7 +12114,6 @@ inline std::string GetBuildConfigString()
     ss << "  COMPILE_HTTP         : " << (COMPILE_HTTP ? "ON" : "OFF") << "\n";
     ss << "  COMPILE_JUMP         : " << (COMPILE_JUMP ? "ON" : "OFF") << "\n";
     ss << "  COMPILE_SPEEX        : " << (COMPILE_SPEEX ? "ON" : "OFF") << "\n";
-    ss << "  COMPILE_WEBSOCKET    : " << (COMPILE_WEBSOCKET ? "ON" : "OFF") << "\n";
 
     return ss.str();
 }
