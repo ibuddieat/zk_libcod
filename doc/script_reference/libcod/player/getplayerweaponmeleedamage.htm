@@ -27,7 +27,7 @@ Module: Player<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Returns this player's per-weapon melee-damage override (set by <a href="setplayerweaponmeleedamage.htm">setPlayerWeaponMeleeDamage</a>), or 0 when no override is set (the weapon uses its default/global melee damage).</p>
+<p>Returns the player's individual melee (bash) damage for the given weapon, as set with <a href="setplayerweaponmeleedamage.htm">setPlayerWeaponMeleeDamage</a>. Returns zero if the player uses the weapon's own value (see <a href="../weapons/getweaponmeleedamage.htm">getWeaponMeleeDamage</a>).</p>
 
 </H3>
 </TR></TD></TABLE>
@@ -45,7 +45,7 @@ The player
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-mine = player getPlayerWeaponMeleeDamage("mp44_mp");
+meleeDamage = player getPlayerWeaponMeleeDamage(weaponName);
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -61,7 +61,7 @@ mine = player getPlayerWeaponMeleeDamage("mp44_mp");
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;id&gt; Weapon ID (available for backwards compatibility)</LI>
+<LI>1 : &lt;id&gt; Weapon ID (available for backwards compatibility). You can get it with <a href="../weapons/getloadedweapons.htm">getLoadedWeapons</a></LI>
 </UL>
 </TR></TD></TABLE>
 <BR>

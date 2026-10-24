@@ -2107,10 +2107,7 @@ void gsc_player_setfirerangescale(scr_entref_t ref)
 	stackPushFloat(old_scale);
 }
 
-// Shared resolver for the per-player weapon-time natives. With wantTime it parses (weapon, time);
-// without, it parses (weapon). Weapon accepts a name or, for backwards compatibility, an id.
-// Returns qtrue with *outId / *outWeaponId (and *outTime) set on success; on failure it has already
-// pushed the error and an undefined return value, so the caller just returns.
+// Reads (weapon name or id[, ms]); on a bad argument it pushes undefined and returns qfalse
 static qboolean resolvePlayerWeaponTime(scr_entref_t ref, const char *fn, qboolean wantTime, int *outId, int *outWeaponId, int *outTime)
 {
 	int id = ref.entnum;
@@ -2162,10 +2159,7 @@ static qboolean resolvePlayerWeaponTime(scr_entref_t ref, const char *fn, qboole
 	return qtrue;
 }
 
-// Per-player mirrors of the global weapon-time setters (setWeaponFireTime and siblings): each sets
-// one WeaponDef timing field (ms) for a single weapon on this player only. Same dual arg form
-// (name or id) + absolute ms. time <= 0 clears the override (0 is the "no override" sentinel).
-// The paired getters return the stored override, or 0 when none is set (weapon uses its default).
+// Each setter below overrides one weapon value for this player only; 0 or less clears it
 
 void gsc_player_setplayerweaponfiretime(scr_entref_t ref)
 {
@@ -2320,10 +2314,6 @@ static const char *playerNameModeToString(int mode)
 	return "default";
 }
 
-// Per-player name mode. Overrides the global setClientNameMode for THIS player: "manual" holds the
-// player's name changes (staged, not applied) so their name can be locked while others are normal;
-// "auto" applies their name changes immediately; "default" follows the global mode. Returns the
-// previous mode as a string.
 void gsc_player_setplayernamemode(scr_entref_t ref)
 {
 	int id = ref.entnum;
@@ -2377,8 +2367,6 @@ void gsc_player_getplayernamemode(scr_entref_t ref)
 	stackPushString(playerNameModeToString(customPlayerState[id].nameMode));
 }
 
-// Per-player mirror of the global setWeaponDamage: sets the (max) bullet damage for one weapon on
-// this player only. Covers hitscan bullet weapons; damage <= 0 clears. Reuses the int resolver.
 void gsc_player_setplayerweapondamage(scr_entref_t ref)
 {
 	int id, weaponId, damage;
@@ -2403,8 +2391,6 @@ void gsc_player_getplayerweapondamage(scr_entref_t ref)
 	stackPushInt(customPlayerState[id].playerWeaponDamage[weaponId]);
 }
 
-// Per-player mirror of the global setWeaponMeleeDamage: sets the melee (bash) damage for one weapon
-// on this player only. damage <= 0 clears. Reuses the int resolver.
 void gsc_player_setplayerweaponmeleedamage(scr_entref_t ref)
 {
 	int id, weaponId, damage;
@@ -2429,8 +2415,7 @@ void gsc_player_getplayerweaponmeleedamage(scr_entref_t ref)
 	stackPushInt(customPlayerState[id].playerWeaponMeleeDamage[weaponId]);
 }
 
-// Float resolver for the per-player weapon scale natives: parses (weapon, value) as (name|id, float).
-// Returns qtrue with outputs set on success; on failure it has already pushed the error + undefined.
+// Same as resolvePlayerWeaponTime, for a float value
 static qboolean resolvePlayerWeaponFloat(scr_entref_t ref, const char *fn, int *outId, int *outWeaponId, float *outValue)
 {
 	int id = ref.entnum;
@@ -2467,8 +2452,6 @@ static qboolean resolvePlayerWeaponFloat(scr_entref_t ref, const char *fn, int *
 	return qtrue;
 }
 
-// Per-player mirror of the global setWeaponMoveSpeedScale: scales this player's move speed while
-// holding the given weapon. scale <= 0 clears the override.
 void gsc_player_setplayerweaponmovespeedscale(scr_entref_t ref)
 {
 	int id, weaponId;

@@ -27,7 +27,7 @@ Module: Player<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Per-player version of setWeaponReloadTime: sets the reload time in ms of the given weapon for this player only, without affecting other players. A value of 0 (or negative) clears the override. Accepts a weapon name or, for backwards compatibility, a weapon id. Returns true on success. See also <a href="getplayerweaponreloadtime.htm">getPlayerWeaponReloadTime</a>.</p>
+<p>Set the player's individual reload time for the given weapon (on the server side), like <a href="../weapons/setweaponreloadtime.htm">setWeaponReloadTime</a> but only for this player. Read it with <a href="getplayerweaponreloadtime.htm">getPlayerWeaponReloadTime</a>.</p>
 
 </H3>
 </TR></TD></TABLE>
@@ -45,7 +45,8 @@ The player
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-player setPlayerWeaponReloadTime("mp44_mp", 1000);
+reloadTime = 100;
+player setPlayerWeaponReloadTime(weaponName, reloadTime);
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -55,14 +56,14 @@ player setPlayerWeaponReloadTime("mp44_mp", 1000);
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
 <LI>1 : &lt;weapon name&gt;: (string) The weapon name for this weapon</LI>
-<LI>2 : &lt;reload time&gt; New reload time to set in ms (0 clears the override)</LI>
+<LI>2 : &lt;reload time&gt; New reload time to set in ms (0 = weapon default)</LI>
 </UL></TR></TD></TABLE>
 <BR><BR>
 <H2>Deprecated Args:</H2>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;id&gt; Weapon ID (available for backwards compatibility)</LI>
+<LI>1 : &lt;id&gt; Weapon ID (available for backwards compatibility). You can get it with <a href="../weapons/getloadedweapons.htm">getLoadedWeapons</a></LI>
 </UL>
 </TR></TD></TABLE>
 <BR>

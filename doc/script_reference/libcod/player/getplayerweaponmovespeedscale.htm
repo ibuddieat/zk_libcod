@@ -27,7 +27,7 @@ Module: Player<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Returns this player's per-weapon move-speed-scale override (set by <a href="setplayerweaponmovespeedscale.htm">setPlayerWeaponMoveSpeedScale</a>) as a float, or 0 when no override is set (the weapon uses its default/global scale).</p>
+<p>Returns the player's individual move-speed scale for the given weapon, as set with <a href="setplayerweaponmovespeedscale.htm">setPlayerWeaponMoveSpeedScale</a>. Returns zero if the player uses the weapon's own value (see <a href="../weapons/getweaponmovespeedscale.htm">getWeaponMoveSpeedScale</a>).</p>
 
 </H3>
 </TR></TD></TABLE>
@@ -45,7 +45,7 @@ The player
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-mine = player getPlayerWeaponMoveSpeedScale("mp44_mp");
+scale = player getPlayerWeaponMoveSpeedScale(weaponName);
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -61,7 +61,7 @@ mine = player getPlayerWeaponMoveSpeedScale("mp44_mp");
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;id&gt; Weapon ID (available for backwards compatibility)</LI>
+<LI>1 : &lt;id&gt; Weapon ID (available for backwards compatibility). You can get it with <a href="../weapons/getloadedweapons.htm">getLoadedWeapons</a></LI>
 </UL>
 </TR></TD></TABLE>
 <BR>

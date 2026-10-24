@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>setPlayerWeaponDamage( &lt;weapon name&gt;, &lt;damage&gt; )</H1>
+<H1>setPlayerWeaponDamage( &lt;weapon name&gt;, &lt;dmg&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
@@ -27,7 +27,7 @@ Module: Player<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Per-player version of <a href="../weapons/setweapondamage.htm">setWeaponDamage</a>: sets the (max, close-range) bullet damage of the given weapon for this player only, without affecting other players. Applies to hitscan bullet weapons; projectile weapons are not affected. A value of 0 (or negative) clears the override. Accepts a weapon name or, for backwards compatibility, a weapon id. Returns true on success. See also <a href="getplayerweapondamage.htm">getPlayerWeaponDamage</a>.</p>
+<p>Set the player's individual damage for the given weapon (on the server side), like <a href="../weapons/setweapondamage.htm">setWeaponDamage</a> but only for this player. Read it with <a href="getplayerweapondamage.htm">getPlayerWeaponDamage</a>.</p>
 
 </H3>
 </TR></TD></TABLE>
@@ -45,7 +45,8 @@ The player
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-player setPlayerWeaponDamage("mp44_mp", 100);
+dmg = 50;
+player setPlayerWeaponDamage(weaponName, dmg);
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -55,14 +56,14 @@ player setPlayerWeaponDamage("mp44_mp", 100);
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
 <LI>1 : &lt;weapon name&gt;: (string) The weapon name for this weapon</LI>
-<LI>2 : &lt;damage&gt; New max damage to set (0 clears the override)</LI>
+<LI>2 : &lt;dmg&gt; New damage to set (0 = weapon default)</LI>
 </UL></TR></TD></TABLE>
 <BR><BR>
 <H2>Deprecated Args:</H2>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;id&gt; Weapon ID (available for backwards compatibility)</LI>
+<LI>1 : &lt;id&gt; Weapon ID (available for backwards compatibility). You can get it with <a href="../weapons/getloadedweapons.htm">getLoadedWeapons</a></LI>
 </UL>
 </TR></TD></TABLE>
 <BR>

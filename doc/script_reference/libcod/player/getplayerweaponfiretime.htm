@@ -27,7 +27,7 @@ Module: Player<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Returns this player's per-weapon fire-time override in ms, as set by <a href="setplayerweaponfiretime.htm">setPlayerWeaponFireTime</a>. Returns 0 when no override is set for the weapon (the weapon uses its global/default fire time, which you can read with the global <a href="../weapons/getweaponfiretime.htm">getWeaponFireTime</a>). Accepts a weapon name or, for backwards compatibility, a weapon id.</p>
+<p>Returns the player's individual fire time for the given weapon in ms, as set with <a href="setplayerweaponfiretime.htm">setPlayerWeaponFireTime</a>. Returns zero if the player uses the weapon's own value (see <a href="../weapons/getweaponfiretime.htm">getWeaponFireTime</a>).</p>
 
 </H3>
 </TR></TD></TABLE>
@@ -45,7 +45,7 @@ The player
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-mine = player getPlayerWeaponFireTime("mp44_mp"); // 0 if no override
+fireTime = player getPlayerWeaponFireTime(weaponName);
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -61,7 +61,7 @@ mine = player getPlayerWeaponFireTime("mp44_mp"); // 0 if no override
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;id&gt; Weapon ID (available for backwards compatibility)</LI>
+<LI>1 : &lt;id&gt; Weapon ID (available for backwards compatibility). You can get it with <a href="../weapons/getloadedweapons.htm">getLoadedWeapons</a></LI>
 </UL>
 </TR></TD></TABLE>
 <BR>

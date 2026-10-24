@@ -2181,10 +2181,7 @@ void ProcessClientUserinfoChange(int clientNum)
 	else
 		client->sess.predictItemPickup = 0;
 
-	/* New code start: per-player setPlayerNameMode
-	 * Stock uses the single global level.manualNameChange to decide whether an incoming name is
-	 * staged (held in newnetname) or applied immediately. Let a per-player mode override it:
-	 * 1 = auto (apply now), 2 = manual (stage), 0 = default (follow the global flag). */
+	/* New code start: per-player name mode, overrides level.manualNameChange */
 	qboolean useManual = level.manualNameChange;
 	if ( customPlayerState[clientNum].nameMode == 1 )
 		useManual = qfalse;
@@ -8413,13 +8410,7 @@ void custom_PM_Weapon(pmove_t *pm, pml_t *pml)
 	}
 	/* New code end */
 
-	/* New code start: per-player weapon-time overrides (setPlayerWeaponFireTime and siblings)
-	 * Swap the affected weapon's timing fields to this player's overrides around the stock PM_Weapon
-	 * call, then restore. fire/melee/reload/reloadEmpty are read for pm->ps->weapon inside the
-	 * PM_Weapon chain. Fuse is read for pm->ps->weapon when a grenade is the current weapon, but for
-	 * a normal thrown grenade it is read for pm->ps->offHandIndex (PM_Weapon_OffHandHold) -- so the
-	 * offhand weapon's fuse is patched separately below. Pmove is single-threaded, so
-	 * mutate-and-restore within one call cannot race another player. 0 = no override for that field. */
+	/* New code start: per-player weapon times, swapped in for this call and restored after */
 	customPlayerState_t *ps = &customPlayerState[id];
 
 	int ptWeapon = pm->ps->weapon;
@@ -8455,8 +8446,7 @@ void custom_PM_Weapon(pmove_t *pm, pml_t *pml)
 		}
 	}
 
-	// Thrown grenades read fuse from the offhand weapon, not the current weapon. Patch its fuse
-	// separately (skip when it is the same def already handled above, to keep save/restore correct).
+	// A thrown grenade takes its fuse from the offhand weapon
 	int ohWeapon = pm->ps->offHandIndex;
 	WeaponDef_t *ohDef = NULL;
 	int savedOhFuseTime = 0;
@@ -8472,9 +8462,7 @@ void custom_PM_Weapon(pmove_t *pm, pml_t *pml)
 		}
 	}
 
-	// Raise time is read for the weapon being switched TO (newweapon = pm->cmd.weapon) in
-	// PM_Weapon_FinishWeaponChange, not the current weapon, so key it on cmd.weapon. iRaiseTime only,
-	// matching the global setWeaponRaiseTime (alt-weapon raises use a separate altRaiseTime field).
+	// Raise time belongs to the weapon being switched to
 	int rtWeapon = pm->cmd.weapon;
 	WeaponDef_t *rtDef = NULL;
 	int savedRaiseTime = 0;
@@ -9317,9 +9305,7 @@ void custom_FireWeaponMelee(gentity_t *player)
 		height = player_meleeHeight->current.decimal * customPlayerState[id].meleeHeightScale;
 		/* New code end */
 
-		/* New code start: per-player setPlayerWeaponMeleeDamage
-		 * Weapon_Melee reads meleeDamage for the attacker's weapon (wp.weapDef). Swap this player's
-		 * override around the call, then restore. Main-thread melee, so no race. */
+		/* New code start: per-player melee damage */
 		int meleeWeapon = player->s.weapon;
 		int savedMeleeDamage = 0;
 		qboolean swappedMeleeDamage = qfalse;
@@ -9846,12 +9832,7 @@ void custom_Bullet_Fire(gentity_t *inflictor, float spread, weaponParms *wp, con
 
 	G_AntiLagRewindClientPos(offset, &antilagStore);
 
-	/* New code start: per-player setPlayerWeaponDamage
-	 * Bullet_GetDamage reads wp->weapDef->damage for the attacker's weapon. custom_Bullet_Fire is
-	 * the single per-shot entry for BOTH spread (shotgun) and non-spread (rifle/SMG) bullets, so
-	 * swap this attacker's override here (not in Bullet_Fire_Spread, which only runs for shotguns),
-	 * then restore at every exit. Main-thread fire = no race. Deferred bullet-drop shots keep the
-	 * default (documented limitation). inflictor->client is guarded (turret fire can be worldspawn). */
+	/* New code start: per-player bullet damage (bullet-drop shots keep the default) */
 	WeaponDef_t *dmgDef = NULL;
 	int dmgSaved = 0;
 
@@ -9887,7 +9868,7 @@ void custom_Bullet_Fire(gentity_t *inflictor, float spread, weaponParms *wp, con
 			if ( customPlayerState[id].droppingBulletsCount >= MAX_DROPPING_BULLETS )
 			{
 				Com_DPrintf("Bullet_Fire: Too many bullets still on their way for player %d, bullet aborted\n", id);
-				if ( dmgDef ) // restore damage before the early return (this path also skips antilag restore)
+				if ( dmgDef ) // restore before the early return
 					dmgDef->damage = dmgSaved;
 				return;
 			}
@@ -11569,9 +11550,7 @@ void custom_Pmove(pmove_t *pm)
 		playerMovementTrace = qtrue;
 	/* New code end */
 
-	/* New code start: per-player setPlayerWeaponMoveSpeedScale
-	 * moveSpeedScale is read for pm->ps->weapon in PM_CmdScale_Walk inside stock Pmove. Swap this
-	 * player's override around the stock call, then restore. Single-threaded pmove = safe. */
+	/* New code start: per-player move speed scale */
 	int msWeapon = pm->ps->weapon;
 	int msClient = pm->ps->clientNum;
 	WeaponDef_t *msDef = NULL;

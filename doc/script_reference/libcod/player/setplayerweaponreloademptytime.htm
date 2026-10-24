@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>setPlayerWeaponReloadEmptyTime( &lt;weapon name&gt;, &lt;reload empty time&gt; )</H1>
+<H1>setPlayerWeaponReloadEmptyTime( &lt;weapon name&gt;, &lt;empty reload time&gt; )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
@@ -27,7 +27,7 @@ Module: Player<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Per-player version of setWeaponReloadEmptyTime: sets the empty-reload time in ms (used when the clip is empty) of the given weapon for this player only, without affecting other players. A value of 0 (or negative) clears the override. Accepts a weapon name or, for backwards compatibility, a weapon id. Returns true on success. See also <a href="getplayerweaponreloademptytime.htm">getPlayerWeaponReloadEmptyTime</a>.</p>
+<p>Set the player's individual empty reload time for the given weapon (on the server side), like <a href="../weapons/setweaponreloademptytime.htm">setWeaponReloadEmptyTime</a> but only for this player. Read it with <a href="getplayerweaponreloademptytime.htm">getPlayerWeaponReloadEmptyTime</a>.</p>
 
 </H3>
 </TR></TD></TABLE>
@@ -45,7 +45,8 @@ The player
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-player setPlayerWeaponReloadEmptyTime("mp44_mp", 1200);
+emptyReloadTime = 50;
+player setPlayerWeaponReloadEmptyTime(weaponName, emptyReloadTime);
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -55,14 +56,14 @@ player setPlayerWeaponReloadEmptyTime("mp44_mp", 1200);
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
 <LI>1 : &lt;weapon name&gt;: (string) The weapon name for this weapon</LI>
-<LI>2 : &lt;reload empty time&gt; New empty-reload time to set in ms (0 clears the override)</LI>
+<LI>2 : &lt;empty reload time&gt; New empty reload time to set in ms (0 = weapon default)</LI>
 </UL></TR></TD></TABLE>
 <BR><BR>
 <H2>Deprecated Args:</H2>
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>1 : &lt;id&gt; Weapon ID (available for backwards compatibility)</LI>
+<LI>1 : &lt;id&gt; Weapon ID (available for backwards compatibility). You can get it with <a href="../weapons/getloadedweapons.htm">getLoadedWeapons</a></LI>
 </UL>
 </TR></TD></TABLE>
 <BR>

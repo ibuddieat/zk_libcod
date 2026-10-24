@@ -96,6 +96,7 @@
 #define MAX_VOICEPACKETDATALEN      256
 #define MAX_VOICEPACKETS            40
 #define MAX_VOICEPACKETSPERFRAME    2.56
+#define MAX_WEAPONS                 128
 #define MAX_ZPATH                   256
 
 #define MEMORY_NODE_BITS    0x10
@@ -4078,7 +4079,6 @@ static const int g_fHitLocDamageMult_offset = 0x08628EE0;
 #define sv_masterAddress (*((netadr_t*)( sv_masterAddress_offset )))
 #define bg_iNumWeapons (*((int*)( bg_iNumWeapons_offset )))
 #define bg_weaponDefs (*((WeaponDef_t**)( bg_weaponDefs_offset )))
-#define MAX_WEAPONS 128 // Engine weapon-def table capacity (CoD2rev game/g_shared.h). Used to size per-player
 #define dvar_modifiedFlags (*((int*)( dvar_modifiedFlags_offset )))
 #define ipFilterList ((ipFilterList_t*)( ipFilterList_offset ))
 #define g_sv_skel_memory_start ((char**)( g_sv_skel_memory_start_offset ))
@@ -4303,16 +4303,17 @@ typedef struct customPlayerState_s
 	int previousButtons;
 	float turretSpreadScale;
 	float weaponSpreadScale;
-	int nameMode; // per-player name mode: 0 = default (follow global), 1 = auto, 2 = manual
-	int playerWeaponFireTime[MAX_WEAPONS]; // per-weapon fire-time override in ms, 0 = off
-	int playerWeaponMeleeTime[MAX_WEAPONS]; // per-weapon melee-time override in ms, 0 = off
-	int playerWeaponReloadTime[MAX_WEAPONS]; // per-weapon reload-time override in ms, 0 = off
-	int playerWeaponReloadEmptyTime[MAX_WEAPONS]; // per-weapon empty-reload-time override in ms, 0 = off
-	int playerWeaponFuseTime[MAX_WEAPONS]; // per-weapon fuse-time override in ms, 0 = off
-	int playerWeaponRaiseTime[MAX_WEAPONS]; // per-weapon raise (weapon-switch) time override in ms, 0 = off
-	int playerWeaponDamage[MAX_WEAPONS]; // per-weapon (max) damage override, 0 = off
-	int playerWeaponMeleeDamage[MAX_WEAPONS]; // per-weapon melee-damage override, 0 = off
-	float playerWeaponMoveSpeedScale[MAX_WEAPONS]; // per-weapon move-speed-scale override, 0 = off
+	int nameMode; // 0 = default, 1 = auto, 2 = manual
+	// Per-player weapon overrides, 0 = use the weapon file value
+	int playerWeaponFireTime[MAX_WEAPONS];
+	int playerWeaponMeleeTime[MAX_WEAPONS];
+	int playerWeaponReloadTime[MAX_WEAPONS];
+	int playerWeaponReloadEmptyTime[MAX_WEAPONS];
+	int playerWeaponFuseTime[MAX_WEAPONS];
+	int playerWeaponRaiseTime[MAX_WEAPONS];
+	int playerWeaponDamage[MAX_WEAPONS];
+	int playerWeaponMeleeDamage[MAX_WEAPONS];
+	float playerWeaponMoveSpeedScale[MAX_WEAPONS];
 	#if COMPILE_BOTS == 1
 	int botButtons;
 	int botWeapon;

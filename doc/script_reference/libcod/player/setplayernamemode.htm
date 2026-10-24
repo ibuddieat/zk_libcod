@@ -27,7 +27,7 @@ Module: Player<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Per-player version of the global <a href="../../stock/level/setclientnamemode.htm">setClientNameMode</a>. Sets how THIS player's name changes are handled, overriding the server-wide mode. "manual" holds the player's incoming name changes (they are staged, not applied) so their name can be locked while other players are unaffected; "auto" applies the player's name changes immediately; "default" follows the global mode set by setClientNameMode. Returns the previous mode as a string. See also <a href="getplayernamemode.htm">getPlayerNameMode</a>.</p>
+<p>Like setClientNameMode, but only for this player. "manual" holds their name changes, "auto" applies them at once, "default" follows the server setting. Returns the previous mode. Read it with <a href="getplayernamemode.htm">getPlayerNameMode</a>.</p>
 
 </H3>
 </TR></TD></TABLE>
