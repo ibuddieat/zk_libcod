@@ -48,6 +48,7 @@ extern dvar_t *player_meleeHeight;
 extern dvar_t *player_meleeRange;
 extern dvar_t *player_meleeWidth;
 extern dvar_t *rcon_password;
+extern dvar_t *showdrop;
 extern dvar_t *showpackets;
 extern dvar_t *sv_allowAnonymous;
 extern dvar_t *sv_allowDownload;
@@ -3534,6 +3535,171 @@ void custom_SV_WriteSnapshotToClient(client_t *client, msg_t *msg)
 
 	for ( i = 0; i < sv_padPackets->current.integer; i++ )
 		MSG_WriteByte(msg, 0);
+}
+
+qboolean custom_Netchan_Process(netchan_t *chan, msg_t *msg)
+{
+	int sequence;
+	int fragmentStart, fragmentLength;
+	qboolean fragmented;
+
+	/* New code start: Multi version support */
+	int temp = (int)chan - 0x6E6C4;
+	client_t *client = (client_t *)temp;
+	int id = client - svs.clients;
+	int fragmentBufferSize = MAX_MSGLEN;
+
+	if ( customPlayerState[id].protocolVersion != 118 )
+		fragmentBufferSize = MAX_LEGACY_MSGLEN;
+	/* New code end */
+
+	NetProf_PrepProfiling(&chan->pProf);
+	MSG_BeginReading(msg);
+
+	sequence = MSG_ReadLong(msg);
+	if ( sequence & FRAGMENT_BIT )
+	{
+		sequence &= ~FRAGMENT_BIT;
+		fragmented = qtrue;
+	}
+	else
+	{
+		fragmented = qfalse;
+	}
+
+	if ( chan->sock == NS_SERVER )
+	{
+		MSG_ReadShort(msg);
+	}
+
+	if ( fragmented )
+	{
+		/* New code start: Multi version support */
+		if ( customPlayerState[id].protocolVersion != 118 )
+		{
+			fragmentStart = MSG_ReadShort(msg);
+		}
+		else
+		{
+		/* New code end */
+			fragmentStart = MSG_ReadLong(msg);
+		}
+		fragmentLength = MSG_ReadShort(msg);
+	}
+	else
+	{
+		fragmentStart = 0;
+		fragmentLength = 0;
+	}
+
+	NetProf_NewRecievePacket(chan, msg->cursize, fragmented);
+
+	if ( showpackets->current.boolean )
+	{
+		if ( fragmented )
+		{
+			Com_Printf("[client %i] %s recv %4i : s=%i fragment=%i,%i\n"
+			           , 1
+			           , netsrcString[chan->sock]
+			           , msg->cursize
+			           , sequence
+			           , fragmentStart, fragmentLength);
+		}
+		else
+		{
+			Com_Printf("[client %i] %s recv %4i : s=%i\n"
+			           , 1
+			           , netsrcString[chan->sock]
+			           , msg->cursize
+			           , sequence);
+		}
+	}
+
+	if ( sequence <= chan->incomingSequence )
+	{
+		if ( showdrop->current.boolean || showpackets->current.boolean )
+		{
+			Com_Printf("[client %i] %s:Out of order packet %i at %i\n"
+			           , 1
+			           , NET_AdrToString(chan->remoteAddress)
+			           ,  sequence
+			           , chan->incomingSequence);
+		}
+		return qfalse;
+	}
+
+	chan->dropped = sequence - ( chan->incomingSequence + 1 );
+	if ( chan->dropped > 0 )
+	{
+		if ( showdrop->current.boolean || showpackets->current.boolean )
+		{
+			Com_Printf("[client %i] %s: Dropped %i packets at %i\n"
+			           , 1
+			           , NET_AdrToString(chan->remoteAddress)
+			           , chan->dropped
+			           , sequence);
+		}
+	}
+
+	if ( !fragmented )
+	{
+		chan->incomingSequence = sequence;
+		return qtrue;
+	}
+
+	if ( sequence != chan->fragmentSequence )
+	{
+		chan->fragmentSequence = sequence;
+		chan->fragmentLength = 0;
+	}
+
+	if ( fragmentStart != chan->fragmentLength )
+	{
+		if ( showdrop->current.boolean || showpackets->current.boolean )
+		{
+			Com_Printf("%s:Dropped a message fragment, sequence %d\n"
+			           , NET_AdrToString(chan->remoteAddress)
+			           , sequence);
+		}
+		return qfalse;
+	}
+
+	// New: Use of fragmentBufferSize instead of sizeof(chan->fragmentBuffer)
+	if ( fragmentLength < 0 || msg->readcount + fragmentLength > msg->cursize ||
+	        chan->fragmentLength + fragmentLength > fragmentBufferSize )
+	{
+		if ( showdrop->current.boolean || showpackets->current.boolean )
+		{
+			Com_Printf("%s:illegal fragment length\n"
+			           , NET_AdrToString(chan->remoteAddress));
+		}
+		return qfalse;
+	}
+
+	memcpy(chan->fragmentBuffer + chan->fragmentLength, msg->data + msg->readcount, fragmentLength);
+	chan->fragmentLength += fragmentLength;
+	if ( fragmentLength == FRAGMENT_SIZE )
+	{
+		return qfalse;
+	}
+
+	if ( chan->fragmentLength > msg->maxsize )
+	{
+		Com_Printf("%s:fragmentLength %i > msg->maxsize\n"
+		           , NET_AdrToString(chan->remoteAddress),
+		           chan->fragmentLength);
+		return qfalse;
+	}
+
+	*(int *)msg->data = LittleLong(sequence);
+	memcpy(msg->data + 4, chan->fragmentBuffer, chan->fragmentLength);
+	msg->cursize = chan->fragmentLength + 4;
+	chan->fragmentLength = 0;
+	MSG_BeginReading(msg);
+	MSG_ReadLong(msg);
+	chan->incomingSequence = sequence;
+
+	return qtrue;
 }
 
 qboolean custom_Netchan_Transmit(netchan_t *chan, int length, byte *data)
@@ -12368,6 +12534,7 @@ public:
 		cracking_hook_function(0x0810B9A4, (int)custom_G_ClientStopUsingTurret);
 		cracking_hook_function(0x0810175A, (int)custom_player_die);
 		cracking_hook_function(0x0808E2AA, (int)custom_SV_DirectConnect);
+		cracking_hook_function(0x0806BE8A, (int)custom_Netchan_Process);
 		cracking_hook_function(0x0806BA4C, (int)custom_Netchan_TransmitNextFragment);
 		cracking_hook_function(0x0808F628, (int)custom_SV_ClientEnterWorld);
 		cracking_hook_function(0x0809537C, (int)custom_SVC_Info);

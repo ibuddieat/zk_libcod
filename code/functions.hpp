@@ -648,6 +648,9 @@ static const Netchan_Transmit_t Netchan_Transmit = (Netchan_Transmit_t)0x0806BC6
 typedef qboolean (*Netchan_Process_t)(netchan_t *chan, msg_t *msg);
 static const Netchan_Process_t Netchan_Process = (Netchan_Process_t)0x0806BE8A;
 
+typedef void (*NetProf_NewRecievePacket_t)(netchan_t *chan, int iSize, int bFragment);
+static const NetProf_NewRecievePacket_t NetProf_NewRecievePacket = (NetProf_NewRecievePacket_t)0x0806B4D2;
+
 typedef void (*NetProf_PrepProfiling_t)(netProfileInfo_t **prof);
 static const NetProf_PrepProfiling_t NetProf_PrepProfiling = (NetProf_PrepProfiling_t)0x0806B2DA;
 
@@ -1637,6 +1640,9 @@ static const get_bit_t get_bit = (get_bit_t)0x0806627A;
 
 typedef short (*BigShort_t)(short l);
 static const BigShort_t BigShort = (BigShort_t)0x080B7572;
+
+typedef int (*LittleLong_t)(int l);
+static const LittleLong_t LittleLong = (LittleLong_t)0x0806CF00;
 
 typedef void (*CalculateRanks_t)(void);
 static const CalculateRanks_t CalculateRanks = (CalculateRanks_t)0x081097E6;

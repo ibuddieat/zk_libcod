@@ -39,6 +39,7 @@ dvar_t *player_meleeHeight;
 dvar_t *player_meleeRange;
 dvar_t *player_meleeWidth;
 dvar_t *rcon_password;
+dvar_t *showdrop;
 dvar_t *showpackets;
 dvar_t *sv_allowAnonymous;
 dvar_t *sv_allowDownload;
@@ -232,6 +233,7 @@ void hook_Com_Printf_in_Com_Init_Try_Block_Function(const char *format, ...)
 	net_port = Dvar_FindVar("net_port");
 	nextmap = Dvar_FindVar("nextmap");
 	rcon_password = Dvar_FindVar("rcon_password");
+	showdrop = Dvar_FindVar("showdrop");
 	showpackets = Dvar_FindVar("showpackets");
 	sv_debugReliableCmds = Dvar_FindVar("sv_debugReliableCmds");
 	sv_disableClientConsole = Dvar_FindVar("sv_disableClientConsole");
