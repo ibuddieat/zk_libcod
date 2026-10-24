@@ -37,6 +37,7 @@ Module: JSON<BR>
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
+job = json_load_async("stats/big.json");
 data = json_async_result(job);
 if(IsDefined(data))
     IPrintLn(data.size + " entries loaded");
