@@ -96,6 +96,7 @@
 #define MAX_VOICEPACKETDATALEN      256
 #define MAX_VOICEPACKETS            40
 #define MAX_VOICEPACKETSPERFRAME    2.56
+#define MAX_WEAPONS                 128
 #define MAX_ZPATH                   256
 
 #define MEMORY_NODE_BITS    0x10
@@ -4302,6 +4303,17 @@ typedef struct customPlayerState_s
 	int previousButtons;
 	float turretSpreadScale;
 	float weaponSpreadScale;
+	int nameMode; // 0 = default, 1 = auto, 2 = manual
+	// Per-player weapon overrides, 0 = use the weapon file value
+	int playerWeaponFireTime[MAX_WEAPONS];
+	int playerWeaponMeleeTime[MAX_WEAPONS];
+	int playerWeaponReloadTime[MAX_WEAPONS];
+	int playerWeaponReloadEmptyTime[MAX_WEAPONS];
+	int playerWeaponFuseTime[MAX_WEAPONS];
+	int playerWeaponRaiseTime[MAX_WEAPONS];
+	int playerWeaponDamage[MAX_WEAPONS];
+	int playerWeaponMeleeDamage[MAX_WEAPONS];
+	float playerWeaponMoveSpeedScale[MAX_WEAPONS];
 	#if COMPILE_BOTS == 1
 	int botButtons;
 	int botWeapon;

@@ -2181,7 +2181,15 @@ void ProcessClientUserinfoChange(int clientNum)
 	else
 		client->sess.predictItemPickup = 0;
 
-	if ( client->sess.connected == CON_CONNECTED && level.manualNameChange )
+	/* New code start: per-player name mode, overrides level.manualNameChange */
+	qboolean useManual = level.manualNameChange;
+	if ( customPlayerState[clientNum].nameMode == 1 )
+		useManual = qfalse;
+	else if ( customPlayerState[clientNum].nameMode == 2 )
+		useManual = qtrue;
+	/* New code end */
+
+	if ( client->sess.connected == CON_CONNECTED && useManual )
 	{
 		value = Info_ValueForKey(userinfo, "name");
 		ClientCleanName(value, client->sess.newnetname, 32);
@@ -8402,11 +8410,98 @@ void custom_PM_Weapon(pmove_t *pm, pml_t *pml)
 	}
 	/* New code end */
 
+	/* New code start: per-player weapon times, swapped in for this call and restored after */
+	customPlayerState_t *ps = &customPlayerState[id];
+
+	int ptWeapon = pm->ps->weapon;
+	WeaponDef_t *ptDef = NULL;
+	int savedFireTime = 0, savedMeleeTime = 0, savedReloadTime = 0, savedReloadEmptyTime = 0, savedFuseTime = 0;
+
+	if ( ptWeapon > 0 && ptWeapon < MAX_WEAPONS )
+	{
+		if ( ps->playerWeaponFireTime[ptWeapon] > 0 || ps->playerWeaponMeleeTime[ptWeapon] > 0
+		  || ps->playerWeaponReloadTime[ptWeapon] > 0 || ps->playerWeaponReloadEmptyTime[ptWeapon] > 0
+		  || ps->playerWeaponFuseTime[ptWeapon] > 0 )
+		{
+			ptDef = BG_GetWeaponDef(ptWeapon);
+			if ( ptDef )
+			{
+				savedFireTime = ptDef->iFireTime;
+				savedMeleeTime = ptDef->iMeleeTime;
+				savedReloadTime = ptDef->iReloadTime;
+				savedReloadEmptyTime = ptDef->iReloadEmptyTime;
+				savedFuseTime = ptDef->iFuseTime;
+
+				if ( ps->playerWeaponFireTime[ptWeapon] > 0 )
+					ptDef->iFireTime = ps->playerWeaponFireTime[ptWeapon];
+				if ( ps->playerWeaponMeleeTime[ptWeapon] > 0 )
+					ptDef->iMeleeTime = ps->playerWeaponMeleeTime[ptWeapon];
+				if ( ps->playerWeaponReloadTime[ptWeapon] > 0 )
+					ptDef->iReloadTime = ps->playerWeaponReloadTime[ptWeapon];
+				if ( ps->playerWeaponReloadEmptyTime[ptWeapon] > 0 )
+					ptDef->iReloadEmptyTime = ps->playerWeaponReloadEmptyTime[ptWeapon];
+				if ( ps->playerWeaponFuseTime[ptWeapon] > 0 )
+					ptDef->iFuseTime = ps->playerWeaponFuseTime[ptWeapon];
+			}
+		}
+	}
+
+	// A thrown grenade takes its fuse from the offhand weapon
+	int ohWeapon = pm->ps->offHandIndex;
+	WeaponDef_t *ohDef = NULL;
+	int savedOhFuseTime = 0;
+
+	if ( ohWeapon > 0 && ohWeapon < MAX_WEAPONS && ohWeapon != ptWeapon
+	  && ps->playerWeaponFuseTime[ohWeapon] > 0 )
+	{
+		ohDef = BG_GetWeaponDef(ohWeapon);
+		if ( ohDef )
+		{
+			savedOhFuseTime = ohDef->iFuseTime;
+			ohDef->iFuseTime = ps->playerWeaponFuseTime[ohWeapon];
+		}
+	}
+
+	// Raise time belongs to the weapon being switched to
+	int rtWeapon = pm->cmd.weapon;
+	WeaponDef_t *rtDef = NULL;
+	int savedRaiseTime = 0;
+
+	if ( rtWeapon > 0 && rtWeapon < MAX_WEAPONS && ps->playerWeaponRaiseTime[rtWeapon] > 0 )
+	{
+		rtDef = BG_GetWeaponDef(rtWeapon);
+		if ( rtDef )
+		{
+			savedRaiseTime = rtDef->iRaiseTime;
+			rtDef->iRaiseTime = ps->playerWeaponRaiseTime[rtWeapon];
+		}
+	}
+	/* New code end */
+
 	hook_PM_Weapon->unhook();
 	void (*PM_Weapon)(pmove_t *pm, pml_t *pml);
 	*(int *)&PM_Weapon = hook_PM_Weapon->from;
 	PM_Weapon(pm, pml);
 	hook_PM_Weapon->hook();
+
+	/* New code start: restore the shared WeaponDef timing fields */
+	if ( ptDef )
+	{
+		ptDef->iFireTime = savedFireTime;
+		ptDef->iMeleeTime = savedMeleeTime;
+		ptDef->iReloadTime = savedReloadTime;
+		ptDef->iReloadEmptyTime = savedReloadEmptyTime;
+		ptDef->iFuseTime = savedFuseTime;
+	}
+	if ( ohDef )
+	{
+		ohDef->iFuseTime = savedOhFuseTime;
+	}
+	if ( rtDef )
+	{
+		rtDef->iRaiseTime = savedRaiseTime;
+	}
+	/* New code end */
 }
 
 void hook_Player_UpdateLookAtEntity(gentity_t *player)
@@ -9210,7 +9305,26 @@ void custom_FireWeaponMelee(gentity_t *player)
 		height = player_meleeHeight->current.decimal * customPlayerState[id].meleeHeightScale;
 		/* New code end */
 
+		/* New code start: per-player melee damage */
+		int meleeWeapon = player->s.weapon;
+		int savedMeleeDamage = 0;
+		qboolean swappedMeleeDamage = qfalse;
+
+		if ( meleeWeapon > 0 && meleeWeapon < MAX_WEAPONS && wp.weapDef
+		  && customPlayerState[id].playerWeaponMeleeDamage[meleeWeapon] > 0 )
+		{
+			savedMeleeDamage = wp.weapDef->iMeleeDamage;
+			wp.weapDef->iMeleeDamage = customPlayerState[id].playerWeaponMeleeDamage[meleeWeapon];
+			swappedMeleeDamage = qtrue;
+		}
+		/* New code end */
+
 		Weapon_Melee(player, &wp, range, width, height);
+
+		/* New code start: restore shared WeaponDef melee damage */
+		if ( swappedMeleeDamage )
+			wp.weapDef->iMeleeDamage = savedMeleeDamage;
+		/* New code end */
 	}
 }
 
@@ -9717,6 +9831,29 @@ void custom_Bullet_Fire(gentity_t *inflictor, float spread, weaponParms *wp, con
 	int id;
 
 	G_AntiLagRewindClientPos(offset, &antilagStore);
+
+	/* New code start: per-player bullet damage (bullet-drop shots keep the default) */
+	WeaponDef_t *dmgDef = NULL;
+	int dmgSaved = 0;
+
+	if ( inflictor->client )
+	{
+		int dmgId = inflictor->client->ps.clientNum;
+		int dmgWeapon = inflictor->client->ps.weapon;
+
+		if ( dmgId >= 0 && dmgId < MAX_CLIENTS && dmgWeapon > 0 && dmgWeapon < MAX_WEAPONS
+		  && customPlayerState[dmgId].playerWeaponDamage[dmgWeapon] > 0 )
+		{
+			dmgDef = BG_GetWeaponDef(dmgWeapon);
+			if ( dmgDef )
+			{
+				dmgSaved = dmgDef->damage;
+				dmgDef->damage = customPlayerState[dmgId].playerWeaponDamage[dmgWeapon];
+			}
+		}
+	}
+	/* New code end */
+
 	if ( wp->weapDef->weapClass == WEAPCLASS_SPREAD )
 	{
 		custom_Bullet_Fire_Spread(source, inflictor, wp, offset, spread);
@@ -9731,6 +9868,8 @@ void custom_Bullet_Fire(gentity_t *inflictor, float spread, weaponParms *wp, con
 			if ( customPlayerState[id].droppingBulletsCount >= MAX_DROPPING_BULLETS )
 			{
 				Com_DPrintf("Bullet_Fire: Too many bullets still on their way for player %d, bullet aborted\n", id);
+				if ( dmgDef ) // restore before the early return
+					dmgDef->damage = dmgSaved;
 				return;
 			}
 
@@ -9793,6 +9932,12 @@ void custom_Bullet_Fire(gentity_t *inflictor, float spread, weaponParms *wp, con
 			custom_Bullet_Fire_Extended(source, inflictor, wp->muzzleTrace, end, 1.0, 0, wp, source, offset);
 		}
 	}
+
+	/* New code start: restore shared WeaponDef damage */
+	if ( dmgDef )
+		dmgDef->damage = dmgSaved;
+	/* New code end */
+
 	G_AntiLag_RestoreClientPos(&antilagStore);
 }
 
@@ -11405,11 +11550,34 @@ void custom_Pmove(pmove_t *pm)
 		playerMovementTrace = qtrue;
 	/* New code end */
 
+	/* New code start: per-player move speed scale */
+	int msWeapon = pm->ps->weapon;
+	int msClient = pm->ps->clientNum;
+	WeaponDef_t *msDef = NULL;
+	float msSaved = 0;
+
+	if ( msClient >= 0 && msClient < MAX_CLIENTS && msWeapon > 0 && msWeapon < MAX_WEAPONS
+	  && customPlayerState[msClient].playerWeaponMoveSpeedScale[msWeapon] > 0 )
+	{
+		msDef = BG_GetWeaponDef(msWeapon);
+		if ( msDef )
+		{
+			msSaved = msDef->fMoveSpeedScale;
+			msDef->fMoveSpeedScale = customPlayerState[msClient].playerWeaponMoveSpeedScale[msWeapon];
+		}
+	}
+	/* New code end */
+
 	hook_Pmove->unhook();
 	void (*Pmove)(pmove_t *pm);
 	*(int *)&Pmove = hook_Pmove->from;
 	Pmove(pm);
 	hook_Pmove->hook();
+
+	/* New code start: restore move-speed scale */
+	if ( msDef )
+		msDef->fMoveSpeedScale = msSaved;
+	/* New code end */
 
 	// New: (not)SolidForPlayer
 	if ( updateBrushModelContents )

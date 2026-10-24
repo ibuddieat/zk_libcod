@@ -2107,6 +2107,376 @@ void gsc_player_setfirerangescale(scr_entref_t ref)
 	stackPushFloat(old_scale);
 }
 
+// Reads (weapon name or id[, ms]); on a bad argument it pushes undefined and returns qfalse
+static qboolean resolvePlayerWeaponTime(scr_entref_t ref, const char *fn, qboolean wantTime, int *outId, int *outWeaponId, int *outTime)
+{
+	int id = ref.entnum;
+	int weaponId;
+	char *name;
+	int time = 0;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("%s() entity %i is not a player", fn, id);
+		stackPushUndefined();
+		return qfalse;
+	}
+
+	if ( wantTime )
+	{
+		if ( stackGetParams("si", &name, &time) )
+			weaponId = BG_FindWeaponIndexForName(name);
+		else if ( !stackGetParams("ii", &weaponId, &time) )
+		{
+			stackError("%s() one or more arguments is undefined or has a wrong type", fn);
+			stackPushUndefined();
+			return qfalse;
+		}
+	}
+	else
+	{
+		if ( stackGetParams("s", &name) )
+			weaponId = BG_FindWeaponIndexForName(name);
+		else if ( !stackGetParams("i", &weaponId) )
+		{
+			stackError("%s() argument is undefined or has a wrong type", fn);
+			stackPushUndefined();
+			return qfalse;
+		}
+	}
+
+	if ( weaponId <= 0 || weaponId >= MAX_WEAPONS || weaponId > bg_iNumWeapons )
+	{
+		stackPushUndefined();
+		return qfalse;
+	}
+
+	*outId = id;
+	*outWeaponId = weaponId;
+	if ( wantTime )
+		*outTime = time;
+
+	return qtrue;
+}
+
+// Each setter below overrides one weapon value for this player only; 0 or less clears it
+
+void gsc_player_setplayerweaponfiretime(scr_entref_t ref)
+{
+	int id, weaponId, time;
+
+	if ( !resolvePlayerWeaponTime(ref, "setPlayerWeaponFireTime", qtrue, &id, &weaponId, &time) )
+		return;
+
+	if ( time < 0 )
+		time = 0;
+	customPlayerState[id].playerWeaponFireTime[weaponId] = time;
+
+	stackPushBool(qtrue);
+}
+
+void gsc_player_getplayerweaponfiretime(scr_entref_t ref)
+{
+	int id, weaponId, time;
+
+	if ( !resolvePlayerWeaponTime(ref, "getPlayerWeaponFireTime", qfalse, &id, &weaponId, &time) )
+		return;
+
+	stackPushInt(customPlayerState[id].playerWeaponFireTime[weaponId]);
+}
+
+void gsc_player_setplayerweaponmeleetime(scr_entref_t ref)
+{
+	int id, weaponId, time;
+
+	if ( !resolvePlayerWeaponTime(ref, "setPlayerWeaponMeleeTime", qtrue, &id, &weaponId, &time) )
+		return;
+
+	if ( time < 0 )
+		time = 0;
+	customPlayerState[id].playerWeaponMeleeTime[weaponId] = time;
+
+	stackPushBool(qtrue);
+}
+
+void gsc_player_getplayerweaponmeleetime(scr_entref_t ref)
+{
+	int id, weaponId, time;
+
+	if ( !resolvePlayerWeaponTime(ref, "getPlayerWeaponMeleeTime", qfalse, &id, &weaponId, &time) )
+		return;
+
+	stackPushInt(customPlayerState[id].playerWeaponMeleeTime[weaponId]);
+}
+
+void gsc_player_setplayerweaponreloadtime(scr_entref_t ref)
+{
+	int id, weaponId, time;
+
+	if ( !resolvePlayerWeaponTime(ref, "setPlayerWeaponReloadTime", qtrue, &id, &weaponId, &time) )
+		return;
+
+	if ( time < 0 )
+		time = 0;
+	customPlayerState[id].playerWeaponReloadTime[weaponId] = time;
+
+	stackPushBool(qtrue);
+}
+
+void gsc_player_getplayerweaponreloadtime(scr_entref_t ref)
+{
+	int id, weaponId, time;
+
+	if ( !resolvePlayerWeaponTime(ref, "getPlayerWeaponReloadTime", qfalse, &id, &weaponId, &time) )
+		return;
+
+	stackPushInt(customPlayerState[id].playerWeaponReloadTime[weaponId]);
+}
+
+void gsc_player_setplayerweaponreloademptytime(scr_entref_t ref)
+{
+	int id, weaponId, time;
+
+	if ( !resolvePlayerWeaponTime(ref, "setPlayerWeaponReloadEmptyTime", qtrue, &id, &weaponId, &time) )
+		return;
+
+	if ( time < 0 )
+		time = 0;
+	customPlayerState[id].playerWeaponReloadEmptyTime[weaponId] = time;
+
+	stackPushBool(qtrue);
+}
+
+void gsc_player_getplayerweaponreloademptytime(scr_entref_t ref)
+{
+	int id, weaponId, time;
+
+	if ( !resolvePlayerWeaponTime(ref, "getPlayerWeaponReloadEmptyTime", qfalse, &id, &weaponId, &time) )
+		return;
+
+	stackPushInt(customPlayerState[id].playerWeaponReloadEmptyTime[weaponId]);
+}
+
+void gsc_player_setplayerweaponfusetime(scr_entref_t ref)
+{
+	int id, weaponId, time;
+
+	if ( !resolvePlayerWeaponTime(ref, "setPlayerWeaponFuseTime", qtrue, &id, &weaponId, &time) )
+		return;
+
+	if ( time < 0 )
+		time = 0;
+	customPlayerState[id].playerWeaponFuseTime[weaponId] = time;
+
+	stackPushBool(qtrue);
+}
+
+void gsc_player_getplayerweaponfusetime(scr_entref_t ref)
+{
+	int id, weaponId, time;
+
+	if ( !resolvePlayerWeaponTime(ref, "getPlayerWeaponFuseTime", qfalse, &id, &weaponId, &time) )
+		return;
+
+	stackPushInt(customPlayerState[id].playerWeaponFuseTime[weaponId]);
+}
+
+void gsc_player_setplayerweaponraisetime(scr_entref_t ref)
+{
+	int id, weaponId, time;
+
+	if ( !resolvePlayerWeaponTime(ref, "setPlayerWeaponRaiseTime", qtrue, &id, &weaponId, &time) )
+		return;
+
+	if ( time < 0 )
+		time = 0;
+	customPlayerState[id].playerWeaponRaiseTime[weaponId] = time;
+
+	stackPushBool(qtrue);
+}
+
+void gsc_player_getplayerweaponraisetime(scr_entref_t ref)
+{
+	int id, weaponId, time;
+
+	if ( !resolvePlayerWeaponTime(ref, "getPlayerWeaponRaiseTime", qfalse, &id, &weaponId, &time) )
+		return;
+
+	stackPushInt(customPlayerState[id].playerWeaponRaiseTime[weaponId]);
+}
+
+static const char *playerNameModeToString(int mode)
+{
+	if ( mode == 1 )
+		return "auto";
+	if ( mode == 2 )
+		return "manual";
+	return "default";
+}
+
+void gsc_player_setplayernamemode(scr_entref_t ref)
+{
+	int id = ref.entnum;
+	char *mode;
+	int newMode, oldMode;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_setplayernamemode() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( !stackGetParams("s", &mode) )
+	{
+		stackError("gsc_player_setplayernamemode() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( !strcmp(mode, "auto") )
+		newMode = 1;
+	else if ( !strcmp(mode, "manual") )
+		newMode = 2;
+	else if ( !strcmp(mode, "default") )
+		newMode = 0;
+	else
+	{
+		stackError("gsc_player_setplayernamemode() mode must be \"auto\", \"manual\" or \"default\"");
+		stackPushUndefined();
+		return;
+	}
+
+	oldMode = customPlayerState[id].nameMode;
+	customPlayerState[id].nameMode = newMode;
+
+	stackPushString(playerNameModeToString(oldMode));
+}
+
+void gsc_player_getplayernamemode(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_getplayernamemode() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushString(playerNameModeToString(customPlayerState[id].nameMode));
+}
+
+void gsc_player_setplayerweapondamage(scr_entref_t ref)
+{
+	int id, weaponId, damage;
+
+	if ( !resolvePlayerWeaponTime(ref, "setPlayerWeaponDamage", qtrue, &id, &weaponId, &damage) )
+		return;
+
+	if ( damage < 0 )
+		damage = 0;
+	customPlayerState[id].playerWeaponDamage[weaponId] = damage;
+
+	stackPushBool(qtrue);
+}
+
+void gsc_player_getplayerweapondamage(scr_entref_t ref)
+{
+	int id, weaponId, unused;
+
+	if ( !resolvePlayerWeaponTime(ref, "getPlayerWeaponDamage", qfalse, &id, &weaponId, &unused) )
+		return;
+
+	stackPushInt(customPlayerState[id].playerWeaponDamage[weaponId]);
+}
+
+void gsc_player_setplayerweaponmeleedamage(scr_entref_t ref)
+{
+	int id, weaponId, damage;
+
+	if ( !resolvePlayerWeaponTime(ref, "setPlayerWeaponMeleeDamage", qtrue, &id, &weaponId, &damage) )
+		return;
+
+	if ( damage < 0 )
+		damage = 0;
+	customPlayerState[id].playerWeaponMeleeDamage[weaponId] = damage;
+
+	stackPushBool(qtrue);
+}
+
+void gsc_player_getplayerweaponmeleedamage(scr_entref_t ref)
+{
+	int id, weaponId, unused;
+
+	if ( !resolvePlayerWeaponTime(ref, "getPlayerWeaponMeleeDamage", qfalse, &id, &weaponId, &unused) )
+		return;
+
+	stackPushInt(customPlayerState[id].playerWeaponMeleeDamage[weaponId]);
+}
+
+// Same as resolvePlayerWeaponTime, for a float value
+static qboolean resolvePlayerWeaponFloat(scr_entref_t ref, const char *fn, int *outId, int *outWeaponId, float *outValue)
+{
+	int id = ref.entnum;
+	int weaponId;
+	char *name;
+	float value;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("%s() entity %i is not a player", fn, id);
+		stackPushUndefined();
+		return qfalse;
+	}
+
+	if ( stackGetParams("sf", &name, &value) )
+		weaponId = BG_FindWeaponIndexForName(name);
+	else if ( !stackGetParams("if", &weaponId, &value) )
+	{
+		stackError("%s() one or more arguments is undefined or has a wrong type", fn);
+		stackPushUndefined();
+		return qfalse;
+	}
+
+	if ( weaponId <= 0 || weaponId >= MAX_WEAPONS || weaponId > bg_iNumWeapons )
+	{
+		stackPushUndefined();
+		return qfalse;
+	}
+
+	*outId = id;
+	*outWeaponId = weaponId;
+	*outValue = value;
+
+	return qtrue;
+}
+
+void gsc_player_setplayerweaponmovespeedscale(scr_entref_t ref)
+{
+	int id, weaponId;
+	float scale;
+
+	if ( !resolvePlayerWeaponFloat(ref, "setPlayerWeaponMoveSpeedScale", &id, &weaponId, &scale) )
+		return;
+
+	if ( scale < 0 )
+		scale = 0;
+	customPlayerState[id].playerWeaponMoveSpeedScale[weaponId] = scale;
+
+	stackPushBool(qtrue);
+}
+
+void gsc_player_getplayerweaponmovespeedscale(scr_entref_t ref)
+{
+	int id, weaponId, unused;
+
+	if ( !resolvePlayerWeaponTime(ref, "getPlayerWeaponMoveSpeedScale", qfalse, &id, &weaponId, &unused) )
+		return;
+
+	stackPushFloat(customPlayerState[id].playerWeaponMoveSpeedScale[weaponId]);
+}
+
 void gsc_player_setweaponfiremeleedelay(scr_entref_t ref)
 {
 	int id = ref.entnum;
