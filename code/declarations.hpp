@@ -97,6 +97,9 @@
 #define MAX_VOICEPACKETSPERFRAME    2.56
 #define MAX_ZPATH                   256
 
+#define MEMORY_NODE_BITS    0x10
+#define MEMORY_NODE_COUNT   0x10000
+
 #define ENTITYNUM_NONE      ( MAX_GENTITIES - 1 )
 #define ENTITYNUM_WORLD     ( MAX_GENTITIES - 2 )
 
@@ -711,6 +714,23 @@ struct scrStringGlob_t
 	HashEntry *nextFreeEntry;
 };
 
+struct __attribute__((aligned(8))) MemoryNode
+{
+	uint16_t prev;
+	uint16_t next;
+};
+
+typedef struct __attribute__((aligned(128))) scrMemTreeGlob_s
+{
+	MemoryNode nodes[MEMORY_NODE_COUNT];
+	char leftBits[256];
+	char numBits[256];
+	char logBits[256];
+	uint16_t head[MEMORY_NODE_BITS + 1];
+	int totalAlloc;
+	int totalAllocBuckets;
+} scrMemTreeGlob_t;
+
 typedef enum
 {
 	VAR_UNDEFINED,
@@ -740,11 +760,7 @@ typedef enum
 	VAR_COUNT
 } var_type_t;
 
-// Engine variable-system constants (from the reverse-engineered server,
-// Refrences/CoD2rev_Server/src/script/script_public.h). VAR_MASK extracts
-// the var_type_t from VariableValueInternal::w.type; variable names encode
-// the key kind via these thresholds: name < SL_MAX_STRING_INDEX is a string
-// key, name >= MAX_ARRAYINDEX is an integer index (= name - MAX_ARRAYINDEX).
+// https://github.com/voron00/CoD2rev_Server/blob/11c40a5/src/script/script_public.h
 #define VAR_MASK            0x1F
 #define SL_MAX_STRING_INDEX 0x10000
 #define MAX_ARRAYINDEX      0x800000
@@ -3926,6 +3942,7 @@ static const int gclients_offset = 0x087A2500;
 static const int varpub_offset = 0x08397500;
 static const int varglob_offset = 0x08297500;
 static const int stringglob_offset = 0x08287400;
+static const int memtreeglob_offset = 0x08206F80;
 static const int vmpub_offset = 0x083D8A80;
 static const int compilepub_offset = 0x08205C80;
 static const int vmglob_offset = 0x083DCE80;
@@ -4002,6 +4019,7 @@ static const int g_fHitLocDamageMult_offset = 0x08628EE0;
 #define scrVarGlob (((VariableValueInternal*)( varglob_offset )))
 #define scrVarGlob_high ((VariableValueInternal*)( varglob_offset + 16 * 32770 ))
 #define scrStringGlob (*((scrStringGlob_t*)( stringglob_offset )))
+#define scrMemTreeGlob (*((scrMemTreeGlob_t*)( memtreeglob_offset )))
 #define scrCompilePub (*((scrCompilePub_t*)( compilepub_offset )))
 #define scrVmGlob (*((scrVmGlob_t*)( vmglob_offset )))
 #define scrParserPub (*((scrParserPub_t*)( scrParserPub_offset )))
@@ -4081,6 +4099,7 @@ static const int g_fHitLocDamageMult_offset = 0x08628EE0;
  static_assert((sizeof(gitem_t) == 44), "ERROR: gitem_t size is invalid!");
  static_assert((sizeof(XModel) == 144), "ERROR: XModel size is invalid!");
  static_assert((sizeof(scrStringGlob_t) == 65544), "ERROR: scrStringGlob_t size is invalid!");
+ static_assert((sizeof(scrMemTreeGlob_t) == 0x80380), "ERROR: scrMemTreeGlob_t size is invalid!");
  static_assert((sizeof(worldContents_s) == 12), "ERROR: worldContents_s size is invalid!");
  static_assert((sizeof(worldTree_t) == 12), "ERROR: worldTree_t size is invalid!");
  static_assert((sizeof(worldSector_t) == 24), "ERROR: worldSector_t size is invalid!");

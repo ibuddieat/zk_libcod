@@ -27,7 +27,7 @@ Module: JSON<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Returns a list of job IDs from <a href="json_load_async.htm">json_load_async</a> or <a href="json_save_async.htm">json_save_async</a> that have finished. The list is empty if nothing is ready yet. A job ID keeps showing up until it is collected with <a href="json_async_result.htm">json_async_result</a>.</p>
+<p>Returns an array of the job IDs from <a href="json_load_async.htm">json_load_async</a> or <a href="json_save_async.htm">json_save_async</a> that have finished and not been collected yet with <a href="json_async_result.htm">json_async_result</a>.</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
@@ -36,11 +36,12 @@ Module: JSON<BR>
 <TR><TD BGCOLOR="222222">
 <H3>
 <PRE>
-for(;;) {
+for(;;)
+{
     wait 0.5;
-    finished = json_async_done();
-    for(i = 0; i &lt; finished.size; i++)
-        result = json_async_result(finished[i]);
+    done = json_async_done();
+    for(i = 0; i &lt; done.size; i++)
+        data = json_async_result(done[i]);
 }
 </PRE>
 </H3>

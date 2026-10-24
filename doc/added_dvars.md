@@ -179,14 +179,14 @@
     * Type: Integer
     * Default: 64
     * Min. Value: 1
-    * Max. Value: 1024
-    * Effect: Maximum number of asynchronous JSON jobs (started via the `json_load_async` and `json_save_async` script functions) that may be pending at the same time. Submissions beyond this limit fail and return a job id of 0.
+    * Max. Value: 256
+    * Effect: Maximum number of `json_load_async` and `json_save_async` jobs at the same time. Counts jobs still running plus finished loads not yet collected with `json_async_result`. Further jobs are refused and return 0.
   * `scr_json_max_load_bytes`
     * Type: Integer
     * Default: 8388608 (8 MB)
     * Min. Value: 1
     * Max. Value: 33554432 (32 MB)
-    * Effect: Maximum size in bytes of a JSON file that the synchronous `json_load` script function will read. Larger files are refused with a script error (use `json_load_async` for those). The asynchronous loader honors this value as well, but is additionally capped at 32 MB (33554432 bytes) regardless of this dvar.
+    * Effect: Maximum size in bytes of a JSON file. `json_load` and `json_load_async` refuse larger files, and `json_save` and `json_save_async` refuse to write larger ones.
   * `scr_json_slow_warn_ms`
     * Type: Integer
     * Default: 25
