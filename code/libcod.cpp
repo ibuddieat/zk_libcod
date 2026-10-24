@@ -1217,7 +1217,7 @@ void hook_Com_MakeSoundAliasesPermanent(snd_alias_list_t *aliasList, SoundFileIn
 	Com_MakeSoundAliasesPermanent(aliasList, fileInfo);
 }
 
-void hook_Scr_EndLoadEvaluate(void)
+void hook_Scr_EndLoadEvaluate_in_Scr_EndLoadScripts(void)
 {
 	// Last point where struct field ids still map to names
 	#if COMPILE_JSON == 1
@@ -12174,7 +12174,7 @@ public:
 		cracking_hook_call(0x08090BA0, (int)hook_ClientCommand);
 		cracking_hook_call(0x080AD1FE, (int)hook_Com_MakeSoundAliasesPermanent);
 		cracking_hook_call(0x080622F9, (int)hook_Com_Printf_in_Com_Init_Try_Block_Function);
-		cracking_hook_call(0x08076466, (int)hook_Scr_EndLoadEvaluate); // Scr_EndLoadScripts
+		cracking_hook_call(0x08076466, (int)hook_Scr_EndLoadEvaluate_in_Scr_EndLoadScripts);
 		cracking_hook_call(0x08062644, (int)hook_Com_Printf_in_Com_ModifyMsec);
 		cracking_hook_call(0x0806B24F, (int)hook_Com_sprintf_in_NET_AdrToString_IP);
 		cracking_hook_call(0x0806B2CE, (int)hook_Com_sprintf_in_NET_AdrToString_IPX);
