@@ -1722,9 +1722,9 @@ void gsc_player_renameclient(scr_entref_t ref)
 		return;
 	}
 
-	if ( strlen(name) > 31 )
+	if ( strlen(name) >= MAX_NAME_LENGTH )
 	{
-		stackError("gsc_player_renameclient() player name is longer than 31 characters");
+		stackError("gsc_player_renameclient() player name is longer than %i characters", MAX_NAME_LENGTH - 1);
 		stackPushUndefined();
 		return;
 	}
@@ -1739,7 +1739,7 @@ void gsc_player_renameclient(scr_entref_t ref)
 	client_t *client = &svs.clients[id];
 
 	Info_SetValueForKey(client->userinfo, "name", name);
-	strcpy(client->name, name);
+	I_strncpyz(client->name, name, sizeof(client->name));
 	ClientUserinfoChanged(id);
 
 	stackPushBool(qtrue);

@@ -119,7 +119,6 @@ int stackGetParamFloat(int param, float *value);
 int stackGetParamObject(int param, unsigned int *value);
 
 void stackError(const char *format, ...);
-int stackPrintParam(int param);
 
 xfunction_t Scr_GetCustomFunction(const char **fname, qboolean *fdev);
 xmethod_t Scr_GetCustomMethod(const char **fname, qboolean *fdev);

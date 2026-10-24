@@ -205,8 +205,7 @@ void gsc_async_mysql_create_query()
 	else
 		async_task_id++;
 
-	strncpy(newtask->query, query, MAX_STRINGLENGTH - 1);
-	newtask->query[MAX_STRINGLENGTH - 1] = '\0';
+	I_strncpyz(newtask->query, query, sizeof(newtask->query));
 
 	newtask->prev = current;
 	newtask->next = NULL;
@@ -247,7 +246,7 @@ void gsc_async_mysql_create_query()
 	else if ( stackGetParamString(2, &valueString) )
 	{
 		newtask->valueType = STRING_VALUE;
-		strcpy(newtask->stringValue, valueString);
+		I_strncpyz(newtask->stringValue, valueString, sizeof(newtask->stringValue));
 	}
 	else if ( stackGetParamVector(2, valueVector) )
 	{
@@ -301,8 +300,7 @@ void gsc_async_mysql_create_query_nosave()
 	else
 		async_task_id++;
 
-	strncpy(newtask->query, query, MAX_STRINGLENGTH - 1);
-	newtask->query[MAX_STRINGLENGTH - 1] = '\0';
+	I_strncpyz(newtask->query, query, sizeof(newtask->query));
 
 	newtask->prev = current;
 	newtask->next = NULL;
@@ -343,7 +341,7 @@ void gsc_async_mysql_create_query_nosave()
 	else if ( stackGetParamString(2, &valueString) )
 	{
 		newtask->valueType = STRING_VALUE;
-		strcpy(newtask->stringValue, valueString);
+		I_strncpyz(newtask->stringValue, valueString, sizeof(newtask->stringValue));
 	}
 	else if ( stackGetParamVector(2, valueVector) )
 	{
@@ -397,8 +395,7 @@ void gsc_async_mysql_create_entity_query(scr_entref_t entref)
 	else
 		async_task_id++;
 
-	strncpy(newtask->query, query, MAX_STRINGLENGTH - 1);
-	newtask->query[MAX_STRINGLENGTH - 1] = '\0';
+	I_strncpyz(newtask->query, query, sizeof(newtask->query));
 
 	newtask->prev = current;
 	newtask->next = NULL;
@@ -439,7 +436,7 @@ void gsc_async_mysql_create_entity_query(scr_entref_t entref)
 	else if ( stackGetParamString(2, &valueString) )
 	{
 		newtask->valueType = STRING_VALUE;
-		strcpy(newtask->stringValue, valueString);
+		I_strncpyz(newtask->stringValue, valueString, sizeof(newtask->stringValue));
 	}
 	else if ( stackGetParamVector(2, valueVector) )
 	{
@@ -493,8 +490,7 @@ void gsc_async_mysql_create_entity_query_nosave(scr_entref_t entref)
 	else
 		async_task_id++;
 
-	strncpy(newtask->query, query, MAX_STRINGLENGTH - 1);
-	newtask->query[MAX_STRINGLENGTH - 1] = '\0';
+	I_strncpyz(newtask->query, query, sizeof(newtask->query));
 
 	newtask->prev = current;
 	newtask->next = NULL;
@@ -535,7 +531,7 @@ void gsc_async_mysql_create_entity_query_nosave(scr_entref_t entref)
 	else if ( stackGetParamString(2, &valueString) )
 	{
 		newtask->valueType = STRING_VALUE;
-		strcpy(newtask->stringValue, valueString);
+		I_strncpyz(newtask->stringValue, valueString, sizeof(newtask->stringValue));
 	}
 	else if ( stackGetParamVector(2, valueVector) )
 	{
